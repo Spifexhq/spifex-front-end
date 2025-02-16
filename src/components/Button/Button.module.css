@@ -1,0 +1,32 @@
+/* Button.module.css */
+
+@import "tailwindcss";
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 15px;
+  }
+
+.primary {
+    background-color: var(--accentPrimary);
+    color: white;
+}
+
+.primary:hover {
+    background-color: var(--accentPrimaryHover);
+}
+
+.primary:active {
+    background-color: var(--accentPrimaryPressed);
+}
+
+.primary:disabled {
+    background-color: var(--accentPrimaryDisabled);
+    cursor: not-allowed;
+}
+

@@ -1,0 +1,17 @@
+.snackbar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .snackbar.open {
+    opacity: 1;
+  }
+  
+  .snackbar.closed {
+    opacity: 0;
+  }
+  

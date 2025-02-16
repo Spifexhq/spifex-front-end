@@ -1,0 +1,135 @@
+/* Container principal */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Conteúdo principal */
+.main-content {
+  max-width: 800px;
+  width: 100%;
+}
+
+/* Estilo do título */
+.title {
+  margin: 20px 0;
+  font-size: 3rem;
+  color: #333;
+}
+
+.subtitle {
+  margin-bottom: 30px;
+  font-size: 1.5rem;
+  color: #666;
+  font-weight: normal;
+}
+
+/* Imagem */
+.image-container img {
+  max-width: 100%;
+  height: auto;
+  margin: 20px 0;
+}
+
+/* Timer */
+.timer-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.timer-box {
+  text-align: center;
+}
+
+.timer-number {
+  font-size: 3rem;
+  color: #1976d2;
+}
+
+.timer-label {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Formulário */
+.form-container {
+  margin-top: 40px;
+}
+
+.notify-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.input-icon img {
+  width: 24px;
+  margin: 0 10px;
+}
+
+.notify-input {
+  padding: 10px;
+  border: none;
+  outline: none;
+  flex: 1;
+}
+
+.notify-button {
+  padding: 10px 20px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.notify-button:hover {
+  background-color: #125a9c;
+}
+
+.helper-text {
+  margin-top: 10px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Linha divisória */
+.divider {
+  margin: 40px 0;
+  border: none;
+  height: 1px;
+  background-color: #ddd;
+  width: 80%;
+}
+
+/* Redes sociais */
+.social-media-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.social-icon img {
+  width: 40px;
+  height: 40px;
+  transition: transform 0.3s ease;
+}
+
+.social-icon img:hover {
+  transform: scale(1.1);
+}

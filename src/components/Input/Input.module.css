@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+.inputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 10px;
+  padding: 5px 0;
+  font-weight: 700;
+  user-select: none;
+  color: #374151;
+}
+
+.input {
+  background-color: var(--color1);
+  font-size: 12px;
+  border: var(--border1);
+  color: #202020;
+  padding: 0.7rem 1rem;
+  border-radius: 5px;
+  outline: none;
+  transition: all ease-in-out 0.2s;
+  box-sizing: border-box;
+}
+
+.input:disabled,
+select:disabled {
+  background-color: var(--color3);
+  color: #ababab;
+}
+
+select:not(:disabled):hover {
+  background-color: #e4e4e4;
+}
+
+.default {
+  background-color: white;
+}
+
+.outlined {
+  border: 2px solid #4f46e5;
+}
+
+.filled {
+  background-color: #f3f4f6;
+  border: none;
+}
+
+.error {
+  border-color: #ef4444;
+}
+
+.errorMessage {
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.togglePasswordButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #4f46e5;
+  padding: 0;
+  z-index: 1;
+  user-select: none;
+  pointer-events: all;
+}
+
+.togglePasswordButton img, .togglePasswordButton svg {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
