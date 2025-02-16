@@ -1,12 +1,18 @@
 import { apiRequest } from '@/api';
+
+import { ApiGetEntriesResponse, ApiGetEntryResponse } from 'src/models/Entries/Entry';
+import { AddEntryPayload, EditEntryPayload } from 'src/models/Entries/EntryPayload';
+import { ApiGetSettledEntriesResponse, ApiGetSettledEntryResponse } from 'src/models/Entries/SettledEntry';
+import { EditSettledEntryPayload } from 'src/models/Entries/SettledEntryPayload';
+
 import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription } from '@/models/Auth';
+import { ApiGetEnterprise, Owner } from '@/models/Enterprise';
 import { ApiGetPermissions } from '@/models/Permission';
-import { CounterUsage ,ApiGetCounterUsage, ApiIncrementCounterUsage } from '@/models/Counter';
 import { ApiGetGroup, ApiGetGroups } from '@/models/Group';
 import { ApiGetEmployee, ApiGetEmployees } from '@/models/Employee';
+import { CounterUsage ,ApiGetCounterUsage, ApiIncrementCounterUsage } from '@/models/Counter';
 import { ApiGetTask, ApiGetTasks } from '@/models/Task';
-import { ApiGetEntries, ApiGetEntry } from '@/models/Entry';
-import { ApiGetSettledEntries, ApiGetSettledEntry } from '@/models/SettledEntry';
+
 import { ApiGetBank, ApiGetBanks } from '@/models/Bank';
 import { ApiGetGeneralLedgerAccount, ApiGetGeneralLedgerAccounts } from '@/models/GeneralLedgerAccount';
 import { ApiGetDocumentTypes } from '@/models/DocumentType';
@@ -14,7 +20,8 @@ import { ApiGetDepartment, ApiGetDepartments } from '@/models/Department';
 import { ApiGetProject, ApiGetProjects } from '@/models/Project';
 import { ApiGetInventoryItem, ApiGetInventoryItems } from '@/models/Inventory';
 import { ApiGetEntities, ApiGetEntity } from '@/models/Entity';
-import { ApiGetEnterprise, Owner } from '@/models/Enterprise';
+
+const buildIdsParam = (ids: number[]): string => ids.join(',');
 
 // Authentication
 const signUp = async ({
@@ -303,152 +310,26 @@ const deleteTask = async (id: number) => {
 };
 
 // Cash Flow Entries
-const getEntries = async () => {
-  const response = await apiRequest<ApiGetEntries>('cashflow/entries');
+const getEntries = async (): Promise<ApiGetEntriesResponse> => {
+  const response = await apiRequest<ApiGetEntriesResponse>('cashflow/entries');
   return response;
 };
 
-const getEntry = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest<ApiGetEntry>(`cashflow/entries/${idsParam}`);
+const getEntry = async (ids: number[]): Promise<ApiGetEntryResponse> => {
+  const response = await apiRequest<ApiGetEntryResponse>(`cashflow/entries/${buildIdsParam(ids)}`);
   return response;
 };
 
-const addEntry = async ({
-  due_date,
-  description,
-  observation,
-  amount,
-  current_installment,
-  total_installments,
-  tags,
-  transaction_type,
-  notes,
-  periods,
-  weekend_action,
-  general_ledger_account_id,
-  document_type_id,
-  project_id,
-  entity_id,
-  inventory_item_id,
-  inventory_item_quantity,
-  department_id,
-  department_percentage
-}: {
-  due_date: string;
-  description?: string;
-  observation?: string;
-  amount: string;
-  current_installment: number;
-  total_installments: number;
-  tags?: string;
-  transaction_type?: string;
-  notes?: string;
-  periods?: string;
-  weekend_action?: string;
-  general_ledger_account_id?: string;
-  document_type_id?: string;
-  project_id?: string;
-  entity_id?: string;
-  inventory_item_id?: string;
-  inventory_item_quantity?: number;
-  department_id?: string;
-  department_percentage?: string;
-}) => {
-  const response = await apiRequest<ApiGetEntry>('cashflow/entries', 'POST', {
-    due_date,
-    description,
-    observation,
-    amount,
-    current_installment,
-    total_installments,
-    tags,
-    transaction_type,
-    notes,
-    periods,
-    weekend_action,
-    general_ledger_account_id,
-    document_type_id,
-    project_id,
-    entity_id,
-    inventory_item_id,
-    inventory_item_quantity,
-    department_id,
-    department_percentage
-  });
+const addEntry = async (payload: AddEntryPayload): Promise<ApiGetEntryResponse> => {
+  const response = await apiRequest<ApiGetEntryResponse>('cashflow/entries', 'POST', payload);
   return response;
 };
 
 const editEntry = async (
   ids: number[],
-  {
-    due_date,
-    description,
-    observation,
-    amount,
-    current_installment,
-    total_installments,
-    tags,
-    transaction_type,
-    notes,
-    periods,
-    weekend_action,
-    general_ledger_account_id,
-    document_type_id,
-    project_id,
-    entity_id,
-    inventory_item_id,
-    inventory_item_quantity,
-    department_id,
-    department_percentage
-  }: {
-    due_date?: string;
-    description?: string;
-    observation?: string;
-    amount?: string;
-    current_installment?: number;
-    total_installments?: number;
-    tags?: string;
-    transaction_type?: string;
-    notes?: string;
-    periods?: string;
-    weekend_action?: string;
-    general_ledger_account_id?: string;
-    document_type_id?: string;
-    project_id?: string;
-    entity_id?: string;
-    inventory_item_id?: string;
-    inventory_item_quantity?: number;
-    department_id?: string;
-    department_percentage?: string;
-  }
-) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest<ApiGetEntry>(
-    `cashflow/entries/${idsParam}`,
-    'PUT',
-    {
-      due_date,
-      description,
-      observation,
-      amount,
-      current_installment,
-      total_installments,
-      tags,
-      transaction_type,
-      notes,
-      periods,
-      weekend_action,
-      general_ledger_account_id,
-      document_type_id,
-      project_id,
-      entity_id,
-      inventory_item_id,
-      inventory_item_quantity,
-      department_id,
-      department_percentage
-    }
-  );
+  payload: EditEntryPayload
+): Promise<ApiGetEntryResponse> => {
+  const response = await apiRequest<ApiGetEntryResponse>(`cashflow/entries/${buildIdsParam(ids)}`, 'PUT', payload);
   return response;
 };
 
@@ -458,47 +339,28 @@ const deleteEntries = async () => {
 };
 
 const deleteEntry = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest(`cashflow/entries/${idsParam}`, 'DELETE');
+  const response = await apiRequest(`cashflow/entries/${buildIdsParam(ids)}`, 'DELETE');
   return response;
 };
 
 // Settled Cash Flow Entries
-const getSettledEntries = async () => {
-  const response = await apiRequest<ApiGetSettledEntries>(
-    'cashflow/settled-entries'
-  );
+const getSettledEntries = async (): Promise<ApiGetSettledEntriesResponse> => {
+  const response = await apiRequest<ApiGetSettledEntriesResponse>('cashflow/settled-entries');
   return response;
 };
 
-const getSettledEntry = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest<ApiGetSettledEntry>(
-    `cashflow/settled-entries/${idsParam}`
-  );
+const getSettledEntry = async (ids: number[]): Promise<ApiGetSettledEntryResponse> => {
+  const url = `cashflow/settled-entries/${buildIdsParam(ids)}`;
+  const response = await apiRequest<ApiGetSettledEntryResponse>(url);
   return response;
 };
 
 const editSettledEntry = async (
   ids: number[],
-  {
-    settlement_due_date,
-    bank_id,
-    is_partial,
-    partial_amount
-  }: {
-    settlement_due_date: string;
-    bank_id: number;
-    is_partial: boolean;
-    partial_amount?: string;
-  }
-) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest<ApiGetSettledEntry>(
-    `cashflow/settled-entries/${idsParam}`,
-    'PATCH',
-    { settlement_due_date, bank_id, is_partial, partial_amount }
-  );
+  payload: EditSettledEntryPayload
+): Promise<ApiGetSettledEntryResponse> => {
+  const url = `cashflow/settled-entries/${buildIdsParam(ids)}`;
+  const response = await apiRequest<ApiGetSettledEntryResponse>(url, 'PATCH', payload);
   return response;
 };
 
@@ -508,11 +370,7 @@ const deleteSettledEntries = async () => {
 };
 
 const deleteSettledEntry = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest(
-    `cashflow/settled-entries/${idsParam}`,
-    'DELETE'
-  );
+  const response = await apiRequest(`cashflow/settled-entries/${buildIdsParam(ids)}`, 'DELETE');
   return response;
 };
 
@@ -547,8 +405,7 @@ const getBanks = async () => {
 };
 
 const getBank = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest<ApiGetBank>(`financeconfig/banks/${idsParam}`);
+  const response = await apiRequest<ApiGetBank>(`financeconfig/banks/${buildIdsParam(ids)}`);
   return response;
 };
 
@@ -596,9 +453,8 @@ const editBank = async (
     bank_status?: boolean;
   }
 ) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetBank>(
-    `financeconfig/banks/${idsParam}`,
+    `financeconfig/banks/${buildIdsParam(ids)}`,
     'PUT',
     {
       bank_institution,
@@ -618,8 +474,7 @@ const deleteBanks = async () => {
 };
 
 const deleteBank = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest(`financeconfig/banks/${idsParam}`, 'DELETE');
+  const response = await apiRequest(`financeconfig/banks/${buildIdsParam(ids)}`, 'DELETE');
   return response;
 };
 
@@ -632,9 +487,8 @@ const getGeneralLedgerAccounts = async () => {
 };
 
 const getGeneralLedgerAccount = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetGeneralLedgerAccount>(
-    `financeconfig/general-ledger-accounts/${idsParam}`
+    `financeconfig/general-ledger-accounts/${buildIdsParam(ids)}`
   );
   return response;
 };
@@ -672,9 +526,8 @@ const editGeneralLedgerAccount = async (
     transaction_type: string;
   }
 ) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetGeneralLedgerAccount>(
-    `financeconfig/general-ledger-accounts/${idsParam}`,
+    `financeconfig/general-ledger-accounts/${buildIdsParam(ids)}`,
     'PUT',
     { general_ledger_account, group, subgroup, transaction_type }
   );
@@ -690,9 +543,8 @@ const deleteGeneralLedgerAccounts = async () => {
 };
 
 const deleteGeneralLedgerAccount = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest(
-    `financeconfig/general-ledger-accounts/${idsParam}`,
+    `financeconfig/general-ledger-accounts/${buildIdsParam(ids)}`,
     'DELETE'
   );
   return response;
@@ -713,9 +565,8 @@ const getDepartments = async () => {
 };
 
 const getDepartment = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetDepartment>(
-    `financeconfig/departments/${idsParam}`
+    `financeconfig/departments/${buildIdsParam(ids)}`
   );
   return response;
 };
@@ -733,9 +584,8 @@ const editDepartment = async (
   ids: number[],
   { department }: { department?: string }
 ) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetDepartment>(
-    `financeconfig/departments/${idsParam}`,
+    `financeconfig/departments/${buildIdsParam(ids)}`,
     'PUT',
     { department }
   );
@@ -748,9 +598,8 @@ const deleteDepartments = async () => {
 };
 
 const deleteDepartment = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest(
-    `financeconfig/departments/${idsParam}`,
+    `financeconfig/departments/${buildIdsParam(ids)}`,
     'DELETE'
   );
   return response;
@@ -763,9 +612,8 @@ const getProjects = async () => {
 };
 
 const getProject = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetProject>(
-    `financeconfig/projects/${idsParam}`
+    `financeconfig/projects/${buildIdsParam(ids)}`
   );
   return response;
 };
@@ -803,9 +651,8 @@ const editProject = async (
     project_description?: string;
   }
 ) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetProject>(
-    `financeconfig/projects/${idsParam}`,
+    `financeconfig/projects/${buildIdsParam(ids)}`,
     'PUT',
     { project, project_code, project_type, project_description }
   );
@@ -818,8 +665,7 @@ const deleteProjects = async () => {
 };
 
 const deleteProject = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest(`financeconfig/projects/${idsParam}`, 'DELETE');
+  const response = await apiRequest(`financeconfig/projects/${buildIdsParam(ids)}`, 'DELETE');
   return response;
 };
 
@@ -832,9 +678,8 @@ const getInventoryItems = async () => {
 };
 
 const getInventoryItem = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetInventoryItem>(
-    `financeconfig/inventory-items/${idsParam}`
+    `financeconfig/inventory-items/${buildIdsParam(ids)}`
   );
   return response;
 };
@@ -868,9 +713,8 @@ const editInventoryItem = async (
     inventory_item_quantity?: number;
   }
 ) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetInventoryItem>(
-    `financeconfig/inventory-items/${idsParam}`,
+    `financeconfig/inventory-items/${buildIdsParam(ids)}`,
     'PUT',
     { inventory_item_code, inventory_item, inventory_item_quantity }
   );
@@ -883,9 +727,8 @@ const deleteInventoryItems = async () => {
 };
 
 const deleteInventoryItem = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest(
-    `financeconfig/inventory-items/${idsParam}`,
+    `financeconfig/inventory-items/${buildIdsParam(ids)}`,
     'DELETE'
   );
   return response;
@@ -898,9 +741,8 @@ const getEntities = async () => {
 };
 
 const getEntity = async (ids: number[]) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetEntity>(
-    `financeconfig/entities/${idsParam}`
+    `financeconfig/entities/${buildIdsParam(ids)}`
   );
   return response;
 };
@@ -1013,9 +855,8 @@ const editEntity = async (
     entity_type?: string;
   }
 ) => {
-  const idsParam = ids.join(',');
   const response = await apiRequest<ApiGetEntity>(
-    `financeconfig/entities/${idsParam}`,
+    `financeconfig/entities/${buildIdsParam(ids)}`,
     'PUT',
     {
       full_name,
@@ -1047,8 +888,7 @@ const deleteEntities = async () => {
 };
 
 const deleteEntity = async (ids: number[]) => {
-  const idsParam = ids.join(',');
-  const response = await apiRequest(`financeconfig/entities/${idsParam}`, 'DELETE');
+  const response = await apiRequest(`financeconfig/entities/${buildIdsParam(ids)}`, 'DELETE');
   return response;
 };
 

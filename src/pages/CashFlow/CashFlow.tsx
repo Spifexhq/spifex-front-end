@@ -1,20 +1,13 @@
 import Navbar from '@/components/Navbar';
-import EntriesTable from '@/components/CashflowEntry/CashflowEntry';
+import CashFlowTable from '@/components/CashFlowTable/CashFlowTable';
 
 const CashFlow = () => {
     return (
         <div>
             <Navbar />
-            <EntriesTable 
-                banks={[]} 
-                fetchBanks={() => {}} 
-                entries={[]} 
-                fetchEntries={() => {}} 
-                keyword="" 
-                tags={[]} 
-                selectedMonths={[]} 
-                mode="cashflow" 
-            />
+            <div className='mt-30 ml-30 mr-30'>            
+                <CashFlowTable />
+            </div>
         </div>
     );
 };

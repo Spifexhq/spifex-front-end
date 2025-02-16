@@ -1,9 +1,9 @@
 // @/pages/TestEntryPage/index.tsx
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
-import EntriesTable from '@/components/CashflowEntry/CashflowEntry';
+import EntriesTable from 'src/components/CashFlowTable/CashFlowTable';
 import { useRequests } from 'src/api/requests';
-import { ApiGetEntries } from '@/models/Entry';
+import { ApiGetEntries } from 'src/models/Entries/Entry';
 
 const TestEntryPage: React.FC = () => {
   const { getEntries } = useRequests();

@@ -7,8 +7,8 @@ export type Group = {
 };
 
 export type GroupDetail = Group & {
-  permissions: Permission[];
   banks: Bank[];
+  permissions: Permission[];
 };
 
 export type ApiGetGroups = {

@@ -1,6 +1,6 @@
 // hooks/useSettlement.ts
 import { useState } from 'react';
-import { Entry } from '@/models/Entry';
+import { Entry } from 'src/models/Entries/Entry';
 
 const useSettlement = (
   fetchEntries: () => Promise<void>,
