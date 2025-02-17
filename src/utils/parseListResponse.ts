@@ -39,7 +39,7 @@ export function parseListResponse<T>(response: unknown, arrayKey: string): T[] {
       !Array.isArray((data as Record<string, unknown>)[arrayKey])
     ) {
       throw new Error(
-        `Formato de resposta inválido ou sem "${arrayKey}": ` +
+        `Invalid or missing response format "${arrayKey}": ` +
           JSON.stringify(response)
       );
     }

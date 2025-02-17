@@ -1,0 +1,82 @@
+.checkboxContainer {
+  display: inline-flex;
+  align-items: center;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  appearance: none;
+  border: 1px solid #cbd5e1; /* exemplo de cor para o border */
+  background-color: #ffffff;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Estilo ao passar o mouse */
+.checkboxInput:hover {
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+/* Estilo ao estar marcado */
+.checkboxInput:checked {
+  background-color: #1e293b; /* cinza-escuro */
+  border-color: #1e293b;
+}
+
+/* Ícone dentro do checkbox */
+.checkIcon {
+  position: absolute;
+  color: #ffffff;
+  pointer-events: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0; /* escondido quando unchecked */
+}
+
+/* Ao estar marcado, torna ícone visível */
+.checkboxInput:checked + .checkIcon {
+  opacity: 1;
+}
+
+/* Desabilitado */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tamanhos */
+.sizeSmall {
+  width: 16px;
+  height: 16px;
+}
+
+.sizeLarge {
+  width: 24px;
+  height: 24px;
+}
+
+/* Se quiser cores customizadas, crie classes específicas */
+.defaultColor {
+  /* Pode ficar vazio ou ter alguma cor padrao */
+}
+
+.myBlueColor {
+  /* Exemplo de cor customizada */
+  border-color: #007BFF !important;
+  background-color: #E5F0FF !important;
+}
+.myBlueColor.checkboxInput:checked {
+  background-color: #007BFF !important;
+  border-color: #007BFF !important;
+}
