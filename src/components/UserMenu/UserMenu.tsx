@@ -56,7 +56,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         className="flex items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
       >
         <img alt="Settings" src="src/assets/Icons/userMenu/settings.svg" className="w-5 h-5" />
-        <span className="ml-2">Company Settings</span>
+        <span className="ml-2">Configurações da Empresa</span>
       </Link>
 
       {/* Personal Settings */}
@@ -66,7 +66,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         className="flex items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
       >
         <img alt="Personal Settings" src="src/assets/Icons/userMenu/enterprise-panel.svg" className="w-5 h-5" />
-        <span className="ml-2">Personal Settings</span>
+        <span className="ml-2">Configurações Pessoais</span>
       </Link>
 
       {/* Notification Preferences */}
@@ -75,7 +75,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
       >
         <img alt="Notifications" src="src/assets/Icons/userMenu/notifications.svg" className="w-5 h-5" />
-        <span className="ml-2">Notification Preferences</span>
+        <span className="ml-2">Notificações</span>
       </button>
 
       {/* Help Section */}
@@ -87,7 +87,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
       >
         <img alt="Help" src="src/assets/Icons/userMenu/help.svg" className="w-5 h-5" />
-        <span className="ml-2">Help</span>
+        <span className="ml-2">Ajuda</span>
       </button>
 
       {/* Logout Button */}
@@ -96,7 +96,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
       >
         <img alt="Exit" src="src/assets/Icons/userMenu/exit.svg" className="w-5 h-5" />
-        <span className="ml-2">Logout</span>
+        <span className="ml-2">Sair</span>
       </button>
     </div>
   );
