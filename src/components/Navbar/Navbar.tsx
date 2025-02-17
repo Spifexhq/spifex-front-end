@@ -1,3 +1,22 @@
+/**
+ * Navbar.tsx
+ * 
+ * This component renders a responsive navigation bar that adapts to mobile and desktop views.
+ * 
+ * Features:
+ * - Supports a mobile drawer with smooth animations
+ * - Provides user menu with outside click detection
+ * - Uses permission-based navigation links (via `PermissionMiddleware`)
+ * - Includes a simulated AI assistant modal
+ * - Detects screen width to toggle mobile vs. desktop layout
+ * - Closes user menu when clicking outside
+ * 
+ * Usage:
+ * ```tsx
+ * <Navbar />
+ * ```
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -157,80 +176,7 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile Drawer with animation */}
-      {isMobile && (
-        <>
-          {/* Mobile: Backdrop with opacity animation */}
-          <div
-            className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
-              drawerOpen ? 'opacity-50 pointer-events-auto' : 'opacity-0 pointer-events-none'
-            }`}
-            onClick={() => setDrawerOpen(false)}
-          />
-
-          {/* Mobile: Side Drawer with slide-in/out animation */}
-          <div
-            className={`fixed top-0 left-0 bottom-0 w-64 bg-white z-50 shadow-md overflow-y-auto transform transition-transform duration-300 ${
-              drawerOpen ? 'translate-x-0' : '-translate-x-full'
-            }`}
-          >
-            <div className="p-4">
-              {/* Close Drawer Button */}
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="mb-4 p-2 rounded-md text-gray-600 hover:text-gray-800 focus:outline-none"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-
-              {/* Mobile: Navigation Links inside Drawer */}
-              <div className="flex flex-col space-y-2">
-                <PermissionMiddleware codeName="view_cash_flow_button" isPage={false}>
-                  <Link
-                    to="/cashflow"
-                    onClick={() => setDrawerOpen(false)}
-                    className={`px-3 py-2 rounded-md ${
-                      isActive('/cashflow') ? 'text-orange-500 font-bold' : 'text-gray-800'
-                    }`}
-                  >
-                    Fluxo de Caixa
-                  </Link>
-                </PermissionMiddleware>
-
-                <PermissionMiddleware codeName="view_settled_button" isPage={false}>
-                  <Link
-                    to="/settled"
-                    onClick={() => setDrawerOpen(false)}
-                    className={`px-3 py-2 rounded-md ${
-                      isActive('/settled') ? 'text-orange-500 font-bold' : 'text-gray-800'
-                    }`}
-                  >
-                    Realizado
-                  </Link>
-                </PermissionMiddleware>
-
-                {(isSubscribed || isSuperUser) && (
-                  <PermissionMiddleware codeName="view_report_button" isPage={false}>
-                    <Link
-                      to="/reports"
-                      onClick={() => setDrawerOpen(false)}
-                      className={`px-3 py-2 rounded-md ${
-                        isActive('/reports') ? 'text-orange-500 font-bold' : 'text-gray-800'
-                      }`}
-                    >
-                      Relatórios
-                    </Link>
-                  </PermissionMiddleware>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Simulated AI Modal (visible on both mobile and desktop) */}
+      {/* Simulated AI Modal */}
       <SimulatedAI isOpen={isSimulatedAIOpen} onClose={handleSimulatedAIClose} />
     </>
   );

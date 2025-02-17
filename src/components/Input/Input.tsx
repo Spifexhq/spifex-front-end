@@ -1,9 +1,42 @@
+/**
+ * Input.tsx
+ * 
+ * This component renders a customizable input field with optional features such as:
+ * - Label support
+ * - Error message display
+ * - Password visibility toggle
+ * - Multiple input variants (default, outlined, filled)
+ * - Loading state
+ * 
+ * Features:
+ * - Uses `useId` to generate a unique ID for accessibility
+ * - Dynamically applies styles based on the input type and variant
+ * - Supports a password visibility toggle when `showTogglePassword` is enabled
+ * - Handles loading and disabled states
+ * 
+ * Usage:
+ * ```tsx
+ * <Input label="Username" placeholder="Enter your name" />
+ * <Input type="password" label="Password" showTogglePassword />
+ * <Input variant="outlined" errorMessage="This field is required" />
+ * ```
+ */
+
 import React, { useId, useState } from 'react';
 import styles from './Input.module.css';
 import { InputProps } from './Input.types';
 import classNames from 'classnames';
 
-const Input: React.FC<InputProps> = ({ variant = 'default', label, errorMessage, style, showTogglePassword = false, type = 'text', isLoading = false, ...rest }) => {
+const Input: React.FC<InputProps> = ({ 
+  variant = 'default', 
+  label, 
+  errorMessage, 
+  style, 
+  showTogglePassword = false, 
+  type = 'text', 
+  isLoading = false, 
+  ...rest 
+}) => {
   const id = useId();  // Generates a unique ID to link the label to the input field
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);  // Manages the visibility state of the password
 

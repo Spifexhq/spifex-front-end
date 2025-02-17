@@ -1,3 +1,23 @@
+/**
+ * Snackbar.tsx
+ * 
+ * This component renders a temporary notification (Snackbar) using React portals.
+ * 
+ * Features:
+ * - Supports automatic dismissal (`autoHideDuration`)
+ * - Uses CSS animations for smooth fade-in/out effects
+ * - Closes on timeout or when the `onClose` function is called
+ * - Uses React portals to render in `document.body`
+ * - Accepts children content (typically an `Alert` component)
+ * 
+ * Usage:
+ * ```tsx
+ * <Snackbar open={true} autoHideDuration={3000} onClose={handleClose}>
+ *   <Alert severity="success">Operation successful!</Alert>
+ * </Snackbar>
+ * ```
+ */
+
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./Snackbar.module.css";
@@ -16,7 +36,7 @@ const Snackbar: React.FC<SnackbarProps> = ({
     if (open) {
       setVisible(true);
     } else {
-      const timer = setTimeout(() => setVisible(false), 300); // Fade-out delay
+      const timer = setTimeout(() => setVisible(false), 300);
       return () => clearTimeout(timer);
     }
   }, [open]);

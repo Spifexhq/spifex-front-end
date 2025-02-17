@@ -1,6 +1,17 @@
-@import "tailwindcss";
+/**
+ * Input.module.css
+ * 
+ * This file defines the styles for the Input component.
+ * 
+ * Features:
+ * - Supports multiple input styles: default, outlined, filled
+ * - Provides error handling with visual feedback
+ * - Includes a toggle button for password visibility
+ * - Applies smooth transitions for better UX
+ * - Ensures accessibility and usability
+ */
 
-.inputContainer {
+ .inputContainer {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -36,6 +47,7 @@ select:not(:disabled):hover {
   background-color: #e4e4e4;
 }
 
+/* Input Variants */
 .default {
   background-color: white;
 }
@@ -49,6 +61,7 @@ select:not(:disabled):hover {
   border: none;
 }
 
+/* Error State */
 .error {
   border-color: #ef4444;
 }
@@ -58,6 +71,7 @@ select:not(:disabled):hover {
   font-size: 12px;
 }
 
+/* Wrapper for custom elements */
 .inputWrapper {
   position: relative;
 }
@@ -67,6 +81,7 @@ select:not(:disabled):hover {
   padding-right: 40px;
 }
 
+/* Toggle Password Visibility Button */
 .togglePasswordButton {
   position: absolute;
   right: 10px;
@@ -83,7 +98,8 @@ select:not(:disabled):hover {
   pointer-events: all;
 }
 
-.togglePasswordButton img, .togglePasswordButton svg {
+.togglePasswordButton img, 
+.togglePasswordButton svg {
   pointer-events: none;
   -webkit-user-drag: none;
 }

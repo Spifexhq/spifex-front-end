@@ -1,6 +1,14 @@
-/* Button.module.css */
-
-@import "tailwindcss";
+/**
+ * Button.module.css
+ * 
+ * This file defines the styles for the Button component.
+ * 
+ * Features:
+ * - Supports different button styles, starting with "primary"
+ * - Uses CSS variables for color customization
+ * - Includes hover, active, and disabled states for better UX
+ * - Applies flexbox for proper alignment and spacing
+ */
 
 .button {
     display: flex;
@@ -10,7 +18,7 @@
     font-size: 16px;
     cursor: pointer;
     border-radius: 15px;
-  }
+}
 
 .primary {
     background-color: var(--accentPrimary);
@@ -29,4 +37,3 @@
     background-color: var(--accentPrimaryDisabled);
     cursor: not-allowed;
 }
-

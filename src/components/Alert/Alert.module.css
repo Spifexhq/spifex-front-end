@@ -1,3 +1,15 @@
+/**
+ * Alert.module.css
+ * 
+ * This file defines the styles for the Alert component.
+ * 
+ * Features:
+ * - Provides different styles for each severity level (success, error, warning, info)
+ * - Uses a left border to indicate the alert type
+ * - Applies a shadow for better visibility
+ * - Supports a flexible design with a rounded border
+ */
+
 .alert {
     display: flex;
     align-items: center;
@@ -6,25 +18,24 @@
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     border-left: 4px solid;
     color: white;
-  }
+}
   
-  .success {
+.success {
     background-color: #28a745;
     border-color: #1e7e34;
-  }
+}
   
-  .error {
+.error {
     background-color: #dc3545;
     border-color: #a71d2a;
-  }
+}
   
-  .warning {
+.warning {
     background-color: #ffc107;
     border-color: #d39e00;
-  }
+}
   
-  .info {
+.info {
     background-color: #007bff;
     border-color: #0056b3;
-  }
-  
+}

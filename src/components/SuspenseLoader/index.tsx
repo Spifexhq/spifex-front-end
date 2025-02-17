@@ -5,9 +5,10 @@ import './styles.css';
 type Props = {
     noLoadNp?: boolean;
     noLoadProgress?: boolean;
+    className?: string;
 };
 
-const SuspenseLoader = ({ noLoadNp = false, noLoadProgress = false }: Props) => {
+const SuspenseLoader = ({ noLoadNp = false, noLoadProgress = false, className }: Props) => {
     useEffect(() => {
         if (!noLoadNp) {
             NProgress.start();
@@ -20,19 +21,10 @@ const SuspenseLoader = ({ noLoadNp = false, noLoadProgress = false }: Props) => 
 
     return (
         <div
-            style={{
-                position: 'fixed',
-                left: 0,
-                top: 0,
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}
+            className="fixed inset-0 flex items-center justify-center"
         >
             {!noLoadProgress && (
-                <div className="SuspenseLoader-cubes">
+                <div className={`SuspenseLoader-cubes ${className ?? "w-15 h-15"}`}>
                     <div className="sk-cube sk-cube1"></div>
                     <div className="sk-cube sk-cube2"></div>
                     <div className="sk-cube sk-cube3"></div>
