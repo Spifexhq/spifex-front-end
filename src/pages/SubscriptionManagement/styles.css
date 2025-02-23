@@ -1,0 +1,148 @@
+/* Main container for subscription management */
+.subscription-management {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+}
+
+/* Main title */
+.subscription-management__title {
+  font-size: 24px;
+  color: var(--black);
+  text-align: center;
+}
+
+/* Subscription management content */
+.subscription-management__content {
+  background-color: var(--white);
+  border-radius: 10px;
+  border: var(--border1);
+  padding: 20px;
+  max-width: 350px;
+  margin: 20px;
+  text-align: center;
+}
+
+/* Subtitle within the content */
+.subscription-management__subtitle,
+.subscription-management__text {
+  font-size: 14px;
+  color: var(--black);
+  margin-bottom: 40px;
+}
+
+/* List of plans */
+.subscription-management__plans-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Plan list items */
+.plans-list__item {
+  margin-bottom: 15px;
+}
+
+/* Plan button */
+.item__button {
+  width: 100%;
+  padding: 15px;
+  border: var(--border1);
+  background-color: var(--accentPrimary);
+  color: var(--white);
+  font-size: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Hover effect on button */
+.item__button:hover {
+  background-color: var(--accentPrimaryHover);
+}
+
+/* Disabled button or current plan */
+.item__button:disabled,
+.item__button.current-plan {
+  background-color: var(--white);
+  border: var(--border1);
+  color: var(--black);
+  cursor: not-allowed;
+}
+
+/* Actions container within the content */
+.subscription-management__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  font-size: 12px;
+}
+
+/* Confirmation modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+/* Modal content */
+.modal__content {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+}
+
+/* Modal title */
+.modal__title {
+  margin-bottom: 16px;
+  font-size: 24px;
+  color: var(--black);
+}
+
+/* Modal description */
+.modal__description {
+  font-size: 14px;
+  color: var(--color4);
+}
+
+/* Actions within the modal */
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  gap: 10px;
+}
+
+/* Button within the modal */
+.modal__cancel-button {
+  margin-left: 0.5rem;
+  padding: 10px 20px;
+  border: none;
+  background-color: #4f4f4f;
+  color: #f0f0f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal__cancel-button:hover {
+  background-color: #6f6f6f;
+}
+
+.modal__loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
