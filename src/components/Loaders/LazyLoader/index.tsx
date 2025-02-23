@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import SuspenseLoader from "@/components/SuspenseLoader";
+import { SuspenseLoader } from "@/components/Loaders";
 
 const Loader = (Component: React.ComponentType) => (props: object) => (
     <Suspense fallback={<SuspenseLoader />}>

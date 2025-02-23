@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import SuspenseLoader from "@/components/SuspenseLoader";
+import { SuspenseLoader } from "@/components/Loaders";
 
 type Props = {
   children: ReactNode;
