@@ -103,7 +103,7 @@ const EnterprisePanel: React.FC = () => {
           {isOwner ? (
             <>
               <div className="enterprise-panel__actions">
-                <Button style={{ borderRadius: "5px" }} className="btn btn--edit" onClick={handleOpenModal}>
+                <Button className="btn btn--link" onClick={handleOpenModal}>
                   Editar
                 </Button>
               </div>
