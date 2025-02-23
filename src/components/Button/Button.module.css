@@ -14,7 +14,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
     border-radius: 15px;
@@ -53,5 +52,24 @@
 
 .secondary:disabled {
     background-color: var(--accentSecondaryDisabled);
+    cursor: not-allowed;
+}
+
+.common {
+    border: var(--border1);
+    background-color: var(--accentCommon);
+    color: var(--black);
+}
+
+.common:hover {
+    background-color: var(--accentCommonHover);
+}
+
+.common:active {
+    background-color: var(--accentCommonPressed);
+}
+
+.common:disabled {
+    background-color: var(--accentCommonDisabled);
     cursor: not-allowed;
 }
