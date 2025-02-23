@@ -1,0 +1,27 @@
+.payment-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 40px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: var(--main-color);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+}
+
+.payment-button:disabled {
+  cursor: not-allowed;
+  background-color: gray;
+}
+
+.payment-button:hover:not(:disabled) {
+  background-color: var(--main-color-hover);
+}
+
+.payment-button.active-plan {
+  background-color: var(--color4);
+  cursor: not-allowed;
+}
