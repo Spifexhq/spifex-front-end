@@ -37,3 +37,21 @@
     background-color: var(--accentPrimaryDisabled);
     cursor: not-allowed;
 }
+
+.secondary {
+    background-color: var(--accentSecondary);
+    color: white;
+}
+
+.secondary:hover {
+    background-color: var(--accentSecondaryHover);
+}
+
+.secondary:active {
+    background-color: var(--accentSecondaryPressed);
+}
+
+.secondary:disabled {
+    background-color: var(--accentSecondaryDisabled);
+    cursor: not-allowed;
+}

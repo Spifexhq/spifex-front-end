@@ -12,7 +12,10 @@
   --accentPrimaryHover: #f4883a;
   --accentPrimaryPressed: #F36127;
   --accentPrimaryDisabled: #eb9d7e;
-  --secondary-color: #9BE7E2;
+  --accentSecondary: #9BE7E2;
+  --accentSecondaryHover: #b2e7e3;
+  --accentSecondaryPressed: #72e7dd;
+  --accentSecondaryDisabled: #cfe6e4;
   --white: #ffffff;
   --black: #202020;
   --color1: #f2f2f2;
