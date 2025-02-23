@@ -1,36 +1,7 @@
 import React, { useState } from 'react';
+import { FormData, ModalFormProps, Tab } from "./Modal.types";
+import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
 import './styles.css';
-
-interface FormData {
-  details: {
-    dueDate: string;
-    description: string;
-    observation: string;
-    amount: string;
-    accountingAccount: string;
-    documentType: string;
-    notes: string;
-  };
-  costCenters: {
-    departments: string[];
-    department_percentage: string[];
-    projects: string;
-  };
-  inventory: {
-    product: string;
-    quantity: string;
-  };
-  participants: {
-    entityType: string;
-    entity: string;
-  };
-  recurrence: {
-    recurrence: string;
-    installments: string;
-    periods: string;
-    weekend: string;
-  };
-}
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -64,13 +35,6 @@ const initialFormData: FormData = {
   }
 };
 
-interface ModalFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-type Tab = 'details' | 'costCenters' | 'inventory' | 'participants' | 'recurrence';
-
 const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
   // State for active tab and form data (fields persist between tabs)
   const [activeTab, setActiveTab] = useState<Tab>('details');
@@ -81,57 +45,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
     setFormData(initialFormData);
     setActiveTab('details');
     onClose();
-  };
-
-  const formatCurrency = (amount: string): string => {
-    const numeric = parseInt(amount, 10) || 0;
-    // Divide by 100 to get the value in reais and format with two decimal places
-    const formatted = (numeric / 100).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    return `R$ ${formatted}`;
-  };
-
-  // Handler for keystrokes in value input
-  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const current = formData.details.amount || "0";
-    // If it is a digit (0 to 9)
-    if (/^\d$/.test(e.key)) {
-      e.preventDefault();
-      const newAmount = parseInt(current, 10) * 10 + parseInt(e.key, 10);
-      setFormData({
-        ...formData,
-        details: {
-          ...formData.details,
-          amount: newAmount.toString(),
-        },
-      });
-    }
-    // If it is Backspace, remove the last digit (dividing by 10 and rounding down)
-    else if (e.key === "Backspace") {
-      e.preventDefault();
-      const newAmount = Math.floor(parseInt(current, 10) / 10);
-      setFormData({
-        ...formData,
-        details: {
-          ...formData.details,
-          amount: newAmount.toString(),
-        },
-      });
-    }
-    // Allows Tab and arrows for navigation
-    else if (
-      e.key === "Tab" ||
-      e.key === "ArrowLeft" ||
-      e.key === "ArrowRight"
-    ) {
-      // Does not prevent
-    }
-    // Prevents other keys
-    else {
-      e.preventDefault();
-    }
   };
 
   // -------------------------------
@@ -153,17 +66,8 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
 
   // Called when the departments dropdown value changes
   const handleDepartmentChange = (updatedDepartments: string[]) => {
-    const departmentCount = updatedDepartments.length;
-    const basePercentage = departmentCount > 0 ? (100 / departmentCount).toFixed(2) : "0";
-    const updatedPercentages = Array(departmentCount).fill(basePercentage);
-    const total = updatedPercentages.reduce((sum, value) => sum + parseFloat(value), 0);
-    const difference = (100 - total).toFixed(2);
-    if (departmentCount > 0) {
-      // Adjust the last percentage so that the total becomes 100%
-      updatedPercentages[departmentCount - 1] = (
-        parseFloat(updatedPercentages[departmentCount - 1]) + parseFloat(difference)
-      ).toFixed(2);
-    }
+    const updatedPercentages = distributePercentages(updatedDepartments);
+
     setFormData({
       ...formData,
       costCenters: {
@@ -250,7 +154,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
                 // Displays the formatted value (for example: "R$ 0.00")
                 value={formatCurrency(formData.details.amount)}
                 // Handles digit input and backspace
-                onKeyDown={handleAmountKeyDown}
+                onKeyDown={(e) => handleAmountKeyDown(e, formData.details.amount, setFormData)}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
               />
             </div>
