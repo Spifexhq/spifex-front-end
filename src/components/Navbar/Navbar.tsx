@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Top fixed Navbar */}
-      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left section: Mobile Menu Button + Logo */}
@@ -151,7 +151,7 @@ const Navbar: React.FC = () => {
           ref={drawerRef}
           className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-gray-200 transform ${
             drawerOpen ? 'translate-x-0' : '-translate-x-full'
-          } transition-transform duration-300 z-50`}
+          } transition-transform duration-300 z-100`}
         >
           <div className="flex flex-col h-full p-4">
             <button
