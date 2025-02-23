@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Bank } from '@/models/Bank';
-import { useRequests } from 'src/api/requests';
+import { useRequests } from '@/api/requests';
 
 export const useFetchBanks = () => {
   const [banks, setBanks] = useState<Bank[]>([]);

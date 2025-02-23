@@ -22,7 +22,7 @@ import React from 'react';
 import styles from './Button.module.css';
 import { ButtonProps } from './Button.types';
 import classNames from 'classnames';
-import InlineLoader from '@/components/InlineLoader';
+import { InlineLoader } from '@/components/Loaders';
 
 const Button: React.FC<ButtonProps> = ({ 
   variant = 'primary', 

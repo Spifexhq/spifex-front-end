@@ -1,9 +1,9 @@
 import { apiRequest } from '@/api';
 
-import { ApiGetEntriesResponse, ApiGetEntryResponse } from 'src/models/Entries/Entry';
-import { AddEntryPayload, EditEntryPayload } from 'src/models/Entries/EntryPayload';
-import { ApiGetSettledEntriesResponse, ApiGetSettledEntryResponse } from 'src/models/Entries/SettledEntry';
-import { EditSettledEntryPayload } from 'src/models/Entries/SettledEntryPayload';
+import { ApiGetEntriesResponse, ApiGetEntryResponse } from '@/models/Entries/Entry';
+import { AddEntryPayload, EditEntryPayload } from '@/models/Entries/EntryPayload';
+import { ApiGetSettledEntriesResponse, ApiGetSettledEntryResponse } from '@/models/Entries/SettledEntry';
+import { EditSettledEntryPayload } from '@/models/Entries/SettledEntryPayload';
 
 import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription } from '@/models/Auth';
 import { ApiGetEnterprise, Owner } from '@/models/Enterprise';

@@ -2,8 +2,8 @@ import { useState, useEffect, FC, ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { useAuth } from '@/api';
-import { AuthMiddleware } from 'src/middlewares';
-import SuspenseLoader from '@/components/SuspenseLoader';
+import { AuthMiddleware } from '@/middlewares';
+import { SuspenseLoader } from '@/components/Loaders';
 
 interface SpifexLayoutProps {
     children?: ReactNode;
