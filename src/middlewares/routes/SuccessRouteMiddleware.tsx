@@ -6,7 +6,7 @@ interface Props {
     children: React.ReactElement;
 }
 
-export const SuccessRouteMiddleware: React.FC<Props> = ({ children }) => { // 🔹 Agora é named export
+export const SuccessRouteMiddleware: React.FC<Props> = ({ children }) => {
     const { isSubscribed, isLogged, isOwner } = useAuthContext();
     const location = useLocation();
 

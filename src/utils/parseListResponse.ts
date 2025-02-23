@@ -1,15 +1,15 @@
-// src/utils/parseListResponse.ts
+// @/utils/parseListResponse.ts
 
 /**
- * Recebe a resposta crua da API, uma chave ("entries", "settled_entries", etc.)
- * e retorna um array do tipo definido em T.
+ * Receives the raw response from the API, a key ("entries", "settled_entries", etc.)
+ * and returns an array of the type defined in T.
  *
- * Se houver "detail" com mensagem, lança Erro.
- * Se houver "data", desembalar. 
- * Se a chave não existir ou não for Array, lança Erro.
+ * If there is "detail" with message, throws Error.
+ * If there is "date", unpack. 
+ * If the key does not exist or is not an Array, it throws Error.
  */
 export function parseListResponse<T>(response: unknown, arrayKey: string): T[] {
-    // 1) Verifica se é objeto não-nulo com detail preenchido
+    // 1) Checks if it is a non-null object with detail filled in
     if (
       typeof response === 'object' &&
       response !== null &&
@@ -20,7 +20,7 @@ export function parseListResponse<T>(response: unknown, arrayKey: string): T[] {
       throw new Error((response as { detail: string }).detail);
     }
   
-    // 2) Tenta extrair "data" se existir
+    // 2) Try to extract "data" if it exists
     let data: unknown = response;
     if (
       typeof response === 'object' &&
@@ -31,7 +31,7 @@ export function parseListResponse<T>(response: unknown, arrayKey: string): T[] {
       data = (response as { data: unknown }).data;
     }
   
-    // 3) Confere se "data" é objeto, não-nulo, tem a chave `arrayKey` e se é um array
+    // 3) Checks if "data" is an object, non-null, has the key `arrayKey` and if it is an array
     if (
       typeof data !== 'object' ||
       data === null ||
@@ -44,7 +44,7 @@ export function parseListResponse<T>(response: unknown, arrayKey: string): T[] {
       );
     }
   
-    // 4) Retorna o array do tipo <T>
+    // 4) Returns the array of type <T>
     return (data as Record<string, T[]>)[arrayKey];
   }
   
