@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/api";
 import Snackbar from "@/components/Snackbar";
@@ -8,18 +8,22 @@ import Input from "@/components/Input";
 import './styles.css';
 
 const SignIn = () => {
-    const navigate = useNavigate(); // Hook to programmatically navigate between routes
+    const navigate = useNavigate();
+    const { handleSignIn } = useAuth();
 
     // State variables to manage form inputs and feedback messages
-    const [snackBarMessage, setSnackBarMessage] = useState("");
     const [emailInput, setEmailInput] = useState('');
     const [passwordInput, setPasswordInput] = useState('');
+    
+    // State to manage loading and feedback messages
+    const isFormIncomplete = !emailInput || !passwordInput;
     const [isLoading, setIsLoading] = useState(false);
-
-    const { handleSignIn } = useAuth(); // Custom hook for authentication
+    const [snackBarMessage, setSnackBarMessage] = useState("");
 
     // Function to handle sign-in button click
-    const handleSignInBtn = async () => {
+    const handleSignInBtn = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault(); // Prevent default form submission behavior
+
         // Validate if both email and password fields are filled
         if (emailInput === "" || passwordInput === "") {
           setSnackBarMessage("Preencha todos os campos");
@@ -37,6 +41,12 @@ const SignIn = () => {
             setIsLoading(false);
           }
         };
+
+    // Function to handle form submit
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        handleSignInBtn({ preventDefault: () => {} } as React.MouseEvent<HTMLButtonElement>);
+    };
 
     return (
         <div className="sign-in">
@@ -62,7 +72,7 @@ const SignIn = () => {
                         </div>
 
                         {/* Sign-in form */}
-                        <form className="sign-in__form">
+                        <form className="sign-in__form" onSubmit={handleSubmit}>
                             <Input 
                                 label="Email" 
                                 placeholder="Digite seu email" 
@@ -86,9 +96,10 @@ const SignIn = () => {
                             <div className="sign-in__button-wrapper">
                                 <Button
                                     variant="primary"
-                                    onClick={handleSignInBtn}
+                                    type="submit"
                                     loaderColor="#FFFFFF"
                                     isLoading={isLoading}
+                                    disabled={isFormIncomplete || isLoading}
                                     style={{height: "50px", width: "100%"}}
                                 >
                                     Entrar
