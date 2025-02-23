@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormData, ModalFormProps, Tab } from "./Modal.types";
 import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
-import './styles.css';
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -39,13 +38,45 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
   // State for active tab and form data (fields persist between tabs)
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const descriptionRef = useRef<HTMLInputElement>(null);
 
   // When closing the modal, reset the form data and active tab
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setFormData(initialFormData);
     setActiveTab('details');
     onClose();
-  };
+  }, [onClose]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+    }
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleClose]);
+
+  // Fill in today's date and focus on the description field when opening
+  useEffect(() => {
+    if (isOpen) {
+      const today = new Date().toISOString().split("T")[0];
+      setFormData((prev) => ({
+        ...prev,
+        details: { ...prev.details, dueDate: today },
+      }));
+
+      setTimeout(() => {
+        descriptionRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
   // -------------------------------
   // COST CENTERS TAB LOGIC
@@ -110,6 +141,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
                 Descrição
               </label>
               <input
+                ref={descriptionRef}
                 id="description"
                 type="text"
                 placeholder="Digite a descrição"
@@ -520,7 +552,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-50">
       <div className="relative bg-white text-[#202020] rounded-lg shadow-xl w-[85%] h-[80%]">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b">
