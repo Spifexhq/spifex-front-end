@@ -70,6 +70,7 @@ const Input: React.FC<InputProps> = ({
             onClick={togglePasswordVisibility}
             className={styles.togglePasswordButton}
             disabled={isLoading}
+            tabIndex={-1}
           >
             {/* Displays different icons based on password visibility */}
             {isPasswordVisible ? (
