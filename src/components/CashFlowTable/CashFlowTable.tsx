@@ -1,17 +1,18 @@
 /**
  * CashFlowTable.tsx
- * 
+ *
  * This component renders a table displaying cash flow entries.
  * It fetches data from an API, sorts entries by due date (ascending),
  * and calculates a running balance.
- * 
+ *
  * Features:
  * - Fetches and parses financial entries
  * - Orders entries by due date (earliest first)
  * - Allows multi-selection with Shift key support
  * - Calculates and displays a cumulative balance
  * - Displays positive amounts for "credit" transactions and negative for "debit"
- * 
+ * - Inserts a monthly summary row after the last entry of each month
+ *
  * Dependencies:
  * - useRequests: API hook for fetching data
  * - useShiftSelect: Custom hook for multi-selection logic
@@ -21,11 +22,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRequests } from '@/api/requests';
 
-import { Entry } from 'src/models/Entries/Entry';
+import { Entry } from '@/models/Entries/Entry';
 import { parseListResponse } from '@/utils/parseListResponse';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
 
-import InlineLoader from '../InlineLoader';
+import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';
 
 const CashFlowTable: React.FC = () => {
@@ -33,16 +34,29 @@ const CashFlowTable: React.FC = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [runningBalance, setRunningBalance] = useState<number[]>([]);
+
+  // This state will hold an array of "render rows", which can be either
+  // a normal entry or a monthly summary row.
+  const [tableRows, setTableRows] = useState<
+    Array<{
+      isSummary: boolean;
+      entry?: Entry;
+      monthlySum?: number;
+      runningBalance?: number;
+      displayMonth?: string;
+    }>
+  >([]);
 
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
 
+  // Fetch and sort entries
   useEffect(() => {
     async function fetchEntries() {
       try {
         const response = await getEntries();
         const parsed = parseListResponse<Entry>(response, 'entries');
 
+        // Sort entries by due date (ascending)
         const sortedEntries = parsed.sort((a, b) => {
           return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
         });
@@ -60,17 +74,80 @@ const CashFlowTable: React.FC = () => {
     fetchEntries();
   }, [getEntries]);
 
-  // Calculate the balance for the table
+  /**
+   * Build table rows, grouping by month. After each month's entries, 
+   * insert a summary row that shows the monthly total and the running balance 
+   * at the end of that month.
+   */
   useEffect(() => {
-    let balance = 0;
-    const updatedRunningBalance = entries.map((entry) => {
+    if (!entries.length) {
+      setTableRows([]);
+      return;
+    }
+
+    let currentMonth = '';
+    let monthlySum = 0;
+    let runningBalance = 0;
+
+    const newTableRows: Array<{
+      isSummary: boolean;
+      entry?: Entry;
+      monthlySum?: number;
+      runningBalance?: number;
+      displayMonth?: string;
+    }> = [];
+
+    // Format the date as mm/yyyy (e.g., "01/2025")
+    const getMonthYear = (dateStr: string) => {
+      const date = new Date(dateStr);
+      const m = (date.getMonth() + 1).toString().padStart(2, '0');
+      const y = date.getFullYear();
+      return `${m}/${y}`;
+    };
+
+    entries.forEach((entry, index) => {
       const amount = parseFloat(entry.amount);
       const transactionValue = entry.transaction_type === 'credit' ? amount : -amount;
-      balance += transactionValue;
-      return balance;
+      const entryMonth = getMonthYear(entry.due_date);
+
+      // If we moved to a new month, push the previous month's summary row
+      if (currentMonth && currentMonth !== entryMonth) {
+        newTableRows.push({
+          isSummary: true,
+          monthlySum,
+          runningBalance,
+          displayMonth: currentMonth,
+        });
+        monthlySum = 0;
+      }
+
+      // Update current month if needed
+      if (!currentMonth || currentMonth !== entryMonth) {
+        currentMonth = entryMonth;
+      }
+
+      monthlySum += transactionValue;
+      runningBalance += transactionValue;
+
+      // Push the entry as a normal row
+      newTableRows.push({
+        isSummary: false,
+        entry,
+        runningBalance,
+      });
+
+      // Push final summary row at the end of entries
+      if (index === entries.length - 1) {
+        newTableRows.push({
+          isSummary: true,
+          monthlySum,
+          runningBalance,
+          displayMonth: currentMonth,
+        });
+      }
     });
 
-    setRunningBalance(updatedRunningBalance);
+    setTableRows(newTableRows);
   }, [entries]);
 
   if (loading) return <InlineLoader color="orange" className="w-10 h-10" />;
@@ -78,69 +155,106 @@ const CashFlowTable: React.FC = () => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-t-2xl">
+        <thead className="bg-gray-100 rounded-t-2xl">
           <tr>
             {/* Select All Checkbox */}
             <th className="px-4 py-3 text-center">
               <div className="flex justify-center items-center h-full">
                 <Checkbox
-                  checked={selectedIds.length === entries.length && entries.length > 0}
+                  checked={
+                    // Compare selectedIds with the count of normal entry rows
+                    selectedIds.length === entries.length && entries.length > 0
+                  }
                   onClick={() => handleSelectAll()}
                 />
               </div>
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Data de Vencimento
+              Due Date
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Descrição
+              Description
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Observação
+              Observation
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Parcela
+              Installment
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Valor
+              Amount
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Saldo
+              Balance
             </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {entries.map((entry, index) => {
-            const isSelected = selectedIds.includes(entry.id);
-            const amount = parseFloat(entry.amount);
-            const balance = runningBalance[index] || 0;
+          {tableRows.map((row, index) => {
+            if (!row.isSummary && row.entry) {
+              // Normal entry row
+              const entry = row.entry;
+              const isSelected = selectedIds.includes(entry.id);
+              const amount = parseFloat(entry.amount);
+              const value = entry.transaction_type === 'debit' ? -amount : amount;
+              const balance = row.runningBalance || 0;
 
+              return (
+                <tr key={entry.id} className="hover:bg-gray-50">
+                  <td className="flex justify-center items-center px-4 py-4">
+                    {/* Checkbox for each entry */}
+                    <Checkbox
+                      checked={isSelected}
+                      onClick={(e) => handleSelectRow(entry.id, e)}
+                    />
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    {entry.due_date}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{entry.description}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {entry.observation || '-'}
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    {`${entry.current_installment}/${entry.total_installments}`}
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    {value.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <span className={balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      {balance >= 0 ? '+' : ''}
+                      {balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
+                  </td>
+                </tr>
+              );
+            }
+
+            // Monthly summary row with a smaller height (using reduced padding)
+            const { monthlySum = 0, runningBalance = 0, displayMonth } = row;
             return (
-              <tr key={entry.id} className="hover:bg-gray-50">
-                <td className="flex justify-center items-center px-4 py-4">
-                  {/* Checkbox for each line */}
-                  <Checkbox
-                    checked={isSelected}
-                    onClick={(e) => handleSelectRow(entry.id, e)}
-                  />
+              <tr key={`summary-${index}`} className="bg-gray-100 text-sm">
+                <td colSpan={5} className="px-4 py-1 font-semibold text-left">
+                  {displayMonth}
                 </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">{entry.due_date}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{entry.description}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{entry.observation || '-'}</td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  {`${entry.current_installment}/${entry.total_installments}`}
-                </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  {(entry.transaction_type === 'debit' ? -amount : amount).toLocaleString('pt-BR', { 
-                    style: 'currency', 
-                    currency: 'BRL' 
+                <td colSpan={1} className="px-6 py-1 text-center font-semibold whitespace-nowrap">
+                  {monthlySum.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
                   })}
                 </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap font-semibold">
-                  <span className={balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    {balance >= 0 ? '+' : ''}
-                    {balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                <td className="px-6 py-1 text-center font-semibold whitespace-nowrap">
+                  <span className={runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    {runningBalance >= 0 ? '+' : ''}
+                    {runningBalance.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
                   </span>
                 </td>
               </tr>
