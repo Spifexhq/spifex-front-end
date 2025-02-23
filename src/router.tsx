@@ -4,16 +4,22 @@ import { Navigate } from 'react-router-dom';
 
 import BaseLayout from "./layouts/BaseLayout";
 import SpifexLayout from "./layouts/SpifexLayout";
-import Loader from "@/utils/loader";
+import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
 import { PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
-import CashFlow from "./pages/CashFlow/CashFlow";
 
 // Auth Pages
 const SignUp = Loader(lazy(() => import("@/pages/Auth/SignUp")));
 const SignIn = Loader(lazy(() => import("@/pages/Auth/SignIn")));
+const SignUpRedirect = Loader(lazy(() => import("@/pages/Auth/SignUpRedirect")));
 const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerification")));
+
+// Pages
+const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
+const Reports = Loader(lazy(() => import("@/pages/Reports")));
+const Enterprise = Loader(lazy(() => import("@/pages/EnterprisePanel")));
+const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
 
 // Status Pages
 const PurchaseConfirmation = Loader(lazy(() => import("@/pages/Status/PurchaseConfirmation")));
@@ -47,6 +53,10 @@ const routes: RouteObject[] = [
                 element: <SignIn />
             },
             {
+                path: '/signup/redirect/:token',
+                element: <SignUpRedirect />
+            },
+            {
                 path: 'verify-email/:uidb64/:token/',
                 element: <EmailVerification />
             },
@@ -69,6 +79,31 @@ const routes: RouteObject[] = [
                     </PermissionMiddleware>
                 )
             },
+            // Reports
+            {
+                path: 'reports',
+                element: (
+                    <SubscriptionMiddleware redirectTo="/settings">
+                        <PermissionMiddleware codeName="view_report_button" redirectTo={'/settings'}>
+                            <Reports />
+                        </PermissionMiddleware>
+                    </SubscriptionMiddleware>
+                )
+            },
+            // Enterprise
+            {
+                path: 'enterprise',
+                element: <Enterprise />
+            },
+            {
+                path: 'subscription-management',
+                element: (
+                    <OwnerRoute>
+                        <SubscriptionManagement />
+                    </OwnerRoute>
+                ),
+            },
+            // Status
             {
                 path: 'status',
                 children: [
