@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <nav
       ref={sidebarRef}
       aria-label="Sidebar de Navegação"
-      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white flex flex-col transition-all duration-300 border-r border-gray-200
+      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-10000 bg-white flex flex-col transition-all duration-300 border-r border-gray-200
         ${isOpen ? 'w-60' : 'w-16'}
         overflow-hidden`}
     >
