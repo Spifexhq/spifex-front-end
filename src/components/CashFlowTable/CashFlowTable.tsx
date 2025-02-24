@@ -28,6 +28,7 @@ import { useShiftSelect } from '@/hooks/useShiftSelect';
 
 import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';
+import Button from '../Button';
 
 const CashFlowTable: React.FC = () => {
   const { getEntries } = useRequests();
@@ -159,7 +160,7 @@ const CashFlowTable: React.FC = () => {
         <thead className="bg-gray-100 rounded-t-2xl">
           <tr>
             {/* Select All Checkbox */}
-            <th className="px-4 py-3 text-center">
+            <th className="w-[5%] px-3 py-3 text-center">
               <div className="flex justify-center items-center h-full">
                 <Checkbox
                   checked={
@@ -170,23 +171,25 @@ const CashFlowTable: React.FC = () => {
                 />
               </div>
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Due Date
+            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Vencimento
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Description
+            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Descrição
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Observation
+            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Observação
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Installment
+            <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Parcela
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Amount
+            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Valor
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Balance
+            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Saldo
+            </th>
+            <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
             </th>
           </tr>
         </thead>
@@ -201,35 +204,42 @@ const CashFlowTable: React.FC = () => {
               const balance = row.runningBalance || 0;
 
               return (
-                <tr key={entry.id} className="hover:bg-gray-50">
-                  <td className="flex justify-center items-center px-4 py-4">
-                    {/* Checkbox for each entry */}
+                <tr key={entry.id} className="hover:bg-gray-50 text-[14px]">
+                  <td className="w-[5%] px-3 py-2 text-center align-middle">
                     <Checkbox
                       checked={isSelected}
                       onClick={(e) => handleSelectRow(entry.id, e)}
                     />
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <td className="px-3 py-2 text-center whitespace-nowrap">
                     {entry.due_date}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{entry.description}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap">{entry.description}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
                     {entry.observation || '-'}
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <td className="px-3 py-2 text-center whitespace-nowrap">
                     {`${entry.current_installment}/${entry.total_installments}`}
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <td className="px-3 py-2 text-center whitespace-nowrap">
                     {value.toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
-                    <span className={balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      {balance >= 0 ? '+' : ''}
+                  <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <span>
                       {balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <Button variant='common' style={{ padding: "10px", borderRadius: "8px" }}>
+                      <img
+                        alt="Editar"
+                        height={12} width={12}
+                        src="src/assets/Icons/tools/edit.svg"
+                      />
+                    </Button>
                   </td>
                 </tr>
               );
@@ -238,17 +248,17 @@ const CashFlowTable: React.FC = () => {
             // Monthly summary row with a smaller height (using reduced padding)
             const { monthlySum = 0, runningBalance = 0, displayMonth } = row;
             return (
-              <tr key={`summary-${index}`} className="bg-gray-100 text-sm">
+              <tr key={`summary-${index}`} className="bg-gray-100 text-[10px]">
                 <td colSpan={5} className="px-4 py-1 font-semibold text-left">
                   {displayMonth}
                 </td>
-                <td colSpan={1} className="px-6 py-1 text-center font-semibold whitespace-nowrap">
+                <td colSpan={1} className="px-3 py-1 text-center font-semibold whitespace-nowrap">
                   {monthlySum.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL',
                   })}
                 </td>
-                <td className="px-6 py-1 text-center font-semibold whitespace-nowrap">
+                <td className="px-3 py-1 text-center font-semibold whitespace-nowrap">
                   <span className={runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
                     {runningBalance >= 0 ? '+' : ''}
                     {runningBalance.toLocaleString('pt-BR', {
@@ -257,6 +267,7 @@ const CashFlowTable: React.FC = () => {
                     })}
                   </span>
                 </td>
+                <td></td>
               </tr>
             );
           })}
