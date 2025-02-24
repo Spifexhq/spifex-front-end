@@ -23,8 +23,7 @@ const CashFlow = () => {
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
+    <div className="flex">
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
@@ -33,24 +32,21 @@ const CashFlow = () => {
         mode="default"
       />
 
-      {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         {/* Navbar fixa no topo */}
         <div className="fixed top-0 left-0 right-0 z-50">
           <Navbar />
         </div>
 
-        {/* Conteúdo com rolagem abaixo da Navbar */}
-        <div className="mt-[60px] h-[calc(100vh-60px)] overflow-y-auto px-8">
+        {/* Deixa a página rolar livremente */}
+        <div className="mt-[60px] mb-[60px] px-8">
           <div className="mt-30">
-              <CashFlowTable />
+            <CashFlowTable />
           </div>
         </div>
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-        />
-        </div>
+
+        <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
+      </div>
     </div>
   );
 };

@@ -30,11 +30,17 @@ import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';
 import Button from '../Button';
 
+const PAGE_SIZE = 100;
+
 const CashFlowTable: React.FC = () => {
   const { getEntries } = useRequests();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   // This state will hold an array of "render rows", which can be either
   // a normal entry or a monthly summary row.
@@ -150,6 +156,67 @@ const CashFlowTable: React.FC = () => {
 
     setTableRows(newTableRows);
   }, [entries]);
+
+  const fetchEntries = async (reset = false) => {
+    if (!hasMore || isFetching) return;
+
+    setIsFetching(true);
+
+    try {
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const response = await getEntries(PAGE_SIZE, reset ? 0 : offset);
+      const parsed = parseListResponse<Entry>(response, 'entries');
+
+      // Ensures records are ordered correctly
+      const sortedEntries = [...(reset ? [] : entries), ...parsed].sort(
+        (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+      );
+
+      setTimeout(() => { // 🔥 Force a 3 second delay
+        setEntries(sortedEntries);
+        setOffset(prev => reset ? PAGE_SIZE : prev + PAGE_SIZE);
+        setHasMore(parsed.length === PAGE_SIZE);
+        setLoading(false);
+        setLoadingMore(false);
+        setIsFetching(false);
+      }, 1000);
+      
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao buscar dados.';
+      console.error('Erro ao buscar lançamentos:', message);
+      setError(message);
+      setLoading(false);
+      setLoadingMore(false);
+      setIsFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEntries(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Detects scroll at the end of the table to load more data
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 150 &&
+        !isFetching &&
+        hasMore
+      ) {
+        fetchEntries();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offset, hasMore, isFetching]);
 
   if (loading) return <InlineLoader color="orange" className="w-10 h-10" />;
   if (error) return <div>{error}</div>;
@@ -273,6 +340,7 @@ const CashFlowTable: React.FC = () => {
           })}
         </tbody>
       </table>
+      {loadingMore && <InlineLoader color="orange" className="w-8 h-8 mx-auto my-2" />}
     </div>
   );
 };

@@ -310,8 +310,13 @@ const deleteTask = async (id: number) => {
 };
 
 // Cash Flow Entries
-const getEntries = async (): Promise<ApiGetEntriesResponse> => {
-  const response = await apiRequest<ApiGetEntriesResponse>('cashflow/entries');
+// const getEntries = async (): Promise<ApiGetEntriesResponse> => {
+//   const response = await apiRequest<ApiGetEntriesResponse>('cashflow/entries');
+//   return response;
+// };
+
+const getEntries = async (limit = 100, offset = 0): Promise<ApiGetEntriesResponse> => {
+  const response = await apiRequest<ApiGetEntriesResponse>(`cashflow/entries/paginated?limit=${limit}&offset=${offset}`);
   return response;
 };
 
