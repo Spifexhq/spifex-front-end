@@ -28,7 +28,7 @@ const CashFlow = () => {
   // 🔹 Função que ativa o filtro de exemplo
   const applyFilterExample = () => {
     setFilters({
-      startDate: "2022-01-01",
+      startDate: "2025-01-01",
       endDate: "2035-08-25",
       generalLedgerAccountId: [3,5],
       description: "",
