@@ -1,6 +1,6 @@
 import { apiRequest } from '@/api';
 
-import { ApiGetEntriesResponse, ApiGetEntryResponse } from '@/models/Entries/Entry';
+import { ApiGetEntriesResponse, ApiGetEntryResponse, CashFlowFilters } from '@/models/Entries/Entry';
 import { AddEntryPayload, EditEntryPayload } from '@/models/Entries/EntryPayload';
 import { ApiGetSettledEntriesResponse, ApiGetSettledEntryResponse } from '@/models/Entries/SettledEntry';
 import { EditSettledEntryPayload } from '@/models/Entries/SettledEntryPayload';
@@ -319,6 +319,40 @@ const getEntries = async (limit = 100, offset = 0): Promise<ApiGetEntriesRespons
   const response = await apiRequest<ApiGetEntriesResponse>(`cashflow/entries/paginated?limit=${limit}&offset=${offset}`);
   return response;
 };
+
+function buildQueryParams(limit: number, offset: number, filters?: CashFlowFilters) {
+  let query = `cashflow/entries/paginated?limit=${limit}&offset=${offset}`;
+  
+  if (filters?.startDate) {
+    query += `&start_date=${filters.startDate}`;
+  }
+  if (filters?.endDate) {
+    query += `&end_date=${filters.endDate}`;
+  }
+  if (filters?.description) {
+    query += `&description=${filters.description}`;
+  }
+  if (filters?.observation) {
+    query += `&observation=${filters.observation}`;
+  }
+  if (filters?.generalLedgerAccountId && filters.generalLedgerAccountId.length > 0) {
+    // Ex: [3, 26] => '3,26'
+    const ids = filters.generalLedgerAccountId.join(',');
+    query += `&general_ledger_account_id=${ids}`;
+  }
+
+  return query;
+}
+
+async function getFilteredEntries(
+  limit = 100,
+  offset = 0,
+  filters?: CashFlowFilters
+): Promise<ApiGetEntriesResponse> {
+  const endpoint = buildQueryParams(limit, offset, filters);
+  const response = await apiRequest<ApiGetEntriesResponse>(endpoint);
+  return response;
+}
 
 const getEntry = async (ids: number[]): Promise<ApiGetEntryResponse> => {
   const response = await apiRequest<ApiGetEntryResponse>(`cashflow/entries/${buildIdsParam(ids)}`);
@@ -940,6 +974,7 @@ export const useRequests = () => ({
 
   // Cash Flow Entries
   getEntries,
+  getFilteredEntries,
   getEntry,
   addEntry,
   editEntry,
