@@ -1,6 +1,7 @@
 import { apiRequest } from '@/api';
 
-import { ApiGetEntriesResponse, ApiGetEntryResponse, CashFlowFilters } from '@/models/Entries/Entry';
+import { CashFlowFilters } from '@/models/Entries/CashFlowFilters';
+import { ApiGetEntriesResponse, ApiGetEntryResponse } from '@/models/Entries/Entry';
 import { AddEntryPayload, EditEntryPayload } from '@/models/Entries/EntryPayload';
 import { ApiGetSettledEntriesResponse, ApiGetSettledEntryResponse } from '@/models/Entries/SettledEntry';
 import { EditSettledEntryPayload } from '@/models/Entries/SettledEntryPayload';
@@ -22,6 +23,30 @@ import { ApiGetInventoryItem, ApiGetInventoryItems } from '@/models/Inventory';
 import { ApiGetEntities, ApiGetEntity } from '@/models/Entity';
 
 const buildIdsParam = (ids: number[]): string => ids.join(',');
+
+function buildQueryParams(url: string, limit: number, offset: number, filters?: CashFlowFilters) {
+  let query = `cashflow/${url}/paginated?limit=${limit}&offset=${offset}`;
+  
+  if (filters?.startDate) {
+    query += `&start_date=${filters.startDate}`;
+  }
+  if (filters?.endDate) {
+    query += `&end_date=${filters.endDate}`;
+  }
+  if (filters?.description) {
+    query += `&description=${filters.description}`;
+  }
+  if (filters?.observation) {
+    query += `&observation=${filters.observation}`;
+  }
+  if (filters?.generalLedgerAccountId && filters.generalLedgerAccountId.length > 0) {
+    // Ex: [3, 26] => '3,26'
+    const ids = filters.generalLedgerAccountId.join(',');
+    query += `&general_ledger_account_id=${ids}`;
+  }
+
+  return query;
+}
 
 // Authentication
 const signUp = async ({
@@ -320,36 +345,13 @@ const getEntries = async (limit = 100, offset = 0): Promise<ApiGetEntriesRespons
   return response;
 };
 
-function buildQueryParams(limit: number, offset: number, filters?: CashFlowFilters) {
-  let query = `cashflow/entries/paginated?limit=${limit}&offset=${offset}`;
-  
-  if (filters?.startDate) {
-    query += `&start_date=${filters.startDate}`;
-  }
-  if (filters?.endDate) {
-    query += `&end_date=${filters.endDate}`;
-  }
-  if (filters?.description) {
-    query += `&description=${filters.description}`;
-  }
-  if (filters?.observation) {
-    query += `&observation=${filters.observation}`;
-  }
-  if (filters?.generalLedgerAccountId && filters.generalLedgerAccountId.length > 0) {
-    // Ex: [3, 26] => '3,26'
-    const ids = filters.generalLedgerAccountId.join(',');
-    query += `&general_ledger_account_id=${ids}`;
-  }
-
-  return query;
-}
-
 async function getFilteredEntries(
   limit = 100,
   offset = 0,
-  filters?: CashFlowFilters
+  filters?: CashFlowFilters,
+  url: string = 'entries'
 ): Promise<ApiGetEntriesResponse> {
-  const endpoint = buildQueryParams(limit, offset, filters);
+  const endpoint = buildQueryParams(url, limit, offset, filters);
   const response = await apiRequest<ApiGetEntriesResponse>(endpoint);
   return response;
 }
@@ -387,6 +389,17 @@ const getSettledEntries = async (): Promise<ApiGetSettledEntriesResponse> => {
   const response = await apiRequest<ApiGetSettledEntriesResponse>('cashflow/settled-entries');
   return response;
 };
+
+async function getFilteredSettledEntries(
+  limit = 100,
+  offset = 0,
+  filters?: CashFlowFilters,
+  url: string = 'settled-entries'
+): Promise<ApiGetSettledEntriesResponse> {
+  const endpoint = buildQueryParams(url, limit, offset, filters);
+  const response = await apiRequest<ApiGetSettledEntriesResponse>(endpoint);
+  return response;
+}
 
 const getSettledEntry = async (ids: number[]): Promise<ApiGetSettledEntryResponse> => {
   const url = `cashflow/settled-entries/${buildIdsParam(ids)}`;
@@ -983,6 +996,7 @@ export const useRequests = () => ({
 
   // Settled Entries
   getSettledEntries,
+  getFilteredSettledEntries,
   getSettledEntry,
   editSettledEntry,
   deleteSettledEntries,
