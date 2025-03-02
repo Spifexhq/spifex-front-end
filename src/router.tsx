@@ -17,6 +17,7 @@ const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerificati
 
 // Pages
 const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
+const SettledEntries = Loader(lazy(() => import("src/pages/SettledEntries")));
 const Reports = Loader(lazy(() => import("@/pages/Reports")));
 const Enterprise = Loader(lazy(() => import("@/pages/EnterprisePanel")));
 const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
@@ -76,6 +77,15 @@ const routes: RouteObject[] = [
                 element: (
                     <PermissionMiddleware codeName="view_cash_flow_button" redirectTo={'/settled'}>
                         <CashFlow />
+                    </PermissionMiddleware>
+                )
+            },
+            // Cash Flow
+            {
+                path: 'settled',
+                element: (
+                    <PermissionMiddleware codeName="view_settled_button" redirectTo={'/settings'}>
+                        <SettledEntries />
                     </PermissionMiddleware>
                 )
             },
