@@ -66,7 +66,7 @@ const CashFlow = () => {
           </div>
 
           {/* Tabela de fluxo de caixa, agora recebendo os filtros como prop */}
-          <CashFlowTable filters={filters} />
+          <CashFlowTable filters={filters} tableType={"cash_flow"} />
         </div>
 
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
