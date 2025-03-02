@@ -80,7 +80,7 @@ const routes: RouteObject[] = [
                     </PermissionMiddleware>
                 )
             },
-            // Cash Flow
+            // Settled Entries
             {
                 path: 'settled',
                 element: (
