@@ -51,12 +51,14 @@ const Checkbox: React.FC<CheckboxProps> = ({
     <div className={styles.checkboxContainer}>
       <label className={styles.checkboxLabel}>
         <input
-          type="checkbox"
-          checked={checked}
-          onClick={onClick}
-          onChange={onChange}
-          disabled={disabled}
-          className={inputClasses}
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => {
+              if (onChange) onChange(e);
+            }}
+            onClick={onClick}
+            disabled={disabled}
+            className={inputClasses}
         />
         {/* Check icon */}
         <span className={styles.checkIcon}>
