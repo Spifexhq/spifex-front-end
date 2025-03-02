@@ -1,13 +1,13 @@
 /**
  * CashFlowTable.tsx
  *
- * Renders a table of cash flow entries with pagination + infinite scroll.
+ * Renders a table of cash flow or settled entries with pagination + infinite scroll.
  * Receives optional filters as props (start_date, end_date, etc.).
  *
  * Features:
  * - Fetches data from an API with pagination
  * - Allows multiple filters
- * - Sorts entries by due_date ascending
+ * - Sorts entries by due_date or settlement_due_date (depending on tableType)
  * - Builds monthly summary rows
  * - Multi-selection with Shift key support
  * - Infinite scroll
@@ -16,29 +16,58 @@
 import React, { useEffect, useState } from 'react';
 import { useRequests } from '@/api/requests';
 
-import { Entry, CashFlowFilters } from '@/models/Entries/Entry';
+import { CashFlowFilters, Entry, SettledEntry } from '@/models/Entries';
 import { parseListResponse } from '@/utils/parseListResponse';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
 
 import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';
-import Button from '../Button';
+import Button from '@/components/Button';
 
 const PAGE_SIZE = 100;
 
 interface CashFlowTableProps {
   filters?: CashFlowFilters;
+  tableType: 'cash_flow' | 'settled';
 }
 
-const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
-  const { getFilteredEntries } = useRequests(); // <— Single hook usage, no duplication
+/**
+ * Helper: get the correct date field from Entry | SettledEntry
+ */
+function getDateField(
+  entry: Entry | SettledEntry,
+  tableType: 'cash_flow' | 'settled'
+): string {
+  return tableType === 'cash_flow'
+    ? (entry as Entry).due_date
+    : (entry as SettledEntry).settlement_due_date;
+}
 
-  // State
-  const [entries, setEntries] = useState<Entry[]>([]);
+/**
+ * Helper: get numeric date for sorting
+ */
+function getDateForSorting(
+  entry: Entry | SettledEntry,
+  tableType: 'cash_flow' | 'settled'
+): number {
+  const dateStr =
+    tableType === 'cash_flow'
+      ? (entry as Entry).due_date
+      : (entry as SettledEntry).settlement_due_date;
+
+  return new Date(dateStr).getTime();
+}
+
+const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, tableType }) => {
+  const { getFilteredEntries, getFilteredSettledEntries } = useRequests();
+
+  // Array of both Entry and SettledEntry
+  const [entries, setEntries] = useState<Array<Entry | SettledEntry>>([]);
+
   const [tableRows, setTableRows] = useState<
     Array<{
       isSummary: boolean;
-      entry?: Entry;
+      entry?: Entry | SettledEntry;
       monthlySum?: number;
       runningBalance?: number;
       displayMonth?: string;
@@ -56,19 +85,12 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
   // Multi-select hook
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
 
-  /**
-   * Main fetch function: calls getFilteredEntries() and updates state.
-   * @param reset - If true, clear current entries and start from offset=0
-   */
   const fetchEntries = async (reset = false) => {
-    // Avoid extra calls
     if (isFetching) return;
-    // If there's no more data and user isn't forcing a reset, do nothing
     if (!hasMore && !reset) return;
 
     setIsFetching(true);
 
-    // If resetting, start from zero and show main loader
     if (reset) {
       setLoading(true);
       setOffset(0);
@@ -77,14 +99,22 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     }
 
     try {
-      const response = await getFilteredEntries(PAGE_SIZE, reset ? 0 : offset, filters);
-      const parsed = parseListResponse<Entry>(response, 'entries');
+      let response;
+      if (tableType === 'cash_flow') {
+        response = await getFilteredEntries(PAGE_SIZE, reset ? 0 : offset, filters);
+      } else {
+        response = await getFilteredSettledEntries(PAGE_SIZE, reset ? 0 : offset, filters);
+      }
 
-      // Merge old + new entries, then sort
+      // Adjust the parseListResponse key to your real API structure
+      // e.g., 'entries' vs. 'settled_entries'
+      const parsed = parseListResponse<Entry | SettledEntry>(response, 'entries');
+
       const combined = (reset ? [] : entries).concat(parsed);
-      const sorted = combined.sort(
-        (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-      );
+      // Sort by the correct date field
+      const sorted = combined.sort((a, b) => {
+        return getDateForSorting(a, tableType) - getDateForSorting(b, tableType);
+      });
 
       setEntries(sorted);
       setOffset((prev) => (reset ? PAGE_SIZE : prev + PAGE_SIZE));
@@ -100,18 +130,12 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     }
   };
 
-  /**
-   * Whenever filters change, reset the table and fetch from offset=0.
-   * Also fetch on component mount (first render).
-   */
   useEffect(() => {
     fetchEntries(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, tableType]);
 
-  /**
-   * Infinite scroll: load more data when user scrolls near bottom.
-   */
+  // Infinite scroll
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -128,10 +152,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offset, hasMore, isFetching]);
 
-  /**
-   * Build table rows (normal + monthly summary).
-   * This runs whenever `entries` changes.
-   */
+  // Build table rows (normal + monthly summary)
   useEffect(() => {
     if (!entries.length) {
       setTableRows([]);
@@ -144,7 +165,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
 
     const newRows: Array<{
       isSummary: boolean;
-      entry?: Entry;
+      entry?: Entry | SettledEntry;
       monthlySum?: number;
       runningBalance?: number;
       displayMonth?: string;
@@ -158,11 +179,15 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     };
 
     entries.forEach((entry, index) => {
-      const amount = parseFloat(entry.amount);
-      const transactionValue = entry.transaction_type === 'credit' ? amount : -amount;
-      const entryMonth = getMonthYear(entry.due_date);
+      const dateStr = getDateField(entry, tableType);
 
-      // If we're moving to a new month, push the previous month's summary row
+      const amountNum = parseFloat(entry.amount);
+      const transactionValue =
+        entry.transaction_type === 'credit' ? amountNum : -amountNum;
+
+      const entryMonth = getMonthYear(dateStr);
+
+      // If it's a new month, push the summary for the previous one
       if (currentMonth && currentMonth !== entryMonth) {
         newRows.push({
           isSummary: true,
@@ -173,7 +198,6 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
         monthlySum = 0;
       }
 
-      // Update current month if needed
       if (!currentMonth || currentMonth !== entryMonth) {
         currentMonth = entryMonth;
       }
@@ -181,14 +205,13 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
       monthlySum += transactionValue;
       runningBalance += transactionValue;
 
-      // Push the normal row
       newRows.push({
         isSummary: false,
         entry,
         runningBalance,
       });
 
-      // If this is the last entry overall, add the final summary row
+      // At the last entry, push the final month's summary
       if (index === entries.length - 1) {
         newRows.push({
           isSummary: true,
@@ -200,9 +223,9 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     });
 
     setTableRows(newRows);
-  }, [entries]);
+  }, [entries, tableType]);
 
-  // Render states
+  // Show loader, errors, or table
   if (loading && !entries.length) {
     return <InlineLoader color="orange" className="w-10 h-10" />;
   }
@@ -210,63 +233,85 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     return <div>{error}</div>;
   }
 
+  // If tableType = settled, there's an extra column for 'Banco'
+  const totalColumns = tableType === 'settled' ? 9 : 8;
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-t-2xl">
         <thead className="bg-gray-100 rounded-t-2xl">
           <tr>
-            {/* Select All Checkbox */}
             <th className="w-[5%] px-3 py-3 text-center">
               <div className="flex justify-center items-center h-full">
                 <Checkbox
-                  checked={
-                    // Compare selectedIds with the count of normal entry rows
-                    selectedIds.length === entries.length && entries.length > 0
-                  }
-                  onClick={() => handleSelectAll()}
+                  checked={selectedIds.length === entries.length && entries.length > 0}
+                  onChange={() => handleSelectAll()}
                 />
               </div>
             </th>
             <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
               Vencimento
             </th>
-            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th
+              className={`px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider ${
+                tableType === 'settled' ? 'w-[15%]' : 'w-[20%]'
+              }`}
+            >
               Descrição
             </th>
-            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th
+              className={`px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider ${
+                tableType === 'settled' ? 'w-[15%]' : 'w-[20%]'
+              }`}
+            >
               Observação
             </th>
             <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
               Parcela
             </th>
+            {tableType === 'settled' && (
+              <th className="w-[10%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                Banco
+              </th>
+            )}
             <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
               Valor
             </th>
             <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
               Saldo
             </th>
-            <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-            </th>
+            <th className="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider" style={{ maxWidth: '68px', minWidth: '68px' }}></th>
           </tr>
         </thead>
+
         <tbody className="bg-white divide-y divide-gray-200">
           {tableRows.length === 0 ? (
-            // If there are no records (and we are also not in loading or error),
-            // we display the message "No data available"
             <tr>
-              <td colSpan={8} className="px-4 py-3 text-center text-gray-500">
+              <td colSpan={totalColumns} className="px-4 py-3 text-center text-gray-500">
                 Nenhum dado disponível
               </td>
             </tr>
           ) : (
-            // Otherwise, we render the normal lines and summaries
-            tableRows.map((row, index) => {
+            tableRows.map((row, idx) => {
               if (!row.isSummary && row.entry) {
-                // Normal entry row
                 const entry = row.entry;
                 const isSelected = selectedIds.includes(entry.id);
-                const amount = parseFloat(entry.amount);
-                const value = entry.transaction_type === 'debit' ? -amount : amount;
+
+                // Depending on tableType, show either due_date or settlement_due_date
+                const dateField = getDateField(entry, tableType);
+
+                // Show the bank property if it's settled. Usually you'd display bank.name or similar.
+                let bankName = '';
+                if (tableType === 'settled') {
+                  const settled = entry as SettledEntry;
+                  // e.g., if `Bank` has a `name` or `title` property
+                  // Just ensure it's a string:
+                  bankName = settled.bank?.bank_institution ?? '-';
+                }
+
+                const amountNum = parseFloat(entry.amount);
+                const value =
+                  entry.transaction_type === 'debit' ? -amountNum : amountNum;
                 const balance = row.runningBalance || 0;
 
                 return (
@@ -278,15 +323,24 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
                       />
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
-                      {entry.due_date}
+                      {dateField}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">{entry.description}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {entry.description}
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {entry.observation || '-'}
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
-                      {`${entry.current_installment}/${entry.total_installments}`}
+                      {`${entry.current_installment ?? '-'} / ${
+                        entry.total_installments ?? '-'
+                      }`}
                     </td>
+                    {tableType === 'settled' && (
+                      <td className="px-3 py-2 text-center whitespace-nowrap">
+                        {bankName}
+                      </td>
+                    )}
                     <td className="px-3 py-2 text-center whitespace-nowrap">
                       {value.toLocaleString('pt-BR', {
                         style: 'currency',
@@ -294,15 +348,20 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
                       })}
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
-                      <span>
-                        {balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
+                      {balance.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <Button variant='common' style={{ padding: "10px", borderRadius: "8px" }}>
+                      <Button
+                        variant="common"
+                        style={{ padding: '10px', borderRadius: '8px' }}
+                      >
                         <img
                           alt="Editar"
-                          height={12} width={12}
+                          height={12}
+                          width={12}
                           src="src/assets/Icons/tools/edit.svg"
                         />
                       </Button>
@@ -311,21 +370,32 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
                 );
               }
 
-              // Monthly summary row with a smaller height (using reduced padding)
+              // Summary row
               const { monthlySum = 0, runningBalance = 0, displayMonth } = row;
+              // For the summary row, we must handle colSpan carefully
+              // Example: If 'settled', we have 9 total columns, but 1 is an action column
+              // so we might break up colSpan to make sense visually.
               return (
-                <tr key={`summary-${index}`} className="bg-gray-50 text-[10px]">
-                  <td colSpan={5} className="px-4 py-1 font-semibold text-left">
+                <tr key={`summary-${idx}`} className="bg-gray-50 text-[10px]">
+                  {/* Common scenario: the left chunk + the monthlySum + the runningBalance + empty cell */}
+                  {/* Adjust as needed for your design */}
+                  <td colSpan={tableType === 'settled' ? 5 : 5} className="px-4 py-1 font-semibold text-left">
                     {displayMonth}
                   </td>
-                  <td colSpan={1} className="px-3 py-1 text-center font-semibold whitespace-nowrap">
+
+                  {/* If it's settled, skip 1 more column for 'Banco' */}
+                  {tableType === 'settled' && <td></td>}
+
+                  <td className="px-3 py-1 text-center font-semibold whitespace-nowrap">
                     {monthlySum.toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
                   </td>
                   <td className="px-3 py-1 text-center font-semibold whitespace-nowrap">
-                    <span className={runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    <span
+                      className={runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}
+                    >
                       {runningBalance >= 0 ? '+' : ''}
                       {runningBalance.toLocaleString('pt-BR', {
                         style: 'currency',
@@ -346,3 +416,4 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
 };
 
 export default CashFlowTable;
+
