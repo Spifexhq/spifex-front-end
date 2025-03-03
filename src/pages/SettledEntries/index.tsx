@@ -2,10 +2,10 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Modal from "@/components/Modal";
-import { CashFlowTable } from "@/components/CashFlowTable";
-import Button from "@/components/Button"; // Supondo que você tenha esse componente de botão
+import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
+import Filter, { FilterData } from "@/components/Filter";
 
-const CashFlow = () => {
+const Settled = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -25,15 +25,10 @@ const CashFlow = () => {
     setIsModalOpen(false);
   };
 
-  // 🔹 Função que ativa o filtro de exemplo
-  const applyFilterExample = () => {
-    setFilters({
-      startDate: "2025-01-01",
-      endDate: "2035-08-25",
-      generalLedgerAccountId: [3,5],
-      description: "",
-      observation: "",
-    });
+  // Receives new filters from child and updates state
+  const handleApplyFilters = (newFilters: FilterData) => {
+    // FilterData is compatible with CashFlowFilters if they share the same fields
+    setFilters(newFilters);
   };
 
   return (
@@ -54,19 +49,11 @@ const CashFlow = () => {
 
         {/* Conteúdo principal */}
         <div className="mt-[60px] px-10">
-          {/* 🔥 Botão para aplicar filtro de exemplo */}
-          <div className="mb-4 flex justify-end">
-            <Button
-              variant="primary"
-              onClick={applyFilterExample}
-              className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
-            >
-              Aplicar Filtro (Exemplo)
-            </Button>
-          </div>
+
+          <Filter onApply={handleApplyFilters} />
 
           {/* Tabela de fluxo de caixa, agora recebendo os filtros como prop */}
-          <CashFlowTable filters={filters} tableType={"settled"} />
+          <SettledEntriesTable filters={filters} />
         </div>
 
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
@@ -75,4 +62,4 @@ const CashFlow = () => {
   );
 };
 
-export default CashFlow;
+export default Settled;
