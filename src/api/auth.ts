@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
 import { useRequests } from '@/api';
 import { ApiSignIn } from '@/models/Auth';
+import { Permission } from '@/models/Permission';
 
 const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';
 
@@ -53,12 +54,14 @@ export const useAuth = () => {
 
     const response = await getUser();
 
-    console.log("getUser Response:", response.data);
+    console.log("getUser Response:", response);
 
-    if (response.data && !response.detail) {
+    if (response.status === 'success' && response.data) {
       dispatch(setUser(response.data.user));
       dispatch(setUserEnterprise(response.data.enterprise));
       dispatch(setSubscriptionStatus(response.data.subscription));
+    } else {
+      console.error("Error fetching user:", response.message);
     }
   }, [dispatch, getUser]);
 
@@ -90,8 +93,8 @@ export const useAuth = () => {
   const handleSignIn = async (email: string, password: string): Promise<ApiSignIn> => {
     const response = await signIn({ email, password });
 
-    if (!response.data) {
-      throw new Error("Authentication failed. Please check your credentials.");
+    if (response.status !== 'success' || !response.data) {
+      throw new Error(response.message || "Authentication failed. Please check your credentials.");
     }
 
     dispatch(setUser(response.data.user));
