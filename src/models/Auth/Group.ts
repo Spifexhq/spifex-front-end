@@ -1,4 +1,4 @@
-import { Bank } from './Bank';
+import { Bank } from '../Bank';
 import { Permission } from './Permission';
 
 export type Group = {

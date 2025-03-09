@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useRequests } from '@/api';
 import { useAuthContext } from "@/contexts/useAuthContext";
 import Navbar from "@/components/Navbar";
-import { Enterprise } from "@/models/Enterprise";
+import { Enterprise } from "src/models/Auth/Enterprise";
 import { SuspenseLoader } from '@/components/Loaders';
 import './styles.css';
 import Button from 'src/components/Button';

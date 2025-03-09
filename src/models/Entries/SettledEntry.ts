@@ -1,10 +1,8 @@
 import { IApiResponse } from '@/models/Api';
-import { GeneralLedgerAccount } from '../GeneralLedgerAccount';
-import { DocumentType } from '../DocumentType';
-import { Department } from '../Department';
-import { Project } from '../Project';
-import { Inventory } from '../Inventory';
-import { Entity } from '../Entity';
+import {
+  GeneralLedgerAccount, DocumentType,
+  Department, Project, Inventory, Entity
+} from '@/models/ForeignKeys';
 import { Bank } from '../Bank';
 
 export type SettledEntry = {
@@ -29,6 +27,7 @@ export type SettledEntry = {
 
   bank: Bank;
   settlement_due_date: string;
+  formatted_settlement_due_date: string;
   installments_correlation_id?: string | null;
   partial_settlement_correlation_id?: string | null;
   transference_correlation_id?: string | null;

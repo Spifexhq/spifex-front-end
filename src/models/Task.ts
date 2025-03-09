@@ -1,4 +1,4 @@
-import { Employee } from './Employee';
+import { Employee } from './Auth/Employee';
 
 export type Task = {
   id: number;

@@ -25,7 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
 import { useRequests } from '@/api';
 import { ApiSignIn } from '@/models/Auth';
-import { Permission } from '@/models/Permission';
+import { Permission } from 'src/models/Auth/Permission';
 
 const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';
 

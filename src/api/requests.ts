@@ -1,22 +1,18 @@
 import { apiRequest } from '@/api';
 
-import { CashFlowFilters } from '@/models/Entries/CashFlowFilters';
 import {
-  ApiGetEntriesData,
-  ApiGetEntryData,
-} from '@/models/Entries/Entry';
-import { AddEntryPayload, EditEntryPayload } from '@/models/Entries/EntryPayload';
-import {
-  ApiGetSettledEntriesData,
-  ApiGetSettledEntryData,
-} from '@/models/Entries/SettledEntry';
-import { EditSettledEntryPayload } from '@/models/Entries/SettledEntryPayload';
+  CashFlowFilters,
+  ApiGetEntriesData, ApiGetEntryData,
+  AddEntryPayload, EditEntryPayload,
+  ApiGetSettledEntriesData, ApiGetSettledEntryData,
+  EditSettledEntryPayload,
+} from '@/models/Entries';
 
 import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription } from '@/models/Auth';
-import { ApiGetEnterprise, Owner } from '@/models/Enterprise';
-import { ApiGetPermissions } from '@/models/Permission';
-import { ApiGetGroup, ApiGetGroups } from '@/models/Group';
-import { ApiGetEmployee, ApiGetEmployees } from '@/models/Employee';
+import { ApiGetEnterprise, Owner } from 'src/models/Auth/Enterprise';
+import { ApiGetPermissions } from 'src/models/Auth/Permission';
+import { ApiGetGroup, ApiGetGroups } from '@/models/Auth/Group';
+import { ApiGetEmployee, ApiGetEmployees } from 'src/models/Auth/Employee';
 import {
   CounterUsage,
   ApiGetCounterUsage,
@@ -25,14 +21,14 @@ import { ApiGetTask, ApiGetTasks } from '@/models/Task';
 
 import { ApiGetBank, ApiGetBanks } from '@/models/Bank';
 import {
-  ApiGetGeneralLedgerAccount,
-  ApiGetGeneralLedgerAccounts,
-} from '@/models/GeneralLedgerAccount';
-import { ApiGetDocumentTypes } from '@/models/DocumentType';
-import { ApiGetDepartment, ApiGetDepartments } from '@/models/Department';
-import { ApiGetProject, ApiGetProjects } from '@/models/Project';
-import { ApiGetInventoryItem, ApiGetInventoryItems } from '@/models/Inventory';
-import { ApiGetEntities, ApiGetEntity } from '@/models/Entity';
+  ApiGetGeneralLedgerAccount, ApiGetGeneralLedgerAccounts,
+  ApiGetDocumentType, ApiGetDocumentTypes,
+  ApiGetDepartment, ApiGetDepartments,
+  ApiGetProject, ApiGetProjects,
+  ApiGetInventoryItem, ApiGetInventoryItems,
+  ApiGetEntity, ApiGetEntities,
+} from 'src/models/ForeignKeys';
+
 import { IApiResponse } from '@/models/Api';
 
 const buildIdsParam = (ids: number[]): string => ids.join(',');
@@ -503,6 +499,14 @@ const getDocumentTypes = async (): Promise<IApiResponse<ApiGetDocumentTypes>> =>
   return apiRequest<ApiGetDocumentTypes>('financeconfig/document-types');
 };
 
+const getDocumentType = async (
+  ids: number[]
+): Promise<IApiResponse<ApiGetDocumentType>> => {
+  return apiRequest<ApiGetDocumentType>(
+    `financeconfig/document-types/${buildIdsParam(ids)}`
+  );
+};
+
 // ======================
 //     Departments
 // ======================
@@ -806,6 +810,7 @@ export const useRequests = () => ({
 
   // Document Types
   getDocumentTypes,
+  getDocumentType,
 
   // Departments
   getDepartments,

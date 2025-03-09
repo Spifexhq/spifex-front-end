@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { useRequests } from "@/api/requests";
-import { GeneralLedgerAccount } from "@/models/GeneralLedgerAccount";
+import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccount";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 
 export interface FilterData {

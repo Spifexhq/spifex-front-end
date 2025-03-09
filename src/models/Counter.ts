@@ -1,4 +1,4 @@
-import { Permission } from './Permission';
+import { Permission } from './Auth/Permission';
 
 export type CounterUsage = {
   id: number;

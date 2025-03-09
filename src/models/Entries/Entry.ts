@@ -1,15 +1,14 @@
 import { IApiResponse } from '@/models/Api';
-import { GeneralLedgerAccount } from '../GeneralLedgerAccount';
-import { DocumentType } from '../DocumentType';
-import { Department } from '../Department';
-import { Project } from '../Project';
-import { Inventory } from '../Inventory';
-import { Entity } from '../Entity';
+import {
+  GeneralLedgerAccount, DocumentType,
+  Department, Project, Inventory, Entity
+} from '@/models/ForeignKeys';
 import { Bank } from '../Bank';
 
 export type Entry = {
   id: number;
   due_date: string;
+  formatted_due_date: string;
   description: string;
   observation: string | null;
   amount: string;
