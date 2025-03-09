@@ -1,3 +1,4 @@
+import { IApiResponse } from '@/models/Api';
 import { GeneralLedgerAccount } from '../GeneralLedgerAccount';
 import { DocumentType } from '../DocumentType';
 import { Department } from '../Department';
@@ -35,24 +36,16 @@ export type Entry = {
   enterprise: number;
 };
 
-// Entries
-export type ApiGetEntriesSuccess = {
+export interface ApiGetEntriesData {
   entries: Entry[];
-};
+  total?: number;
+  limit?: number;
+  offset?: number;
+}
 
-export type ApiGetEntriesError = {
-  detail: string;
-};
+export interface ApiGetEntryData {
+  entries: Entry[];
+}
 
-export type ApiGetEntriesResponse = ApiGetEntriesSuccess | ApiGetEntriesError;
-
-// Entry
-export type ApiGetEntrySuccess = {
-  entry: Entry;
-};
-
-export type ApiGetEntryError = {
-  detail: string;
-};
-
-export type ApiGetEntryResponse = ApiGetEntrySuccess | ApiGetEntryError;
+export type ApiGetEntriesResponse = IApiResponse<ApiGetEntriesData>;
+export type ApiGetEntryResponse = IApiResponse<ApiGetEntryData>;

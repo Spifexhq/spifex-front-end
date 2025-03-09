@@ -1,65 +1,70 @@
-// @/pages/TestEntryPage/index.tsx
-import React, { useState, useEffect } from 'react';
-import Navbar from 'src/components/Navbar/Navbar';
-import EntriesTable from 'src/components/CashFlowTable/CashFlowTable';
-import { useRequests } from 'src/api/requests';
-import { ApiGetEntries } from 'src/models/Entries/Entry';
+import { useState } from "react";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
+import Modal from "@/components/Modal";
+import CashFlowTable from "@/components/Table/CashFlowTable";
+import Filter, { FilterData } from "@/components/Filter";
 
-const TestEntryPage: React.FC = () => {
-  const { getEntries } = useRequests();
-  const [entries, setEntries] = useState<ApiGetEntries['entries']>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Make sure your Table's prop type expects `filters` of type `CashFlowFilters`
+const CashFlow = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      try {
-        const response = await getEntries();
-        if (response.data && response.data.entries) {
-          setEntries(response.data.entries);
-        } else {
-          setError('Nenhuma entrada encontrada.');
-        }
-      } catch (err) {
-        console.error('Erro ao buscar entradas:', err);
-        setError('Erro ao buscar entradas.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Store filters in the parent
+  const [filters, setFilters] = useState({});
 
-    fetchEntries();
-  }, [getEntries]);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
 
-  if (loading) {
-    return (
-      <div className="p-4">
-        <Navbar />
-        <p>Carregando...</p>
-      </div>
-    );
-  }
+  const handleOpenModal = (type: string) => {
+    console.log("Abrindo modal do tipo:", type);
+    setIsModalOpen(true);
+  };
 
-  if (error) {
-    return (
-      <div className="p-4">
-        <Navbar />
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // Receives new filters from child and updates state
+  const handleApplyFilters = (newFilters: FilterData) => {
+    // FilterData is compatible with CashFlowFilters if they share the same fields
+    setFilters(newFilters);
+  };
 
   return (
-    <div>
-      <Navbar />
-      <h1 className="text-2xl font-bold my-4 text-center">
-        Lista de Entradas de Cashflow
-      </h1>
-      <div className="max-w-6xl mx-auto p-4">
-        <EntriesTable entries={entries} mode="cashflow" />
+    <div className="flex">
+      <Sidebar
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        handleOpenModal={handleOpenModal}
+        handleOpenTransferenceModal={() => null}
+        mode="default"
+      />
+
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          isSidebarOpen ? "ml-60" : "ml-16"
+        }`}
+      >
+        {/* Navbar fixa no topo */}
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <Navbar />
+        </div>
+
+        {/* Conteúdo principal */}
+        <div className="mt-[60px] px-10">
+          {/* Our new Filter Card */}
+          <Filter onApply={handleApplyFilters} />
+
+          {/* Tabela de fluxo de caixa, agora recebendo os filters do estado */}
+          <CashFlowTable filters={filters} />
+        </div>
+
+        <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
       </div>
     </div>
   );
 };
 
-export default TestEntryPage;
+export default CashFlow;

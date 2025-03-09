@@ -1,4 +1,6 @@
-export type ApiError = {
-  detail: string;
-  code?: string;
-};
+export interface IApiResponse<T> {
+  status: 'success' | 'error';
+  message: string;
+  data?: T;
+  errors?: unknown;
+}

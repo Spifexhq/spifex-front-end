@@ -17,7 +17,7 @@ import React, { useEffect, useState } from 'react';
 import { useRequests } from '@/api/requests';
 
 import { CashFlowFilters, Entry } from '@/models/Entries';
-import { parseListResponse } from '@/utils/parseListResponse';
+import { parseApiList } from 'src/utils/parseApiList';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
 
 import { InlineLoader } from '@/components/Loaders';
@@ -75,8 +75,8 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
 
     try {
       const response = await getFilteredEntries(PAGE_SIZE, reset ? 0 : offset, filters);
-      // Adjust the parseListResponse key to match the actual API response object key
-      const parsed = parseListResponse<Entry>(response, 'entries');
+      // Adjust the parseApiList key to match the actual API response object key
+      const parsed = parseApiList<Entry>(response, 'entries');
 
       const combined = (reset ? [] : entries).concat(parsed);
       // Sort by due_date

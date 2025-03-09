@@ -17,7 +17,7 @@ import React, { useEffect, useState } from 'react';
 import { useRequests } from '@/api/requests';
 
 import { CashFlowFilters, Entry, SettledEntry } from '@/models/Entries';
-import { parseListResponse } from '@/utils/parseListResponse';
+import { parseListResponse } from 'src/utils/parseApiList';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
 
 import { InlineLoader } from '@/components/Loaders';

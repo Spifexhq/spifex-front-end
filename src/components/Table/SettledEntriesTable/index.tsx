@@ -17,7 +17,7 @@ import React, { useEffect, useState } from 'react';
 import { useRequests } from '@/api/requests';
 
 import { CashFlowFilters, SettledEntry } from '@/models/Entries';
-import { parseListResponse } from '@/utils/parseListResponse';
+import { parseApiList } from 'src/utils/parseApiList';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
 
 import { InlineLoader } from '@/components/Loaders';
@@ -79,8 +79,8 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) =>
         reset ? 0 : offset,
         filters
       );
-      // Adjust the parseListResponse key to match the actual API response object key
-      const parsed = parseListResponse<SettledEntry>(response, 'entries');
+      // Adjust the parseApiList key to match the actual API response object key
+      const parsed = parseApiList<SettledEntry>(response, 'entries');
 
       const combined = (reset ? [] : entries).concat(parsed);
       // Sort by settlement_due_date

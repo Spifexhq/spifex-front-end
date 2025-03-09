@@ -1,3 +1,4 @@
+import { IApiResponse } from '@/models/Api';
 import { GeneralLedgerAccount } from '../GeneralLedgerAccount';
 import { DocumentType } from '../DocumentType';
 import { Department } from '../Department';
@@ -35,24 +36,16 @@ export type SettledEntry = {
   enterprise: number;
 };
 
-// Settled Entries
-export type ApiGetSettledEntriesSuccess = {
-  settled_entries: SettledEntry[];
-};
+export interface ApiGetSettledEntriesData {
+  entries: SettledEntry[];
+  total?: number;
+  limit?: number;
+  offset?: number;
+}
 
-export type ApiGetSettledEntriesError = {
-  detail: string;
-};
+export interface ApiGetSettledEntryData {
+  entries: SettledEntry[];
+}
 
-export type ApiGetSettledEntriesResponse = ApiGetSettledEntriesSuccess | ApiGetSettledEntriesError;
-
-// Settled Entry
-export type ApiGetSettledEntrySuccess = {
-  entry: SettledEntry;
-};
-
-export type ApiGetSettledEntryError = {
-  detail: string;
-};
-
-export type ApiGetSettledEntryResponse = ApiGetSettledEntrySuccess | ApiGetSettledEntryError;
+export type ApiGetSettledEntriesResponse = IApiResponse<ApiGetSettledEntriesData>;
+export type ApiGetSettledEntryResponse = IApiResponse<ApiGetSettledEntryData>;

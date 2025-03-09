@@ -1,6 +1,6 @@
 // hooks/usePaginatedEntries.ts
 import { useState, useEffect, useCallback } from 'react';
-import { parseListResponse } from '@/utils/parseListResponse';
+import { parseApiList } from 'src/utils/parseApiList';
 import { Entry } from '@/models/Entries/Entry';
 import { useRequests } from '@/api/requests';
 
@@ -50,7 +50,7 @@ export function usePaginatedEntries(filters: FilterParams) {
         };
 
         const response = await getEntries(PAGE_SIZE, newOffset, extraParams);
-        const parsed = parseListResponse<Entry>(response, 'entries');
+        const parsed = parseApiList<Entry>(response, 'entries');
 
         // Merge com o que já temos (ou recomeçar caso reset)
         setEntries((prev) => {
