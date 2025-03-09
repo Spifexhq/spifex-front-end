@@ -34,32 +34,29 @@ const PurchaseConfirmation: React.FC = () => {
   useEffect(() => {
     const fetchPurchaseDetails = async () => {
       if (!sessionId) {
-        setSnackBarMessage("Invalid session.");
+        setSnackBarMessage("Sessão inválida.");
         setIsFetching(false);
         return;
       }
 
       try {
-        const response = await apiRequest<{ purchase_details: PurchaseDetails }>(
-          "payments/get-purchase-details/",
-          "GET",
-          { session_id: sessionId },
-          true
-        );
+        const response = await apiRequest<{
+          purchase_details: PurchaseDetails;
+        }>("payments/get-purchase-details/", "GET", { session_id: sessionId }, true);
 
-        if (response.detail) {
-          setSnackBarMessage(response.detail);
-        } else if (response.data) {
+        if (response.status === "error") {
+          setSnackBarMessage(response.message || "Erro ao recuperar detalhes da compra.");
+        } else if (response.data?.purchase_details) {
           setPurchaseDetails(response.data.purchase_details);
 
-          // Call handleInitUser to update user subscription status
+          // Atualiza o status de assinatura do usuário
           await handleInitUser();
         } else {
-          setSnackBarMessage("Could not retrieve purchase details.");
+          setSnackBarMessage("Não foi possível recuperar os detalhes da compra.");
         }
       } catch (err) {
-        console.error("Error fetching purchase details:", err);
-        setSnackBarMessage("Could not retrieve purchase details.");
+        console.error("Erro ao buscar detalhes da compra:", err);
+        setSnackBarMessage("Erro ao recuperar detalhes da compra.");
       } finally {
         setIsFetching(false);
       }
@@ -74,19 +71,19 @@ const PurchaseConfirmation: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate("/subscription-management");
     } catch (err) {
-      console.error("Redirection error:", err);
-      setSnackBarMessage("An error occurred while redirecting. Please try again.");
+      console.error("Erro ao redirecionar:", err);
+      setSnackBarMessage("Ocorreu um erro ao redirecionar. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Show a loading indicator while fetching data
+  // Exibe um indicador de carregamento enquanto busca os dados
   if (isFetching) {
     return <InlineLoader />;
   }
 
-  // Show error message if purchase details are not available
+  // Exibe mensagem de erro caso os detalhes da compra não estejam disponíveis
   if (!purchaseDetails) {
     return (
       <div className="purchase-confirmation-page">
@@ -119,7 +116,7 @@ const PurchaseConfirmation: React.FC = () => {
           </div>
           <div className="purchase-confirmation__content">
             <div className="purchase-confirmation__header">
-              <h2>Purchase Confirmed!</h2>
+              <h2>Compra Confirmada!</h2>
             </div>
             <div className="purchase-confirmation__details">
               <div className="purchase-confirmation__item">
@@ -127,17 +124,17 @@ const PurchaseConfirmation: React.FC = () => {
                 <span>{purchaseDetails.item}</span>
               </div>
               <div className="purchase-confirmation__item">
-                <label>Amount</label>
+                <label>Valor</label>
                 <span>{purchaseDetails.amount}</span>
               </div>
               <div className="purchase-confirmation__item">
-                <label>Date</label>
+                <label>Data</label>
                 <span>
                   {new Date(Number(purchaseDetails.date) * 1000).toLocaleDateString()}
                 </span>
               </div>
               <div className="purchase-confirmation__item">
-                <label>Transaction ID</label>
+                <label>ID da Transação</label>
                 <span>{purchaseDetails.transactionId}</span>
               </div>
             </div>
@@ -147,13 +144,13 @@ const PurchaseConfirmation: React.FC = () => {
                 disabled={isLoading}
                 className="purchase-confirmation__button button-primary"
               >
-                {isLoading ? <InlineLoader /> : "Go Back"}
+                {isLoading ? <InlineLoader /> : "Voltar"}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Snackbar for displaying error messages */}
+        {/* Snackbar para mensagens de erro */}
         <Snackbar
           className="purchase-confirmation__snackbar"
           open={snackBarMessage !== ""}

@@ -19,7 +19,7 @@ const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerificati
 const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
 const SettledEntries = Loader(lazy(() => import("src/pages/SettledEntries")));
 const Reports = Loader(lazy(() => import("@/pages/Reports")));
-const Enterprise = Loader(lazy(() => import("@/pages/EnterprisePanel")));
+const Enterprise = Loader(lazy(() => import("src/pages/PersonalData")));
 const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
 
 // Status Pages

@@ -33,9 +33,7 @@ const SignUp = () => {
   };
 
   // Function to handle sign-up button click
-  const handleSignUpBtn = async (
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleSignUpBtn = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault(); // Prevent default form submission behavior
 
     // Validate if all fields are filled
@@ -43,28 +41,28 @@ const SignUp = () => {
       setSnackBarMessage("Preencha todos os campos");
       return;
     }
-    
+
     // Validate if password and confirm password match
     if (passwordInput !== confirmPasswordInput) {
-        setSnackBarMessage("As senhas não coincidem");
-        return;
+      setSnackBarMessage("As senhas não coincidem");
+      return;
     }
-    
+
     // Validate if password requirements are met
     if (!isValidPassword(passwordInput)) {
-        setSnackBarMessage(
-            <div>
-            <p>Certifique-se de que requisitos são cumpridos:</p>
-            <ul className="mt-2 ml-7 list-inside list-disc">
-                <li>Pelo menos 8 caracteres</li>
-                <li>Pelo menos uma letra maiúscula</li>
-                <li>Pelo menos um número</li>
-                <li>Pelo menos um caractere especial</li>
-            </ul>
-            </div>
-        );
-        return;
-        }
+      setSnackBarMessage(
+        <div>
+          <p>Certifique-se de que requisitos são cumpridos:</p>
+          <ul className="mt-2 ml-7 list-inside list-disc">
+            <li>Pelo menos 8 caracteres</li>
+            <li>Pelo menos uma letra maiúscula</li>
+            <li>Pelo menos um número</li>
+            <li>Pelo menos um caractere especial</li>
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     setIsLoading(true); // Start loading state
 
@@ -75,23 +73,23 @@ const SignUp = () => {
         email: emailInput,
         password: passwordInput,
       });
-      // If a specific error message appears:
-      if (response.detail) {
-        setSnackBarMessage(response.detail);
-        return;
-      }
-      setSnackBarMessage(
-        "Cadastro realizado com sucesso! Verifique seu email para ativar sua conta."
-      );
-      setNameInput("");
-      setEmailInput("");
-      setPasswordInput("");
-      setConfirmPasswordInput("");
 
-      const token = uuidv4();
-      navigate(`/signup/redirect/${token}`, {
-        state: { email: emailInput },
-      });
+      if (response.status === "error") {
+        setSnackBarMessage(response.message);
+      } else {
+        setSnackBarMessage(
+          "Cadastro realizado com sucesso! Verifique seu email para ativar sua conta."
+        );
+        setNameInput("");
+        setEmailInput("");
+        setPasswordInput("");
+        setConfirmPasswordInput("");
+
+        const token = uuidv4();
+        navigate(`/signup/redirect/${token}`, {
+          state: { email: emailInput },
+        });
+      }
     } catch {
       setSnackBarMessage(
         "Ocorreu um erro ao tentar registrar. Tente novamente mais tarde."
@@ -137,9 +135,7 @@ const SignUp = () => {
           {/* Form wrapper */}
           <div className="sign-up__form-wrapper">
             <div className="sign-up__header">
-              <span className="sign-up__title">
-                Crie sua conta Spifex
-              </span>
+              <span className="sign-up__title">Crie sua conta Spifex</span>
             </div>
 
             {/* Sign-up form */}
@@ -181,9 +177,7 @@ const SignUp = () => {
                   placeholder="Confirme sua senha"
                   type="password"
                   value={confirmPasswordInput}
-                  onChange={(e) =>
-                    setConfirmPasswordInput(e.target.value)
-                  }
+                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
                   onPaste={(e) => e.preventDefault()}
                   onCopy={(e) => e.preventDefault()}
                   disabled={isLoading}
@@ -212,9 +206,7 @@ const SignUp = () => {
 
           {/* Footer with link to sign-in page */}
           <div className="sign-up__footer">
-            <span className="sign-up__footer-text">
-              Já tem conta?
-            </span>
+            <span className="sign-up__footer-text">Já tem conta?</span>
             <Link to="/signin" className="sign-up__link">
               Clique aqui.
             </Link>
@@ -228,16 +220,16 @@ const SignUp = () => {
           autoHideDuration={6000}
           onClose={() => setSnackBarMessage("")}
         >
-            <Alert
+          <Alert
             className="sign-up__alert"
             severity={
-                typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso") 
-                ? "success" 
+              typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso")
+                ? "success"
                 : "error"
             }
-            >
+          >
             {snackBarMessage}
-            </Alert>
+          </Alert>
         </Snackbar>
       </div>
     </div>

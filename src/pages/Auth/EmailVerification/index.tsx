@@ -20,28 +20,35 @@ const EmailVerification = () => {
         const verifyUserEmail = async () => {
             if (!uidb64 || !token) {
                 setVerificationMessage("Parâmetros inválidos.");
-                setIsVerifying(false);
                 setSnackBarMessage("Parâmetros inválidos.");
+                setIsVerifying(false);
                 return;
             }
 
             try {
                 const response = await verifyEmail(uidb64, token);
-                if (response && response.detail) {
-                    setVerificationMessage(response.detail);
-                } else {
+
+                if (response?.status === "error") {
+                    setVerificationMessage(response.message);
+                    setSnackBarMessage(response.message);
+                } else if (response?.status === "success") {
                     setVerificationMessage("Email verificado com sucesso!");
+                    setSnackBarMessage("Email verificado com sucesso!");
+                } else {
+                    setVerificationMessage("Resposta inesperada da API.");
+                    setSnackBarMessage("Erro desconhecido.");
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao verificar seu email.";
                 setVerificationMessage(errorMessage);
+                setSnackBarMessage(errorMessage);
             } finally {
                 setIsVerifying(false);
-                setSnackBarMessage(verificationMessage);
             }
         };
+
         verifyUserEmail();
-    }, [uidb64, token, verifyEmail, verificationMessage]);
+    }, [uidb64, token, verifyEmail]);
 
     return (
         <div className="email-verification">
@@ -54,18 +61,24 @@ const EmailVerification = () => {
                             <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4">
                                 <div className="max-w-md w-full bg-white p-6 shadow-md rounded-md text-center">
                                     <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-                                    Seu email foi verificado com sucesso!
+                                        {verificationMessage.includes("sucesso")
+                                            ? "Seu email foi verificado com sucesso!"
+                                            : "Erro na verificação do email"}
                                     </h1>
                                     <p className="text-gray-600 mb-6">
-                                    Agora você pode entrar na sua conta.
+                                        {verificationMessage.includes("sucesso")
+                                            ? "Agora você pode entrar na sua conta."
+                                            : "Verifique o link ou tente novamente mais tarde."}
                                     </p>
-                                    <Button
-                                        variant="primary"
-                                        onClick={() => navigate("/signin")}
-                                        style={{ height: "50px", width: "100%" }}
-                                    >
-                                        Ir para Login
-                                    </Button>
+                                    {verificationMessage.includes("sucesso") && (
+                                        <Button
+                                            variant="primary"
+                                            onClick={() => navigate("/signin")}
+                                            style={{ height: "50px", width: "100%" }}
+                                        >
+                                            Ir para Login
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         )}

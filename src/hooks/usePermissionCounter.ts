@@ -16,22 +16,22 @@ export const usePermissionCounter = () => {
     setAlertMessage(''); // Limpa qualquer mensagem anterior
 
     try {
-      const usage = await incrementCounter(permissionCode);
+      const response = await incrementCounter(permissionCode);
 
-      // Verifica se é um objeto de erro (contendo 'detail')
-      if ('detail' in usage) {
-        // Se vier "Acesso negado" no detail, você força a mensagem de limite
-        if (usage.detail.toLowerCase().includes('acesso negado')) {
-          setAlertMessage(`Você atingiu o limite de uso para a permissão: ${permissionCode}`);
-        } else {
-          setAlertMessage(`Erro na permissão ${permissionCode}: ${usage.detail}`);
-        }
-      } else {
-        // Caso de sucesso
+      if (!response || typeof response !== 'object') {
+        throw new Error('Resposta inesperada da API.');
+      }
+
+      if (response.status === 'error') {
+        // Se for um erro, verificamos a mensagem
+        setAlertMessage(`Erro na permissão ${permissionCode}: ${response.message}`);
+      } else if (response.status === 'success') {
+        // Caso de sucesso, assumimos que a operação foi bem-sucedida
         setAlertMessage(`Operação realizada com sucesso para "${permissionCode}"!`);
+      } else {
+        setAlertMessage(`Resposta inesperada da API para "${permissionCode}".`);
       }
     } catch (error) {
-      // Lógica para tratar problemas de rede ou outros imprevistos
       console.error(`Erro na permissão ${permissionCode}:`, error);
       setAlertMessage(`Erro na permissão ${permissionCode}. Verifique sua conexão ou tente novamente.`);
     } finally {

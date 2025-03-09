@@ -9,7 +9,7 @@ import { SuspenseLoader } from '@/components/Loaders';
 import './styles.css';
 import Button from 'src/components/Button';
 
-const EnterprisePanel: React.FC = () => {
+const PersonalData: React.FC = () => {
   const { isOwner } = useAuthContext();
   const { getEnterprise, editEnterprise } = useRequests();
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
@@ -33,15 +33,15 @@ const EnterprisePanel: React.FC = () => {
             ownerEmail: response.data.enterprise.owner.email,
           });
         } else {
-          console.error(response.detail);
+          console.error('Erro ao buscar dados da empresa:', response);
         }
       } catch (error) {
-        console.error('Error fetching enterprise data:', error);
+        console.error('Erro ao buscar dados da empresa:', error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchEnterprise();
   }, [getEnterprise]);
 
@@ -69,10 +69,10 @@ const EnterprisePanel: React.FC = () => {
         setEnterprise(response.data.enterprise);
         handleCloseModal();
       } else {
-        console.error(response.detail);
+        console.error('Erro ao atualizar os dados da empresa:', response);
       }
     } catch (error) {
-      console.error('Error updating enterprise information:', error);
+      console.error('Erro ao atualizar os dados da empresa:', error);
     }
   };
 
@@ -175,4 +175,4 @@ const EnterprisePanel: React.FC = () => {
   );
 };
 
-export default EnterprisePanel;
+export default PersonalData;
