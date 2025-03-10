@@ -62,6 +62,10 @@ const routes: RouteObject[] = [
                 element: <EmailVerification />
             },
             {
+                path: 'verify-pending-email/:uidb64/:token/',
+                element: <EmailVerification />
+            },
+            {
                 path: '',
                 element: <Navigate to="/cashflow" replace />
             }

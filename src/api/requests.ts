@@ -84,6 +84,18 @@ const verifyEmail = async (
   );
 };
 
+const verifyNewEmail = async (
+  uidb64: string,
+  token: string
+): Promise<IApiResponse<unknown>> => {
+  return apiRequest<unknown>(
+    `auth/verify-pending-email/${uidb64}/${token}/`,
+    'GET',
+    undefined,
+    false
+  );
+};
+
 const getUser = async (): Promise<IApiResponse<ApiGetUser>> => {
   return apiRequest<ApiGetUser>('auth/user');
 };
@@ -737,6 +749,7 @@ export const useRequests = () => ({
   signUp,
   signIn,
   verifyEmail,
+  verifyNewEmail,
   getUser,
   getEnterprise,
   editEnterprise,

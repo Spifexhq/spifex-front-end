@@ -6,8 +6,11 @@ import { useAuthContext } from "@/contexts/useAuthContext";
 import Navbar from "@/components/Navbar";
 import { Enterprise } from "src/models/Auth/Enterprise";
 import { SuspenseLoader } from '@/components/Loaders';
-import './styles.css';
 import Button from 'src/components/Button';
+import Input from 'src/components/Input';
+import Snackbar from "@/components/Snackbar";
+import Alert from "@/components/Alert";
+import './styles.css';
 
 const PersonalData: React.FC = () => {
   const { isOwner } = useAuthContext();
@@ -15,6 +18,7 @@ const PersonalData: React.FC = () => {
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
   const [formData, setFormData] = useState({
     name: '',
     ownerName: '',
@@ -50,6 +54,13 @@ const PersonalData: React.FC = () => {
   };
 
   const handleCloseModal = () => {
+    if (enterprise) {
+      setFormData({
+        name: enterprise.name,
+        ownerName: enterprise.owner.name,
+        ownerEmail: enterprise.owner.email,
+      });
+    }
     setModalOpen(false);
   };
 
@@ -60,19 +71,25 @@ const PersonalData: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await editEnterprise({
+      const response = await editEnterprise({
         name: formData.name,
         owner: { name: formData.ownerName, email: formData.ownerEmail },
       });
-      const response = await getEnterprise();
-      if (response.data) {
-        setEnterprise(response.data.enterprise);
+
+      if (response.status === "error") {
+        throw new Error(response.message);
+      }
+
+      const updatedEnterprise = await getEnterprise();
+      if (updatedEnterprise.data) {
+        setEnterprise(updatedEnterprise.data.enterprise);
         handleCloseModal();
       } else {
-        console.error('Erro ao atualizar os dados da empresa:', response);
+        console.error('Erro ao atualizar os dados da empresa:', updatedEnterprise);
       }
     } catch (error) {
-      console.error('Erro ao atualizar os dados da empresa:', error);
+      const errorMessage = error instanceof Error ? error.message : "Erro ao atualizar os dados.";
+      setSnackBarMessage(errorMessage);
     }
   };
 
@@ -103,7 +120,7 @@ const PersonalData: React.FC = () => {
           {isOwner ? (
             <>
               <div className="enterprise-panel__actions">
-                <Button className="btn btn--link" onClick={handleOpenModal}>
+                <Button className="edit__button-wrapper"  onClick={handleOpenModal}>
                   Editar
                 </Button>
               </div>
@@ -119,40 +136,37 @@ const PersonalData: React.FC = () => {
           <div className="modal" onClick={handleCloseModal}>
             <div className="modal__content" onClick={(e) => e.stopPropagation()}>
               <div className="modal__header">
-                <h3 className="modal__title">Edit Enterprise Information</h3>
+                <h3 className="modal__title">Informações da Empresa</h3>
                 <button className="modal__close" onClick={handleCloseModal}>
                   &times;
                 </button>
               </div>
               <form className="modal__form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                 <div className="modal__section">
-                  <label htmlFor="name">Nome da empresa: </label>
-                  <input
+                  <Input
+                    label='Nome da empresa'
                     type="text"
-                    id="name"
-                    name="name"
+                    name='name'
                     value={formData.name}
                     onChange={handleChange}
                     required
                   />
                 </div>
                 <div className="modal__section">
-                  <label htmlFor="ownerName">Dono: </label>
-                  <input
+                  <Input
+                    label='Proprietário'
                     type="text"
-                    id="ownerName"
-                    name="ownerName"
+                    name='ownerName'
                     value={formData.ownerName}
                     onChange={handleChange}
                     required
                   />
                 </div>
                 <div className="modal__section">
-                  <label htmlFor="ownerEmail">Email principal: </label>
-                  <input
+                  <Input
+                    label='Email principal'
                     type="email"
-                    id="ownerEmail"
-                    name="ownerEmail"
+                    name='ownerEmail'
                     value={formData.ownerEmail}
                     onChange={handleChange}
                     required
@@ -170,6 +184,21 @@ const PersonalData: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Snackbar para exibir erro */}
+        <Snackbar
+          className="enterprise-panel__snackbar"
+          open={snackBarMessage !== ""}
+          autoHideDuration={6000}
+          onClose={() => setSnackBarMessage("")}
+        >
+          <Alert
+            className="enterprise-panel__alert"
+            severity="error"
+          >
+            {snackBarMessage}
+          </Alert>
+        </Snackbar>
       </div>
     </>
   );
