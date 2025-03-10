@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-
 import { useRequests } from 'src/api';
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import { InlineLoader } from 'src/components/Loaders';
+import Button from 'src/components/Button';
 import './styles.css';
 
 interface PaymentButtonProps {
@@ -35,8 +34,8 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCa
       } else {
         alert('Não foi possível redirecionar para a página de pagamento.');
       }
-    } catch (error: any) {
-      console.error('Erro ao iniciar o processo de pagamento:', error.response?.data || error.message);
+    } catch (error) {
+      console.error('Erro ao iniciar o processo de pagamento:', error);
       alert('Ocorreu um erro ao iniciar o processo de pagamento. Por favor, tente novamente mais tarde.');
     } finally {
       setIsProcessing(false);
@@ -45,14 +44,15 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCa
   };
 
   return (
-    <button
-      className="payment-button"
+    <Button
+      className='payment-button'
+      loaderColor="#FFFFFF"
       onClick={handlePayment}
       disabled={isProcessing}
-      color="primary"
+      isLoading={isProcessing}
     >
-      {isProcessing ? <InlineLoader /> : label}
-    </button>
+      {label}
+    </Button>
   );
 };
 

@@ -8,6 +8,7 @@ import Navbar from 'src/components/Navbar';
 import { InlineLoader, SuspenseLoader } from 'src/components/Loaders';
 import PaymentButton from 'src/components/SubscriptionButtons/PaymentButton';
 import ManageSubscriptionLink from 'src/components/SubscriptionButtons/ManageSubscriptionLink';
+import Button from 'src/components/Button';
 import './styles.css';
 
 const SubscriptionManagement: React.FC = () => {
@@ -62,13 +63,14 @@ const SubscriptionManagement: React.FC = () => {
             <ul className="subscription-management__plans-list">
               {availablePlans.map((plan) => (
                 <li className="plans-list__item" key={plan.priceId}>
-                  <button
+                  <Button
                     className={`item__button ${plan.priceId === activePlanId ? 'current-plan' : ''}`}
                     disabled={plan.priceId === activePlanId}
                     onClick={() => handlePlanChange(plan.priceId)}
+                    loaderColor="#FFFFFF"
                   >
                     {plan.label} {plan.priceId === activePlanId ? '(Atual)' : ''}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
