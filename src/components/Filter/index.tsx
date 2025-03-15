@@ -3,6 +3,7 @@ import Button from "@/components/Button";
 import { useRequests } from "@/api/requests";
 import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccount";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
+import Input from "../Input";
 
 export interface FilterData {
   startDate?: string;
@@ -74,39 +75,31 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
         <div className="flex space-x-4">
           {/* Start Date */}
           <div className="flex-1">
-            <label htmlFor="startDate" className="block text-sm font-medium mb-1">
-              Data Inicial
-            </label>
-            <input
+            <Input
+              label="Data Inicial"
               type="date"
-              id="startDate"
               name="startDate"
               value={formData.startDate || ""}
               onChange={handleChange}
-              className="border rounded-md p-2 w-full"
             />
           </div>
 
           {/* End Date */}
           <div className="flex-1">
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
-              Data Final
-            </label>
-            <input
+            <Input
+              label="Data Final"
               type="date"
-              id="endDate"
               name="endDate"
-              value={formData.endDate || ""}
+              value={formData.startDate || ""}
               onChange={handleChange}
-              className="border rounded-md p-2 w-full"
             />
           </div>
         </div>
 
         {/* Second Column, Row 1: Ledger Accounts Dropdown */}
         <div>
-          <label className="block text-sm font-medium mb-1">Conta Contábil</label>
           <MultiSelectDropdown<GeneralLedgerAccount>
+            label="Conta Contábil"
             items={ledgerAccounts}
             selected={selectedLedgerAccounts}
             onChange={handleLedgerAccountChange}
@@ -118,31 +111,23 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
 
         {/* First Column, Row 2: Description Field */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium mb-1">
-            Descrição
-          </label>
-          <input
+          <Input
+            label="Descrição"
             type="text"
-            id="description"
             name="description"
             value={formData.description || ""}
             onChange={handleChange}
-            className="border rounded-md p-2 w-full"
           />
         </div>
 
         {/* Second Column, Row 2: Observation Field */}
         <div>
-          <label htmlFor="observation" className="block text-sm font-medium mb-1">
-            Observação
-          </label>
-          <textarea
-            id="observation"
+          <Input
+            label="Observação"
+            type="text"
             name="observation"
             value={formData.observation || ""}
             onChange={handleChange}
-            className="border rounded-md p-2 w-full"
-            rows={1}
           />
         </div>
       </div>
