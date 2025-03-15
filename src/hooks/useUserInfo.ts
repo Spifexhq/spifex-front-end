@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
-import { User, UserEnterpriseDetail, Subscription } from '@/models/Auth';
+import { User, UserEnterpriseDetail, Subscription, Permission } from '@/models/Auth';
 
 interface UserInfo {
   user: User | null;
@@ -34,6 +34,6 @@ export const useUserInfo = (): UserInfo => {
     isSubscribed: auth.user?.is_subscribed ?? false,
     activePlanId: auth.subscription?.plan_id ?? null,
     stripeCustomerId: auth.user?.stripe_customer_id ?? null,
-    permissions: auth.enterprise?.permissions?.map(p => p.code_name) ?? [],
+    permissions: auth.enterprise?.permissions?.map((p: Permission) => p.code_name) ?? [],
   };
 };
