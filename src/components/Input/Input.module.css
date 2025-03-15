@@ -26,6 +26,7 @@
 }
 
 .input {
+  width: 100%;
   background-color: var(--color1);
   font-size: 12px;
   border: var(--border1);
@@ -74,11 +75,6 @@ select:not(:disabled):hover {
 /* Wrapper for custom elements */
 .inputWrapper {
   position: relative;
-}
-
-.input {
-  width: 100%;
-  padding-right: 40px;
 }
 
 /* Toggle Password Visibility Button */
