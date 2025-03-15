@@ -22,21 +22,10 @@
 export type InputVariant = 'default' | 'outlined' | 'filled' | 'error';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  // Defines the input style variant
   variant?: InputVariant;
-
-  // Displays a label above the input
   label?: string;
-
-  // Shows an error message below the input
   errorMessage?: string;
-
-  // Inline styles for custom styling
   style?: React.CSSProperties;
-
-  // Enables a toggle button for password visibility
   showTogglePassword?: boolean;
-
-  // Disables input and shows a loading state
   isLoading?: boolean;
 }
