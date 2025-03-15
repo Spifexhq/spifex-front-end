@@ -4,8 +4,8 @@ import Sidebar from "@/components/Sidebar";
 import Modal from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
 import Filter, { FilterData } from "@/components/Filter";
+import BanksTable from "src/components/Table/BanksTable";
 
-// Make sure your Table's prop type expects `filters` of type `CashFlowFilters`
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +28,6 @@ const CashFlow = () => {
 
   // Receives new filters from child and updates state
   const handleApplyFilters = (newFilters: FilterData) => {
-    // FilterData is compatible with CashFlowFilters if they share the same fields
     setFilters(newFilters);
   };
 
@@ -42,22 +41,32 @@ const CashFlow = () => {
         mode="default"
       />
 
+      {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${
           isSidebarOpen ? "ml-60" : "ml-16"
         }`}
       >
-        {/* Navbar fixa no topo */}
+        {/* Fixed Navbar */}
         <div className="fixed top-0 left-0 right-0 z-50">
           <Navbar />
         </div>
 
-        {/* Conteúdo principal */}
-        <div className="mt-[60px] px-10">
-          {/* Our new Filter Card */}
-          <Filter onApply={handleApplyFilters} />
+        {/* Push main content below the fixed Navbar */}
+        <div className="mt-[80px] px-10">
+          {/* Filter + BanksTable side by side */}
+          <div className="flex flex-wrap md:flex-nowrap gap-4 mb-6">
+            {/* Filter on the left */}
+            <div className="flex-1 min-w-[250px]">
+              <Filter onApply={handleApplyFilters} />
+            </div>
+            {/* BanksTable on the right */}
+            <div className="flex-1 min-w-[250px]">
+              <BanksTable />
+            </div>
+          </div>
 
-          {/* Tabela de fluxo de caixa, agora recebendo os filters do estado */}
+          {/* CashFlow Table below */}
           <CashFlowTable filters={filters} />
         </div>
 
