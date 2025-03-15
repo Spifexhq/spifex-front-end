@@ -69,7 +69,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
   };
 
   return (
-    <div className="border rounded-md shadow p-4 bg-white mb-4 max-w-5xl">
+    <div className="relative rounded-md shadow-md h-[252px] p-4 bg-white max-w-5xl">
       <div className="grid grid-cols-2 gap-4">
         {/* First Column, Row 1: Date Fields */}
         <div className="flex space-x-4">
