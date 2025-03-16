@@ -19,6 +19,7 @@ import { useRequests } from '@/api/requests';
 import { CashFlowFilters, Entry } from '@/models/Entries';
 import { parseApiList } from 'src/utils/parseApiList';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
+import { useBanks } from '@/hooks/useBanks';
 
 import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';
@@ -32,6 +33,7 @@ interface CashFlowTableProps {
 
 const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
   const { getFilteredEntries } = useRequests();
+  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
 
   // We'll store an array of Entry objects here
   const [entries, setEntries] = useState<Array<Entry>>([]);
@@ -130,7 +132,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
 
     let currentMonth = '';
     let monthlySum = 0;
-    let runningBalance = 0;
+    let runningBalance = totalConsolidatedBalance;
 
     const newRows: Array<{
       isSummary: boolean;
@@ -192,7 +194,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
     });
 
     setTableRows(newRows);
-  }, [entries]);
+  }, [entries, totalConsolidatedBalance, loadingBanks]);
 
   // Show loader, errors, or table
   if (loading && !entries.length) {
@@ -216,26 +218,26 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
                 />
               </div>
             </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
               Vencimento
             </th>
-            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
               Descrição
             </th>
-            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th className="w-[20%] px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
               Observação
             </th>
-            <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
               Parcela
             </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
               Valor
             </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
               Saldo
             </th>
             <th
-              className="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
+              className="px-3 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider"
               style={{ maxWidth: '68px', minWidth: '68px' }}
             ></th>
           </tr>
@@ -244,7 +246,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {tableRows.length === 0 ? (
             <tr>
-              <td colSpan={8} className="px-4 py-3 text-center text-gray-500">
+              <td colSpan={8} className="px-4 py-3 text-center text-gray-600">
                 Nenhum dado disponível
               </td>
             </tr>
