@@ -19,6 +19,7 @@ import { useRequests } from '@/api/requests';
 import { CashFlowFilters, SettledEntry } from '@/models/Entries';
 import { parseApiList } from 'src/utils/parseApiList';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
+import { useBanks } from '@/hooks/useBanks';
 
 import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';
@@ -28,9 +29,10 @@ const PAGE_SIZE = 100;
 
 interface SettledEntriesTableProps {
   filters?: CashFlowFilters;
+  bankIds?: number[];
 }
 
-const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) => {
+const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bankIds }) => {
   const { getFilteredSettledEntries } = useRequests();
   const [entries, setEntries] = useState<Array<SettledEntry>>([]);
   const [tableRows, setTableRows] = useState<
@@ -49,6 +51,7 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) =>
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
+  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(bankIds);
 
   /**
    * Fetch paginated settled entries from the API
@@ -127,72 +130,100 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) =>
       setTableRows([]);
       return;
     }
-
+  
+    // -------------------------------------------------
+    // 1. Calculate REVERSE BALANCE from bottom (most recent) to top (oldest)
+    // -------------------------------------------------
+    let runningReverseBalance = totalConsolidatedBalance || 0;
+    const reversedBalances: number[] = new Array(entries.length).fill(0);
+  
+    // Iterate from the end to the beginning (highest index -> 0)
+    for (let i = entries.length - 1; i >= 0; i--) {
+      // Before modifying runningReverseBalance, store the current balance for this row
+      reversedBalances[i] = runningReverseBalance;
+  
+      const e = entries[i];
+      const amountNum = parseFloat(e.amount);
+  
+      // If it's 'credit', subtract. If it's 'debit', add.
+      if (e.transaction_type === 'credit') {
+        runningReverseBalance -= amountNum;
+      } else {
+        runningReverseBalance += amountNum;
+      }
+      
+      reversedBalances[i] = runningReverseBalance;
+    }
+  
+    // -------------------------------------------------
+    // 2. (Optional) Calculate the monthly summary as before,
+    //    but now we will not use this runningBalance for the "Balance" column.
+    //    If you NO LONGER need the monthly summary, you can remove it.
+    // -------------------------------------------------
     let currentMonth = '';
     let monthlySum = 0;
-    let runningBalance = 0;
-
+    let ascendingBalance = 0; // if you want to keep the old "runningBalance"
     const newRows: Array<{
       isSummary: boolean;
       entry?: SettledEntry;
       monthlySum?: number;
-      runningBalance?: number;
+      runningBalance?: number; // will now be the reversedBalance
       displayMonth?: string;
     }> = [];
-
+  
     const getMonthYear = (dateStr: string) => {
       const date = new Date(dateStr);
       const m = (date.getMonth() + 1).toString().padStart(2, '0');
       const y = date.getFullYear();
       return `${m}/${y}`;
     };
-
+  
     entries.forEach((entry, index) => {
       const dateStr = entry.settlement_due_date;
-
+      const entryMonth = getMonthYear(dateStr);
+  
       const amountNum = parseFloat(entry.amount);
       const transactionValue =
         entry.transaction_type === 'credit' ? amountNum : -amountNum;
-
-      const entryMonth = getMonthYear(dateStr);
-
-      // If it's a new month, push the summary for the previous one
+  
+      // This is just for the monthly summary (optional)
       if (currentMonth && currentMonth !== entryMonth) {
+        // When the month changes, push a summary row
         newRows.push({
           isSummary: true,
           monthlySum,
-          runningBalance,
+          runningBalance: ascendingBalance, 
           displayMonth: currentMonth,
         });
         monthlySum = 0;
       }
-
       if (!currentMonth || currentMonth !== entryMonth) {
         currentMonth = entryMonth;
       }
-
       monthlySum += transactionValue;
-      runningBalance += transactionValue;
-
+      ascendingBalance += transactionValue;
+  
+      // Create the regular row
       newRows.push({
         isSummary: false,
         entry,
-        runningBalance,
+        // Here we use the REVERSE BALANCE calculated in the previous step
+        runningBalance: reversedBalances[index],
       });
-
-      // At the last entry, push the final month's summary
+  
+      // If it's the last entry in the array, insert the final summary for the month
       if (index === entries.length - 1) {
         newRows.push({
           isSummary: true,
           monthlySum,
-          runningBalance,
+          runningBalance: ascendingBalance,
           displayMonth: currentMonth,
         });
       }
     });
-
+  
     setTableRows(newRows);
-  }, [entries]);
+  }, [entries, totalConsolidatedBalance, loadingBanks]);  
 
   // Show loader, errors, or table
   if (loading && !entries.length) {
@@ -261,7 +292,6 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) =>
                 const amountNum = parseFloat(entry.amount);
                 const value =
                   entry.transaction_type === 'debit' ? -amountNum : amountNum;
-                const balance = row.runningBalance || 0;
 
                 // Example: if 'bank_institution' is the best property for display
                 const bankName = entry.bank?.bank_institution ?? '-';
@@ -298,7 +328,7 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) =>
                       })}
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
-                      {balance.toLocaleString('pt-BR', {
+                      {row.runningBalance?.toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}

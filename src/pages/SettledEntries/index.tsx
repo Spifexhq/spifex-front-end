@@ -65,7 +65,7 @@ const Settled = () => {
           </div>
 
           {/* Settled Entries Table */}
-          <SettledEntriesTable filters={filters} />
+          <SettledEntriesTable filters={filters} bankIds={filters.banksId} />
         </div>
 
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
