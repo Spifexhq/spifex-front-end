@@ -49,9 +49,12 @@ function buildQueryParams(url: string, limit: number, offset: number, filters?: 
     query += `&observation=${filters.observation}`;
   }
   if (filters?.generalLedgerAccountId && filters.generalLedgerAccountId.length > 0) {
-    // Ex: [3, 26] => '3,26'
     const ids = filters.generalLedgerAccountId.join(',');
     query += `&general_ledger_account_id=${ids}`;
+  }
+  if (filters?.banksId && filters.banksId.length > 0) {
+    const banksParam = filters.banksId.join(',');
+    query += `&bank_id=${banksParam}`;
   }
 
   return query;

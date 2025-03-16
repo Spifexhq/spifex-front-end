@@ -4,4 +4,5 @@ export type CashFlowFilters = {
     description?: string;
     observation?: string;
     generalLedgerAccountId?: number[];
+    banksId?: number[];
   };
