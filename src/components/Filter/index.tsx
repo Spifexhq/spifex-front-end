@@ -1,14 +1,19 @@
+// Filter.tsx
+
 import React, { FC, useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { useRequests } from "@/api/requests";
+import type { Bank } from "@/models/Bank";
 import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccount";
 import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
+import { useBanks } from "@/hooks/useBanks";
 import Input from "../Input";
 
 export interface FilterData {
   startDate?: string;
   endDate?: string;
   generalLedgerAccountId?: number[];
+  banksId?: number[];
   description?: string;
   observation?: string;
 }
@@ -19,11 +24,15 @@ interface FilterProps {
 
 const Filter: FC<FilterProps> = ({ onApply }) => {
   const { getGeneralLedgerAccounts } = useRequests();
+  
+  // Here we fetch ALL active banks (no specific IDs)
+  const { banks } = useBanks();
 
   const [formData, setFormData] = useState<FilterData>({
     startDate: "",
     endDate: "",
     generalLedgerAccountId: [],
+    banksId: [],
     description: "",
     observation: "",
   });
@@ -40,28 +49,29 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
       });
   }, [getGeneralLedgerAccounts]);
 
-  // Convert the currently selected IDs into an array of GeneralLedgerAccount objects
-  // so we can pass them to <MultiSelectDropdown>.
   const selectedLedgerAccounts = ledgerAccounts.filter((acc) =>
     formData.generalLedgerAccountId?.includes(acc.id)
+  );
+
+  const selectedBanks = banks.filter((bank) =>
+    formData.banksId?.includes(bank.id)
   );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLedgerAccountChange = (updatedAccounts: GeneralLedgerAccount[]) => {
-    // Convert array of GeneralLedgerAccount objects back to an array of IDs
     const newIds = updatedAccounts.map((acc) => acc.id);
-    setFormData((prev) => ({
-      ...prev,
-      generalLedgerAccountId: newIds,
-    }));
+    setFormData((prev) => ({ ...prev, generalLedgerAccountId: newIds }));
+  };
+
+  const handleBankChange = (updatedBanks: Bank[]) => {
+    const newIds = updatedBanks.map((bank) => bank.id);
+    setFormData((prev) => ({ ...prev, banksId: newIds }));
   };
 
   const handleApply = () => {
@@ -69,11 +79,10 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
   };
 
   return (
-    <div className="relative rounded-md shadow-md h-[252px] p-4 bg-white max-w-5xl">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="relative rounded-md shadow-md h-auto p-4 bg-white max-w-5xl">
+      <div className="grid grid-cols-2 gap-2">
         {/* First Column, Row 1: Date Fields */}
         <div className="flex space-x-4">
-          {/* Start Date */}
           <div className="flex-1">
             <Input
               label="Data Inicial"
@@ -83,20 +92,18 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
               onChange={handleChange}
             />
           </div>
-
-          {/* End Date */}
           <div className="flex-1">
             <Input
               label="Data Final"
               type="date"
               name="endDate"
-              value={formData.startDate || ""}
+              value={formData.endDate || ""}
               onChange={handleChange}
             />
           </div>
         </div>
 
-        {/* Second Column, Row 1: Ledger Accounts Dropdown */}
+        {/* First Column, Row 1 or 2 (your layout choice) */}
         <div>
           <MultiSelectDropdown<GeneralLedgerAccount>
             label="Conta Contábil"
@@ -109,7 +116,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
           />
         </div>
 
-        {/* First Column, Row 2: Description Field */}
+        {/* Description Field */}
         <div>
           <Input
             label="Descrição"
@@ -120,7 +127,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
           />
         </div>
 
-        {/* Second Column, Row 2: Observation Field */}
+        {/* Observation Field */}
         <div>
           <Input
             label="Observação"
@@ -130,8 +137,19 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
             onChange={handleChange}
           />
         </div>
-      </div>
 
+        {/* Bank MultiSelect */}
+        <div>
+          <MultiSelectDropdown<Bank>
+            label="Banco"
+            items={banks}
+            selected={selectedBanks}
+            onChange={handleBankChange}
+            getItemKey={(item) => item.id}
+            getItemLabel={(item) => item.bank_institution}
+            buttonLabel="Bancos"
+          />
+        </div>
       {/* Apply Filters Button */}
       <div className="flex justify-end mt-4">
         <Button
@@ -142,6 +160,8 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
           Aplicar Filtros
         </Button>
       </div>
+      </div>
+
     </div>
   );
 };

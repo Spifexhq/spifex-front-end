@@ -10,7 +10,7 @@ const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<FilterData>({});
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -60,12 +60,12 @@ const CashFlow = () => {
             </div>
             {/* BanksTable on the right */}
             <div className="flex-1 min-w-[250px]">
-              <BanksTable />
+              <BanksTable selectedBankIds={filters.banksId} />
             </div>
           </div>
 
           {/* CashFlow Table */}
-          <CashFlowTable filters={filters} />
+          <CashFlowTable filters={filters} bankIds={filters.banksId} />
         </div>
 
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} />

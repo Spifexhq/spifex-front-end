@@ -10,7 +10,7 @@ const Settled = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<FilterData>({});
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -60,7 +60,7 @@ const Settled = () => {
             </div>
             {/* BanksTable on the right */}
             <div className="flex-1 min-w-[250px]">
-              <BanksTable />
+              <BanksTable selectedBankIds={filters.banksId} />
             </div>
           </div>
 

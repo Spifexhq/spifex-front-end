@@ -15,5 +15,5 @@ export type ApiGetBanks = {
 };
 
 export type ApiGetBank = {
-  bank: Bank;
+  banks: Bank[];
 };

@@ -2,8 +2,12 @@ import React from 'react';
 import { useBanks } from '@/hooks/useBanks';
 import { InlineLoader } from '@/components/Loaders';
 
-const BanksTable: React.FC = () => {
-  const { banks, totalConsolidatedBalance, loading, error } = useBanks();
+interface BanksTableProps {
+  selectedBankIds?: number[];
+}
+
+const BanksTable: React.FC<BanksTableProps> = ({ selectedBankIds }) => {
+  const { banks, totalConsolidatedBalance, loading, error } = useBanks(selectedBankIds);
 
   if (loading) {
     return (
@@ -18,7 +22,7 @@ const BanksTable: React.FC = () => {
   }
 
   return (
-    <div className="relative rounded shadow-md max-h-[252px] overflow-y-auto" style={{ minHeight: '200px' }}>
+    <div className="relative rounded shadow-md max-h-[252px] overflow-y-auto">
       <table className="w-full text-sm text-left">
         <thead className="sticky top-0 bg-gray-100 z-10">
           <tr>

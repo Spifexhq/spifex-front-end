@@ -32,10 +32,7 @@ interface SettledEntriesTableProps {
 
 const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) => {
   const { getFilteredSettledEntries } = useRequests();
-
-  // We'll store an array of SettledEntry objects here
   const [entries, setEntries] = useState<Array<SettledEntry>>([]);
-
   const [tableRows, setTableRows] = useState<
     Array<{
       isSummary: boolean;
@@ -45,16 +42,12 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters }) =>
       displayMonth?: string;
     }>
   >([]);
-
-  // Loading + pagination states
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Multi-select hook
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
 
   /**
