@@ -381,7 +381,9 @@ const deleteSettledEntry = async (
   );
 };
 
-// Transferences
+// ======================
+//    Transferences
+// ======================
 const addTransference = async (params: {
   due_date: string;
   amount: string;
@@ -392,7 +394,9 @@ const addTransference = async (params: {
   return apiRequest<unknown>('cashflow/transferences', 'POST', params);
 };
 
-// Banks
+// ======================
+//    Banks
+// ======================
 const getBanks = async (): Promise<IApiResponse<ApiGetBanks>> => {
   return apiRequest<ApiGetBanks>('financeconfig/banks');
 };
