@@ -95,18 +95,20 @@ function MultiSelectDropdown<T>({
         >
           {buttonLabel}
           <svg
-            className="w-2.5 h-2.5 ml-3"
+            className={`w-4 h-4 ml-3 transition-transform duration-200 ease-in-out ${
+              isOpen ? "rotate-0" : "rotate-180"
+            }`}
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
-            viewBox="0 0 10 6"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path
-              stroke="currentColor"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
-              d="m1 1 4 4 4-4"
+              d="M19 9l-7 7-7-7"
             />
           </svg>
         </button>
