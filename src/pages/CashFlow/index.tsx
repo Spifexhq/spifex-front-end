@@ -10,7 +10,6 @@ const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Store filters in the parent
   const [filters, setFilters] = useState({});
 
   const toggleSidebar = () => {
@@ -26,7 +25,6 @@ const CashFlow = () => {
     setIsModalOpen(false);
   };
 
-  // Receives new filters from child and updates state
   const handleApplyFilters = (newFilters: FilterData) => {
     setFilters(newFilters);
   };
@@ -66,7 +64,7 @@ const CashFlow = () => {
             </div>
           </div>
 
-          {/* CashFlow Table below */}
+          {/* CashFlow Table */}
           <CashFlowTable filters={filters} />
         </div>
 
