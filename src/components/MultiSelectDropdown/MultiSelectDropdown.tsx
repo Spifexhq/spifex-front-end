@@ -12,6 +12,9 @@ function MultiSelectDropdown<T>({
   getItemLabel,
   buttonLabel = "Select Items",
   disabled = false,
+
+  // Nova prop
+  singleSelect = false,
 }: MultiSelectDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,24 +28,24 @@ function MultiSelectDropdown<T>({
     }
   };
 
-  /** Handles clicks outside of the dropdown to close it */
+  /** Fecha o dropdown ao clicar fora dele */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        onChange([]);
       }
     }
-
+  
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, onChange]);
 
-  /** Adds or removes an item from `selected`. */
+  /** Adiciona/Remove um item da lista `selected`. */
   const handleCheckboxChange = (item: T) => {
     const itemKey = getItemKey(item);
     const isCurrentlySelected = selected.some(
@@ -50,28 +53,45 @@ function MultiSelectDropdown<T>({
     );
 
     let updatedSelected: T[];
-    if (isCurrentlySelected) {
-      updatedSelected = selected.filter(
-        (selectedItem) => getItemKey(selectedItem) !== itemKey
-      );
+
+    if (singleSelect) {
+      // Se for singleSelect, só pode ter 0 ou 1 item.
+      if (isCurrentlySelected) {
+        // Se o usuário clicou de novo no mesmo item, desmarca tudo
+        updatedSelected = [];
+      } else {
+        // Seleciona apenas este item
+        updatedSelected = [item];
+      }
     } else {
-      updatedSelected = [...selected, item];
+      // Múltipla seleção (comportamento original)
+      if (isCurrentlySelected) {
+        updatedSelected = selected.filter(
+          (selectedItem) => getItemKey(selectedItem) !== itemKey
+        );
+      } else {
+        updatedSelected = [...selected, item];
+      }
     }
 
     onChange(updatedSelected);
   };
 
-  /** Selects all items. */
+  /** Seleciona todos (somente se não for singleSelect). */
   const selectAll = () => {
-    onChange([...items]);
+    if (!singleSelect) {
+      onChange([...items]);
+    }
   };
 
-  /** Deselects all items. */
+  /** Remove todos (somente se não for singleSelect). */
   const deselectAll = () => {
-    onChange([]);
+    if (!singleSelect) {
+      onChange([]);
+    }
   };
 
-  // Filter items based on search term.
+  // Filtra itens conforme o termo digitado
   const filteredItems = searchTerm
     ? items.filter((item) =>
         getItemLabel(item).toLowerCase().includes(searchTerm.toLowerCase())
@@ -115,20 +135,23 @@ function MultiSelectDropdown<T>({
 
         {isOpen && (
           <div className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 max-h-[250px] overflow-y-auto rounded-lg w-full">
-            <div className="flex flex-row p-2.5 pb-0 text-center select-none">
-              <button
-                onClick={selectAll}
-                className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
-              >
-                Marcar Tudo
-              </button>
-              <button
-                onClick={deselectAll}
-                className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
-              >
-                Desmarcar Tudo
-              </button>
-            </div>
+            {/* Botões de "Marcar/Desmarcar Tudo" só fazem sentido se NÃO for singleSelect */}
+            {!singleSelect && (
+              <div className="flex flex-row p-2.5 pb-0 text-center select-none">
+                <button
+                  onClick={selectAll}
+                  className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
+                >
+                  Marcar Tudo
+                </button>
+                <button
+                  onClick={deselectAll}
+                  className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
+                >
+                  Desmarcar Tudo
+                </button>
+              </div>
+            )}
 
             <input
               type="text"
@@ -160,7 +183,9 @@ function MultiSelectDropdown<T>({
                       onChange={() => handleCheckboxChange(item)}
                       size="small"
                     />
-                    <span className="pl-2 user-select-none">{label}</span>
+                    <span className="pl-2 user-select-none">
+                      {label}
+                    </span>
                   </div>
                 );
               })}

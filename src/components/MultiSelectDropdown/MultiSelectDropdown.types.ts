@@ -9,5 +9,6 @@ export interface MultiSelectDropdownProps<T> {
     getItemLabel: (item: T) => string;
     buttonLabel?: string;
     disabled?: boolean;
+    singleSelect?: boolean;
   }
   
