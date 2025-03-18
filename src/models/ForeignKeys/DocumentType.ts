@@ -1,7 +1,7 @@
 export type DocumentType = {
   id: number;
-  document_type: string | null;
-  uuid_document_type: string | null;
+  document_type: string;
+  uuid_document_type: string;
 };
 
 export type ApiGetDocumentTypes = {
