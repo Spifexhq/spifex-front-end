@@ -126,6 +126,8 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
 
   // Build table rows (normal + monthly summary)
   useEffect(() => {
+    if (loadingBanks) return;
+
     if (!entries.length) {
       setTableRows([]);
       return;
@@ -229,7 +231,7 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
   if (loading && !entries.length) {
     return <InlineLoader color="orange" className="w-10 h-10" />;
   }
-
+  
   if (error) {
     return <div>{error}</div>;
   }

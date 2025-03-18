@@ -35,10 +35,7 @@ interface CashFlowTableProps {
 const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, bankIds }) => {
   const { getFilteredEntries } = useRequests();
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(bankIds);
-
-  // We'll store an array of Entry objects here
   const [entries, setEntries] = useState<Array<Entry>>([]);
-
   const [tableRows, setTableRows] = useState<
     Array<{
       isSummary: boolean;
@@ -66,27 +63,25 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, bankIds }) => {
   const fetchEntries = async (reset = false) => {
     if (isFetching) return;
     if (!hasMore && !reset) return;
-
+  
     setIsFetching(true);
-
+  
     if (reset) {
       setLoading(true);
       setOffset(0);
     } else {
       setLoadingMore(true);
     }
-
+  
     try {
       const response = await getFilteredEntries(PAGE_SIZE, reset ? 0 : offset, filters);
-      // Adjust the parseApiList key to match the actual API response object key
       const parsed = parseApiList<Entry>(response, 'entries');
-
+  
       const combined = (reset ? [] : entries).concat(parsed);
-      // Sort by due_date
       const sorted = combined.sort((a, b) => {
         return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
       });
-
+  
       setEntries(sorted);
       setOffset((prev) => (reset ? PAGE_SIZE : prev + PAGE_SIZE));
       setHasMore(parsed.length === PAGE_SIZE);
@@ -95,11 +90,11 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, bankIds }) => {
       console.error('Erro ao buscar lançamentos:', message);
       setError(message);
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
       setIsFetching(false);
+      setLoadingMore(false);
+      setLoading(false);
     }
-  };
+  };  
 
   // Trigger fetch on mount or whenever filters change
   useEffect(() => {
@@ -126,6 +121,8 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, bankIds }) => {
 
   // Build table rows (normal + monthly summary)
   useEffect(() => {
+    if (loadingBanks) return;
+    
     if (!entries.length) {
       setTableRows([]);
       return;
