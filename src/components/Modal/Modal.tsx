@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormData, ModalFormProps, Tab } from "./Modal.types";
 import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
+import { useRequests } from "@/api/requests";
+import { GeneralLedgerAccount, DocumentType } from "src/models/ForeignKeys";
+import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -34,11 +37,18 @@ const initialFormData: FormData = {
   }
 };
 
-const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
+const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
   // State for active tab and form data (fields persist between tabs)
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
+
+  const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
+  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GeneralLedgerAccount[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
+  const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocumentType[]>([]);
+
+  const { getGeneralLedgerAccounts, getDocumentTypes } = useRequests();
 
   // When closing the modal, reset the form data and active tab
   const handleClose = useCallback(() => {
@@ -63,6 +73,10 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, handleClose]);
 
+  // -------------------------------
+  // DETAILS TAB LOGIC
+  // -------------------------------
+
   // Fill in today's date and focus on the description field when opening
   useEffect(() => {
     if (isOpen) {
@@ -77,6 +91,66 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
       }, 100);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    getGeneralLedgerAccounts()
+      .then((response) => {
+        let allAccounts: GeneralLedgerAccount[] =
+          response.data?.general_ledger_accounts || [];
+
+        if (type === 'credit') {
+          allAccounts = allAccounts.filter((acc) => acc.transaction_type === 'credit');
+        } else {
+          allAccounts = allAccounts.filter((acc) => acc.transaction_type === 'debit');
+        }
+
+        setLedgerAccounts(allAccounts);
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar contas contábeis:", error);
+      });
+
+      getDocumentTypes()
+      .then((response) => {
+        setDocumentTypes(response.data?.document_types || []);
+      })
+      .catch((error) => console.error("Erro ao buscar tipos de documento:", error));
+  
+  }, [getGeneralLedgerAccounts, getDocumentTypes, isOpen, type]);
+
+  const handleLedgerAccountChange = (updatedAccounts: GeneralLedgerAccount[]) => {
+    setSelectedLedgerAccount(updatedAccounts);
+  
+    const itemId = updatedAccounts.length > 0
+      ? String(updatedAccounts[0].id)
+      : "";
+  
+    setFormData({
+      ...formData,
+      details: {
+        ...formData.details,
+        accountingAccount: itemId,
+      },
+    });
+  };
+
+  const handleDocumentTypeChange = (updatedDocumentTypes: DocumentType[]) => {
+    setSelectedDocumentType(updatedDocumentTypes);
+
+    const itemId = updatedDocumentTypes.length > 0
+    ? String(updatedDocumentTypes[0].id)
+    : "";
+  
+    setFormData({
+      ...formData,
+      details: {
+        ...formData.details,
+        documentType: itemId,
+      },
+    });
+  };
 
   // -------------------------------
   // COST CENTERS TAB LOGIC
@@ -192,47 +266,29 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose }) => {
             </div>
             {/* Conta Contábil */}
             <div className="mb-4">
-              <label htmlFor="accountingAccount" className="block text-sm font-medium">
-                Conta Contábil
-              </label>
-              <select
-                id="accountingAccount"
-                value={formData.details.accountingAccount}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    details: { ...formData.details, accountingAccount: e.target.value },
-                  })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
-              >
-                <option value="">Selecione uma opção</option>
-                <option value="conta1">Conta 1</option>
-                <option value="conta2">Conta 2</option>
-                <option value="conta3">Conta 3</option>
-              </select>
+              <MultiSelectDropdown<GeneralLedgerAccount>
+                label="Conta Contábil"
+                items={ledgerAccounts}
+                selected={selectedLedgerAccounts}
+                onChange={handleLedgerAccountChange}
+                getItemKey={(item) => item.id}
+                getItemLabel={(item) => item.general_ledger_account}
+                buttonLabel="Selecione Contas Contábeis"
+                singleSelect
+              />
             </div>
             {/* Tipo de Documento */}
             <div className="mb-4">
-              <label htmlFor="documentType" className="block text-sm font-medium">
-                Tipo de Documento
-              </label>
-              <select
-                id="documentType"
-                value={formData.details.documentType}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    details: { ...formData.details, documentType: e.target.value },
-                  })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
-              >
-                <option value="">Selecione uma opção</option>
-                <option value="tipo1">Tipo 1</option>
-                <option value="tipo2">Tipo 2</option>
-                <option value="tipo3">Tipo 3</option>
-              </select>
+              <MultiSelectDropdown<DocumentType>
+                label="Tipo de Documento"
+                items={documentTypes}
+                selected={selectedDocumentTypes}
+                onChange={handleDocumentTypeChange}
+                getItemKey={(item) => item.id}
+                getItemLabel={(item) => item.document_type}
+                buttonLabel="Selecione Contas Contábeis"
+                singleSelect
+              />
             </div>
             {/* Notas */}
             <div className="mb-4 col-span-3">

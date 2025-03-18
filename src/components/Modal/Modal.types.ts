@@ -30,10 +30,13 @@ export interface FormData {
       weekend: string;
     };
   }
+
+  export type ModalType = 'credit' | 'debit';
   
   export interface ModalFormProps {
     isOpen: boolean;
     onClose: () => void;
+    type: ModalType;
   }
   
   type Tab = 'details' | 'costCenters' | 'inventory' | 'participants' | 'recurrence';
