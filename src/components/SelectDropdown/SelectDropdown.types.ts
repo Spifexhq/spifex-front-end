@@ -1,6 +1,6 @@
-// multi-select-dropdown/MultiSelectDropdown.types.ts
+// multi-select-dropdown/SelectDropdown.types.ts
 
-export interface MultiSelectDropdownProps<T> {
+export interface SelectDropdownProps<T> {
     label?: string;
     items: T[];
     selected: T[];

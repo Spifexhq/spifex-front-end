@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useId } from "react";
-import { MultiSelectDropdownProps } from "./MultiSelectDropdown.types";
-import styles from './MultiSelectDropdown.module.css';
+import { SelectDropdownProps } from "./SelectDropdown.types";
+import styles from './SelectDropdown.module.css';
 import Checkbox from "@/components/Checkbox";
 
-function MultiSelectDropdown<T>({
+function SelectDropdown<T>({
   label,
   items,
   selected,
@@ -15,7 +15,7 @@ function MultiSelectDropdown<T>({
 
   // Nova prop
   singleSelect = false,
-}: MultiSelectDropdownProps<T>) {
+}: SelectDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -197,4 +197,4 @@ function MultiSelectDropdown<T>({
   );
 }
 
-export default MultiSelectDropdown;
+export default SelectDropdown;

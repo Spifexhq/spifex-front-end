@@ -5,7 +5,7 @@ import Button from "@/components/Button";
 import { useRequests } from "@/api/requests";
 import type { Bank } from "@/models/Bank";
 import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccount";
-import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
+import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import Input from "../Input";
 
@@ -105,7 +105,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
 
         {/* First Column, Row 1 or 2 (your layout choice) */}
         <div>
-          <MultiSelectDropdown<GeneralLedgerAccount>
+          <SelectDropdown<GeneralLedgerAccount>
             label="Conta Contábil"
             items={ledgerAccounts}
             selected={selectedLedgerAccounts}
@@ -140,7 +140,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
 
         {/* Bank MultiSelect */}
         <div>
-          <MultiSelectDropdown<Bank>
+          <SelectDropdown<Bank>
             label="Banco"
             items={banks}
             selected={selectedBanks}

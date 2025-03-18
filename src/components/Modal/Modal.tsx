@@ -3,7 +3,7 @@ import { FormData, ModalFormProps, Tab } from "./Modal.types";
 import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
 import { useRequests } from "@/api/requests";
 import { GeneralLedgerAccount, DocumentType } from "src/models/ForeignKeys";
-import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
+import { SelectDropdown } from "@/components/SelectDropdown";
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -266,7 +266,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
             </div>
             {/* Conta Contábil */}
             <div className="mb-4">
-              <MultiSelectDropdown<GeneralLedgerAccount>
+              <SelectDropdown<GeneralLedgerAccount>
                 label="Conta Contábil"
                 items={ledgerAccounts}
                 selected={selectedLedgerAccounts}
@@ -279,7 +279,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
             </div>
             {/* Tipo de Documento */}
             <div className="mb-4">
-              <MultiSelectDropdown<DocumentType>
+              <SelectDropdown<DocumentType>
                 label="Tipo de Documento"
                 items={documentTypes}
                 selected={selectedDocumentTypes}
