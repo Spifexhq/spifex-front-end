@@ -19,7 +19,7 @@ export interface FormData {
       product: string;
       quantity: string;
     };
-    participants: {
+    entities: {
       entityType: string;
       entity: string;
     };
@@ -39,7 +39,7 @@ export interface FormData {
     type: ModalType;
   }
   
-  type Tab = 'details' | 'costCenters' | 'inventory' | 'participants' | 'recurrence';
+  type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';
   
   export type { Tab };
   
