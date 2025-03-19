@@ -12,28 +12,28 @@ function SelectDropdown<T>({
   getItemLabel,
   buttonLabel = "Select Items",
   disabled = false,
-
-  // Nova prop
   singleSelect = false,
+  clearOnClickOutside = true,
+  customStyles = {},
 }: SelectDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const id = useId();
 
-  /** Toggles the dropdown open/closed. */
   const toggleDropdown = () => {
     if (!disabled) {
       setIsOpen((prev) => !prev);
     }
   };
 
-  /** Fecha o dropdown ao clicar fora dele */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        onChange([]);
+        if (clearOnClickOutside) {
+          onChange([]);
+        }
       }
     }
   
@@ -43,9 +43,8 @@ function SelectDropdown<T>({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen, onChange]);
+  }, [isOpen, onChange, clearOnClickOutside]);
 
-  /** Adiciona/Remove um item da lista `selected`. */
   const handleCheckboxChange = (item: T) => {
     const itemKey = getItemKey(item);
     const isCurrentlySelected = selected.some(
@@ -55,43 +54,28 @@ function SelectDropdown<T>({
     let updatedSelected: T[];
 
     if (singleSelect) {
-      // Se for singleSelect, só pode ter 0 ou 1 item.
-      if (isCurrentlySelected) {
-        // Se o usuário clicou de novo no mesmo item, desmarca tudo
-        updatedSelected = [];
-      } else {
-        // Seleciona apenas este item
-        updatedSelected = [item];
-      }
+      updatedSelected = isCurrentlySelected ? [] : [item];
     } else {
-      // Múltipla seleção (comportamento original)
-      if (isCurrentlySelected) {
-        updatedSelected = selected.filter(
-          (selectedItem) => getItemKey(selectedItem) !== itemKey
-        );
-      } else {
-        updatedSelected = [...selected, item];
-      }
+      updatedSelected = isCurrentlySelected
+        ? selected.filter((selectedItem) => getItemKey(selectedItem) !== itemKey)
+        : [...selected, item];
     }
 
     onChange(updatedSelected);
   };
 
-  /** Seleciona todos (somente se não for singleSelect). */
   const selectAll = () => {
     if (!singleSelect) {
       onChange([...items]);
     }
   };
 
-  /** Remove todos (somente se não for singleSelect). */
   const deselectAll = () => {
     if (!singleSelect) {
       onChange([]);
     }
   };
 
-  // Filtra itens conforme o termo digitado
   const filteredItems = searchTerm
     ? items.filter((item) =>
         getItemLabel(item).toLowerCase().includes(searchTerm.toLowerCase())
@@ -134,17 +118,21 @@ function SelectDropdown<T>({
         </button>
 
         {isOpen && (
-          <div className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 max-h-[250px] overflow-y-auto rounded-lg w-full">
-            {/* Botões de "Marcar/Desmarcar Tudo" só fazem sentido se NÃO for singleSelect */}
+          <div 
+            className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 overflow-y-auto rounded-lg w-full"
+            style={customStyles}
+          >
             {!singleSelect && (
               <div className="flex flex-row p-2.5 pb-0 text-center select-none">
                 <button
+                  type="button"
                   onClick={selectAll}
                   className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
                 >
                   Marcar Tudo
                 </button>
                 <button
+                  type="button"
                   onClick={deselectAll}
                   className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
                 >

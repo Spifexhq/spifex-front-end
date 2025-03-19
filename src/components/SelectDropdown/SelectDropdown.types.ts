@@ -10,5 +10,7 @@ export interface SelectDropdownProps<T> {
     buttonLabel?: string;
     disabled?: boolean;
     singleSelect?: boolean;
-  }
+    clearOnClickOutside?: boolean;
+    customStyles?: React.CSSProperties;
+}
   
