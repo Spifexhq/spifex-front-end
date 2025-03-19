@@ -113,6 +113,9 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
             getItemKey={(item) => item.id}
             getItemLabel={(item) => item.general_ledger_account}
             buttonLabel="Contas Contábeis"
+            customStyles={{
+              maxHeight: "250px",
+            }}
           />
         </div>
 
@@ -148,6 +151,9 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
             getItemKey={(item) => item.id}
             getItemLabel={(item) => item.bank_institution}
             buttonLabel="Bancos"
+            customStyles={{
+              maxHeight: "250px",
+            }}
           />
         </div>
       {/* Apply Filters Button */}
