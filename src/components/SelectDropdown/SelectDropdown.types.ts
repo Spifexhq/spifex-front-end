@@ -12,5 +12,5 @@ export interface SelectDropdownProps<T> {
     singleSelect?: boolean;
     clearOnClickOutside?: boolean;
     customStyles?: React.CSSProperties;
+    groupBy?: (item: T) => string;
 }
-  
