@@ -116,6 +116,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
             customStyles={{
               maxHeight: "250px",
             }}
+            groupBy={(item) => item.subgroup}
           />
         </div>
 
