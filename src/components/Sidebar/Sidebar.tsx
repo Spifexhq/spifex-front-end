@@ -1,8 +1,9 @@
 import { PermissionMiddleware } from '@/middlewares';
+import { ModalType } from "@/components/Modal/Modal.types";
 
 interface SidebarProps {
   isOpen: boolean;
-  handleOpenModal: (type: string) => void;
+  handleOpenModal: (type: ModalType) => void;
   handleOpenTransferenceModal: () => void;
   toggleSidebar: () => void;
   mode: string;

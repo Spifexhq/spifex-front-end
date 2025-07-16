@@ -5,10 +5,12 @@ import Modal from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
 import Filter, { FilterData } from "@/components/Filter";
 import BanksTable from "src/components/Table/BanksTable";
+import { ModalType } from "@/components/Modal/Modal.types";
 
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -16,8 +18,9 @@ const CashFlow = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
-  const handleOpenModal = (type: string) => {
+  const handleOpenModal = (type: ModalType) => {
     console.log("Abrindo modal do tipo:", type);
+    setModalType(type);
     setIsModalOpen(true);
   };
 
@@ -68,7 +71,13 @@ const CashFlow = () => {
           <CashFlowTable filters={filters} bankIds={filters.banksId} />
         </div>
 
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
+        {modalType && (
+          <Modal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            type={modalType}
+          />
+        )}
       </div>
     </div>
   );

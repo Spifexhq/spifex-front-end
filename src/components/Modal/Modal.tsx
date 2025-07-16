@@ -360,6 +360,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
                 customStyles={{
                   maxHeight: "150px",
                 }}
+                groupBy={(item) => item.subgroup}
               />
             </div>
             {/* Tipo de Documento */}
