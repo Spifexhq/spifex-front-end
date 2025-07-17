@@ -632,7 +632,9 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
       <div className="relative bg-white text-[#202020] rounded-lg shadow-xl w-[85%] h-[80%] flex flex-col">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold">Modal - Formulário</h2>
+          <h1 className="text-xl font-semibold select-none">
+            {type === "credit" ? "Recebimentos" : "Pagamentos"}
+          </h1>
         </div>
 
         <form id="modalForm" className="flex flex-col flex-grow">
