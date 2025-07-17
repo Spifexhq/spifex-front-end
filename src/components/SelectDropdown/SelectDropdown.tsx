@@ -13,7 +13,7 @@ function SelectDropdown<T>({
   buttonLabel = "Select Items",
   disabled = false,
   singleSelect = false,
-  clearOnClickOutside = true,
+  clearOnClickOutside = false,
   customStyles = {},
   groupBy,
 }: SelectDropdownProps<T>) {
@@ -150,7 +150,7 @@ function SelectDropdown<T>({
 
   return (
     <div className="flex flex-col w-full gap-[4px]">
-      {label && <label htmlFor={id} className={styles.label}>{label}</label>}
+      {label && <label className={styles.label}>{label}</label>}
       <div ref={dropdownRef} className="relative w-full select-none z-10">
         <button
           onClick={toggleDropdown}

@@ -68,7 +68,7 @@ const CashFlow = () => {
           </div>
 
           {/* CashFlow Table */}
-          <CashFlowTable filters={filters} bankIds={filters.banksId} />
+          <CashFlowTable filters={filters} />
         </div>
 
         {modalType && (

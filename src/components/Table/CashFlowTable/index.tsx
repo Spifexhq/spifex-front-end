@@ -29,12 +29,11 @@ const PAGE_SIZE = 100;
 
 interface CashFlowTableProps {
   filters?: CashFlowFilters;
-  bankIds?: number[];
 }
 
-const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, bankIds }) => {
+const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
   const { getFilteredEntries } = useRequests();
-  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(bankIds);
+  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.banksId);
   const [entries, setEntries] = useState<Array<Entry>>([]);
   const [tableRows, setTableRows] = useState<
     Array<{
