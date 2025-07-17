@@ -64,15 +64,11 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLedgerAccountChange = (updatedAccounts: GeneralLedgerAccount[]) => {
-    const newIds = updatedAccounts.map((acc) => acc.id);
-    setFormData((prev) => ({ ...prev, generalLedgerAccountId: newIds }));
-  };
+  const handleLedgerAccountChange = (list: GeneralLedgerAccount[]) =>
+    setFormData((p) => ({ ...p, generalLedgerAccountId: list.map((x) => Number(x.id)) }));
 
-  const handleBankChange = (updatedBanks: Bank[]) => {
-    const newIds = updatedBanks.map((bank) => bank.id);
-    setFormData((prev) => ({ ...prev, banksId: newIds }));
-  };
+  const handleBankChange = (list: Bank[]) =>
+    setFormData((p) => ({ ...p, banksId: list.map((x) => Number(x.id)) }));
 
   const handleApply = () => {
     onApply(formData);
