@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { format } from 'date-fns';
-import { formatAmount, unformatAmount, formatDateToDDMMYYYY } from '@/utils/utils';
+import { formatAmount, formatDateToDDMMYYYY } from '@/utils/utils';
 import { formatCurrency, handleAmountKeyDown } from "@/utils/formUtils";
 import { useRequests } from '@/api/requests';
 import Input from '@/components/Input';
@@ -78,7 +78,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     try {
       const data = {
         due_date: formatDateToDDMMYYYY(formData.due_date),
-        amount: unformatAmount(formData.amount),
+        amount: (parseInt(formData.amount, 10) / 100).toFixed(2),
         bank_out_id: parseInt(formData.bank_out_id),
         bank_in_id: parseInt(formData.bank_in_id),
         observation: formData.observation,
