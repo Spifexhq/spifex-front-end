@@ -1,14 +1,16 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
-import Modal from "@/components/Modal";
+import { Modal } from "@/components/Modal";
 import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
 import Filter, { FilterData } from "@/components/Filter";
 import BanksTable from "src/components/Table/BanksTable";
+import { ModalType } from "@/components/Modal/Modal.types";
 
 const Settled = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -16,8 +18,9 @@ const Settled = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
-  const handleOpenModal = (type: string) => {
+  const handleOpenModal = (type: ModalType) => {
     console.log("Abrindo modal do tipo:", type);
+    setModalType(type);
     setIsModalOpen(true);
   };
 
@@ -68,7 +71,13 @@ const Settled = () => {
           <SettledEntriesTable filters={filters} bankIds={filters.banksId} />
         </div>
 
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
+        {modalType && (
+          <Modal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            type={modalType}
+          />
+        )}
       </div>
     </div>
   );

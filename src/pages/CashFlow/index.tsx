@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
-import Modal from "@/components/Modal";
+import {Modal, TransferenceModal} from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
 import Filter, { FilterData } from "@/components/Filter";
 import BanksTable from "src/components/Table/BanksTable";
@@ -10,6 +10,7 @@ import { ModalType } from "@/components/Modal/Modal.types";
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const [filters, setFilters] = useState<FilterData>({});
@@ -38,7 +39,7 @@ const CashFlow = () => {
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
         handleOpenModal={handleOpenModal}
-        handleOpenTransferenceModal={() => null}
+        handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
         mode="default"
       />
 
@@ -76,6 +77,17 @@ const CashFlow = () => {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             type={modalType}
+          />
+        )}
+        
+        {isTransferenceModalOpen && (
+          <TransferenceModal
+            isOpen={isTransferenceModalOpen}
+            onClose={() => setIsTransferenceModalOpen(false)}
+            onSave={() => {
+              setIsTransferenceModalOpen(false);
+              // opcional: refetch dados ou mostrar snackbar
+            }}
           />
         )}
       </div>
