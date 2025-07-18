@@ -3,11 +3,11 @@ import { format, parse } from 'date-fns';
 
 // Formatting
 export const formatAmount = (input) => {
-  let numericAmount = input.replace(/\D/g, '');
+  const numericAmount = input.replace(/\D/g, '');
     if (numericAmount === '') {
       return '';
     }
-  let floatAmount = parseFloat(numericAmount) / 100;
+  const floatAmount = parseFloat(numericAmount) / 100;
   return floatAmount.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
