@@ -236,52 +236,33 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
     return <div>{error}</div>;
   }
 
-  // We have 9 columns total: selection + (7 data columns) + action
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-t-2xl">
-        <thead className="bg-gray-100 rounded-t-2xl">
-          <tr>
-            <th className="w-[5%] px-3 py-3 text-center">
+        <thead className="bg-gray-100 text-[11px]">
+          <tr className="text-gray-600 tracking-wider">
+            <th className="w-[5%] px-2 py-1 text-center font-semibold">
               <div className="flex justify-center items-center h-full">
                 <Checkbox
                   checked={selectedIds.length === entries.length && entries.length > 0}
                   onChange={() => handleSelectAll()}
+                  size={"sm"}
                 />
               </div>
             </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Vencimento
-            </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Descrição
-            </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Observação
-            </th>
-            <th className="w-[5%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Parcela
-            </th>
-            <th className="w-[10%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Banco
-            </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Valor
-            </th>
-            <th className="w-[15%] px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-              Saldo
-            </th>
-            <th
-              className="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
-              style={{ maxWidth: '68px', minWidth: '68px' }}
-            ></th>
+            <th className="w-[15%] px-2 py-1 text-center font-semibold">Vencimento</th>
+            <th className="w-[15%] px-2 py-1 text-center font-semibold">Descrição</th>
+            <th className="w-[5%] px-2 py-1 text-center font-semibold">Parcela</th>
+            <th className="w-[10%] px-2 py-1 text-center font-semibold">Banco</th>
+            <th className="w-[15%] px-2 py-1 text-center font-semibold">Valor</th>
+            <th className="w-[15%] px-2 py-1 text-center font-semibold">Saldo</th>
+            <th className="px-2 py-1 text-center font-semibold" style={{ maxWidth: '68px', minWidth: '68px' }}></th>
           </tr>
         </thead>
-
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray-200 text-[12px]">
           {tableRows.length === 0 ? (
             <tr>
-              <td colSpan={9} className="px-4 py-3 text-center text-gray-500">
+              <td colSpan={8} className="px-2 py-2 text-center text-gray-500">
                 Nenhum dado disponível
               </td>
             </tr>
@@ -294,51 +275,41 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
                 const amountNum = parseFloat(entry.amount);
                 const value =
                   entry.transaction_type === 'debit' ? -amountNum : amountNum;
-
-                // Example: if 'bank_institution' is the best property for display
                 const bankName = entry.bank?.bank_institution ?? '-';
 
                 return (
-                  <tr key={entry.id} className="hover:bg-gray-50 text-[14px]">
-                    <td className="w-[5%] px-3 py-2 text-center align-middle">
+                  <tr key={entry.id} className="hover:bg-gray-50">
+                    <td className="px-2 py-1 text-center">
                       <Checkbox
                         checked={isSelected}
                         onClick={(e) => handleSelectRow(entry.id, e)}
+                        size={"sm"}
                       />
                     </td>
-                    <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <td className="px-2 py-1 text-center whitespace-nowrap">
                       {entry.settlement_due_date}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      {entry.description}
+                    <td className="px-2 py-1 whitespace-nowrap">{entry.description}</td>
+                    <td className="px-2 py-1 text-center whitespace-nowrap">
+                      {`${entry.current_installment ?? '-'} / ${entry.total_installments ?? '-'}`}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      {entry.observation || '-'}
-                    </td>
-                    <td className="px-3 py-2 text-center whitespace-nowrap">
-                      {`${entry.current_installment ?? '-'} / ${
-                        entry.total_installments ?? '-'
-                      }`}
-                    </td>
-                    <td className="px-3 py-2 text-center whitespace-nowrap">
-                      {bankName}
-                    </td>
-                    <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <td className="px-2 py-1 text-center whitespace-nowrap">{bankName}</td>
+                    <td className="px-2 py-1 text-center whitespace-nowrap">
                       {value.toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
                     </td>
-                    <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <td className="px-2 py-1 text-center whitespace-nowrap">
                       {row.runningBalance?.toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
                     </td>
-                    <td className="px-3 py-2 text-center">
+                    <td className="px-2 py-1 text-center">
                       <Button
                         variant="common"
-                        style={{ padding: '10px', borderRadius: '8px' }}
+                        style={{ padding: '8px', borderRadius: '6px' }}
                       >
                         <img
                           alt="Editar"
@@ -355,22 +326,19 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
               // Summary row
               const { monthlySum = 0, runningBalance = 0, displayMonth } = row;
               return (
-                <tr key={`summary-${idx}`} className="bg-gray-50 text-[10px]">
-                  <td colSpan={5} className="px-4 py-1 font-semibold text-left">
+                <tr key={`summary-${idx}`} className="bg-gray-50 text-[9px]">
+                  <td colSpan={5} className="px-2 py-1 font-semibold text-left">
                     {displayMonth}
                   </td>
-                  {/* Extra TD for Banco */}
                   <td></td>
-                  <td className="px-3 py-1 text-center font-semibold whitespace-nowrap">
+                  <td className="px-2 py-1 text-center font-semibold whitespace-nowrap">
                     {monthlySum.toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
                   </td>
-                  <td className="px-3 py-1 text-center font-semibold whitespace-nowrap">
-                    <span
-                      className={runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}
-                    >
+                  <td className="px-2 py-1 text-center font-semibold whitespace-nowrap">
+                    <span className={runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
                       {runningBalance >= 0 ? '+' : ''}
                       {runningBalance.toLocaleString('pt-BR', {
                         style: 'currency',
