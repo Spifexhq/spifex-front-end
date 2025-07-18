@@ -7,9 +7,6 @@
  *  "100" => "R$ 1,00"
  *  "12345" => "R$ 123,45"
  */
-
-import { FormData } from "@/components/Modal/Modal.types";
-
 // Formats a centavos string into "R$ X,XX" (Brazilian currency formatting)
 export function formatCurrency(amount: string): string {
   const numeric = parseInt(amount, 10) || 0;
@@ -51,41 +48,45 @@ export function distributePercentages(departments: string[]): string[] {
 export function handleAmountKeyDown(
   e: React.KeyboardEvent<HTMLInputElement>,
   currentAmount: string,
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>
+  setFormData: React.Dispatch<React.SetStateAction<any>>,
+  isRoot: boolean = false // padrão é false, ou seja, usa `details.amount`
 ) {
-  // If it is a digit (0 to 9)
+  const updateAmount = (newValue: string) => {
+    setFormData((prev: any) => {
+      if (isRoot) {
+        return {
+          ...prev,
+          amount: newValue,
+        };
+      } else {
+        return {
+          ...prev,
+          details: {
+            ...prev.details,
+            amount: newValue,
+          },
+        };
+      }
+    });
+  };
+
+  // Digitação de número
   if (/^\d$/.test(e.key)) {
     e.preventDefault();
-    const newAmount = parseInt(currentAmount, 10) * 10 + parseInt(e.key, 10);
-    setFormData((prev) => ({
-      ...prev,
-      details: {
-        ...prev.details,
-        amount: newAmount.toString(),
-      },
-    }));
+    const newAmount = parseInt(currentAmount || "0", 10) * 10 + parseInt(e.key, 10);
+    updateAmount(newAmount.toString());
   }
-  // If it is Backspace, remove the last digit (dividing by 10 and rounding down)
+  // Backspace
   else if (e.key === "Backspace") {
     e.preventDefault();
-    const newAmount = Math.floor(parseInt(currentAmount, 10) / 10);
-    setFormData((prev) => ({
-      ...prev,
-      details: {
-        ...prev.details,
-        amount: newAmount.toString(),
-      },
-    }));
+    const newAmount = Math.floor(parseInt(currentAmount || "0", 10) / 10);
+    updateAmount(newAmount.toString());
   }
-  // Allows Tab and arrow keys for navigation
-  else if (
-    e.key === "Tab" ||
-    e.key === "ArrowLeft" ||
-    e.key === "ArrowRight"
-  ) {
-    // do nothing (don't prevent default)
+  // Navegação
+  else if (["Tab", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+    // deixa passar
   }
-  // Prevent everything else
+  // Bloqueia o resto
   else {
     e.preventDefault();
   }
