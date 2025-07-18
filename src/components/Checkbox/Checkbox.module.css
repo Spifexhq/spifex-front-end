@@ -61,14 +61,14 @@
   height: 16px;
 }
 
+.sizeSM {
+  width: 18px;
+  height: 18px;
+}
+
 .sizeLarge {
   width: 24px;
   height: 24px;
-}
-
-/* Se quiser cores customizadas, crie classes específicas */
-.defaultColor {
-  /* Pode ficar vazio ou ter alguma cor padrao */
 }
 
 .myBlueColor {

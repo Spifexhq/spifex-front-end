@@ -5,6 +5,6 @@ export interface CheckboxProps {
   onClick?: React.MouseEventHandler<HTMLInputElement>;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   disabled?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'sm' | 'medium' | 'large';
   colorClass?: string;
 }

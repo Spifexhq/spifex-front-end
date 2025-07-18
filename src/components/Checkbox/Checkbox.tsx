@@ -32,6 +32,8 @@ const Checkbox: React.FC<CheckboxProps> = ({
   let sizeClass = '';
   if (size === 'small') {
     sizeClass = styles.sizeSmall;
+  } else if (size === 'sm') {
+    sizeClass = styles.sizeSM;
   } else if (size === 'large') {
     sizeClass = styles.sizeLarge;
   }
