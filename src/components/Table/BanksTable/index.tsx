@@ -38,16 +38,19 @@ const BanksTable: React.FC<BanksTableProps> = ({ selectedBankIds }) => {
               <td colSpan={4} className="px-4 py-3 text-center text-gray-600">Nenhum banco disponível</td>
             </tr>
           ) : (
-            banks.map((bank) => (
-              <tr key={bank.id} className="text-[12px] hover:bg-gray-50">
-                <td className="px-4 py-2">{bank.bank_institution}</td>
-                <td className="px-4 py-2">{bank.bank_branch}</td>
-                <td className="px-4 py-2">{bank.bank_account}</td>
-                <td className="px-4 py-2 text-center">
-                  {Number(bank.consolidated_balance).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </td>
-              </tr>
-            ))
+            banks
+              .slice() // evita mutação direta
+              .sort((a, b) => a.id - b.id)
+              .map((bank) => (
+                <tr key={bank.id} className="text-[12px] hover:bg-gray-50">
+                  <td className="px-4 py-2">{bank.bank_institution}</td>
+                  <td className="px-4 py-2">{bank.bank_branch}</td>
+                  <td className="px-4 py-2">{bank.bank_account}</td>
+                  <td className="px-4 py-2 text-center">
+                    {Number(bank.consolidated_balance).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </td>
+                </tr>
+              ))
           )}
         </tbody>
         <tfoot className="sticky text-[14px] text-gray-600 bottom-0 bg-gray-100 z-10">

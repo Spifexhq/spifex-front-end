@@ -12,6 +12,7 @@ const CashFlow = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
+  const [banksKey, setBanksKey] = useState(0);
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -64,7 +65,7 @@ const CashFlow = () => {
             </div>
             {/* BanksTable on the right */}
             <div className="flex-1 min-w-[250px]">
-              <BanksTable selectedBankIds={filters.banksId} />
+              <BanksTable key={banksKey} selectedBankIds={filters.banksId} />
             </div>
           </div>
 
@@ -86,7 +87,7 @@ const CashFlow = () => {
             onClose={() => setIsTransferenceModalOpen(false)}
             onSave={() => {
               setIsTransferenceModalOpen(false);
-              // opcional: refetch dados ou mostrar snackbar
+              setBanksKey((prev) => prev + 1); // força atualização
             }}
           />
         )}
