@@ -53,7 +53,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       <div className={styles.inputWrapper}>
         <input
           id={id}
-          className={inputClasses}
+          className={`${inputClasses} placeholder-gray-400`}
           type={showTogglePassword && type === 'password' ? (isPasswordVisible ? 'text' : 'password') : type}
           disabled={isLoading || rest.disabled}
           ref={ref} // <-- Agora a ref está sendo passada corretamente
