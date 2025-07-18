@@ -21,6 +21,11 @@ export type Entity = {
   uuid_entity: string | null;
 };
 
+export type EntityType = {
+  id: number;
+  entity_type: string;
+};
+
 export type ApiGetEntities = {
   entities: Entity[];
 };
