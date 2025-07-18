@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FormData, ModalFormProps, Tab } from "./Modal.types";
+import { FormData, ModalFormProps, Tab, RecurrenceOption, PeriodOption, WeekendOption } from "./Modal.types";
 import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
 import { useRequests } from "@/api/requests";
-import { GeneralLedgerAccount, DocumentType, Department, Project, Inventory, Entity } from "src/models/ForeignKeys";
+import { GeneralLedgerAccount, DocumentType, Department, Project, Inventory, Entity, EntityType } from "src/models/ForeignKeys";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import Input from '../Input';
 
@@ -31,9 +31,9 @@ const initialFormData: FormData = {
     entity: ""
   },
   recurrence: {
-    recurrence: "não",
+    recurrence: 0,
     installments: "",
-    periods: "",
+    periods: 1,
     weekend: ""
   }
 };
@@ -55,6 +55,24 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<Inventory[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
+  const [selectedEntityType, setSelectedEntityType] = useState<EntityType[]>([]);
+
+  const recurrenceOptions: RecurrenceOption[] = [
+    { id: 1, label: "Sim", value: 1 },
+    { id: 2, label: "Não", value: 0 },
+  ];
+
+  const periodOptions: PeriodOption[] = [
+    { id: 1, label: "Mensal", value: 1 },
+    { id: 2, label: "Semanal", value: 2 },
+    { id: 3, label: "Bimestral", value: 3 },
+    { id: 4, label: "Semestral", value: 4 },
+    { id: 5, label: "Anual", value: 5 },
+  ];
+
+  const selectedPeriod = periodOptions.find(
+    (option) => option.value === formData.recurrence.periods
+  );
 
   const { 
     getGeneralLedgerAccounts, 
@@ -340,10 +358,10 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
                 label="Valor"
                 type="text"
                 placeholder="Digite o valor"
-                // Displays the formatted value (for example: "R$ 0.00")
                 value={formatCurrency(formData.details.amount)}
-                // Handles digit input and backspace
-                onKeyDown={(e) => handleAmountKeyDown(e, formData.details.amount, setFormData)}
+                onKeyDown={(e) =>
+                  handleAmountKeyDown(e, formData.details.amount, setFormData)
+                }
               />
             </div>
             {/* Conta Contábil */}
@@ -486,26 +504,29 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
         return (
           <div>
             {/* Tipo de entidade */}
-            <div className="mb-4">
-              <label htmlFor="entityType" className="block text-sm font-medium">
-                Tipo de entidade
-              </label>
-              <select
-                id="entityType"
-                value={formData.entities.entityType}
-                onChange={(e) =>
+            <div>
+              <SelectDropdown<EntityType>
+                label="Tipo de entidade"
+                items={[
+                  { id: 1, entity_type: 'Cliente' },
+                  { id: 2, entity_type: 'Fornecedor' },
+                  { id: 3, entity_type: 'Funcionário' },
+                ]}
+                selected={selectedEntityType}
+                onChange={(newValue) => {
+                  setSelectedEntityType(newValue);
                   setFormData({
                     ...formData,
-                    entities: { ...formData.entities, entityType: e.target.value },
-                  })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
-              >
-                <option value="">Selecione um tipo</option>
-                <option value="cliente">Cliente</option>
-                <option value="fornecedor">Fornecedor</option>
-                <option value="funcionario">Funcionário</option>
-              </select>
+                    entities: { ...formData.entities, entityType: newValue[0]?.entity_type || "" },
+                  });
+                }}
+                getItemKey={(item) => item.id}
+                getItemLabel={(item) => item.entity_type}
+                buttonLabel="Selecione um Tipo de Entidade"
+                singleSelect
+                customStyles={{ maxHeight: "150px" }}
+                hideFilter={true}
+              />
             </div>
             {/* Render Entidade only if a entity type is selected */}
             {formData.entities.entityType !== "" && (
@@ -518,7 +539,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
                 getItemKey={(item) => item.id}
                 getItemLabel={(item) => item.full_name || "Entidade sem nome"}
                 buttonLabel="Selecione uma Entidade"
-                clearOnClickOutside={false}
                 singleSelect
                 customStyles={{ maxHeight: "150px" }}
               />
@@ -530,36 +550,37 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
         return (
           <div>
             {/* Recorrência */}
-            <div className="mb-4">
-              <label htmlFor="recurrence" className="block text-sm font-medium">
-                Recorrência
-              </label>
-              <select
-                id="recurrence"
-                value={formData.recurrence.recurrence}
-                onChange={(e) =>
+            <div>
+              <SelectDropdown<RecurrenceOption>
+                label="Recorrência"
+                items={recurrenceOptions}
+                selected={
+                  formData.recurrence.recurrence === 1
+                    ? [recurrenceOptions[0]]
+                    : [recurrenceOptions[1]]
+                }
+                onChange={(newValue) => {
+                  const selected = newValue[0]?.value ?? 0;
                   setFormData({
                     ...formData,
-                    recurrence: { ...formData.recurrence, recurrence: e.target.value },
-                  })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
-              >
-                <option value="sim">Sim</option>
-                <option value="não">Não</option>
-              </select>
+                    recurrence: { ...formData.recurrence, recurrence: selected },
+                  });
+                }}
+                getItemKey={(item) => item.id}
+                getItemLabel={(item) => item.label}
+                buttonLabel="Selecione"
+                singleSelect
+                hideFilter
+                customStyles={{ maxHeight: "120px" }}
+              />
             </div>
-            {formData.recurrence.recurrence === 'sim' && (
-              <>
+            {formData.recurrence.recurrence === 1 && (
+              <div className='grid grid-cols-2 gap-4'>
                 {/* Parcelas */}
-                <div className="mb-4">
-                  <label htmlFor="installments" className="block text-sm font-medium">
-                    Parcelas
-                  </label>
-                  <input
-                    id="installments"
+                <div>
+                  <Input
+                    label='Parcelas'
                     type="number"
-                    placeholder="Digite o número de parcelas"
                     value={formData.recurrence.installments}
                     onChange={(e) =>
                       setFormData({
@@ -567,55 +588,71 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
                         recurrence: { ...formData.recurrence, installments: e.target.value },
                       })
                     }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
                   />
                 </div>
                 {/* Períodos */}
-                <div className="mb-4">
-                  <label htmlFor="periods" className="block text-sm font-medium">
-                    Períodos
-                  </label>
-                  <select
-                    id="periods"
-                    value={formData.recurrence.periods}
-                    onChange={(e) =>
+                <div>
+                  <SelectDropdown<PeriodOption>
+                    label="Períodos"
+                    items={periodOptions}
+                    selected={selectedPeriod ? [selectedPeriod] : []}
+                    onChange={(newValue) =>
                       setFormData({
                         ...formData,
-                        recurrence: { ...formData.recurrence, periods: e.target.value },
+                        recurrence: {
+                          ...formData.recurrence,
+                          periods: newValue[0]?.value ?? 0,
+                        },
                       })
                     }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
-                  >
-                    <option value="">Selecione um período</option>
-                    <option value="mensal">Mensal</option>
-                    <option value="semanal">Semanal</option>
-                    <option value="bimestral">Bimestral</option>
-                    <option value="semestral">Semestral</option>
-                    <option value="anual">Anual</option>
-                  </select>
+                    getItemKey={(item) => item.id}
+                    getItemLabel={(item) => item.label}
+                    buttonLabel="Selecione um Período"
+                    singleSelect
+                    customStyles={{ maxHeight: "120px" }}
+                    hideFilter
+                  />
                 </div>
                 {/* Fim de semana */}
-                <div className="mb-4">
-                  <label htmlFor="weekend" className="block text-sm font-medium">
-                    Fim de semana
-                  </label>
-                  <select
-                    id="weekend"
-                    value={formData.recurrence.weekend}
-                    onChange={(e) =>
+                <div>
+                  <SelectDropdown<WeekendOption>
+                    label="Fim de Semana"
+                    items={[
+                      { id: 1, label: "Postergar", value: "postergar" },
+                      { id: 2, label: "Antecipar", value: "antecipar" },
+                    ]}
+                    selected={
+                      formData.recurrence.weekend
+                        ? [
+                            {
+                              id: formData.recurrence.weekend === "postergar" ? 1 : 2,
+                              label:
+                                formData.recurrence.weekend === "postergar"
+                                  ? "Postergar"
+                                  : "Antecipar",
+                              value: formData.recurrence.weekend as WeekendOption["value"],
+                            },
+                          ]
+                        : []
+                    }
+                    onChange={(newValue) =>
                       setFormData({
                         ...formData,
-                        recurrence: { ...formData.recurrence, weekend: e.target.value },
+                        recurrence: {
+                          ...formData.recurrence,
+                          weekend: newValue[0]?.value || "",
+                        },
                       })
                     }
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none"
-                  >
-                    <option value="">Nenhum</option>
-                    <option value="postergar">Postergar</option>
-                    <option value="antecipar">Antecipar</option>
-                  </select>
+                    getItemKey={(item) => item.id}
+                    getItemLabel={(item) => item.label}
+                    buttonLabel="Selecione"
+                    singleSelect
+                    customStyles={{ maxHeight: "120px" }}
+                    hideFilter
+                  />
                 </div>
-              </>
+              </div>
             )}
           </div>
         );

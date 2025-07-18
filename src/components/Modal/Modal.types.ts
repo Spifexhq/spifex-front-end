@@ -24,9 +24,9 @@ export interface FormData {
       entity: string;
     };
     recurrence: {
-      recurrence: string;
+      recurrence: number;
       installments: string;
-      periods: string;
+      periods: number;
       weekend: string;
     };
   }
@@ -39,7 +39,22 @@ export interface FormData {
     type: ModalType;
   }
   
-  type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';
-  
-  export type { Tab };
-  
+  export type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';
+
+  export type RecurrenceOption = {
+    id: number;
+    label: string;
+    value: 0 | 1;
+  }
+
+  export type PeriodOption = {
+    id: number;
+    label: string;
+    value: 1 | 2 | 3 | 4 | 5;
+  };
+
+  export type WeekendOption = {
+    id: number;
+    label: string;
+    value: "postergar" | "antecipar";
+  };
