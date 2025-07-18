@@ -16,11 +16,14 @@ function SelectDropdown<T>({
   clearOnClickOutside = false,
   customStyles = {},
   groupBy,
+  hideCheckboxes = false,
+  hideFilter = false,
 }: SelectDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const id = useId();
+  const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
   const toggleDropdown = () => {
     if (!disabled) {
@@ -37,7 +40,7 @@ function SelectDropdown<T>({
         }
       }
     }
-  
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
@@ -54,7 +57,7 @@ function SelectDropdown<T>({
 
     let updatedSelected: T[];
 
-    if (singleSelect) {
+    if (effectiveSingleSelect) {
       updatedSelected = isCurrentlySelected ? [] : [item];
     } else {
       updatedSelected = isCurrentlySelected
@@ -63,16 +66,20 @@ function SelectDropdown<T>({
     }
 
     onChange(updatedSelected);
+
+    if (hideCheckboxes) {
+      setIsOpen(false);
+    }
   };
 
   const selectAll = () => {
-    if (!singleSelect) {
+    if (!effectiveSingleSelect) {
       onChange([...items]);
     }
   };
 
   const deselectAll = () => {
-    if (!singleSelect) {
+    if (!effectiveSingleSelect) {
       onChange([]);
     }
   };
@@ -96,7 +103,7 @@ function SelectDropdown<T>({
   }
 
   const handleGroupToggle = (groupItems: T[]) => {
-    if (singleSelect) return;
+    if (effectiveSingleSelect) return;
 
     const allSelected = groupItems.every((item) =>
       selected.some((sel) => getItemKey(sel) === getItemKey(item))
@@ -131,17 +138,21 @@ function SelectDropdown<T>({
       <div
         key={key}
         onClick={() => handleCheckboxChange(item)}
-        className="flex items-center text-[10px] p-2.5 font-normal bg-white transition duration-300 ease-in-out hover:bg-orange-100 hover:bg-opacity-20 gap-1 select-none cursor-pointer"
+        className={`flex items-center text-[10px] p-2.5 font-normal transition duration-300 ease-in-out gap-1 select-none cursor-pointer
+          ${hideCheckboxes && isChecked ? "bg-blue-100 text-blue-900 font-semibold" : "bg-white hover:bg-orange-100 hover:bg-opacity-20"}
+        `}
       >
-        <Checkbox
-          checked={isChecked}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          onChange={() => handleCheckboxChange(item)}
-          size="small"
-        />
-        <span className="pl-2 user-select-none">
+        {!hideCheckboxes && (
+          <Checkbox
+            checked={isChecked}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            onChange={() => handleCheckboxChange(item)}
+            size="small"
+          />
+        )}
+        <span className={`${!hideCheckboxes ? "pl-2" : ""} user-select-none`}>
           {label}
         </span>
       </div>
@@ -151,7 +162,7 @@ function SelectDropdown<T>({
   return (
     <div className="flex flex-col w-full gap-[4px]">
       {label && <label className={styles.label}>{label}</label>}
-      <div ref={dropdownRef} className="relative w-full select-none z-10">
+      <div ref={dropdownRef} className="relative w-full select-none">
         <button
           onClick={toggleDropdown}
           id={id}
@@ -163,7 +174,15 @@ function SelectDropdown<T>({
           type="button"
           disabled={disabled}
         >
-          {buttonLabel}
+          <span className="truncate overflow-hidden whitespace-nowrap max-w-[90%] text-left text-gray-400">
+            {selected.length === 0
+              ? buttonLabel
+              : effectiveSingleSelect
+              ? getItemLabel(selected[0])
+              : selected
+                  .map((item) => getItemLabel(item))
+                  .join(", ")}
+          </span>
           <svg
             className={`w-4 h-4 ml-3 transition-transform duration-200 ease-in-out ${
               isOpen ? "rotate-0" : "rotate-180"
@@ -185,10 +204,10 @@ function SelectDropdown<T>({
 
         {isOpen && (
           <div 
-            className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 overflow-y-auto rounded-lg w-full"
+            className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 overflow-y-auto rounded-lg w-full z-[9999]"
             style={customStyles}
           >
-            {!singleSelect && (
+            {!effectiveSingleSelect && !hideCheckboxes && (
               <div className="flex flex-row p-2.5 pb-0 text-center select-none">
                 <button
                   type="button"
@@ -207,22 +226,24 @@ function SelectDropdown<T>({
               </div>
             )}
 
-            <input
-              type="text"
-              placeholder="Filtrar"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="border-b border-gray-300 w-full p-1 pl-5 box-border text-[12px]"
-            />
+            {!hideFilter && (
+              <input
+                type="text"
+                placeholder="Filtrar"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border-b border-gray-300 w-full p-1 pl-5 box-border text-[12px]"
+              />
+            )}
 
-            <div className="flex flex-col px-2.5 pb-2.5">
+            <div className="flex flex-col py-2.5">
               {groupBy ? (
                 Object.entries(groupedItems).map(([groupName, groupItems]) => {
                   return (
                     <div key={groupName}>
                       <div
-                        className={`font-bold text-xs mt-2 mb-1 ${
-                          !singleSelect ? "cursor-pointer" : ""
+                        className={`font-bold px-2.5 text-xs mt-2 mb-1 ${
+                          !effectiveSingleSelect ? "cursor-pointer" : ""
                         }`}
                         onClick={() => handleGroupToggle(groupItems)}
                       >

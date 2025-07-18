@@ -13,4 +13,6 @@ export interface SelectDropdownProps<T> {
     clearOnClickOutside?: boolean;
     customStyles?: React.CSSProperties;
     groupBy?: (item: T) => string;
+    hideCheckboxes?: boolean;
+    hideFilter?: boolean;
 }
