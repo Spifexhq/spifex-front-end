@@ -1,7 +1,22 @@
 import { useState } from 'react';
 import { unformatAmount } from '@/utils/utils';
 
-const useEntryFormValidation = (formData) => {
+interface EntryFormData {
+  due_date: string;
+  description: string;
+  amount: string;
+  general_ledger_account_id: string;
+  department_id: string[];
+  department_percentage: string[];
+  recurrence: string;
+  total_installments: number;
+  inventory_item_id: string;
+  inventory_item_quantity: string;
+  entity_type: string;
+  entity_id: string;
+}
+
+const useEntryFormValidation = (formData: EntryFormData) => {
   const [alertMessage, setAlertMessage] = useState('');
 
   const validateForm = () => {

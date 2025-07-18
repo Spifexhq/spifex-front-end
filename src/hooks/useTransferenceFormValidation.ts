@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { unformatAmount } from '@/utils/utils';
 
-const useTransferenceFormValidation = (formData) => {
+interface TransferenceFormData {
+  due_date: string;
+  amount: string;
+  bank_out_id: string;
+  bank_in_id: string;
+  observation?: string;
+}
+
+const useTransferenceFormValidation = (formData: TransferenceFormData) => {
   const [alertMessage, setAlertMessage] = useState('');
 
   const validateForm = () => {

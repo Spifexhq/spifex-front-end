@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { format, parse } from 'date-fns';
 
 // Formatting
-export const formatAmount = (input) => {
+export const formatAmount = (input: string) => {
   const numericAmount = input.replace(/\D/g, '');
     if (numericAmount === '') {
       return '';
@@ -12,7 +12,7 @@ export const formatAmount = (input) => {
 };
 
 
-export const unformatAmount = (formattedAmount) => formattedAmount.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+export const unformatAmount = (formattedAmount: string) => formattedAmount.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
 
 
 export const formatDate = (dateString: string | undefined | null) => {
@@ -22,7 +22,7 @@ export const formatDate = (dateString: string | undefined | null) => {
 };
 
 
-export const formatDateToDDMMYYYY = (dateString) => {
+export const formatDateToDDMMYYYY = (dateString: string) => {
   const date = parse(dateString, 'yyyy-MM-dd', new Date());
   return format(date, 'dd/MM/yyyy');
 };
