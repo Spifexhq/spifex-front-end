@@ -6,6 +6,7 @@ import { useRequests } from '@/api/requests';
 import Input from '@/components/Input';
 import { SelectDropdown } from '@/components/SelectDropdown';
 import { Bank } from '@/models/Bank';
+import Button from '../Button';
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -146,6 +147,9 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 }
                 singleSelect
                 buttonLabel="Selecione o banco"
+                customStyles={{
+                  maxHeight: "150px",
+                }}
               />
 
               <SelectDropdown<Bank>
@@ -163,6 +167,9 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 }
                 singleSelect
                 buttonLabel="Selecione o banco"
+                customStyles={{
+                  maxHeight: "150px",
+                }}
               />
 
               <div className="col-span-2">
@@ -176,20 +183,21 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4 mt-6 border-t">
-              <button
-                type="button"
+            <div className="flex justify-end space-x-2 pt-4 mt-6">
+              <Button
                 onClick={handleClose}
-                className="bg-red-500 text-white px-4 py-2 rounded"
+                variant='cancel'
+                className="px-4 py-2"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                variant='primary'
+                className="px-4 py-2"
               >
                 Salvar
-              </button>
+              </Button>
             </div>
           </form>
       </div>

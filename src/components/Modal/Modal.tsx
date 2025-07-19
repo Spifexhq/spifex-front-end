@@ -6,6 +6,7 @@ import { GeneralLedgerAccount, DocumentType, Department, Project, Inventory, Ent
 import { SelectDropdown } from "@/components/SelectDropdown";
 import Input from '../Input';
 import { AddEntryPayload } from '@/models/Entries';
+import Button from '../Button';
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -493,7 +494,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
                   clearOnClickOutside={false}
                   buttonLabel="Selecione Departamentos"
                   customStyles={{
-                    maxHeight: "150px",
+                    maxHeight: "250px",
                   }}
                 />
               </div>
@@ -729,7 +730,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-50">
-      <div className="relative bg-white text-[#202020] rounded-lg shadow-xl w-[85%] h-[80%] flex flex-col">
+      <div className="relative bg-white text-[#202020] rounded-lg shadow-xl w-[85%] h-[75%] flex flex-col">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b">
           <h1 className="text-xl font-semibold select-none">
@@ -741,14 +742,14 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
           {/* Modal Content (Adjust height and scrolling behavior) */}
           <div className="p-4 flex-grow overflow-auto min-h-0">
             {/* Tabs Navigation */}
-            <div className="mb-4 border-b">
+            <div className="mb-4">
               <nav className="flex space-x-4 mb-2">
                 <button
                   type="button"
                   onClick={() => setActiveTab('details')}
                   className={`py-2 px-4 focus:outline-none ${
                     activeTab === 'details'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
+                      ? 'border-b-2 text-[color:var(--accentPrimary)] border-[color:var(--accentPrimary)]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -759,7 +760,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
                   onClick={() => setActiveTab('costCenters')}
                   className={`py-2 px-4 focus:outline-none ${
                     activeTab === 'costCenters'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
+                      ? 'border-b-2 text-[color:var(--accentPrimary)] border-[color:var(--accentPrimary)]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -770,7 +771,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
                   onClick={() => setActiveTab('inventory')}
                   className={`py-2 px-4 focus:outline-none ${
                     activeTab === 'inventory'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
+                      ? 'border-b-2 text-[color:var(--accentPrimary)] border-[color:var(--accentPrimary)]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -781,7 +782,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
                   onClick={() => setActiveTab('entities')}
                   className={`py-2 px-4 focus:outline-none ${
                     activeTab === 'entities'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
+                      ? 'border-b-2 text-[color:var(--accentPrimary)] border-[color:var(--accentPrimary)]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -792,7 +793,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
                   onClick={() => setActiveTab('recurrence')}
                   className={`py-2 px-4 focus:outline-none ${
                     activeTab === 'recurrence'
-                      ? 'border-b-2 border-blue-500 text-blue-500'
+                      ? 'border-b-2 text-[color:var(--accentPrimary)] border-[color:var(--accentPrimary)]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -805,20 +806,21 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
           </div>
 
           {/* Fixed Footer */}
-          <div className="p-4 bg-white border-t flex justify-end space-x-4">
-            <button
-              type="button"
+          <div className="p-4 bg-white flex justify-end space-x-4">
+            <Button
               onClick={handleClose}
-              className="bg-red-500 text-white py-2 px-4 rounded focus:outline-none"
+              variant='cancel'
+              className="px-4 py-2"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="bg-blue-500 text-white py-2 px-4 rounded focus:outline-none"
+              variant='primary'
+              className="px-4 py-2"
             >
               Salvar
-            </button>
+            </Button>
           </div>
         </form>
       </div>
