@@ -22,9 +22,9 @@ export type Entry = {
   creation_date: string;
   general_ledger_account: GeneralLedgerAccount | null;
   document_type: DocumentType | null;
-  departments: Department[];
+  departments: Department[] | null;
   project: Project | null;
-  inventory_item: Inventory[];
+  inventory_item: Inventory[] | null;
   entity: Entity | null;
 
   bank?: Bank;
