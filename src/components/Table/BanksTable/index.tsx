@@ -22,7 +22,7 @@ const BanksTable: React.FC<BanksTableProps> = ({ selectedBankIds }) => {
   }
 
   return (
-    <div className="relative rounded shadow-md max-h-[252px] overflow-y-auto">
+    <div className="relative rounded border border-gray-300 max-h-[262px] overflow-y-auto">
       <table className="w-full text-sm text-left">
         <thead className="sticky top-0 bg-gray-100 z-10">
           <tr>
