@@ -36,6 +36,7 @@ export interface FormData {
   export interface ModalFormProps {
     isOpen: boolean;
     onClose: () => void;
+    onSave: () => void;
     type: ModalType;
   }
   

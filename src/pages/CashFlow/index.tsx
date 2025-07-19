@@ -13,6 +13,7 @@ const CashFlow = () => {
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [banksKey, setBanksKey] = useState(0);
+  const [cashflowKey, setCashflowKey] = useState(0);
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -70,7 +71,7 @@ const CashFlow = () => {
           </div>
 
           {/* CashFlow Table */}
-          <CashFlowTable filters={filters} />
+          <CashFlowTable key={cashflowKey} filters={filters} />
         </div>
 
         {modalType && (
@@ -78,6 +79,10 @@ const CashFlow = () => {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             type={modalType}
+            onSave={() => {
+              handleCloseModal();
+              setCashflowKey(prev => prev + 1); // força atualização da CashFlowTable
+            }}
           />
         )}
         
@@ -87,7 +92,7 @@ const CashFlow = () => {
             onClose={() => setIsTransferenceModalOpen(false)}
             onSave={() => {
               setIsTransferenceModalOpen(false);
-              setBanksKey((prev) => prev + 1); // força atualização
+              setBanksKey((prev) => prev + 1);
             }}
           />
         )}

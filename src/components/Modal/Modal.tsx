@@ -5,6 +5,7 @@ import { useRequests } from "@/api/requests";
 import { GeneralLedgerAccount, DocumentType, Department, Project, Inventory, Entity, EntityType } from "src/models/ForeignKeys";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import Input from '../Input';
+import { AddEntryPayload } from '@/models/Entries';
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -38,10 +39,11 @@ const initialFormData: FormData = {
   }
 };
 
-const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
+const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) => {
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
+  const { addEntry } = useRequests();
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
   const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GeneralLedgerAccount[]>([]);
@@ -96,6 +98,67 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
   
     onClose();
   }, [onClose]);
+
+  const cleanCurrency = (raw: string) =>
+    (parseFloat(raw.replace(/[^\d]/g, "")) / 100).toFixed(2);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const isRecurring = formData.recurrence.recurrence === 1;
+    const installments = isRecurring
+      ? Number(formData.recurrence.installments || 1)
+      : 1;
+
+    const payload: AddEntryPayload = {
+      due_date: formData.details.dueDate,
+      description: formData.details.description || undefined,
+      observation: formData.details.observation || undefined,
+      amount: cleanCurrency(formData.details.amount),       // "100.00"
+      current_installment: 1,
+      total_installments: installments,
+      transaction_type: type,                               // "credit" ou "debit"
+      notes: formData.details.notes || undefined,
+
+      // Recorrência
+      periods: isRecurring ? String(formData.recurrence.periods) : null,
+      weekend_action: isRecurring ? formData.recurrence.weekend : null,
+
+      // FK simples
+      general_ledger_account_id: formData.details.accountingAccount || null,
+      document_type_id: formData.details.documentType || null,
+      project_id: formData.costCenters.projects || null,
+      entity_id: formData.entities.entity || null,
+
+      // Inventário
+      inventory_item_id: formData.inventory.product
+        ? Number(formData.inventory.product)
+        : null,
+      inventory_item_quantity: formData.inventory.quantity
+        ? Number(formData.inventory.quantity)
+        : null,
+
+      // Departamentos (listas)
+      department_id: formData.costCenters.departments.length
+        ? formData.costCenters.departments.join(',')
+        : null,
+      department_percentage: formData.costCenters.department_percentage.length
+        ? formData.costCenters.department_percentage.join(',')
+        : null,
+    };
+    console.log("Payload enviado:", payload);
+    const res = await addEntry(payload);
+
+      if (!res.data) {
+        console.error("Erro API:", res.message, res.errors);
+        alert(res.message);
+        return;
+      }
+
+      // ✅ Fechar modal e atualizar tabela
+      handleClose();
+      onSave();
+    };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -674,7 +737,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type }) => {
           </h1>
         </div>
 
-        <form id="modalForm" className="flex flex-col flex-grow">
+        <form id="modalForm" className="flex flex-col flex-grow" onSubmit={handleSubmit}>
           {/* Modal Content (Adjust height and scrolling behavior) */}
           <div className="p-4 flex-grow overflow-auto min-h-0">
             {/* Tabs Navigation */}
