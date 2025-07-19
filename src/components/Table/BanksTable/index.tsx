@@ -26,10 +26,10 @@ const BanksTable: React.FC<BanksTableProps> = ({ selectedBankIds }) => {
       <table className="w-full text-sm text-left">
         <thead className="sticky top-0 bg-gray-100 z-10">
           <tr>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600 uppercase">Instituição</th>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600 uppercase">Agência</th>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600 uppercase">Conta</th>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600 uppercase">Saldo</th>
+            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Instituição</th>
+            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Agência</th>
+            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Conta</th>
+            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Saldo</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +39,7 @@ const BanksTable: React.FC<BanksTableProps> = ({ selectedBankIds }) => {
             </tr>
           ) : (
             banks
-              .slice() // evita mutação direta
+              .slice()
               .sort((a, b) => a.id - b.id)
               .map((bank) => (
                 <tr key={bank.id} className="text-[12px] hover:bg-gray-50">
