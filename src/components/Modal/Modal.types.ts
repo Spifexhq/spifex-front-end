@@ -1,5 +1,7 @@
 // Modal.types.ts
 
+import { Entry } from '@/models/Entries';
+
 export interface FormData {
     details: {
       dueDate: string;
@@ -38,6 +40,7 @@ export interface FormData {
     onClose: () => void;
     onSave: () => void;
     type: ModalType;
+    initialEntry?: Entry | null;
   }
   
   export type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';

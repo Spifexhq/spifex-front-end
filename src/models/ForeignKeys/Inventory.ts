@@ -6,6 +6,11 @@ export type Inventory = {
   uuid_inventory_item: string | null;
 };
 
+export type InventoryAllocation = {
+  inventory_item: Inventory;
+  inventory_item_quantity: number;
+};
+
 export type ApiGetInventoryItems = {
   inventory_items: Inventory[];
 };

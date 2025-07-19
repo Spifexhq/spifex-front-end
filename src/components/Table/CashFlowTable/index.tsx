@@ -29,9 +29,10 @@ const PAGE_SIZE = 100;
 
 interface CashFlowTableProps {
   filters?: CashFlowFilters;
+  onEdit(entry: Entry): void;
 }
 
-const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
+const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit }) => {
   const { getFilteredEntries } = useRequests();
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.banksId);
   const [entries, setEntries] = useState<Array<Entry>>([]);
@@ -269,17 +270,18 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters }) => {
                       })}
                     </td>
                     <td className="px-2 py-1 text-center">
-                      <Button
-                        variant="common"
-                        style={{ padding: '8px', borderRadius: '6px' }}
-                      >
-                        <img
-                          alt="Editar"
-                          height={12}
-                          width={12}
-                          src="src/assets/Icons/tools/edit.svg"
-                        />
-                      </Button>
+                    <Button
+                      variant="common"
+                      style={{ padding: '8px', borderRadius: '6px' }}
+                      onClick={() => onEdit(entry)}    // ② NOVO
+                    >
+                      <img
+                        alt="Editar"
+                        height={12}
+                        width={12}
+                        src="src/assets/Icons/tools/edit.svg"
+                      />
+                    </Button>
                     </td>
                   </tr>
                 );

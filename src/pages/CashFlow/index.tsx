@@ -6,6 +6,7 @@ import CashFlowTable from "@/components/Table/CashFlowTable";
 import Filter, { FilterData } from "@/components/Filter";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
+import { Entry } from '@/models/Entries';
 
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,6 +15,7 @@ const CashFlow = () => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [banksKey, setBanksKey] = useState(0);
   const [cashflowKey, setCashflowKey] = useState(0);
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -27,8 +29,10 @@ const CashFlow = () => {
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleEditEntry = (entry: Entry) => {
+    setEditingEntry(entry);                              // guarda a linha
+    setModalType(entry.transaction_type as ModalType);   // cast garante o tipo
+    setIsModalOpen(true);
   };
 
   const handleApplyFilters = (newFilters: FilterData) => {
@@ -71,17 +75,26 @@ const CashFlow = () => {
           </div>
 
           {/* CashFlow Table */}
-          <CashFlowTable key={cashflowKey} filters={filters} />
+          <CashFlowTable
+            key={cashflowKey}
+            filters={filters}
+            onEdit={handleEditEntry}
+          />
         </div>
 
         {modalType && (
           <Modal
             isOpen={isModalOpen}
-            onClose={handleCloseModal}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditingEntry(null);
+            }}
             type={modalType}
+            initialEntry={editingEntry}
             onSave={() => {
-              handleCloseModal();
-              setCashflowKey(prev => prev + 1); // força atualização da CashFlowTable
+              setIsModalOpen(false);
+              setEditingEntry(null);
+              setCashflowKey((prev) => prev + 1);
             }}
           />
         )}

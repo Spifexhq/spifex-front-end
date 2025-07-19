@@ -1,7 +1,8 @@
 import { IApiResponse } from '@/models/Api';
 import {
   GeneralLedgerAccount, DocumentType,
-  Department, Project, Inventory, Entity
+  DepartmentAllocation, Project,
+  InventoryAllocation, Entity
 } from '@/models/ForeignKeys';
 import { Bank } from '../Bank';
 
@@ -22,9 +23,9 @@ export type Entry = {
   creation_date: string;
   general_ledger_account: GeneralLedgerAccount | null;
   document_type: DocumentType | null;
-  departments: Department[] | null;
+  departments: DepartmentAllocation[] | null;
   project: Project | null;
-  inventory_item: Inventory[] | null;
+  inventory_item: InventoryAllocation[] | null;
   entity: Entity | null;
 
   bank?: Bank;

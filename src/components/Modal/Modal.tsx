@@ -40,11 +40,11 @@ const initialFormData: FormData = {
   }
 };
 
-const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) => {
+const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, initialEntry }) => {
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
-  const { addEntry } = useRequests();
+  const { addEntry, editEntry } = useRequests();
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
   const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GeneralLedgerAccount[]>([]);
@@ -147,19 +147,127 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
         ? formData.costCenters.department_percentage.join(',')
         : null,
     };
+
     console.log("Payload enviado:", payload);
-    const res = await addEntry(payload);
+
+    try {
+      let res;
+
+      if (initialEntry) {
+        // 🔁 Modo edição
+        res = await editEntry([initialEntry.id], payload);
+      } else {
+        // ➕ Modo criação
+        res = await addEntry(payload);
+      }
 
       if (!res.data) {
         console.error("Erro API:", res.message, res.errors);
-        alert(res.message);
+        alert(res.message || "Erro ao salvar lançamento.");
         return;
       }
 
-      // ✅ Fechar modal e atualizar tabela
       handleClose();
       onSave();
-    };
+    } catch (err) {
+      console.error("Erro ao salvar lançamento:", err);
+      alert("Erro inesperado ao salvar lançamento.");
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || !initialEntry) return;
+
+    const isRecurring = (initialEntry.total_installments ?? 1) > 1;
+
+    // porcentagens de departamentos vinda da API
+    const deptIds   = initialEntry.departments?.map(d => String(d.department.id)) || [];
+    const deptPercs = initialEntry.departments?.map(d => d.percentage) || [];
+
+    setFormData({
+      details: {
+        dueDate: initialEntry.due_date,
+        description: initialEntry.description ?? '',
+        observation: initialEntry.observation ?? '',
+        amount: initialEntry.amount,
+        accountingAccount: String(initialEntry.general_ledger_account?.id ?? ''),
+        documentType:      String(initialEntry.document_type?.id ?? ''),
+        notes: initialEntry.notes ?? ''
+      },
+      costCenters: {
+        departments: deptIds,
+        department_percentage: deptPercs,
+        projects: String(initialEntry.project?.id ?? '')
+      },
+      inventory: {
+        product:  String(initialEntry.inventory_item?.[0]?.inventory_item.id ?? ''),
+        quantity: initialEntry.inventory_item?.[0]?.inventory_item_quantity
+                    ? String(initialEntry.inventory_item[0].inventory_item_quantity)
+                    : ''
+      },
+      entities: {
+        entityType: initialEntry.entity?.entity_type ?? '',
+        entity:     String(initialEntry.entity?.id ?? '')
+      },
+      recurrence: {
+        recurrence: isRecurring ? 1 : 0,
+        installments: isRecurring
+          ? String(initialEntry.total_installments)
+          : '',
+        periods: Number(initialEntry.periods ?? 1),
+        weekend: initialEntry.weekend_action ?? ''
+      }
+    });
+  }, [isOpen, initialEntry]);
+
+
+  /** 2. Novo efeito para selecionar itens dos dropdowns */
+  useEffect(() => {
+    if (!isOpen || !initialEntry) return;
+
+    // -------------- Detalhes --------------
+    const la = ledgerAccounts.find(a => a.id === initialEntry.general_ledger_account?.id);
+    setSelectedLedgerAccount(la ? [la] : []);
+
+    const dt = documentTypes.find(d => d.id === initialEntry.document_type?.id);
+    setSelectedDocumentType(dt ? [dt] : []);
+
+    // -------------- Cost Centers --------------
+    const deptIds = initialEntry.departments?.map(d => d.department.id) || [];
+    setSelectedDepartments(
+      departments.filter(dep => deptIds.includes(dep.id))
+    );
+
+    const prj = projects.find(p => p.id === initialEntry.project?.id);
+    setSelectedProject(prj ? [prj] : []);
+
+    // -------------- Inventory --------------
+    const invId = initialEntry.inventory_item?.[0]?.inventory_item.id;
+    const inv = inventoryItems.find(i => i.id === invId);
+    setSelectedInventoryItem(inv ? [inv] : []);
+
+    // -------------- Entities --------------
+    if (initialEntry.entity) {
+      const ent = entities.find(e => e.id === initialEntry.entity!.id);
+      setSelectedEntity(ent ? [ent] : []);
+
+      setSelectedEntityType([
+        { id: 0, entity_type: initialEntry.entity.entity_type ?? '' }
+      ]);
+    } else {
+      setSelectedEntity([]);
+      setSelectedEntityType([]);
+    }
+  }, [
+    isOpen,
+    initialEntry,
+    ledgerAccounts,
+    documentTypes,
+    departments,
+    projects,
+    inventoryItems,
+    entities
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -188,20 +296,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
   // -------------------------------
 
   // Fill in today's date and focus on the description field when opening
-  useEffect(() => {
-    if (isOpen) {
-      const today = new Date().toISOString().split("T")[0];
-      setFormData((prev) => ({
-        ...prev,
-        details: { ...prev.details, dueDate: today },
-      }));
-
-      setTimeout(() => {
-        descriptionRef.current?.focus();
-      }, 100);
-    }
-  }, [isOpen]);
-
   useEffect(() => {
     if (!isOpen) return;
 
@@ -253,6 +347,15 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
       })
       .catch(error => console.error("Erro ao buscar entidades:", error));
 
+    if (!initialEntry) {
+      setFormData((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          dueDate: new Date().toISOString().slice(0, 10),
+        },
+      }));
+    }
   }, [
     getGeneralLedgerAccounts,
     getDocumentTypes,
@@ -261,7 +364,8 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave }) 
     getInventoryItems,
     getEntities,
     isOpen,
-    type
+    type,
+    initialEntry,
   ]);
 
   const handleLedgerAccountChange = (updatedAccounts: GeneralLedgerAccount[]) => {

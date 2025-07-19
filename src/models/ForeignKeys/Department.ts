@@ -4,6 +4,11 @@ export type Department = {
   uuid_department: string | null;
 };
 
+export type DepartmentAllocation = {
+  department: Department;
+  percentage: string;
+};
+
 export type ApiGetDepartments = {
   departments: Department[];
 };
