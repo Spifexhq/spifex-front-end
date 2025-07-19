@@ -73,3 +73,22 @@
     background-color: var(--accentCommonDisabled);
     cursor: not-allowed;
 }
+
+.cancel {
+    border: var(--border1);
+    background-color: var(--accentCancel);
+    color: var(--black);
+}
+
+.cancel:hover {
+    background-color: var(--accentCancelHover);
+}
+
+.cancel:active {
+    background-color: var(--accentCancelPressed);
+}
+
+.cancel:disabled {
+    background-color: var(--accentCancelDisabled);
+    cursor: not-allowed;
+}
