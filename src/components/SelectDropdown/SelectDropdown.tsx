@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useId } from "react";
 import { SelectDropdownProps } from "./SelectDropdown.types";
-import styles from './SelectDropdown.module.css';
 import Checkbox from "@/components/Checkbox";
 
 function SelectDropdown<T>({
@@ -161,7 +160,7 @@ function SelectDropdown<T>({
 
   return (
     <div className="flex flex-col w-full gap-[4px]">
-      {label && <label className={styles.label}>{label}</label>}
+      {label && <label className="text-[10px] py-[5px] font-bold select-none text-gray-700">{label}</label>}
       <div ref={dropdownRef} className="relative w-full select-none">
         <button
           onClick={toggleDropdown}
