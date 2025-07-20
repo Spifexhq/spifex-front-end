@@ -19,7 +19,7 @@
  * ```
  */
 
-export type InputVariant = 'default' | 'outlined' | 'filled' | 'error';
+export type InputVariant = 'default' | 'outlined' | 'filled';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   variant?: InputVariant;

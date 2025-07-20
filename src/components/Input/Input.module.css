@@ -40,7 +40,7 @@
 
 .input:disabled,
 select:disabled {
-  background-color: var(--color3);
+  background-color: #e5e7eb;
   color: #ababab;
 }
 
@@ -51,6 +51,12 @@ select:not(:disabled):hover {
 /* Input Variants */
 .default {
   background-color: white;
+}
+
+.default:disabled {
+  background-color: #e5e7eb;
+  color: #ababab;
+  cursor: not-allowed;
 }
 
 .outlined {
