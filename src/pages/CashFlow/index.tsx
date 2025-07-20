@@ -7,6 +7,8 @@ import Filter, { FilterData } from "@/components/Filter";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
 import { Entry } from '@/models/Entries';
+import Button from "src/components/Button";
+import { useRequests } from '@/api/requests';
 
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -16,6 +18,8 @@ const CashFlow = () => {
   const [banksKey, setBanksKey] = useState(0);
   const [cashflowKey, setCashflowKey] = useState(0);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { deleteEntry } = useRequests();
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -79,7 +83,29 @@ const CashFlow = () => {
             key={cashflowKey}
             filters={filters}
             onEdit={handleEditEntry}
+            onSelectionChange={setSelectedIds}
           />
+          {selectedIds.length > 0 && (
+          <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg p-4 rounded-xl z-50 flex items-center gap-4">
+            <span className="text-sm text-gray-700">{selectedIds.length} selecionado(s)</span>
+            <Button
+              variant="danger"
+              style={{ padding: '8px', fontSize: '14px'}}
+              onClick={async () => {
+                try {
+                  await deleteEntry(selectedIds);
+                  setCashflowKey((prev) => prev + 1); // Recarrega tabela
+                  setSelectedIds([]); // Limpa seleção
+                } catch (err) {
+                  alert("Erro ao deletar lançamentos.");
+                  console.error(err);
+                }
+              }}
+            >
+              Deletar selecionados
+            </Button>
+          </div>
+        )}
         </div>
 
         {modalType && (

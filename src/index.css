@@ -21,6 +21,10 @@
   --accentCancelHover: #f1f1f1;
   --accentCancelPressed: #f9f9f9;
   --accentCancelDisabled: #ffffff;
+  --accentDanger: #da2020;
+  --accentDangerHover: #f42626;
+  --accentDangerPressed: #c62020;
+  --accentDangerDisabled: #d03e3e;
   --white: #ffffff;
   --black: #202020;
   --color1: #f2f2f2;

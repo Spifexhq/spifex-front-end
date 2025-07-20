@@ -30,9 +30,10 @@ const PAGE_SIZE = 100;
 interface CashFlowTableProps {
   filters?: CashFlowFilters;
   onEdit(entry: Entry): void;
+  onSelectionChange?: (selected: number[]) => void;
 }
 
-const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit }) => {
+const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelectionChange }) => {
   const { getFilteredEntries } = useRequests();
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.banksId);
   const [entries, setEntries] = useState<Array<Entry>>([]);
@@ -56,6 +57,10 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit }) => {
 
   // Multi-select hook
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
+
+  useEffect(() => {
+    onSelectionChange?.(selectedIds);
+  }, [selectedIds, onSelectionChange]);
 
   /**
    * Fetch paginated entries from the API
@@ -273,7 +278,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit }) => {
                     <Button
                       variant="common"
                       style={{ padding: '8px', borderRadius: '6px' }}
-                      onClick={() => onEdit(entry)}    // ② NOVO
+                      onClick={() => onEdit(entry)}
                     >
                       <img
                         alt="Editar"
