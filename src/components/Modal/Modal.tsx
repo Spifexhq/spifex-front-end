@@ -69,6 +69,11 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     { id: 5, label: "Anual", value: 5 },
   ];
 
+  const decimalToCentsString = (amount: string | number) => {
+    const num = Number(amount);
+    return Number.isFinite(num) ? Math.round(num * 100).toString() : "";
+  };
+
   const { 
     getGeneralLedgerAccounts, 
     getDocumentTypes,
@@ -181,7 +186,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
         dueDate: initialEntry.due_date,
         description: initialEntry.description ?? '',
         observation: initialEntry.observation ?? '',
-        amount: initialEntry.amount,
+        amount:        decimalToCentsString(initialEntry.amount),
         accountingAccount: String(initialEntry.general_ledger_account?.id ?? ''),
         documentType:      String(initialEntry.document_type?.id ?? ''),
         notes: initialEntry.notes ?? ''
