@@ -59,11 +59,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<EntityType[]>([]);
-
-  const recurrenceOptions: RecurrenceOption[] = [
-    { id: 1, label: "Sim", value: 1 },
-    { id: 2, label: "Não", value: 0 },
-  ];
+  const isRecurrenceLocked = !!initialEntry && (initialEntry.total_installments ?? 1) > 1;
 
   const periodOptions: PeriodOption[] = [
     { id: 1, label: "Mensal", value: 1 },
@@ -72,10 +68,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     { id: 4, label: "Semestral", value: 4 },
     { id: 5, label: "Anual", value: 5 },
   ];
-
-  const selectedPeriod = periodOptions.find(
-    (option) => option.value === formData.recurrence.periods
-  );
 
   const { 
     getGeneralLedgerAccounts, 
@@ -716,16 +708,18 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
         );
       case 'recurrence':
         return (
-          <div>
-            {/* Recorrência */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <SelectDropdown<RecurrenceOption>
                 label="Recorrência"
-                items={recurrenceOptions}
+                items={[
+                  { id: 1, label: "Sim", value: 1 },
+                  { id: 2, label: "Não", value: 0 },
+                ]}
                 selected={
                   formData.recurrence.recurrence === 1
-                    ? [recurrenceOptions[0]]
-                    : [recurrenceOptions[1]]
+                    ? [{ id: 1, label: "Sim", value: 1 }]
+                    : [{ id: 2, label: "Não", value: 0 }]
                 }
                 onChange={(newValue) => {
                   const selected = newValue[0]?.value ?? 0;
@@ -740,11 +734,12 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
                 singleSelect
                 hideFilter
                 customStyles={{ maxHeight: "120px" }}
+                disabled={isRecurrenceLocked}
               />
             </div>
+
             {formData.recurrence.recurrence === 1 && (
-              <div className='grid grid-cols-2 gap-4'>
-                {/* Parcelas */}
+              <>
                 <div>
                   <Input
                     label='Parcelas'
@@ -756,14 +751,15 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
                         recurrence: { ...formData.recurrence, installments: e.target.value },
                       })
                     }
+                    disabled={isRecurrenceLocked}
                   />
                 </div>
-                {/* Períodos */}
+
                 <div>
                   <SelectDropdown<PeriodOption>
                     label="Períodos"
                     items={periodOptions}
-                    selected={selectedPeriod ? [selectedPeriod] : []}
+                    selected={periodOptions.filter(opt => opt.value === formData.recurrence.periods)}
                     onChange={(newValue) =>
                       setFormData({
                         ...formData,
@@ -779,23 +775,24 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
                     singleSelect
                     customStyles={{ maxHeight: "120px" }}
                     hideFilter
+                    disabled={isRecurrenceLocked}
                   />
                 </div>
-                {/* Fim de semana */}
+
                 <div>
                   <SelectDropdown<WeekendOption>
                     label="Fim de Semana"
                     items={[
-                      { id: 1, label: "Postergar", value: "postergar" },
-                      { id: 2, label: "Antecipar", value: "antecipar" },
+                      { id: 1, label: "Postergar", value: "postpone" },
+                      { id: 2, label: "Antecipar", value: "antedate" },
                     ]}
                     selected={
                       formData.recurrence.weekend
                         ? [
                             {
-                              id: formData.recurrence.weekend === "postergar" ? 1 : 2,
+                              id: formData.recurrence.weekend === "postpone" ? 1 : 2,
                               label:
-                                formData.recurrence.weekend === "postergar"
+                                formData.recurrence.weekend === "postpone"
                                   ? "Postergar"
                                   : "Antecipar",
                               value: formData.recurrence.weekend as WeekendOption["value"],
@@ -818,9 +815,10 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
                     singleSelect
                     customStyles={{ maxHeight: "120px" }}
                     hideFilter
+                    disabled={isRecurrenceLocked}
                   />
                 </div>
-              </div>
+              </>
             )}
           </div>
         );

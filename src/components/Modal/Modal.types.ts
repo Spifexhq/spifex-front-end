@@ -60,5 +60,5 @@ export interface FormData {
   export type WeekendOption = {
     id: number;
     label: string;
-    value: "postergar" | "antecipar";
+    value: "postpone" | "antedate";
   };
