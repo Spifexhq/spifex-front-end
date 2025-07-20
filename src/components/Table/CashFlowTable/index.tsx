@@ -30,7 +30,7 @@ const PAGE_SIZE = 100;
 interface CashFlowTableProps {
   filters?: CashFlowFilters;
   onEdit(entry: Entry): void;
-  onSelectionChange?: (selected: number[]) => void;
+  onSelectionChange?: (ids: number[], entries: Entry[]) => void;
 }
 
 const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelectionChange }) => {
@@ -59,8 +59,9 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
 
   useEffect(() => {
-    onSelectionChange?.(selectedIds);
-  }, [selectedIds, onSelectionChange]);
+    const selectedRows = entries.filter(e => selectedIds.includes(e.id));
+    onSelectionChange?.(selectedIds, selectedRows);
+  }, [selectedIds, entries, onSelectionChange]);
 
   /**
    * Fetch paginated entries from the API
