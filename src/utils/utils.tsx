@@ -12,7 +12,27 @@ export const formatAmount = (input: string) => {
 };
 
 
-export const unformatAmount = (formattedAmount: string) => formattedAmount.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+export const unformatAmount = (formattedAmount: string) => {
+  return formattedAmount
+    .replace(/\s/g, '')
+    .replace('R$', '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+};
+
+
+export const decimalToCentsString = (amount: string | number) => {
+  const num = Number(amount);
+  return Number.isFinite(num) ? Math.round(num * 100).toString() : "";
+};
+
+
+export const centsToDecimalString = (cents: string) => {
+  if (!cents) return "";
+  const value = (parseInt(cents, 10) || 0) / 100;
+  // toFixed(2) garante duas casas decimais
+  return value.toFixed(2);
+};
 
 
 export const formatDate = (dateString: string | undefined | null) => {
