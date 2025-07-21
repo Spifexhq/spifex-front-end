@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { PermissionMiddleware } from '@/middlewares';
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from '@/contexts/useAuthContext';
 
 import UserMenu from '@/components/UserMenu';
 import SimulatedAI from '@/components/SimulatedAI';
@@ -21,7 +21,10 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isActive = (path: string) => location.pathname === path;
+  useEffect(() => {
+    setDrawerOpen(false);
+    setUserMenuOpen(false);
+  }, [location.pathname]);
 
   const handleDrawerToggle = () => {
     if (userMenuOpen) setUserMenuOpen(false);
@@ -38,10 +41,16 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setUserMenuOpen(false);
       }
-      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+      if (
+        drawerRef.current &&
+        !drawerRef.current.contains(event.target as Node)
+      ) {
         setDrawerOpen(false);
       }
     }
@@ -49,74 +58,107 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleHelpClick = () => setIsSimulatedAIOpen(true);
-  const handleSimulatedAIClose = () => setIsSimulatedAIOpen(false);
-
   return (
     <>
-      {/* Top fixed Navbar */}
-      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-100">
+      {/* Barra fixa */}
+      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Left section: Mobile Menu Button + Logo */}
+            {/* Logo + hamburguer */}
             <div className="flex items-center">
-              {/* Mobile: Hamburger icon */}
               {isMobile && (
                 <button
                   onClick={handleDrawerToggle}
                   className="p-2 rounded-md text-gray-600 hover:text-gray-800 focus:outline-none"
                 >
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
                   </svg>
                 </button>
               )}
 
-              {/* Logo */}
-              <Link to="/cashflow" className="text-xl font-bold ml-2">
+              <NavLink
+                to="/cashflow"
+                className="text-xl font-bold ml-2"
+                end
+              >
                 Spifex
-              </Link>
+              </NavLink>
             </div>
 
-            {/* Desktop Navigation Links */}
+            {/* Links desktop */}
             {!isMobile && (
               <div className="flex items-center space-x-4">
-                <PermissionMiddleware codeName="view_cash_flow_button" isPage={false}>
-                  <Link
+                <PermissionMiddleware
+                  codeName="view_cash_flow_button"
+                  isPage={false}
+                >
+                  <NavLink
                     to="/cashflow"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      isActive('/cashflow') ? 'text-orange-500 font-bold' : 'text-gray-800'
-                    }`}
+                    end
+                    className={({ isActive }) =>
+                      `px-3 py-2 rounded-md text-sm font-medium ${
+                        isActive
+                          ? 'text-orange-500 font-bold'
+                          : 'text-gray-800'
+                      }`
+                    }
                   >
                     Fluxo de Caixa
-                  </Link>
+                  </NavLink>
                 </PermissionMiddleware>
-                <PermissionMiddleware codeName="view_settled_button" isPage={false}>
-                  <Link
+
+                <PermissionMiddleware
+                  codeName="view_settled_button"
+                  isPage={false}
+                >
+                  <NavLink
                     to="/settled"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      isActive('/settled') ? 'text-orange-500 font-bold' : 'text-gray-800'
-                    }`}
+                    className={({ isActive }) =>
+                      `px-3 py-2 rounded-md text-sm font-medium ${
+                        isActive
+                          ? 'text-orange-500 font-bold'
+                          : 'text-gray-800'
+                      }`
+                    }
                   >
                     Realizado
-                  </Link>
+                  </NavLink>
                 </PermissionMiddleware>
+
                 {(isSubscribed || isSuperUser) && (
-                  <PermissionMiddleware codeName="view_report_button" isPage={false}>
-                    <Link
+                  <PermissionMiddleware
+                    codeName="view_report_button"
+                    isPage={false}
+                  >
+                    <NavLink
                       to="/reports"
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
-                        isActive('/reports') ? 'text-orange-500 font-bold' : 'text-gray-800'
-                      }`}
+                      className={({ isActive }) =>
+                        `px-3 py-2 rounded-md text-sm font-medium ${
+                          isActive
+                            ? 'text-orange-500 font-bold'
+                            : 'text-gray-800'
+                        }`
+                      }
                     >
                       Relatórios
-                    </Link>
+                    </NavLink>
                   </PermissionMiddleware>
                 )}
               </div>
             )}
 
-            {/* User Menu */}
+            {/* Menu do usuário */}
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={handleUserMenuToggle}
@@ -124,7 +166,9 @@ const Navbar: React.FC = () => {
               >
                 Menu
                 <svg
-                  className={`h-4 w-4 ml-2 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                  className={`h-4 w-4 ml-2 transition-transform duration-200 ${
+                    userMenuOpen ? 'rotate-180' : ''
+                  }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   role="none"
@@ -138,20 +182,23 @@ const Navbar: React.FC = () => {
                 </svg>
               </button>
               {userMenuOpen && (
-                <UserMenu onClose={() => setUserMenuOpen(false)} onHelpClick={handleHelpClick} />
+                <UserMenu
+                  onClose={() => setUserMenuOpen(false)}
+                  onHelpClick={() => setIsSimulatedAIOpen(true)}
+                />
               )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Drawer */}
+      {/* Drawer mobile */}
       {isMobile && (
         <div
           ref={drawerRef}
           className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-gray-200 transform ${
             drawerOpen ? 'translate-x-0' : '-translate-x-full'
-          } transition-transform duration-300 z-100`}
+          } transition-transform duration-300 z-40`}
         >
           <div className="flex flex-col h-full p-4">
             <button
@@ -160,22 +207,47 @@ const Navbar: React.FC = () => {
             >
               ✖
             </button>
+
             <nav className="mt-4 space-y-2">
-              <PermissionMiddleware codeName="view_cash_flow_button" isPage={false}>
-                <Link to="/cashflow" className="block p-2 rounded-md text-gray-800 hover:bg-gray-100">
+              <PermissionMiddleware
+                codeName="view_cash_flow_button"
+                isPage={false}
+              >
+                <NavLink
+                  to="/cashflow"
+                  end
+                  onClick={() => setDrawerOpen(false)}
+                  className="block p-2 rounded-md text-gray-800 hover:bg-gray-100"
+                >
                   Fluxo de Caixa
-                </Link>
+                </NavLink>
               </PermissionMiddleware>
-              <PermissionMiddleware codeName="view_settled_button" isPage={false}>
-                <Link to="/settled" className="block p-2 rounded-md text-gray-800 hover:bg-gray-100">
+
+              <PermissionMiddleware
+                codeName="view_settled_button"
+                isPage={false}
+              >
+                <NavLink
+                  to="/settled"
+                  onClick={() => setDrawerOpen(false)}
+                  className="block p-2 rounded-md text-gray-800 hover:bg-gray-100"
+                >
                   Realizado
-                </Link>
+                </NavLink>
               </PermissionMiddleware>
+
               {(isSubscribed || isSuperUser) && (
-                <PermissionMiddleware codeName="view_report_button" isPage={false}>
-                  <Link to="/reports" className="block p-2 rounded-md text-gray-800 hover:bg-gray-100">
+                <PermissionMiddleware
+                  codeName="view_report_button"
+                  isPage={false}
+                >
+                  <NavLink
+                    to="/reports"
+                    onClick={() => setDrawerOpen(false)}
+                    className="block p-2 rounded-md text-gray-800 hover:bg-gray-100"
+                  >
                     Relatórios
-                  </Link>
+                  </NavLink>
                 </PermissionMiddleware>
               )}
             </nav>
@@ -183,8 +255,11 @@ const Navbar: React.FC = () => {
         </div>
       )}
 
-      {/* Simulated AI Modal */}
-      <SimulatedAI isOpen={isSimulatedAIOpen} onClose={handleSimulatedAIClose} />
+      {/* Modal de ajuda */}
+      <SimulatedAI
+        isOpen={isSimulatedAIOpen}
+        onClose={() => setIsSimulatedAIOpen(false)}
+      />
     </>
   );
 };

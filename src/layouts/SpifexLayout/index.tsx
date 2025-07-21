@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/api';
 import { AuthMiddleware } from '@/middlewares';
 import { SuspenseLoader } from '@/components/Loaders';
+import Navbar from 'src/components/Navbar';
 
 interface SpifexLayoutProps {
     children?: ReactNode;
@@ -31,6 +32,7 @@ const SpifexLayout: FC<SpifexLayoutProps> = () => {
 
     return (
         <AuthMiddleware>
+            <Navbar />
             <div
                 className='spifex-layout__container'
                 style={{
