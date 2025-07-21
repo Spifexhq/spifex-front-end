@@ -32,6 +32,7 @@ export type SettledEntry = {
   partial_settlement_correlation_id?: string | null;
   transference_correlation_id?: string | null;
   settlement_state: boolean;
+  settlement_date: string;
   enterprise: number;
 };
 

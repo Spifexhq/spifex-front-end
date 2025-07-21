@@ -81,9 +81,15 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
       const combined = (reset ? [] : entries).concat(parsed);
       // Sort by settlement_due_date
       const sorted = combined.sort((a, b) => {
-        return (
+        const dueDiff =
           new Date(a.settlement_due_date).getTime() -
-          new Date(b.settlement_due_date).getTime()
+          new Date(b.settlement_due_date).getTime();
+
+        if (dueDiff !== 0) return dueDiff;
+
+        return (
+          new Date(a.settlement_date).getTime() -
+          new Date(b.settlement_date).getTime()
         );
       });
 
