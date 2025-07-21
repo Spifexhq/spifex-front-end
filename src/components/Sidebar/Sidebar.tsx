@@ -1,3 +1,4 @@
+import React from 'react';
 import { PermissionMiddleware } from '@/middlewares';
 import { ModalType } from "@/components/Modal/Modal.types";
 
