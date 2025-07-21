@@ -1,5 +1,4 @@
-import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import { useCallback, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import {Modal, TransferenceModal} from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
@@ -37,14 +36,22 @@ const CashFlow = () => {
   };
 
   const handleEditEntry = (entry: Entry) => {
-    setEditingEntry(entry);                              // guarda a linha
-    setModalType(entry.transaction_type as ModalType);   // cast garante o tipo
+    setEditingEntry(entry);
+    setModalType(entry.transaction_type as ModalType);
     setIsModalOpen(true);
   };
 
   const handleApplyFilters = (newFilters: FilterData) => {
     setFilters(newFilters);
   };
+
+  const handleSelectionChange = useCallback(
+    (ids: number[], rows: Entry[]) => {
+      setSelectedIds(ids);
+      setSelectedEntries(rows);
+    },
+    []
+  );
 
   return (
     <div className="flex">
@@ -62,11 +69,6 @@ const CashFlow = () => {
           isSidebarOpen ? "ml-60" : "ml-16"
         }`}
       >
-        {/* Fixed Navbar */}
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navbar />
-        </div>
-
         {/* Push main content below the fixed Navbar */}
         <div className="mt-[80px] px-10">
           {/* Filter + BanksTable side by side */}
@@ -86,10 +88,7 @@ const CashFlow = () => {
             key={cashflowKey}
             filters={filters}
             onEdit={handleEditEntry}
-            onSelectionChange={(ids, rows) => {
-              setSelectedIds(ids);
-              setSelectedEntries(rows);
-            }}
+            onSelectionChange={handleSelectionChange}
           />
           {selectedIds.length > 0 && (
           <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg p-4 rounded-xl z-50 flex items-center gap-4">
@@ -157,8 +156,8 @@ const CashFlow = () => {
           selectedEntries={selectedEntries}
           onSave={() => {
             setIsSettlementModalOpen(false);
-            setCashflowKey(k => k + 1);   // Recarrega tabela
-            setBanksKey(k => k + 1);      // Recarrega saldos
+            setCashflowKey(k => k + 1);
+            setBanksKey(k => k + 1);
             setSelectedIds([]);
           }}
         />
