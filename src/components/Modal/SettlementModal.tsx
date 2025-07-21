@@ -8,6 +8,7 @@ import Checkbox from "@/components/Checkbox";
 import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
 import Input from "../Input";
 import { centsToDecimalString } from "src/utils/utils";
+import { InlineLoader } from "../Loaders";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -141,7 +142,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               <tbody>
                 {loadingBanks ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-4">Carregando…</td>
+                    <td colSpan={5} className="text-center py-4"><InlineLoader color="orange" className="w-8 h-8" /></td>
                   </tr>
                 ) : error ? (
                   <tr>
