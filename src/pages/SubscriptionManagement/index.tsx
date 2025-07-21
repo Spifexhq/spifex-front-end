@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from 'src/api';
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import Navbar from 'src/components/Navbar';
 import { InlineLoader, SuspenseLoader } from 'src/components/Loaders';
 import PaymentButton from 'src/components/SubscriptionButtons/PaymentButton';
 import ManageSubscriptionLink from 'src/components/SubscriptionButtons/ManageSubscriptionLink';
@@ -51,7 +50,6 @@ const SubscriptionManagement: React.FC = () => {
 
   return (
     <>
-      <Navbar />
       <div className="subscription-management">
         <h1 className="subscription-management__title">Gerenciar Assinatura</h1>
 
