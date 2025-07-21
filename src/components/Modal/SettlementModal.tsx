@@ -201,7 +201,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                           type="date"
                           value={e.due_date}
                           onChange={(ev) => updateEntryDate(e.id, ev.target.value)}
-                          className="border border-gray-300 rounded px-1 text-xs"
+                          className="border border-gray-300 rounded px-1 py-1 text-xs"
                         />
                       </td>
                       <td className="px-2 py-1 whitespace-nowrap">{e.description}</td>
@@ -250,6 +250,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           </Button>
             <Button
             variant="primary"
+            className="px-4 py-2"
             onClick={handleLiquidate}
             disabled={
                 selectedBankIds.length === 0 ||
