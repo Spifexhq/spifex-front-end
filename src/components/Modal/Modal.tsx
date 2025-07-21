@@ -7,6 +7,7 @@ import { SelectDropdown } from "@/components/SelectDropdown";
 import Input from '../Input';
 import { AddEntryPayload } from '@/models/Entries';
 import Button from '../Button';
+import { decimalToCentsString } from 'src/utils/utils';
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -68,11 +69,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     { id: 4, label: "Semestral", value: 4 },
     { id: 5, label: "Anual", value: 5 },
   ];
-
-  const decimalToCentsString = (amount: string | number) => {
-    const num = Number(amount);
-    return Number.isFinite(num) ? Math.round(num * 100).toString() : "";
-  };
 
   const { 
     getGeneralLedgerAccounts, 
