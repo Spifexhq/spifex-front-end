@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
 import Input from "../Input";
+import { centsToDecimalString } from "src/utils/utils";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -39,6 +40,9 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   /* -------------------------------------------------------------------------- */
   const [selectedBankIds, setSelectedBankIds] = useState<number[]>([]);
   const [entriesState, setEntriesState] = useState<LocalEntryState[]>([]);
+    const somePartialWithoutValue = entriesState.some(
+    (e) => e.isPartial && (!e.partialAmount || parseInt(e.partialAmount, 10) === 0)
+    );
   /* -------------------------------------------------------------------------- */
   /*                               Side‑effects                                 */
   /* -------------------------------------------------------------------------- */
@@ -97,7 +101,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             settlement_due_date: e.due_date,
             bank_id: bankId,
             is_partial: e.isPartial,
-            partial_amount: e.isPartial ? e.partialAmount : undefined,
+            partial_amount: e.isPartial ? centsToDecimalString(e.partialAmount) : undefined,
           };
           return editSettledEntry([e.id], payload);
         })
@@ -244,12 +248,15 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           <Button variant="cancel" className="px-4 py-2" onClick={onClose}>
             Cancelar
           </Button>
-          <Button
+            <Button
             variant="primary"
-            className="px-4 py-2"
             onClick={handleLiquidate}
-            disabled={selectedBankIds.length === 0 || entriesState.length === 0}
-          >
+            disabled={
+                selectedBankIds.length === 0 ||
+                entriesState.length === 0 ||
+                somePartialWithoutValue
+            }
+            >
             Liquidar
           </Button>
         </div>
