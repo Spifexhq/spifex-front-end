@@ -234,7 +234,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
         <tbody className="bg-white divide-y divide-gray-200 text-[12px]">
           {tableRows.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-4 py-2 text-center text-gray-600 text-sm">
+              <td colSpan={7} className="px-4 py-3 text-center text-gray-500">
                 Nenhum dado disponível
               </td>
             </tr>
