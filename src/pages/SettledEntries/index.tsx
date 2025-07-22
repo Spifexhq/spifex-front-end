@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useRequests } from '@/api/requests';
+import Button from '@/components/Button';
 import Sidebar from "@/components/Sidebar";
 import { Modal } from "@/components/Modal";
 import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
@@ -12,6 +14,9 @@ const Settled = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { deleteSettledEntry } = useRequests();
+
 
   const [filters, setFilters] = useState<FilterData>({});
 
@@ -60,7 +65,11 @@ const Settled = () => {
           </div>
 
           {/* Settled Entries Table */}
-          <SettledEntriesTable filters={filters} bankIds={filters.banksId} />
+          <SettledEntriesTable
+            filters={filters}
+            bankIds={filters.banksId}
+            onSelectionChange={setSelectedIds}
+          />
         </div>
 
         {modalType && (
@@ -79,6 +88,27 @@ const Settled = () => {
           />
         )}
       </div>
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg p-4 rounded-xl z-50 flex items-center gap-4">
+          <span className="text-sm text-gray-700">{selectedIds.length} selecionado(s)</span>
+          <Button
+            variant="danger"
+            style={{ padding: '8px', fontSize: '14px' }}
+            onClick={async () => {
+              try {
+                await deleteSettledEntry(selectedIds);
+                setSelectedIds([]);
+                window.location.reload();
+              } catch (err) {
+                alert("Erro ao deletar liquidações.");
+                console.error(err);
+              }
+            }}
+          >
+            Retornar selecionados
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

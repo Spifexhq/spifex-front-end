@@ -30,9 +30,10 @@ const PAGE_SIZE = 100;
 interface SettledEntriesTableProps {
   filters?: CashFlowFilters;
   bankIds?: number[];
+  onSelectionChange?: (ids: number[]) => void;
 }
 
-const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bankIds }) => {
+const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bankIds, onSelectionChange }) => {
   const { getFilteredSettledEntries } = useRequests();
   const [entries, setEntries] = useState<Array<SettledEntry>>([]);
   const [tableRows, setTableRows] = useState<
@@ -52,6 +53,12 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
   const [error, setError] = useState<string | null>(null);
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(bankIds);
+
+  useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(selectedIds);
+    }
+  }, [selectedIds, onSelectionChange]);
 
   /**
    * Fetch paginated settled entries from the API
@@ -231,7 +238,7 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
     });
   
     setTableRows(newRows);
-  }, [entries, totalConsolidatedBalance, loadingBanks]);  
+  }, [entries, totalConsolidatedBalance, loadingBanks]);
 
   // Show loader, errors, or table
   if (loading && !entries.length) {
@@ -268,7 +275,7 @@ const SettledEntriesTable: React.FC<SettledEntriesTableProps> = ({ filters, bank
         <tbody className="bg-white divide-y divide-gray-200 text-[12px]">
           {tableRows.length === 0 ? (
             <tr>
-              <td colSpan={8} className="px-2 py-2 text-center text-gray-500">
+              <td colSpan={8} className="px-4 py-3 text-center text-gray-500">
                 Nenhum dado disponível
               </td>
             </tr>
