@@ -103,8 +103,13 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
 
   if (!isOpen) return null;
 
-  const bankOutOptions = banks.filter((b) => b.id !== parseInt(formData.bank_in_id));
-  const bankInOptions = banks.filter((b) => b.id !== parseInt(formData.bank_out_id));
+  const bankOutOptions = banks
+    .filter((b) => b.id !== parseInt(formData.bank_in_id))
+    .sort((a, b) => a.id - b.id);
+
+  const bankInOptions = banks
+    .filter((b) => b.id !== parseInt(formData.bank_out_id))
+    .sort((a, b) => a.id - b.id);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-50">
