@@ -1,70 +1,170 @@
-import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
-import Modal from "@/components/Modal";
-import CashFlowTable from "@/components/Table/CashFlowTable";
-import Filter, { FilterData } from "@/components/Filter";
+import { useRequests } from "@/api/requests";
+import { Entry } from "@/models/Entries";
+import dayjs from "dayjs";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
-// Make sure your Table's prop type expects `filters` of type `CashFlowFilters`
-const CashFlow = () => {
+const Report = () => {
+  const { getEntries } = useRequests();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Store filters in the parent
-  const [filters, setFilters] = useState({});
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await getEntries(10000, 0);
+        setEntries(response.data?.entries ?? []);
+      } catch (e) {
+        console.error("Failed to fetch entries", e);
+        setError("Erro ao buscar lançamentos.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
-  };
+    fetchData();
+  }, [getEntries]);
 
-  const handleOpenModal = (type: string) => {
-    console.log("Abrindo modal do tipo:", type);
-    setIsModalOpen(true);
-  };
+  const monthlyData = useMemo(() => {
+    const map: Record<string, { amount: number; isPositive: boolean }> = {};
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+    entries.forEach((entry) => {
+      const monthKey = dayjs(entry.due_date)
+        .startOf("month")
+        .format("YYYY-MM");
+      const amount = parseFloat(entry.amount);
+      const isCredit = entry.transaction_type === "credit";
+      const signedAmount = isCredit ? amount : -amount;
 
-  // Receives new filters from child and updates state
-  const handleApplyFilters = (newFilters: FilterData) => {
-    // FilterData is compatible with CashFlowFilters if they share the same fields
-    setFilters(newFilters);
-  };
+      if (!map[monthKey]) {
+        map[monthKey] = { amount: signedAmount, isPositive: signedAmount >= 0 };
+      } else {
+        map[monthKey].amount += signedAmount;
+        map[monthKey].isPositive = map[monthKey].amount >= 0;
+      }
+    });
+
+    const monthsSorted = Object.keys(map).sort();
+
+    const currentMonthKey = dayjs().startOf("month").format("YYYY-MM");
+    if (!map[currentMonthKey]) {
+      map[currentMonthKey] = { amount: 0, isPositive: true };
+      monthsSorted.push(currentMonthKey);
+      monthsSorted.sort();
+    }
+
+    if (monthsSorted.length > 24) {
+      const currentIndex = monthsSorted.indexOf(currentMonthKey);
+      let start = currentIndex - 11;
+      if (start < 0) start = 0;
+
+      let end = start + 24;
+      if (end > monthsSorted.length) {
+        end = monthsSorted.length;
+        start = end - 24;
+      }
+
+      monthsSorted.splice(0, start);
+      monthsSorted.splice(24);
+    }
+
+    return monthsSorted.map((key) => ({
+      monthKey: key,
+      month: dayjs(key).format("MMM/YY"),
+      amount: map[key].amount,
+      isPositive: map[key].isPositive,
+    }));
+  }, [entries]);
+
+  const toggleSidebar = useCallback(
+    () => setIsSidebarOpen((prev) => !prev),
+    []
+  );
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-white text-gray-900">
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
-        handleOpenModal={handleOpenModal}
-        handleOpenTransferenceModal={() => null}
+        handleOpenModal={() => {}}
+        handleOpenTransferenceModal={() => {}}
         mode="default"
       />
 
-      <div
+      <main
         className={`flex-1 transition-all duration-300 ${
           isSidebarOpen ? "ml-60" : "ml-16"
         }`}
       >
-        {/* Navbar fixa no topo */}
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <Navbar />
+        <div className="mt-[80px] w-full px-10 py-6">
+          <h1 className="text-2xl font-semibold mb-6">
+            Relatório de Fluxo de Caixa
+          </h1>
+
+          {loading && <p className="text-sm">Carregando…</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
+          {!loading && !error && (
+            <div className="w-full h-80 bg-gray-100 rounded-xl p-4 shadow-lg">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: "#374151", fontSize: 12 }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#374151", fontSize: 12 }}
+                    tickFormatter={(v: number) =>
+                      v.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                        minimumFractionDigits: 0,
+                      })
+                    }
+                  />
+                  <Tooltip
+                    labelClassName="text-sm"
+                    formatter={(value: number) => [
+                      value.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }),
+                      "Saldo",
+                    ]}
+                    contentStyle={{ backgroundColor: "#F9FAFB", border: "1px solid #D1D5DB", color: "#111827" }}
+                    cursor={{ fill: "#E5E7EB", opacity: 0.6 }}
+                  />
+                  <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
+                    {monthlyData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.isPositive ? "#1E3A8A" : "#991B1B"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
-
-        {/* Conteúdo principal */}
-        <div className="mt-[60px] px-10">
-          {/* Our new Filter Card */}
-          <Filter onApply={handleApplyFilters} />
-
-          {/* Tabela de fluxo de caixa, agora recebendo os filters do estado */}
-          <CashFlowTable filters={filters} />
-        </div>
-
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} />
-      </div>
+      </main>
     </div>
   );
 };
 
-export default CashFlow;
+export default Report;
