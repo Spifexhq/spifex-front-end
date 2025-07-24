@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { InlineLoader } from "src/components/Loaders";
 
 const Report = () => {
   const { getEntries } = useRequests();
@@ -115,7 +116,7 @@ const Report = () => {
             Relatório de Fluxo de Caixa
           </h1>
 
-          {loading && <p className="text-sm">Carregando…</p>}
+          {loading && <p className="text-sm"><InlineLoader color="orange" className="w-10 h-10" /></p>}
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           {!loading && !error && (
