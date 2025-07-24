@@ -21,6 +21,7 @@ function SelectDropdown<T>({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const id = useId();
   const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
@@ -34,19 +35,36 @@ function SelectDropdown<T>({
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchTerm("");
         if (clearOnClickOutside) {
           onChange([]);
         }
       }
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    }
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onChange, clearOnClickOutside]);
+
+  useEffect(() => {
+    if (isOpen && !hideFilter && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen, hideFilter]);
 
   const handleCheckboxChange = (item: T) => {
     const itemKey = getItemKey(item);
@@ -231,6 +249,7 @@ function SelectDropdown<T>({
                 placeholder="Filtrar"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                ref={searchInputRef}
                 className="border-b border-gray-300 w-full p-1 pl-5 box-border text-[12px]"
               />
             )}
