@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+import SidebarSettings from '@/components/Sidebar/SidebarSettings';
 import { useRequests } from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
 import Navbar from '@/components/Navbar';
@@ -94,6 +95,7 @@ const PersonalData: React.FC = () => {
   return (
     <>
       <Navbar />
+      <SidebarSettings userName="Edgar Moraes" activeItem="personal-settings" />
       <div className="min-h-screen text-gray-900 px-8 py-20">
         <div className="max-w-3xl mx-auto bg-white rounded-lg shadow p-8">
           <h2 className="text-3xl font-semibold mb-10">Configurações Pessoais</h2>

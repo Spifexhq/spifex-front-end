@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import Sidebar from "@/components/Sidebar";
+import { Sidebar } from "@/components/Sidebar";
 import {Modal, TransferenceModal} from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
 import Filter, { FilterData } from "@/components/Filter";

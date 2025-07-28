@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import Sidebar from "@/components/Sidebar";
+import { Sidebar } from "@/components/Sidebar";
 import { useRequests } from "@/api/requests";
 import { Entry } from "@/models/Entries";
 import dayjs from "dayjs";

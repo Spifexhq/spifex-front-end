@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRequests } from '@/api/requests';
 import Button from '@/components/Button';
-import Sidebar from "@/components/Sidebar";
+import { Sidebar } from "@/components/Sidebar";
 import { Modal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
 import Filter, { FilterData } from "@/components/Filter";
