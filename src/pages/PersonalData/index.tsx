@@ -1,224 +1,267 @@
+// src/pages/PersonalSettings.tsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-import SidebarSettings from '@/components/Sidebar/SidebarSettings';
-import { useRequests } from '@/api';
-import { useAuthContext } from '@/contexts/useAuthContext';
 import Navbar from '@/components/Navbar';
-import { Enterprise } from 'src/models/Auth/Enterprise';
+import SidebarSettings from '@/components/Sidebar/SidebarSettings';
 import { SuspenseLoader } from '@/components/Loaders';
 import Input from '@/components/Input';
 import Button from '@/components/Button';
 import Snackbar from '@/components/Snackbar';
 import Alert from '@/components/Alert';
 
-const PersonalData: React.FC = () => {
-  const { isOwner } = useAuthContext();
-  const { getEnterprise, editEnterprise } = useRequests();
+import { useRequests } from '@/api';
+import { useAuthContext } from '@/contexts/useAuthContext';
+import { User, Enterprise } from 'src/models/Auth';          // ⬅ ajuste o path
+
+/* -------------------------------------------------------------------------- */
+
+type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department';
+
+const PersonalSettings: React.FC = () => {
+  const navigate = useNavigate();
+  const { isOwner } = useAuthContext();                       // ← flag vinda do contexto
+  const { getUser, getEnterprise, editUser } = useRequests(); // editEnterprise não é usado aqui
+
+  const [user, setUser]             = useState<User | null>(null);
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading]       = useState(true);
+
+  const [modalOpen, setModalOpen]           = useState(false);
+  const [editingField, setEditingField] = useState<EditableUserField | null>(null);
   const [snackBarMessage, setSnackBarMessage] = useState('');
+
   const [formData, setFormData] = useState({
-    name: '',
-    ownerName: '',
-    ownerEmail: ''
+    name        : '',
+    email       : '',
+    phone_number: '',
+    job_title   : '',
+    department  : '',
   });
 
+  /* ------------------------------ Carrega dados --------------------------- */
   useEffect(() => {
-    const fetchEnterprise = async () => {
+    (async () => {
       try {
-        const response = await getEnterprise();
-        if (response.data) {
-          setEnterprise(response.data.enterprise);
+        /* ---------- USER ---------- */
+        const { data: userResp } = await getUser();
+        if (userResp) {
+          setUser(userResp.user);
           setFormData({
-            name: response.data.enterprise.name,
-            ownerName: response.data.enterprise.owner.name,
-            ownerEmail: response.data.enterprise.owner.email
+            name        : userResp.user.name,
+            email       : userResp.user.email,
+            phone_number: userResp.user.phone_number,
+            job_title   : userResp.user.job_title,
+            department  : userResp.user.department,
           });
+
+          /* ---------- ENTERPRISE (só owner) ---------- */
+          if (userResp.user.is_owner) {
+            const { data: entResp } = await getEnterprise();
+            if (entResp) setEnterprise(entResp.enterprise);
+          }
         }
-      } catch (error) {
-        console.error('Erro ao buscar dados da empresa:', error);
+      } catch (e) {
+        console.error('Erro ao buscar dados', e);
       } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, [getUser, getEnterprise]);
 
-    fetchEnterprise();
-  }, [getEnterprise]);
-
-  const handleOpenModal = () => setModalOpen(true);
-
-  const handleCloseModal = () => {
-    if (enterprise) {
+  /* ------------------------------- Handlers ------------------------------- */
+  const openModal = (field?: EditableUserField) => {
+    if (user) {
       setFormData({
-        name: enterprise.name,
-        ownerName: enterprise.owner.name,
-        ownerEmail: enterprise.owner.email
+        name        : user.name,
+        email       : user.email,
+        phone_number: user.phone_number,
+        job_title   : user.job_title,
+        department  : user.department,
       });
     }
+
+    setEditingField(field ?? null);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (user) {
+      setFormData({
+        name        : user.name,
+        email       : user.email,
+        phone_number: user.phone_number,
+        job_title   : user.job_title,
+        department  : user.department,
+      });
+    }
+    setEditingField(null);
     setModalOpen(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async () => {
+    // Envia só o campo em edição, ou o diff completo quando for “Editar tudo”
+    const payload =
+      editingField !== null
+        ? { [editingField]: formData[editingField] }
+        : formData;             // modal foi aberto em modo “todos os campos”
+
     try {
-      const response = await editEnterprise({
-        name: formData.name,
-        owner: { name: formData.ownerName, email: formData.ownerEmail }
-      });
+      const res = await editUser(payload);
+      if (res.status === 'error') throw new Error(res.message);
 
-      if (response.status === 'error') {
-        throw new Error(response.message);
-      }
-
-      const updated = await getEnterprise();
+      const updated = await getUser();      // refetch
       if (updated.data) {
-        setEnterprise(updated.data.enterprise);
-        handleCloseModal();
+        setUser(updated.data.user);
+        closeModal();
       }
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Erro ao atualizar os dados.';
-      setSnackBarMessage(message);
+    } catch (err) {
+      setSnackBarMessage(
+        err instanceof Error ? err.message : 'Erro ao atualizar dados.',
+      );
     }
   };
 
+  /* ----------------------------- UI helpers ------------------------------ */
+  const Row = ({
+    label, value, field, btnLabel
+  }: { label: string; value: string; field: EditableUserField; btnLabel: string }) => (
+    <div className="flex items-center justify-between border-b last:border-0 py-4 px-4">
+      <div>
+        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-base font-medium text-gray-900">
+          {value || 'Não disponível'}
+        </p>
+      </div>
+      {isOwner && (
+        <Button variant="outline" onClick={() => openModal(field)}>
+          {btnLabel}
+        </Button>
+      )}
+    </div>
+  );
+
   if (loading) return <SuspenseLoader />;
 
+  /* ----------------------------------------------------------------------- */
   return (
     <>
       <Navbar />
-      <SidebarSettings userName="Edgar Moraes" activeItem="personal-settings" />
-      <div className="min-h-screen text-gray-900 px-8 py-20">
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow p-8">
-          <h2 className="text-3xl font-semibold mb-10">Configurações Pessoais</h2>
 
-          <div className="space-y-6 border-b border-gray-200 pb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Nome da empresa</p>
-                <p className="text-base font-medium">
-                  {enterprise?.name || 'Não disponível'}
-                </p>
+      <SidebarSettings
+        userName={user?.name}
+        activeItem="personal-settings"
+        onSelect={(id) => {
+          if (id === 'plan') return navigate('/subscription-management');
+          if (id === 'personal-settings') return navigate('/settings/personal');
+          navigate(`/${id}`);
+        }}
+      />
+
+      <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
+        <section className="max-w-3xl mx-auto p-8">
+
+          {/* ---------------------- DADOS DA EMPRESA (somente owner) ---------------------- */}
+          {isOwner && enterprise && (
+            <>
+              <h3 className="text-lg font-semibold mb-2">Dados da empresa</h3>
+              <div className="border rounded-lg divide-y">
+                <div className="flex items-center justify-between py-4 px-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Nome da empresa</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {enterprise.name || 'Não disponível'}
+                    </p>
+                  </div>
+                  {/* Para editar, redireciona ao Company settings */}
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/settings/company-settings')}
+                  >
+                    Gerenciar
+                  </Button>
+                </div>
               </div>
-              {isOwner && (
-                <Button variant="outline" onClick={handleOpenModal}>
-                  Editar
-                </Button>
-              )}
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Proprietário</p>
-                <p className="text-base font-medium">
-                  {enterprise?.owner.name || 'Não disponível'}
-                </p>
-              </div>
-              {isOwner && (
-                <Button variant="outline" onClick={handleOpenModal}>
-                  Editar
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Email principal</p>
-                <p className="text-base font-medium">
-                  {enterprise?.owner.email || 'Não disponível'}
-                </p>
-              </div>
-              {isOwner && (
-                <Button variant="outline" onClick={handleOpenModal}>
-                  Editar
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {isOwner && (
-            <div className="mt-6">
-              <Link
-                to="/subscription-management"
-                className="text-blue-600 hover:underline text-sm font-medium"
-              >
-                Acessar Plano
-              </Link>
-            </div>
+              <h3 className="text-lg font-semibold mt-10 mb-2">Dados pessoais</h3>
+            </>
           )}
-        </div>
-      </div>
 
-      {/* Modal */}
+          {/* ---------------------- DADOS DO USUÁRIO ---------------------- */}
+          <div className="border rounded-lg divide-y">
+            <Row label="Nome completo"  value={user?.name  ?? ''} field="name"        btnLabel="Atualizar nome" />
+            <Row label="Email principal" value={user?.email ?? ''} field="email"       btnLabel="Atualizar email" />
+            <Row label="Telefone"        value={user?.phone_number ?? ''} field="phone_number" btnLabel="Atualizar telefone" />
+            <Row label="Cargo"           value={user?.job_title ?? ''} field="job_title"   btnLabel="Atualizar cargo" />
+            <Row label="Departamento"    value={user?.department ?? ''} field="department"  btnLabel="Atualizar departamento" />
+          </div>
+        </section>
+      </main>
+
+      {/* ------------------------------ Modal -------------------------------- */}
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
-          onClick={handleCloseModal}
+          onClick={closeModal}
         >
           <div
-            className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
             onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">Editar informações</h3>
+            <header className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">
+                Editar informações
+              </h3>
               <button
-                className="text-gray-400 hover:text-gray-700 text-2xl"
-                onClick={handleCloseModal}
+                className="text-2xl text-gray-400 hover:text-gray-700"
+                onClick={closeModal}
               >
                 &times;
               </button>
-            </div>
+            </header>
+
             <form
               className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit();
-              }}
+              onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
             >
-              <Input
-                label="Nome da empresa"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                label="Proprietário"
-                name="ownerName"
-                value={formData.ownerName}
-                onChange={handleChange}
-                required
-              />
-              <Input
-                label="Email principal"
-                name="ownerEmail"
-                type="email"
-                value={formData.ownerEmail}
-                onChange={handleChange}
-                required
-              />
+              {(editingField === null || editingField === 'name') && (
+                <Input label="Nome completo" name="name"
+                       value={formData.name} onChange={handleChange} required />
+              )}
+              {(editingField === null || editingField === 'email') && (
+                <Input label="Email principal" name="email" type="email"
+                       value={formData.email} onChange={handleChange} required />
+              )}
+              {(editingField === null || editingField === 'phone_number') && (
+                <Input label="Telefone" name="phone_number" type="tel"
+                       value={formData.phone_number} onChange={handleChange} />
+              )}
+              {(editingField === null || editingField === 'job_title') && (
+                <Input label="Cargo" name="job_title"
+                       value={formData.job_title} onChange={handleChange} />
+              )}
+              {(editingField === null || editingField === 'department') && (
+                <Input label="Departamento" name="department"
+                       value={formData.department} onChange={handleChange} />
+              )}
+
               <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={handleCloseModal} type="button">
+                <Button className="px-4 py-2" variant="outline" type="button" onClick={closeModal}>
                   Cancelar
                 </Button>
-                <Button type="submit">Salvar</Button>
+                <Button className="px-4 py-2" type="submit">Salvar</Button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Snackbar */}
+      {/* ----------------------------- Snackbar ----------------------------- */}
       <Snackbar
-        open={snackBarMessage !== ''}
+        open={!!snackBarMessage}
         autoHideDuration={6000}
         onClose={() => setSnackBarMessage('')}
       >
@@ -228,4 +271,4 @@ const PersonalData: React.FC = () => {
   );
 };
 
-export default PersonalData;
+export default PersonalSettings;
