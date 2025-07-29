@@ -103,6 +103,16 @@ const getUser = async (): Promise<IApiResponse<ApiGetUser>> => {
   return apiRequest<ApiGetUser>('auth/user');
 };
 
+const editUser = async (data: {
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  job_title?: string;
+  department?: string;
+}): Promise<IApiResponse<ApiGetUser>> => {
+  return apiRequest<ApiGetUser>('auth/user', 'PUT', data);
+};
+
 const getEnterprise = async (): Promise<IApiResponse<ApiGetEnterprise>> => {
   return apiRequest<ApiGetEnterprise>('companies/enterprise');
 };
@@ -758,6 +768,7 @@ export const useRequests = () => ({
   verifyEmail,
   verifyNewEmail,
   getUser,
+  editUser,
   getEnterprise,
   editEnterprise,
 

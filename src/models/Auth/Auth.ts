@@ -4,6 +4,9 @@ export type User = {
   id: number;
   name: string;
   email: string;
+  phone_number: string;
+  job_title: string;
+  department: string;
   is_owner: boolean;
   is_superuser: boolean;
   stripe_customer_id: string | null;
