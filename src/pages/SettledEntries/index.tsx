@@ -8,6 +8,7 @@ import Filter, { FilterData } from "@/components/Filter";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
 import { Entry } from '@/models/Entries';
+import Navbar from "src/components/Navbar";
 
 const Settled = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -37,6 +38,7 @@ const Settled = () => {
 
   return (
     <div className="flex">
+      <Navbar />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}

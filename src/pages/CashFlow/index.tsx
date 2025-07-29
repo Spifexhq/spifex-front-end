@@ -9,6 +9,7 @@ import { Entry } from '@/models/Entries';
 import Button from "src/components/Button";
 import { useRequests } from '@/api/requests';
 import SettlementModal from "src/components/Modal/SettlementModal";
+import Navbar from "src/components/Navbar";
 
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -55,6 +56,7 @@ const CashFlow = () => {
 
   return (
     <div className="flex">
+      <Navbar />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}

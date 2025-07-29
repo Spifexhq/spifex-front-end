@@ -14,6 +14,7 @@ import {
   Cell,
 } from "recharts";
 import { InlineLoader } from "src/components/Loaders";
+import Navbar from "src/components/Navbar";
 
 const Report = () => {
   const { getEntries } = useRequests();
@@ -98,6 +99,7 @@ const Report = () => {
 
   return (
     <div className="flex min-h-screen bg-white text-gray-900">
+      <Navbar />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
