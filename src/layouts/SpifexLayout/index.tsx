@@ -4,7 +4,6 @@ import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/api';
 import { AuthMiddleware } from '@/middlewares';
 import { SuspenseLoader } from '@/components/Loaders';
-import Navbar from 'src/components/Navbar';
 
 interface SpifexLayoutProps {
     children?: ReactNode;
@@ -32,16 +31,13 @@ const SpifexLayout: FC<SpifexLayoutProps> = () => {
 
     return (
         <AuthMiddleware>
-            <Navbar />
             <div
-                className='spifex-layout__container'
                 style={{
                     flex: 1,
                     height: '100%',
                 }}
             >
                 <div
-                    className='spifex-layout__content'
                     style={{
                         position: 'relative',
                         zIndex: 5,
@@ -50,7 +46,6 @@ const SpifexLayout: FC<SpifexLayoutProps> = () => {
                     }}
                 >
                     <div
-                        className='spifex-layout__outlet'
                         style={{ display: 'block' }}>
                         <Outlet />
                     </div>

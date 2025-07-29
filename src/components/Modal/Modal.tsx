@@ -832,7 +832,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-[9999]">
       <div className="relative bg-white text-[#202020] rounded-lg shadow-xl w-[85%] h-[75%] flex flex-col">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b">
