@@ -107,6 +107,7 @@ const routes: RouteObject[] = [
             // Settings
             {
                 path: 'settings',
+                element: <Personal />,
                 children: [
                     {
                         path: 'personal',
