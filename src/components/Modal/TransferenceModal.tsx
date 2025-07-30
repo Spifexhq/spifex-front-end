@@ -112,7 +112,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     .sort((a, b) => a.id - b.id);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-[9999]">
       <div className="bg-white w-[600px] max-w-full rounded-lg shadow-xl overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h1 className="text-xl font-semibold">Transferência entre Bancos</h1>
