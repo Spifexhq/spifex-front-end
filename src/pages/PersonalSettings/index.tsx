@@ -12,11 +12,11 @@ import Alert from '@/components/Alert';
 
 import { useRequests } from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
-import { User, Enterprise } from 'src/models/Auth';
+import { User, Enterprise } from '@/models/Auth';
 import { formatTimezoneLabel } from "@/utils/timezone";
 import { TIMEZONES } from "@/utils/timezones-list";
-import Checkbox from 'src/components/Checkbox';
-import { SelectDropdown } from 'src/components/SelectDropdown';
+import Checkbox from '@/components/Checkbox';
+import { SelectDropdown } from '@/components/SelectDropdown';
 /* -------------------------------------------------------------------------- */
 
 type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department' | 'timezone';
