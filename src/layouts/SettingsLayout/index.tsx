@@ -1,20 +1,21 @@
-import { useState, useEffect, FC, ReactNode, Suspense } from 'react';
+// src/layouts/SettingsLayout.tsx
+import { useState, useEffect, FC, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
 import { useAuth } from '@/api';
 import { AuthMiddleware } from '@/middlewares';
 import { SuspenseLoader } from '@/components/Loaders';
+import Navbar from '@/components/Navbar';
+import SidebarSettings from '@/components/Sidebar/SidebarSettings';
+import { useAuthContext } from '@/contexts/useAuthContext';
 
-interface SpifexLayoutProps {
-  children?: ReactNode;
-}
-
-export const SpifexLayout: FC<SpifexLayoutProps> = () => {
+export const SettingsLayout: FC = () => {
   const { handleInitUser } = useAuth();
+  const { user } = useAuthContext();
   const location = useLocation();
 
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [pageKey, setPageKey] = useState(location.pathname); // controla transição
+  const [pageKey, setPageKey] = useState(location.pathname); // controla Suspense
 
   useEffect(() => {
     const authenticateUser = async () => {
@@ -24,9 +25,9 @@ export const SpifexLayout: FC<SpifexLayoutProps> = () => {
     authenticateUser();
   }, [handleInitUser]);
 
-  // Ativa a tela branca com loader ao mudar de rota
+  // Recarrega Suspense a cada mudança de rota interna
   useEffect(() => {
-    setPageKey(location.pathname); // força novo suspense render
+    setPageKey(location.pathname);
   }, [location.pathname]);
 
   if (loadingAuth) {
@@ -35,6 +36,8 @@ export const SpifexLayout: FC<SpifexLayoutProps> = () => {
 
   return (
     <AuthMiddleware>
+      <Navbar />
+      <SidebarSettings userName={user?.name} activeItem={location.pathname.includes('subscription') ? 'subscription-management' : 'personal'} />
       <div className="flex flex-col h-full w-full">
         <div className="relative z-5 flex-1">
           <Suspense fallback={<SuspenseLoader />}>
@@ -48,4 +51,4 @@ export const SpifexLayout: FC<SpifexLayoutProps> = () => {
   );
 };
 
-export default SpifexLayout;
+export default SettingsLayout;

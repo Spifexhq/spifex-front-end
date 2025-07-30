@@ -5,7 +5,7 @@ interface BaseLayoutProps {
   children?: ReactNode;
 }
 
-const BaseLayout: FC<BaseLayoutProps> = ({ children }) => {
+export const BaseLayout: FC<BaseLayoutProps> = ({ children }) => {
   return (
     <div
       style={{

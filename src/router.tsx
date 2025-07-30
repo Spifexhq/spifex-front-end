@@ -2,8 +2,9 @@ import { lazy } from "react";
 import { RouteObject } from "react-router";
 import { Navigate } from 'react-router-dom';
 
-import BaseLayout from "./layouts/BaseLayout";
-import SpifexLayout from "./layouts/SpifexLayout";
+// Layouts
+import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
+
 import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
@@ -105,24 +106,24 @@ const routes: RouteObject[] = [
                 )
             },
             // Settings
-            {
-                path: 'settings',
-                element: <Personal />,
-                children: [
-                    {
-                        path: 'personal',
-                        element: <Personal />
-                    },
-                    {
-                        path: 'subscription-management',
-                        element: (
-                            <OwnerRoute>
-                                <SubscriptionManagement />
-                            </OwnerRoute>
-                        )
-                    },
-                ]
-            },
+{
+  path: 'settings',
+  element: <SettingsLayout />,
+  children: [
+    {
+      path: 'personal',
+      element: <Personal />
+    },
+    {
+      path: 'subscription-management',
+      element: (
+        <OwnerRoute>
+          <SubscriptionManagement />
+        </OwnerRoute>
+      )
+    }
+  ]
+},
             // Status
             {
                 path: 'status',
