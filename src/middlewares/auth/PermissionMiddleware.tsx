@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/api";
-import '../styles/styles.css';
+import './styles.css';
 
 type Props = {
   children: ReactNode;
