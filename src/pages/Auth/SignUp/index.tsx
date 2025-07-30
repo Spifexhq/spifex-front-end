@@ -19,6 +19,7 @@ const SignUp = () => {
   const [passwordInput, setPasswordInput] = useState("");
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
   const [nameInput, setNameInput] = useState("");
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   // State to manage loading and feedback messages
   const isFormIncomplete =
@@ -72,6 +73,7 @@ const SignUp = () => {
         name: nameInput,
         email: emailInput,
         password: passwordInput,
+        timezone : tz,
       });
 
       if (response.status === "error") {

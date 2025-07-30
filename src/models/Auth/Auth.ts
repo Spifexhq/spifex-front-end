@@ -7,6 +7,7 @@ export type User = {
   phone_number: string;
   job_title: string;
   department: string;
+  timezone : string;
   is_owner: boolean;
   is_superuser: boolean;
   stripe_customer_id: string | null;
@@ -46,6 +47,7 @@ export type ApiSignUp = {
   name: string;
   email: string;
   password: string;
+  timezone : string;
 };
 
 export type ApiSubscriptionStatus = {

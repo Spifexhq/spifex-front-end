@@ -1,5 +1,5 @@
 // src/pages/PersonalSettings.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 
 import Navbar from '@/components/Navbar';
@@ -13,9 +13,13 @@ import Alert from '@/components/Alert';
 import { useRequests } from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
 import { User, Enterprise } from 'src/models/Auth';
+import { formatTimezoneLabel } from "@/utils/timezone";
+import { TIMEZONES } from "@/utils/timezones-list";
+import Checkbox from 'src/components/Checkbox';
+import { SelectDropdown } from 'src/components/SelectDropdown';
 /* -------------------------------------------------------------------------- */
 
-type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department';
+type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department' | 'timezone';
 
 const PersonalSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -30,12 +34,17 @@ const PersonalSettings: React.FC = () => {
   const [editingField, setEditingField] = useState<EditableUserField | null>(null);
   const [snackBarMessage, setSnackBarMessage] = useState('');
 
+  const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [useDeviceTz, setUseDeviceTz] = useState(true);
+  const [selectedTimezone, setSelectedTimezone] = useState<{ label: string; value: string }[]>([]);
+
   const [formData, setFormData] = useState({
     name        : '',
     email       : '',
     phone_number: '',
     job_title   : '',
     department  : '',
+    timezone  : '',
   });
 
   /* ------------------------------ Carrega dados --------------------------- */
@@ -52,6 +61,7 @@ const PersonalSettings: React.FC = () => {
             phone_number: userResp.user.phone_number,
             job_title   : userResp.user.job_title,
             department  : userResp.user.department,
+            timezone    : userResp.user.timezone,
           });
 
           /* ---------- ENTERPRISE (só owner) ---------- */
@@ -77,14 +87,16 @@ const PersonalSettings: React.FC = () => {
         phone_number: user.phone_number,
         job_title   : user.job_title,
         department  : user.department,
+        timezone  : user.timezone,
       });
+      setUseDeviceTz(user.timezone === deviceTz);
     }
 
     setEditingField(field ?? null);
     setModalOpen(true);
   };
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     if (user) {
       setFormData({
         name        : user.name,
@@ -92,11 +104,19 @@ const PersonalSettings: React.FC = () => {
         phone_number: user.phone_number,
         job_title   : user.job_title,
         department  : user.department,
+        timezone    : user.timezone,
       });
+
+      // reset do fuso
+      setUseDeviceTz(user.timezone === deviceTz);
+
+      const tzObj = TIMEZONES.find((t) => t.value === user.timezone);
+      setSelectedTimezone(tzObj ? [tzObj] : []);
     }
+
     setEditingField(null);
     setModalOpen(false);
-  };
+  }, [user, deviceTz]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -123,6 +143,27 @@ const PersonalSettings: React.FC = () => {
       );
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      const tzObj = TIMEZONES.find((t) => t.value === user.timezone);
+      setSelectedTimezone(tzObj ? [tzObj] : []);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    if (modalOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [modalOpen, closeModal]);
 
   /* ----------------------------- UI helpers ------------------------------ */
   const Row = ({
@@ -191,6 +232,7 @@ const PersonalSettings: React.FC = () => {
             <Row label="Telefone"        value={user?.phone_number ?? ''} field="phone_number" btnLabel="Atualizar telefone" />
             <Row label="Cargo"           value={user?.job_title ?? ''} field="job_title"   btnLabel="Atualizar cargo" />
             <Row label="Departamento"    value={user?.department ?? ''} field="department"  btnLabel="Atualizar departamento" />
+            <Row label="Fuso horário"    value={formatTimezoneLabel(user?.timezone ?? "")} field="timezone"  btnLabel="Atualizar fuso horário" />
           </div>
         </section>
       </main>
@@ -199,7 +241,6 @@ const PersonalSettings: React.FC = () => {
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]"
-          onClick={closeModal}
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -241,9 +282,61 @@ const PersonalSettings: React.FC = () => {
                 <Input label="Departamento" name="department"
                        value={formData.department} onChange={handleChange} />
               )}
+{(editingField === null || editingField === "timezone") && (
+  <>
+    {/* ---------- Toggle ---------- */}
+    <div className="flex items-center justify-between">
+      <label htmlFor="tz-toggle" className="font-medium text-gray-700">
+        Usar fuso do dispositivo
+      </label>
+      <Checkbox
+        checked={useDeviceTz}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setUseDeviceTz(checked);
+          setFormData((p) => ({
+            ...p,
+            timezone: checked ? deviceTz : p.timezone,
+          }));
+
+          if (checked) {
+            const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
+            setSelectedTimezone(tzObj ? [tzObj] : []);
+          }
+        }}
+        size="sm"
+        colorClass="defaultColor"
+      />
+    </div>
+
+    {/* ---------- SelectDropdown ---------- */}
+<SelectDropdown
+  label="Fuso horário"
+  items={TIMEZONES}
+  selected={selectedTimezone}
+  onChange={(tz) => {
+    setSelectedTimezone(tz);
+    if (tz.length > 0) {
+      setFormData((p) => ({
+        ...p,
+        timezone: tz[0].value,
+      }));
+    }
+  }}
+  getItemKey={(item) => item.value}
+  getItemLabel={(item) => item.label}
+  singleSelect
+  hideCheckboxes
+  clearOnClickOutside={false}
+  buttonLabel="Selecione o fuso horário"
+  disabled={useDeviceTz}
+/>
+  </>
+)}
+
 
               <div className="flex justify-end gap-3 pt-4">
-                <Button className="px-4 py-2" variant="outline" type="button" onClick={closeModal}>
+                <Button className="px-4 py-2" variant="cancel" type="button" onClick={closeModal}>
                   Cancelar
                 </Button>
                 <Button className="px-4 py-2" type="submit">Salvar</Button>
