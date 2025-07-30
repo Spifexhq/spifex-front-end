@@ -19,6 +19,7 @@ interface UserInfo {
   activePlanId: string | null;
   stripeCustomerId: string | null;
   permissions: string[];
+  lastPasswordChange: string | null;
 }
 
 const useCombinedUserInfo = (): UserInfo => {
@@ -38,6 +39,7 @@ const useCombinedUserInfo = (): UserInfo => {
     activePlanId: auth.subscription?.plan_id ?? null,
     stripeCustomerId: auth.user?.stripe_customer_id ?? null,
     permissions: auth.enterprise?.permissions?.map((p: Permission) => p.code_name) ?? [],
+    lastPasswordChange: auth.user?.last_password_change ?? null,
   };
 };
 

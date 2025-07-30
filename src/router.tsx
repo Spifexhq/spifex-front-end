@@ -9,6 +9,7 @@ import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
 import { PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
+import SecurityAndPrivacy from "./pages/SecurityAndPrivacy/SecurityAndPrivacy";
 
 // Auth Pages
 const SignUp = Loader(lazy(() => import("@/pages/Auth/SignUp")));
@@ -106,24 +107,28 @@ const routes: RouteObject[] = [
                 )
             },
             // Settings
-{
-  path: 'settings',
-  element: <SettingsLayout />,
-  children: [
-    {
-      path: 'personal',
-      element: <Personal />
-    },
-    {
-      path: 'subscription-management',
-      element: (
-        <OwnerRoute>
-          <SubscriptionManagement />
-        </OwnerRoute>
-      )
-    }
-  ]
-},
+            {
+            path: 'settings',
+            element: <SettingsLayout />,
+            children: [
+                {
+                path: 'personal',
+                element: <Personal />
+                },
+                {
+                path: 'subscription-management',
+                element: (
+                    <OwnerRoute>
+                        <SubscriptionManagement />
+                    </OwnerRoute>
+                )
+                },
+                {
+                path: 'security',
+                element: <SecurityAndPrivacy />
+                },
+            ]
+            },
             // Status
             {
                 path: 'status',

@@ -18,6 +18,7 @@ export type User = {
   is_staff: boolean;
   is_email_verified: boolean;
   date_joined: string;
+  last_password_change: string | null;
 };
 
 export type UserEnterpriseDetail = {

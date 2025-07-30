@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiRequest } from '@/api';
 
 import {
@@ -123,6 +124,21 @@ export const editEnterprise = async (
 ): Promise<IApiResponse<ApiGetEnterprise>> => {
   return apiRequest<ApiGetEnterprise>('companies/enterprise', 'PUT', data);
 };
+
+// ======================
+//    Passwords
+// ======================
+const changePassword = async (
+  payload: { current_password: string; new_password: string }
+): Promise<IApiResponse<unknown>> => {
+  return apiRequest<unknown>('auth/password-change/', 'PUT', payload, true);
+};
+
+export const requestPasswordReset = (email: string) =>
+  axios.post('auth/password-reset/', { email });
+
+export const confirmPasswordReset = (uid: string, token: string, password: string) =>
+  axios.post(`auth/password-reset/${uid}/${token}/`, { password });
 
 // ======================
 //    Subscriptions
@@ -772,6 +788,11 @@ export const useRequests = () => ({
   editUser,
   getEnterprise,
   editEnterprise,
+
+  // Passwords
+  changePassword,
+  requestPasswordReset,
+  confirmPasswordReset,
 
   // Subscriptions
   createCheckoutSession,

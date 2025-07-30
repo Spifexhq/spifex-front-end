@@ -282,58 +282,57 @@ const PersonalSettings: React.FC = () => {
                 <Input label="Departamento" name="department"
                        value={formData.department} onChange={handleChange} />
               )}
-{(editingField === null || editingField === "user_timezone") && (
-  <>
-    {/* ---------- Toggle ---------- */}
-    <div className="flex items-center justify-between">
-      <label htmlFor="tz-toggle" className="font-medium text-gray-700">
-        Usar fuso do dispositivo
-      </label>
-      <Checkbox
-        checked={useDeviceTz}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setUseDeviceTz(checked);
-          setFormData((p) => ({
-            ...p,
-            user_timezone: checked ? deviceTz : p.user_timezone,
-          }));
+              {(editingField === null || editingField === "user_timezone") && (
+                <>
+                  {/* ---------- Toggle ---------- */}
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="tz-toggle" className="font-medium text-gray-700">
+                      Usar fuso do dispositivo
+                    </label>
+                    <Checkbox
+                      checked={useDeviceTz}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setUseDeviceTz(checked);
+                        setFormData((p) => ({
+                          ...p,
+                          user_timezone: checked ? deviceTz : p.user_timezone,
+                        }));
 
-          if (checked) {
-            const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
-            setSelectedTimezone(tzObj ? [tzObj] : []);
-          }
-        }}
-        size="sm"
-        colorClass="defaultColor"
-      />
-    </div>
+                        if (checked) {
+                          const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
+                          setSelectedTimezone(tzObj ? [tzObj] : []);
+                        }
+                      }}
+                      size="sm"
+                      colorClass="defaultColor"
+                    />
+                  </div>
 
-    {/* ---------- SelectDropdown ---------- */}
-<SelectDropdown
-  label="Fuso horário"
-  items={TIMEZONES}
-  selected={selectedTimezone}
-  onChange={(tz) => {
-    setSelectedTimezone(tz);
-    if (tz.length > 0) {
-      setFormData((p) => ({
-        ...p,
-        user_timezone: tz[0].value,
-      }));
-    }
-  }}
-  getItemKey={(item) => item.value}
-  getItemLabel={(item) => item.label}
-  singleSelect
-  hideCheckboxes
-  clearOnClickOutside={false}
-  buttonLabel="Selecione o fuso horário"
-  disabled={useDeviceTz}
-/>
-  </>
-)}
-
+                  {/* ---------- SelectDropdown ---------- */}
+                  <SelectDropdown
+                    label="Fuso horário"
+                    items={TIMEZONES}
+                    selected={selectedTimezone}
+                    onChange={(tz) => {
+                      setSelectedTimezone(tz);
+                      if (tz.length > 0) {
+                        setFormData((p) => ({
+                          ...p,
+                          user_timezone: tz[0].value,
+                        }));
+                      }
+                    }}
+                    getItemKey={(item) => item.value}
+                    getItemLabel={(item) => item.label}
+                    singleSelect
+                    hideCheckboxes
+                    clearOnClickOutside={false}
+                    buttonLabel="Selecione o fuso horário"
+                    disabled={useDeviceTz}
+                  />
+                    </>
+                  )}
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button className="px-4 py-2" variant="cancel" type="button" onClick={closeModal}>
