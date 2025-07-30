@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 /**
  * ## SidebarSettings
@@ -83,7 +84,7 @@ const sections: {
   {
     title: "",
     items: [
-      { id: "personal-settings", icon: "settings", label: "Personal settings" },
+      { id: "personal", icon: "settings", label: "Personal settings" },
       { id: "notifications", icon: "bell", label: "Notifications" },
       { id: "copilots", icon: "robot", label: "Copilots" },
       { id: "security", icon: "shield", label: "Security and privacy" },
@@ -93,7 +94,7 @@ const sections: {
     title: "My own",
     items: [
       { id: "company-settings", icon: "building", label: "Company settings" },
-      { id: "plan", icon: "layers", label: "Plan" },
+      { id: "subscription-management", icon: "layers", label: "Plan" },
       { id: "integrations", icon: "squares", label: "Integrations" },
     ],
   },
@@ -118,50 +119,62 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
   userName = "User",
   activeItem,
   onSelect,
-}) => (
-  <nav
-    aria-label="Settings navigation sidebar"
-    className="fixed top-0 left-0 h-screen w-64 z-50 flex flex-col bg-white border-r border-gray-200"
-  >
-    {/* User block */}
-    <div className="flex items-center gap-2 h-16 px-3 border-b border-gray-100 select-none">
-      {Icons.user}
-      <span className="font-medium text-gray-700">{userName}</span>
-    </div>
+}) => {
+  const navigate = useNavigate();
 
-    {/* Menu groups */}
-    <div className="flex-1 overflow-y-auto py-3">
-      {sections.map(({ title, items }) => (
-        <div key={title || "root"} className="mt-1">
-          {title && (
-            <p className="px-4 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              {title}
-            </p>
-          )}
+  const handleClick = (id: string) => {
+    if (onSelect) {
+      onSelect(id);
+    } else {
+      navigate(`/settings/${id}`);
+    }
+  };
 
-          <ul className="space-y-1">
-            {items.map(({ id, icon, label }) => {
-              const active = activeItem === id;
-              return (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() => onSelect?.(id)}
-                    className={`group w-full flex items-center gap-3 h-9 rounded-lg px-3 transition-colors duration-200 ${
-                      active ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    {Icons[icon]}
-                    <span className="text-sm whitespace-nowrap">{label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-    </div>
-  </nav>
-);
+  return (
+    <nav
+      aria-label="Settings navigation sidebar"
+      className="fixed top-0 left-0 h-screen w-64 z-50 flex flex-col bg-white border-r border-gray-200"
+    >
+      {/* User block */}
+      <div className="flex items-center gap-2 h-16 px-3 border-b border-gray-100 select-none">
+        {Icons.user}
+        <span className="font-medium text-gray-700">{userName}</span>
+      </div>
+
+      {/* Menu groups */}
+      <div className="flex-1 overflow-y-auto py-3">
+        {sections.map(({ title, items }) => (
+          <div key={title || "root"} className="mt-1">
+            {title && (
+              <p className="px-4 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                {title}
+              </p>
+            )}
+
+            <ul className="space-y-1">
+              {items.map(({ id, icon, label }) => {
+                const active = activeItem === id;
+                return (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      onClick={() => handleClick(id)}
+                      className={`group w-full flex items-center gap-3 h-9 rounded-lg px-3 transition-colors duration-200 ${
+                        active ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {Icons[icon]}
+                      <span className="text-sm whitespace-nowrap">{label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </nav>
+  );
+};
 
 export default SidebarSettings;
