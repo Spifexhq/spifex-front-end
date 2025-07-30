@@ -3,7 +3,6 @@ import { useRequests } from 'src/api';
 import { useAuthContext } from "@/contexts/useAuthContext";
 
 import Button from 'src/components/Button';
-import './styles.css';
 
 interface PaymentButtonProps {
   priceId: string;
@@ -45,7 +44,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCa
 
   return (
     <Button
-      className='payment-button'
+      className="flex justify-center items-center w-1/2 h-[50px] px-5 cursor-pointer text-white border-none rounded-[10px]"
       loaderColor="#FFFFFF"
       onClick={handlePayment}
       disabled={isProcessing}

@@ -1,32 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-import { useAuth } from 'src/api';
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuth } from '@/api';
+import { useAuthContext } from '@/contexts/useAuthContext';
 
-import { InlineLoader, SuspenseLoader } from 'src/components/Loaders';
-import PaymentButton from 'src/components/SubscriptionButtons/PaymentButton';
-import ManageSubscriptionLink from 'src/components/SubscriptionButtons/ManageSubscriptionLink';
-import Button from 'src/components/Button';
-import './styles.css';
-import Navbar from 'src/components/Navbar';
+import Navbar from '@/components/Navbar';
+import SidebarSettings from '@/components/Sidebar/SidebarSettings';
+import { InlineLoader, SuspenseLoader } from '@/components/Loaders';
+import PaymentButton from '@/components/SubscriptionButtons/PaymentButton';
+import ManageSubscriptionLink from '@/components/SubscriptionButtons/ManageSubscriptionLink';
+import Button from '@/components/Button';
 
 const SubscriptionManagement: React.FC = () => {
+  const navigate = useNavigate();
   const { isLogged, handleInitUser } = useAuth();
-  const { isSubscribed, activePlanId } = useAuthContext();
+  const { isSubscribed, activePlanId, user } = useAuthContext();
+
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const availablePlans = import.meta.env.VITE_ENVIRONMENT === 'development'
-  ? [
-    { priceId: 'price_1Q01ZhJP9mPoGRyfBocieoN0', label: 'Plano Básico - R$50,00/mês' },
-    { priceId: 'price_1Q0BQ0JP9mPoGRyfvnYKUjCy', label: 'Plano Premium - R$150,00/mês' }
-  ]
-  : [
-    { priceId: 'price_1Q00r4JP9mPoGRyfZjHpSZul', label: 'Plano Básico - R$50,00/mês' },
-    { priceId: 'price_1Q6OSrJP9mPoGRyfjaNSlrhX', label: 'Plano Premium - R$150,00/mês' }
-    ];
   const [selectedPlanId, setSelectedPlanId] = useState('');
-  const navigate = useNavigate();
+
+  const availablePlans = import.meta.env.VITE_ENVIRONMENT === 'development'
+    ? [
+        { priceId: 'price_1Q01ZhJP9mPoGRyfBocieoN0', label: 'Plano Básico - R$50,00/mês' },
+        { priceId: 'price_1Q0BQ0JP9mPoGRyfvnYKUjCy', label: 'Plano Premium - R$150,00/mês' },
+      ]
+    : [
+        { priceId: 'price_1Q00r4JP9mPoGRyfZjHpSZul', label: 'Plano Básico - R$50,00/mês' },
+        { priceId: 'price_1Q6OSrJP9mPoGRyfjaNSlrhX', label: 'Plano Premium - R$150,00/mês' },
+      ];
 
   useEffect(() => {
     const init = async () => {
@@ -36,110 +38,110 @@ const SubscriptionManagement: React.FC = () => {
     init();
   }, [handleInitUser]);
 
-  const handlePlanChange = (priceId: string) => {
-    setSelectedPlanId(priceId);
-  };
-
   if (!isLogged) {
     navigate('/signin');
     return null;
   }
 
-  if (loading) {
-    return <SuspenseLoader />;
-  }
+  if (loading) return <SuspenseLoader />;
+
+  const planName = activePlanId
+    ? activePlanId.includes('1Q01ZhJP9mPoGRyfBocieoN0') ? 'Básico' : 'Premium' : null;
 
   return (
     <>
       <Navbar />
-      <div className="subscription-management">
-        <h1 className="subscription-management__title">Gerenciar Assinatura</h1>
 
-        {isSubscribed ? (
-          <div className="subscription-management__content">
-            <h2 className="subscription-management__subtitle">
-              Você está atualmente inscrito no plano: {activePlanId === 'price_1Q01ZhJP9mPoGRyfBocieoN0' ? 'Básico' : 'Premium'}
-            </h2>
-            <ul className="subscription-management__plans-list">
-              {availablePlans.map((plan) => (
-                <li className="plans-list__item" key={plan.priceId}>
-                  <Button
-                    className={`item__button ${plan.priceId === activePlanId ? 'current-plan' : ''}`}
-                    disabled={plan.priceId === activePlanId}
-                    onClick={() => handlePlanChange(plan.priceId)}
-                    loaderColor="#FFFFFF"
-                  >
-                    {plan.label} {plan.priceId === activePlanId ? '(Atual)' : ''}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-            <div className="subscription-management__actions">
-              <ManageSubscriptionLink />
-              <Link to="/settings" className="manage-subscription-button">
-                Configurações
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="subscription-management__content">
-            <p className="subscription-management__text">
-              Selecione um plano para assinar.
-            </p>
-            <ul className="subscription-management__plans-list">
-              {availablePlans.map((plan) => (
-                <li className="plans-list__item" key={plan.priceId}>
-                  <PaymentButton priceId={plan.priceId} label={plan.label} />
-                </li>
-              ))}
-            </ul>
-            <div className="subscription-management__actions">
-              <ManageSubscriptionLink />
-              <Link to="/settings" className="manage-subscription-button">
-                Configurações
-              </Link>
-            </div>
-          </div>
-        )}
+      <SidebarSettings
+        userName={user?.name}
+        activeItem="plan"
+        onSelect={(id) => {
+          if (id === 'plan') return navigate('/subscription-management');
+          if (id === 'personal-settings') return navigate('/settings/personal');
+          navigate(`/${id}`);
+        }}
+      />
 
-        {selectedPlanId && (
-          <div
-            className={`modal ${isProcessing ? 'modal--processing' : ''}`}
-            onClick={() => {
-              if (!isProcessing) setSelectedPlanId('');
-            }}
-          >
-            <div className="modal__content" onClick={(e) => e.stopPropagation()}>
-              {isProcessing ? (
-                <div className="modal__loader">
-                  <InlineLoader />
-                </div>
-              ) : (
-                <>
-                  <h3 className="modal__title">Confirmar Alteração de Plano</h3>
-                  <p className="modal__description">
-                    Tem certeza de que deseja alterar para este plano? Sua assinatura atual será atualizada.
-                  </p>
-                  <div className="modal__actions">
-                    <button
-                      className="modal__cancel-button"
-                      onClick={() => setSelectedPlanId('')}
-                      disabled={isProcessing}
+      <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
+        <section className="max-w-3xl mx-auto p-8">
+          <h1 className="text-xl font-semibold mb-6">Gerenciar Assinatura</h1>
+
+          {isSubscribed ? (
+            <div className="space-y-6">
+              <p className="text-base">
+                Você está atualmente inscrito no plano:
+                <strong> {planName}</strong>
+              </p>
+
+              <div className="border rounded-lg divide-y">
+                {availablePlans.map((plan) => (
+                  <div key={plan.priceId} className="flex items-center justify-between p-4">
+                    <span>{plan.label}</span>
+                    <Button
+                      variant="outline"
+                      disabled={plan.priceId === activePlanId}
+                      onClick={() => setSelectedPlanId(plan.priceId)}
                     >
-                      Cancelar
-                    </button>
-                    <PaymentButton
-                      priceId={selectedPlanId}
-                      label="Confirmar"
-                      onProcessingChange={setIsProcessing}
-                    />
+                      {plan.priceId === activePlanId ? 'Atual' : 'Selecionar'}
+                    </Button>
                   </div>
-                </>
-              )}
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                <ManageSubscriptionLink />
+              </div>
             </div>
+          ) : (
+            <div className="space-y-6">
+              <p className="text-base">Selecione um plano para assinar:</p>
+              <div className="border rounded-lg divide-y">
+                {availablePlans.map((plan) => (
+                  <div key={plan.priceId} className="flex items-center justify-between p-4">
+                    <span>{plan.label}</span>
+                    <PaymentButton priceId={plan.priceId} label="Assinar" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      </main>
+
+      {selectedPlanId && (
+        <div
+          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          onClick={() => !isProcessing && setSelectedPlanId('')}
+        >
+          <div
+            className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isProcessing ? (
+              <div className="flex items-center justify-center h-32">
+                <InlineLoader />
+              </div>
+            ) : (
+              <>
+                <h3 className="text-xl font-semibold mb-2">Confirmar alteração</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Tem certeza de que deseja alterar para este plano?
+                </p>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setSelectedPlanId('')}>
+                    Cancelar
+                  </Button>
+                  <PaymentButton
+                    priceId={selectedPlanId}
+                    label="Confirmar"
+                    onProcessingChange={setIsProcessing}
+                  />
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 };
