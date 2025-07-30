@@ -1,64 +1,55 @@
-import './styles.css';
+import React, { useEffect } from 'react';
 
-function StatusMaintenance() {
+import maintenance from '@/assets/Images/status/maintenance.svg';
+import facebook from '@/assets/Images/status/facebook.svg';
+import x from '@/assets/Images/status/x.svg';
+import instagram from '@/assets/Images/status/instagram.svg';
+
+const StatusMaintenance: React.FC = () => {
+  useEffect(() => {
+    document.title = 'Status - Maintenance';
+  }, []);
+
   return (
-    <>
-      <head>
-        <title>Status - Maintenance</title>
-      </head>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 text-center bg-white text-gray-800">
+      <img src={maintenance} alt="Maintenance" className="w-72 mb-10" />
 
-      <div className="container">
-        <div className="main-content">
-          <div className="text-center">
-            <h2 className="title">O site está atualmente em manutenção</h2>
-            <h3 className="subtitle">Pedimos desculpas por qualquer inconveniente causado</h3>
+      <h2 className="text-3xl font-semibold mb-2">O site está atualmente em manutenção</h2>
 
-            <div className="image-container">
-              <img
-                alt="Maintenance"
-                height="250"
-                src="src/assets/Images/status/maintenance.svg"
-              />
-            </div>
-          </div>
+      <p className="text-gray-600 text-sm sm:text-base">
+        Pedimos desculpas por qualquer inconveniente causado.
+      </p>
 
-          <hr className="divider" />
+      <hr className="w-full max-w-md border-t border-gray-200 my-10" />
 
-          <div className="social-media-container">
-            <a
-              href="https://www.facebook.com/spifexHQ"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon"
-              title="Facebook"
-            >
-              <img src="/static/icons/facebook.svg" alt="Facebook" />
-            </a>
-
-            <a
-              href="https://x.com/spifexHQ"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon"
-              title="Twitter"
-            >
-              <img src="/static/icons/twitter.svg" alt="Twitter" />
-            </a>
-
-            <a
-              href="https://instagram.com/spifexhq"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon"
-              title="Instagram"
-            >
-              <img src="/static/icons/instagram.svg" alt="Instagram" />
-            </a>
-          </div>
-        </div>
+      <div className="flex items-center justify-center space-x-6">
+        <a
+          href="https://www.facebook.com/spifexHQ"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Facebook"
+        >
+          <img src={facebook} alt="Facebook" className="w-6 h-6" />
+        </a>
+        <a
+          href="https://x.com/spifexHQ"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Twitter"
+        >
+          <img src={x} alt="Twitter" className="w-6 h-6" />
+        </a>
+        <a
+          href="https://instagram.com/spifexhq"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Instagram"
+        >
+          <img src={instagram} alt="Instagram" className="w-6 h-6" />
+        </a>
       </div>
-    </>
+    </div>
   );
-}
+};
 
 export default StatusMaintenance;

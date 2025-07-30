@@ -1,65 +1,60 @@
-import './styles.css';
+import React, { useEffect } from 'react';
+import error404 from '@/assets/Images/status/404.svg';
+import facebook from '@/assets/Images/status/facebook.svg';
+import x from '@/assets/Images/status/x.svg';
+import instagram from '@/assets/Images/status/instagram.svg';
 
-function Status404() {
+const Status404: React.FC = () => {
+  useEffect(() => {
+    document.title = 'Status - 404';
+  }, []);
+
   return (
-    <>
-      <head>
-        <title>Status - 404</title>
-      </head>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 text-center bg-white text-gray-800">
+      <img src={error404} alt="404" className="w-64 mb-8" />
 
-      <div className="container">
-        <div className="main-content">
-          <div className="image-container">
-            <img alt="404" height="180" src="src/assets/Images/status/404.svg" />
-          </div>
-          <h2 className="title">Esta página não existe</h2>
-          <h4 className="subtitle">
-            Ela pode ter sido removida ou movida para outro endereço
-          </h4>
+      <h2 className="text-3xl font-semibold mb-4">Esta página não existe</h2>
+      <p className="text-gray-600 mb-6 text-sm sm:text-base">
+        Ela pode ter sido removida ou movida para outro endereço.
+      </p>
 
-          <div className="button-container">
-            <a href="/cashflow" className="btn-outline">
-              Voltar à página inicial
-            </a>
-          </div>
-        </div>
+      <a
+        href="/cashflow"
+        className="inline-block px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+      >
+        Voltar à página inicial
+      </a>
 
-        <hr className="divider" />
+      <hr className="w-full max-w-md border-t border-gray-200 my-10" />
 
-        <div className="social-media-container">
-          <a
-            href="https://www.facebook.com/spifexHQ"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            title="Facebook"
-          >
-            <img src="/static/icons/facebook.svg" alt="Facebook" />
-          </a>
-
-          <a
-            href="https://x.com/spifexHQ"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            title="Twitter"
-          >
-            <img src="/static/icons/twitter.svg" alt="Twitter" />
-          </a>
-
-          <a
-            href="https://instagram.com/spifexhq"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon"
-            title="Instagram"
-          >
-            <img src="/static/icons/instagram.svg" alt="Instagram" />
-          </a>
-        </div>
+      <div className="flex items-center justify-center space-x-6">
+        <a
+          href="https://www.facebook.com/spifexHQ"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Facebook"
+        >
+          <img src={facebook} alt="Facebook" className="w-6 h-6" />
+        </a>
+        <a
+          href="https://x.com/spifexHQ"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Twitter"
+        >
+          <img src={x} alt="Twitter" className="w-6 h-6" />
+        </a>
+        <a
+          href="https://instagram.com/spifexhq"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Instagram"
+        >
+          <img src={instagram} alt="Instagram" className="w-6 h-6" />
+        </a>
       </div>
-    </>
+    </div>
   );
-}
+};
 
 export default Status404;
