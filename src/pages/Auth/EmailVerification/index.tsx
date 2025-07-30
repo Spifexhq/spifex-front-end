@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import { useRequests } from '@/api/requests';
-import Snackbar from '@/components/Snackbar';
-import Alert from '@/components/Alert';
 import Button from '@/components/Button';
 import { InlineLoader } from '@/components/Loaders';
 
@@ -15,7 +13,6 @@ const EmailVerification = () => {
 
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationMessage, setVerificationMessage] = useState('');
-  const [snackBarMessage, setSnackBarMessage] = useState('');
 
   useEffect(() => {
     document.title = 'Verificação de Email';
@@ -23,7 +20,6 @@ const EmailVerification = () => {
     const doVerification = async () => {
       if (!uidb64 || !token) {
         setVerificationMessage('Parâmetros inválidos para verificação.');
-        setSnackBarMessage('Parâmetros inválidos para verificação.');
         setIsVerifying(false);
         return;
       }
@@ -38,13 +34,10 @@ const EmailVerification = () => {
 
         if (response?.status === 'error') {
           setVerificationMessage(response.message || 'Erro ao verificar email.');
-          setSnackBarMessage(response.message || 'Erro ao verificar email.');
         } else if (response?.status === 'success') {
           setVerificationMessage('Email verificado com sucesso!');
-          setSnackBarMessage('Email verificado com sucesso!');
         } else {
           setVerificationMessage('Resposta inesperada da API.');
-          setSnackBarMessage('Erro desconhecido.');
         }
       } catch (error) {
         const message =
@@ -52,7 +45,6 @@ const EmailVerification = () => {
             ? error.message
             : 'Ocorreu um erro ao verificar seu email.';
         setVerificationMessage(message);
-        setSnackBarMessage(message);
       } finally {
         setIsVerifying(false);
       }
@@ -92,16 +84,6 @@ const EmailVerification = () => {
           </div>
         )}
       </div>
-
-      <Snackbar
-        open={snackBarMessage !== ''}
-        autoHideDuration={6000}
-        onClose={() => setSnackBarMessage('')}
-      >
-        <Alert severity={snackBarMessage.includes('sucesso') ? 'success' : 'error'}>
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
     </div>
   );
 };
