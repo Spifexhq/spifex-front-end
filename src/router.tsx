@@ -19,7 +19,7 @@ const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerificati
 const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
 const SettledEntries = Loader(lazy(() => import("src/pages/SettledEntries")));
 const Reports = Loader(lazy(() => import("@/pages/Reports")));
-const Personal = Loader(lazy(() => import("src/pages/PersonalData")));
+const Personal = Loader(lazy(() => import("src/pages/PersonalSettings")));
 const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
 
 // Status Pages
@@ -112,16 +112,16 @@ const routes: RouteObject[] = [
                     {
                         path: 'personal',
                         element: <Personal />
-                    }
+                    },
+                    {
+                        path: 'subscription-management',
+                        element: (
+                            <OwnerRoute>
+                                <SubscriptionManagement />
+                            </OwnerRoute>
+                        )
+                    },
                 ]
-            },
-            {
-                path: 'subscription-management',
-                element: (
-                    <OwnerRoute>
-                        <SubscriptionManagement />
-                    </OwnerRoute>
-                ),
             },
             // Status
             {

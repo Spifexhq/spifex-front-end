@@ -1,6 +1,6 @@
 // src/pages/PersonalSettings.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 
 import Navbar from '@/components/Navbar';
 import SidebarSettings from '@/components/Sidebar/SidebarSettings';
@@ -12,16 +12,15 @@ import Alert from '@/components/Alert';
 
 import { useRequests } from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
-import { User, Enterprise } from 'src/models/Auth';          // ⬅ ajuste o path
-
+import { User, Enterprise } from 'src/models/Auth';
 /* -------------------------------------------------------------------------- */
 
 type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department';
 
 const PersonalSettings: React.FC = () => {
   const navigate = useNavigate();
-  const { isOwner } = useAuthContext();                       // ← flag vinda do contexto
-  const { getUser, getEnterprise, editUser } = useRequests(); // editEnterprise não é usado aqui
+  const { isOwner } = useAuthContext();
+  const { getUser, getEnterprise, editUser } = useRequests();
 
   const [user, setUser]             = useState<User | null>(null);
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
@@ -150,16 +149,11 @@ const PersonalSettings: React.FC = () => {
   return (
     <>
       <Navbar />
-
       <SidebarSettings
         userName={user?.name}
-        activeItem="personal-settings"
-        onSelect={(id) => {
-          if (id === 'plan') return navigate('/subscription-management');
-          if (id === 'personal-settings') return navigate('/settings/personal');
-          navigate(`/${id}`);
-        }}
+        activeItem="personal"
       />
+      <Outlet />
 
       <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
         <section className="max-w-3xl mx-auto p-8">
@@ -204,7 +198,7 @@ const PersonalSettings: React.FC = () => {
       {/* ------------------------------ Modal -------------------------------- */}
       {modalOpen && (
         <div
-          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]"
           onClick={closeModal}
         >
           <div

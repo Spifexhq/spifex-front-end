@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRequireLogin } from '@/hooks/useRequireLogin';
 
 import { useAuth } from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
@@ -12,8 +12,8 @@ import ManageSubscriptionLink from '@/components/SubscriptionButtons/ManageSubsc
 import Button from '@/components/Button';
 
 const SubscriptionManagement: React.FC = () => {
-  const navigate = useNavigate();
-  const { isLogged, handleInitUser } = useAuth();
+  const isLogged = useRequireLogin();
+  const { handleInitUser } = useAuth();
   const { isSubscribed, activePlanId, user } = useAuthContext();
 
   const [loading, setLoading] = useState(true);
@@ -38,12 +38,7 @@ const SubscriptionManagement: React.FC = () => {
     init();
   }, [handleInitUser]);
 
-  if (!isLogged) {
-    navigate('/signin');
-    return null;
-  }
-
-  if (loading) return <SuspenseLoader />;
+  if (!isLogged || loading) return <SuspenseLoader />;
 
   const planName = activePlanId
     ? activePlanId.includes('1Q01ZhJP9mPoGRyfBocieoN0') ? 'Básico' : 'Premium' : null;
@@ -54,12 +49,7 @@ const SubscriptionManagement: React.FC = () => {
 
       <SidebarSettings
         userName={user?.name}
-        activeItem="plan"
-        onSelect={(id) => {
-          if (id === 'plan') return navigate('/subscription-management');
-          if (id === 'personal-settings') return navigate('/settings/personal');
-          navigate(`/${id}`);
-        }}
+        activeItem="subscription-management"
       />
 
       <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
