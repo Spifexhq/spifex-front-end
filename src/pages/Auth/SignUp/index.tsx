@@ -73,7 +73,7 @@ const SignUp = () => {
         name: nameInput,
         email: emailInput,
         password: passwordInput,
-        timezone : tz,
+        user_timezone : tz,
       });
 
       if (response.status === "error") {

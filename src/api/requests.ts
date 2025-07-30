@@ -67,7 +67,7 @@ const signUp = async (params: {
   name: string;
   email: string;
   password: string;
-  timezone : string;
+  user_timezone : string;
 }): Promise<IApiResponse<ApiSignUp>> => {
   return apiRequest<ApiSignUp>('auth/signup', 'POST', params, false);
 };

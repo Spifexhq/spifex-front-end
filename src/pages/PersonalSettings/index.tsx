@@ -19,7 +19,7 @@ import Checkbox from '@/components/Checkbox';
 import { SelectDropdown } from '@/components/SelectDropdown';
 /* -------------------------------------------------------------------------- */
 
-type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department' | 'timezone';
+type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department' | 'user_timezone';
 
 const PersonalSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ const PersonalSettings: React.FC = () => {
     phone_number: '',
     job_title   : '',
     department  : '',
-    timezone  : '',
+    user_timezone  : '',
   });
 
   /* ------------------------------ Carrega dados --------------------------- */
@@ -61,7 +61,7 @@ const PersonalSettings: React.FC = () => {
             phone_number: userResp.user.phone_number,
             job_title   : userResp.user.job_title,
             department  : userResp.user.department,
-            timezone    : userResp.user.timezone,
+            user_timezone    : userResp.user.user_timezone,
           });
 
           /* ---------- ENTERPRISE (só owner) ---------- */
@@ -87,9 +87,9 @@ const PersonalSettings: React.FC = () => {
         phone_number: user.phone_number,
         job_title   : user.job_title,
         department  : user.department,
-        timezone  : user.timezone,
+        user_timezone  : user.user_timezone,
       });
-      setUseDeviceTz(user.timezone === deviceTz);
+      setUseDeviceTz(user.user_timezone === deviceTz);
     }
 
     setEditingField(field ?? null);
@@ -104,13 +104,13 @@ const PersonalSettings: React.FC = () => {
         phone_number: user.phone_number,
         job_title   : user.job_title,
         department  : user.department,
-        timezone    : user.timezone,
+        user_timezone    : user.user_timezone,
       });
 
       // reset do fuso
-      setUseDeviceTz(user.timezone === deviceTz);
+      setUseDeviceTz(user.user_timezone === deviceTz);
 
-      const tzObj = TIMEZONES.find((t) => t.value === user.timezone);
+      const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
 
@@ -146,7 +146,7 @@ const PersonalSettings: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      const tzObj = TIMEZONES.find((t) => t.value === user.timezone);
+      const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
   }, [user]);
@@ -232,7 +232,7 @@ const PersonalSettings: React.FC = () => {
             <Row label="Telefone"        value={user?.phone_number ?? ''} field="phone_number" btnLabel="Atualizar telefone" />
             <Row label="Cargo"           value={user?.job_title ?? ''} field="job_title"   btnLabel="Atualizar cargo" />
             <Row label="Departamento"    value={user?.department ?? ''} field="department"  btnLabel="Atualizar departamento" />
-            <Row label="Fuso horário"    value={formatTimezoneLabel(user?.timezone ?? "")} field="timezone"  btnLabel="Atualizar fuso horário" />
+            <Row label="Fuso horário"    value={formatTimezoneLabel(user?.user_timezone ?? "")} field="user_timezone"  btnLabel="Atualizar fuso horário" />
           </div>
         </section>
       </main>
@@ -282,7 +282,7 @@ const PersonalSettings: React.FC = () => {
                 <Input label="Departamento" name="department"
                        value={formData.department} onChange={handleChange} />
               )}
-{(editingField === null || editingField === "timezone") && (
+{(editingField === null || editingField === "user_timezone") && (
   <>
     {/* ---------- Toggle ---------- */}
     <div className="flex items-center justify-between">
@@ -296,7 +296,7 @@ const PersonalSettings: React.FC = () => {
           setUseDeviceTz(checked);
           setFormData((p) => ({
             ...p,
-            timezone: checked ? deviceTz : p.timezone,
+            user_timezone: checked ? deviceTz : p.user_timezone,
           }));
 
           if (checked) {
@@ -319,7 +319,7 @@ const PersonalSettings: React.FC = () => {
     if (tz.length > 0) {
       setFormData((p) => ({
         ...p,
-        timezone: tz[0].value,
+        user_timezone: tz[0].value,
       }));
     }
   }}
