@@ -106,7 +106,7 @@ const sections: {
     title: "Spend management",
     items: [
       { id: "expenses", icon: "receipt", label: "Expenses" },
-      { id: "brex-assistant", icon: "robot", label: "Brex Assistant" },
+      { id: "assistant", icon: "robot", label: "Assistant" },
     ],
   },
 ];
