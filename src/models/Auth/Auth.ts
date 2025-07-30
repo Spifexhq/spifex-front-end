@@ -1,3 +1,5 @@
+// @/models/Auth
+
 import { Permission } from './Permission';
 
 export type User = {
