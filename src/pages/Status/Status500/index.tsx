@@ -11,7 +11,7 @@ const Status500: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 text-center bg-white text-gray-800">
-      <img src={error500} alt="500" className="w-72 mb-8" />
+      <img src={error500} alt="500" className="w-72 mb-8 select-none pointer-events-none" />
 
       <h2 className="text-2xl sm:text-3xl font-semibold mb-4">
         Houve um erro, por favor tente novamente mais tarde
@@ -37,7 +37,7 @@ const Status500: React.FC = () => {
           rel="noopener noreferrer"
           title="Facebook"
         >
-          <img src={facebook} alt="Facebook" className="w-6 h-6" />
+          <img src={facebook} alt="Facebook" className="w-6 h-6 select-none pointer-events-none" />
         </a>
         <a
           href="https://x.com/spifexHQ"
@@ -45,7 +45,7 @@ const Status500: React.FC = () => {
           rel="noopener noreferrer"
           title="Twitter"
         >
-          <img src={x} alt="Twitter" className="w-6 h-6" />
+          <img src={x} alt="Twitter" className="w-6 h-6 select-none pointer-events-none" />
         </a>
         <a
           href="https://instagram.com/spifexhq"
@@ -53,7 +53,7 @@ const Status500: React.FC = () => {
           rel="noopener noreferrer"
           title="Instagram"
         >
-          <img src={instagram} alt="Instagram" className="w-6 h-6" />
+          <img src={instagram} alt="Instagram" className="w-6 h-6 select-none pointer-events-none" />
         </a>
       </div>
     </div>

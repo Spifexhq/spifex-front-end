@@ -57,7 +57,7 @@ const StatusComingSoon: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 text-center bg-white text-gray-800">
-      <img src={comingSoon} alt="Coming Soon" className="w-64 mb-10" />
+      <img src={comingSoon} alt="Coming Soon" className="w-64 mb-10 select-none pointer-events-none" />
 
       <h1 className="text-4xl font-bold mb-2">Em breve</h1>
 
@@ -89,7 +89,7 @@ const StatusComingSoon: React.FC = () => {
           rel="noopener noreferrer"
           title="Facebook"
         >
-          <img src={facebook} alt="Facebook" className="w-6 h-6" />
+          <img src={facebook} alt="Facebook" className="w-6 h-6 select-none pointer-events-none" />
         </a>
         <a
           href="https://x.com/spifexHQ"
@@ -97,7 +97,7 @@ const StatusComingSoon: React.FC = () => {
           rel="noopener noreferrer"
           title="Twitter"
         >
-          <img src={x} alt="Twitter" className="w-6 h-6" />
+          <img src={x} alt="Twitter" className="w-6 h-6 select-none pointer-events-none" />
         </a>
         <a
           href="https://instagram.com/spifexhq"
@@ -105,7 +105,7 @@ const StatusComingSoon: React.FC = () => {
           rel="noopener noreferrer"
           title="Instagram"
         >
-          <img src={instagram} alt="Instagram" className="w-6 h-6" />
+          <img src={instagram} alt="Instagram" className="w-6 h-6 select-none pointer-events-none" />
         </a>
       </div>
     </div>

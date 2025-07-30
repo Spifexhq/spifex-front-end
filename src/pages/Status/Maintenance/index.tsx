@@ -12,7 +12,7 @@ const StatusMaintenance: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 text-center bg-white text-gray-800">
-      <img src={maintenance} alt="Maintenance" className="w-72 mb-10" />
+      <img src={maintenance} alt="Maintenance" className="w-72 mb-10 select-none pointer-events-none" />
 
       <h2 className="text-3xl font-semibold mb-2">O site está atualmente em manutenção</h2>
 
@@ -29,7 +29,7 @@ const StatusMaintenance: React.FC = () => {
           rel="noopener noreferrer"
           title="Facebook"
         >
-          <img src={facebook} alt="Facebook" className="w-6 h-6" />
+          <img src={facebook} alt="Facebook" className="w-6 h-6 select-none pointer-events-none" />
         </a>
         <a
           href="https://x.com/spifexHQ"
@@ -37,7 +37,7 @@ const StatusMaintenance: React.FC = () => {
           rel="noopener noreferrer"
           title="Twitter"
         >
-          <img src={x} alt="Twitter" className="w-6 h-6" />
+          <img src={x} alt="Twitter" className="w-6 h-6 select-none pointer-events-none" />
         </a>
         <a
           href="https://instagram.com/spifexhq"
@@ -45,7 +45,7 @@ const StatusMaintenance: React.FC = () => {
           rel="noopener noreferrer"
           title="Instagram"
         >
-          <img src={instagram} alt="Instagram" className="w-6 h-6" />
+          <img src={instagram} alt="Instagram" className="w-6 h-6 select-none pointer-events-none" />
         </a>
       </div>
     </div>

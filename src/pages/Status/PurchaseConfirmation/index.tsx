@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-import { useAuth, apiRequest } from "@/api";
+import { useAuth, apiRequest } from '@/api';
+import Snackbar from '@/components/Snackbar';
+import Alert from '@/components/Alert';
+import { InlineLoader } from '@/components/Loaders';
 
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import { InlineLoader } from "src/components/Loaders";
-
-import "./styles.css";
+import logo from '@/assets/Icons/Logo/logo-black.svg';
+import bgImage from '@/assets/Images/background/purchase-success.svg';
+import Button from 'src/components/Button';
 
 interface PurchaseDetails {
   item: string;
@@ -20,43 +21,45 @@ const PurchaseConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [snackBarMessage, setSnackBarMessage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [snackBarMessage, setSnackBarMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetails | null>(null);
-  const [isFetching, setIsFetching] = useState<boolean>(true);
+  const [isFetching, setIsFetching] = useState(true);
 
-  // Using authentication hook to initialize user data
   const { handleInitUser } = useAuth();
 
   const query = new URLSearchParams(location.search);
-  const sessionId = query.get("session_id");
+  const sessionId = query.get('session_id');
 
   useEffect(() => {
+    document.title = 'Compra Confirmada';
+
     const fetchPurchaseDetails = async () => {
       if (!sessionId) {
-        setSnackBarMessage("Sessão inválida.");
+        setSnackBarMessage('Sessão inválida.');
         setIsFetching(false);
         return;
       }
 
       try {
-        const response = await apiRequest<{
-          purchase_details: PurchaseDetails;
-        }>("payments/get-purchase-details/", "GET", { session_id: sessionId }, true);
+        const response = await apiRequest<{ purchase_details: PurchaseDetails }>(
+          'payments/get-purchase-details/',
+          'GET',
+          { session_id: sessionId },
+          true
+        );
 
-        if (response.status === "error") {
-          setSnackBarMessage(response.message || "Erro ao recuperar detalhes da compra.");
+        if (response.status === 'error') {
+          setSnackBarMessage(response.message || 'Erro ao recuperar detalhes da compra.');
         } else if (response.data?.purchase_details) {
           setPurchaseDetails(response.data.purchase_details);
-
-          // Atualiza o status de assinatura do usuário
           await handleInitUser();
         } else {
-          setSnackBarMessage("Não foi possível recuperar os detalhes da compra.");
+          setSnackBarMessage('Não foi possível recuperar os detalhes da compra.');
         }
       } catch (err) {
-        console.error("Erro ao buscar detalhes da compra:", err);
-        setSnackBarMessage("Erro ao recuperar detalhes da compra.");
+        console.error('Erro ao buscar detalhes da compra:', err);
+        setSnackBarMessage('Erro ao recuperar detalhes da compra.');
       } finally {
         setIsFetching(false);
       }
@@ -69,106 +72,104 @@ const PurchaseConfirmation: React.FC = () => {
     setIsLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate("/subscription-management");
+      navigate('/settings/subscription-management');
     } catch (err) {
-      console.error("Erro ao redirecionar:", err);
-      setSnackBarMessage("Ocorreu um erro ao redirecionar. Tente novamente.");
+      console.error('Erro ao redirecionar:', err);
+      setSnackBarMessage('Ocorreu um erro ao redirecionar. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Exibe um indicador de carregamento enquanto busca os dados
   if (isFetching) {
-    return <InlineLoader />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <InlineLoader />
+      </div>
+    );
   }
 
-  // Exibe mensagem de erro caso os detalhes da compra não estejam disponíveis
   if (!purchaseDetails) {
     return (
-      <div className="purchase-confirmation-page">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Snackbar
-          className="purchase-confirmation__snackbar"
-          open={snackBarMessage !== ""}
+          open={snackBarMessage !== ''}
           autoHideDuration={6000}
-          onClose={() => setSnackBarMessage("")}
+          onClose={() => setSnackBarMessage('')}
         >
-          <Alert className="purchase-confirmation__alert" severity="error">
-            {snackBarMessage}
-          </Alert>
+          <Alert severity="error">{snackBarMessage}</Alert>
         </Snackbar>
       </div>
     );
   }
 
   return (
-    <div className="purchase-confirmation-page">
-      <div className="purchase-confirmation-page__left">
-        <div className="purchase-confirmation__container">
-          <div className="purchase-confirmation__logo-container">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-white">
+      {/* Left side */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <div className="mb-6 text-center">
             <a href="https://spifex.com">
-              <img
-                className="purchase-confirmation__logo"
-                alt="Logo"
-                src="src/assets/Icons/Logo/logo-black.svg"
-              />
+              <img src={logo} alt="Logo" className="h-10 mx-auto" />
             </a>
           </div>
-          <div className="purchase-confirmation__content">
-            <div className="purchase-confirmation__header">
-              <h2>Compra Confirmada!</h2>
-            </div>
-            <div className="purchase-confirmation__details">
-              <div className="purchase-confirmation__item">
-                <label>Item</label>
+
+          <div className="bg-white rounded-md shadow-md p-6">
+            <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+              Assinatura Confirmada!
+            </h1>
+
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="font-medium">Item:</span>
                 <span>{purchaseDetails.item}</span>
               </div>
-              <div className="purchase-confirmation__item">
-                <label>Valor</label>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="font-medium">Valor:</span>
                 <span>{purchaseDetails.amount}</span>
               </div>
-              <div className="purchase-confirmation__item">
-                <label>Data</label>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="font-medium">Data:</span>
                 <span>
                   {new Date(Number(purchaseDetails.date) * 1000).toLocaleDateString()}
                 </span>
               </div>
-              <div className="purchase-confirmation__item">
-                <label>ID da Transação</label>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span className="font-medium">ID da Transação:</span>
                 <span>{purchaseDetails.transactionId}</span>
               </div>
             </div>
-            <div className="purchase-confirmation__buttons-container">
-              <button
+
+            <div className="mt-8">
+              <Button
                 onClick={handleRedirect}
                 disabled={isLoading}
-                className="purchase-confirmation__button button-primary"
+                className="w-full h-12"
               >
-                {isLoading ? <InlineLoader /> : "Voltar"}
-              </button>
+                {isLoading ? <InlineLoader /> : 'Voltar'}
+              </Button>
             </div>
           </div>
         </div>
-
-        {/* Snackbar para mensagens de erro */}
-        <Snackbar
-          className="purchase-confirmation__snackbar"
-          open={snackBarMessage !== ""}
-          autoHideDuration={6000}
-          onClose={() => setSnackBarMessage("")}
-        >
-          <Alert className="purchase-confirmation__alert" severity="error">
-            {snackBarMessage}
-          </Alert>
-        </Snackbar>
       </div>
-      <div className="purchase-confirmation-page__right">
+
+      {/* Right side image */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
         <img
-          className="purchase-confirmation-page__image"
+          src={bgImage}
           alt="Background"
-          src="src/assets/Images/background/purchase-success.svg"
+          className="max-h-[650px] w-auto object-contain select-none pointer-events-none"
         />
       </div>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackBarMessage !== ''}
+        autoHideDuration={6000}
+        onClose={() => setSnackBarMessage('')}
+      >
+        <Alert severity="error">{snackBarMessage}</Alert>
+      </Snackbar>
     </div>
   );
 };
