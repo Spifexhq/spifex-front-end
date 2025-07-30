@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import Button from "@/components/Button";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import Button from '@/components/Button';
 
 // Email domain mapping
 const emailProviders: Record<string, string> = {
-  "gmail.com": "https://mail.google.com/",
-  "outlook.com": "https://outlook.office.com/mail/",
-  "hotmail.com": "https://outlook.office.com/mail/",
-  "live.com": "https://outlook.office.com/mail/",
-  "icloud.com": "https://www.icloud.com/",
-  "yahoo.com": "https://mail.yahoo.com/",
+  'gmail.com': 'https://mail.google.com/',
+  'outlook.com': 'https://outlook.office.com/mail/',
+  'hotmail.com': 'https://outlook.office.com/mail/',
+  'live.com': 'https://outlook.office.com/mail/',
+  'icloud.com': 'https://www.icloud.com/',
+  'yahoo.com': 'https://mail.yahoo.com/',
   // ...
 };
 
@@ -18,41 +18,36 @@ const SignUpRedirect: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [emailServiceUrl, setEmailServiceUrl] = useState<string>("");
+  const [emailServiceUrl, setEmailServiceUrl] = useState<string>('');
 
   useEffect(() => {
-    // If there is no token OR there is no state with the email,
-    // means we didn't get here after registering. Redirects to /signup
+    document.title = 'Cadastro realizado';
+
     if (!token || !location.state) {
-      navigate("/signup");
+      navigate('/signup');
       return;
     }
 
-    // Retrieves the email from the state
     const { email } = location.state as { email: string };
     if (!email) {
-      navigate("/signup");
+      navigate('/signup');
       return;
     }
 
-    // Identifies the email domain
-    const domain = email.split("@")[1]?.toLowerCase() || "";
-
-    // Search for the corresponding URL or generate a mailto
+    const domain = email.split('@')[1]?.toLowerCase() || '';
     const url = emailProviders[domain] || `mailto:${email}`;
     setEmailServiceUrl(url);
-
   }, [location.state, navigate, token]);
 
   const handleClick = () => {
     if (emailServiceUrl) {
-      window.open(emailServiceUrl, "_blank");
+      window.open(emailServiceUrl, '_blank');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4">
-      <div className="max-w-md w-full bg-white p-6 shadow-md rounded-md text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 text-center">
+      <div className="max-w-md w-full bg-white shadow-md rounded-md p-6">
         <h1 className="text-2xl font-semibold text-gray-800 mb-4">
           Cadastro realizado com sucesso!
         </h1>
@@ -64,7 +59,7 @@ const SignUpRedirect: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleClick}
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
           >
             Acessar meu email
           </Button>
