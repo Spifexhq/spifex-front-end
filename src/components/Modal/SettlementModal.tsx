@@ -119,7 +119,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   /* -------------------------------------------------------------------------- */
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.7)] z-[9999]">
       <div className="relative bg-white rounded-lg shadow-xl w-[85%] h-[80%] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
