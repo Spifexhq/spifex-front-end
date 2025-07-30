@@ -1,22 +1,16 @@
-import React from 'react';
+import { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useRequireLogin } from '@/hooks/useRequireLogin';
+import { useAuthContext } from '@/contexts/useAuthContext';
 
-import { useAuthContext } from "@/contexts/useAuthContext";
+interface OwnerRouteProps { children: ReactElement }
 
-interface OwnerRouteProps {
-  children: React.ReactElement;
-}
+export const OwnerRoute = ({ children }: OwnerRouteProps) => {
+  const isLogged = useRequireLogin();
+  const { isOwner } = useAuthContext();
 
-export const OwnerRoute: React.FC<OwnerRouteProps> = ({ children }) => {
-  const { isOwner, isLogged } = useAuthContext();
-
-  if (!isLogged) {
-    return <Navigate to="/signin" replace />;
-  }
-
-  if (!isOwner) {
-    return <Navigate to="/enterprise" replace />;
-  }
+  if (!isLogged) return null;
+  if (!isOwner)   return <Navigate to="/settings/personal" replace />;
 
   return children;
 };

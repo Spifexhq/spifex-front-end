@@ -1,25 +1,25 @@
-import React from 'react';
+import { ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useRequireLogin } from '@/hooks/useRequireLogin';
+import { useAuthContext } from '@/contexts/useAuthContext';
 
-interface Props {
-    children: React.ReactElement;
-}
+interface Props { children: ReactElement }
 
-export const SuccessRouteMiddleware: React.FC<Props> = ({ children }) => {
-    const { isSubscribed, isLogged, isOwner } = useAuthContext();
-    const location = useLocation();
+export const SuccessRouteMiddleware = ({ children }: Props) => {
+  const isLogged = useRequireLogin();
+  const { isSubscribed, isOwner } = useAuthContext();
+  const location = useLocation();
 
-    const query = new URLSearchParams(location.search);
-    const sessionId = query.get('session_id');
+  if (!isLogged) return null;
 
-    if (!sessionId) {
-        return isLogged ? <Navigate to="/enterprise" replace /> : <Navigate to="/signin" replace />;
-    }
+  const query      = new URLSearchParams(location.search);
+  const sessionId  = query.get('session_id');
 
-    if (!isLogged || (!isSubscribed && !isOwner)) {
-        return isLogged ? <Navigate to="/enterprise" replace /> : <Navigate to="/signin" replace />;
-    }
+  const invalid =
+    !sessionId ||                    // sem session_id
+    (!isSubscribed && !isOwner);     // assinante/owner obrigatório
 
-    return children;
+  if (invalid) return <Navigate to="/settings/personal" replace />;
+
+  return children;
 };
