@@ -26,6 +26,8 @@ import { useId, useState, forwardRef } from 'react';
 import styles from './Input.module.css';
 import { InputProps } from './Input.types';
 import classNames from 'classnames';
+import visible from '@/assets/Icons/password/visible.svg';
+import notVisible from '@/assets/Icons/password/not-visible.svg';
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({ 
   variant = 'default', 
@@ -56,7 +58,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           className={`placeholder-gray-400 ${inputClasses} ${type === 'password' ? '!pr-10' : ''}`}
           type={showTogglePassword && type === 'password' ? (isPasswordVisible ? 'text' : 'password') : type}
           disabled={isLoading || rest.disabled}
-          ref={ref} // <-- Agora a ref está sendo passada corretamente
+          ref={ref}
           {...rest}
         />
 
@@ -69,9 +71,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             tabIndex={-1}
           >
             {isPasswordVisible ? (
-              <img src="src/assets/Icons/password/not-visible.svg" alt='not-visible' width={20} />
+              <img src={notVisible} alt='not-visible' width={20} />
             ) : (
-              <img src="src/assets/Icons/password/visible.svg" alt='visible' width={20} />
+              <img src={visible} alt='visible' width={20} />
             )}
           </button>
         )}
