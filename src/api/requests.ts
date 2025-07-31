@@ -9,11 +9,12 @@ import {
   EditSettledEntryPayload,
 } from '@/models/Entries';
 
-import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription } from '@/models/Auth';
-import { ApiGetEnterprise, Owner } from 'src/models/Auth/Enterprise';
-import { ApiGetPermissions } from 'src/models/Auth/Permission';
-import { ApiGetGroup, ApiGetGroups } from '@/models/Auth/Group';
-import { ApiGetEmployee, ApiGetEmployees } from 'src/models/Auth/Employee';
+import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription,
+  ApiGetEnterprise, Owner, ApiGetPermissions,
+  ApiGetGroup, ApiGetGroups,
+  ApiGetEmployee, ApiGetEmployees
+ } from '@/models/Auth';
+ 
 import {
   CounterUsage,
   ApiGetCounterUsage,
@@ -120,7 +121,18 @@ const getEnterprise = async (): Promise<IApiResponse<ApiGetEnterprise>> => {
 };
 
 export const editEnterprise = async (
-  data: { name: string; owner: Owner }
+  data: {
+    name: string;
+    enterprise_timezone: string;
+    address: {
+      line1: string;
+      line2: string;
+      city: string;
+      country: string;
+      zip_code: string;
+    };
+    owner: Owner;
+  }
 ): Promise<IApiResponse<ApiGetEnterprise>> => {
   return apiRequest<ApiGetEnterprise>('companies/enterprise', 'PUT', data);
 };

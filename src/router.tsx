@@ -9,7 +9,6 @@ import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
 import { PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
-import SecurityAndPrivacy from "./pages/SecurityAndPrivacy/SecurityAndPrivacy";
 
 // Auth Pages
 const SignUp = Loader(lazy(() => import("@/pages/Auth/SignUp")));
@@ -23,6 +22,8 @@ const SettledEntries = Loader(lazy(() => import("src/pages/SettledEntries")));
 const Reports = Loader(lazy(() => import("@/pages/Reports")));
 const Personal = Loader(lazy(() => import("src/pages/PersonalSettings")));
 const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
+const SecurityAndPrivacy = Loader(lazy(() => import("@/pages/SecurityAndPrivacy")));
+const CompanySettings = Loader(lazy(() => import("@/pages/CompanySettings")));
 
 // Status Pages
 const PurchaseConfirmation = Loader(lazy(() => import("@/pages/Status/PurchaseConfirmation")));
@@ -114,6 +115,10 @@ const routes: RouteObject[] = [
                 {
                 path: 'personal',
                 element: <Personal />
+                },
+                {
+                path: 'company-settings',
+                element: <CompanySettings />
                 },
                 {
                 path: 'subscription-management',
