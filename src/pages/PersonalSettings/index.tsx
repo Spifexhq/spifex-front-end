@@ -165,6 +165,18 @@ const PersonalSettings: React.FC = () => {
     };
   }, [modalOpen, closeModal]);
 
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
+
   /* ----------------------------- UI helpers ------------------------------ */
   const Row = ({
     label, value, field, btnLabel
@@ -335,10 +347,10 @@ const PersonalSettings: React.FC = () => {
                   )}
 
               <div className="flex justify-end gap-3 pt-4">
-                <Button className="px-4 py-2" variant="cancel" type="button" onClick={closeModal}>
+                <Button variant="cancel" type="button" onClick={closeModal}>
                   Cancelar
                 </Button>
-                <Button className="px-4 py-2" type="submit">Salvar</Button>
+                <Button type="submit">Salvar</Button>
               </div>
             </form>
           </div>
