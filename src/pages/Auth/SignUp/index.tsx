@@ -9,6 +9,7 @@ import Input from "@/components/Input";
 
 import { v4 as uuidv4 } from 'uuid';
 import "./styles.css";
+import { validatePassword } from "@/utils/validatePassword";
 
 const SignUp = () => {
   const { signUp } = useRequests();
@@ -27,12 +28,6 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
 
-  // Function to validate the password
-  const isValidPassword = (password: string) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-    return passwordRegex.test(password);
-  };
-
   // Function to handle sign-up button click
   const handleSignUpBtn = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault(); // Prevent default form submission behavior
@@ -50,18 +45,9 @@ const SignUp = () => {
     }
 
     // Validate if password requirements are met
-    if (!isValidPassword(passwordInput)) {
-      setSnackBarMessage(
-        <div>
-          <p>Certifique-se de que requisitos são cumpridos:</p>
-          <ul className="mt-2 ml-7 list-inside list-disc">
-            <li>Pelo menos 8 caracteres</li>
-            <li>Pelo menos uma letra maiúscula</li>
-            <li>Pelo menos um número</li>
-            <li>Pelo menos um caractere especial</li>
-          </ul>
-        </div>
-      );
+    const { isValid, message } = validatePassword(passwordInput);
+    if (!isValid) {
+      setSnackBarMessage(message);
       return;
     }
 

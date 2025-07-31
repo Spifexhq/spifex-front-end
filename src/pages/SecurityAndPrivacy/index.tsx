@@ -16,6 +16,7 @@ import Alert          from '@/components/Alert';
 import { useRequests }    from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
 import { User } from '@/models/Auth';
+import { validatePassword } from "@/utils/validatePassword";
 
 const SecurityAndPrivacy = () => {
   const { getUser, changePassword } = useRequests();
@@ -25,7 +26,7 @@ const SecurityAndPrivacy = () => {
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [snackBarMessage, setSnackBarMessage] = useState('');
+  const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
 
   const [pwData, setPwData] = useState({
     current_password: '',
@@ -43,37 +44,47 @@ const SecurityAndPrivacy = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPwData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-    const handleSubmit = async () => {
-    if (pwData.new_password !== pwData.confirm) {
-        setSnackBarMessage('As senhas não coincidem.');
-        return;
+  const handleSubmit = async () => {
+    const { current_password, new_password, confirm } = pwData;
+
+    if (new_password !== confirm) {
+      setSnackBarMessage("As senhas não coincidem.");
+      return;
+    }
+
+    if (current_password === new_password) {
+      setSnackBarMessage("A nova senha não pode ser igual à senha atual.");
+      return;
+    }
+
+    const validation = validatePassword(new_password);
+    if (!validation.isValid) {
+      setSnackBarMessage(validation.message);
+      return;
     }
 
     try {
-        const res = await changePassword({
-            current_password: pwData.current_password,
-            new_password: pwData.new_password,
-        });
+      const res = await changePassword({
+        current_password,
+        new_password,
+      });
 
-        if (res.status === 'success') {
-            closeModal();
-            setSnackBarMessage('Senha alterada com sucesso.');
-            // TODO opcional: logout ou refetch do user
-        } else {
-            throw new Error(res.message || 'Erro ao alterar senha.');
-        }
+      if (res.status === 'success') {
+        closeModal();
+        setSnackBarMessage("Senha alterada com sucesso.");
+      } else {
+        throw new Error(res.message || "Erro ao alterar senha.");
+      }
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            setSnackBarMessage(
-                err.response?.data?.message ?? 'Erro ao alterar senha.'
-            );
-        } else if (err instanceof Error) {
-            setSnackBarMessage(err.message);
-        } else {
-            setSnackBarMessage('Erro inesperado.');
-            }
-        }
-    };
+      if (axios.isAxiosError(err)) {
+        setSnackBarMessage(err.response?.data?.message ?? "Erro ao alterar senha.");
+      } else if (err instanceof Error) {
+        setSnackBarMessage(err.message);
+      } else {
+        setSnackBarMessage("Erro inesperado.");
+      }
+    }
+  };
 
   /* ------------------------ Load user ------------------------ */
   useEffect(() => {
@@ -177,6 +188,7 @@ const SecurityAndPrivacy = () => {
                 type="password"
                 value={pwData.current_password}
                 onChange={handleChange}
+                showTogglePassword
                 required
               />
               <Input
@@ -185,6 +197,7 @@ const SecurityAndPrivacy = () => {
                 type="password"
                 value={pwData.new_password}
                 onChange={handleChange}
+                showTogglePassword
                 required
               />
               <Input
@@ -193,6 +206,7 @@ const SecurityAndPrivacy = () => {
                 type="password"
                 value={pwData.confirm}
                 onChange={handleChange}
+                showTogglePassword
                 required
               />
 
@@ -216,7 +230,11 @@ const SecurityAndPrivacy = () => {
         >
             <Alert
                 className="sign-in__alert"
-                severity={snackBarMessage.includes("sucesso") ? "success" : "error"}
+                severity={
+                  typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso")
+                    ? "success"
+                    : "error"
+                }
             >
                 {snackBarMessage}
             </Alert>
