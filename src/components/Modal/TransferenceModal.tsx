@@ -192,14 +192,12 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               <Button
                 onClick={handleClose}
                 variant='cancel'
-                className="px-4 py-2"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 variant='primary'
-                className="px-4 py-2"
               >
                 Salvar
               </Button>

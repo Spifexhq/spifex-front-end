@@ -158,7 +158,6 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
         <Button
           variant="primary"
           onClick={handleApply}
-          className="px-4 py-2"
         >
           Aplicar Filtros
         </Button>

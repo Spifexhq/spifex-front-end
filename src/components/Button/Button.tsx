@@ -40,7 +40,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     // Renders the button with dynamic classes and inline styles
-    <button className={buttonClasses} style={style} disabled={isLoading || rest.disabled} {...rest}>
+    <button className={`${buttonClasses} px-4 py-2`} style={style} disabled={isLoading || rest.disabled} {...rest}>
       {/* Displays a loading spinner if isLoading is true, otherwise shows the button content */}
       {isLoading ? <InlineLoader color={loaderColor} /> : children}
     </button>

@@ -246,12 +246,11 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
         </div>
         {/* Footer */}
         <div className="p-4 bg-white flex justify-end gap-4">
-          <Button variant="cancel" className="px-4 py-2" onClick={onClose}>
+          <Button variant="cancel" onClick={onClose}>
             Cancelar
           </Button>
             <Button
             variant="primary"
-            className="px-4 py-2"
             onClick={handleLiquidate}
             disabled={
                 selectedBankIds.length === 0 ||
