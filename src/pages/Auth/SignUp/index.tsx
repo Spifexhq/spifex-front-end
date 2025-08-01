@@ -1,140 +1,127 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { useRequests } from "@/api/requests";
+import { validatePassword } from "@/utils/validatePassword";
 
 import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import signUpBackground from "@/assets/Images/background/signup-background.svg";
 
-import { v4 as uuidv4 } from 'uuid';
+import signUpBackground from "@/assets/Images/background/signup-background.svg";
+import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
+
 import "./styles.css";
-import { validatePassword } from "@/utils/validatePassword";
+
+// -----------------------------------------------------------------------------
+// Component
+// -----------------------------------------------------------------------------
 
 const SignUp = () => {
-  const { signUp } = useRequests();
   const navigate = useNavigate();
+  const { signUp } = useRequests();
 
-  // State variables for form inputs
-  const [emailInput, setEmailInput] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
-  const [nameInput, setNameInput] = useState("");
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  // State to manage loading and feedback messages
-  const isFormIncomplete =
-    !nameInput || !emailInput || !passwordInput || !confirmPasswordInput;
   const [isLoading, setIsLoading] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
 
-  // Function to handle sign-up button click
-  const handleSignUpBtn = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault(); // Prevent default form submission behavior
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    // Validate if all fields are filled
+  const isFormIncomplete = Object.values(form).some((field) => field === "");
+
+  const handleInputChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
     if (isFormIncomplete) {
       setSnackBarMessage("Preencha todos os campos");
       return;
     }
 
-    // Validate if password and confirm password match
-    if (passwordInput !== confirmPasswordInput) {
+    if (form.password !== form.confirmPassword) {
       setSnackBarMessage("As senhas não coincidem");
       return;
     }
 
-    // Validate if password requirements are met
-    const { isValid, message } = validatePassword(passwordInput);
+    const { isValid, message } = validatePassword(form.password);
     if (!isValid) {
       setSnackBarMessage(message);
       return;
     }
 
-    setIsLoading(true); // Start loading state
+    setIsLoading(true);
 
     try {
-      // Make API request to register the user
       const response = await signUp({
-        name: nameInput,
-        email: emailInput,
-        password: passwordInput,
-        user_timezone : tz,
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        user_timezone: timezone,
       });
 
       if (response.status === "error") {
         setSnackBarMessage(response.message);
-      } else {
-        setSnackBarMessage(
-          "Cadastro realizado com sucesso! Verifique seu email para ativar sua conta."
-        );
-        setNameInput("");
-        setEmailInput("");
-        setPasswordInput("");
-        setConfirmPasswordInput("");
-
-        const token = uuidv4();
-        navigate(`/signup/redirect/${token}`, {
-          state: { email: emailInput },
-        });
+        return;
       }
+
+      setSnackBarMessage("Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.");
+
+      setForm({ name: "", email: "", password: "", confirmPassword: "" });
+
+      navigate(`/signup/redirect?ts=${Date.now()}`, {
+        state: { email: form.email },
+      });
     } catch {
-      setSnackBarMessage(
-        "Ocorreu um erro ao tentar registrar. Tente novamente mais tarde."
-      );
+      setSnackBarMessage("Ocorreu um erro ao tentar registrar. Tente novamente mais tarde.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Function to handle form submit
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    handleSignUpBtn({
-      preventDefault: () => {},
-    } as React.MouseEvent<HTMLButtonElement>);
-  };
+  // -----------------------------------------------------------------------------
+  // Render
+  // -----------------------------------------------------------------------------
 
   return (
     <div className="sign-up">
-      {/* Left section with background image */}
+      {/* Left section */}
       <div className="sign-up__section sign-up__section--left">
-        <img
-          className="sign-up__image"
-          alt="Background"
-          src={signUpBackground}
-        />
+        <img className="sign-up__image" alt="Background" src={signUpBackground} />
       </div>
 
-      {/* Right section with form */}
+      {/* Right section */}
       <div className="sign-up__section sign-up__section--right">
         <div className="sign-up__container">
           {/* Logo */}
           <div className="sign-up__logo-wrapper">
             <a href="https://spifex.com" className="sign-up__logo-link">
-              <img
-                className="sign-up__logo"
-                alt="Logo"
-                src="src/assets/Icons/Logo/logo-black.svg"
-              />
+              <img className="sign-up__logo" alt="Logo" src={logoBlack} />
             </a>
           </div>
 
-          {/* Form wrapper */}
+          {/* Form */}
           <div className="sign-up__form-wrapper">
             <div className="sign-up__header">
               <span className="sign-up__title">Crie sua conta Spifex</span>
             </div>
 
-            {/* Sign-up form */}
             <form className="sign-up__form" onSubmit={handleSubmit}>
               <Input
                 label="Nome"
                 placeholder="Digite seu nome"
                 type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
+                value={form.name}
+                onChange={handleInputChange("name")}
                 disabled={isLoading}
               />
 
@@ -142,8 +129,8 @@ const SignUp = () => {
                 label="Email"
                 placeholder="Digite seu email"
                 type="email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
+                value={form.email}
+                onChange={handleInputChange("email")}
                 disabled={isLoading}
                 autoComplete="off"
                 autoCorrect="off"
@@ -154,8 +141,8 @@ const SignUp = () => {
                   label="Senha"
                   placeholder="Digite sua senha"
                   type="password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
+                  value={form.password}
+                  onChange={handleInputChange("password")}
                   disabled={isLoading}
                   showTogglePassword
                   autoComplete="new-password"
@@ -165,8 +152,8 @@ const SignUp = () => {
                   label="Confirme sua senha"
                   placeholder="Confirme sua senha"
                   type="password"
-                  value={confirmPasswordInput}
-                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                  value={form.confirmPassword}
+                  onChange={handleInputChange("confirmPassword")}
                   onPaste={(e) => e.preventDefault()}
                   onCopy={(e) => e.preventDefault()}
                   disabled={isLoading}
@@ -176,11 +163,10 @@ const SignUp = () => {
                 />
               </div>
 
-              {/* Submit button */}
               <div className="sign-up__button-wrapper">
                 <Button
                   variant="primary"
-                  onClick={handleSignUpBtn}
+                  onClick={handleSubmit}
                   type="submit"
                   loaderColor="#FFFFFF"
                   isLoading={isLoading}
@@ -193,7 +179,7 @@ const SignUp = () => {
             </form>
           </div>
 
-          {/* Footer with link to sign-in page */}
+          {/* Footer */}
           <div className="sign-up__footer">
             <span className="sign-up__footer-text">Já tem conta?</span>
             <Link to="/signin" className="sign-up__link">
@@ -202,7 +188,7 @@ const SignUp = () => {
           </div>
         </div>
 
-        {/* Snackbar for showing feedback messages */}
+        {/* Snackbar */}
         <Snackbar
           className="sign-up__snackbar"
           open={snackBarMessage !== ""}
@@ -211,11 +197,7 @@ const SignUp = () => {
         >
           <Alert
             className="sign-up__alert"
-            severity={
-              typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso")
-                ? "success"
-                : "error"
-            }
+            severity={typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso") ? "success" : "error"}
           >
             {snackBarMessage}
           </Alert>

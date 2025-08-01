@@ -57,7 +57,7 @@ const routes: RouteObject[] = [
                 element: <SignIn />
             },
             {
-                path: '/signup/redirect/:token',
+                path: 'signup/redirect',
                 element: <SignUpRedirect />
             },
             {

@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '@/components/Button';
 
-// Email domain mapping
+interface SignUpRedirectState {
+  email?: string;
+}
+
 const emailProviders: Record<string, string> = {
   'gmail.com': 'https://mail.google.com/',
   'outlook.com': 'https://outlook.office.com/mail/',
@@ -10,11 +13,9 @@ const emailProviders: Record<string, string> = {
   'live.com': 'https://outlook.office.com/mail/',
   'icloud.com': 'https://www.icloud.com/',
   'yahoo.com': 'https://mail.yahoo.com/',
-  // ...
 };
 
 const SignUpRedirect: React.FC = () => {
-  const { token } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,21 +24,17 @@ const SignUpRedirect: React.FC = () => {
   useEffect(() => {
     document.title = 'Cadastro realizado';
 
-    if (!token || !location.state) {
+    const state = location.state as SignUpRedirectState | null;
+
+    if (!state?.email) {
       navigate('/signup');
       return;
     }
 
-    const { email } = location.state as { email: string };
-    if (!email) {
-      navigate('/signup');
-      return;
-    }
-
-    const domain = email.split('@')[1]?.toLowerCase() || '';
-    const url = emailProviders[domain] || `mailto:${email}`;
+    const domain = state.email.split('@')[1]?.toLowerCase() || '';
+    const url = emailProviders[domain] || `mailto:${state.email}`;
     setEmailServiceUrl(url);
-  }, [location.state, navigate, token]);
+  }, [location.state, navigate]);
 
   const handleClick = () => {
     if (emailServiceUrl) {
