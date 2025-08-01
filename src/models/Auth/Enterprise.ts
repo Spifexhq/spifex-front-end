@@ -1,3 +1,5 @@
+// @/models/auth/Enterprise.ts
+
 export type Owner = {
   name: string;
   email: string;

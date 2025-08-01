@@ -1,3 +1,5 @@
+// @/models/auth/Employee.ts
+
 import { Group } from './Group';
 
 export type Employee = {

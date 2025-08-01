@@ -1,3 +1,5 @@
+// @/models/auth/Permission.ts
+
 export type Permission = {
   id: number;
   label: string;

@@ -1,3 +1,5 @@
+// @/models/auth/Group.ts
+
 import { Bank } from '../Bank';
 import { Permission } from './Permission';
 
