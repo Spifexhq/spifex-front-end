@@ -6,6 +6,7 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import signUpBackground from "@/assets/Images/background/signup-background.svg";
 
 import { v4 as uuidv4 } from 'uuid';
 import "./styles.css";
@@ -102,7 +103,7 @@ const SignUp = () => {
         <img
           className="sign-up__image"
           alt="Background"
-          src="src/assets/Images/background/signup-background.svg"
+          src={signUpBackground}
         />
       </div>
 
