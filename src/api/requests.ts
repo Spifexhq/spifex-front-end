@@ -1,4 +1,18 @@
 import axios from 'axios';
+// import {
+//   SignUpRequest,
+//   SignUpResponse,
+//   SignInRequest,
+//   SignInResponse,
+//   GetUserResponse,
+//   GetEnterpriseResponse,
+//   GetEmployeesResponse,
+//   GetEmployeeResponse,
+//   GetGroupsResponse,
+//   GetGroupResponse,
+//   SubscriptionStatusResponse,
+// } from "@/models/auth";
+
 import { apiRequest } from '@/api';
 
 import {
@@ -13,7 +27,7 @@ import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription,
   ApiGetEnterprise, Owner, ApiGetPermissions,
   ApiGetGroup, ApiGetGroups,
   ApiGetEmployee, ApiGetEmployees
- } from '@/models/Auth';
+ } from 'src/models/auth';
  
 import {
   CounterUsage,
