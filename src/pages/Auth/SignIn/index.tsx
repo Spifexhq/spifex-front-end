@@ -5,6 +5,7 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import signInBackground from "@/assets/Images/background/signin-background.svg";
 import './styles.css';
 
 const SignIn = () => {
@@ -138,7 +139,7 @@ const SignIn = () => {
                 <img
                     className="sign-in__image"
                     alt="Background"
-                    src="src/assets/Images/background/signin-background.svg"
+                    src={signInBackground}
                 />
             </div>
         </div>
