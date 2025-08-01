@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, ReactNode } from 'react';
 import { SubscriptionContext } from './SubscriptionContext';
-import { Subscription } from '@/models/Auth';
+import { Subscription } from 'src/models/auth';
 import { useRequests } from '@/api';
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {

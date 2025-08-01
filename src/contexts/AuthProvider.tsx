@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useAuth as useAuthHook } from "@/api/auth";
 import { AuthContext } from "@/contexts/AuthContext";
 import { RootState } from '@/redux/rootReducer';
-import { User, UserEnterpriseDetail, Subscription, Permission } from '@/models/Auth';
+import { User, UserEnterpriseDetail, Subscription, Permission } from 'src/models/auth';
 
 interface UserInfo {
   user: User | null;

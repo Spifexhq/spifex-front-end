@@ -12,7 +12,7 @@ import Alert from '@/components/Alert';
 
 import { useRequests } from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
-import { User, Enterprise } from '@/models/Auth';
+import { User, Enterprise } from 'src/models/auth';
 import { formatTimezoneLabel } from "@/utils/timezone";
 import { TIMEZONES } from "@/utils/timezones-list";
 import Checkbox from '@/components/Checkbox';

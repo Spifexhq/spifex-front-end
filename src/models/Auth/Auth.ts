@@ -1,4 +1,4 @@
-// @/models/Auth
+// @/models/auth/auth.ts
 
 import { Permission } from './Permission';
 

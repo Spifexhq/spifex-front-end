@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { Subscription } from '@/models/Auth';
+import { Subscription } from 'src/models/auth';
 
 export interface SubscriptionContextProps {
   subscription: Subscription | null;

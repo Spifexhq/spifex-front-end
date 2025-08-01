@@ -16,7 +16,7 @@ import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { useRequests } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { Enterprise } from "@/models/Auth";
+import { Enterprise } from "src/models/auth";
 import { TIMEZONES } from "@/utils/timezones-list";
 import { formatTimezoneLabel } from "@/utils/timezone";
 

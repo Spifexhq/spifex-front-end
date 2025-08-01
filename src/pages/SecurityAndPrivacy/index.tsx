@@ -15,7 +15,7 @@ import Alert          from '@/components/Alert';
 
 import { useRequests }    from '@/api';
 import { useAuthContext } from '@/contexts/useAuthContext';
-import { User } from '@/models/Auth';
+import { User } from 'src/models/auth';
 import { validatePassword } from "@/utils/validatePassword";
 
 const SecurityAndPrivacy = () => {

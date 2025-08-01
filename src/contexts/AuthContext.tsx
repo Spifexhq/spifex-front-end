@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { User, Subscription, UserEnterpriseDetail, ApiSignIn } from "@/models/Auth";
+import { User, Subscription, UserEnterpriseDetail, ApiSignIn } from "src/models/auth";
 
 export interface AuthContextType {
   user: User | null;
