@@ -341,6 +341,9 @@ const PersonalSettings: React.FC = () => {
                     hideCheckboxes
                     clearOnClickOutside={false}
                     buttonLabel="Selecione o fuso horário"
+                    customStyles={{
+                      maxHeight: "250px",
+                    }}
                     disabled={useDeviceTz}
                   />
                     </>
