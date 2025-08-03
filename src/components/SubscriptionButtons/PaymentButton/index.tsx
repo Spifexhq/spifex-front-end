@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useRequests } from 'src/api';
 import { useAuthContext } from "@/contexts/useAuthContext";
 
 import Button from 'src/components/Button';
+import { api } from 'src/api/requests2';
 
 interface PaymentButtonProps {
   priceId: string;
@@ -13,7 +13,6 @@ interface PaymentButtonProps {
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCallback, onProcessingChange }) => {
   const { isOwner } = useAuthContext();
-  const { createCheckoutSession } = useRequests();
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOwner) return null;
@@ -25,7 +24,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCa
     setIsProcessing(true);
     if (onProcessingChange) onProcessingChange(true);
     try {
-      const response = await createCheckoutSession(priceId);
+      const response = await api.createCheckoutSession(priceId);
       const { url } = response.data || {};
 
       if (url) {

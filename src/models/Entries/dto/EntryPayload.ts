@@ -1,4 +1,4 @@
-export type EntryPayloadBase = {
+export interface EntryPayloadBase {
   due_date: string;
   description?: string;
   observation?: string | null;

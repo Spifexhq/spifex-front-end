@@ -1,41 +1,27 @@
-/**
- * CashFlowTable.tsx
- *
- * Renders a table of cash flow entries with pagination + infinite scroll.
- * Receives optional filters as props (start_date, end_date, etc.).
- *
- * Features:
- * - Fetches data from an API with pagination
- * - Allows multiple filters
- * - Sorts entries by due_date
- * - Builds monthly summary rows
- * - Multi-selection with Shift key support
- * - Infinite scroll
- */
+/* src/components/Table/CashFlowTable/index.tsx */
 
-import React, { useEffect, useState } from 'react';
-import { useRequests } from '@/api/requests';
+import React, { useEffect, useState } from "react";
+import { api } from "@/api/requests2";
 
-import { CashFlowFilters, Entry } from '@/models/Entries';
-import { parseApiList } from 'src/utils/parseApiList';
-import { useShiftSelect } from '@/hooks/useShiftSelect';
-import { useBanks } from '@/hooks/useBanks';
+import { EntryFilters, Entry } from "src/models/Entries/domain";
+import { useShiftSelect } from "@/hooks/useShiftSelect";
+import { useBanks } from "@/hooks/useBanks";
 
-import { InlineLoader } from '@/components/Loaders';
-import Checkbox from '@/components/Checkbox';
-import Button from '@/components/Button';
+import { InlineLoader } from "@/components/Loaders";
+import Checkbox from "@/components/Checkbox";
+import Button from "@/components/Button";
+import { getCursorFromUrl } from "src/utils/cursors";
 
-const PAGE_SIZE = 100;
+const mapEntry = (dto: Entry): Entry => dto;
 
 interface CashFlowTableProps {
-  filters?: CashFlowFilters;
+  filters?: EntryFilters;
   onEdit(entry: Entry): void;
   onSelectionChange?: (ids: number[], entries: Entry[]) => void;
 }
 
 const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelectionChange }) => {
-  const { getFilteredEntries } = useRequests();
-  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.banksId);
+  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.bank_id);
   const [entries, setEntries] = useState<Array<Entry>>([]);
   const [tableRows, setTableRows] = useState<
     Array<{
@@ -44,18 +30,17 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
       monthlySum?: number;
       runningBalance?: number;
       displayMonth?: string;
+      summaryId?: string;
     }>
   >([]);
 
-  // Loading + pagination states
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
-  const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-  // Multi-select hook
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
 
   useEffect(() => {
@@ -63,50 +48,56 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
     onSelectionChange?.(selectedIds, selectedRows);
   }, [selectedIds, entries, onSelectionChange]);
 
-  /**
-   * Fetch paginated entries from the API
-   */
+  /* ------------------------------------------------------------------
+   *  Fetch
+   * ------------------------------------------------------------------ */
   const fetchEntries = async (reset = false) => {
     if (isFetching) return;
-    if (!hasMore && !reset) return;
-  
+
+    const cursorParam = reset ? {} : { cursor: nextCursor ?? undefined };
+
+    const glaParam = filters?.general_ledger_account_id?.length
+      ? filters.general_ledger_account_id.join(',')
+      : undefined;
+
+    const payload = {
+      ...cursorParam,
+      ...filters,
+      general_ledger_account_id: glaParam,
+      bank_id: undefined,
+    };
+
     setIsFetching(true);
-  
     if (reset) {
       setLoading(true);
-      setOffset(0);
     } else {
       setLoadingMore(true);
     }
-  
-    try {
-      const response = await getFilteredEntries(PAGE_SIZE, reset ? 0 : offset, filters);
-      const parsed = parseApiList<Entry>(response, 'entries');
-  
-      const combined = (reset ? [] : entries).concat(parsed);
-      const sorted = combined.sort((a, b) => {
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-      });
-  
-      setEntries(sorted);
-      setOffset((prev) => (reset ? PAGE_SIZE : prev + PAGE_SIZE));
-      setHasMore(parsed.length === PAGE_SIZE);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar dados.';
-      console.error('Erro ao buscar lançamentos:', message);
-      setError(message);
-    } finally {
-      setIsFetching(false);
-      setLoadingMore(false);
-      setLoading(false);
-    }
-  };  
 
-  // Trigger fetch on mount or whenever filters change
+    try {
+      const { data } = await api.getEntries(payload);
+      const mapped = data.results.map(mapEntry);
+      setEntries(prev =>
+        reset
+          ? mapped
+          : [...prev, ...mapped.filter(e => !prev.some(p => p.id === e.id))]
+      );
+      setNextCursor(getCursorFromUrl(data.next));
+      setHasMore(!!data.next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao buscar dados.');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+      setIsFetching(false);
+    }
+  };
+
   useEffect(() => {
     fetchEntries(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
+
 
   // Infinite scroll
   useEffect(() => {
@@ -123,7 +114,11 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offset, hasMore, isFetching]);
+  }, [hasMore, isFetching]);
+
+  /* ------------------------------------------------------------------
+   *  Build rows
+   * ------------------------------------------------------------------ */
 
   // Build table rows (normal + monthly summary)
   useEffect(() => {
@@ -144,6 +139,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
       monthlySum?: number;
       runningBalance?: number;
       displayMonth?: string;
+      summaryId?: string;
     }> = [];
 
     const getMonthYear = (dateStr: string) => {
@@ -169,6 +165,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
           monthlySum,
           runningBalance,
           displayMonth: currentMonth,
+          summaryId: `summary-${currentMonth}-${index}`,
         });
         monthlySum = 0;
       }
@@ -186,13 +183,13 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
         runningBalance,
       });
 
-      // At the last entry, push the final month's summary
       if (index === entries.length - 1) {
         newRows.push({
           isSummary: true,
           monthlySum,
           runningBalance,
           displayMonth: currentMonth,
+          summaryId: `summary-${currentMonth}-final`,
         });
       }
     });
@@ -200,7 +197,10 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
     setTableRows(newRows);
   }, [entries, totalConsolidatedBalance, loadingBanks]);
 
-  // Show loader, errors, or table
+  /* ------------------------------------------------------------------
+   *  Render
+   * ------------------------------------------------------------------ */
+
   if (loading && !entries.length) {
     return <InlineLoader color="orange" className="w-10 h-10" />;
   }
@@ -239,7 +239,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
               </td>
             </tr>
           ) : (
-            tableRows.map((row, idx) => {
+            tableRows.map((row) => {
               if (!row.isSummary && row.entry) {
                 const entry = row.entry;
                 const isSelected = selectedIds.includes(entry.id);
@@ -250,7 +250,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
                 const balance = row.runningBalance || 0;
 
                 return (
-                  <tr key={entry.id} className="hover:bg-gray-50">
+                  <tr key={`entry-${entry.id}`} className="hover:bg-gray-50">
                     <td className="w-[5%] px-2 py-1 text-center align-middle">
                       <Checkbox
                         checked={isSelected}
@@ -258,7 +258,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
                         size={"sm"}
                       />
                     </td>
-                    <td className="px-2 py-1 text-center whitespace-nowrap">{entry.due_date}</td>
+                    <td className="px-2 py-1 text-center whitespace-nowrap">{new Date(entry.due_date).toLocaleDateString("pt-BR")}</td>
                     <td className="px-2 py-1 whitespace-nowrap">{entry.description}</td>
                     <td className="px-2 py-1 text-center whitespace-nowrap">
                       {`${entry.current_installment ?? '-'} / ${entry.total_installments ?? '-'}`}
@@ -296,7 +296,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
               // Summary row
               const { monthlySum = 0, runningBalance = 0, displayMonth } = row;
               return (
-                <tr key={`summary-${idx}`} className="bg-gray-50 text-[9px]">
+                <tr key={row.summaryId} className="bg-gray-50 text-[9px]">
                   <td colSpan={4} className="px-2 py-1 font-semibold text-left">
                     {displayMonth}
                   </td>

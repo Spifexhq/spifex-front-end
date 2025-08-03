@@ -2,7 +2,7 @@
 export * from "./CashFlowFilters";
 
 export * from "./Entry";
-export * from "./EntryPayload";
+export * from "./dto/EntryPayload";
 
 export * from "./SettledEntry";
-export * from "./SettledEntryPayload";
+export * from "./dto/SettledEntryPayload";

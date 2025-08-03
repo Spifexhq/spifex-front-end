@@ -1,25 +1,29 @@
-// src/pages/SecurityAndPrivacy.tsx
-import axios from 'axios';
-import { useState, useEffect, useCallback } from 'react';
-import { Outlet } from 'react-router-dom';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+/* -------------------------------------------------------------------------- */
+/*  File: src/pages/SecurityAndPrivacy.tsx                                    */
+/* -------------------------------------------------------------------------- */
 
-import Navbar         from '@/components/Navbar';
-import SidebarSettings from '@/components/Sidebar/SidebarSettings';
-import { SuspenseLoader } from '@/components/Loaders';
-import Input          from '@/components/Input';
-import Button         from '@/components/Button';
-import Snackbar       from '@/components/Snackbar';
-import Alert          from '@/components/Alert';
+import axios from "axios";
+import { useState, useEffect, useCallback } from "react";
+import { Outlet } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-import { useRequests }    from '@/api';
-import { useAuthContext } from '@/contexts/useAuthContext';
-import { User } from 'src/models/auth';
+import Navbar            from "@/components/Navbar";
+import SidebarSettings   from "@/components/Sidebar/SidebarSettings";
+import { SuspenseLoader } from "@/components/Loaders";
+import Input             from "@/components/Input";
+import Button            from "@/components/Button";
+import Snackbar          from "@/components/Snackbar";
+import Alert             from "@/components/Alert";
+
+import { api }             from "@/api/requests2";
+import { useAuthContext }  from "@/contexts/useAuthContext";
+import { User }            from "src/models/auth";
 import { validatePassword } from "@/utils/validatePassword";
 
+/* -------------------------------------------------------------------------- */
+
 const SecurityAndPrivacy = () => {
-  const { getUser, changePassword } = useRequests();
   const { user: authUser } = useAuthContext();
 
   const [user, setUser]       = useState<User | null>(null);
@@ -29,15 +33,15 @@ const SecurityAndPrivacy = () => {
   const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
 
   const [pwData, setPwData] = useState({
-    current_password: '',
-    new_password: '',
-    confirm: '',
+    current_password: "",
+    new_password: "",
+    confirm: "",
   });
 
   /* ------------------------ Handlers ------------------------- */
   const openModal  = () => setModalOpen(true);
   const closeModal = useCallback(() => {
-    setPwData({ current_password: '', new_password: '', confirm: '' });
+    setPwData({ current_password: "", new_password: "", confirm: "" });
     setModalOpen(false);
   }, []);
 
@@ -51,12 +55,10 @@ const SecurityAndPrivacy = () => {
       setSnackBarMessage("As senhas não coincidem.");
       return;
     }
-
     if (current_password === new_password) {
       setSnackBarMessage("A nova senha não pode ser igual à senha atual.");
       return;
     }
-
     const validation = validatePassword(new_password);
     if (!validation.isValid) {
       setSnackBarMessage(validation.message);
@@ -64,25 +66,16 @@ const SecurityAndPrivacy = () => {
     }
 
     try {
-      const res = await changePassword({
-        current_password,
-        new_password,
-      });
-
-      if (res.status === 'success') {
-        closeModal();
-        setSnackBarMessage("Senha alterada com sucesso.");
-      } else {
-        throw new Error(res.message || "Erro ao alterar senha.");
-      }
+      await api.changePassword({ current_password, new_password });
+      closeModal();
+      setSnackBarMessage("Senha alterada com sucesso.");
     } catch (err) {
-      if (axios.isAxiosError(err)) {
+      if (axios.isAxiosError(err))
         setSnackBarMessage(err.response?.data?.message ?? "Erro ao alterar senha.");
-      } else if (err instanceof Error) {
+      else if (err instanceof Error)
         setSnackBarMessage(err.message);
-      } else {
+      else
         setSnackBarMessage("Erro inesperado.");
-      }
     }
   };
 
@@ -90,38 +83,26 @@ const SecurityAndPrivacy = () => {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await getUser();
-        if (data) setUser(data.user);
+        const resp = await api.getUser();
+        setUser(resp.data.user);
       } finally {
         setLoading(false);
       }
     })();
-  }, [getUser]);
+  }, []);
 
+  /* ------------------------ UX hooks ------------------------ */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeModal();
     };
-
-    if (modalOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [modalOpen, closeModal]);
 
   useEffect(() => {
-    if (modalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
   if (loading) return <SuspenseLoader />;
@@ -130,7 +111,7 @@ const SecurityAndPrivacy = () => {
   return (
     <>
       <Navbar />
-      <SidebarSettings userName={authUser?.name ?? ''} activeItem="security" />
+      <SidebarSettings userName={authUser?.name ?? ""} activeItem="security" />
       <Outlet />
 
       <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
@@ -144,8 +125,12 @@ const SecurityAndPrivacy = () => {
                 <p className="text-base font-medium text-gray-900">
                   Última alteração:&nbsp;
                   {user?.last_password_change
-                    ? format(new Date(user.last_password_change), "d 'de' MMM, yyyy", { locale: ptBR })
-                    : 'nunca'}
+                    ? format(
+                        new Date(user.last_password_change),
+                        "d 'de' MMM, yyyy",
+                        { locale: ptBR }
+                      )
+                    : "nunca"}
                 </p>
               </div>
               <Button variant="outline" onClick={openModal}>
@@ -156,11 +141,9 @@ const SecurityAndPrivacy = () => {
         </section>
       </main>
 
-      {/* ------------------ Modal ------------------ */}
+      {/* ---------------------- Modal ---------------------- */}
       {modalOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]"
-        >
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
@@ -221,24 +204,23 @@ const SecurityAndPrivacy = () => {
         </div>
       )}
 
-      {/* --------------- Snackbar --------------- */}
-        <Snackbar
-            className="sign-in__snackbar"
-            open={!!snackBarMessage}
-            autoHideDuration={5000}
-            onClose={() => setSnackBarMessage("")}
+      {/* ----------------------- Snackbar ----------------------- */}
+      <Snackbar
+        open={!!snackBarMessage}
+        autoHideDuration={5000}
+        onClose={() => setSnackBarMessage("")}
+      >
+        <Alert
+          severity={
+            typeof snackBarMessage === "string" &&
+            snackBarMessage.includes("sucesso")
+              ? "success"
+              : "error"
+          }
         >
-            <Alert
-                className="sign-in__alert"
-                severity={
-                  typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso")
-                    ? "success"
-                    : "error"
-                }
-            >
-                {snackBarMessage}
-            </Alert>
-        </Snackbar>
+          {snackBarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

@@ -8,33 +8,23 @@ import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccoun
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import Input from "../Input";
-
-export interface FilterData {
-  startDate?: string;
-  endDate?: string;
-  generalLedgerAccountId?: number[];
-  banksId?: number[];
-  description?: string;
-  observation?: string;
-}
+import { EntryFilters } from "src/models/Entries/domain";
 
 interface FilterProps {
-  onApply: (filters: FilterData) => void;
+  onApply: (filters: EntryFilters) => void;
 }
 
 const Filter: FC<FilterProps> = ({ onApply }) => {
   const { getGeneralLedgerAccounts } = useRequests();
-  
-  // Here we fetch ALL active banks (no specific IDs)
   const { banks } = useBanks();
 
-  const [formData, setFormData] = useState<FilterData>({
-    startDate: "",
-    endDate: "",
-    generalLedgerAccountId: [],
-    banksId: [],
+  const [formData, setFormData] = useState<EntryFilters>({
+    start_date: "",
+    end_date: "",
     description: "",
     observation: "",
+    general_ledger_account_id: [],
+    bank_id: [],
   });
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
@@ -50,11 +40,11 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
   }, [getGeneralLedgerAccounts]);
 
   const selectedLedgerAccounts = ledgerAccounts.filter((acc) =>
-    formData.generalLedgerAccountId?.includes(acc.id)
+    formData.general_ledger_account_id?.includes(acc.id)
   );
 
   const selectedBanks = banks.filter((bank) =>
-    formData.banksId?.includes(bank.id)
+    formData.bank_id?.includes(bank.id)
   );
 
   const handleChange = (
@@ -65,10 +55,10 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
   };
 
   const handleLedgerAccountChange = (list: GeneralLedgerAccount[]) =>
-    setFormData((p) => ({ ...p, generalLedgerAccountId: list.map((x) => Number(x.id)) }));
+    setFormData((p) => ({ ...p, general_ledger_account_id: list.map((x) => Number(x.id)) }));
 
   const handleBankChange = (list: Bank[]) =>
-    setFormData((p) => ({ ...p, banksId: list.map((x) => Number(x.id)) }));
+    setFormData((p) => ({ ...p, bank_id: list.map((x) => Number(x.id)) }));
 
   const handleApply = () => {
     onApply(formData);
@@ -83,8 +73,8 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
             <Input
               label="Data Inicial"
               type="date"
-              name="startDate"
-              value={formData.startDate || ""}
+              name="start_date"
+              value={formData.start_date || ""}
               onChange={handleChange}
             />
           </div>
@@ -92,8 +82,8 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
             <Input
               label="Data Final"
               type="date"
-              name="endDate"
-              value={formData.endDate || ""}
+              name="end_date"
+              value={formData.end_date || ""}
               onChange={handleChange}
             />
           </div>

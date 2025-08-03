@@ -1,50 +1,64 @@
-// src/pages/PersonalSettings.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
-
-import Navbar from '@/components/Navbar';
-import SidebarSettings from '@/components/Sidebar/SidebarSettings';
-import { SuspenseLoader } from '@/components/Loaders';
-import Input from '@/components/Input';
-import Button from '@/components/Button';
-import Snackbar from '@/components/Snackbar';
-import Alert from '@/components/Alert';
-
-import { useRequests } from '@/api';
-import { useAuthContext } from '@/contexts/useAuthContext';
-import { User, Enterprise } from 'src/models/auth';
-import { formatTimezoneLabel } from "@/utils/timezone";
-import { TIMEZONES } from "@/utils/timezones-list";
-import Checkbox from '@/components/Checkbox';
-import { SelectDropdown } from '@/components/SelectDropdown';
+/* -------------------------------------------------------------------------- */
+/*  File: src/pages/PersonalSettings.tsx                                      */
 /* -------------------------------------------------------------------------- */
 
-type EditableUserField = 'name' | 'email' | 'phone_number' | 'job_title' | 'department' | 'user_timezone';
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, Outlet } from "react-router-dom";
+
+import Navbar from "@/components/Navbar";
+import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import { SuspenseLoader } from "@/components/Loaders";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
+import Snackbar from "@/components/Snackbar";
+import Alert from "@/components/Alert";
+import Checkbox from "@/components/Checkbox";
+import { SelectDropdown } from "@/components/SelectDropdown";
+
+import { api } from "@/api/requests2";
+import { useAuthContext } from "@/contexts/useAuthContext";
+import { User, Enterprise } from "src/models/auth";
+import { TIMEZONES } from "@/utils/timezones-list";
+import { formatTimezoneLabel } from "@/utils/timezone";
+
+/* -------------------------------------------------------------------------- */
+
+type EditableUserField =
+  | "name"
+  | "email"
+  | "phone_number"
+  | "job_title"
+  | "department"
+  | "user_timezone";
 
 const PersonalSettings: React.FC = () => {
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
-  const { getUser, getEnterprise, editUser } = useRequests();
 
-  const [user, setUser]             = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [modalOpen, setModalOpen]           = useState(false);
-  const [editingField, setEditingField] = useState<EditableUserField | null>(null);
-  const [snackBarMessage, setSnackBarMessage] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingField, setEditingField] = useState<EditableUserField | null>(
+    null
+  );
+  const [snackBarMessage, setSnackBarMessage] = useState("");
 
+  /* ---------- Fuso horário ---------- */
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [useDeviceTz, setUseDeviceTz] = useState(true);
-  const [selectedTimezone, setSelectedTimezone] = useState<{ label: string; value: string }[]>([]);
+  const [selectedTimezone, setSelectedTimezone] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   const [formData, setFormData] = useState({
-    name        : '',
-    email       : '',
-    phone_number: '',
-    job_title   : '',
-    department  : '',
-    user_timezone  : '',
+    name: "",
+    email: "",
+    phone_number: "",
+    job_title: "",
+    department: "",
+    user_timezone: "",
   });
 
   /* ------------------------------ Carrega dados --------------------------- */
@@ -52,44 +66,52 @@ const PersonalSettings: React.FC = () => {
     (async () => {
       try {
         /* ---------- USER ---------- */
-        const { data: userResp } = await getUser();
-        if (userResp) {
-          setUser(userResp.user);
-          setFormData({
-            name        : userResp.user.name,
-            email       : userResp.user.email,
-            phone_number: userResp.user.phone_number,
-            job_title   : userResp.user.job_title,
-            department  : userResp.user.department,
-            user_timezone    : userResp.user.user_timezone,
-          });
+        const userResp = await api.getUser(); // ApiSuccess<GetUserResponse>
+        const userData = userResp.data.user;
 
-          /* ---------- ENTERPRISE (só owner) ---------- */
-          if (userResp.user.is_owner) {
-            const { data: entResp } = await getEnterprise();
-            if (entResp) setEnterprise(entResp.enterprise);
-          }
+        setUser(userData);
+        setFormData({
+          name: userData.name,
+          email: userData.email,
+          phone_number: userData.phone_number,
+          job_title: userData.job_title,
+          department: userData.department,
+          user_timezone: userData.user_timezone,
+        });
+
+        /* ---------- ENTERPRISE (só owner) ---------- */
+        if (userData.is_owner) {
+          const entResp = await api.getEnterprise(); // ApiSuccess<Enterprise>
+          setEnterprise(entResp.data);
         }
+
+        /* ---------- Timezone UI ---------- */
+        const tzObj = TIMEZONES.find((t) => t.value === userData.user_timezone);
+        setSelectedTimezone(tzObj ? [tzObj] : []);
+        setUseDeviceTz(userData.user_timezone === deviceTz);
       } catch (e) {
-        console.error('Erro ao buscar dados', e);
+        console.error("Erro ao buscar dados", e);
+        setSnackBarMessage("Erro ao buscar dados.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [getUser, getEnterprise]);
+  }, [deviceTz]);
 
   /* ------------------------------- Handlers ------------------------------- */
   const openModal = (field?: EditableUserField) => {
     if (user) {
       setFormData({
-        name        : user.name,
-        email       : user.email,
+        name: user.name,
+        email: user.email,
         phone_number: user.phone_number,
-        job_title   : user.job_title,
-        department  : user.department,
-        user_timezone  : user.user_timezone,
+        job_title: user.job_title,
+        department: user.department,
+        user_timezone: user.user_timezone,
       });
       setUseDeviceTz(user.user_timezone === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
+      setSelectedTimezone(tzObj ? [tzObj] : []);
     }
 
     setEditingField(field ?? null);
@@ -99,17 +121,14 @@ const PersonalSettings: React.FC = () => {
   const closeModal = useCallback(() => {
     if (user) {
       setFormData({
-        name        : user.name,
-        email       : user.email,
+        name: user.name,
+        email: user.email,
         phone_number: user.phone_number,
-        job_title   : user.job_title,
-        department  : user.department,
-        user_timezone    : user.user_timezone,
+        job_title: user.job_title,
+        department: user.department,
+        user_timezone: user.user_timezone,
       });
-
-      // reset do fuso
       setUseDeviceTz(user.user_timezone === deviceTz);
-
       const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
@@ -122,56 +141,36 @@ const PersonalSettings: React.FC = () => {
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async () => {
-    // Envia só o campo em edição, ou o diff completo quando for “Editar tudo”
     const payload =
-      editingField !== null
-        ? { [editingField]: formData[editingField] }
-        : formData;             // modal foi aberto em modo “todos os campos”
+      editingField !== null ? { [editingField]: formData[editingField] } : formData;
 
     try {
-      const res = await editUser(payload);
-      if (res.status === 'error') throw new Error(res.message);
+      /* ---------- PUT /auth/user ---------- */
+      const res = await api.editUser(payload); // ApiSuccess<User>
+      if (!res.data) throw new Error("Erro ao atualizar dados.");
 
-      const updated = await getUser();      // refetch
-      if (updated.data) {
-        setUser(updated.data.user);
-        closeModal();
-      }
+      /* ---------- Refresh ---------- */
+      const updated = await api.getUser();
+      setUser(updated.data.user);
+      closeModal();
     } catch (err) {
       setSnackBarMessage(
-        err instanceof Error ? err.message : 'Erro ao atualizar dados.',
+        err instanceof Error ? err.message : "Erro ao atualizar dados."
       );
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
-      setSelectedTimezone(tzObj ? [tzObj] : []);
-    }
-  }, [user]);
-
+  /* ----------------------------- Key/scroll hooks ------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeModal();
     };
-
-    if (modalOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [modalOpen, closeModal]);
 
   useEffect(() => {
-    if (modalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
+    document.body.style.overflow = modalOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -179,13 +178,21 @@ const PersonalSettings: React.FC = () => {
 
   /* ----------------------------- UI helpers ------------------------------ */
   const Row = ({
-    label, value, field, btnLabel
-  }: { label: string; value: string; field: EditableUserField; btnLabel: string }) => (
+    label,
+    value,
+    field,
+    btnLabel,
+  }: {
+    label: string;
+    value: string;
+    field: EditableUserField;
+    btnLabel: string;
+  }) => (
     <div className="flex items-center justify-between border-b last:border-0 py-4 px-4">
       <div>
         <p className="text-sm text-gray-500">{label}</p>
         <p className="text-base font-medium text-gray-900">
-          {value || 'Não disponível'}
+          {value || "Não disponível"}
         </p>
       </div>
       {isOwner && (
@@ -196,22 +203,18 @@ const PersonalSettings: React.FC = () => {
     </div>
   );
 
+  /* -------------------------- Render principal --------------------------- */
   if (loading) return <SuspenseLoader />;
 
-  /* ----------------------------------------------------------------------- */
   return (
     <>
       <Navbar />
-      <SidebarSettings
-        userName={user?.name}
-        activeItem="personal"
-      />
+      <SidebarSettings userName={user?.name} activeItem="personal" />
       <Outlet />
 
       <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
         <section className="max-w-3xl mx-auto p-8">
-
-          {/* ---------------------- DADOS DA EMPRESA (somente owner) ---------------------- */}
+          {/* ---------------------- DADOS DA EMPRESA (owner) ---------------------- */}
           {isOwner && enterprise && (
             <>
               <h3 className="text-lg font-semibold mb-2">Dados da empresa</h3>
@@ -220,13 +223,12 @@ const PersonalSettings: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-500">Nome da empresa</p>
                     <p className="text-base font-medium text-gray-900">
-                      {enterprise.name || 'Não disponível'}
+                      {enterprise.name || "Não disponível"}
                     </p>
                   </div>
-                  {/* Para editar, redireciona ao Company settings */}
                   <Button
                     variant="outline"
-                    onClick={() => navigate('/settings/company-settings')}
+                    onClick={() => navigate("/settings/company-settings")}
                   >
                     Gerenciar
                   </Button>
@@ -239,21 +241,49 @@ const PersonalSettings: React.FC = () => {
 
           {/* ---------------------- DADOS DO USUÁRIO ---------------------- */}
           <div className="border rounded-lg divide-y">
-            <Row label="Nome completo"  value={user?.name  ?? ''} field="name"        btnLabel="Atualizar nome" />
-            <Row label="Email principal" value={user?.email ?? ''} field="email"       btnLabel="Atualizar email" />
-            <Row label="Telefone"        value={user?.phone_number ?? ''} field="phone_number" btnLabel="Atualizar telefone" />
-            <Row label="Cargo"           value={user?.job_title ?? ''} field="job_title"   btnLabel="Atualizar cargo" />
-            <Row label="Departamento"    value={user?.department ?? ''} field="department"  btnLabel="Atualizar departamento" />
-            <Row label="Fuso horário"    value={formatTimezoneLabel(user?.user_timezone ?? "")} field="user_timezone"  btnLabel="Atualizar fuso horário" />
+            <Row
+              label="Nome completo"
+              value={user?.name ?? ""}
+              field="name"
+              btnLabel="Atualizar nome"
+            />
+            <Row
+              label="Email principal"
+              value={user?.email ?? ""}
+              field="email"
+              btnLabel="Atualizar email"
+            />
+            <Row
+              label="Telefone"
+              value={user?.phone_number ?? ""}
+              field="phone_number"
+              btnLabel="Atualizar telefone"
+            />
+            <Row
+              label="Cargo"
+              value={user?.job_title ?? ""}
+              field="job_title"
+              btnLabel="Atualizar cargo"
+            />
+            <Row
+              label="Departamento"
+              value={user?.department ?? ""}
+              field="department"
+              btnLabel="Atualizar departamento"
+            />
+            <Row
+              label="Fuso horário"
+              value={formatTimezoneLabel(user?.user_timezone ?? "")}
+              field="user_timezone"
+              btnLabel="Atualizar fuso horário"
+            />
           </div>
         </section>
       </main>
 
       {/* ------------------------------ Modal -------------------------------- */}
       {modalOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]"
-        >
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
@@ -272,33 +302,64 @@ const PersonalSettings: React.FC = () => {
 
             <form
               className="space-y-4"
-              onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
             >
-              {(editingField === null || editingField === 'name') && (
-                <Input label="Nome completo" name="name"
-                       value={formData.name} onChange={handleChange} required />
+              {(editingField === null || editingField === "name") && (
+                <Input
+                  label="Nome completo"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
               )}
-              {(editingField === null || editingField === 'email') && (
-                <Input label="Email principal" name="email" type="email"
-                       value={formData.email} onChange={handleChange} required />
+              {(editingField === null || editingField === "email") && (
+                <Input
+                  label="Email principal"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
               )}
-              {(editingField === null || editingField === 'phone_number') && (
-                <Input label="Telefone" name="phone_number" type="tel"
-                       value={formData.phone_number} onChange={handleChange} />
+              {(editingField === null || editingField === "phone_number") && (
+                <Input
+                  label="Telefone"
+                  name="phone_number"
+                  type="tel"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                />
               )}
-              {(editingField === null || editingField === 'job_title') && (
-                <Input label="Cargo" name="job_title"
-                       value={formData.job_title} onChange={handleChange} />
+              {(editingField === null || editingField === "job_title") && (
+                <Input
+                  label="Cargo"
+                  name="job_title"
+                  value={formData.job_title}
+                  onChange={handleChange}
+                />
               )}
-              {(editingField === null || editingField === 'department') && (
-                <Input label="Departamento" name="department"
-                       value={formData.department} onChange={handleChange} />
+              {(editingField === null || editingField === "department") && (
+                <Input
+                  label="Departamento"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                />
               )}
+
+              {/* ---------- Fuso horário ---------- */}
               {(editingField === null || editingField === "user_timezone") && (
                 <>
-                  {/* ---------- Toggle ---------- */}
                   <div className="flex items-center justify-between">
-                    <label htmlFor="tz-toggle" className="font-medium text-gray-700">
+                    <label
+                      htmlFor="tz-toggle"
+                      className="font-medium text-gray-700"
+                    >
                       Usar fuso do dispositivo
                     </label>
                     <Checkbox
@@ -310,9 +371,10 @@ const PersonalSettings: React.FC = () => {
                           ...p,
                           user_timezone: checked ? deviceTz : p.user_timezone,
                         }));
-
                         if (checked) {
-                          const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
+                          const tzObj = TIMEZONES.find(
+                            (t) => t.value === deviceTz
+                          );
                           setSelectedTimezone(tzObj ? [tzObj] : []);
                         }
                       }}
@@ -321,7 +383,6 @@ const PersonalSettings: React.FC = () => {
                     />
                   </div>
 
-                  {/* ---------- SelectDropdown ---------- */}
                   <SelectDropdown
                     label="Fuso horário"
                     items={TIMEZONES}
@@ -341,13 +402,11 @@ const PersonalSettings: React.FC = () => {
                     hideCheckboxes
                     clearOnClickOutside={false}
                     buttonLabel="Selecione o fuso horário"
-                    customStyles={{
-                      maxHeight: "250px",
-                    }}
+                    customStyles={{ maxHeight: "250px" }}
                     disabled={useDeviceTz}
                   />
-                    </>
-                  )}
+                </>
+              )}
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="cancel" type="button" onClick={closeModal}>
@@ -364,7 +423,7 @@ const PersonalSettings: React.FC = () => {
       <Snackbar
         open={!!snackBarMessage}
         autoHideDuration={6000}
-        onClose={() => setSnackBarMessage('')}
+        onClose={() => setSnackBarMessage("")}
       >
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>

@@ -14,19 +14,16 @@ import Alert from "@/components/Alert";
 import Checkbox from "@/components/Checkbox";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
-import { useRequests } from "@/api";
+import { api } from "@/api/requests2";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { Enterprise } from "src/models/auth";
+import { Enterprise } from "src/models/auth/domain";
 import { TIMEZONES } from "@/utils/timezones-list";
 import { formatTimezoneLabel } from "@/utils/timezone";
-
-/* -------------------------------------------------------------------------- */
 
 type EditableUserField = "none" | "name" | "timezone" | "address";
 
 const CompanySettings: React.FC = () => {
   const { isOwner } = useAuthContext();
-  const { getEnterprise, editEnterprise } = useRequests();
 
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,30 +50,31 @@ const CompanySettings: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await getEnterprise();
-        if (data) {
-          setEnterprise(data.enterprise);
-          setFormData({
-            name: data.enterprise.name,
-            enterprise_timezone: data.enterprise.enterprise_timezone,
-            address_line1: data.enterprise.address_line1 ?? "",
-            address_line2: data.enterprise.address_line2 ?? "",
-            country: data.enterprise.country ?? "",
-            city: data.enterprise.city ?? "",
-            zip_code: data.enterprise.zip_code ?? "",
-          });
+        const response = await api.getEnterprise();        // ApiSuccess<Enterprise>
+        const enterpriseData = response.data;              // ← objeto Enterprise
 
-          const tzObj = TIMEZONES.find(t => t.value === data.enterprise.enterprise_timezone);
-          setSelectedTimezone(tzObj ? [tzObj] : []);
-          setUseDeviceTz(data.enterprise.enterprise_timezone === deviceTz);
-        }
+        setEnterprise(enterpriseData);
+        setFormData({
+          name: enterpriseData.name,
+          enterprise_timezone: enterpriseData.enterprise_timezone,
+          address_line1: enterpriseData.address_line1 ?? "",
+          address_line2: enterpriseData.address_line2 ?? "",
+          country:       enterpriseData.country       ?? "",
+          city:          enterpriseData.city          ?? "",
+          zip_code:      enterpriseData.zip_code      ?? "",
+        });
+
+        const tzObj = TIMEZONES.find(t => t.value === enterpriseData.enterprise_timezone);
+        setSelectedTimezone(tzObj ? [tzObj] : []);
+        setUseDeviceTz(enterpriseData.enterprise_timezone === deviceTz);
       } catch (err) {
         console.error("Erro ao buscar dados da empresa", err);
+        setSnackBarMessage("Erro ao buscar dados da empresa.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [getEnterprise, deviceTz]);
+  }, [deviceTz]);
 
   /* ------------------------------ Handlers ------------------------------- */
   const openModal = (field?: EditableUserField) => {
@@ -86,9 +84,9 @@ const CompanySettings: React.FC = () => {
         enterprise_timezone: enterprise.enterprise_timezone,
         address_line1: enterprise.address_line1 ?? "",
         address_line2: enterprise.address_line2 ?? "",
-        country: enterprise.country ?? "",
-        city: enterprise.city ?? "",
-        zip_code: enterprise.zip_code ?? "",
+        country:       enterprise.country       ?? "",
+        city:          enterprise.city          ?? "",
+        zip_code:      enterprise.zip_code      ?? "",
       });
 
       setUseDeviceTz(enterprise.enterprise_timezone === deviceTz);
@@ -106,15 +104,13 @@ const CompanySettings: React.FC = () => {
         enterprise_timezone: enterprise.enterprise_timezone,
         address_line1: enterprise.address_line1 ?? "",
         address_line2: enterprise.address_line2 ?? "",
-        country: enterprise.country ?? "",
-        city: enterprise.city ?? "",
-        zip_code: enterprise.zip_code ?? "",
+        country:       enterprise.country       ?? "",
+        city:          enterprise.city          ?? "",
+        zip_code:      enterprise.zip_code      ?? "",
       });
 
-      // reset do fuso
       setUseDeviceTz(enterprise.enterprise_timezone === deviceTz);
-
-      const tzObj = TIMEZONES.find((t) => t.value === enterprise.enterprise_timezone);
+      const tzObj = TIMEZONES.find(t => t.value === enterprise.enterprise_timezone);
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
 
@@ -125,38 +121,37 @@ const CompanySettings: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
 
-    const submitPartial = async (partialData: Partial<typeof formData>) => {
+  const submitPartial = async (partialData: Partial<typeof formData>) => {
     try {
-        if (!enterprise || !enterprise.owner) {
+      if (!enterprise || !enterprise.owner) {
         setSnackBarMessage("Os dados da empresa não estão disponíveis.");
         return;
-        }
+      }
 
-        const requestBody = {
+      const requestBody = {
         name: formData.name,
         enterprise_timezone: formData.enterprise_timezone,
         address: {
-            line1: formData.address_line1,
-            line2: formData.address_line2,
-            city: formData.city,
-            country: formData.country,
-            zip_code: formData.zip_code,
+          line1: formData.address_line1,
+          line2: formData.address_line2,
+          city:  formData.city,
+          country: formData.country,
+          zip_code: formData.zip_code,
         },
         ...partialData,
         owner: enterprise.owner,
-        };
+      };
 
-        const res = await editEnterprise(requestBody);
+      const res = await api.editEnterprise(requestBody);
+      if (!res.data) throw new Error("Erro ao atualizar empresa.");
 
-        if (res.status === "error") throw new Error(res.message);
-
-        const updated = await getEnterprise();
-        if (updated.data) setEnterprise(updated.data.enterprise);
-        closeModal();
+      const updated = await api.getEnterprise();
+      setEnterprise(updated.data);                    // ← sem .enterprise
+      closeModal();
     } catch (err) {
-        setSnackBarMessage(err instanceof Error ? err.message : "Erro ao atualizar empresa.");
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao atualizar empresa.");
     }
-    };
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

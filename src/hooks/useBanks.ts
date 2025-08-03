@@ -1,18 +1,14 @@
-// useBanks.ts
-
+/* src/hooks/useBanks.ts */
 import { useEffect, useState } from 'react';
-import { useRequests } from '@/api/requests';
-import type { Bank } from '@/models/Bank';
+import { api } from '@/api/requests2';
+import type { Bank } from '@/models/enterprise_structure/domain';
 
-/**
- * @param ids (optional) Pass an array of bank IDs to fetch only those banks.
- *            If omitted or empty, fetches ALL banks.
- */
+type BanksResponse = { banks?: Bank[]; results?: Bank[] };
+
 export const useBanks = (ids?: number[]) => {
-  const { getBanks, getBank } = useRequests();
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]   = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBanks = async () => {
@@ -20,45 +16,28 @@ export const useBanks = (ids?: number[]) => {
       setError(null);
 
       try {
-        let response;
+        const res = ids && ids.length
+          ? await api.getBank(ids)
+          : await api.getAllBanks();
 
-        if (ids && ids.length > 0) {
-          // Fetch only these IDs
-          response = await getBank(ids);
-          if (response.status === 'error') {
-            throw new Error(response.message || 'Erro ao buscar bancos por ID.');
-          }
-          // "banks" is the array from ApiGetBank
-          const fetchedBanks = response.data?.banks || [];
-          const activeBanks = fetchedBanks.filter(b => b.bank_status);
-          setBanks(activeBanks);
-        } else {
-          // Fetch ALL
-          response = await getBanks();
-          if (response.status === 'error') {
-            throw new Error(response.message || 'Erro ao buscar bancos.');
-          }
-          const allBanks = response.data?.banks || [];
-          const activeBanks = allBanks.filter(b => b.bank_status);
-          setBanks(activeBanks);
-        }
+        const payload = res.data as BanksResponse;
+        const fetched = payload.banks ?? payload.results ?? [];
+
+        setBanks(fetched.filter(b => b.bank_status));
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Erro ao buscar bancos.'
-        );
+        setError(err instanceof Error ? err.message : 'Erro ao buscar bancos.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchBanks();
-  }, [getBanks, getBank, ids]);
+  }, [ids]);
 
-  // 🔹 Calculate total consolidated balance
-  const totalConsolidatedBalance = banks.reduce((sum, bank) => {
-    const val = bank.consolidated_balance ?? 0;
-    return sum + Number(val);
-  }, 0);
+  const totalConsolidatedBalance = banks.reduce(
+    (sum, b) => sum + Number(b.consolidated_balance ?? 0),
+    0,
+  );
 
   return { banks, totalConsolidatedBalance, loading, error };
 };

@@ -1,7 +1,8 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useRequests } from "@/api/requests";
+import { api } from "src/api/requests2";
+import { isApiError } from '@/utils/apiError';
 import { validatePassword } from "@/utils/validatePassword";
 
 import Snackbar from "@/components/Snackbar";
@@ -20,7 +21,6 @@ import "./styles.css";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { signUp } = useRequests();
 
   const [form, setForm] = useState({
     name: "",
@@ -62,15 +62,15 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      const response = await signUp({
+      const res = await api.signUp({
         name: form.name,
         email: form.email,
         password: form.password,
         user_timezone: timezone,
       });
 
-      if (response.status === "error") {
-        setSnackBarMessage(response.message);
+      if (isApiError(res)) {
+        setSnackBarMessage(res.error.message);
         return;
       }
 

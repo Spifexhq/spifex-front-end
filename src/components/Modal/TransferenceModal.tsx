@@ -2,10 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { formatAmount, formatDateToDDMMYYYY } from '@/utils/utils';
 import { formatCurrency, handleAmountKeyDown } from "@/utils/formUtils";
-import { useRequests } from '@/api/requests';
+import { api } from 'src/api/requests2';
 import Input from '@/components/Input';
 import { SelectDropdown } from '@/components/SelectDropdown';
-import { Bank } from '@/models/Bank';
+import { Bank } from '@/models/enterprise_structure/domain';
 import Button from '../Button';
 
 interface TransferenceModalProps {
@@ -25,7 +25,6 @@ const initialForm = {
 const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState(initialForm);
   const [banks, setBanks] = useState<Bank[]>([]);
-  const { getBanks, addTransference } = useRequests();
 
   const resetForm = useCallback(() => {
     setFormData(initialForm);
@@ -85,7 +84,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         observation: formData.observation,
       };
 
-      await addTransference(data);
+      await api.addTransference(data);
       onSave();
       resetForm();
     } catch (err) {
@@ -96,10 +95,14 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   useEffect(() => {
     if (!isOpen) return;
 
-    getBanks()
-      .then((res) => setBanks(res.data?.banks || []))
-      .catch((err) => console.error('Erro ao buscar bancos:', err));
-  }, [getBanks, isOpen]);
+    api.getAllBanks()
+      .then(res => {
+        const payload = res.data as { banks?: Bank[]; results?: Bank[] };
+        const fetched = payload.banks ?? payload.results ?? [];
+        setBanks(fetched.filter(b => b.bank_status));
+      })
+      .catch(err => console.error('Erro ao buscar bancos:', err));
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

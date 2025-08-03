@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { useRequests } from "@/api/requests";
 import { Entry } from "@/models/Entries";
 import dayjs from "dayjs";
 import {
@@ -15,21 +14,30 @@ import {
 } from "recharts";
 import { InlineLoader } from "src/components/Loaders";
 import Navbar from "src/components/Navbar";
+import { api } from "src/api/requests2";
+
+const PAGE_SIZE = 10000
+const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
+const endDate = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
 
 const Report = () => {
-  const { getEntries } = useRequests();
-
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const payload = useMemo(() => ({
+    page_size: PAGE_SIZE,
+    start_date: startDate,
+    end_date: endDate,
+  }), []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await getEntries(10000, 0);
-        setEntries(response.data?.entries ?? []);
+        const response = await api.getEntries(payload);
+        setEntries(response.data?.results ?? []);
       } catch (e) {
         console.error("Failed to fetch entries", e);
         setError("Erro ao buscar lançamentos.");
@@ -39,7 +47,7 @@ const Report = () => {
     };
 
     fetchData();
-  }, [getEntries]);
+  }, [payload]);
 
   const monthlyData = useMemo(() => {
     const map: Record<string, { amount: number; isPositive: boolean }> = {};

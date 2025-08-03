@@ -1,4 +1,3 @@
-import { IApiResponse } from '@/models/Api';
 import {
   GeneralLedgerAccount, DocumentType,
   DepartmentAllocation, Project,
@@ -6,17 +5,16 @@ import {
 } from '@/models/ForeignKeys';
 import { Bank } from '../Bank';
 
-export type Entry = {
+export interface Entry {
   id: number;
   due_date: string;
-  formatted_due_date: string;
   description: string;
   observation: string | null;
   amount: string;
   current_installment: number | null;
   total_installments: number | null;
   tags: string | null;
-  transaction_type: string;
+  transaction_type: "credit" | "debit";
   notes: string | null;
   periods: string | null;
   weekend_action: string | null;
@@ -28,24 +26,20 @@ export type Entry = {
   inventory_item: InventoryAllocation[] | null;
   entity: Entity | null;
 
-  bank?: Bank;
-  settlement_due_date?: string;
+  bank?: Bank | null;
+  settlement_due_date?: string | null;
   installments_correlation_id?: string | null;
   partial_settlement_correlation_id?: string | null;
-  settlement_state: boolean;
+
+  settlement_state: 0 | 1;
   enterprise: number;
 };
 
-export interface ApiGetEntriesData {
-  entries: Entry[];
-  total?: number;
-  limit?: number;
-  offset?: number;
+export interface CursorLinks {
+  next: string | null;
+  previous: string | null;
 }
 
-export interface ApiGetEntryData {
-  entries: Entry[];
+export interface GetEntry extends CursorLinks {
+  results: Entry[];
 }
-
-export type ApiGetEntriesResponse = IApiResponse<ApiGetEntriesData>;
-export type ApiGetEntryResponse = IApiResponse<ApiGetEntryData>;

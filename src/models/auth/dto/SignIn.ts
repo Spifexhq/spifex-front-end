@@ -1,5 +1,5 @@
 import { User, UserEnterpriseDetail } from "../domain";
-import { SubscriptionStatusResponse } from "./Subscription";
+import { Subscription } from "./Subscription";
 
 export interface SignInRequest {
   email: string;
@@ -9,7 +9,7 @@ export interface SignInRequest {
 export interface SignInResponse {
   user: User;
   enterprise: UserEnterpriseDetail;
-  subscription: SubscriptionStatusResponse | null;
+  subscription: Subscription | null;
   refresh: string;
   access: string;
 }

@@ -1,11 +1,7 @@
 import { ReactNode } from 'react';
 import { useRequireLogin } from '@/hooks/useRequireLogin';
 
-type Props = { children: ReactNode };
-
-export const AuthMiddleware = ({ children }: Props) => {
-  const isLogged = useRequireLogin();
-  if (!isLogged) return null;
-
-  return <>{children}</>;
-};
+export const AuthMiddleware = ({ children }: { children: ReactNode }) => {
+  const isLogged = useRequireLogin()
+  return isLogged ? <>{children}</> : null
+}

@@ -1,14 +1,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useBanks } from "@/hooks/useBanks";
-import { Entry, EditSettledEntryPayload } from "@/models/Entries";
-import { useRequests } from "@/api/requests";
+import { EditSettledEntryPayload } from "@/models/Entries/dto";
+import { Entry } from "src/models/Entries/domain";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
 import Input from "../Input";
 import { centsToDecimalString } from "src/utils/utils";
 import { InlineLoader } from "../Loaders";
+import { api } from "src/api/requests2";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -34,7 +35,6 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   /* -------------------------------------------------------------------------- */
   /*                                Requests                                    */
   /* -------------------------------------------------------------------------- */
-  const { editSettledEntry } = useRequests();
   const { banks, loading: loadingBanks, error } = useBanks();
   /* -------------------------------------------------------------------------- */
   /*                                  State                                     */
@@ -104,7 +104,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             is_partial: e.isPartial,
             partial_amount: e.isPartial ? centsToDecimalString(e.partialAmount) : undefined,
           };
-          return editSettledEntry([e.id], payload);
+          return api.editSettledEntry([e.id], payload);
         })
       );
       onSave();

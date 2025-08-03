@@ -1,57 +1,62 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
-import { useRequests } from '@/api/requests';
+import { VerifyEmailResponse, VerifyNewEmailResponse } from '@/models/auth/dto/EmailVerification';
+import { ApiResponse } from '@/models/Api';
+import { api } from "@/api/requests2";
 import Button from '@/components/Button';
+import { isApiError } from '@/utils/apiError';
 import { InlineLoader } from '@/components/Loaders';
 
 const EmailVerification = () => {
   const { uidb64, token } = useParams<{ uidb64?: string; token?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { verifyEmail, verifyNewEmail } = useRequests();
 
   const [isVerifying, setIsVerifying] = useState(true);
-  const [verificationMessage, setVerificationMessage] = useState('');
+  const [verificationMessage, setMsg] = useState('');
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     document.title = 'Verificação de Email';
 
-    const doVerification = async () => {
+    const verify = async () => {
       if (!uidb64 || !token) {
-        setVerificationMessage('Parâmetros inválidos para verificação.');
+        setMsg('Parâmetros inválidos para verificação.');
         setIsVerifying(false);
         return;
       }
 
       try {
-        let response;
-        if (location.pathname.includes('verify-pending-email')) {
-          response = await verifyNewEmail(uidb64, token);
-        } else {
-          response = await verifyEmail(uidb64, token);
-        }
+        const call = location.pathname.includes('verify-pending-email')
+          ? api.verifyNewEmail
+          : api.verifyEmail;
 
-        if (response?.status === 'error') {
-          setVerificationMessage(response.message || 'Erro ao verificar email.');
-        } else if (response?.status === 'success') {
-          setVerificationMessage('Email verificado com sucesso!');
+        const res: ApiResponse<VerifyEmailResponse | VerifyNewEmailResponse> =
+          await call(uidb64, token);
+
+        if (isApiError(res)) {
+          setMsg(res.error.message || 'Erro ao verificar email.');
+          setSuccess(false);
         } else {
-          setVerificationMessage('Resposta inesperada da API.');
+          // Mensagem estática, já que o backend não retorna `message`
+          setMsg('Email verificado com sucesso!');
+          setSuccess(true);
         }
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'Ocorreu um erro ao verificar seu email.';
-        setVerificationMessage(message);
+      } catch (err) {
+        setMsg(
+          err instanceof Error
+            ? err.message
+            : 'Ocorreu um erro ao verificar seu email.'
+        );
+        setSuccess(false);
       } finally {
         setIsVerifying(false);
       }
     };
 
-    doVerification();
-  }, [uidb64, token, location.pathname, verifyEmail, verifyNewEmail]);
+    verify();
+  }, [uidb64, token, location.pathname]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
@@ -63,16 +68,14 @@ const EmailVerification = () => {
         ) : (
           <div className="bg-white shadow-md rounded-md p-6 text-center">
             <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-              {verificationMessage.includes('sucesso')
+              {success
                 ? 'Seu email foi verificado com sucesso!'
                 : 'Erro na verificação do email'}
             </h1>
             <p className="text-gray-600 mb-6">
-              {verificationMessage.includes('sucesso')
-                ? 'Agora você pode entrar na sua conta.'
-                : 'Verifique o link ou tente novamente mais tarde.'}
+              {verificationMessage}
             </p>
-            {verificationMessage.includes('sucesso') && (
+            {success && (
               <Button
                 variant="primary"
                 onClick={() => navigate('/signin')}

@@ -1,31 +1,35 @@
-import { useState, useEffect, useCallback, ReactNode } from 'react';
-import { SubscriptionContext } from './SubscriptionContext';
-import { Subscription } from 'src/models/auth';
-import { useRequests } from '@/api';
+/* -------------------------------------------------------------------------- */
+/*  File: src/contexts/SubscriptionProvider.tsx                               */
+/* -------------------------------------------------------------------------- */
+
+import { useState, useEffect, useCallback, ReactNode } from "react";
+import { SubscriptionContext } from "./SubscriptionContext";
+import { Subscription } from "src/models/auth";
+import { api } from "@/api/requests2";             // ← usa API central
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
-  const { getSubscriptionStatus } = useRequests();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     try {
-      const response = await getSubscriptionStatus();
-      if (response.data) {
-        const { status, stripe_subscription_id, plan_id } = response.data;
+      const resp = await api.getSubscriptionStatus();
+      if (resp.data) {
+        const { status, stripe_subscription_id, plan_id } = resp.data;
         setSubscription({
           status,
-          stripe_subscription_id: stripe_subscription_id ?? '',
-          plan_id: plan_id ?? '',
+          stripe_subscription_id: stripe_subscription_id ?? "",
+          plan_id: plan_id ?? "",
         });
       } else {
         setSubscription(null);
       }
     } catch (error) {
-      console.error('Error fetching subscription:', error);
+      console.error("Error fetching subscription:", error);
       setSubscription(null);
     }
-  }, [getSubscriptionStatus]);
+  }, []);
 
+  /* first load */
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);

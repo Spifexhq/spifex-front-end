@@ -5,13 +5,13 @@ export interface Owner {
 
 export interface Enterprise {
   id: number;
-  externalId: string;
+  external_id: string;
   name: string;
-  enterpriseTimezone: string;
-  addressLine1?: string | null;
-  addressLine2?: string | null;
+  enterprise_timezone: string;
+  address_line1?: string | null;
+  address_line2?: string | null;
   country?: string | null;
   city?: string | null;
-  zipCode?: string | null;
+  zip_code?: string | null;
   owner: Owner;
 }

@@ -23,8 +23,7 @@ import { useCallback } from 'react';
 import { setUser, setUserEnterprise, setSubscriptionStatus } from '@/redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
-import { useRequests } from '@/api';
-import { ApiSignIn } from 'src/models/auth';
+import { api } from '@/api/requests2'
 import { Permission } from 'src/models/auth/Permission';
 
 const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';
@@ -35,35 +34,62 @@ const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';
 export const handleGetAccessToken = () => localStorage.getItem(LOCAL_STORAGE_KEY) ?? '';
 
 export const useAuth = () => {
-  const auth = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
-  const { signIn, getUser } = useRequests();
+  const auth  = useSelector((s:RootState)=>s.auth)
+  const dispatch = useDispatch()
 
-  const user = {
-    ...auth.user,
-    enterprise: auth.enterprise,
-    subscription: auth.subscription,
-  };
+  /**
+   * Handles user logout by clearing user data and removing the access token.
+   */
+  const handleSignOut = useCallback(() => {
+    dispatch(setUser(null));
+    dispatch(setUserEnterprise(null));
+    dispatch(setSubscriptionStatus(null));
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  }, [dispatch]);
 
   /**
    * Initializes the user session by fetching user data using the stored access token.
    */
   const handleInitUser = useCallback(async () => {
-    const access_token = handleGetAccessToken();
-    if (!access_token) return;
+    const token = handleGetAccessToken();
+    if (!token || auth.user) return;
 
-    const response = await getUser();
-
-    console.log("getUser Response:", response);
-
-    if (response.status === 'success' && response.data) {
-      dispatch(setUser(response.data.user));
-      dispatch(setUserEnterprise(response.data.enterprise));
-      dispatch(setSubscriptionStatus(response.data.subscription));
-    } else {
-      console.error("Error fetching user:", response.message);
+    try {
+      const res = await api.getUser();
+      dispatch(setUser(res.data.user));
+      dispatch(setUserEnterprise(res.data.enterprise));
+      dispatch(setSubscriptionStatus(res.data.subscription));
+    } catch (err) {
+      console.error("Erro ao buscar usuário:", err);
+      handleSignOut(); // ✅ agora está seguro
     }
-  }, [dispatch, getUser]);
+  }, [auth.user, dispatch, handleSignOut]);
+
+  /**
+   * Handles user authentication by sending credentials to the API.
+   * Stores the access token and user data on successful authentication.
+   * @param email - The user's email.
+   * @param password - The user's password.
+   * @returns {Promise<ApiSignIn>} The authenticated user data.
+   * @throws An error if authentication fails.
+   */
+  const handleSignIn = async (email: string, password: string) => {
+    const res = await api.signIn({ email, password })
+    const token = res.data.access               // string crua
+    if (!token) throw new Error('Token ausente')
+    localStorage.setItem('AUTH_ACCESS', token)
+    console.log('✅ token salvo (início):', token.slice(0,25))
+
+    dispatch(setUser(res.data.user))
+    dispatch(setUserEnterprise(res.data.enterprise))
+    dispatch(setSubscriptionStatus(res.data.subscription))
+
+    console.log('👤 Usuário logado:', res.data.user);
+    console.log('🏢 Empresa:', res.data.enterprise);
+    console.log('📦 Assinatura:', res.data.subscription);
+
+    return res;
+  }
 
   /**
    * Checks whether the authenticated user has a specific permission.
@@ -82,43 +108,8 @@ export const useAuth = () => {
     [auth.enterprise]
   );
 
-  /**
-   * Handles user authentication by sending credentials to the API.
-   * Stores the access token and user data on successful authentication.
-   * @param email - The user's email.
-   * @param password - The user's password.
-   * @returns {Promise<ApiSignIn>} The authenticated user data.
-   * @throws An error if authentication fails.
-   */
-  const handleSignIn = async (email: string, password: string): Promise<ApiSignIn> => {
-    const response = await signIn({ email, password });
-
-    if (response.status !== 'success' || !response.data) {
-      throw new Error(response.message || "Authentication failed. Please check your credentials.");
-    }
-
-    dispatch(setUser(response.data.user));
-    dispatch(setUserEnterprise(response.data.enterprise));
-    dispatch(setSubscriptionStatus(response.data.subscription));
-
-    localStorage.setItem(LOCAL_STORAGE_KEY, response.data.access);
-
-    return response.data;
-  };
-
-  /**
-   * Handles user logout by clearing user data and removing the access token.
-   */
-  const handleSignOut = () => {
-    dispatch(setUser(null));
-    dispatch(setUserEnterprise(null));
-    dispatch(setSubscriptionStatus(null));
-
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-  };
-
   return {
-    user,
+    user: auth.user,
     subscription: auth.subscription,
     isLogged: auth.user != null,
     handleInitUser,

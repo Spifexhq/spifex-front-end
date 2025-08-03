@@ -2,14 +2,15 @@ import { useCallback, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import {Modal, TransferenceModal} from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
-import Filter, { FilterData } from "@/components/Filter";
+import Filter from "@/components/Filter";
+import { EntryFilters } from "src/models/Entries/domain";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
 import { Entry } from '@/models/Entries';
 import Button from "src/components/Button";
-import { useRequests } from '@/api/requests';
 import SettlementModal from "src/components/Modal/SettlementModal";
 import Navbar from "src/components/Navbar";
+import { api } from "src/api/requests2";
 
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -20,11 +21,10 @@ const CashFlow = () => {
   const [cashflowKey, setCashflowKey] = useState(0);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const { deleteEntry } = useRequests();
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
 
-  const [filters, setFilters] = useState<FilterData>({});
+  const [filters, setFilters] = useState<EntryFilters>({});
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -42,7 +42,7 @@ const CashFlow = () => {
     setIsModalOpen(true);
   };
 
-  const handleApplyFilters = (newFilters: FilterData) => {
+  const handleApplyFilters = (newFilters: EntryFilters) => {
     setFilters(newFilters);
   };
 
@@ -81,7 +81,7 @@ const CashFlow = () => {
             </div>
             {/* BanksTable on the right */}
             <div className="flex-1 min-w-[250px]">
-              <BanksTable key={banksKey} selectedBankIds={filters.banksId} />
+              <BanksTable key={banksKey} selectedBankIds={filters.bank_id} />
             </div>
           </div>
 
@@ -107,7 +107,7 @@ const CashFlow = () => {
               style={{ padding: '8px', fontSize: '14px'}}
               onClick={async () => {
                 try {
-                  await deleteEntry(selectedIds);
+                  await api.deleteEntry(selectedIds);
                   setCashflowKey((prev) => prev + 1);
                   setSelectedIds([]);
                 } catch (err) {

@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { useRequests } from '@/api/requests';
 import Button from '@/components/Button';
 import { Sidebar } from "@/components/Sidebar";
 import { Modal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
-import Filter, { FilterData } from "@/components/Filter";
+import Filter from "@/components/Filter";
+import { EntryFilters } from "src/models/Entries/domain";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
 import { Entry } from '@/models/Entries';
 import Navbar from "src/components/Navbar";
+import { api } from "src/api/requests2";
 
 const Settled = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -17,10 +18,8 @@ const Settled = () => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const { deleteSettledEntry } = useRequests();
 
-
-  const [filters, setFilters] = useState<FilterData>({});
+  const [filters, setFilters] = useState<EntryFilters>({});
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -32,7 +31,7 @@ const Settled = () => {
     setIsModalOpen(true);
   };
 
-  const handleApplyFilters = (newFilters: FilterData) => {
+  const handleApplyFilters = (newFilters: EntryFilters) => {
     setFilters(newFilters);
   };
 
@@ -63,14 +62,14 @@ const Settled = () => {
             </div>
             {/* BanksTable on the right */}
             <div className="flex-1 min-w-[250px]">
-              <BanksTable selectedBankIds={filters.banksId} />
+              <BanksTable selectedBankIds={filters.bank_id} />
             </div>
           </div>
 
           {/* Settled Entries Table */}
           <SettledEntriesTable
             filters={filters}
-            bankIds={filters.banksId}
+            bankIds={filters.bank_id}
             onSelectionChange={setSelectedIds}
           />
         </div>
@@ -110,7 +109,7 @@ const Settled = () => {
             style={{ padding: '8px', fontSize: '14px' }}
             onClick={async () => {
               try {
-                await deleteSettledEntry(selectedIds);
+                await api.deleteSettledEntry(selectedIds);
                 setSelectedIds([]);
                 window.location.reload();
               } catch (err) {

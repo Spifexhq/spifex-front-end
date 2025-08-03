@@ -1,3 +1,4 @@
+import axios from 'axios'
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormData, ModalFormProps, Tab, RecurrenceOption, PeriodOption, WeekendOption } from "./Modal.types";
 import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
@@ -5,9 +6,11 @@ import { useRequests } from "@/api/requests";
 import { GeneralLedgerAccount, DocumentType, Department, Project, Inventory, Entity, EntityType } from "src/models/ForeignKeys";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import Input from '../Input';
-import { AddEntryPayload } from '@/models/Entries';
+import { AddEntryPayload } from '@/models/Entries/dto';
 import Button from '../Button';
 import { decimalToCentsString } from 'src/utils/utils';
+import { api } from 'src/api/requests2';
+import { ApiError } from '@/models/Api';
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -45,7 +48,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
   const [activeTab, setActiveTab] = useState<Tab>('details');
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
-  const { addEntry, editEntry } = useRequests();
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
   const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GeneralLedgerAccount[]>([]);
@@ -141,6 +143,9 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
         : null,
     };
 
+    console.log("💰 amount:", formData.details.amount);
+    console.log("🧼 amount cleanCurrency:", cleanCurrency(formData.details.amount));
+
     console.log("Payload enviado:", payload);
 
     try {
@@ -148,24 +153,31 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
 
       if (initialEntry) {
         // 🔁 Modo edição
-        res = await editEntry([initialEntry.id], payload);
+        res = await api.editEntry([initialEntry.id], payload);
       } else {
         // ➕ Modo criação
-        res = await addEntry(payload);
+        res = await api.addEntry(payload);
       }
 
-      if (!res.data) {
-        console.error("Erro API:", res.message, res.errors);
-        alert(res.message || "Erro ao salvar lançamento.");
+      if (!('data' in res)) {
+        const apiError = res as ApiError;
+        console.error("Erro API:", apiError.error.message, apiError.error.details);
+        alert(apiError.error.message || "Erro ao salvar lançamento.");
         return;
       }
 
       handleClose();
       onSave();
-    } catch (err) {
-      console.error("Erro ao salvar lançamento:", err);
-      alert("Erro inesperado ao salvar lançamento.");
-    }
+} catch (err) {
+  console.error("Erro ao salvar lançamento:", err);
+
+  // ⚠️ Verifica se é AxiosError com response
+  if (axios.isAxiosError(err) && err.response?.data?.error?.message) {
+    alert(err.response.data.error.message);
+  } else {
+    alert("Erro inesperado ao salvar lançamento.");
+  }
+}
   };
 
   useEffect(() => {
@@ -520,6 +532,12 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
                 type="text"
                 placeholder="Digite o valor"
                 value={formatCurrency(formData.details.amount)}
+                onChange={(e) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    details: { ...prev.details, amount: e.target.value }
+                  }))
+                }
                 onKeyDown={(e) =>
                   handleAmountKeyDown(e, formData.details.amount, setFormData)
                 }

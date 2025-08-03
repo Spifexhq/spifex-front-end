@@ -2,7 +2,7 @@ import {
   GeneralLedgerAccount, DocumentType,
   Department, Project, Inventory, Entity
 } from '@/models/ForeignKeys';
-import { Bank } from '../Bank';
+import { Bank } from '../../Bank';
 
 export type SettledEntry = {
   id: number;

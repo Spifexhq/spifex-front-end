@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import { ApiSuccess } from "src/models";
 import { User, Subscription, UserEnterpriseDetail, ApiSignIn } from "src/models/auth";
 
 export interface AuthContextType {
@@ -17,7 +18,7 @@ export interface AuthContextType {
   permissions: string[];
   handleInitUser: () => Promise<void>;
   handlePermissionExists: (permissionCodename: string) => boolean;
-  handleSignIn: (email: string, password: string) => Promise<ApiSignIn>;
+  handleSignIn: (email: string, password: string) => Promise<ApiSuccess<ApiSignIn>>;
   handleSignOut: () => void;
 }
 

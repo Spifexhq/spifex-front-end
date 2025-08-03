@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-
-import { useRequests } from 'src/api';
 import { useAuthContext } from "@/contexts/useAuthContext";
+import { api } from 'src/api/requests2';
+import axios from 'axios';
 
 import './styles.css';
 
 const ManageSubscriptionLink: React.FC = () => {
   const { isSubscribed, isSuperUser, isOwner } = useAuthContext();
-  const { createCustomerPortalSession } = useRequests();
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOwner || !isSubscribed || !isSuperUser) return null;
@@ -16,18 +15,21 @@ const ManageSubscriptionLink: React.FC = () => {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      const response = await createCustomerPortalSession();
+      const response = await api.createCustomerPortalSession();
       const { url } = response.data || {};
       if (url) {
         window.location.href = url;
       } else {
         alert('Não foi possível redirecionar para o portal de gerenciamento de assinaturas.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao redirecionar para o Customer Portal:', error);
-      const errorMessage =
-        error.response?.data?.error ||
-        'Ocorreu um erro ao redirecionar para o portal de gerenciamento de assinaturas.';
+
+      let errorMessage = 'Ocorreu um erro ao redirecionar para o portal de gerenciamento de assinaturas.';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.error ?? errorMessage;
+      }
+
       alert(errorMessage);
     } finally {
       setIsProcessing(false);

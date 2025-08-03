@@ -1,4 +1,3 @@
-import axios from 'axios';
 // import {
 //   SignUpRequest,
 //   SignUpResponse,
@@ -15,16 +14,7 @@ import axios from 'axios';
 
 import { apiRequest } from '@/api';
 
-import {
-  CashFlowFilters,
-  ApiGetEntriesData, ApiGetEntryData,
-  AddEntryPayload, EditEntryPayload,
-  ApiGetSettledEntriesData, ApiGetSettledEntryData,
-  EditSettledEntryPayload,
-} from '@/models/Entries';
-
-import { ApiSignUp, ApiGetUser, ApiSignIn, Subscription,
-  ApiGetEnterprise, Owner, ApiGetPermissions,
+import { ApiGetPermissions,
   ApiGetGroup, ApiGetGroups,
   ApiGetEmployee, ApiGetEmployees
  } from 'src/models/auth';
@@ -35,7 +25,6 @@ import {
 } from '@/models/Counter';
 import { ApiGetTask, ApiGetTasks } from '@/models/Task';
 
-import { ApiGetBank, ApiGetBanks } from '@/models/Bank';
 import {
   ApiGetGeneralLedgerAccount, ApiGetGeneralLedgerAccounts,
   ApiGetDocumentType, ApiGetDocumentTypes,
@@ -48,159 +37,6 @@ import {
 import { IApiResponse } from '@/models/Api';
 
 const buildIdsParam = (ids: number[]): string => ids.join(',');
-
-function buildQueryParams(url: string, limit: number, offset: number, filters?: CashFlowFilters) {
-  let query = `cashflow/${url}/paginated?limit=${limit}&offset=${offset}`;
-  
-  if (filters?.startDate) {
-    query += `&start_date=${filters.startDate}`;
-  }
-  if (filters?.endDate) {
-    query += `&end_date=${filters.endDate}`;
-  }
-  if (filters?.description) {
-    query += `&description=${filters.description}`;
-  }
-  if (filters?.observation) {
-    query += `&observation=${filters.observation}`;
-  }
-  if (filters?.generalLedgerAccountId && filters.generalLedgerAccountId.length > 0) {
-    const ids = filters.generalLedgerAccountId.join(',');
-    query += `&general_ledger_account_id=${ids}`;
-  }
-  if (filters?.banksId && filters.banksId.length > 0) {
-    const banksParam = filters.banksId.join(',');
-    query += `&bank_id=${banksParam}`;
-  }
-
-  return query;
-}
-
-// ======================
-//    Authentication
-// ======================
-const signUp = async (params: {
-  name: string;
-  email: string;
-  password: string;
-  user_timezone : string;
-}): Promise<IApiResponse<ApiSignUp>> => {
-  return apiRequest<ApiSignUp>('auth/signup', 'POST', params, false);
-};
-
-const signIn = async (params: { email: string; password: string }): Promise<IApiResponse<ApiSignIn>> => {
-  return apiRequest<ApiSignIn>('auth/signin', 'POST', params, false);
-};
-
-const verifyEmail = async (
-  uidb64: string,
-  token: string
-): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(
-    `auth/verify-email/${uidb64}/${token}/`,
-    'GET',
-    undefined,
-    false
-  );
-};
-
-const verifyNewEmail = async (
-  uidb64: string,
-  token: string
-): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(
-    `auth/verify-pending-email/${uidb64}/${token}/`,
-    'GET',
-    undefined,
-    false
-  );
-};
-
-const getUser = async (): Promise<IApiResponse<ApiGetUser>> => {
-  return apiRequest<ApiGetUser>('auth/user');
-};
-
-const editUser = async (data: {
-  name?: string;
-  email?: string;
-  phone_number?: string;
-  job_title?: string;
-  department?: string;
-}): Promise<IApiResponse<ApiGetUser>> => {
-  return apiRequest<ApiGetUser>('auth/user', 'PUT', data);
-};
-
-const getEnterprise = async (): Promise<IApiResponse<ApiGetEnterprise>> => {
-  return apiRequest<ApiGetEnterprise>('companies/enterprise');
-};
-
-export const editEnterprise = async (
-  data: {
-    name: string;
-    enterprise_timezone: string;
-    address: {
-      line1: string;
-      line2: string;
-      city: string;
-      country: string;
-      zip_code: string;
-    };
-    owner: Owner;
-  }
-): Promise<IApiResponse<ApiGetEnterprise>> => {
-  return apiRequest<ApiGetEnterprise>('companies/enterprise', 'PUT', data);
-};
-
-// ======================
-//    Passwords
-// ======================
-const changePassword = async (
-  payload: { current_password: string; new_password: string }
-): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('auth/password-change/', 'PUT', payload, true);
-};
-
-export const requestPasswordReset = (email: string) =>
-  axios.post('auth/password-reset/', { email });
-
-export const confirmPasswordReset = (uid: string, token: string, password: string) =>
-  axios.post(`auth/password-reset/${uid}/${token}/`, { password });
-
-// ======================
-//    Subscriptions
-// ======================
-export const createCheckoutSession = async (
-  price_id: string
-): Promise<IApiResponse<{ url?: string; message?: string }>> => {
-  return apiRequest<{ url?: string; message?: string }>(
-    'payments/create-checkout-session/',
-    'POST',
-    { price_id },
-    true
-  );
-};
-
-export const getSubscriptionStatus = async (): Promise<
-  IApiResponse<Subscription>
-> => {
-  return apiRequest<Subscription>(
-    'payments/get-subscription-status/',
-    'GET',
-    undefined,
-    true
-  );
-};
-
-export const createCustomerPortalSession = async (): Promise<
-  IApiResponse<{ url?: string }>
-> => {
-  return apiRequest<{ url?: string }>(
-    'payments/create-customer-portal-session/',
-    'POST',
-    {},
-    true
-  );
-};
 
 // ======================
 //  Groups / Permissions
@@ -338,179 +174,13 @@ const deleteTask = async (id: number): Promise<IApiResponse<unknown>> => {
 };
 
 // ======================
-//   Cash Flow Entries
-// ======================
-const getEntries = async (
-  limit = 100,
-  offset = 0
-): Promise<IApiResponse<ApiGetEntriesData>> => {
-  return apiRequest<ApiGetEntriesData>(
-    `cashflow/entries/paginated?limit=${limit}&offset=${offset}`
-  );
-};
-
-async function getFilteredEntries(
-  limit = 100,
-  offset = 0,
-  filters?: CashFlowFilters,
-  url: string = 'entries'
-): Promise<IApiResponse<ApiGetEntriesData>> {
-  const endpoint = buildQueryParams(url, limit, offset, filters);
-  return apiRequest<ApiGetEntriesData>(endpoint);
-}
-
-const getEntry = async (
-  ids: number[]
-): Promise<IApiResponse<ApiGetEntryData>> => {
-  return apiRequest<ApiGetEntryData>(`cashflow/entries/${buildIdsParam(ids)}`);
-};
-
-const addEntry = async (
-  payload: AddEntryPayload
-): Promise<IApiResponse<ApiGetEntryData>> => {
-  return apiRequest<ApiGetEntryData>('cashflow/entries', 'POST', payload);
-};
-
-const editEntry = async (
-  ids: number[],
-  payload: EditEntryPayload
-): Promise<IApiResponse<ApiGetEntryData>> => {
-  return apiRequest<ApiGetEntryData>(
-    `cashflow/entries/${buildIdsParam(ids)}`,
-    'PUT',
-    payload
-  );
-};
-
-const deleteEntries = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('cashflow/entries', 'DELETE');
-};
-
-const deleteEntry = async (ids: number[]): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(`cashflow/entries/${buildIdsParam(ids)}`, 'DELETE');
-};
-
-// ======================
-// Settled Cash Flow Entries
-// ======================
-const getSettledEntries = async (): Promise<
-  IApiResponse<ApiGetSettledEntriesData>
-> => {
-  return apiRequest<ApiGetSettledEntriesData>('cashflow/settled-entries');
-};
-
-async function getFilteredSettledEntries(
-  limit = 100,
-  offset = 0,
-  filters?: CashFlowFilters,
-  url: string = 'settled-entries'
-): Promise<IApiResponse<ApiGetSettledEntriesData>> {
-  const endpoint = buildQueryParams(url, limit, offset, filters);
-  return apiRequest<ApiGetSettledEntriesData>(endpoint);
-}
-
-const getSettledEntry = async (
-  ids: number[]
-): Promise<IApiResponse<ApiGetSettledEntryData>> => {
-  const url = `cashflow/settled-entries/${buildIdsParam(ids)}`;
-  return apiRequest<ApiGetSettledEntryData>(url);
-};
-
-const editSettledEntry = async (
-  ids: number[],
-  payload: EditSettledEntryPayload
-): Promise<IApiResponse<ApiGetSettledEntryData>> => {
-  const url = `cashflow/settled-entries/${buildIdsParam(ids)}`;
-  return apiRequest<ApiGetSettledEntryData>(url, 'PATCH', payload);
-};
-
-const deleteSettledEntries = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('cashflow/settled-entries', 'DELETE');
-};
-
-const deleteSettledEntry = async (
-  ids: number[]
-): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(
-    `cashflow/settled-entries/${buildIdsParam(ids)}`,
-    'DELETE'
-  );
-};
-
-// ======================
-//    Transferences
-// ======================
-const addTransference = async (params: {
-  due_date: string;
-  amount: string;
-  bank_out_id: number;
-  bank_in_id: number;
-  observation?: string;
-}): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('cashflow/transferences', 'POST', params);
-};
-
-// ======================
-//    Banks
-// ======================
-const getBanks = async (): Promise<IApiResponse<ApiGetBanks>> => {
-  return apiRequest<ApiGetBanks>('financeconfig/banks');
-};
-
-const getBank = async (
-  ids: number[]
-): Promise<IApiResponse<ApiGetBank>> => {
-  return apiRequest<ApiGetBank>(`financeconfig/banks/${buildIdsParam(ids)}`);
-};
-
-const addBank = async (params: {
-  bank_institution: string;
-  bank_account_type: string;
-  bank_branch: string;
-  bank_account: string;
-  initial_balance: string;
-  bank_status: boolean;
-}): Promise<IApiResponse<ApiGetBank>> => {
-  return apiRequest<ApiGetBank>('financeconfig/banks', 'POST', params);
-};
-
-const editBank = async (
-  ids: number[],
-  data: {
-    bank_institution?: string;
-    bank_account_type?: string;
-    bank_branch?: string;
-    bank_account?: string;
-    initial_balance?: string;
-    bank_status?: boolean;
-  }
-): Promise<IApiResponse<ApiGetBank>> => {
-  return apiRequest<ApiGetBank>(
-    `financeconfig/banks/${buildIdsParam(ids)}`,
-    'PUT',
-    data
-  );
-};
-
-const deleteBanks = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('financeconfig/banks', 'DELETE');
-};
-
-const deleteBank = async (ids: number[]): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(
-    `financeconfig/banks/${buildIdsParam(ids)}`,
-    'DELETE'
-  );
-};
-
-// ======================
 //  General Ledger Accounts
 // ======================
 const getGeneralLedgerAccounts = async (): Promise<
   IApiResponse<ApiGetGeneralLedgerAccounts>
 > => {
   return apiRequest<ApiGetGeneralLedgerAccounts>(
-    'financeconfig/general-ledger-accounts'
+    'enterprise_structure/general-ledger-accounts'
   );
 };
 
@@ -518,7 +188,7 @@ const getGeneralLedgerAccount = async (
   ids: number[]
 ): Promise<IApiResponse<ApiGetGeneralLedgerAccount>> => {
   return apiRequest<ApiGetGeneralLedgerAccount>(
-    `financeconfig/general-ledger-accounts/${buildIdsParam(ids)}`
+    `enterprise_structure/general-ledger-accounts/${buildIdsParam(ids)}`
   );
 };
 
@@ -529,7 +199,7 @@ const addGeneralLedgerAccount = async (params: {
   transaction_type: string;
 }): Promise<IApiResponse<ApiGetGeneralLedgerAccount>> => {
   return apiRequest<ApiGetGeneralLedgerAccount>(
-    'financeconfig/general-ledger-accounts',
+    'enterprise_structure/general-ledger-accounts',
     'POST',
     params
   );
@@ -545,21 +215,21 @@ const editGeneralLedgerAccount = async (
   }
 ): Promise<IApiResponse<ApiGetGeneralLedgerAccount>> => {
   return apiRequest<ApiGetGeneralLedgerAccount>(
-    `financeconfig/general-ledger-accounts/${buildIdsParam(ids)}`,
+    `enterprise_structure/general-ledger-accounts/${buildIdsParam(ids)}`,
     'PUT',
     data
   );
 };
 
 const deleteGeneralLedgerAccounts = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('financeconfig/general-ledger-accounts', 'DELETE');
+  return apiRequest<unknown>('enterprise_structure/general-ledger-accounts', 'DELETE');
 };
 
 const deleteGeneralLedgerAccount = async (
   ids: number[]
 ): Promise<IApiResponse<unknown>> => {
   return apiRequest<unknown>(
-    `financeconfig/general-ledger-accounts/${buildIdsParam(ids)}`,
+    `enterprise_structure/general-ledger-accounts/${buildIdsParam(ids)}`,
     'DELETE'
   );
 };
@@ -568,14 +238,14 @@ const deleteGeneralLedgerAccount = async (
 //     Document Type
 // ======================
 const getDocumentTypes = async (): Promise<IApiResponse<ApiGetDocumentTypes>> => {
-  return apiRequest<ApiGetDocumentTypes>('financeconfig/document-types');
+  return apiRequest<ApiGetDocumentTypes>('enterprise_structure/document-types');
 };
 
 const getDocumentType = async (
   ids: number[]
 ): Promise<IApiResponse<ApiGetDocumentType>> => {
   return apiRequest<ApiGetDocumentType>(
-    `financeconfig/document-types/${buildIdsParam(ids)}`
+    `enterprise_structure/document-types/${buildIdsParam(ids)}`
   );
 };
 
@@ -583,19 +253,19 @@ const getDocumentType = async (
 //     Departments
 // ======================
 const getDepartments = async (): Promise<IApiResponse<ApiGetDepartments>> => {
-  return apiRequest<ApiGetDepartments>('financeconfig/departments');
+  return apiRequest<ApiGetDepartments>('enterprise_structure/departments');
 };
 
 const getDepartment = async (
   ids: number[]
 ): Promise<IApiResponse<ApiGetDepartment>> => {
   return apiRequest<ApiGetDepartment>(
-    `financeconfig/departments/${buildIdsParam(ids)}`
+    `enterprise_structure/departments/${buildIdsParam(ids)}`
   );
 };
 
 const addDepartment = async (data: { department: string }): Promise<IApiResponse<ApiGetDepartment>> => {
-  return apiRequest<ApiGetDepartment>('financeconfig/departments', 'POST', data);
+  return apiRequest<ApiGetDepartment>('enterprise_structure/departments', 'POST', data);
 };
 
 const editDepartment = async (
@@ -603,19 +273,19 @@ const editDepartment = async (
   data: { department?: string }
 ): Promise<IApiResponse<ApiGetDepartment>> => {
   return apiRequest<ApiGetDepartment>(
-    `financeconfig/departments/${buildIdsParam(ids)}`,
+    `enterprise_structure/departments/${buildIdsParam(ids)}`,
     'PUT',
     data
   );
 };
 
 const deleteDepartments = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('financeconfig/departments', 'DELETE');
+  return apiRequest<unknown>('enterprise_structure/departments', 'DELETE');
 };
 
 const deleteDepartment = async (ids: number[]): Promise<IApiResponse<unknown>> => {
   return apiRequest<unknown>(
-    `financeconfig/departments/${buildIdsParam(ids)}`,
+    `enterprise_structure/departments/${buildIdsParam(ids)}`,
     'DELETE'
   );
 };
@@ -624,14 +294,14 @@ const deleteDepartment = async (ids: number[]): Promise<IApiResponse<unknown>> =
 //       Projects
 // ======================
 const getProjects = async (): Promise<IApiResponse<ApiGetProjects>> => {
-  return apiRequest<ApiGetProjects>('financeconfig/projects');
+  return apiRequest<ApiGetProjects>('enterprise_structure/projects');
 };
 
 const getProject = async (
   ids: number[]
 ): Promise<IApiResponse<ApiGetProject>> => {
   return apiRequest<ApiGetProject>(
-    `financeconfig/projects/${buildIdsParam(ids)}`
+    `enterprise_structure/projects/${buildIdsParam(ids)}`
   );
 };
 
@@ -641,7 +311,7 @@ const addProject = async (data: {
   project_type: string;
   project_description: string;
 }): Promise<IApiResponse<ApiGetProject>> => {
-  return apiRequest<ApiGetProject>('financeconfig/projects', 'POST', data);
+  return apiRequest<ApiGetProject>('enterprise_structure/projects', 'POST', data);
 };
 
 const editProject = async (
@@ -654,19 +324,19 @@ const editProject = async (
   }
 ): Promise<IApiResponse<ApiGetProject>> => {
   return apiRequest<ApiGetProject>(
-    `financeconfig/projects/${buildIdsParam(ids)}`,
+    `enterprise_structure/projects/${buildIdsParam(ids)}`,
     'PUT',
     data
   );
 };
 
 const deleteProjects = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('financeconfig/projects', 'DELETE');
+  return apiRequest<unknown>('enterprise_structure/projects', 'DELETE');
 };
 
 const deleteProject = async (ids: number[]): Promise<IApiResponse<unknown>> => {
   return apiRequest<unknown>(
-    `financeconfig/projects/${buildIdsParam(ids)}`,
+    `enterprise_structure/projects/${buildIdsParam(ids)}`,
     'DELETE'
   );
 };
@@ -675,14 +345,14 @@ const deleteProject = async (ids: number[]): Promise<IApiResponse<unknown>> => {
 //       Inventory
 // ======================
 const getInventoryItems = async (): Promise<IApiResponse<ApiGetInventoryItems>> => {
-  return apiRequest<ApiGetInventoryItems>('financeconfig/inventory-items');
+  return apiRequest<ApiGetInventoryItems>('enterprise_structure/inventory-items');
 };
 
 const getInventoryItem = async (
   ids: number[]
 ): Promise<IApiResponse<ApiGetInventoryItem>> => {
   return apiRequest<ApiGetInventoryItem>(
-    `financeconfig/inventory-items/${buildIdsParam(ids)}`
+    `enterprise_structure/inventory-items/${buildIdsParam(ids)}`
   );
 };
 
@@ -691,7 +361,7 @@ const addInventoryItem = async (data: {
   inventory_item: string;
   inventory_item_quantity: number;
 }): Promise<IApiResponse<ApiGetInventoryItem>> => {
-  return apiRequest<ApiGetInventoryItem>('financeconfig/inventory-items', 'POST', data);
+  return apiRequest<ApiGetInventoryItem>('enterprise_structure/inventory-items', 'POST', data);
 };
 
 const editInventoryItem = async (
@@ -703,21 +373,21 @@ const editInventoryItem = async (
   }
 ): Promise<IApiResponse<ApiGetInventoryItem>> => {
   return apiRequest<ApiGetInventoryItem>(
-    `financeconfig/inventory-items/${buildIdsParam(ids)}`,
+    `enterprise_structure/inventory-items/${buildIdsParam(ids)}`,
     'PUT',
     data
   );
 };
 
 const deleteInventoryItems = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('financeconfig/inventory-items', 'DELETE');
+  return apiRequest<unknown>('enterprise_structure/inventory-items', 'DELETE');
 };
 
 const deleteInventoryItem = async (
   ids: number[]
 ): Promise<IApiResponse<unknown>> => {
   return apiRequest<unknown>(
-    `financeconfig/inventory-items/${buildIdsParam(ids)}`,
+    `enterprise_structure/inventory-items/${buildIdsParam(ids)}`,
     'DELETE'
   );
 };
@@ -726,14 +396,14 @@ const deleteInventoryItem = async (
 //       Entities
 // ======================
 const getEntities = async (): Promise<IApiResponse<ApiGetEntities>> => {
-  return apiRequest<ApiGetEntities>('financeconfig/entities');
+  return apiRequest<ApiGetEntities>('enterprise_structure/entities');
 };
 
 const getEntity = async (
   ids: number[]
 ): Promise<IApiResponse<ApiGetEntity>> => {
   return apiRequest<ApiGetEntity>(
-    `financeconfig/entities/${buildIdsParam(ids)}`
+    `enterprise_structure/entities/${buildIdsParam(ids)}`
   );
 };
 
@@ -757,7 +427,7 @@ const addEntity = async (data: {
   account_holder_name?: string;
   entity_type?: string;
 }): Promise<IApiResponse<ApiGetEntity>> => {
-  return apiRequest<ApiGetEntity>('financeconfig/entities', 'POST', data);
+  return apiRequest<ApiGetEntity>('enterprise_structure/entities', 'POST', data);
 };
 
 const editEntity = async (
@@ -784,19 +454,19 @@ const editEntity = async (
   }
 ): Promise<IApiResponse<ApiGetEntity>> => {
   return apiRequest<ApiGetEntity>(
-    `financeconfig/entities/${buildIdsParam(ids)}`,
+    `enterprise_structure/entities/${buildIdsParam(ids)}`,
     'PUT',
     data
   );
 };
 
 const deleteEntities = async (): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('financeconfig/entities', 'DELETE');
+  return apiRequest<unknown>('enterprise_structure/entities', 'DELETE');
 };
 
 const deleteEntity = async (ids: number[]): Promise<IApiResponse<unknown>> => {
   return apiRequest<unknown>(
-    `financeconfig/entities/${buildIdsParam(ids)}`,
+    `enterprise_structure/entities/${buildIdsParam(ids)}`,
     'DELETE'
   );
 };
@@ -805,26 +475,6 @@ const deleteEntity = async (ids: number[]): Promise<IApiResponse<unknown>> => {
 //       Export
 // ======================
 export const useRequests = () => ({
-  // Auth
-  signUp,
-  signIn,
-  verifyEmail,
-  verifyNewEmail,
-  getUser,
-  editUser,
-  getEnterprise,
-  editEnterprise,
-
-  // Passwords
-  changePassword,
-  requestPasswordReset,
-  confirmPasswordReset,
-
-  // Subscriptions
-  createCheckoutSession,
-  getSubscriptionStatus,
-  createCustomerPortalSession,
-
   // Groups/ Permissions
   getPermissions,
   getGroups,
@@ -850,34 +500,6 @@ export const useRequests = () => ({
   addTask,
   editTask,
   deleteTask,
-
-  // Cash Flow Entries
-  getEntries,
-  getFilteredEntries,
-  getEntry,
-  addEntry,
-  editEntry,
-  deleteEntries,
-  deleteEntry,
-
-  // Settled Entries
-  getSettledEntries,
-  getFilteredSettledEntries,
-  getSettledEntry,
-  editSettledEntry,
-  deleteSettledEntries,
-  deleteSettledEntry,
-
-  // Transferences
-  addTransference,
-
-  //Banks
-  getBanks,
-  getBank,
-  addBank,
-  editBank,
-  deleteBanks,
-  deleteBank,
 
   // General Ledger Accounts
   getGeneralLedgerAccounts,
