@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
 import { RequestsContext } from "@/contexts/RequestsContext";
-import { useRequests } from "@/api/requests";
+import { api } from "@/api/requests2"; // <- substitui useRequests por api
 
 export const RequestsProvider = ({ children }: { children: ReactNode }) => {
-  const requests = useRequests();
-
-  return <RequestsContext.Provider value={requests}>{children}</RequestsContext.Provider>;
+  return (
+    <RequestsContext.Provider value={api}>
+      {children}
+    </RequestsContext.Provider>
+  );
 };
