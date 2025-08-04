@@ -1,14 +1,4 @@
-import { Group } from "../domain";
-
-export interface Employee {
-  id: number;
-  name: string;
-  email: string;
-}
-
-export interface EmployeeDetail extends Employee {
-  groups: Group[];
-}
+import { Employee, EmployeeDetail, Group } from "../domain";
 
 export interface GetEmployeesResponse {
   employees: Employee[];
@@ -18,20 +8,13 @@ export interface GetEmployeeResponse {
   employee: EmployeeDetail;
 }
 
-// import { Group } from './Group';
+export interface EmployeePayloadBase {
+  name: string;
+  email: string;
+  groups: Group[];
+}
 
-// export type Employee = {
-//   id: number;
-//   name: string;
-//   email: string;
-// };
-
-// export type EmployeeDetail = Employee & {
-//   groups: Group[];
-// };
-
-// export type ApiGetEmployees = {
-//   employees: Employee[];
-// };
-
-// export type ApiGetEmployee = EmployeeDetail;
+export type AddEmployeeRequest = EmployeePayloadBase & {
+  password?: string;
+}
+export type EditEmployeeRequest = EmployeePayloadBase;

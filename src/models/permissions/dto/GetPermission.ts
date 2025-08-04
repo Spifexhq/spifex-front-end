@@ -1,0 +1,21 @@
+import { Permission } from "../domain/Permission";
+
+export interface GetPermissions {
+  permissions: Permission[];
+}
+
+export interface GetPermission {
+  permission: Permission;
+}
+
+export interface PermissionPayloadBase {
+  label: string;
+  code_name: string;
+  permission_type: string;
+  usage_limit: {
+    [key: string]: number | null;
+  };
+}
+
+export type AddPermissionRequest = PermissionPayloadBase;
+export type EditPermissionRequest = PermissionPayloadBase;

@@ -25,26 +25,11 @@ import {
 } from '@/models/Counter';
 import { ApiGetTask, ApiGetTasks } from '@/models/Task';
 
-import {
-  ApiGetGeneralLedgerAccount, ApiGetGeneralLedgerAccounts,
-  ApiGetDocumentType, ApiGetDocumentTypes,
-  ApiGetDepartment, ApiGetDepartments,
-  ApiGetProject, ApiGetProjects,
-  ApiGetInventoryItem, ApiGetInventoryItems,
-  ApiGetEntity, ApiGetEntities,
-} from 'src/models/ForeignKeys';
-
 import { IApiResponse } from '@/models/Api';
-
-const buildIdsParam = (ids: number[]): string => ids.join(',');
 
 // ======================
 //  Groups / Permissions
 // ======================
-const getPermissions = async (): Promise<IApiResponse<ApiGetPermissions>> => {
-  return apiRequest<ApiGetPermissions>('companies/permissions');
-};
-
 const getGroups = async (): Promise<IApiResponse<ApiGetGroups>> => {
   return apiRequest<ApiGetGroups>('companies/groups');
 };
@@ -102,38 +87,6 @@ const incrementCounter = async (
 };
 
 // ======================
-//       Employees
-// ======================
-const getEmployees = async (): Promise<IApiResponse<ApiGetEmployees>> => {
-  return apiRequest<ApiGetEmployees>('companies/employees');
-};
-
-const getAnEmployee = async (
-  id: number
-): Promise<IApiResponse<ApiGetEmployee>> => {
-  return apiRequest<ApiGetEmployee>(`companies/employees/${id}`);
-};
-
-const addEmployee = async (params: {
-  name: string;
-  email: string;
-  password: string;
-}): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>('companies/employees', 'POST', params);
-};
-
-const editEmployee = async (
-  id: number,
-  data: { name?: string; email?: string; groups: string }
-): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(`companies/employees/${id}`, 'PUT', data);
-};
-
-const deleteEmployee = async (id: number): Promise<IApiResponse<unknown>> => {
-  return apiRequest<unknown>(`companies/employees/${id}`, 'DELETE');
-};
-
-// ======================
 //         Tasks
 // ======================
 const getTasks = async (): Promise<IApiResponse<ApiGetTasks>> => {
@@ -179,7 +132,6 @@ const deleteTask = async (id: number): Promise<IApiResponse<unknown>> => {
 // ======================
 export const useRequests = () => ({
   // Groups/ Permissions
-  getPermissions,
   getGroups,
   getAnGroup,
   addGroup,
@@ -189,14 +141,7 @@ export const useRequests = () => ({
   // Counter
   getCounter,
   incrementCounter,
-
-  // Employees
-  getEmployees,
-  getAnEmployee,
-  addEmployee,
-  editEmployee,
-  deleteEmployee,
-
+  
   // Tasks
   getTasks,
   getAnTask,

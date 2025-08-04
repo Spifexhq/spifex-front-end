@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { request } from '@/lib/http'
 import {
+  AddEmployeeRequest,
+  EditEmployeeRequest,
+  GetEmployeeResponse,
     GetUserResponse,
     SignInRequest,
     SignInResponse,
@@ -8,7 +11,7 @@ import {
     SignUpResponse,
     Subscription
 } from '@/models/auth/dto'
-import { User, Enterprise } from 'src/models/auth/domain'
+import { User, Enterprise, Employee } from 'src/models/auth/domain'
 import { Entry, SettledEntry, Transference } from 'src/models/Entries/domain'
 import { GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
@@ -23,6 +26,7 @@ import { GetBank, GetBanks,
   GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
 } from 'src/models/enterprise_structure/dto';
 import { Bank, LedgerAccount, Department, Project, InventoryItem, Entity } from 'src/models/enterprise_structure/domain';
+import { GetPermissions } from 'src/models/permissions/dto';
 
 
 export const api = {
@@ -73,6 +77,26 @@ export const api = {
   editEnterprise: (payload: Partial<Enterprise>) =>
     request<Enterprise>('companies/enterprise', 'PUT', payload),
 
+  /* --- Permissions --- */
+  getPermissions: () =>
+    request<GetPermissions>('companies/permissions', "GET"),
+
+  /* --- Employees --- */
+  getEmployees: () =>
+    request<GetEntryResponse>("companies/employees", "GET"),
+
+  getEmployee: (ids: number[]) =>
+    request<GetEmployeeResponse>(`companies/employees/${ids.join(',')}`, "GET"),
+
+  addEmployee: (payload: AddEmployeeRequest) =>
+    request<Employee>("companies/employees", "POST", payload),
+
+  editEmployee: (ids: number[], payload: Partial<EditEmployeeRequest>) =>
+    request<Employee>(`companies/employees/${ids.join(',')}`, 'PUT', payload),
+
+  deleteEmployee: (ids: number[]) =>
+    request<Employee>(`companies/employees/${ids.join(',')}`, 'DELETE'),
+
   /* --- Cash-flow Entries --- */
   getEntries: (payload: GetEntryRequest) =>
     request<GetEntryResponse>("cashflow/entries/paginated", "GET", payload),
@@ -80,7 +104,7 @@ export const api = {
   getAllEntries: () =>
     request<GetEntryResponse>("cashflow/entries", "GET"),
 
-  GetEntryResponse: (ids: number[], payload: GetEntryRequest) =>
+  getEntry: (ids: number[], payload: GetEntryRequest) =>
     request<GetEntryResponse>(`cashflow/entries/${ids.join(',')}`, "GET", payload),
 
   addEntry: (payload: AddEntryRequest) =>
