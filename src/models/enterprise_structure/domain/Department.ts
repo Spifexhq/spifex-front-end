@@ -8,4 +8,3 @@ export interface DepartmentAllocation {
   department: Department;
   percentage: string;
 };
-

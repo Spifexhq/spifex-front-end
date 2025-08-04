@@ -1,11 +1,3 @@
-// Deletar depois \/
-export interface IApiResponse<T> {
-  status: 'success' | 'error';
-  message: string;
-  data?: T;
-  errors?: unknown;
-}
-
 export interface Meta {
   request_id: string
   pagination?: {

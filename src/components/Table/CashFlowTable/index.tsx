@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/api/requests2";
 
-import { EntryFilters, Entry } from "src/models/Entries/domain";
+import { EntryFilters, Entry } from "src/models/entries/domain";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { useBanks } from "@/hooks/useBanks";
 

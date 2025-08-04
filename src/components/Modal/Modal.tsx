@@ -28,7 +28,7 @@ import { decimalToCentsString } from 'src/utils/utils';
 // API and models
 import { api } from 'src/api/requests2';
 import { ApiError } from '@/models/Api';
-import { AddEntryRequest } from '@/models/Entries/dto';
+import { AddEntryRequest } from '@/models/entries/dto';
 import {
   Department,
   DepartmentAllocation,

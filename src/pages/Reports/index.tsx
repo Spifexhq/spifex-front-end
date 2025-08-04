@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { Entry } from "@/models/Entries";
+import { Entry } from "@/models/entries";
 import dayjs from "dayjs";
 import {
   BarChart,

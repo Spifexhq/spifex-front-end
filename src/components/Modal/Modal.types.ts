@@ -1,5 +1,5 @@
 // Modal.types.ts
-import { Entry } from '@/models/Entries/domain';
+import { Entry } from '@/models/entries/domain';
 
 export interface FormData {
     details: {

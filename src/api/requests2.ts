@@ -4,15 +4,19 @@ import {
   GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,
   GetUserResponse,
   SignInRequest, SignInResponse, SignUpRequest, SignUpResponse,
-  Subscription
+  Subscription,
+  GetPermissions,
+  GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
-import { User, Enterprise, Employee } from 'src/models/auth/domain'
-import { Entry, SettledEntry, Transference } from 'src/models/Entries/domain'
+import { User, Enterprise, Employee, GroupDetail, CounterUsage, IncrementCounterUsage } from '@/models/auth/domain'
+import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
+import { TaskDetail } from '@/models/tasks/domain';
+import { Entry, SettledEntry, Transference } from '@/models/entries/domain'
 import {
   GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
   AddTransferenceRequest
-} from '@/models/Entries/dto'
+} from '@/models/entries/dto'
 import {
   GetBank, GetBanks,
   GetLedgerAccount, GetLedgerAccounts, AddLedgerAccountRequest, EditLedgerAccountRequest,
@@ -21,9 +25,8 @@ import {
   GetProject, GetProjects, AddProjectRequest, EditProjectRequest,
   GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
   GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
-} from 'src/models/enterprise_structure/dto';
-import { Bank, LedgerAccount, Department, Project, InventoryItem, Entity } from 'src/models/enterprise_structure/domain';
-import { GetPermissions } from 'src/models/permissions/dto';
+} from '@/models/enterprise_structure/dto';
+import { Bank, LedgerAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
 
 
 export const api = {
@@ -67,6 +70,13 @@ export const api = {
   createCustomerPortalSession: () =>
     request<{ url?: string }>('payments/create-customer-portal-session/', 'POST', {}),
 
+  /* --- Counter --- */
+  getCounter: (codeName: string) =>
+    request<CounterUsage>(`companies/counter/${codeName}/`, 'GET'),
+  
+  incrementCounter: (codeName: string) =>
+    request<IncrementCounterUsage>(`companies/counter/${codeName}/`, 'PATCH'),
+
   /* --- Enterprise --- */
   getEnterprise: () =>
     request<Enterprise>('companies/enterprise', "GET"),
@@ -77,6 +87,44 @@ export const api = {
   /* --- Permissions --- */
   getPermissions: () =>
     request<GetPermissions>('companies/permissions', "GET"),
+
+  /* --- Tasks --- */
+  getAllTasks: () =>
+    request<GetTasks>("companies/tasks", "GET"),
+
+  getTask: (ids: number[]) =>
+    request<GetTask>(`companies/tasks/${ids.join(',')}`, "GET"),
+
+  addTask: (payload: AddTaskRequest) =>
+    request<TaskDetail>("companies/tasks", "POST", payload),
+
+  editTask: (ids: number[], payload: Partial<EditTaskRequest>) =>
+    request<TaskDetail>(`companies/tasks/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllTasks: () =>
+    request<TaskDetail>("companies/tasks", 'DELETE'),
+
+  deleteTask: (ids: number[]) =>
+    request<TaskDetail>(`companies/tasks/${ids.join(',')}`, 'DELETE'),
+
+  /* --- Groups --- */
+  getAllGroups: () =>
+    request<GetGroups>("companies/groups", "GET"),
+
+  getGroup: (ids: number[]) =>
+    request<GetGroup>(`companies/groups/${ids.join(',')}`, "GET"),
+
+  addGroup: (payload: AddGroupRequest) =>
+    request<GroupDetail>("companies/groups", "POST", payload),
+
+  editGroup: (ids: number[], payload: Partial<EditGroupRequest>) =>
+    request<GroupDetail>(`companies/groups/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllGroups: () =>
+    request<GroupDetail>("companies/groups", 'DELETE'),
+
+  deleteGroup: (ids: number[]) =>
+    request<GroupDetail>(`companies/groups/${ids.join(',')}`, 'DELETE'),
 
   /* --- Employees --- */
   getEmployees: () =>

@@ -4,10 +4,10 @@ import { Sidebar } from "@/components/Sidebar";
 import { Modal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
 import Filter from "@/components/Filter";
-import { EntryFilters } from "src/models/Entries/domain";
+import { EntryFilters } from "src/models/entries/domain";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
-import { Entry } from '@/models/Entries';
+import { Entry } from '@/models/entries';
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests2";
 

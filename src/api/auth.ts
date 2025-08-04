@@ -24,7 +24,7 @@ import { setUser, setUserEnterprise, setSubscriptionStatus } from '@/redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
 import { api } from '@/api/requests2'
-import { Permission } from 'src/models/auth/Permission';
+import { Permission } from 'src/models/auth';
 
 const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';
 

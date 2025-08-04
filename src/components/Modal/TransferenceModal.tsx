@@ -5,7 +5,7 @@ import { formatCurrency, handleAmountKeyDown } from "@/utils/formUtils";
 import { api } from 'src/api/requests2';
 import Input from '@/components/Input';
 import { SelectDropdown } from '@/components/SelectDropdown';
-import { Bank } from '@/models/enterprise_structure/domain';
+import { Bank } from '@/models/enterprise_structure';
 import Button from '../Button';
 
 interface TransferenceModalProps {

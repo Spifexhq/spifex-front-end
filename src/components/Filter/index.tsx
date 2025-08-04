@@ -3,11 +3,13 @@
 import React, { FC, useEffect, useState } from "react";
 import Button from "@/components/Button";
 import type { Bank } from "@/models/Bank";
-import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccount";
+import { LedgerAccount } from "src/models/enterprise_structure";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import Input from "../Input";
-import { EntryFilters } from "src/models/Entries/domain";
+import { EntryFilters } from "<source />
+<models />
+<e></e>ntries/domain";
 import { api } from "src/api/requests2";
 
 interface FilterProps {
@@ -26,7 +28,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
     bank_id: [],
   });
 
-  const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
+  const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
 
   useEffect(() => {
     const fetchLedgerAccounts = async () => {
@@ -57,7 +59,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLedgerAccountChange = (list: GeneralLedgerAccount[]) =>
+  const handleLedgerAccountChange = (list: LedgerAccount[]) =>
     setFormData((p) => ({ ...p, general_ledger_account_id: list.map((x) => Number(x.id)) }));
 
   const handleBankChange = (list: Bank[]) =>
@@ -94,7 +96,7 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
 
         {/* First Column, Row 1 or 2 (your layout choice) */}
         <div>
-          <SelectDropdown<GeneralLedgerAccount>
+          <SelectDropdown<LedgerAccount>
             label="Conta Contábil"
             items={ledgerAccounts}
             selected={selectedLedgerAccounts}

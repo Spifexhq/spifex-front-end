@@ -16,8 +16,8 @@ import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils"
 
 // API and models
 import { api } from "src/api/requests2";
-import { Entry } from "src/models/Entries/domain";
-import { EditSettledEntryRequest } from "@/models/Entries/dto";
+import { Entry } from "src/models/entries/domain";
+import { EditSettledEntryRequest } from "@/models/entries/dto";
 
 interface SettlementModalProps {
   isOpen: boolean;

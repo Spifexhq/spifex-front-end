@@ -1,4 +1,4 @@
-import { Bank } from "../../Bank";
+import { Bank } from "src/models/enterprise_structure";
 import { Permission } from "./Permission";
 
 export interface Group {
