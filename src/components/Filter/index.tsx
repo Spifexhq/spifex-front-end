@@ -2,20 +2,19 @@
 
 import React, { FC, useEffect, useState } from "react";
 import Button from "@/components/Button";
-import { useRequests } from "@/api/requests";
 import type { Bank } from "@/models/Bank";
 import { GeneralLedgerAccount } from "src/models/ForeignKeys/GeneralLedgerAccount";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import Input from "../Input";
 import { EntryFilters } from "src/models/Entries/domain";
+import { api } from "src/api/requests2";
 
 interface FilterProps {
   onApply: (filters: EntryFilters) => void;
 }
 
 const Filter: FC<FilterProps> = ({ onApply }) => {
-  const { getGeneralLedgerAccounts } = useRequests();
   const { banks } = useBanks();
 
   const [formData, setFormData] = useState<EntryFilters>({
@@ -30,14 +29,18 @@ const Filter: FC<FilterProps> = ({ onApply }) => {
   const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
 
   useEffect(() => {
-    getGeneralLedgerAccounts()
-      .then((response) => {
-        setLedgerAccounts(response.data?.general_ledger_accounts || []);
-      })
-      .catch((error) => {
-        console.error("Error fetching ledger accounts:", error);
-      });
-  }, [getGeneralLedgerAccounts]);
+    const fetchLedgerAccounts = async () => {
+      try {
+        const res = await api.getAllLedgerAccounts(); // já tipado como ApiSuccess<T>
+        setLedgerAccounts(res.data.general_ledger_accounts);
+      } catch (error) {
+        console.error("Erro ao buscar contas contábeis:", error);
+        setLedgerAccounts([]);
+      }
+    };
+
+    fetchLedgerAccounts();
+  }, []);
 
   const selectedLedgerAccounts = ledgerAccounts.filter((acc) =>
     formData.general_ledger_account_id?.includes(acc.id)

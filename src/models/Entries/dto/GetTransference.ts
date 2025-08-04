@@ -1,3 +1,4 @@
+// Payload
 export interface TransferencePayloadBase {
   due_date: string;
   amount: string;
@@ -6,6 +7,6 @@ export interface TransferencePayloadBase {
   observation?: string;
 };
 
-export type AddTransferencePayload = TransferencePayloadBase;
+export type AddTransferenceRequest = TransferencePayloadBase;
 
-export type EditTransferencePayload = Partial<TransferencePayloadBase>;
+export type EditTransferenceRequest = Partial<TransferencePayloadBase>;

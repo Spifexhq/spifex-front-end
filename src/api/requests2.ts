@@ -8,14 +8,21 @@ import {
     SignUpResponse,
     Subscription
 } from '@/models/auth/dto'
-import { User } from 'src/models/auth'
-import { Enterprise } from 'src/models/auth/domain'
+import { User, Enterprise } from 'src/models/auth/domain'
 import { Entry, SettledEntry, Transference } from 'src/models/Entries/domain'
-import { GetEntry, GetEntryParams, GetSettledEntry, GetSettledEntryParams,
-  AddEntryPayload, EditEntryPayload, EditSettledEntryPayload, AddTransferencePayload
+import { GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
+  GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
+  AddTransferenceRequest
 } from '@/models/Entries/dto'
-import { GetBank } from 'src/models/enterprise_structure/dto';
-import { Bank } from 'src/models/enterprise_structure/domain';
+import { GetBank, GetBanks,
+  GetLedgerAccount, GetLedgerAccounts, AddLedgerAccountRequest, EditLedgerAccountRequest,
+  GetDocumentType, GetDocumentTypes,
+  GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
+  GetProject, GetProjects, AddProjectRequest, EditProjectRequest,
+  GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
+  GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
+} from 'src/models/enterprise_structure/dto';
+import { Bank, LedgerAccount, Department, Project, InventoryItem, Entity } from 'src/models/enterprise_structure/domain';
 
 
 export const api = {
@@ -67,19 +74,19 @@ export const api = {
     request<Enterprise>('companies/enterprise', 'PUT', payload),
 
   /* --- Cash-flow Entries --- */
-  getEntries: (payload: GetEntryParams) =>
-    request<GetEntry>("cashflow/entries/paginated", "GET", payload),
+  getEntries: (payload: GetEntryRequest) =>
+    request<GetEntryResponse>("cashflow/entries/paginated", "GET", payload),
 
   getAllEntries: () =>
-    request<GetEntry>("cashflow/entries", "GET"),
+    request<GetEntryResponse>("cashflow/entries", "GET"),
 
-  getEntry: (ids: number[], payload: GetEntryParams) =>
-    request<GetEntry>(`cashflow/entries/${ids.join(',')}`, "GET", payload),
+  GetEntryResponse: (ids: number[], payload: GetEntryRequest) =>
+    request<GetEntryResponse>(`cashflow/entries/${ids.join(',')}`, "GET", payload),
 
-  addEntry: (payload: AddEntryPayload) =>
+  addEntry: (payload: AddEntryRequest) =>
     request<Entry>("cashflow/entries", "POST", payload),
 
-  editEntry: (ids: number[], payload: Partial<EditEntryPayload>) =>
+  editEntry: (ids: number[], payload: Partial<EditEntryRequest>) =>
     request<Entry>(`cashflow/entries/${ids.join(',')}`, 'PUT', payload),
 
   deleteAllEntries: () =>
@@ -89,16 +96,16 @@ export const api = {
     request<Entry>(`cashflow/entries/${ids.join(',')}`, 'DELETE'),
 
   /* --- Settled Entries --- */
-  getSettledEntries: (payload: GetSettledEntryParams) =>
+  getSettledEntries: (payload: GetSettledEntryRequest) =>
     request<GetSettledEntry>("cashflow/settled-entries/paginated", "GET", payload),
 
   getAllSettledEntries: () =>
     request<GetSettledEntry>("cashflow/settled-entries", "GET"),
 
-  getSettledEntry: (ids: number[], payload: GetSettledEntryParams) =>
+  getSettledEntry: (ids: number[], payload: GetSettledEntryRequest) =>
     request<GetSettledEntry>(`cashflow/settled-entries/${ids.join(',')}`, "GET", payload),
 
-  editSettledEntry: (ids: number[], payload: Partial<EditSettledEntryPayload>) =>
+  editSettledEntry: (ids: number[], payload: Partial<EditSettledEntryRequest>) =>
     request<SettledEntry>(`cashflow/settled-entries/${ids.join(',')}`, 'PATCH', payload),
 
   deleteAllSettledEntries: () =>
@@ -108,12 +115,12 @@ export const api = {
     request<SettledEntry>(`cashflow/settled-entries/${ids.join(',')}`, 'DELETE'),
 
   /* --- Transferences --- */
-  addTransference: (payload: AddTransferencePayload) =>
+  addTransference: (payload: AddTransferenceRequest) =>
     request<Transference>("cashflow/transferences", "POST", payload),
 
   /* --- Banks --- */
   getAllBanks: () =>
-    request<GetBank>("enterprise_structure/banks", "GET"),
+    request<GetBanks>("enterprise_structure/banks", "GET"),
 
   getBank: (ids: number[]) =>
     request<GetBank>(`enterprise_structure/banks/${ids.join(',')}`, "GET"),
@@ -129,4 +136,106 @@ export const api = {
 
   deleteBank: (ids: number[]) =>
     request<Bank>(`enterprise_structure/banks/${ids.join(',')}`, 'DELETE'),
+
+  /* --- General Ledger Acccounts --- */
+  getAllLedgerAccounts: () =>
+    request<GetLedgerAccounts>("enterprise_structure/general-ledger-accounts", "GET"),
+
+  getLedgerAccount: (ids: number[]) =>
+    request<GetLedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, "GET"),
+
+  addLedgerAccount: (payload: AddLedgerAccountRequest) =>
+    request<LedgerAccount>("enterprise_structure/general-ledger-accounts", "POST", payload),
+
+  editLedgerAccount: (ids: number[], payload: Partial<EditLedgerAccountRequest>) =>
+    request<LedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllLedgerAccounts: () =>
+    request<LedgerAccount>("enterprise_structure/general-ledger-accounts", 'DELETE'),
+
+  deleteLedgerAccount: (ids: number[]) =>
+    request<LedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, 'DELETE'),
+
+  /* --- Document Types --- */
+  getAllDocumentTypes: () =>
+    request<GetDocumentTypes>("enterprise_structure/document-types", "GET"),
+
+  getDocumentType: (ids: number[]) =>
+    request<GetDocumentType>(`enterprise_structure/document-types/${ids.join(',')}`, "GET"),
+
+  /* --- Departments --- */
+  getAllDepartments: () =>
+    request<GetDepartments>("enterprise_structure/departments", "GET"),
+
+  getDepartment: (ids: number[]) =>
+    request<GetDepartment>(`enterprise_structure/departments/${ids.join(',')}`, "GET"),
+
+  addDepartment: (payload: AddDepartmentRequest) =>
+    request<Department>("enterprise_structure/departments", "POST", payload),
+
+  editDepartment: (ids: number[], payload: Partial<EditDepartmentRequest>) =>
+    request<Department>(`enterprise_structure/departments/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllDepartments: () =>
+    request<Department>("enterprise_structure/departments", 'DELETE'),
+
+  deleteDepartment: (ids: number[]) =>
+    request<Department>(`enterprise_structure/departments/${ids.join(',')}`, 'DELETE'),
+
+  /* --- Projects --- */
+  getAllProjects: () =>
+    request<GetProjects>("enterprise_structure/projects", "GET"),
+
+  getProject: (ids: number[]) =>
+    request<GetProject>(`enterprise_structure/projects/${ids.join(',')}`, "GET"),
+
+  addProject: (payload: AddProjectRequest) =>
+    request<Project>("enterprise_structure/projects", "POST", payload),
+
+  editProject: (ids: number[], payload: Partial<EditProjectRequest>) =>
+    request<Project>(`enterprise_structure/projects/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllProjects: () =>
+    request<Project>("enterprise_structure/projects", 'DELETE'),
+
+  deleteProject: (ids: number[]) =>
+    request<Project>(`enterprise_structure/projects/${ids.join(',')}`, 'DELETE'),
+
+  /* --- Inventory --- */
+  getAllInventoryItems: () =>
+    request<GetInventoryItems>("enterprise_structure/inventory-items", "GET"),
+
+  getInventoryItem: (ids: number[]) =>
+    request<GetInventoryItem>(`enterprise_structure/inventory-items/${ids.join(',')}`, "GET"),
+
+  addInventoryItem: (payload: AddInventoryItemRequest) =>
+    request<InventoryItem>("enterprise_structure/inventory-items", "POST", payload),
+
+  editInventoryItem: (ids: number[], payload: Partial<EditInventoryItemRequest>) =>
+    request<InventoryItem>(`enterprise_structure/inventory-items/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllInventoryItems: () =>
+    request<InventoryItem>("enterprise_structure/inventory-items", 'DELETE'),
+
+  deleteInventoryItem: (ids: number[]) =>
+    request<InventoryItem>(`enterprise_structure/inventory-items/${ids.join(',')}`, 'DELETE'),
+
+  /* --- Entities --- */
+  getAllEntities: () =>
+    request<GetEntities>("enterprise_structure/entities", "GET"),
+
+  getEntity: (ids: number[]) =>
+    request<GetEntity>(`enterprise_structure/entities/${ids.join(',')}`, "GET"),
+
+  addEntity: (payload: AddEntityRequest) =>
+    request<Entity>("enterprise_structure/entities", "POST", payload),
+
+  editEntity: (ids: number[], payload: Partial<EditEntityRequest>) =>
+    request<Entity>(`enterprise_structure/entities/${ids.join(',')}`, "PUT", payload),
+  
+  deleteAllEntities: () =>
+    request<Entity>("enterprise_structure/entities", 'DELETE'),
+
+  deleteEntity: (ids: number[]) =>
+    request<Entity>(`enterprise_structure/entities/${ids.join(',')}`, 'DELETE'),
 }

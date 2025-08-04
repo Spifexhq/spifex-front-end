@@ -1,8 +1,8 @@
 import {
-  GeneralLedgerAccount, DocumentType,
+  LedgerAccount, DocumentType,
   DepartmentAllocation, Project,
   InventoryAllocation, Entity
-} from '@/models/ForeignKeys';
+} from '@/models/enterprise_structure/domain';
 import { Bank } from '../../Bank';
 
 export interface Entry {
@@ -19,7 +19,7 @@ export interface Entry {
   periods: string | null;
   weekend_action: string | null;
   creation_date: string;
-  general_ledger_account: GeneralLedgerAccount | null;
+  general_ledger_account: LedgerAccount | null;
   document_type: DocumentType | null;
   departments: DepartmentAllocation[] | null;
   project: Project | null;

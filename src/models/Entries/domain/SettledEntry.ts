@@ -1,7 +1,8 @@
 import {
-  GeneralLedgerAccount, DocumentType,
-  Department, Project, Inventory, Entity
-} from '@/models/ForeignKeys';
+  LedgerAccount, DocumentType,
+  DepartmentAllocation, Project,
+  InventoryAllocation, Entity
+} from '@/models/enterprise_structure/domain';
 import { Bank } from '../../Bank';
 
 export type SettledEntry = {
@@ -17,11 +18,11 @@ export type SettledEntry = {
   periods: string | null;
   weekend_action: string | null;
   creation_date: string;
-  general_ledger_account: GeneralLedgerAccount | null;
-  document_type: DocumentType[] | null;
-  departments: Department[];
+  general_ledger_account: LedgerAccount | null;
+  document_type: DocumentType | null;
+  departments: DepartmentAllocation[];
   project: Project[] | null;
-  inventory: Inventory[] | null;
+  inventory: InventoryAllocation[] | null;
   entity: Entity[] | null;
 
   bank: Bank;

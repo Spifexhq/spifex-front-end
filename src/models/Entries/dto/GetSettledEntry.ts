@@ -1,6 +1,6 @@
 import { SettledEntry } from "../domain";
 
-export interface GetSettledEntryParams {
+export interface GetSettledEntryRequest {
   page_size?: number;
   cursor?: string;
   start_date?: string;
@@ -16,6 +16,16 @@ export interface SECursorLinks {
   previous: string | null;
 }
 
+// Payload
 export interface GetSettledEntry extends SECursorLinks {
   results: SettledEntry[];
 }
+
+export type SettledEntryPayloadBase = {
+  settlement_due_date: string;
+  bank_id: number;
+  is_partial: boolean;
+  partial_amount?: string;
+};
+
+export type EditSettledEntryRequest = SettledEntryPayloadBase;

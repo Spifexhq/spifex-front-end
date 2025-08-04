@@ -1,3 +1,5 @@
+import { Group } from "../domain";
+
 export interface Employee {
   id: number;
   name: string;
@@ -5,7 +7,7 @@ export interface Employee {
 }
 
 export interface EmployeeDetail extends Employee {
-  groups: number[];
+  groups: Group[];
 }
 
 export interface GetEmployeesResponse {
@@ -15,3 +17,21 @@ export interface GetEmployeesResponse {
 export interface GetEmployeeResponse {
   employee: EmployeeDetail;
 }
+
+// import { Group } from './Group';
+
+// export type Employee = {
+//   id: number;
+//   name: string;
+//   email: string;
+// };
+
+// export type EmployeeDetail = Employee & {
+//   groups: Group[];
+// };
+
+// export type ApiGetEmployees = {
+//   employees: Employee[];
+// };
+
+// export type ApiGetEmployee = EmployeeDetail;

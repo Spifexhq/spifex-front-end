@@ -1,15 +1,23 @@
-
+// SettlementModal.tsx
 import React, { useEffect, useState } from "react";
+
+// Hooks
 import { useBanks } from "@/hooks/useBanks";
-import { EditSettledEntryPayload } from "@/models/Entries/dto";
-import { Entry } from "src/models/Entries/domain";
+
+// Components
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
-import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
 import Input from "../Input";
-import { centsToDecimalString } from "src/utils/utils";
 import { InlineLoader } from "../Loaders";
+
+// Utils
+import { centsToDecimalString } from "src/utils/utils";
+import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
+
+// API and models
 import { api } from "src/api/requests2";
+import { Entry } from "src/models/Entries/domain";
+import { EditSettledEntryRequest } from "@/models/Entries/dto";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -98,7 +106,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     try {
       await Promise.all(
         entriesState.map((e) => {
-          const payload: EditSettledEntryPayload = {
+          const payload: EditSettledEntryRequest = {
             settlement_due_date: e.due_date,
             bank_id: bankId,
             is_partial: e.isPartial,

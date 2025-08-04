@@ -1,16 +1,44 @@
-import axios from 'axios'
+// Modal.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FormData, ModalFormProps, Tab, RecurrenceOption, PeriodOption, WeekendOption } from "./Modal.types";
-import { formatCurrency, distributePercentages, handleAmountKeyDown } from "@/utils/formUtils";
-import { useRequests } from "@/api/requests";
-import { GeneralLedgerAccount, DocumentType, Department, Project, Inventory, Entity, EntityType } from "src/models/ForeignKeys";
-import { SelectDropdown } from "@/components/SelectDropdown";
-import Input from '../Input';
-import { AddEntryPayload } from '@/models/Entries/dto';
+import axios from 'axios';
+
+// Components
 import Button from '../Button';
+import Input from '../Input';
+import { SelectDropdown } from '@/components/SelectDropdown';
+
+// Types and interfaces
+import {
+  FormData,
+  ModalFormProps,
+  PeriodOption,
+  RecurrenceOption,
+  Tab,
+  WeekendOption,
+} from './Modal.types';
+
+// Utils
+import {
+  distributePercentages,
+  formatCurrency,
+  handleAmountKeyDown,
+} from '@/utils/formUtils';
 import { decimalToCentsString } from 'src/utils/utils';
+
+// API and models
 import { api } from 'src/api/requests2';
 import { ApiError } from '@/models/Api';
+import { AddEntryRequest } from '@/models/Entries/dto';
+import {
+  Department,
+  DepartmentAllocation,
+  DocumentType,
+  Entity,
+  EntityType,
+  InventoryItem,
+  LedgerAccount,
+  Project,
+} from '@/models/enterprise_structure/domain';
 
 // Initial state for the form data
 const initialFormData: FormData = {
@@ -49,16 +77,16 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
 
-  const [ledgerAccounts, setLedgerAccounts] = useState<GeneralLedgerAccount[]>([]);
-  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GeneralLedgerAccount[]>([]);
+  const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
+  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<LedgerAccount[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocumentType[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<Inventory[]>([]);
-  const [selectedInventoryItem, setSelectedInventoryItem] = useState<Inventory[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
   const [selectedEntityType, setSelectedEntityType] = useState<EntityType[]>([]);
@@ -71,15 +99,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     { id: 4, label: "Semestral", value: 4 },
     { id: 5, label: "Anual", value: 5 },
   ];
-
-  const { 
-    getGeneralLedgerAccounts, 
-    getDocumentTypes,
-    getDepartments,
-    getProjects,
-    getInventoryItems,
-    getEntities
-  } = useRequests();
 
   const handleClose = useCallback(() => {
     setFormData(initialFormData);
@@ -106,7 +125,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
       ? Number(formData.recurrence.installments || 1)
       : 1;
 
-    const payload: AddEntryPayload = {
+    const payload: AddEntryRequest = {
       due_date: formData.details.dueDate,
       description: formData.details.description || undefined,
       observation: formData.details.observation || undefined,
@@ -134,13 +153,11 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
         ? Number(formData.inventory.quantity)
         : null,
 
-      // Departamentos (listas)
-      department_id: formData.costCenters.departments.length
-        ? formData.costCenters.departments.join(',')
-        : null,
-      department_percentage: formData.costCenters.department_percentage.length
-        ? formData.costCenters.department_percentage.join(',')
-        : null,
+      // Departamentos
+      department_id:
+        formData.costCenters.departments.length ? formData.costCenters.departments.join(',') : undefined,
+      department_percentage:
+        formData.costCenters.department_percentage.length ? formData.costCenters.department_percentage.join(',') : undefined,
     };
 
     console.log("💰 amount:", formData.details.amount);
@@ -186,8 +203,12 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     const isRecurring = (initialEntry.total_installments ?? 1) > 1;
 
     // porcentagens de departamentos vinda da API
-    const deptIds   = initialEntry.departments?.map(d => String(d.department.id)) || [];
-    const deptPercs = initialEntry.departments?.map(d => d.percentage) || [];
+    const deptIds = initialEntry.departments?.map(
+      (d: DepartmentAllocation) => String(d.department.id)
+    ) || [];
+    const deptPercs = initialEntry.departments?.map(
+      (d: DepartmentAllocation) => d.percentage
+    ) || [];
 
     setFormData({
       details: {
@@ -238,7 +259,9 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     setSelectedDocumentType(dt ? [dt] : []);
 
     // -------------- Cost Centers --------------
-    const deptIds = initialEntry.departments?.map(d => d.department.id) || [];
+    const deptIds = initialEntry.departments?.map(
+      (d: DepartmentAllocation) => d.department.id
+    ) || [];
     setSelectedDepartments(
       departments.filter(dep => deptIds.includes(dep.id))
     );
@@ -246,7 +269,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
     const prj = projects.find(p => p.id === initialEntry.project?.id);
     setSelectedProject(prj ? [prj] : []);
 
-    // -------------- Inventory --------------
+    // -------------- InventoryItem --------------
     const invId = initialEntry.inventory_item?.[0]?.inventory_item.id;
     const inv = inventoryItems.find(i => i.id === invId);
     setSelectedInventoryItem(inv ? [inv] : []);
@@ -304,9 +327,9 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
   useEffect(() => {
     if (!isOpen) return;
 
-    getGeneralLedgerAccounts()
+    api.getAllLedgerAccounts()
       .then((response) => {
-        let allAccounts: GeneralLedgerAccount[] =
+        let allAccounts: LedgerAccount[] =
           response.data?.general_ledger_accounts || [];
 
         // Filter by credit/debit if needed
@@ -322,31 +345,31 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
         console.error("Erro ao buscar contas contábeis:", error);
       });
 
-    getDocumentTypes()
+    api.getAllDocumentTypes()
       .then((response) => {
         setDocumentTypes(response.data?.document_types || []);
       })
       .catch((error) => console.error("Erro ao buscar tipos de documento:", error));
 
-    getDepartments()
+    api.getAllDepartments()
       .then((response) => {
         setDepartments(response.data?.departments || []);
       })
       .catch((error) => console.error("Erro ao buscar departamentos:", error));
 
-    getProjects()
+    api.getAllProjects()
       .then((response) => {
         setProjects(response.data?.projects || []);
       })
       .catch((error) => console.error("Erro ao buscar projetos:", error));
 
-    getInventoryItems()
+    api.getAllInventoryItems()
       .then(response => {
         setInventoryItems(response.data?.inventory_items || []);
       })
       .catch(error => console.error("Erro ao buscar itens de inventário:", error));
 
-    getEntities()
+    api.getAllEntities()
       .then(response => {
         setEntities(response.data?.entities || []);
       })
@@ -361,19 +384,9 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
         },
       }));
     }
-  }, [
-    getGeneralLedgerAccounts,
-    getDocumentTypes,
-    getDepartments,
-    getProjects,
-    getInventoryItems,
-    getEntities,
-    isOpen,
-    type,
-    initialEntry,
-  ]);
+  }, [isOpen, type, initialEntry]);
 
-  const handleLedgerAccountChange = (updatedAccounts: GeneralLedgerAccount[]) => {
+  const handleLedgerAccountChange = (updatedAccounts: LedgerAccount[]) => {
     setSelectedLedgerAccount(updatedAccounts);
   
     const itemId = updatedAccounts.length > 0
@@ -456,7 +469,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
   // INVENTORY TAB LOGIC
   // -------------------------------
 
-  const handleInventoryChange = (updatedInventory: Inventory[]) => {
+  const handleInventoryChange = (updatedInventory: InventoryItem[]) => {
     setSelectedInventoryItem(updatedInventory);
     const itemId = updatedInventory.length > 0 ? String(updatedInventory[0].id) : "";
     setFormData(prev => ({ ...prev, inventory: { ...prev.inventory, product: itemId } }));
@@ -545,7 +558,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
             </div>
             {/* Conta Contábil */}
             <div className="mb-1">
-              <SelectDropdown<GeneralLedgerAccount>
+              <SelectDropdown<LedgerAccount>
                 label="Conta Contábil"
                 items={ledgerAccounts}
                 selected={selectedLedgerAccounts}
@@ -655,7 +668,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ isOpen, onClose, type, onSave, in
           <div>
             {/* Produto */}
             <div>
-              <SelectDropdown<Inventory>
+              <SelectDropdown<InventoryItem>
                 label="Produto"
                 items={inventoryItems}
                 selected={selectedInventoryItem}
