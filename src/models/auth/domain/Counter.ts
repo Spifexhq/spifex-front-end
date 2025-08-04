@@ -10,4 +10,5 @@ export interface CounterUsage {
 
 export interface IncrementCounterUsage {
   counter_usage: CounterUsage;
+  message: string;
 }

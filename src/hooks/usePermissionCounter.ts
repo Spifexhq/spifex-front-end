@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useRequests } from '@/api/requests';
+import { api } from 'src/api/requests2';
 
 export const usePermissionCounter = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [requestLoading, setRequestLoading] = useState(false);
-
-  const { incrementCounter } = useRequests();
 
   /**
    * Função genérica para incrementar o contador de uma permissão.
@@ -13,27 +11,24 @@ export const usePermissionCounter = () => {
    */
   const handlePermissionIncrement = async (permissionCode: string) => {
     setRequestLoading(true);
-    setAlertMessage(''); // Limpa qualquer mensagem anterior
+    setAlertMessage('');
 
     try {
-      const response = await incrementCounter(permissionCode);
-
-      if (!response || typeof response !== 'object') {
-        throw new Error('Resposta inesperada da API.');
-      }
-
-      if (response.status === 'error') {
-        // Se for um erro, verificamos a mensagem
-        setAlertMessage(`Erro na permissão ${permissionCode}: ${response.message}`);
-      } else if (response.status === 'success') {
-        // Caso de sucesso, assumimos que a operação foi bem-sucedida
-        setAlertMessage(`Operação realizada com sucesso para "${permissionCode}"!`);
-      } else {
-        setAlertMessage(`Resposta inesperada da API para "${permissionCode}".`);
-      }
-    } catch (error) {
+      const response = await api.incrementCounter(permissionCode);
+      const msg = response.data.message;
+      setAlertMessage(`Permissão "${permissionCode}" atualizada com sucesso: ${msg}`);
+    } catch (error: unknown) {
       console.error(`Erro na permissão ${permissionCode}:`, error);
-      setAlertMessage(`Erro na permissão ${permissionCode}. Verifique sua conexão ou tente novamente.`);
+
+      const errorMessage =
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof (error as { message: unknown }).message === 'string'
+          ? (error as { message: string }).message
+          : 'Erro desconhecido ao tentar atualizar permissão.';
+
+      setAlertMessage(`Erro na permissão ${permissionCode}: ${errorMessage}`);
     } finally {
       setRequestLoading(false);
     }
