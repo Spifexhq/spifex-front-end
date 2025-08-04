@@ -9,7 +9,7 @@ import { ModalType } from "@/components/Modal/Modal.types";
 import Button from "src/components/Button";
 import SettlementModal from "src/components/Modal/SettlementModal";
 import Navbar from "src/components/Navbar";
-import { api } from "src/api/requests2";
+import { api } from "src/api/requests";
 
 const CashFlow = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

@@ -1,6 +1,6 @@
 /* src/hooks/useBanks.ts */
 import { useEffect, useState } from 'react'
-import { api } from '@/api/requests2'
+import { api } from 'src/api/requests'
 import type { Bank } from '@/models/enterprise_structure/domain'
 
 export const useBanks = (ids?: number[]) => {

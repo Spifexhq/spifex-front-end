@@ -15,7 +15,7 @@ import { centsToDecimalString } from "src/utils/utils";
 import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
 
 // API and models
-import { api } from "src/api/requests2";
+import { api } from "src/api/requests";
 import { Entry } from "src/models/entries/domain";
 import { EditSettledEntryRequest } from "@/models/entries/dto";
 

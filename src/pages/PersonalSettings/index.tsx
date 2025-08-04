@@ -15,7 +15,7 @@ import Alert from "@/components/Alert";
 import Checkbox from "@/components/Checkbox";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
-import { api } from "@/api/requests2";
+import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { User, Enterprise } from "src/models/auth";
 import { TIMEZONES } from "@/utils/timezones-list";

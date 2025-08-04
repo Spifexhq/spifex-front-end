@@ -1,7 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { api } from "src/api/requests2";
+import { api } from "src/api/requests";
 import { isApiError } from '@/utils/apiError';
 import { validatePassword } from "@/utils/validatePassword";
 

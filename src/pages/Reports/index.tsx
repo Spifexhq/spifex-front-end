@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { InlineLoader } from "src/components/Loaders";
 import Navbar from "src/components/Navbar";
-import { api } from "src/api/requests2";
+import { api } from "src/api/requests";
 
 const PAGE_SIZE = 10000
 const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");

@@ -1,7 +1,7 @@
 /* src/components/Table/SettledEntriesTable/index.tsx */
 
 import React, { useEffect, useState } from 'react';
-import { api } from '@/api/requests2';
+import { api } from 'src/api/requests';
 
 import { EntryFilters, SettledEntry } from 'src/models/entries/domain';
 import { useShiftSelect } from '@/hooks/useShiftSelect';

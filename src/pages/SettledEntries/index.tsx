@@ -9,7 +9,7 @@ import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
 import { Entry } from '@/models/entries';
 import Navbar from "src/components/Navbar";
-import { api } from "src/api/requests2";
+import { api } from "src/api/requests";
 
 const Settled = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

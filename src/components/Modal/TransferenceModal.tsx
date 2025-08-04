@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { formatAmount, formatDateToDDMMYYYY } from '@/utils/utils';
 import { formatCurrency, handleAmountKeyDown } from "@/utils/formUtils";
-import { api } from 'src/api/requests2';
+import { api } from 'src/api/requests';
 import Input from '@/components/Input';
 import { SelectDropdown } from '@/components/SelectDropdown';
 import { Bank } from '@/models/enterprise_structure';

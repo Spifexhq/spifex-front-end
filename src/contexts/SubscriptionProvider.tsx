@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, ReactNode } from "react";
 import { SubscriptionContext } from "./SubscriptionContext";
 import { Subscription } from "src/models/auth";
-import { api } from "@/api/requests2";             // ← usa API central
+import { api } from "src/api/requests";             // ← usa API central
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);

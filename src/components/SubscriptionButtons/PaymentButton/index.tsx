@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuthContext } from "@/contexts/useAuthContext";
 
 import Button from 'src/components/Button';
-import { api } from 'src/api/requests2';
+import { api } from 'src/api/requests';
 
 interface PaymentButtonProps {
   priceId: string;

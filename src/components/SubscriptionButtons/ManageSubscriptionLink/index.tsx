@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { api } from 'src/api/requests2';
+import { api } from 'src/api/requests';
 import axios from 'axios';
 
 import './styles.css';

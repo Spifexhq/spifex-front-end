@@ -23,7 +23,7 @@ import { useCallback } from 'react';
 import { setUser, setUserEnterprise, setSubscriptionStatus } from '@/redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
-import { api } from '@/api/requests2'
+import { api } from 'src/api/requests'
 import { Permission } from 'src/models/auth';
 
 const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';

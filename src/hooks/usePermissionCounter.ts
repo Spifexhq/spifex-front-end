@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api } from 'src/api/requests2';
+import { api } from 'src/api/requests';
 
 export const usePermissionCounter = () => {
   const [alertMessage, setAlertMessage] = useState('');

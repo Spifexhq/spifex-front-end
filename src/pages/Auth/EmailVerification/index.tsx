@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import { VerifyEmailResponse, VerifyNewEmailResponse } from '@/models/auth/dto/EmailVerification';
 import { ApiResponse } from '@/models/Api';
-import { api } from "@/api/requests2";
+import { api } from "src/api/requests";
 import Button from '@/components/Button';
 import { isApiError } from '@/utils/apiError';
 import { InlineLoader } from '@/components/Loaders';

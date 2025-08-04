@@ -10,7 +10,7 @@ import Input from "../Input";
 import { EntryFilters } from "<source />
 <models />
 <e></e>ntries/domain";
-import { api } from "src/api/requests2";
+import { api } from "src/api/requests";
 
 interface FilterProps {
   onApply: (filters: EntryFilters) => void;

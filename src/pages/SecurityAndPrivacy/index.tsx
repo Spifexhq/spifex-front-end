@@ -16,7 +16,7 @@ import Button            from "@/components/Button";
 import Snackbar          from "@/components/Snackbar";
 import Alert             from "@/components/Alert";
 
-import { api }             from "@/api/requests2";
+import { api }             from "src/api/requests";
 import { useAuthContext }  from "@/contexts/useAuthContext";
 import { User }            from "src/models/auth";
 import { validatePassword } from "@/utils/validatePassword";
