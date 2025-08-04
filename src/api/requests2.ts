@@ -1,23 +1,20 @@
 import axios from 'axios';
 import { request } from '@/lib/http'
 import {
-  AddEmployeeRequest,
-  EditEmployeeRequest,
-  GetEmployeeResponse,
-    GetUserResponse,
-    SignInRequest,
-    SignInResponse,
-    SignUpRequest,
-    SignUpResponse,
-    Subscription
+  GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,
+  GetUserResponse,
+  SignInRequest, SignInResponse, SignUpRequest, SignUpResponse,
+  Subscription
 } from '@/models/auth/dto'
 import { User, Enterprise, Employee } from 'src/models/auth/domain'
 import { Entry, SettledEntry, Transference } from 'src/models/Entries/domain'
-import { GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
+import {
+  GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
   AddTransferenceRequest
 } from '@/models/Entries/dto'
-import { GetBank, GetBanks,
+import {
+  GetBank, GetBanks,
   GetLedgerAccount, GetLedgerAccounts, AddLedgerAccountRequest, EditLedgerAccountRequest,
   GetDocumentType, GetDocumentTypes,
   GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
@@ -83,7 +80,7 @@ export const api = {
 
   /* --- Employees --- */
   getEmployees: () =>
-    request<GetEntryResponse>("companies/employees", "GET"),
+    request<GetEmployeesResponse>("companies/employees", "GET"),
 
   getEmployee: (ids: number[]) =>
     request<GetEmployeeResponse>(`companies/employees/${ids.join(',')}`, "GET"),
