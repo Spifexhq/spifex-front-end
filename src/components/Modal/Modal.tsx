@@ -17,13 +17,13 @@ import {
   WeekendOption,
 } from './Modal.types';
 
-// Utils
+// Lib
 import {
+  decimalToCentsString,
   distributePercentages,
   formatCurrency,
-  handleAmountKeyDown,
-} from '@/utils/formUtils';
-import { decimalToCentsString } from 'src/utils/utils';
+  handleAmountKeyDown
+} from 'src/lib';
 
 // API and models
 import { api } from 'src/api/requests';

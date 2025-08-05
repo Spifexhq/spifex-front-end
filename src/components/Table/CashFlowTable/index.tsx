@@ -10,7 +10,7 @@ import { useBanks } from "@/hooks/useBanks";
 import { InlineLoader } from "@/components/Loaders";
 import Checkbox from "@/components/Checkbox";
 import Button from "@/components/Button";
-import { getCursorFromUrl } from "src/utils/cursors";
+import { getCursorFromUrl } from "src/lib/list";
 
 const mapEntry = (dto: Entry): Entry => dto;
 

@@ -11,8 +11,11 @@ import Input from "../Input";
 import { InlineLoader } from "../Loaders";
 
 // Utils
-import { centsToDecimalString } from "src/utils/utils";
-import { formatCurrency, handleUtilitaryAmountKeyDown } from "@/utils/formUtils";
+import {
+  centsToDecimalString,
+  formatCurrency,
+  handleUtilitaryAmountKeyDown
+} from "src/lib";
 
 // API and models
 import { api } from "src/api/requests";

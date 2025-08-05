@@ -5,7 +5,7 @@ import { VerifyEmailResponse, VerifyNewEmailResponse } from '@/models/auth/dto/E
 import { ApiResponse } from '@/models/Api';
 import { api } from "src/api/requests";
 import Button from '@/components/Button';
-import { isApiError } from '@/utils/apiError';
+import { isApiError } from 'src/lib/api/apiError';
 import { InlineLoader } from '@/components/Loaders';
 
 const EmailVerification = () => {

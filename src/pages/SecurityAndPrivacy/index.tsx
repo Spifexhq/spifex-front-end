@@ -19,7 +19,7 @@ import Alert             from "@/components/Alert";
 import { api }             from "src/api/requests";
 import { useAuthContext }  from "@/contexts/useAuthContext";
 import { User }            from "src/models/auth";
-import { validatePassword } from "@/utils/validatePassword";
+import { validatePassword } from "src/lib";
 
 /* -------------------------------------------------------------------------- */
 

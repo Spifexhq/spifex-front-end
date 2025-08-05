@@ -1,5 +1,5 @@
-// utils/timezones‑list.ts
-import { formatTimezoneLabel } from "./timezone";
+// src/lib/tz/timezonesList.ts
+import { formatTimezoneLabel } from "./formatTimezoneLabel";
 
 export interface TimezoneOption {
   value: string;

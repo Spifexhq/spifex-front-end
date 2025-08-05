@@ -6,7 +6,7 @@ import { api } from 'src/api/requests';
 import { EntryFilters, SettledEntry } from 'src/models/entries/domain';
 import { useShiftSelect } from '@/hooks/useShiftSelect';
 import { useBanks } from '@/hooks/useBanks';
-import { getCursorFromUrl } from '@/utils/cursors';
+import { getCursorFromUrl } from "src/lib/list";
 
 import { InlineLoader } from '@/components/Loaders';
 import Checkbox from '@/components/Checkbox';

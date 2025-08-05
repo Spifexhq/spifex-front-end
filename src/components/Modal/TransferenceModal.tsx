@@ -1,12 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { format } from 'date-fns';
-import { formatAmount, formatDateToDDMMYYYY } from '@/utils/utils';
-import { formatCurrency, handleAmountKeyDown } from "@/utils/formUtils";
+
+
 import { api } from 'src/api/requests';
 import Input from '@/components/Input';
 import { SelectDropdown } from '@/components/SelectDropdown';
 import { Bank } from '@/models/enterprise_structure';
 import Button from '../Button';
+import {
+  formatAmount,
+  formatCurrency,
+  formatDateToDDMMYYYY,
+  handleAmountKeyDown
+} from 'src/lib';
 
 interface TransferenceModalProps {
   isOpen: boolean;

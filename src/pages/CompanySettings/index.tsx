@@ -17,8 +17,8 @@ import { SelectDropdown } from "@/components/SelectDropdown";
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { Enterprise } from "src/models/auth/domain";
-import { TIMEZONES } from "@/utils/timezones-list";
-import { formatTimezoneLabel } from "@/utils/timezone";
+import { formatTimezoneLabel, TIMEZONES } from "src/lib";
+
 
 type EditableUserField = "none" | "name" | "timezone" | "address";
 

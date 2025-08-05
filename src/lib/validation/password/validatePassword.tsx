@@ -1,4 +1,4 @@
-// src/utils/validatePassword.tsx
+// src/validation/password/validatePassword.tsx
 export type PasswordValidationResult = {
   isValid: boolean;
   message: string | JSX.Element;
