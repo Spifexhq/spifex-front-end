@@ -1,9 +1,12 @@
-import { combineReducers } from "@reduxjs/toolkit";
+// redux/rootReducer.ts
 import authReducer from "./reducers/authReducer";
 
-const rootReducer = combineReducers({
+const rootReducer = {
   auth: authReducer,
-});
+};
 
-export type RootState = ReturnType<typeof rootReducer>;
+export type RootState = {
+  auth: ReturnType<typeof authReducer>;
+};
+
 export default rootReducer;

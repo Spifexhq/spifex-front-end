@@ -1,9 +1,9 @@
 import { createContext } from "react";
-import { ApiSignIn, ApiGetUser } from "src/models/auth"; 
+import { SignInRequest, SignInResponse, GetUserResponse } from "@/models/auth/dto";
 
 export interface RequestsContextType {
-  getUser: () => Promise<{ data?: ApiGetUser | null }>;
-  signIn: (params: { email: string; password: string }) => Promise<{ data?: ApiSignIn | null; detail?: string }>;
+  getUser: () => Promise<{ data?: GetUserResponse | null }>;
+  signIn: (params: SignInRequest) => Promise<{ data?: SignInResponse | null; detail?: string }>;
 }
 
 export const RequestsContext = createContext<RequestsContextType | undefined>(undefined);

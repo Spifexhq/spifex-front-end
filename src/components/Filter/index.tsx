@@ -7,9 +7,7 @@ import { LedgerAccount } from "src/models/enterprise_structure";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import Input from "../Input";
-import { EntryFilters } from "<source />
-<models />
-<e></e>ntries/domain";
+import { EntryFilters } from "src/models/entries/domain";
 import { api } from "src/api/requests";
 
 interface FilterProps {
