@@ -31,6 +31,11 @@ export interface SnackbarProps {
   // Optional CSS class for customization
   className?: string;
 
+  /** Mensagem curta; se presente, o Snackbar cria internamente um <Alert> */
+  message?: string | JSX.Element;
+  /** Severidade usada quando message é fornecida */
+  severity?: "success" | "error" | "warning" | "info";
+
   // Content within the Snackbar (usually an Alert)
   children: React.ReactNode;
 }

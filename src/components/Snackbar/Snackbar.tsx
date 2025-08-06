@@ -19,6 +19,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import Alert from "@/components/Alert";   
 import { createPortal } from "react-dom";
 import styles from "./Snackbar.module.css";
 import { SnackbarProps } from "./Snackbar.types";
@@ -28,6 +29,8 @@ const Snackbar: React.FC<SnackbarProps> = ({
   autoHideDuration,
   onClose,
   className = "",
+  message,
+  severity = "info",
   children,
 }) => {
   const [visible, setVisible] = useState(open);
@@ -50,9 +53,19 @@ const Snackbar: React.FC<SnackbarProps> = ({
 
   if (!visible) return null;
 
+  const content = message ? (
+    <Alert severity={severity}>{message}</Alert>
+  ) : (
+    children
+  );
+
   return createPortal(
-    <div className={`${styles.snackbar} ${open ? styles.open : styles.closed} ${className}`}>
-      {children}
+    <div
+      className={`${styles.snackbar} ${
+        open ? styles.open : styles.closed
+      } ${className}`}
+    >
+      {content}
     </div>,
     document.body
   );

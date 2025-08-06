@@ -63,6 +63,7 @@ const Icons = {
     "M12 22.09l-.97-.44C6 19.07 3 15.86 3 12V5l9-4 9 4v7c0 3.86-3 7.07-8.03 9.65l-.97.44Z M9 12l2 2 4-4"
   ),
   building: svg("M4 21h16V7L12 3 4 7v14ZM9 21V9h6v12"),
+  bank: svg("m12 .923 9.114 3.646A3 3 0 0 1 23 7.354V10h-3v6h3v3a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-3h3v-6H1V7.354A3 3 0 0 1 2.886 4.57L12 .923ZM6 16h5v-6H6v6Zm7 0h5v-6h-5v6ZM12 3.077 3.629 6.426A1 1 0 0 0 3 7.354V8h12V4.277l-3-1.2ZM3 19v-1h12v2H4a1 1 0 0 1-1-1Z"),
   layers: svg("M3 7l9-4 9 4-9 4-9-4ZM3 14l9 4 9-4M3 10l9 4 9-4"),
   squares: svg("M3 3h7v7H3V3Zm0 11h7v7H3v-7Zm11-11h7v7h-7V3Zm0 11h7v7h-7v-7Z"),
   card: svg(
@@ -94,19 +95,33 @@ const sections: {
     title: "My own",
     items: [
       { id: "company-settings", icon: "building", label: "Company settings" },
+      { id: "employees", icon: "settings", label: "Employees" },
       { id: "subscription-management", icon: "layers", label: "Plan" },
       { id: "integrations", icon: "squares", label: "Integrations" },
     ],
   },
   {
     title: "Banking",
-    items: [{ id: "bank-statements", icon: "card", label: "Bank statements" }],
+    items: [
+      { id: "banks", icon: "bank", label: "Banks" },
+      { id: "bank-statements", icon: "card", label: "Statements" }
+    ],
   },
   {
     title: "Spend management",
     items: [
       { id: "expenses", icon: "receipt", label: "Expenses" },
       { id: "assistant", icon: "robot", label: "Assistant" },
+    ],
+  },
+  {
+    title: "Structure",
+    items: [
+      { id: "groups", icon: "settings", label: "Groups" },
+      { id: "departments", icon: "squares", label: "Departments" },
+      { id: "entities", icon: "settings", label: "Entities" },
+      { id: "inventory", icon: "settings", label: "Inventory" },
+      { id: "projects", icon: "settings", label: "Projects" },
     ],
   },
 ];

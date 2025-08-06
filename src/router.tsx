@@ -16,14 +16,23 @@ const SignIn = Loader(lazy(() => import("@/pages/Auth/SignIn")));
 const SignUpRedirect = Loader(lazy(() => import("@/pages/Auth/SignUpRedirect")));
 const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerification")));
 
-// Pages
+// Main Pages
 const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
 const SettledEntries = Loader(lazy(() => import("src/pages/SettledEntries")));
 const Reports = Loader(lazy(() => import("@/pages/Reports")));
+
+// Settings
 const Personal = Loader(lazy(() => import("src/pages/PersonalSettings")));
 const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
 const SecurityAndPrivacy = Loader(lazy(() => import("@/pages/SecurityAndPrivacy")));
 const CompanySettings = Loader(lazy(() => import("@/pages/CompanySettings")));
+const DepartmentSettings = Loader(lazy(() => import("@/pages/DepartmentSettings")));
+const BankSettings = Loader(lazy(() => import("@/pages/BankSettings")));
+const EntitySettings = Loader(lazy(() => import("@/pages/EntitySettings")));
+const InventorySettings = Loader(lazy(() => import("@/pages/InventorySettings")));
+const ProjectSettings = Loader(lazy(() => import("@/pages/ProjectSettings")));
+const EmployeeSettings = Loader(lazy(() => import("@/pages/EmployeeSettings")));
+const GroupSettings = Loader(lazy(() => import("@/pages/GroupSettings")));
 
 // Status Pages
 const PurchaseConfirmation = Loader(lazy(() => import("@/pages/Status/PurchaseConfirmation")));
@@ -131,6 +140,34 @@ const routes: RouteObject[] = [
                 {
                 path: 'security',
                 element: <SecurityAndPrivacy />
+                },
+                {
+                path: 'banks',
+                element: <BankSettings />
+                },
+                {
+                path: 'departments',
+                element: <DepartmentSettings />
+                },
+                {
+                path: 'entities',
+                element: <EntitySettings />
+                },
+                {
+                path: 'inventory',
+                element: <InventorySettings />
+                },
+                {
+                path: 'projects',
+                element: <ProjectSettings />
+                },
+                {
+                path: 'employees',
+                element: <EmployeeSettings />
+                },
+                {
+                path: 'groups',
+                element: <GroupSettings />
                 },
             ]
             },

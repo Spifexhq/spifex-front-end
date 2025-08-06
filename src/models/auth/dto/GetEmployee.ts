@@ -1,4 +1,4 @@
-import { Employee, EmployeeDetail, Group } from "../domain";
+import { Employee, EmployeeDetail } from "../domain";
 
 export interface GetEmployeesResponse {
   employees: Employee[];
@@ -11,7 +11,7 @@ export interface GetEmployeeResponse {
 export interface EmployeePayloadBase {
   name: string;
   email: string;
-  groups: Group[];
+  groups: number[];
 }
 
 export type AddEmployeeRequest = EmployeePayloadBase & {

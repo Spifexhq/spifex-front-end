@@ -1,5 +1,4 @@
-import { Bank } from "src/models/enterprise_structure";
-import { GroupDetail, Permission } from "../domain";
+import { GroupDetail } from "../domain";
 
 export interface GetGroups {
   groups: GroupDetail[];
@@ -11,8 +10,8 @@ export interface GetGroup {
 
 export interface GroupPayloadBase {
   name: string;
-  banks: Bank[];
-  permissions: Permission[];
+  banks: string;
+  permissions: string;
 }
 
 export type AddGroupRequest = GroupPayloadBase;
