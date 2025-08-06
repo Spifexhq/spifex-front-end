@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import { useAuth } from "@/api";
@@ -17,6 +17,10 @@ import "./styles.css";
 // -----------------------------------------------------------------------------
 
 const SignIn = () => {
+  useEffect(() => {
+    document.title = "Login | Spifex";
+  }, []);
+  
   const navigate = useNavigate();
   const { handleSignIn } = useAuth();
 

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import {Modal, TransferenceModal} from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
@@ -12,6 +12,10 @@ import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 
 const CashFlow = () => {
+  useEffect(() => {
+    document.title = "Fluxo de Caixa";
+  }, []);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);

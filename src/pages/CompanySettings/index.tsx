@@ -23,6 +23,10 @@ import { formatTimezoneLabel, TIMEZONES } from "src/lib";
 type EditableUserField = "none" | "name" | "timezone" | "address";
 
 const CompanySettings: React.FC = () => {
+  useEffect(() => {
+    document.title = "Configurações da Empresa";
+  }, []);
+
   const { isOwner } = useAuthContext();
 
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null);

@@ -13,6 +13,10 @@ interface TimeLeft {
 }
 
 const StatusComingSoon: React.FC = () => {
+  useEffect(() => {
+    document.title = "Coming Soon";
+  }, []);
+
   const calculateTimeLeft = (): TimeLeft => {
     const difference = +new Date('2025-12-31T23:59:59') - +new Date();
     let timeLeft: TimeLeft = {};

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from '@/components/Button';
 import { Sidebar } from "@/components/Sidebar";
 import { Modal, TransferenceModal } from "@/components/Modal";
@@ -12,6 +12,10 @@ import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 
 const Settled = () => {
+  useEffect(() => {
+    document.title = "Realizado";
+  }, []);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);

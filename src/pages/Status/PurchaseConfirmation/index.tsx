@@ -18,6 +18,10 @@ interface PurchaseDetails {
 }
 
 const PurchaseConfirmation: React.FC = () => {
+  useEffect(() => {
+    document.title = "Confirmação de Compra";
+  }, []);
+
   const navigate = useNavigate();
   const location = useLocation();
 

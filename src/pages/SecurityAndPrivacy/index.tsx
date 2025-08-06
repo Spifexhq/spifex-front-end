@@ -24,6 +24,10 @@ import { validatePassword } from "src/lib";
 /* -------------------------------------------------------------------------- */
 
 const SecurityAndPrivacy = () => {
+  useEffect(() => {
+    document.title = "Segurança e Privacidade";
+  }, []);
+
   const { user: authUser } = useAuthContext();
 
   const [user, setUser]       = useState<User | null>(null);

@@ -21,6 +21,10 @@ const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM
 const endDate = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
 
 const Report = () => {
+  useEffect(() => {
+    document.title = "Relatórios";
+  }, []);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);

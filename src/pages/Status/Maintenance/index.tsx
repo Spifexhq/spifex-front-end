@@ -7,7 +7,7 @@ import instagram from '@/assets/Images/status/instagram.svg';
 
 const StatusMaintenance: React.FC = () => {
   useEffect(() => {
-    document.title = 'Status - Maintenance';
+    document.title = 'Maintenance';
   }, []);
 
   return (

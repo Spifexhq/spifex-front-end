@@ -12,6 +12,10 @@ import ManageSubscriptionLink from '@/components/SubscriptionButtons/ManageSubsc
 import Button from '@/components/Button';
 
 const SubscriptionManagement: React.FC = () => {
+  useEffect(() => {
+    document.title = "Gestão de Plano";
+  }, []);
+
   const isLogged = useRequireLogin();
   const { handleInitUser } = useAuth();
   const { isSubscribed, activePlanId, user } = useAuthContext();
