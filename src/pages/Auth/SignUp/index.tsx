@@ -1,9 +1,8 @@
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "src/api/requests";
-import { isApiError } from 'src/lib/api/apiError';
-import { validatePassword } from "src/lib";
+import { isApiError, validatePassword, useAutoCountry } from 'src/lib';
 
 import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
@@ -20,6 +19,10 @@ import "./styles.css";
 // -----------------------------------------------------------------------------
 
 const SignUp = () => {
+  useEffect(() => {
+    document.title = "Sign Up | Spifex";
+  }, []);
+  
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -33,14 +36,19 @@ const SignUp = () => {
   const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { user_country: autoCountry } = useAutoCountry({ timeoutMs: 2500 });
 
-  const isFormIncomplete = Object.values(form).some((field) => field === "");
+  const isFormIncomplete = Object.values(form).some((v) => v === "");
 
-  const handleInputChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-  };
+  const handleInputChange =
+    (field: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (
+    e: FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.preventDefault();
 
     if (isFormIncomplete) {
@@ -67,6 +75,7 @@ const SignUp = () => {
         email: form.email,
         password: form.password,
         user_timezone: timezone,
+        user_country: (autoCountry || "").toUpperCase(), // <- fora do form, como timezone
       });
 
       if (isApiError(res)) {

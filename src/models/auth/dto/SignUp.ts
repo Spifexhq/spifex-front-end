@@ -5,6 +5,7 @@ export interface SignUpRequest {
   email: string;
   password: string;
   user_timezone: string;
+  user_country: string;
 }
 
 export interface SignUpResponseSuccess {

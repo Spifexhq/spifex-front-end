@@ -8,6 +8,7 @@ export interface User {
   job_title: string;
   department: string;
   user_timezone : string;
+  user_country: string;
   is_owner: boolean;
   is_superuser: boolean;
   stripe_customer_id: string | null;

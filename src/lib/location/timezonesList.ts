@@ -1,4 +1,4 @@
-// src/lib/tz/timezonesList.ts
+// src/lib/location/timezonesList.ts
 import { formatTimezoneLabel } from "./formatTimezoneLabel";
 
 export interface TimezoneOption {

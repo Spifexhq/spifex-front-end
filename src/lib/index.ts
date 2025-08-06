@@ -3,5 +3,5 @@ export * from "./currency";
 export * from "./date";
 export * from "./form";
 export * from "./list";
-export * from "./tz";
+export * from "./location";
 export * from "./validation";

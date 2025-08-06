@@ -1,4 +1,4 @@
-// src/lib/tz/formatTimezoneLabel.ts
+// src/lib/location/formatTimezoneLabel.ts
 /**
  * Converte "Europe/London" ➜ "London, Europe (GMT +01:00)"
  * - Usa Intl.DateTimeFormat("longOffset") quando disponível.

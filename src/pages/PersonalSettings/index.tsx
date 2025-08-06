@@ -18,8 +18,7 @@ import { SelectDropdown } from "@/components/SelectDropdown";
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { User, Enterprise } from "src/models/auth";
-import { TIMEZONES } from "@/utils/timezones-list";
-import { formatTimezoneLabel } from "@/utils/timezone";
+import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 
 /* -------------------------------------------------------------------------- */
 
@@ -29,9 +28,14 @@ type EditableUserField =
   | "phone_number"
   | "job_title"
   | "department"
-  | "user_timezone";
+  | "user_timezone"
+  | "user_country";
 
 const PersonalSettings: React.FC = () => {
+  useEffect(() => {
+    document.title = "Configurações Pessoais";
+  }, []);
+
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
 
@@ -59,6 +63,7 @@ const PersonalSettings: React.FC = () => {
     job_title: "",
     department: "",
     user_timezone: "",
+    user_country: "",
   });
 
   /* ------------------------------ Carrega dados --------------------------- */
@@ -77,6 +82,7 @@ const PersonalSettings: React.FC = () => {
           job_title: userData.job_title,
           department: userData.department,
           user_timezone: userData.user_timezone,
+          user_country: userData.user_country,
         });
 
         /* ---------- ENTERPRISE (só owner) ---------- */
@@ -108,6 +114,7 @@ const PersonalSettings: React.FC = () => {
         job_title: user.job_title,
         department: user.department,
         user_timezone: user.user_timezone,
+        user_country: user.user_country,
       });
       setUseDeviceTz(user.user_timezone === deviceTz);
       const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
@@ -127,6 +134,7 @@ const PersonalSettings: React.FC = () => {
         job_title: user.job_title,
         department: user.department,
         user_timezone: user.user_timezone,
+        user_country: user.user_country,
       });
       setUseDeviceTz(user.user_timezone === deviceTz);
       const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
@@ -272,6 +280,12 @@ const PersonalSettings: React.FC = () => {
               btnLabel="Atualizar departamento"
             />
             <Row
+              label="País"
+              value={user?.user_country ?? ""}
+              field="user_country"
+              btnLabel="Atualizar país"
+            />
+            <Row
               label="Fuso horário"
               value={formatTimezoneLabel(user?.user_timezone ?? "")}
               field="user_timezone"
@@ -348,6 +362,14 @@ const PersonalSettings: React.FC = () => {
                   label="Departamento"
                   name="department"
                   value={formData.department}
+                  onChange={handleChange}
+                />
+              )}
+              {(editingField === null || editingField === "user_country") && (
+                <Input
+                  label="País"
+                  name="country"
+                  value={formData.user_country}
                   onChange={handleChange}
                 />
               )}
