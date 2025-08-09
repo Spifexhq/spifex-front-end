@@ -260,6 +260,21 @@ const LedgerAccountSettings: React.FC = () => {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalOpen, closeModal]);
+
+  useEffect(() => {
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
+
   /* ----------------------- View render helpers --------------------------- */
   const renderListView = () => (
     <div className="space-y-6">
