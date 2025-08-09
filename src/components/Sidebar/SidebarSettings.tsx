@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth as useAuthHook } from "@/api/auth";
 
 /**
  * ## SidebarSettings
@@ -36,41 +37,62 @@ const svg = (path: string, viewBox = "0 0 24 24") => (
 );
 
 const Icons = {
-  user: (
-    <svg
-      className="w-5 h-5 text-gray-600 flex-shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      viewBox="0 0 24 24"
-    >
-      <path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0Z" />
-      <path d="M4.5 21a8.25 8.25 0 0115 0" />
-    </svg>
+  user: svg(
+    "M12 12a5 5 0 100-10 5 5 0 000 10z M4 20v-1a7 7 0 017-7h2a7 7 0 017 7v1",
   ),
-  settings: svg(
-    "M11.982 3.5a8.45 8.45 0 00-2.474.372 1 1 0 01-.98-.196l-1.625-1.4a.75.75 0 00-1.025.134l-1.6 1.9a.75.75 0 00.109 1.045l1.384 1.147a1 1 0 01.376.881 8.48 8.48 0 000 2.558 1 1 0 01-.376.881L4.387 11.7a.75.75 0 00-.109 1.045l1.6 1.9a.75.75 0 001.025.134l1.625-1.4a1 1 0 01.98-.196 8.45 8.45 0 004.948 0 1 1 0 01.98.196l1.625 1.4a.75.75 0 001.025-.134l1.6-1.9a.75.75 0 00-.109-1.045l-1.384-1.147a1 1 0 01-.376-.881 8.479 8.479 0 01.002-2.558 1 1 0 01.376-.881l1.384-1.147a.75.75 0 00.109-1.045l-1.6-1.9a.75.75 0 00-1.025-.134l-1.625 1.4a1 1 0 01-.98.196 8.45 8.45 0 00-2.474-.372ZM15 12a3 3 0 11-6 0 3 3 0 016 0Z"
+  personal: svg(
+    "M4 6h16M9 4a2 2 0 110 4M4 12h16M15 10a2 2 0 110 4M4 18h16M7 16a2 2 0 110 4"
   ),
   bell: svg(
-    "M14.857 17.243A5.642 5.642 0 0112 18.5a5.642 5.642 0 01-2.857-.257M18 10.5a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"
+    "M18 16v-4a6 6 0 10-12 0v4l-2 2h16l-2-2z M13.73 21a2 2 0 01-3.46 0"
   ),
   robot: svg(
-    "M10 3h4v2h3a1 1 0 011 1v3h2v7H4V9h2V6a1 1 0 011-1h3V3Zm-3 10h2v2H7v-2Zm8 0h2v2h-2v-2ZM9 6h6v2H9V6Z"
+    "M4 7h16v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7z M9 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm9 0a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z M12 7V4m0-1a1 1 0 110 2 1 1 0 010-2z"
   ),
   shield: svg(
-    "M12 22.09l-.97-.44C6 19.07 3 15.86 3 12V5l9-4 9 4v7c0 3.86-3 7.07-8.03 9.65l-.97.44Z M9 12l2 2 4-4"
+    "M12 3l7 3v6c0 4.5-3 8.5-7 9-4-.5-7-4.5-7-9V6l7-3z M9 12h6M12 9v6"
   ),
-  building: svg("M4 21h16V7L12 3 4 7v14ZM9 21V9h6v12"),
-  bank: svg("m12 .923 9.114 3.646A3 3 0 0 1 23 7.354V10h-3v6h3v3a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-3h3v-6H1V7.354A3 3 0 0 1 2.886 4.57L12 .923ZM6 16h5v-6H6v6Zm7 0h5v-6h-5v6ZM12 3.077 3.629 6.426A1 1 0 0 0 3 7.354V8h12V4.277l-3-1.2ZM3 19v-1h12v2H4a1 1 0 0 1-1-1Z"),
-  layers: svg("M3 7l9-4 9 4-9 4-9-4ZM3 14l9 4 9-4M3 10l9 4 9-4"),
-  squares: svg("M3 3h7v7H3V3Zm0 11h7v7H3v-7Zm11-11h7v7h-7V3Zm0 11h7v7h-7v-7Z"),
+  building: svg(
+    "M6 4h12v16H6V4z M10 8h1M13 8h1M10 11h1M13 11h1M10 14h1M13 14h1M8 20v-2h8v2"
+  ),
+  employees: svg(
+    "M8 8a3 3 0 110-6 3 3 0 010 6z M16 9a3 3 0 110-6 3 3 0 010 6z M4 19v-1a5 5 0 015-5h0 M12 19v-1a5 5 0 015-5h0"
+  ),
+  layers: svg(
+    "M12 3l9 5-9 5-9-5 9-5z M21 13l-9 5-9-5"
+  ),
+  integrations: svg(
+    "M3 7h8v8H3V7z M13 9h8v8h-8V9z M11 11h2v2h-2z"
+  ),
+  bank: svg(
+    "M3 9l9-5 9 5z M4 10h16 M6 10v7M10 10v7M14 10v7M18 10v7 M3 17h18M2 21h20"
+  ),
   card: svg(
-    "M2.25 7.5h19.5v-3A2.25 2.25 0 0019.5 2.25H4.5A2.25 2.25 0 002.25 4.5v3ZM2.25 9h19.5v8.25A2.25 2.25 0 0119.5 19.5H4.5a2.25 2.25 0 01-2.25-2.25V9Zm15 4.5h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z"
+    "M3 5h18a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2z M3 10h18 M7 15h5"
   ),
   receipt: svg(
-    "M9 3.75 7.5 2.25 6 3.75 4.5 2.25 3 3.75v16.5l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5V3.75L10.5 2.25 9 3.75ZM9 7.5h6m-6 3h6m-6 3h3"
+    "M7 3h10v18l-3-2-2 2-2-2-3 2V3z M9 7h6M9 11h6M9 15h4"
+  ),
+  assistant: svg(
+    "M3 21l8-8 M12 4l6 6-6 6-6-6 6-6z M18 3v2 M21 6h-2 M17 11v2 M12 6h2"
+  ),
+  ledger: svg(
+    "M5 7a1.5 1.5 0 110-3 1.5 1.5 0 010 3z M9 7h11 M5 12a1.5 1.5 0 110-3 1.5 1.5 0 010 3z M9 12h11 M5 17a1.5 1.5 0 110-3 1.5 1.5 0 010 3z M9 17h11"
+  ),
+  groups: svg(
+    "M6 12a2 2 0 110-4 2 2 0 010 4z M18 7a2 2 0 110-4 2 2 0 010 4z M18 17a2 2 0 110-4 2 2 0 010 4z M8 12h6 M16 8l-4 3 M16 16l-4-3"
+  ),
+  departments: svg(
+    "M4 4h7v7H4V4z M13 4h7v7h-7V4z M4 13h7v7H4v-7z M13 13h7v7h-7v-7z"
+  ),
+  entities: svg(
+    "M4 6h7v14H4V6z M13 4h7v16h-7V4z M7 9h1M7 12h1M7 15h1M16 8h1M16 11h1M16 14h1 M6 20h3M15 20h5"
+  ),
+  inventory: svg(
+    "M12 3l9 5-9 5-9-5 9-5z M21 8v8l-9 5-9-5V8 M12 13v8"
+  ),
+  projects: svg(
+    "M9 6V4h6v2 M3 7h18v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7z M3 12h18"
   ),
 };
 
@@ -85,44 +107,44 @@ const sections: {
   {
     title: "",
     items: [
-      { id: "personal", icon: "settings", label: "Personal settings" },
+      { id: "personal", icon: "personal", label: "Personal settings" },
       { id: "notifications", icon: "bell", label: "Notifications" },
       { id: "copilots", icon: "robot", label: "Copilots" },
       { id: "security", icon: "shield", label: "Security and privacy" },
     ],
   },
   {
-    title: "My own",
+    title: "Organization",
     items: [
       { id: "company-settings", icon: "building", label: "Company settings" },
-      { id: "employees", icon: "settings", label: "Employees" },
+      { id: "employees", icon: "employees", label: "Employees" },
       { id: "subscription-management", icon: "layers", label: "Plan" },
-      { id: "integrations", icon: "squares", label: "Integrations" },
+      { id: "integrations", icon: "integrations", label: "Integrations" },
     ],
   },
   {
     title: "Banking",
     items: [
       { id: "banks", icon: "bank", label: "Banks" },
-      { id: "bank-statements", icon: "card", label: "Statements" }
-    ],
-  },
-  {
-    title: "Spend management",
-    items: [
+      { id: "bank-statements", icon: "card", label: "Statements" },
       { id: "expenses", icon: "receipt", label: "Expenses" },
-      { id: "assistant", icon: "robot", label: "Assistant" },
     ],
   },
   {
-    title: "Structure",
+    title: "Management",
     items: [
-      { id: "ledger-accounts", icon: "settings", label: "Ledger Accounts" },
-      { id: "groups", icon: "settings", label: "Groups" },
-      { id: "departments", icon: "squares", label: "Departments" },
-      { id: "entities", icon: "settings", label: "Entities" },
-      { id: "inventory", icon: "settings", label: "Inventory" },
-      { id: "projects", icon: "settings", label: "Projects" },
+      { id: "assistant", icon: "assistant", label: "Assistant" },
+      { id: "projects", icon: "projects", label: "Projects" },
+      { id: "inventory", icon: "inventory", label: "Inventory" },
+    ],
+  },
+  {
+    title: "Accounting & Structure",
+    items: [
+      { id: "ledger-accounts", icon: "ledger", label: "Ledger Accounts" },
+      { id: "groups", icon: "groups", label: "Groups" },
+      { id: "departments", icon: "departments", label: "Departments" },
+      { id: "entities", icon: "entities", label: "Entities" },
     ],
   },
 ];
@@ -137,57 +159,68 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
   onSelect,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuthHook();
+  const displayName = user?.name || userName;
 
   const handleClick = (id: string) => {
-    if (onSelect) {
-      onSelect(id);
-    } else {
-      navigate(`/settings/${id}`);
-    }
+    if (onSelect) onSelect(id);
+    else navigate(`/settings/${id}`);
   };
 
   return (
     <nav
       aria-label="Settings navigation sidebar"
-      className="fixed top-0 left-0 h-screen w-64 z-50 flex flex-col bg-white border-r border-gray-200"
+      className="fixed top-12 left-0 h-screen w-64 z-50 flex flex-col bg-white border-r border-gray-200"
     >
-      {/* User block */}
-      <div className="flex items-center gap-2 h-16 px-3 border-b border-gray-100 select-none">
-        {Icons.user}
-        <span className="font-medium text-gray-700">{userName}</span>
-      </div>
-
-      {/* Menu groups */}
       <div className="flex-1 overflow-y-auto py-3">
-        {sections.map(({ title, items }) => (
-          <div key={title || "root"} className="mt-1">
-            {title && (
-              <p className="px-4 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                {title}
-              </p>
-            )}
+        {sections.map(({ title, items }, idx) => {
+          const isUserSection = title === "" && idx === 0;
 
-            <ul className="space-y-1">
-              {items.map(({ id, icon, label }) => {
-                const active = activeItem === id;
-                return (
-                  <li key={id}>
-                    <button
-                      type="button"
-                      onClick={() => handleClick(id)}
-                      className={`group w-full flex items-center gap-3 h-9 rounded-lg px-3 transition-colors duration-200 ${
-                        active ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {Icons[icon]}
-                      <span className="text-sm whitespace-nowrap">{label}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+          return (
+            <div key={title || "root"} className="mt-1">
+              {isUserSection ? (
+                <div className="px-4 pt-4 pb-1 text-xs uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500">{Icons.user}</span>
+                    <span className="font-semibold text-gray-700 normal-case text-sm">
+                      {displayName}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                title && (
+                  <p className="px-4 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {title}
+                  </p>
+                )
+              )}
+
+              <ul className="space-y-1">
+                {items.map(({ id, icon, label }) => {
+                  const active = activeItem === id;
+                  return (
+                    <li key={id}>
+                      <button
+                        type="button"
+                        onClick={() => handleClick(id)}
+                        className={`group w-full flex items-center gap-3 h-9 rounded-lg px-3 transition-colors duration-200 ${
+                          active
+                            ? "bg-gray-100 text-gray-900"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {Icons[icon]}
+                        <span className="text-sm whitespace-nowrap">
+                          {label}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
       </div>
     </nav>
   );
