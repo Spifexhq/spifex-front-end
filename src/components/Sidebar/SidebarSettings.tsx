@@ -117,6 +117,7 @@ const sections: {
   {
     title: "Structure",
     items: [
+      { id: "ledger-accounts", icon: "settings", label: "Ledger Accounts" },
       { id: "groups", icon: "settings", label: "Groups" },
       { id: "departments", icon: "squares", label: "Departments" },
       { id: "entities", icon: "settings", label: "Entities" },
