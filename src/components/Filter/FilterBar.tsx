@@ -108,11 +108,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
     <div className="w-full">
       <div className="flex items-center gap-2">
         {/* Campo de busca + chips */}
-        <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-md px-2 h-9">
+        <div className="flex-1 flex flex-wrap items-center gap-2 border border-gray-300 rounded-md px-2 py-1 min-h-9">
           {(filters.start_date || filters.end_date) && (
             <Chip
               icon="calendar"
-              label={`Data de postagem  ${filters.start_date || "mm/dd/yyyy"} - ${filters.end_date || "mm/dd/yyyy"}`}
+              label={`Datas  ${filters.start_date || "mm/dd/yyyy"} - ${filters.end_date || "mm/dd/yyyy"}`}
               onClick={() => setOpenEditor("date")}
               onRemove={() => removerChip("date")}
             />
@@ -146,7 +146,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
           )}
 
           <input
-            className="flex-1 bg-transparent outline-none text-sm placeholder-gray-400"
+            className="flex-[1_1_30%] min-w-[160px] bg-transparent outline-none text-sm placeholder-gray-400"
             placeholder="Buscar ou filtrar…"
             value={filters.description || ""}
             onChange={(e) => setFilters(f => ({ ...f, description: e.target.value }))}
@@ -155,24 +155,25 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
 
         {/* Botões fictícios para manter o layout como nas referências */}
         <div className="hidden sm:block">
-          <button className="h-9 px-2 border border-gray-300 rounded-md text-sm" aria-label="Configurações">
+          <Button variant="outline" className="h-9 px-2 border border-gray-300 rounded-md text-sm" aria-label="Configurações">
             ⚙️
-          </button>
+          </Button>
         </div>
-        <button className="h-9 px-3 border border-gray-300 rounded-md text-xs font-semibold">Salvar visualização</button>
-        <button className="h-9 px-3 border border-gray-300 rounded-md text-xs font-semibold">Agrupar por</button>
+        <Button variant="outline" className="h-9 px-3 border border-gray-300 rounded-md text-xs font-semibold">Salvar visualização</Button>
+        <Button variant="outline" className="h-9 px-3 border border-gray-300 rounded-md text-xs font-semibold">Agrupar por</Button>
       </div>
 
       {/* Segunda linha: ações de filtro */}
       <div className="mt-2 flex items-center gap-2 flex-wrap">
         {/* Adicionar filtro + menu */}
         <div className="relative" ref={menuRef}>
-          <button
+          <Button
+            variant="outline"
             className="h-8 px-3 border border-gray-300 rounded-md text-xs font-semibold"
             onClick={() => setMenuOpen(v => !v)}
           >
             Adicionar filtro +
-          </button>
+          </Button>
 
           {menuOpen && (
             <div className="absolute z-20 mt-2 w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
@@ -206,7 +207,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
 
         {/* Aplicar */}
         <div className="ml-auto sm:ml-0">
-          <Button variant="white" className="h-8 px-3 border border-gray-300 rounded-md text-xs! font-semibold" onClick={aplicar}>
+          <Button variant="outline" className="h-8 px-3 border border-gray-300 rounded-md text-xs! font-semibold" onClick={aplicar}>
             Aplicar
           </Button>
         </div>
@@ -339,7 +340,7 @@ const Chip: React.FC<{
   };
   return (
     <div
-      className="inline-flex items-center gap-1 text-xs border border-gray-300 rounded-md px-2 h-6 bg-white cursor-pointer"
+      className="shrink-0 inline-flex items-center gap-1 text-xs border border-gray-300 rounded-md px-2 h-6 bg-white cursor-pointer"
       onClick={onClick}
     >
       <Icon />
@@ -369,7 +370,7 @@ const Popover: React.FC<{ children: React.ReactNode; onClose(): void }> = ({ chi
   useOutside(ref, onClose);
   return (
     <div className="absolute z-20 mt-2 w-full max-w-3xl">
-      <div ref={ref} className="rounded-md border border-gray-300 bg-white p-3">
+      <div ref={ref} className="rounded-md border border-gray-300 bg-white p-3 shadow-lg">
         {children}
       </div>
     </div>
