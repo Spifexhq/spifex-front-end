@@ -15,7 +15,7 @@
 
 .sign-in__section--right {
     background-color: var(--color3);
-    border-left: var(--border1);
+    border-left: var(--standardBorder);
     align-items: center;
     justify-content: center;
 }
@@ -44,7 +44,7 @@
 }
 
 .sign-in__form-wrapper {
-    border: var(--border1);
+    border: var(--standardBorder);
     border-radius: 15px;
     width: 100%;
     max-width: 500px;
@@ -52,7 +52,7 @@
 }
 
 .sign-in__header {
-    border-bottom: var(--border1);
+    border-bottom: var(--standardBorder);
     padding: 24px;
     font-weight: 600;
     font-size: x-large;

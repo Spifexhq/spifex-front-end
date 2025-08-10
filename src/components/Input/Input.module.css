@@ -29,7 +29,7 @@
   width: 100%;
   background-color: var(--color1);
   font-size: 12px;
-  border: var(--border1);
+  border: var(--standardBorder);
   color: #202020;
   padding: 0.7rem 1rem;
   border-radius: 5px;
