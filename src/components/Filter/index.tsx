@@ -2,7 +2,7 @@
 
 import React, { FC, useEffect, useState } from "react";
 import Button from "@/components/Button";
-import type { Bank } from "@/models/Bank";
+import type { Bank } from "@/models/enterprise_structure/domain/Bank";
 import { LedgerAccount } from "src/models/enterprise_structure";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";

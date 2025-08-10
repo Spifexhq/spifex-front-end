@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import {Modal, TransferenceModal} from "@/components/Modal";
 import CashFlowTable from "@/components/Table/CashFlowTable";
-import Filter from "@/components/Filter";
+import FilterBar from "@/components/Filter/FilterBar";
 import { Entry, EntryFilters } from "src/models/entries";
 import BanksTable from "src/components/Table/BanksTable";
 import { ModalType } from "@/components/Modal/Modal.types";
@@ -76,16 +76,12 @@ const CashFlow = () => {
       >
         {/* Push main content below the fixed Navbar */}
         <div className="mt-[80px] px-10">
-          {/* Filter + BanksTable side by side */}
-          <div className="flex flex-wrap md:flex-nowrap gap-4 mb-6">
-            {/* Filter on the left */}
-            <div className="flex-1 min-w-[250px]">
-              <Filter onApply={handleApplyFilters} />
-            </div>
-            {/* BanksTable on the right */}
-            <div className="flex-1 min-w-[250px]">
-              <BanksTable key={banksKey} selectedBankIds={filters.bank_id} />
-            </div>
+          <div className="mb-4">
+            <FilterBar onApply={handleApplyFilters} />
+          </div>
+
+          <div className="mb-6">
+            <BanksTable key={banksKey} selectedBankIds={filters.bank_id} />
           </div>
 
           {/* CashFlow Table */}
