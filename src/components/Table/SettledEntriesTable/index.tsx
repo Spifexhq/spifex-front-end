@@ -202,15 +202,14 @@ const SettledEntriesTable: React.FC<Props> = ({
               </div>
             </th>
             <th className="w-[15%] px-2 py-1 text-center font-semibold">Vencimento</th>
-            <th className="w-[15%] px-2 py-1 text-center font-semibold">Descrição</th>
+            <th className="w-[30%] px-2 py-1 text-center font-semibold">Descrição</th>
             <th className="w-[5%]  px-2 py-1 text-center font-semibold">Parcela</th>
             <th className="w-[10%] px-2 py-1 text-center font-semibold">Banco</th>
             <th className="w-[15%] px-2 py-1 text-center font-semibold">Valor</th>
             <th className="w-[15%] px-2 py-1 text-center font-semibold">Saldo</th>
-            <th className="px-2 py-1 text-center font-semibold" style={{maxWidth:68}} />
+            <th className="px-2 py-1 text-center font-semibold" style={{ maxWidth: '68px', minWidth: '68px' }} />
           </tr>
         </thead>
-
         <tbody className="bg-white divide-y divide-gray-200 text-[12px]">
           {tableRows.length === 0 ? (
             <tr><td colSpan={8} className="px-4 py-3 text-center text-gray-500">Nenhum dado disponível</td></tr>
@@ -254,7 +253,7 @@ const SettledEntriesTable: React.FC<Props> = ({
               const { monthlySum=0, runningBalance=0, displayMonth } = row;
               return (
                 <tr key={row.summaryId} className="bg-gray-50 text-[9px]">
-                  <td colSpan={5} className="px-2 py-1 font-semibold">{displayMonth}</td>
+                  <td colSpan={4} className="px-2 py-1 font-semibold">{displayMonth}</td>
                   <td></td>
                   <td className="px-2 py-1 text-center font-semibold whitespace-nowrap">
                     {monthlySum.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
