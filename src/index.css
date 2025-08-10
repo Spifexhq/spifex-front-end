@@ -33,7 +33,7 @@
   --color4: #3D3D40;
   --color5: #006919;
   --color6: #740000;
-  --border1: 0.5px solid #d6d6d6;
+  --standardBorder: 0.5px solid #d6d6d6;
   --border2: 1px solid #ececec;
 }
 
@@ -49,4 +49,8 @@
 *::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 10px;
+}
+
+@layer utilities {
+  .standard-border { border: var(--standardBorder); }
 }
