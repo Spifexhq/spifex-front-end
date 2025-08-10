@@ -201,13 +201,8 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
    *  Render
    * ------------------------------------------------------------------ */
 
-  if (loading && !entries.length) {
-    return <InlineLoader color="orange" className="w-10 h-10" />;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (loading && !entries.length) return <InlineLoader color="orange" className="w-10 h-10" />;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="overflow-x-auto">
@@ -228,7 +223,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({ filters, onEdit, onSelect
             <th className="w-[5%] px-2 py-1 text-center font-semibold">Parcela</th>
             <th className="w-[15%] px-2 py-1 text-center font-semibold">Valor</th>
             <th className="w-[15%] px-2 py-1 text-center font-semibold">Saldo</th>
-            <th className="px-2 py-1 text-center font-semibold" style={{ maxWidth: '68px', minWidth: '68px' }}></th>
+            <th className="px-2 py-1 text-center font-semibold" style={{ maxWidth: '68px', minWidth: '68px' }} />
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200 text-[12px]">
