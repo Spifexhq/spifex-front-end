@@ -1,68 +1,70 @@
-import React from 'react';
-import { useBanks } from '@/hooks/useBanks';
-import { InlineLoader } from '@/components/Loaders';
+
+/* --------------------------------------------------------------------------
+ * File: BanksTable.tsx (compact)
+ * Non-table list, minimal + intuitive. Slightly reduced heights.
+ * -------------------------------------------------------------------------- */
+import React from "react";
+import { useBanks } from "@/hooks/useBanks";
+import { InlineLoader } from "@/components/Loaders";
 
 interface BanksTableProps {
   selectedBankIds?: number[];
 }
 
+function getInitials(name: string) {
+  if (!name) return "BK";
+  const parts = name.split(" ").filter(Boolean);
+  const first = parts[0]?.[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase();
+}
+
 const BanksTable: React.FC<BanksTableProps> = ({ selectedBankIds }) => {
   const { banks, totalConsolidatedBalance, loading, error } = useBanks(selectedBankIds);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-4">
-        <InlineLoader color="orange" className="w-8 h-8" />
-      </div>
-    );
-  }
+  if (loading) return (<div className="flex justify-center py-3"><InlineLoader color="orange" /></div>);
+  if (error) return <div className="text-red-600 text-xs">{error}</div>;
 
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
+  const totalFmt = (totalConsolidatedBalance || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
-    <div className="relative rounded border border-gray-300 max-h-[262px] overflow-y-auto">
-      <table className="w-full text-sm text-left">
-        <thead className="sticky top-0 bg-gray-100 z-10">
-          <tr>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Instituição</th>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Agência</th>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Conta</th>
-            <th className="px-4 py-2 w-1/4 text-center text-xs text-gray-600">Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {banks.length === 0 ? (
-            <tr>
-              <td colSpan={4} className="px-4 py-3 text-center text-gray-600">Nenhum banco disponível</td>
-            </tr>
-          ) : (
-            banks
-              .slice()
-              .sort((a, b) => a.id - b.id)
-              .map((bank) => (
-                <tr key={bank.id} className="text-[12px] hover:bg-gray-50">
-                  <td className="px-4 py-2">{bank.bank_institution}</td>
-                  <td className="px-4 py-2">{bank.bank_branch}</td>
-                  <td className="px-4 py-2">{bank.bank_account}</td>
-                  <td className="px-4 py-2 text-center">
-                    {Number(bank.consolidated_balance).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </td>
-                </tr>
-              ))
-          )}
-        </tbody>
-        <tfoot className="sticky text-[14px] text-gray-600 bottom-0 bg-gray-100 z-10">
-          <tr>
-            <td className="px-4 py-2 font-bold" colSpan={3}>Total</td>
-            <td className="px-4 py-2 font-bold text-center">
-              {totalConsolidatedBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+    <section aria-label="Bancos e saldos" className="h-full flex flex-col bg-white">
+      {/* Header (no scroll) */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-gray-600">Bancos</span>
+          <span className="text-[10px] text-gray-500">({banks.length})</span>
+        </div>
+        <div className="text-[11px] text-gray-600">
+          Total: <span className="font-semibold text-gray-800 tabular-nums">{totalFmt}</span>
+        </div>
+      </div>
+
+      {/* Scroll area (fills remaining height) */}
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200">
+        {banks.length === 0 ? (
+          <div className="px-4 py-3 text-xs text-gray-600 text-center">Nenhum banco disponível</div>
+        ) : (
+          banks.slice().sort((a, b) => a.id - b.id).map((bank) => {
+            const balance = Number(bank.consolidated_balance || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+            return (
+              <div key={bank.id} role="listitem" className="flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
+                    {getInitials(bank.bank_institution)}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[13px] text-gray-800 truncate leading-tight">{bank.bank_institution}</span>
+                    <span className="text-[10px] text-gray-500 truncate leading-tight">Agência {bank.bank_branch} • Conta {bank.bank_account}</span>
+                  </div>
+                </div>
+                <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">{balance}</div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </section>
   );
 };
 
