@@ -39,6 +39,9 @@
 
 * {
   font-family: var(--font) !important;
+}
+
+*, *:focus, *:focus-visible {
   outline: none !important;
 }
 
@@ -49,6 +52,21 @@
 *::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 10px;
+}
+
+button[class*="inline-flex"] {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button[class*="inline-flex"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button[class*="inline-flex"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 @layer utilities {
