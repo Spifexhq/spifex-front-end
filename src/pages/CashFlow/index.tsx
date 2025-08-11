@@ -10,8 +10,7 @@ import Button from "src/components/Button";
 import SettlementModal from "src/components/Modal/SettlementModal";
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
-import KpiWithBanksRow, { KpiItem } from "@/components/KPI/KpiWithBanksRow";
-import { useBanks } from "@/hooks/useBanks";
+import KpiRow from "src/components/KPI/KpiRow";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -22,13 +21,13 @@ const CashFlow = () => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [banksKey, setBanksKey] = useState(0);
   const [cashflowKey, setCashflowKey] = useState(0);
+  const [kpiRefresh, setKpiRefresh] = useState(0);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
 
   const [filters, setFilters] = useState<EntryFilters>({});
-  const { banks } = useBanks(filters.bank_id);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
@@ -39,13 +38,6 @@ const CashFlow = () => {
     setSelectedIds(ids);
     setSelectedEntries(rows);
   }, []);
-
-  // Reordered so "Lançamentos marcados" fica na esquerda quando o painel de bancos expande
-  const kpis: KpiItem[] = [
-    { key: "bancos", label: "Bancos", value: banks.length, hint: "no filtro atual" },
-    { key: "marcados", label: "Lançamentos marcados", value: selectedIds.length, hint: "para ações em massa" },
-    { key: "selecionados", label: "Bancos selecionados", value: (filters.bank_id?.length ?? 0) },
-  ];
 
   return (
     <div className="flex">
@@ -65,10 +57,12 @@ const CashFlow = () => {
           <FilterBar onApply={handleApplyFilters} />
 
           {/* KPI row: Banks card expands to the right; others fill left */}
-          <KpiWithBanksRow
-            key={banksKey}
-            items={kpis}
+          <KpiRow
             selectedBankIds={filters.bank_id}
+            filters={filters}
+            context="cashflow"
+            refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey}
           />
 
           {/* CashFlow Table */}
@@ -118,6 +112,7 @@ const CashFlow = () => {
               setIsModalOpen(false);
               setEditingEntry(null);
               setCashflowKey((prev) => prev + 1);
+              setKpiRefresh((k) => k + 1);
             }}
           />
         )}
@@ -143,6 +138,7 @@ const CashFlow = () => {
             setIsSettlementModalOpen(false);
             setCashflowKey((k) => k + 1);
             setBanksKey((k) => k + 1);
+            setKpiRefresh((k) => k + 1);
             setSelectedIds([]);
           }}
         />

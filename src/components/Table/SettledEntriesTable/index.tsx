@@ -49,8 +49,9 @@ const SettledEntriesTable: React.FC<Props> = ({
   const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(bankIds);
 
-  useEffect(() => onSelectionChange?.(selectedIds, entries.filter(e => selectedIds.includes(e.id))),
-            [selectedIds, entries, onSelectionChange]);
+  useEffect(() => {
+    onSelectionChange?.(selectedIds, entries.filter(e => selectedIds.includes(e.id)));
+  }, [selectedIds, entries, onSelectionChange]);
 
   /* ------------------------------------------------------------------
    *  Fetch
@@ -81,7 +82,10 @@ const SettledEntriesTable: React.FC<Props> = ({
 
     try {
       const { data } = await api.getSettledEntries(payload);
-      const mapped = data.results.map(mapEntry);
+      // mapeia e IGNORA transferências (operações nulas)
+      const mapped = data.results
+        .map(mapEntry)
+        .filter(e => !e.transference_correlation_id);
 
       // ▸ deduplica antes de salvar
       setEntries(prev =>
@@ -131,12 +135,15 @@ const SettledEntriesTable: React.FC<Props> = ({
     if (loadingBanks) return;
     if (!entries.length) { setTableRows([]); return; }
 
-    /* 1. reverse balance */
+    /* 1. reverse balance (partindo do saldo consolidado atual) */
     let revBal = totalConsolidatedBalance ?? 0;
     const revBalances: number[] = new Array(entries.length).fill(0);
     for (let i = entries.length - 1; i >= 0; i--) {
       revBalances[i] = revBal;
-      const amt = parseFloat(entries[i].amount);
+      const amt = parseFloat(entries[i].amount) || 0;
+      // voltando no tempo: desfaz o efeito do movimento
+      // debit (pagamento) diminuiu no passado ⇒ somamos de volta
+      // credit (recebimento) aumentou no passado ⇒ subtraímos de volta
       revBal += entries[i].transaction_type === 'debit' ? amt : -amt;
     }
 
@@ -145,12 +152,15 @@ const SettledEntriesTable: React.FC<Props> = ({
     let curMonth = '', monthlySum = 0, summaryCount = 0;
 
     const monthKey = (d: string) => {
-      const dt = new Date(d); return `${(dt.getMonth()+1).toString().padStart(2,'0')}/${dt.getFullYear()}`;
+      const dt = new Date(d);
+      return `${(dt.getMonth()+1).toString().padStart(2,'0')}/${dt.getFullYear()}`;
     };
 
     entries.forEach((e, idx) => {
       const mKey = monthKey(e.settlement_due_date);
-      const amt  = parseFloat(e.amount) * (e.transaction_type === 'debit' ? 1 : -1);
+      // EXIBIÇÃO: credit = +, debit = –
+      const sign = e.transaction_type === 'credit' ? 1 : -1;
+      const amt  = (parseFloat(e.amount) || 0) * sign;
 
       if (curMonth && curMonth !== mKey) {
         rows.push({
@@ -193,7 +203,6 @@ const SettledEntriesTable: React.FC<Props> = ({
       <table className="min-w-full divide-y divide-gray-200 overflow-hidden rounded-t-2xl">
         <thead className="bg-gray-100 text-[11px]">
           <tr className="text-gray-600 tracking-wider">
-            {/* … cabeçalho igual ao original … */}
             <th className="w-[5%] px-2 py-1 text-center font-semibold">
               <div className="flex justify-center">
                 <Checkbox
@@ -201,7 +210,7 @@ const SettledEntriesTable: React.FC<Props> = ({
                   onChange={handleSelectAll} size="sm" />
               </div>
             </th>
-            <th className="w-[15%] px-2 py-1 text-center font-semibold">Vencimento</th>
+            <th className="w/[15%] px-2 py-1 text-center font-semibold">Liquidação</th>
             <th className="w-[30%] px-2 py-1 text-center font-semibold">Descrição</th>
             <th className="w-[5%]  px-2 py-1 text-center font-semibold">Parcela</th>
             <th className="w-[10%] px-2 py-1 text-center font-semibold">Banco</th>
@@ -218,7 +227,10 @@ const SettledEntriesTable: React.FC<Props> = ({
               if (!row.isSummary && row.entry) {
                 const e  = row.entry;
                 const is = selectedIds.includes(e.id);
-                const amtNum = parseFloat(e.amount) * (e.transaction_type === 'debit' ? 1 : -1);
+                // EXIBIÇÃO: credit = +, debit = –
+                const sign   = e.transaction_type === 'credit' ? 1 : -1;
+                const amtNum = (parseFloat(e.amount) || 0) * sign;
+
                 return (
                   <tr key={`entry-${e.id}`} className="hover:bg-gray-50">
                     <td className="px-2 py-1 text-center">

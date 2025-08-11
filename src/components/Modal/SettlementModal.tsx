@@ -164,20 +164,20 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                     <td colSpan={5} className="text-center py-4">Nenhum banco disponível</td>
                   </tr>
                 ) : (
-                  banks.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50 text-[12px]">
+                  banks.slice().sort((a, b) => a.id - b.id).map((bank) => (
+                    <tr key={bank.id} className="hover:bg-gray-50 text-[12px]">
                       <td className="px-2 py-1 text-center">
                         <Checkbox
                           size="sm"
-                          checked={selectedBankIds.includes(b.id)}
-                          onChange={() => toggleBank(b.id)}
+                          checked={selectedBankIds.includes(bank.id)}
+                          onChange={() => toggleBank(bank.id)}
                         />
                       </td>
-                      <td className="px-2 py-1 whitespace-nowrap">{b.bank_institution}</td>
-                      <td className="px-2 py-1 whitespace-nowrap">{b.bank_branch}</td>
-                      <td className="px-2 py-1 whitespace-nowrap">{b.bank_account}</td>
+                      <td className="px-2 py-1 whitespace-nowrap">{bank.bank_institution}</td>
+                      <td className="px-2 py-1 whitespace-nowrap">{bank.bank_branch}</td>
+                      <td className="px-2 py-1 whitespace-nowrap">{bank.bank_account}</td>
                       <td className="px-2 py-1 text-center whitespace-nowrap">
-                        {Number(b.consolidated_balance).toLocaleString("pt-BR", {
+                        {Number(bank.consolidated_balance).toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL",
                         })}

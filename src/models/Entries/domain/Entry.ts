@@ -3,7 +3,7 @@ import {
   DepartmentAllocation, Project,
   InventoryAllocation, Entity
 } from '@/models/enterprise_structure/domain';
-import { Bank } from '../../Bank';
+import { Bank } from '../../enterprise_structure/domain/Bank';
 
 export interface Entry {
   id: number;

@@ -10,8 +10,7 @@ import { Entry } from "@/models/entries";
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 import FilterBar from "src/components/Filter/FilterBar";
-import KpiWithBanksRow, { KpiItem } from "@/components/KPI/KpiWithBanksRow";
-import { useBanks } from "@/hooks/useBanks";
+import KpiRow from "src/components/KPI/KpiRow";
 
 const Settled = () => {
   useEffect(() => {
@@ -24,19 +23,13 @@ const Settled = () => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [kpiRefresh, setKpiRefresh] = useState(0);
 
   const [filters, setFilters] = useState<EntryFilters>({});
-  const { banks } = useBanks(filters.bank_id);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
   const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
-
-  const kpis: KpiItem[] = [
-    { key: "bancos", label: "Bancos", value: banks.length, hint: "no filtro atual" },
-    { key: "selecionados", label: "Bancos selecionados", value: (filters.bank_id?.length ?? 0) },
-    { key: "retornos", label: "Selecionados na tabela", value: selectedIds.length },
-  ];
 
   return (
     <div className="flex">
@@ -56,7 +49,12 @@ const Settled = () => {
           <FilterBar onApply={handleApplyFilters} />
 
           {/* KPI row with Banks card expanding into right-side panel */}
-          <KpiWithBanksRow items={kpis} selectedBankIds={filters.bank_id} />
+          <KpiRow
+            context="settled"
+            filters={filters}
+            selectedBankIds={filters.bank_id}
+            refreshToken={kpiRefresh}
+          />
 
           {/* Settled Entries Table */}
           <SettledEntriesTable
@@ -78,6 +76,7 @@ const Settled = () => {
             onSave={() => {
               setIsModalOpen(false);
               setEditingEntry(null);
+              setKpiRefresh((k) => k + 1);
             }}
           />
         )}
