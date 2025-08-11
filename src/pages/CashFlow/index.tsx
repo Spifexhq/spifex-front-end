@@ -2,7 +2,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Modal, TransferenceModal } from "@/components/Modal";
-import CashFlowTable from "@/components/Table/CashFlowTable";
+import CashFlowTable from "@/components/Table/CashFlowTable/CashFlowTable.index";
 import FilterBar from "src/components/Filter/FilterBar";
 import { Entry, EntryFilters } from "src/models/entries";
 import { ModalType } from "@/components/Modal/Modal.types";
