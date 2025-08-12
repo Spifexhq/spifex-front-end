@@ -136,6 +136,7 @@ const sections: {
       { id: "assistant", icon: "assistant", label: "Assistant" },
       { id: "projects", icon: "projects", label: "Projects" },
       { id: "inventory", icon: "inventory", label: "Inventory" },
+      { id: "entities", icon: "inventory", label: "Entities" },
     ],
   },
   {
