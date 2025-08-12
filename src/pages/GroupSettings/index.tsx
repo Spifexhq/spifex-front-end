@@ -29,6 +29,59 @@ const emptyForm = {
 type FormState = typeof emptyForm;
 
 /* --------------------------------- Helpers -------------------------------- */
+type BankLike =
+  | Bank
+  | {
+      id?: number;
+      bank_id?: number;
+      bank?: Bank | null;
+      account?: string | null;
+      bank_institution?: string | null;
+      bank_account?: string | null;
+    };
+
+const getBankId = (b?: BankLike | null): number | null => {
+  if (!b) return null;
+  // id direto
+  if ("id" in b && typeof b.id === "number") return b.id;
+  // id vindo como bank_id
+  if ("bank_id" in b && typeof b.bank_id === "number") return b.bank_id;
+  // id dentro de bank
+  if ("bank" in b && b.bank && typeof b.bank.id === "number") return b.bank.id;
+  return null;
+};
+
+const toFullBank = (bLike: BankLike, allBanks: Bank[]): Bank => {
+  const id = getBankId(bLike);
+  const found = id ? allBanks.find((x) => x.id === id) : undefined;
+
+  // fallback: se vier como { bank: Bank }, usa o aninhado; senão, usa o próprio objeto tipado como Bank
+  const nested = ((): Bank | undefined => {
+    if (typeof bLike === "object" && bLike && "bank" in bLike) {
+      const maybe = (bLike as { bank?: Bank | null }).bank;
+      if (maybe && typeof maybe.id === "number") return maybe;
+    }
+    return undefined;
+  })();
+
+  return found ?? nested ?? (bLike as Bank);
+};
+
+const bankLabel = (bLike: BankLike): string => {
+  const inst =
+    ("bank_institution" in bLike && bLike.bank_institution) ||
+    (("bank" in bLike && bLike.bank && bLike.bank.bank_institution) ?? "") ||
+    "";
+
+  const acc =
+    ("bank_account" in bLike && bLike.bank_account) ||
+    (("bank" in bLike && bLike.bank && bLike.bank.bank_account) ?? "") ||
+    (("account" in bLike && bLike.account) ?? "") ||
+    "";
+
+  return `${inst}${inst && acc ? " - " : ""}${acc}`.trim();
+};
+
 function getInitials() {
   return "GR";
 }
@@ -120,8 +173,8 @@ const GroupSettings: React.FC = () => {
     setEditingGroup(group);
     setFormData({
       name: group.name,
-      banks: group.banks,
-      permissions: group.permissions,
+      banks: (group.banks || []).map((b) => toFullBank(b, banks)), // 👈 aqui
+      permissions: group.permissions || [],
     });
     setModalOpen(true);
   };
@@ -141,7 +194,7 @@ const GroupSettings: React.FC = () => {
 
   const buildPayload = (): AddGroupRequest => ({
     name: formData.name,
-    banks: formData.banks.map((b) => b.id).join(","),
+    banks: formData.banks.map((b) => getBankId(b)).filter(Boolean).join(","),   // 👈
     permissions: formData.permissions.map((p) => p.id).join(","),
   });
 
@@ -279,8 +332,8 @@ const GroupSettings: React.FC = () => {
                   items={banks}
                   selected={formData.banks}
                   onChange={(items) => setFormData((p) => ({ ...p, banks: items }))}
-                  getItemKey={(b) => b.id}
-                  getItemLabel={(b) => `${b.bank_branch ?? ""} - ${b.bank_account}`}
+                  getItemKey={(b) => getBankId(b)!}
+                  getItemLabel={(b) => bankLabel(b)}          // 👈 evita "undefined"
                   buttonLabel="Selecione os bancos"
                   hideCheckboxes={false}
                   clearOnClickOutside={false}
@@ -294,7 +347,7 @@ const GroupSettings: React.FC = () => {
                     selected={formData.permissions}
                     onChange={(items) => setFormData((p) => ({ ...p, permissions: items }))}
                     getItemKey={(p) => p.id}
-                    getItemLabel={(p) => p.code_name}
+                    getItemLabel={(p) => p.name}
                     buttonLabel="Selecione as permissões"
                     hideCheckboxes={false}
                     clearOnClickOutside={false}
