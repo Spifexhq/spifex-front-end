@@ -1,16 +1,15 @@
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { Modal, TransferenceModal } from "@/components/Modal";
-import CashFlowTable from "src/components/Table/CashFlowTable";
+import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
+import CashFlowTable, { CashFlowTableHandle } from "src/components/Table/CashFlowTable";
 import FilterBar from "src/components/Filter/FilterBar";
 import { Entry, EntryFilters } from "src/models/entries";
 import { ModalType } from "@/components/Modal/Modal.types";
-import Button from "src/components/Button";
-import SettlementModal from "src/components/Modal/SettlementModal";
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 import KpiRow from "src/components/KPI/KpiRow";
+import SelectionActionsBar from "src/components/SelectionActionsBar";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -26,6 +25,7 @@ const CashFlow = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
+  const tableRef = useRef<CashFlowTableHandle>(null);
 
   const [filters, setFilters] = useState<EntryFilters>({});
 
@@ -69,6 +69,7 @@ const CashFlow = () => {
         {/* Table row fills the rest — enables inner scrolling */}
         <div className="min-h-0 h-full">
           <CashFlowTable
+            ref={tableRef}
             key={cashflowKey}
             filters={filters}
             onEdit={handleEditEntry}
@@ -77,33 +78,32 @@ const CashFlow = () => {
         </div>
 
           {selectedIds.length > 0 && (
-            <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg p-4 rounded-xl z-50 flex items-center gap-4">
-              <span className="text-sm text-gray-700">{selectedIds.length} selecionado(s)</span>
-              <Button variant="primary" style={{ padding: 8, fontSize: 14 }} onClick={() => setIsSettlementModalOpen(true)}>
-                Liquidar selecionados
-              </Button>
-              <Button
-                variant="danger"
-                style={{ padding: "8px", fontSize: "14px" }}
-                onClick={async () => {
-                  try {
-                    await api.deleteEntry(selectedIds);
-                    setCashflowKey((prev) => prev + 1);
-                    setSelectedIds([]);
-                  } catch (err) {
-                    alert("Erro ao deletar lançamentos.");
-                    console.error(err);
-                  }
-                }}
-              >
-                Deletar selecionados
-              </Button>
-            </div>
+            <SelectionActionsBar
+              context="cashflow"
+              selectedIds={selectedIds}
+              selectedEntries={selectedEntries}
+              onCancel={() => {
+                tableRef.current?.clearSelection();
+              }}
+              onLiquidate={() => setIsSettlementModalOpen(true)}
+              onDelete={async () => {
+                try {
+                  await api.deleteEntry(selectedIds);
+                  setCashflowKey((prev) => prev + 1);
+                  setKpiRefresh((k) => k + 1);
+                  setSelectedIds([]);
+                  setSelectedEntries([]);
+                } catch (err) {
+                  console.error(err);
+                  alert("Erro ao deletar lançamentos.");
+                }
+              }}
+            />
           )}
         </div>
 
         {modalType && (
-          <Modal
+          <EntriesModal
             isOpen={isModalOpen}
             onClose={() => {
               setIsModalOpen(false);

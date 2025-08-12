@@ -34,7 +34,7 @@ export interface FormData {
 
   export type ModalType = 'credit' | 'debit';
   
-  export interface ModalFormProps {
+  export interface EntriesModalFormProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: () => void;

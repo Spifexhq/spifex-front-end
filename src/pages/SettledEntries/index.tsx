@@ -1,35 +1,39 @@
-
-import { useEffect, useState } from "react";
-import Button from "@/components/Button";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { Modal, TransferenceModal } from "@/components/Modal";
-import SettledEntriesTable from "@/components/Table/SettledEntriesTable";
-import { EntryFilters } from "src/models/entries/domain";
+import { EntriesModal, TransferenceModal } from "@/components/Modal";
+import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
+import { EntryFilters, SettledEntry } from "src/models/entries/domain";
 import { ModalType } from "@/components/Modal/Modal.types";
-import { Entry } from "@/models/entries";
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 import FilterBar from "src/components/Filter/FilterBar";
 import KpiRow from "src/components/KPI/KpiRow";
+import SelectionActionsBar from "src/components/SelectionActionsBar";
 
 const Settled = () => {
-  useEffect(() => {
-    document.title = "Realizado";
-  }, []);
+  useEffect(() => { document.title = "Realizado"; }, []);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
-  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [kpiRefresh, setKpiRefresh] = useState(0);
 
   const [filters, setFilters] = useState<EntryFilters>({});
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
+  const [kpiRefresh, setKpiRefresh] = useState(0);
+  const [tableKey, setTableKey] = useState(0);
+
+  const tableRef = useRef<SettledEntriesTableHandle>(null);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
   const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
+
+  const handleSelectionChange = useCallback((ids: number[], rows: SettledEntry[]) => {
+    setSelectedIds(ids);
+    setSelectedEntries(rows);
+  }, []);
 
   return (
     <div className="flex">
@@ -43,12 +47,11 @@ const Settled = () => {
       />
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
+      <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         {/* Push main content below the fixed Navbar */}
-        <div className="mt-[80px] px-10 space-y-4">
+        <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
           <FilterBar onApply={handleApplyFilters} />
 
-          {/* KPI row with Banks card expanding into right-side panel */}
           <KpiRow
             context="settled"
             filters={filters}
@@ -56,63 +59,59 @@ const Settled = () => {
             refreshToken={kpiRefresh}
           />
 
-          {/* Settled Entries Table */}
-          <SettledEntriesTable
-            filters={filters}
-            bankIds={filters.bank_id}
-            onSelectionChange={setSelectedIds}
-          />
+          {/* Table area with inner scroll inside the table component */}
+          <div className="min-h-0 h-full">
+            <SettledEntriesTable
+              ref={tableRef}
+              key={tableKey}
+              filters={filters}
+              bankIds={filters.bank_id}
+              onSelectionChange={handleSelectionChange}
+            />
+          </div>
+
+          {selectedIds.length > 0 && (
+            <SelectionActionsBar
+              context="settled"
+              selectedIds={selectedIds}
+              selectedEntries={selectedEntries}
+              onCancel={() => tableRef.current?.clearSelection()}
+              onReturn={async () => {
+                try {
+                  await api.deleteSettledEntry(selectedIds); // “Retornar selecionados”
+                  tableRef.current?.clearSelection();
+                  setTableKey((k) => k + 1);
+                  setKpiRefresh((k) => k + 1);
+                } catch (err) {
+                  console.error(err);
+                  alert("Erro ao retornar liquidações.");
+                }
+              }}
+            />
+          )}
         </div>
 
         {modalType && (
-          <Modal
+          <EntriesModal
             isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setEditingEntry(null);
-            }}
+            onClose={() => setIsModalOpen(false)}
             type={modalType}
-            initialEntry={editingEntry}
             onSave={() => {
               setIsModalOpen(false);
-              setEditingEntry(null);
               setKpiRefresh((k) => k + 1);
+              setTableKey((k) => k + 1);
             }}
           />
         )}
+
+        {isTransferenceModalOpen && (
+          <TransferenceModal
+            isOpen={isTransferenceModalOpen}
+            onClose={() => setIsTransferenceModalOpen(false)}
+            onSave={() => setIsTransferenceModalOpen(false)}
+          />
+        )}
       </div>
-
-      {isTransferenceModalOpen && (
-        <TransferenceModal
-          isOpen={isTransferenceModalOpen}
-          onClose={() => setIsTransferenceModalOpen(false)}
-          onSave={() => {
-            setIsTransferenceModalOpen(false);
-          }}
-        />
-      )}
-
-      {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg p-4 rounded-xl z-50 flex items-center gap-4">
-          <span className="text-sm text-gray-700">{selectedIds.length} selecionado(s)</span>
-          <Button
-            variant="danger"
-            style={{ padding: "8px", fontSize: "14px" }}
-            onClick={async () => {
-              try {
-                await api.deleteSettledEntry(selectedIds);
-                setSelectedIds([]);
-                window.location.reload();
-              } catch (err) {
-                alert("Erro ao deletar liquidações.");
-                console.error(err);
-              }
-            }}
-          >
-            Retornar selecionados
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
