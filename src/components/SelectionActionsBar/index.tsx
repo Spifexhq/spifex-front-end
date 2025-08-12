@@ -10,12 +10,12 @@ export type MinimalEntry = {
 };
 
 type Props = {
-  context?: "cashflow" | "settled"; // NEW
+  context?: "cashflow" | "settled";
   selectedIds: number[];
   selectedEntries: MinimalEntry[];
   onLiquidate?: () => void;
   onDelete?: () => void | Promise<void>;
-  onReturn?: () => void | Promise<void>; // NEW (settled)
+  onReturn?: () => void | Promise<void>;
   onCancel?: () => void;
   isProcessing?: boolean;
 };
@@ -49,6 +49,12 @@ const IconDelete = (p: React.SVGProps<SVGSVGElement>) => (
     <path d="M6.2 6.8l.7 9c.04.48.45.86.93.86h4.34c.48 0 .89-.38.93-.86l.7-9" strokeWidth={1.2} />
   </svg>
 );
+const IconReturn = (p: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...p}>
+    <path d="M9 14L4 9l5-5" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20 20v-7a4 4 0 0 0-4-4H4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 /* ------------------------------ Component ------------------------------ */
 
@@ -58,7 +64,7 @@ const SelectionActionsBar: React.FC<Props> = ({
   selectedEntries,
   onLiquidate,
   onDelete,
-  onReturn, // settled
+  onReturn,
   onCancel,
   isProcessing = false,
 }) => {
@@ -67,24 +73,17 @@ const SelectionActionsBar: React.FC<Props> = ({
   const { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue } =
     useMemo(() => {
       const count = selectedIds.length;
-      let sumCredits = 0,
-        sumDebits = 0,
-        credits = 0,
-        debits = 0;
+      let sumCredits = 0, sumDebits = 0, credits = 0, debits = 0;
       const dates: Date[] = [];
-      const parseAmount = (a: string | number) =>
-        typeof a === "string" ? parseFloat(a) : Number(a || 0);
+      const parseAmount = (a: string | number) => (typeof a === "string" ? parseFloat(a) : Number(a || 0));
 
       for (const e of selectedEntries) {
         const amount = parseAmount(e.amount);
         if (e.transaction_type === "credit") {
-          credits++;
-          sumCredits += amount;
+          credits++; sumCredits += amount;
         } else {
-          debits++;
-          sumDebits += amount;
+          debits++; sumDebits += amount;
         }
-
         const raw = e.due_date ?? e.settlement_due_date;
         if (raw) {
           const d = new Date(raw);
@@ -98,9 +97,7 @@ const SelectionActionsBar: React.FC<Props> = ({
     }, [selectedIds, selectedEntries]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && onCancel) onCancel();
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && onCancel) onCancel(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
@@ -121,11 +118,7 @@ const SelectionActionsBar: React.FC<Props> = ({
           <span className="text-[12px] text-gray-700">
             {count} selecionado{count > 1 ? "s" : ""}
           </span>
-          <span
-            className={`text-[12px] ${
-              net >= 0 ? "text-emerald-700" : "text-rose-700"
-            } font-medium`}
-          >
+          <span className={`text-[12px] ${net >= 0 ? "text-emerald-700" : "text-rose-700"} font-medium`}>
             {fmtBRL(net)}
           </span>
           <svg viewBox="0 0 20 20" className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor">
@@ -137,13 +130,13 @@ const SelectionActionsBar: React.FC<Props> = ({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z=[9999] pointer-events-none">
+    <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none">
       <div
         className="
           pointer-events-auto relative
           rounded-xl border border-gray-200 bg-white/95 shadow-xl backdrop-blur
           p-3 md:p-4 transition-all
-          max-w-[40vw] w-[min(460px,40vw)]
+          max-w-[60vw] w-[min(560px,60vw)]
         "
         role="region"
         aria-live="polite"
@@ -159,28 +152,19 @@ const SelectionActionsBar: React.FC<Props> = ({
           <IconMinimize className="w-3.5 h-3.5" />
         </button>
 
-        <div className="grid grid-cols-[1fr_auto] gap-4">
+        <div className="grid grid-cols-[1fr_auto] gap-5">
           {/* Info */}
           <div>
             <div className="text-[13px] text-gray-800">
               <b>{count}</b> selecionado{count > 1 ? "s" : ""}
             </div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-600">
-              <div>
-                Créditos: <b className="text-emerald-700">{credits}</b>
-              </div>
-              <div>
-                Débitos: <b className="text-rose-700">{debits}</b>
-              </div>
-              <div>
-                Σ Créditos: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b>
-              </div>
-              <div>
-                Σ Débitos: <b className="text-rose-700">{fmtBRL(sumDebits)}</b>
-              </div>
+              <div>Créditos: <b className="text-emerald-700">{credits}</b></div>
+              <div>Débitos: <b className="text-rose-700">{debits}</b></div>
+              <div>Σ Créditos: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b></div>
+              <div>Σ Débitos: <b className="text-rose-700">{fmtBRL(sumDebits)}</b></div>
               <div className="col-span-2">
-                Saldo líquido:{" "}
-                <b className={net >= 0 ? "text-emerald-700" : "text-rose-700"}>{fmtBRL(net)}</b>
+                Saldo líquido: <b className={net >= 0 ? "text-emerald-700" : "text-rose-700"}>{fmtBRL(net)}</b>
               </div>
               {minDue && maxDue && (
                 <div className="col-span-2">
@@ -188,14 +172,13 @@ const SelectionActionsBar: React.FC<Props> = ({
                 </div>
               )}
             </div>
-
             <div className="mt-2 text-[10.5px] text-gray-500">
               Dica: pressione <kbd className="px-1 py-0.5 border rounded">Esc</kbd> para cancelar a seleção.
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-2 min-w-[180px]">
+          <div className="flex flex-col gap-2 min-w-[200px]">
             {context === "settled" ? (
               <>
                 <Button
@@ -203,11 +186,21 @@ const SelectionActionsBar: React.FC<Props> = ({
                   onClick={onReturn}
                   disabled={isProcessing}
                   className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title="Retornar selecionados"
+                  title="Retornar"
                 >
-                  {/* Reuse delete icon (semantics: revert/remove settled) */}
-                  <IconDelete className="w-4 h-4" />
-                  <span>Retornar selecionados</span>
+                  <IconReturn className="w-4 h-4" />
+                  <span>Retornar</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="!border-gray-300 !text-gray-700 hover:!bg-gray-50 !px-3 !py-2 flex items-center justify-center gap-2"
+                  onClick={onCancel}
+                  disabled={isProcessing}
+                  title="Cancelar seleção (Esc)"
+                >
+                  <IconCancel className="w-4 h-4" />
+                  <span>Cancelar</span>
                 </Button>
               </>
             ) : (
