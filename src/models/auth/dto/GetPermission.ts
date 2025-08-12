@@ -9,7 +9,7 @@ export interface GetPermission {
 }
 
 export interface PermissionPayloadBase {
-  label: string;
+  name: string;
   code_name: string;
   permission_type: string;
   usage_limit: Record<string, number | null>;
