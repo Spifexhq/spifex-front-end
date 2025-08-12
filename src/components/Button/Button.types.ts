@@ -4,12 +4,31 @@ export type ButtonVariant =
   | "primary"
   | "secondary"
   | "common"
-  | "outline"
-  | "danger"
-  | "link"
   | "cancel"
+  | "danger"
+  | "outline"
+  | "link"
+  | "outlinePrimary"
+  | "outlineDanger"
+  | "ghost"
+  | "softPrimary"
+  | "muted"
+  | "success"
+  | "warning"
+  | "info"
+  | "dashed"
+  | "gradient"
 
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonSize =
+  | "xs"
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  // ícone-only (quadrados)
+  | "iconSm"
+  | "iconMd"
+  | "iconLg";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
