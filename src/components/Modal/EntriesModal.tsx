@@ -415,7 +415,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         // >>> Agora com 3 colunas <<<
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Linha 1: Vencimento / Valor / Tipo de documento */}
+            {/* Linha 1: Vencimento / Valor / Conta contábil */}
             <Input
               label="Vencimento"
               type="date"
@@ -435,16 +435,17 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               }
               onKeyDown={(e) => handleAmountKeyDown(e, formData.details.amount, setFormData)}
             />
-            <SelectDropdown<DocumentType>
-              label="Tipo de documento"
-              items={documentTypes}
-              selected={selectedDocumentTypes}
-              onChange={handleDocumentTypeChange}
+            <SelectDropdown<LedgerAccount>
+              label="Conta contábil"
+              items={ledgerAccounts}
+              selected={selectedLedgerAccounts}
+              onChange={handleLedgerAccountChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.document_type}
-              buttonLabel="Selecione o tipo"
+              getItemLabel={(i) => i.general_ledger_account}
+              buttonLabel="Selecione a conta"
               singleSelect
               customStyles={{ maxHeight: "160px" }}
+              groupBy={(i) => i.subgroup}
             />
 
             {/* Linha 2: Descrição (full) */}
@@ -464,18 +465,17 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               />
             </div>
 
-            {/* Linha 3: Conta contábil */}
-            <SelectDropdown<LedgerAccount>
-              label="Conta contábil"
-              items={ledgerAccounts}
-              selected={selectedLedgerAccounts}
-              onChange={handleLedgerAccountChange}
+            {/* Linha 3: Tipo de documento */}
+            <SelectDropdown<DocumentType>
+              label="Tipo de documento"
+              items={documentTypes}
+              selected={selectedDocumentTypes}
+              onChange={handleDocumentTypeChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.general_ledger_account}
-              buttonLabel="Selecione a conta"
+              getItemLabel={(i) => i.document_type}
+              buttonLabel="Selecione o tipo"
               singleSelect
               customStyles={{ maxHeight: "160px" }}
-              groupBy={(i) => i.subgroup}
             />
 
             {/* Linha 4: Observação */}
@@ -797,7 +797,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         {/* Conteúdo: sem overflow do container; se precisar, caixas internas têm scroll próprio */}
         <form id="modalForm" className="flex-1 flex flex-col" onSubmit={handleSubmit}>
           {/* Conteúdo rolável */}
-          <div className="px-5 py-4 overflow-hidden flex-1">
+          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
             {renderTabContent()}
           </div>
 

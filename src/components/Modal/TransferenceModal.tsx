@@ -165,7 +165,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
       <div
         role="dialog"
         aria-modal="true"
-        className="bg-white border border-gray-200 rounded-lg shadow-xl w-[720px] max-w-[95vw] h-[350px] max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white border border-gray-200 rounded-lg shadow-xl w-[720px] max-w-[95vw] h-[450px] max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <header className="border-b border-gray-200 bg-white">
@@ -192,7 +192,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         </header>
 
         {/* Conteúdo (sem overflow global) */}
-        <form id="transferenceForm" onSubmit={handleSubmit} className="flex-1 px-5 py-4 overflow-hidden">
+        <form id="transferenceForm" onSubmit={handleSubmit} className="relative z-10 px-5 py-4 overflow-visible flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Linha 1: Data / Valor / Observação curta */}
             <Input
