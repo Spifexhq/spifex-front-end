@@ -115,12 +115,12 @@ const EntryRow: React.FC<{
   const positive = value >= 0;
 
   return (
-    <div className="group flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
+    <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <Checkbox checked={isSelected} onClick={(e) => onSelect(entry.id, e)} size="sm" />
 
         <div className="flex flex-col min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="text-[13px] text-gray-800 font-medium truncate leading-tight">
                 {entry.description}
@@ -141,22 +141,22 @@ const EntryRow: React.FC<{
 
             <div className="flex items-center shrink-0">
               <div className="w-[150px] text-center">
-                <div
-                  className={`text-[13px] font-semibold tabular-nums ${
+                <div className={`text-[13px] leading-none font-semibold tabular-nums ${
                     positive ? "text-green-900" : "text-red-900"
-                  }`}
-                >
+                  }`}>
                   {formatCurrency(value)}
                 </div>
               </div>
 
               <div className="w-[150px] text-center">
-                <div className="text-[13px] font-semibold tabular-nums text-gray-900">
+                <div className="text-[13px] leading-none font-semibold tabular-nums text-gray-900">
                   {formatCurrency(runningBalance)}
                 </div>
               </div>
 
-              <div className="w-8 flex justify-center"></div>
+              <div className="w-8 flex justify-center">
+                {}
+              </div>
             </div>
           </div>
         </div>
