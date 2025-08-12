@@ -2,7 +2,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Modal, TransferenceModal } from "@/components/Modal";
-import CashFlowTable from "@/components/Table/CashFlowTable/CashFlowTable.index";
+import CashFlowTable from "src/components/Table/CashFlowTable";
 import FilterBar from "src/components/Filter/FilterBar";
 import { Entry, EntryFilters } from "src/models/entries";
 import { ModalType } from "@/components/Modal/Modal.types";
@@ -51,27 +51,30 @@ const CashFlow = () => {
       />
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
+      <div
+        className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         {/* Push main content below the fixed Navbar */}
-        <div className="mt-[80px] px-10 space-y-4">
-          <FilterBar onApply={handleApplyFilters} />
+      <div
+        className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+        <FilterBar onApply={handleApplyFilters} />
 
-          {/* KPI row: Banks card expands to the right; others fill left */}
-          <KpiRow
-            selectedBankIds={filters.bank_id}
-            filters={filters}
-            context="cashflow"
-            refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey}
-          />
+        <KpiRow
+          selectedBankIds={filters.bank_id}
+          filters={filters}
+          context="cashflow"
+          refreshToken={kpiRefresh}
+          banksRefreshKey={banksKey}
+        />
 
-          {/* CashFlow Table */}
+        {/* Table row fills the rest — enables inner scrolling */}
+        <div className="min-h-0 h-full">
           <CashFlowTable
             key={cashflowKey}
             filters={filters}
             onEdit={handleEditEntry}
             onSelectionChange={handleSelectionChange}
           />
+        </div>
 
           {selectedIds.length > 0 && (
             <div className="fixed bottom-6 right-6 bg-white border border-gray-300 shadow-lg p-4 rounded-xl z-50 flex items-center gap-4">
