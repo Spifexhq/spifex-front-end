@@ -1,6 +1,6 @@
 /* src/components/Table/CashFlowTable/index.tsx */
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef, useImperativeHandle, forwardRef } from "react";
 import { api } from "src/api/requests";
 import { EntryFilters, Entry } from "src/models/entries/domain";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
@@ -19,6 +19,10 @@ interface TableRow {
   runningBalance?: number;
   displayMonth?: string;
 }
+
+export type CashFlowTableHandle = {
+  clearSelection: () => void;
+};
 
 interface CashFlowTableProps {
   filters?: EntryFilters;
@@ -234,11 +238,8 @@ const LoadingSpinner: React.FC = () => (
 );
 
 // Main Component
-const CashFlowTable: React.FC<CashFlowTableProps> = ({ 
-  filters, 
-  onEdit, 
-  onSelectionChange 
-}) => {
+const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
+({ filters, onEdit, onSelectionChange }, ref) => {
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.bank_id);
   
   // State
@@ -250,7 +251,9 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-  const { selectedIds, handleSelectRow, handleSelectAll } = useShiftSelect(entries);
+  const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect(entries);
+
+  useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
 
   const latest = useRef<{
     filters: EntryFilters | undefined;
@@ -417,71 +420,71 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
     );
   }
 
-return (
-  <section
-    aria-label="Fluxo de caixa"
-    className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
-  >
-    {loading && !entries.length ? (
-      <LoadingSpinner />
-    ) : (
-      <>
-        <TableHeader
-          selectedCount={selectedIds.length}
-          totalCount={entries.length}
-          onSelectAll={handleSelectAll}
-        />
+  return (
+    <section
+      aria-label="Fluxo de caixa"
+      className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
+    >
+      {loading && !entries.length ? (
+        <LoadingSpinner />
+      ) : (
+        <>
+          <TableHeader
+            selectedCount={selectedIds.length}
+            totalCount={entries.length}
+            onSelectAll={handleSelectAll}
+          />
 
-        <div
-          ref={scrollerRef}
-          onScroll={handleInnerScroll}
-          className="flex-1 min-h-0 overflow-y-auto"
-        >
-          {tableRows.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {tableRows.map((row) => {
-                if (row.type === "entry" && row.entry) {
-                  const isSelected = selectedIds.includes(row.entry.id);
-                  return (
-                    <EntryRow
-                      key={row.id}
-                      entry={row.entry}
-                      runningBalance={row.runningBalance!}
-                      isSelected={isSelected}
-                      onSelect={handleSelectRow}
-                      onEdit={onEdit}
-                    />
-                  );
-                }
+          <div
+            ref={scrollerRef}
+            onScroll={handleInnerScroll}
+            className="flex-1 min-h-0 overflow-y-auto"
+          >
+            {tableRows.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {tableRows.map((row) => {
+                  if (row.type === "entry" && row.entry) {
+                    const isSelected = selectedIds.includes(row.entry.id);
+                    return (
+                      <EntryRow
+                        key={row.id}
+                        entry={row.entry}
+                        runningBalance={row.runningBalance!}
+                        isSelected={isSelected}
+                        onSelect={handleSelectRow}
+                        onEdit={onEdit}
+                      />
+                    );
+                  }
 
-                if (row.type === "summary") {
-                  return (
-                    <SummaryRow
-                      key={row.id}
-                      displayMonth={row.displayMonth!}
-                      monthlySum={row.monthlySum!}
-                      runningBalance={row.runningBalance!}
-                    />
-                  );
-                }
+                  if (row.type === "summary") {
+                    return (
+                      <SummaryRow
+                        key={row.id}
+                        displayMonth={row.displayMonth!}
+                        monthlySum={row.monthlySum!}
+                        runningBalance={row.runningBalance!}
+                      />
+                    );
+                  }
 
-                return null;
-              })}
+                  return null;
+                })}
 
-              {loadingMore && (
-                <div className="py-3 flex items-center justify-center" role="status" aria-live="polite">
-                  <InlineLoader color="orange" />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </>
-    )}
-  </section>
-);
-};
+                {loadingMore && (
+                  <div className="py-3 flex items-center justify-center" role="status" aria-live="polite">
+                    <InlineLoader color="orange" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+});
 
 export default CashFlowTable;

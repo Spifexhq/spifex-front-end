@@ -25,6 +25,24 @@
   --accentDangerHover: #f42626;
   --accentDangerPressed: #c62020;
   --accentDangerDisabled: #d03e3e;
+    /* === Success === */
+  --accentSuccess: #16A34A;
+  --accentSuccessHover: #22C55E;
+  --accentSuccessPressed: #15803D;
+  --accentSuccessDisabled: #86EFAC;
+
+  /* === Warning === */
+  --accentWarning: #F59E0B;
+  --accentWarningHover: #FDBA28;
+  --accentWarningPressed: #D97706;
+  --accentWarningDisabled: #FCD34D;
+
+  /* === Info === */
+  --accentInfo: #0EA5E9;
+  --accentInfoHover: #38BDF8;
+  --accentInfoPressed: #0284C7;
+  --accentInfoDisabled: #7DD3FC;
+
   --white: #ffffff;
   --black: #202020;
   --color1: #f2f2f2;
