@@ -287,17 +287,15 @@ const KpiRow: React.FC<KpiRowProps> = ({
 
     const momChange = prevNet === 0 ? (mtdNet === 0 ? 0 : Number.POSITIVE_INFINITY)
                                     : (mtdNet - prevNet) / Math.abs(prevNet);
-    const momLabel = Number.isFinite(momChange)
-      ? `${(momChange * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`
-      : "—";
+    const momLabel = `${Math.abs(momChange * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
     const k1: KpiItem = {
       key: "mtdNet",
       label: "MTD: Resultado",
       value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
       hint: loading ? "Carregando..." : `Entradas ${currency(mtdIn)} • Saídas -${currency(mtdOutAbs)}`,
-      delta: loading ? undefined : {
-        value: `M/M ${mtdNet >= 0 ? "+" : ""}${momLabel}`,
+      delta: {
+        value: `M/M ${momChange >= 0 ? "+" : ""}${momLabel}`,
         positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0,
       },
     };
@@ -390,12 +388,10 @@ const KpiRow: React.FC<KpiRowProps> = ({
       label: "Realizado (mês atual)",
       value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
       hint: loading ? "Carregando..." : `Receb. ${currency(mtdIn)} • Pag. -${currency(mtdOutAbs)}`,
-      delta: loading
-        ? undefined
-        : {
-            value: `M/M ${mtdNet >= 0 ? "+" : ""}${momLabel}`,
-            positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0,
-          },
+      delta: {
+        value: `M/M ${momChange >= 0 ? "+" : ""}${momLabel}`,
+        positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0,
+      },
     };
 
     const k2: KpiItem = {
