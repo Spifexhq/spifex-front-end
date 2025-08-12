@@ -1,5 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/EntitySettings.tsx                                        */
+/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
+/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
 /* -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -43,9 +45,51 @@ const emptyForm = {
   account_holder_name: "",
   entity_type: "client",
 };
-
 type FormState = typeof emptyForm;
 
+/* --------------------------------- Helpers -------------------------------- */
+function getInitials() {
+  return "EN";
+}
+
+const Row = ({
+  entity,
+  onEdit,
+  onDelete,
+  canEdit,
+}: {
+  entity: Entity;
+  onEdit: (e: Entity) => void;
+  onDelete: (e: Entity) => void;
+  canEdit: boolean;
+}) => (
+  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase tracking-wide text-gray-600">
+        {ENTITY_TYPES.find((t) => t.value === entity.entity_type)?.label ?? "—"}
+      </p>
+      <p className="text-[13px] font-medium text-gray-900 truncate">
+        {entity.full_name || entity.alias_name || "(sem nome)"}
+      </p>
+    </div>
+    {canEdit && (
+      <div className="flex gap-2 shrink-0">
+        <Button
+          variant="outline"
+          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+          onClick={() => onEdit(entity)}
+        >
+          Editar
+        </Button>
+        <Button variant="common" onClick={() => onDelete(entity)}>
+          Excluir
+        </Button>
+      </div>
+    )}
+  </div>
+);
+
+/* -------------------------------------------------------------------------- */
 const EntitySettings: React.FC = () => {
   useEffect(() => {
     document.title = "Entidades";
@@ -66,7 +110,7 @@ const EntitySettings: React.FC = () => {
   /* ------------------------------ Carrega dados ----------------------------- */
   const fetchEntities = async () => {
     try {
-      const res = await api.getAllEntities(); // ApiSuccess<{ entities: Entity[] }>
+      const res = await api.getAllEntities();
       const sorted = res.data.entities.sort((a, b) => a.id - b.id);
       setEntities(sorted);
     } catch (err) {
@@ -121,12 +165,10 @@ const EntitySettings: React.FC = () => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(p => ({ ...p, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const submitEntity = async (e: React.FormEvent) => {
@@ -140,9 +182,7 @@ const EntitySettings: React.FC = () => {
       await fetchEntities();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao salvar entidade."
-      );
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar entidade.");
     }
   };
 
@@ -154,243 +194,156 @@ const EntitySettings: React.FC = () => {
       await api.deleteEntity([entity.id]);
       await fetchEntities();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao excluir entidade."
-      );
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
     }
   };
 
+  /* ------------------------------- UX hooks -------------------------------- */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
-    };
-
-    if (modalOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
+    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
+    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [modalOpen, closeModal]);
 
   useEffect(() => {
-    if (modalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = modalOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [modalOpen]);
 
-  /* ------------------------------ UI helpers ------------------------------- */
-  const Row = ({ entity }: { entity: Entity }) => (
-    <div className="flex items-center justify-between border-b last:border-0 py-4 px-4">
-      <div>
-        <p className="text-sm text-gray-500">{ENTITY_TYPES.find(t => t.value === entity.entity_type)?.label ?? ""}</p>
-        <p className="text-base font-medium text-gray-900">
-          {entity.full_name || entity.alias_name || "(sem nome)"}
-        </p>
-      </div>
-      {isOwner && (
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => openEditModal(entity)}>
-            Editar
-          </Button>
-          <Button variant="common" onClick={() => deleteEntity(entity)}>
-            Excluir
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-
   if (loading) return <SuspenseLoader />;
 
+  /* --------------------------------- UI ----------------------------------- */
   return (
     <>
       <Navbar />
       <SidebarSettings activeItem="entities" />
 
-      <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
-        <section className="max-w-5xl mx-auto p-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Entidades</h3>
-            {isOwner && <Button onClick={openCreateModal}>Adicionar entidade</Button>}
-          </div>
+      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
+      <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          {/* Header card */}
+          <header className="bg-white border border-gray-200 rounded-lg">
+            <div className="px-5 py-4 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+                {getInitials()}
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Entidades</h1>
+              </div>
+            </div>
+          </header>
 
-          <div className="border rounded-lg divide-y">
-            {entities.map(e => (
-              <Row key={e.id} entity={e} />
-            ))}
-            {entities.length === 0 && (
-              <p className="p-4 text-center text-sm text-gray-500">
-                Nenhuma entidade cadastrada.
-              </p>
-            )}
-          </div>
-        </section>
-      </main>
-
-      {/* ------------------------------ Modal -------------------------------- */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl overflow-y-auto max-h-[90vh]"
-          >
-            <header className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {mode === "create" ? "Adicionar entidade" : "Editar entidade"}
-              </h3>
-              <button
-                className="text-2xl text-gray-400 hover:text-gray-700"
-                onClick={closeModal}
-              >
-                &times;
-              </button>
-            </header>
-
-            <form className="space-y-6" onSubmit={submitEntity}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Nome completo"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Nome fantasia / apelido"
-                  name="alias_name"
-                  value={formData.alias_name}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="CPF (SSN)"
-                  name="ssn_tax_id"
-                  value={formData.ssn_tax_id}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="CNPJ (EIN)"
-                  name="ein_tax_id"
-                  value={formData.ein_tax_id}
-                  onChange={handleChange}
-                />
-
-                <Input
-                  label="DDD"
-                  name="area_code"
-                  value={formData.area_code}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Telefone"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-
-                <SelectDropdown
-                  label="Tipo de entidade"
-                  items={ENTITY_TYPES}
-                  selected={ENTITY_TYPES.filter(t => t.value === formData.entity_type)}
-                  onChange={items =>
-                    items[0] &&
-                    setFormData(p => ({ ...p, entity_type: items[0].value }))
-                  }
-                  getItemKey={item => item.value}
-                  getItemLabel={item => item.label}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel="Selecione o tipo"
-                />
+          {/* Card principal */}
+          <section className="mt-6">
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de entidades</span>
+                  {isOwner && (
+                    <Button onClick={openCreateModal} className="!py-1.5">
+                      Adicionar entidade
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              <h4 className="text-md font-semibold text-gray-800 pt-2">Endereço</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Rua"
-                  name="street"
-                  value={formData.street}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Número"
-                  name="street_number"
-                  value={formData.street_number}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Cidade"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Estado"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="CEP"
-                  name="postal_code"
-                  value={formData.postal_code}
-                  onChange={handleChange}
-                />
-              </div>
+              <div className="divide-y divide-gray-200">
+                {entities.map((e) => (
+                  <Row
+                    key={e.id}
+                    entity={e}
+                    canEdit={!!isOwner}
+                    onEdit={openEditModal}
+                    onDelete={deleteEntity}
+                  />
+                ))}
 
-              <h4 className="text-md font-semibold text-gray-800 pt-2">Dados bancários</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Banco"
-                  name="bank_name"
-                  value={formData.bank_name}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Agência"
-                  name="bank_branch"
-                  value={formData.bank_branch}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Conta corrente"
-                  name="checking_account"
-                  value={formData.checking_account}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Titular (CPF/CNPJ)"
-                  name="account_holder_tax_id"
-                  value={formData.account_holder_tax_id}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Nome do titular"
-                  name="account_holder_name"
-                  value={formData.account_holder_name}
-                  onChange={handleChange}
-                />
+                {entities.length === 0 && (
+                  <p className="p-4 text-center text-sm text-gray-500">Nenhuma entidade cadastrada.</p>
+                )}
               </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="cancel" type="button" onClick={closeModal}>
-                  Cancelar
-                </Button>
-                <Button type="submit">Salvar</Button>
-              </div>
-            </form>
-          </div>
+            </div>
+          </section>
         </div>
-      )}
+
+        {/* ------------------------------ Modal -------------------------------- */}
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
+            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl overflow-y-auto max-h-[90vh]"
+              role="dialog"
+              aria-modal="true"
+            >
+              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
+                <h3 className="text-[14px] font-semibold text-gray-800">
+                  {mode === "create" ? "Adicionar entidade" : "Editar entidade"}
+                </h3>
+                <button
+                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                  onClick={closeModal}
+                  aria-label="Fechar"
+                >
+                  &times;
+                </button>
+              </header>
+
+              <form className="space-y-3" onSubmit={submitEntity}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input label="Nome completo" name="full_name" value={formData.full_name} onChange={handleChange} />
+                  <Input label="Nome fantasia / apelido" name="alias_name" value={formData.alias_name} onChange={handleChange} />
+                  <Input label="CPF (SSN)" name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} />
+                  <Input label="CNPJ (EIN)" name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} />
+
+                  <Input label="DDD" name="area_code" value={formData.area_code} onChange={handleChange} />
+                  <Input label="Telefone" name="phone_number" value={formData.phone_number} onChange={handleChange} />
+                  <Input label="Email" name="email" value={formData.email} onChange={handleChange} />
+
+                  <SelectDropdown
+                    label="Tipo de entidade"
+                    items={ENTITY_TYPES}
+                    selected={ENTITY_TYPES.filter((t) => t.value === formData.entity_type)}
+                    onChange={(items) => items[0] && setFormData((p) => ({ ...p, entity_type: items[0].value }))}
+                    getItemKey={(item) => item.value}
+                    getItemLabel={(item) => item.label}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel="Selecione o tipo"
+                  />
+                </div>
+
+                <h4 className="text-[12px] font-semibold text-gray-800 pt-1">Endereço</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input label="Rua" name="street" value={formData.street} onChange={handleChange} />
+                  <Input label="Número" name="street_number" value={formData.street_number} onChange={handleChange} />
+                  <Input label="Cidade" name="city" value={formData.city} onChange={handleChange} />
+                  <Input label="Estado" name="state" value={formData.state} onChange={handleChange} />
+                  <Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} />
+                </div>
+
+                <h4 className="text-[12px] font-semibold text-gray-800 pt-1">Dados bancários</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input label="Banco" name="bank_name" value={formData.bank_name} onChange={handleChange} />
+                  <Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} />
+                  <Input label="Conta corrente" name="checking_account" value={formData.checking_account} onChange={handleChange} />
+                  <Input label="Titular (CPF/CNPJ)" name="account_holder_tax_id" value={formData.account_holder_tax_id} onChange={handleChange} />
+                  <Input label="Nome do titular" name="account_holder_name" value={formData.account_holder_name} onChange={handleChange} />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button variant="cancel" type="button" onClick={closeModal}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Salvar</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
 
       {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar

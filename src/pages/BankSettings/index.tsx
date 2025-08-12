@@ -1,5 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/BankSettings.tsx                                         */
+/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
+/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
 /* -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -18,20 +20,57 @@ import { api } from "src/api/requests";
 import { Bank } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-// 🔢 Helpers para lidar com moeda (mesmo padrão do Modal de Lançamentos)
-import {
-  formatCurrency,
-  decimalToCentsString,
-} from "src/lib/currency";
-import {
-  handleUtilitaryAmountKeyDown,
-} from "src/lib/form/amountKeyHandlers";
+// 🔢 Helpers para lidar com moeda
+import { formatCurrency, decimalToCentsString } from "src/lib/currency";
+import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
 
 const ACCOUNT_TYPES = [
   { label: "Conta Corrente", value: "checking" },
   { label: "Poupança", value: "savings" },
   { label: "Caixa", value: "cash" },
 ];
+
+/* --------------------------------- Helpers -------------------------------- */
+function getInitials() {
+  return "BK";
+}
+
+const Row = ({
+  bank,
+  onEdit,
+  onDelete,
+  canEdit,
+}: {
+  bank: Bank;
+  onEdit: (b: Bank) => void;
+  onDelete: (b: Bank) => void;
+  canEdit: boolean;
+}) => (
+  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+    <div className="min-w-0">
+      <p className="text-[13px] font-medium text-gray-900 truncate">
+        {bank.bank_institution}
+      </p>
+      <p className="text-[12px] text-gray-600 truncate">
+        {bank.bank_branch} / {bank.bank_account}
+      </p>
+    </div>
+    {canEdit && (
+      <div className="flex gap-2 shrink-0">
+        <Button
+          variant="outline"
+          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+          onClick={() => onEdit(bank)}
+        >
+          Editar
+        </Button>
+        <Button variant="common" onClick={() => onDelete(bank)}>
+          Excluir
+        </Button>
+      </div>
+    )}
+  </div>
+);
 
 const BankSettings: React.FC = () => {
   useEffect(() => {
@@ -53,7 +92,7 @@ const BankSettings: React.FC = () => {
     bank_account_type: "checking",
     bank_branch: "",
     bank_account: "",
-    initial_balance: "0", // string cents ("0" = R$0,00)
+    initial_balance: "0", // string em centavos
     bank_status: true,
   });
 
@@ -115,7 +154,7 @@ const BankSettings: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(p => ({ ...p, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const cleanCurrency = (raw: string) =>
@@ -148,9 +187,7 @@ const BankSettings: React.FC = () => {
       await fetchBanks();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao salvar banco."
-      );
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar banco.");
     }
   };
 
@@ -161,182 +198,164 @@ const BankSettings: React.FC = () => {
       await api.deleteBank([bank.id]);
       await fetchBanks();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao excluir banco."
-      );
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir banco.");
     }
   };
 
+  /* ------------------------------- UX hooks -------------------------------- */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
-    };
-
-    if (modalOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
+    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
+    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [modalOpen, closeModal]);
 
   useEffect(() => {
-    if (modalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = modalOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [modalOpen]);
 
-  /* ------------------------------ UI helpers ------------------------------- */
-  const Row = ({ bank }: { bank: Bank }) => (
-    <div className="flex items-center justify-between border-b last:border-0 py-4 px-4">
-      <div>
-        <p className="text-sm text-gray-500">{bank.bank_institution}</p>
-        <p className="text-base font-medium text-gray-900">
-          {bank.bank_branch} / {bank.bank_account}
-        </p>
-      </div>
-      {isOwner && (
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => openEditModal(bank)}>
-            Editar
-          </Button>
-          <Button variant="common" onClick={() => deleteBank(bank)}>
-            Excluir
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-
   if (loading) return <SuspenseLoader />;
 
+  /* --------------------------------- UI ----------------------------------- */
   return (
     <>
       <Navbar />
       <SidebarSettings activeItem="banks" />
 
-      <main className="min-h-screen bg-gray-50 px-8 py-20 lg:ml-64 text-gray-900">
-        <section className="max-w-4xl mx-auto p-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Bancos</h3>
-            {isOwner && <Button onClick={openCreateModal}>Adicionar banco</Button>}
-          </div>
+      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
+      <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          {/* Header card */}
+          <header className="bg-white border border-gray-200 rounded-lg">
+            <div className="px-5 py-4 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+                {getInitials()}
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Bancos</h1>
+              </div>
+            </div>
+          </header>
 
-          <div className="border rounded-lg divide-y">
-            {banks.map(b => (
-              <Row key={b.id} bank={b} />
-            ))}
-            {banks.length === 0 && (
-              <p className="p-4 text-center text-sm text-gray-500">
-                Nenhum banco cadastrado.
-              </p>
-            )}
-          </div>
-        </section>
-      </main>
-
-      {/* ------------------------------ Modal -------------------------------- */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl overflow-y-auto max-h-[90vh]"
-          >
-            <header className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {mode === "create" ? "Adicionar banco" : "Editar banco"}
-              </h3>
-              <button
-                className="text-2xl text-gray-400 hover:text-gray-700"
-                onClick={closeModal}
-              >
-                &times;
-              </button>
-            </header>
-
-            <form className="space-y-4" onSubmit={submitBank}>
-              <Input
-                label="Instituição bancária"
-                name="bank_institution"
-                value={formData.bank_institution}
-                onChange={handleChange}
-                required
-              />
-
-              <SelectDropdown
-                label="Tipo de conta"
-                items={ACCOUNT_TYPES}
-                selected={ACCOUNT_TYPES.filter(a => a.value === formData.bank_account_type)}
-                onChange={items =>
-                  items[0] &&
-                  setFormData(p => ({ ...p, bank_account_type: items[0].value }))
-                }
-                getItemKey={item => item.value}
-                getItemLabel={item => item.label}
-                singleSelect
-                hideCheckboxes
-                buttonLabel="Selecione o tipo de conta"
-              />
-
-              <Input
-                label="Agência"
-                name="bank_branch"
-                value={formData.bank_branch}
-                onChange={handleChange}
-              />
-
-              <Input
-                label="Conta"
-                name="bank_account"
-                value={formData.bank_account}
-                onChange={handleChange}
-              />
-
-              <Input
-                label="Saldo inicial"
-                name="initial_balance"
-                type="text"
-                placeholder="0,00"
-                value={formatCurrency(formData.initial_balance)}
-                onChange={e =>
-                  setFormData(p => ({ ...p, initial_balance: e.target.value }))
-                }
-                onKeyDown={e =>
-                  handleUtilitaryAmountKeyDown(
-                    e,
-                    formData.initial_balance,
-                    (newVal: string) =>
-                      setFormData(p => ({ ...p, initial_balance: newVal }))
-                  )
-                }
-              />
-
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  checked={formData.bank_status}
-                  onChange={e =>
-                    setFormData(p => ({ ...p, bank_status: e.target.checked }))
-                  }
-                  size="sm"
-                  colorClass="defaultColor"
-                />
-                <span className="text-sm text-gray-700">Conta ativa</span>
+          {/* Card principal */}
+          <section className="mt-6">
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Contas bancárias</span>
+                  {isOwner && (
+                    <Button onClick={openCreateModal} className="!py-1.5">
+                      Adicionar banco
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="cancel" type="button" onClick={closeModal}>
-                  Cancelar
-                </Button>
-                <Button type="submit">Salvar</Button>
+              <div className="divide-y divide-gray-200">
+                {banks.map((b) => (
+                  <Row
+                    key={b.id}
+                    bank={b}
+                    canEdit={!!isOwner}
+                    onEdit={openEditModal}
+                    onDelete={deleteBank}
+                  />
+                ))}
+                {banks.length === 0 && (
+                  <p className="p-4 text-center text-sm text-gray-500">Nenhum banco cadastrado.</p>
+                )}
               </div>
-            </form>
-          </div>
+            </div>
+          </section>
         </div>
-      )}
+
+        {/* ------------------------------ Modal -------------------------------- */}
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
+            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg overflow-y-auto max-h-[90vh]"
+              role="dialog"
+              aria-modal="true"
+            >
+              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
+                <h3 className="text-[14px] font-semibold text-gray-800">
+                  {mode === "create" ? "Adicionar banco" : "Editar banco"}
+                </h3>
+                <button
+                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                  onClick={closeModal}
+                  aria-label="Fechar"
+                >
+                  &times;
+                </button>
+              </header>
+
+              <form className="space-y-3" onSubmit={submitBank}>
+                <Input
+                  label="Instituição bancária"
+                  name="bank_institution"
+                  value={formData.bank_institution}
+                  onChange={handleChange}
+                  required
+                />
+
+                <SelectDropdown
+                  label="Tipo de conta"
+                  items={ACCOUNT_TYPES}
+                  selected={ACCOUNT_TYPES.filter((a) => a.value === formData.bank_account_type)}
+                  onChange={(items) =>
+                    items[0] && setFormData((p) => ({ ...p, bank_account_type: items[0].value }))
+                  }
+                  getItemKey={(item) => item.value}
+                  getItemLabel={(item) => item.label}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel="Selecione o tipo de conta"
+                />
+
+                <Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} />
+
+                <Input label="Conta" name="bank_account" value={formData.bank_account} onChange={handleChange} />
+
+                <Input
+                  label="Saldo inicial"
+                  name="initial_balance"
+                  type="text"
+                  placeholder="0,00"
+                  value={formatCurrency(formData.initial_balance)}
+                  onChange={(e) => setFormData((p) => ({ ...p, initial_balance: e.target.value }))}
+                  onKeyDown={(e) =>
+                    handleUtilitaryAmountKeyDown(e, formData.initial_balance, (newVal: string) =>
+                      setFormData((p) => ({ ...p, initial_balance: newVal }))
+                    )
+                  }
+                />
+
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={formData.bank_status}
+                    onChange={(e) => setFormData((p) => ({ ...p, bank_status: e.target.checked }))}
+                    size="sm"
+                    colorClass="defaultColor"
+                  />
+                  <span className="text-[12px] text-gray-700">Conta ativa</span>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button variant="cancel" type="button" onClick={closeModal}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Salvar</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
 
       {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar
