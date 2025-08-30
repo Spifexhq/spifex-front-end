@@ -1,13 +1,10 @@
-/* --------------------------------------------------------------------------
- * File: src/components/KPI/KpiRow.tsx
- * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { useBanks } from "@/hooks/useBanks";
 import { api } from "src/api/requests";
 import BanksTable from "src/components/Table/BanksTable";
 import type { Entry, SettledEntry, EntryFilters } from "src/models/entries";
+import type { BankAccount } from "@/models/enterprise_structure/domain";
 import { getCursorFromUrl } from "src/lib/list";
 
 export type KpiItem = {
@@ -18,21 +15,29 @@ export type KpiItem = {
   delta?: { value: string; positive?: boolean };
 };
 
+type BanksData = {
+  banks: BankAccount[];
+  totalConsolidatedBalance: number;
+  loading: boolean;
+  error: string | null;
+};
+
 interface KpiRowProps {
-  items?: KpiItem[];                // mantido p/ compat (não usado)
-  selectedBankIds?: number[];       // usado no painel de bancos
-  filters?: EntryFilters;           // mesmos filtros da tabela
-  context?: "cashflow" | "settled"; // controla quais KPIs exibir
-  refreshToken?: number;            // altere para forçar recálculo
+  items?: KpiItem[];
+  selectedBankIds?: (string | number)[];
+  filters?: EntryFilters;
+  context?: "cashflow" | "settled";
+  refreshToken?: number;
   banksRefreshKey?: number;
+  banksData: BanksData;
 }
 
 type Parsed = {
-  amount: number;             // sempre módulo
-  isCredit: boolean;          // true = recebimento, false = pagamento
-  due: dayjs.Dayjs;           // competência (ou liquidação no settled para manter o shape)
+  amount: number;
+  isCredit: boolean;
+  due: dayjs.Dayjs;
   settled: boolean;
-  settleDate?: dayjs.Dayjs;   // data de liquidação (quando houver)
+  settleDate?: dayjs.Dayjs;
   raw: Entry | SettledEntry;
 };
 
@@ -55,24 +60,33 @@ const KpiRow: React.FC<KpiRowProps> = ({
   context = "cashflow",
   refreshToken = 0,
   banksRefreshKey,
+  banksData,
 }) => {
-  const { banks, totalConsolidatedBalance } = useBanks(selectedBankIds);
+  const { banks, loading: banksLoading } = banksData;
   const [expanded, setExpanded] = useState(false);
 
-  // fonte única (entries ou settled-entries)
   const [rows, setRows] = useState<Array<Entry | SettledEntry>>([]);
   const [loading, setLoading] = useState(false);
 
-  // --------- Payloads alinhados às tabelas ---------
-  // janela: mês anterior + mês atual (precisa do anterior para M/M)
+  /* ---------- FILTRO SÓ DO PAINEL DE BANCOS (local) ---------- */
+  const toKey = (v: unknown) => String(v);
+  const filteredBanks = useMemo(() => {
+    if (!selectedBankIds || selectedBankIds.length === 0) return banks;
+    const set = new Set(selectedBankIds.map(toKey));
+    return banks.filter((b) => set.has(toKey(b.id)));
+  }, [banks, selectedBankIds]);
+
+  const filteredTotalConsolidated = useMemo(
+    () => filteredBanks.reduce((acc, b) => acc + Number(b.consolidated_balance ?? 0), 0),
+    [filteredBanks]
+  );
+
+  /* ---------- Payloads e fetch das ENTRADAS (inalterados) ---------- */
   const baseStart = useMemo(
     () => dayjs().subtract(1, "month").startOf("month").format("YYYY-MM-DD"),
     []
   );
-  const baseEnd = useMemo(
-    () => dayjs().endOf("month").format("YYYY-MM-DD"),
-    []
-  );
+  const baseEnd = useMemo(() => dayjs().endOf("month").format("YYYY-MM-DD"), []);
 
   const glaParam = useMemo(
     () =>
@@ -87,7 +101,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
     [filters?.bank_id]
   );
 
-  // Cashflow (abertos/competência) — não filtra por bank_id
+  // Cashflow (sem bank_id)
   const payloadCashflow = useMemo(
     () => ({
       page_size: 5000,
@@ -100,7 +114,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
     [baseStart, baseEnd, filters?.description, filters?.observation, glaParam]
   );
 
-  // Settled (realizado) — respeita bank_id
+  // Settled (respeita bank_id)
   const payloadSettled = useMemo(
     () => ({
       page_size: 5000,
@@ -116,26 +130,21 @@ const KpiRow: React.FC<KpiRowProps> = ({
 
   const [overdueSums, setOverdueSums] = useState({ rec: 0, pay: 0, net: 0, loading: false });
   const yesterdayStr = useMemo(() => dayjs().subtract(1, "day").format("YYYY-MM-DD"), []);
-  const {
-    loading: overdueLoading,
-    rec: overdueRec,
-    pay: overduePay,
-    net: overdueNet,
-  } = overdueSums;
+  const { loading: overdueLoading, rec: overdueRec, pay: overduePay, net: overdueNet } = overdueSums;
+
+  // Overdue (competência) — sem bank_id
   const payloadOverdue = useMemo(
     () => ({
       page_size: 5000,
-      start_date: "1900-01-01", // bem antigo pra cobrir tudo
+      start_date: "1900-01-01",
       end_date: yesterdayStr,
       description: filters?.description,
       observation: filters?.observation,
       general_ledger_account_id: glaParam,
-      // importante: SEM bank_id aqui (tabela de abertos não filtra por banco)
     }),
     [filters?.description, filters?.observation, glaParam, yesterdayStr]
   );
 
-  // --------- Fetch por contexto ---------
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -145,11 +154,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
           const { data } = (await api.getSettledEntries(
             payloadSettled
           )) as { data: Paginated<SettledEntry> };
-          // ignora transferências (operações nulas)
-          const list = (data?.results ?? []).filter(
-            (e) => !e.transference_correlation_id
-          );
-          // dedup
+          const list = (data?.results ?? []).filter((e) => !e.transference_correlation_id);
           const seen = new Set<number>();
           const uniq = list.filter((e) => !seen.has(e.id) && (seen.add(e.id), true));
           if (mounted) setRows(uniq);
@@ -158,7 +163,6 @@ const KpiRow: React.FC<KpiRowProps> = ({
             payloadCashflow
           )) as { data: Paginated<Entry> };
           const list = data?.results ?? [];
-          // dedup
           const seen = new Set<number>();
           const uniq = list.filter((e) => !seen.has(e.id) && (seen.add(e.id), true));
           if (mounted) setRows(uniq);
@@ -192,7 +196,6 @@ const KpiRow: React.FC<KpiRowProps> = ({
           const batch = data?.results ?? [];
 
           for (const e of batch) {
-            // Só não liquidados e com due < hoje
             const settled = Boolean((e as Entry).settlement_state);
             if (settled) continue;
             const due = dayjs((e as Entry).due_date);
@@ -223,27 +226,16 @@ const KpiRow: React.FC<KpiRowProps> = ({
     };
   }, [context, payloadOverdue, refreshToken]);
 
-  // --------- Parsing unificado ---------
   const entriesParsed: Parsed[] = useMemo(() => {
     return rows.map((item) => {
       if ("settlement_due_date" in item) {
-        // SettledEntry → usar settlement_due_date SEM fallback
         const e = item as SettledEntry;
         const amt = Math.abs(Number(e.amount)) || 0;
         const tx = String(e.transaction_type || "").toLowerCase();
         const sdt = dayjs(e.settlement_due_date);
-        // credit = recebimento, debit = pagamento
         const isCredit = tx === "credit";
-        return {
-          raw: e,
-          amount: amt,
-          isCredit,
-          due: sdt, // mantém shape
-          settled: true,
-          settleDate: sdt,
-        };
+        return { raw: e, amount: amt, isCredit, due: sdt, settled: true, settleDate: sdt };
       }
-      // Entry (aberto/competência)
       const e = item as Entry;
       const amt = Math.abs(Number(e.amount)) || 0;
       return {
@@ -257,7 +249,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
     });
   }, [rows]);
 
-  // --------- KPIs: CASHFLOW (competência) ---------
+  /* ---------- KPIs (inalterados) ---------- */
   const cashflowKpis: KpiItem[] = useMemo(() => {
     const today = dayjs();
     const mStart = today.startOf("month");
@@ -289,40 +281,29 @@ const KpiRow: React.FC<KpiRowProps> = ({
                                     : (mtdNet - prevNet) / Math.abs(prevNet);
     const momLabel = `${Math.abs(momChange * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
-    const k1: KpiItem = {
-      key: "mtdNet",
-      label: "MTD: Resultado",
-      value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
-      hint: loading ? "Carregando..." : `Entradas ${currency(mtdIn)} • Saídas -${currency(mtdOutAbs)}`,
-      delta: {
-        value: `M/M ${momChange >= 0 ? "+" : ""}${momLabel}`,
-        positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0,
+    return [
+      {
+        key: "mtdNet",
+        label: "MTD: Resultado",
+        value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
+        hint: loading ? "Carregando..." : `Entradas ${currency(mtdIn)} • Saídas -${currency(mtdOutAbs)}`,
+        delta: { value: `M/M ${momChange >= 0 ? "+" : ""}${momLabel}`, positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0 },
       },
-    };
-
-    // usa os totais globais (paginados) vindos do fetch overdue
-    const k2: KpiItem = {
-      key: "overdueNet",
-      label: "Em atraso (não liquidado)",
-      value: overdueLoading ? "—" : `${overdueNet >= 0 ? "+" : ""}${currency(overdueNet)}`,
-      hint: overdueLoading
-        ? "Carregando..."
-        : `Recebimentos ${currency(overdueRec)} • Pagamentos -${currency(overduePay)}`,
-    };
-
-    const net7 = n7Rec - n7Pay;
-    const k3: KpiItem = {
-      key: "next7Net",
-      label: "Próx. 7 dias",
-      value: loading ? "—" : `${net7 >= 0 ? "+" : ""}${currency(net7)}`,
-      hint: loading ? "Carregando..." : `Recebimentos ${currency(n7Rec)} • Pagamentos ${currency(n7Pay)}`,
-    };
-
-    return [k1, k2, k3];
-    // deps atualizadas para satisfazer o eslint
+      {
+        key: "overdueNet",
+        label: "Em atraso (não liquidado)",
+        value: overdueLoading ? "—" : `${overdueNet >= 0 ? "+" : ""}${currency(overdueNet)}`,
+        hint: overdueLoading ? "Carregando..." : `Recebimentos ${currency(overdueRec)} • Pagamentos -${currency(overduePay)}`,
+      },
+      {
+        key: "next7Net",
+        label: "Próx. 7 dias",
+        value: loading ? "—" : `${currency(n7Rec - n7Pay)}`,
+        hint: loading ? "Carregando..." : `Recebimentos ${currency(n7Rec)} • Pagamentos ${currency(n7Pay)}`,
+      },
+    ];
   }, [entriesParsed, loading, overdueLoading, overdueRec, overduePay, overdueNet]);
 
-  // --------- KPIs: SETTLED (realizado por data de liquidação) ---------
   const settledKpis: KpiItem[] = useMemo(() => {
     const today = dayjs();
     const mStart = today.startOf("month");
@@ -331,106 +312,79 @@ const KpiRow: React.FC<KpiRowProps> = ({
     const prevStart = prevMonth.startOf("month");
     const prevEnd = prevMonth.endOf("month");
 
-    // mês atual (por data de liquidação)
-    let mtdIn = 0,
-      mtdOutAbs = 0,
-      mtdNet = 0;
-    // mês anterior (por data de liquidação)
-    let prevIn = 0,
-      prevOutAbs = 0,
-      prevNet = 0;
-    // últimos 7 dias (por data de liquidação)
+    let mtdIn = 0, mtdOutAbs = 0, mtdNet = 0;
+    let prevIn = 0, prevOutAbs = 0, prevNet = 0;
     const last7Start = today.subtract(6, "day").startOf("day");
     const last7End = today.endOf("day");
-    let last7In = 0,
-      last7OutAbs = 0,
-      last7Net = 0;
+    let last7In = 0, last7OutAbs = 0, last7Net = 0;
 
     for (const r of entriesParsed) {
-      const sDate = r.settleDate; // usar somente settlement_due_date
+      const sDate = r.settleDate;
       if (!sDate || !r.settled) continue;
+      const signed = r.isCredit ? r.amount : -r.amount;
 
-      // usa sempre r.isCredit (credit = recebimento, debit = pagamento)
-      const isInflow = r.isCredit;
-      const signed = isInflow ? r.amount : -r.amount;
-
-      // MTD realizado — inclusivo
       if (!sDate.isBefore(mStart) && !sDate.isAfter(mEnd)) {
-        if (isInflow) mtdIn += r.amount;
-        else mtdOutAbs += r.amount;
+        if (r.isCredit) mtdIn += r.amount; else mtdOutAbs += r.amount;
         mtdNet += signed;
       }
-
-      // Mês anterior realizado — inclusivo
       if (!sDate.isBefore(prevStart) && !sDate.isAfter(prevEnd)) {
-        if (isInflow) prevIn += r.amount;
-        else prevOutAbs += r.amount;
+        if (r.isCredit) prevIn += r.amount; else prevOutAbs += r.amount;
         prevNet += signed;
       }
-
-      // Últimos 7 dias realizado — inclusivo
       if (!sDate.isBefore(last7Start) && !sDate.isAfter(last7End)) {
-        if (isInflow) last7In += r.amount;
-        else last7OutAbs += r.amount;
+        if (r.isCredit) last7In += r.amount; else last7OutAbs += r.amount;
         last7Net += signed;
       }
     }
 
     const momChange =
       prevNet === 0 ? (mtdNet === 0 ? 0 : Number.POSITIVE_INFINITY) : (mtdNet - prevNet) / Math.abs(prevNet);
-
     const momLabel = Number.isFinite(momChange)
       ? `${(momChange * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`
       : "—";
 
-    const k1: KpiItem = {
-      key: "mtdSettledNet",
-      label: "Realizado (mês atual)",
-      value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
-      hint: loading ? "Carregando..." : `Receb. ${currency(mtdIn)} • Pag. -${currency(mtdOutAbs)}`,
-      delta: {
-        value: `M/M ${momChange >= 0 ? "+" : ""}${momLabel}`,
-        positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0,
+    return [
+      {
+        key: "mtdSettledNet",
+        label: "Realizado (mês atual)",
+        value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
+        hint: loading ? "Carregando..." : `Receb. ${currency(mtdIn)} • Pag. -${currency(mtdOutAbs)}`,
+        delta: { value: `M/M ${mtdNet >= 0 ? "+" : ""}${momLabel}`, positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0 },
       },
-    };
-
-    const k2: KpiItem = {
-      key: "prevSettledNet",
-      label: "Mês anterior",
-      value: loading ? "—" : `${prevNet >= 0 ? "+" : ""}${currency(prevNet)}`,
-      hint: loading ? "Carregando..." : `Receb. ${currency(prevIn)} • Pag. -${currency(prevOutAbs)}`,
-    };
-
-    const k3: KpiItem = {
-      key: "last7Settled",
-      label: "Últimos 7 dias",
-      value: loading ? "—" : `${last7Net >= 0 ? "+" : ""}${currency(last7Net)}`,
-      hint: loading ? "Carregando..." : `Receb. ${currency(last7In)} • Pag. -${currency(last7OutAbs)}`,
-    };
-
-    return [k1, k2, k3];
+      {
+        key: "prevSettledNet",
+        label: "Mês anterior",
+        value: loading ? "—" : `${prevNet >= 0 ? "+" : ""}${currency(prevNet)}`,
+        hint: loading ? "Carregando..." : `Receb. ${currency(prevIn)} • Pag. -${currency(prevOutAbs)}`,
+      },
+      {
+        key: "last7Settled",
+        label: "Últimos 7 dias",
+        value: loading ? "—" : `${last7Net >= 0 ? "+" : ""}${currency(last7Net)}`,
+        hint: loading ? "Carregando..." : `Receb. ${currency(last7In)} • Pag. -${currency(last7OutAbs)}`,
+      },
+    ];
   }, [entriesParsed, loading]);
 
   const autoKpis = context === "settled" ? settledKpis : cashflowKpis;
 
-  // --------- Painel Bancos ---------
+  // --------- Painel Bancos (usa FILTRADOS) ---------
   const totalFmt = useMemo(
     () =>
-      (totalConsolidatedBalance || 0).toLocaleString("pt-BR", {
+      Number(filteredTotalConsolidated || 0).toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
       }),
-    [totalConsolidatedBalance]
+    [filteredTotalConsolidated]
   );
 
   const topBank = useMemo(() => {
-    if (!banks?.length) return null;
-    return [...banks].sort((a, b) =>
+    if (!filteredBanks?.length) return null;
+    return [...filteredBanks].sort((a, b) =>
       Number(a.consolidated_balance || 0) < Number(b.consolidated_balance || 0) ? 1 : -1
     )[0];
-  }, [banks]);
+  }, [filteredBanks]);
 
-  // Posicionamento dos KPI cards no lado direito quando expandido
   const rightPlacement = (i: number) => {
     if (!expanded) return "lg:col-span-3";
     if (i === 0) return "lg:col-span-3 lg:col-start-7";
@@ -447,7 +401,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
           className={`grid grid-cols-12 gap-3 w-full ${expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""}`}
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
         >
-          {/* Card/ Painel Bancos (abre à esquerda) */}
+          {/* Card/ Painel Bancos */}
           <AnimatePresence initial={false}>
             {!expanded ? (
               <motion.button
@@ -459,16 +413,16 @@ const KpiRow: React.FC<KpiRowProps> = ({
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[11px] uppercase tracking-wide text-gray-600">Saldo consolidado</span>
-                  <span className="text-[11px] text-gray-500">contas: {banks.length || 0}</span>
+                  <span className="text-[11px] text-gray-500">contas: {filteredBanks.length || 0}</span>
                 </div>
                 <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">{totalFmt}</div>
                 {topBank && (
                   <div className="mt-1 flex items-center gap-2 min-w-0">
                     <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
-                      {getInitials(topBank.bank_institution)}
+                      {getInitials(topBank.institution)}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[12px] text-gray-800 truncate leading-tight">{topBank.bank_institution}</div>
+                      <div className="text-[12px] text-gray-800 truncate leading-tight">{topBank.institution}</div>
                       <div className="text-[10px] text-gray-500 truncate leading-tight">
                         {Number(topBank.consolidated_balance || 0).toLocaleString("pt-BR", {
                           style: "currency",
@@ -500,16 +454,22 @@ const KpiRow: React.FC<KpiRowProps> = ({
                       Fechar
                     </button>
                   </div>
-                  {/* área rolável (único scrollbar) */}
+                  {/* área rolável */}
                   <div className="flex-1 min-h-0 overflow-y-auto">
-                    <BanksTable key={banksRefreshKey} selectedBankIds={selectedBankIds} />
+                    <BanksTable
+                      key={banksRefreshKey}
+                      banks={filteredBanks}
+                      totalConsolidatedBalance={filteredTotalConsolidated}
+                      loading={banksLoading}
+                      error={banksData.error}
+                    />
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* 3 KPIs à direita */}
+          {/* KPIs à direita */}
           {autoKpis.map((kpi, i) => (
             <motion.div
               key={kpi.key}

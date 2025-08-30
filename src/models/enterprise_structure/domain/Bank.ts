@@ -1,11 +1,13 @@
-export interface Bank {
-  id: number;
-  bank_institution: string;
-  bank_account_type: string;
-  bank_branch: string;
-  bank_account: string;
-  initial_balance: number;
-  current_balance: number;
-  consolidated_balance: number;
-  bank_status: boolean;
-};
+export interface BankAccount {
+  id: string;
+  institution: string;
+  account_type: string;
+  currency: string;
+  branch: string;
+  account_number: string;
+  iban?: string;
+  initial_balance: string;        // "1234.56"
+  current_balance: string;        // "…"
+  consolidated_balance: string;   // "…"
+  is_active: boolean;
+}

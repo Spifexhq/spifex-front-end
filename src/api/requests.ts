@@ -18,7 +18,6 @@ import {
   AddTransferenceRequest
 } from '@/models/entries/dto'
 import {
-  GetBank, GetBanks,
   GetLedgerAccount, GetLedgerAccounts, AddLedgerAccountRequest, EditLedgerAccountRequest,
   GetDocumentType, GetDocumentTypes,
   GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
@@ -26,7 +25,8 @@ import {
   GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
   GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
-import { Bank, LedgerAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
+import { BankAccount, LedgerAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
+import { Paginated } from '@/models/Api';
 import { store } from '@/redux/store';
 
 const getOrgExternalId = (): string => {
@@ -110,6 +110,7 @@ export const api = {
     const orgExternalId = getOrgExternalId();
     return request<Organization>(`organizations/${orgExternalId}/`, "GET");
   },
+
   editOrganization: (payload: Partial<Organization>) => {
     const orgExternalId = getOrgExternalId();
     return request<Organization>(`organizations/${orgExternalId}/update/`, "PUT", payload);
@@ -219,23 +220,56 @@ export const api = {
     request<Transference>("cashflow/transferences", "POST", payload),
 
   /* --- Banks --- */
-  getAllBanks: () =>
-    request<GetBanks>("enterprise_structure/banks", "GET"),
+  getAllBanks: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<Paginated<BankAccount>>(
+      `banking/${orgExternalId}/banking/accounts/`,
+      "GET"
+    );
+  },
 
-  getBank: (ids: number[]) =>
-    request<GetBank>(`enterprise_structure/banks/${ids.join(',')}`, "GET"),
+  getBanksBatch: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<BankAccount[]>(
+      `banking/${orgExternalId}/banking/accounts/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  addBank: (payload: Bank) =>
-    request<Bank>("enterprise_structure/banks", 'POST', payload),
+  getBank: (bankExternalId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<BankAccount>(
+      `banking/${orgExternalId}/banking/accounts/${bankExternalId}/`,
+      "GET"
+    );
+  },
 
-  editBank: (ids: number[], payload: Partial<Bank>) =>
-    request<Bank>(`enterprise_structure/banks/${ids.join(',')}`, 'PUT', payload),
+  addBank: (payload: Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">) => {
+    const orgExternalId = getOrgExternalId();
+    return request<BankAccount>(
+      `banking/${orgExternalId}/banking/accounts/`,
+      "POST",
+      payload
+    );
+  },
 
-  deleteAllBanks: () =>
-    request<Bank>("enterprise_structure/banks", 'DELETE'),
+  editBank: (bankExternalId: string, payload: Partial<Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">>) => {
+    const orgExternalId = getOrgExternalId();
+    return request<BankAccount>(
+      `banking/${orgExternalId}/banking/accounts/${bankExternalId}/`,
+      "PATCH",
+      payload
+    );
+  },
 
-  deleteBank: (ids: number[]) =>
-    request<Bank>(`enterprise_structure/banks/${ids.join(',')}`, 'DELETE'),
+  deleteBank: (bankExternalId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<unknown>(
+      `banking/${orgExternalId}/banking/accounts/${bankExternalId}/`,
+      "DELETE"
+    );
+  },
 
   /* --- General Ledger Acccounts --- */
   getAllLedgerAccounts: () =>

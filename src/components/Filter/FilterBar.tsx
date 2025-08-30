@@ -4,7 +4,7 @@
  * Chips + Search + Filters menu + "Limpar filtros" + "Aplicar".
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type { Bank } from "@/models/enterprise_structure/domain/Bank";
+import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import { LedgerAccount } from "src/models/enterprise_structure";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
@@ -62,9 +62,10 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
   }, []);
 
   const selectedBanks = useMemo(
-    () => banks.filter(b => filters.bank_id?.includes(b.id)),
+    () => banks.filter(b => (filters.bank_id ?? []).includes(b.id)),
     [banks, filters.bank_id]
   );
+
   const selectedAccounts = useMemo(
     () => ledgerAccounts.filter(a => filters.general_ledger_account_id?.includes(a.id)),
     [ledgerAccounts, filters.general_ledger_account_id]
@@ -120,7 +121,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
           {(filters.bank_id?.length ?? 0) > 0 && (
             <Chip
               icon="bank"
-              label={`Banco  ${selectedBanks.slice(0, 2).map(b => b.bank_institution).join(", ")}${(selectedBanks.length > 2) ? ` +${selectedBanks.length - 2}` : ""}`}
+              label={`Banco  ${selectedBanks.slice(0, 2).map(b => b.institution).join(", ")}${(selectedBanks.length > 2) ? ` +${selectedBanks.length - 2}` : ""}`}
               onClick={() => setOpenEditor("banks")}
               onRemove={() => removeChip("banks")}
             />
@@ -233,13 +234,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
 
         {openEditor === "banks" && (
           <Popover onClose={() => setOpenEditor(null)}>
-            <SelectDropdown<Bank>
+            <SelectDropdown<BankAccount>
               label="Bancos"
               items={banks}
               selected={selectedBanks}
-              onChange={(list) => setFilters(f => ({ ...f, bank_id: list.map(x => Number(x.id)) }))}
+              onChange={(list) => setFilters(f => ({ ...f, bank_id: list.map(x => x.id) }))}
               getItemKey={(item) => item.id}
-              getItemLabel={(item) => item.bank_institution}
+              getItemLabel={(item) => item.institution}
               buttonLabel="Selecionar bancos"
               customStyles={{ maxHeight: "240px" }}
             />

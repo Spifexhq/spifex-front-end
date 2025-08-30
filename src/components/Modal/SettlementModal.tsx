@@ -1,9 +1,6 @@
 // src/components/Modal/SettlementModal.tsx
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 
-// Hooks
-import { useBanks } from "@/hooks/useBanks";
-
 // Components
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
@@ -21,12 +18,19 @@ import {
 import { api } from "src/api/requests";
 import { Entry } from "src/models/entries/domain";
 import { EditSettledEntryRequest } from "@/models/entries/dto";
+import type { BankAccount } from "@/models/enterprise_structure/domain";
 
 interface SettlementModalProps {
   isOpen: boolean;
   onClose(): void;
   selectedEntries: Entry[];
   onSave(): void;
+  // 🔸 banks injected by parent
+  banksData: {
+    banks: BankAccount[];
+    loading: boolean;
+    error: string | null;
+  };
 }
 
 interface LocalEntryState {
@@ -54,10 +58,11 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   onClose,
   selectedEntries,
   onSave,
+  banksData,
 }) => {
-  const { banks, loading: loadingBanks, error } = useBanks();
+  const { banks, loading: loadingBanks, error } = banksData;
 
-  const [selectedBankId, setSelectedBankId] = useState<number | null>(null);
+  const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
   const [entriesState, setEntriesState] = useState<LocalEntryState[]>([]);
   const [bulkDate, setBulkDate] = useState<string>("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -162,10 +167,14 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   };
 
   const markAllPartial = () =>
-    setEntriesState((prev) => prev.map((e) => ({ ...e, isPartial: true, partialAmount: "" })));
+    setEntriesState((prev) =>
+      prev.map((e) => ({ ...e, isPartial: true, partialAmount: "" }))
+    );
 
   const clearAllPartial = () =>
-    setEntriesState((prev) => prev.map((e) => ({ ...e, isPartial: false, partialAmount: "" })));
+    setEntriesState((prev) =>
+      prev.map((e) => ({ ...e, isPartial: false, partialAmount: "" }))
+    );
 
   /* -------------------------------- submit --------------------------------- */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -237,77 +246,79 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           className="flex-1 min-h-0 px-5 py-4 grid grid-cols-1 lg:grid-cols-[35%_65%] gap-4 min-w-0"
         >
           {/* ----------------- Banks Pane (35%) ----------------- */}
-          <section
-            aria-label="Selecionar banco"
-            className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-wide text-gray-600">Bancos</span>
-                <span className="text-[10px] text-gray-500">({banks.length})</span>
-              </div>
-              {selectedBankId && (
-                <span className="text-[11px] text-gray-600">
-                  Saldo:&nbsp;
-                  <b className="text-gray-900">
-                    {formatBRL(Number((banks.find((b) => b.id === selectedBankId)?.consolidated_balance) || 0))}
-                  </b>
-                </span>
-              )}
+        <section
+          aria-label="Selecionar banco"
+          className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
+        >
+          <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-wide text-gray-600">Bancos</span>
+              <span className="text-[10px] text-gray-500">({banks.length})</span>
             </div>
+            {selectedBankId && (
+              <span className="text-[11px] text-gray-600">
+                Saldo:&nbsp;
+                <b className="text-gray-900">
+                  {formatBRL(
+                    Number(banks.find((b) => b.id === selectedBankId)?.consolidated_balance ?? "0")
+                  )}
+                </b>
+              </span>
+            )}
+          </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 bg-white">
-              {loadingBanks ? (
-                <div className="py-4 grid place-items-center">
-                  <InlineLoader color="orange" />
-                </div>
-              ) : error ? (
-                <div className="py-4 text-center text-xs text-red-600">{error}</div>
-              ) : banks.length === 0 ? (
-                <div className="py-4 text-center text-xs text-gray-600">Nenhum banco disponível</div>
-              ) : (
-                banks
-                  .slice()
-                  .sort((a, b) => a.id - b.id)
-                  .map((b) => {
-                    const selected = selectedBankId === b.id;
-                    const balance = formatBRL(Number(b.consolidated_balance || 0));
-                    return (
-                      <button
-                        type="button"
-                        key={b.id}
-                        onClick={() => setSelectedBankId(selected ? null : b.id)}
-                        className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-gray-50 focus:bg-gray-50 ${
-                          selected ? "bg-gray-50" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span
-                            className={`h-4 w-4 rounded-full border ${
-                              selected
-                                ? "border-[color:var(--accentPrimary)] bg-[color:var(--accentPrimary)]"
-                                : "border-gray-300"
-                            }`}
-                            aria-hidden
-                          />
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-[13px] text-gray-800 truncate leading-tight">
-                              {b.bank_institution}
-                            </span>
-                            <span className="text-[10px] text-gray-500 truncate leading-tight">
-                              Agência {b.bank_branch} • Conta {b.bank_account}
-                            </span>
-                          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 bg-white">
+            {loadingBanks ? (
+              <div className="py-4 grid place-items-center">
+                <InlineLoader color="orange" />
+              </div>
+            ) : error ? (
+              <div className="py-4 text-center text-xs text-red-600">{error}</div>
+            ) : banks.length === 0 ? (
+              <div className="py-4 text-center text-xs text-gray-600">Nenhum banco disponível</div>
+            ) : (
+              banks
+                .slice()
+                .sort((a, b) => a.institution.localeCompare(b.institution))
+                .map((b) => {
+                  const selected = selectedBankId === b.id;
+                  const balance = formatBRL(Number(b.consolidated_balance ?? "0"));
+                  return (
+                    <button
+                      type="button"
+                      key={b.id}
+                      onClick={() => setSelectedBankId(selected ? null : b.id)}
+                      className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-gray-50 focus:bg-gray-50 ${
+                        selected ? "bg-gray-50" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={`h-4 w-4 rounded-full border ${
+                            selected
+                              ? "border-[color:var(--accentPrimary)] bg-[color:var(--accentPrimary)]"
+                              : "border-gray-300"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[13px] text-gray-800 truncate leading-tight">
+                            {b.institution}
+                          </span>
+                          <span className="text-[10px] text-gray-500 truncate leading-tight">
+                            Agência {b.branch} • Conta {b.account_number}
+                          </span>
                         </div>
-                        <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
-                          {balance}
-                        </div>
-                      </button>
-                    );
-                  })
-              )}
-            </div>
-          </section>
+                      </div>
+                      <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
+                        {balance}
+                      </div>
+                    </button>
+                  );
+                })
+            )}
+          </div>
+        </section>
 
           {/* ----------------- Entries Pane (65%) ----------------- */}
           <section
@@ -456,7 +467,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               <span className="text-gray-600">
                 Banco:&nbsp;
                 <b className="text-gray-900">
-                  {chosenBank.bank_institution} • Ag. {chosenBank.bank_branch} • Conta {chosenBank.bank_account}
+                  {(chosenBank.institution || chosenBank.institution)} • Ag. {(chosenBank.branch || chosenBank.branch)} • Conta {(chosenBank.account_number || chosenBank.account_number)}
                 </b>
               </span>
             ) : (

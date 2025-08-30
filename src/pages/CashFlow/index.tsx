@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useState, useRef } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
@@ -10,6 +9,7 @@ import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 import KpiRow from "src/components/KPI/KpiRow";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
+import { useBanks } from "@/hooks/useBanks";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -28,6 +28,14 @@ const CashFlow = () => {
   const tableRef = useRef<CashFlowTableHandle>(null);
 
   const [filters, setFilters] = useState<EntryFilters>({});
+
+  // 🔸 Single source of truth: fetch banks here and pass down
+  const {
+    banks,
+    totalConsolidatedBalance,
+    loading: banksLoading,
+    error: banksError,
+  } = useBanks();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
@@ -54,28 +62,35 @@ const CashFlow = () => {
       <div
         className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         {/* Push main content below the fixed Navbar */}
-      <div
-        className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-        <FilterBar onApply={handleApplyFilters} />
+        <div
+          className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+          <FilterBar onApply={handleApplyFilters} />
 
-        <KpiRow
-          selectedBankIds={filters.bank_id}
-          filters={filters}
-          context="cashflow"
-          refreshToken={kpiRefresh}
-          banksRefreshKey={banksKey}
-        />
-
-        {/* Table row fills the rest — enables inner scrolling */}
-        <div className="min-h-0 h-full">
-          <CashFlowTable
-            ref={tableRef}
-            key={cashflowKey}
+          <KpiRow
+            // filters used for entries KPIs
+            selectedBankIds={filters.bank_id}
             filters={filters}
-            onEdit={handleEditEntry}
-            onSelectionChange={handleSelectionChange}
+            context="cashflow"
+            refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey}
+            banksData={{
+              banks,
+              totalConsolidatedBalance,
+              loading: banksLoading,
+              error: banksError,
+            }}
           />
-        </div>
+
+          {/* Table row fills the rest — enables inner scrolling */}
+          <div className="min-h-0 h-full">
+            <CashFlowTable
+              ref={tableRef}
+              key={cashflowKey}
+              filters={filters}
+              onEdit={handleEditEntry}
+              onSelectionChange={handleSelectionChange}
+            />
+          </div>
 
           {selectedIds.length > 0 && (
             <SelectionActionsBar
@@ -143,6 +158,12 @@ const CashFlow = () => {
             setBanksKey((k) => k + 1);
             setKpiRefresh((k) => k + 1);
             setSelectedIds([]);
+          }}
+          // 🔸 pass banks data to modal too
+          banksData={{
+            banks,
+            loading: banksLoading,
+            error: banksError,
           }}
         />
       )}

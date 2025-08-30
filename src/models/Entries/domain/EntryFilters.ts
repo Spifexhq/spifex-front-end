@@ -4,5 +4,5 @@ export type EntryFilters = {
     description?: string;
     observation?: string;
     general_ledger_account_id?: number[];
-    bank_id?: number[];
+    bank_id?: string[];
   };

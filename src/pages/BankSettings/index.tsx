@@ -17,18 +17,26 @@ import Checkbox from "@/components/Checkbox";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { Bank } from "src/models/enterprise_structure/domain";
+import { BankAccount } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-// 🔢 Helpers para lidar com moeda
-import { formatCurrency, decimalToCentsString } from "src/lib/currency";
+// 🔢 Helpers para lidar com moeda (mantendo a lógica antiga)
+import { formatCurrency, decimalToCentsDigits } from "src/lib/currency";
 import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
 
 const ACCOUNT_TYPES = [
   { label: "Conta Corrente", value: "checking" },
   { label: "Poupança", value: "savings" },
+  { label: "Investimento", value: "investment" },
   { label: "Caixa", value: "cash" },
 ];
+
+/** Converte dígitos de centavos ("123456") -> string decimal "1234.56" para a API */
+const digitsToDecimalString = (digits: string) => {
+  const onlyDigits = String(digits ?? "0").replace(/\D/g, "");
+  const num = Number(onlyDigits || "0") / 100;
+  return num.toFixed(2);
+};
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -41,18 +49,18 @@ const Row = ({
   onDelete,
   canEdit,
 }: {
-  bank: Bank;
-  onEdit: (b: Bank) => void;
-  onDelete: (b: Bank) => void;
+  bank: BankAccount;
+  onEdit: (b: BankAccount) => void;
+  onDelete: (b: BankAccount) => void;
   canEdit: boolean;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">
-        {bank.bank_institution}
+        {bank.institution}
       </p>
       <p className="text-[12px] text-gray-600 truncate">
-        {bank.bank_branch} / {bank.bank_account}
+        {bank.branch} / {bank.account_number}
       </p>
     </div>
     {canEdit && (
@@ -80,29 +88,35 @@ const BankSettings: React.FC = () => {
   const { isOwner } = useAuthContext();
 
   /* --------------------------- Estados principais --------------------------- */
-  const [banks, setBanks] = useState<Bank[]>([]);
+  const [banks, setBanks] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingBank, setEditingBank] = useState<Bank | null>(null);
+  const [editingBank, setEditingBank] = useState<BankAccount | null>(null);
 
+  // Mantemos "initial_balance" como dígitos de centavos (ex.: "123456") — mesma lógica antiga
   const [formData, setFormData] = useState({
-    bank_institution: "",
-    bank_account_type: "checking",
-    bank_branch: "",
-    bank_account: "",
-    initial_balance: "0", // string em centavos
-    bank_status: true,
+    institution: "",
+    account_type: "checking",
+    currency: "BRL",
+    branch: "",
+    account_number: "",
+    iban: "",
+    initial_balance: "0", // <-- dígitos de centavos para edição/mascara
+    is_active: true,
   });
 
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
   /* ------------------------------ Carrega dados ----------------------------- */
-  const fetchBanks = async () => {
+  const fetchBanks = useCallback(async () => {
     try {
-      const res = await api.getAllBanks();
-      const sorted = res.data.banks.sort((a, b) => a.id - b.id);
+      const res = await api.getAllBanks(); // Paginated<BankAccount>
+      const list: BankAccount[] = res.data?.results ?? [];
+      const sorted = [...list].sort((a, b) =>
+        a.institution.localeCompare(b.institution)
+      );
       setBanks(sorted);
     } catch (err) {
       console.error("Erro ao buscar bancos", err);
@@ -110,37 +124,42 @@ const BankSettings: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchBanks();
-  }, []);
+  }, [fetchBanks]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
     setMode("create");
     setEditingBank(null);
     setFormData({
-      bank_institution: "",
-      bank_account_type: "checking",
-      bank_branch: "",
-      bank_account: "",
+      institution: "",
+      account_type: "checking",
+      currency: "BRL",
+      branch: "",
+      account_number: "",
+      iban: "",
       initial_balance: "0",
-      bank_status: true,
+      is_active: true,
     });
     setModalOpen(true);
   };
 
-  const openEditModal = (bank: Bank) => {
+  const openEditModal = (bank: BankAccount) => {
     setMode("edit");
     setEditingBank(bank);
     setFormData({
-      bank_institution: bank.bank_institution,
-      bank_account_type: bank.bank_account_type,
-      bank_branch: bank.bank_branch,
-      bank_account: bank.bank_account,
-      initial_balance: decimalToCentsString(bank.initial_balance),
-      bank_status: bank.bank_status,
+      institution: bank.institution,
+      account_type: bank.account_type,
+      currency: bank.currency || "BRL",
+      branch: bank.branch,
+      account_number: bank.account_number,
+      iban: bank.iban || "",
+      // backend devolve decimal ("1234.56") -> armazenamos como dígitos ("123456")
+      initial_balance: decimalToCentsDigits(bank.initial_balance as unknown as string),
+      is_active: bank.is_active,
     });
     setModalOpen(true);
   };
@@ -157,48 +176,63 @@ const BankSettings: React.FC = () => {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  const cleanCurrency = (raw: string) =>
-    (parseFloat(raw.replace(/\D/g, "")) / 100).toFixed(2);
+  // Mesma UX antiga: formatamos na render; controlamos os dígitos via onKeyDown helper
+  const handleMoneyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    handleUtilitaryAmountKeyDown(
+      e,
+      formData.initial_balance,
+      (newVal: string) => setFormData((p) => ({ ...p, initial_balance: newVal }))
+    );
+  };
 
   const submitBank = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const parsedBalance = parseFloat(cleanCurrency(formData.initial_balance));
+    // Converter dígitos -> decimal "1234.56" para a API (read/write serializers novos)
+    const initial_balance = digitsToDecimalString(formData.initial_balance);
 
     try {
       if (mode === "create") {
         await api.addBank({
-          bank_institution: formData.bank_institution,
-          bank_account_type: formData.bank_account_type,
-          bank_branch: formData.bank_branch,
-          bank_account: formData.bank_account,
-          initial_balance: parsedBalance,
-          current_balance: parsedBalance,
-          consolidated_balance: parsedBalance,
-          bank_status: formData.bank_status,
-          id: 0,
+          institution: formData.institution,
+          account_type: formData.account_type,
+          currency: formData.currency,
+          branch: formData.branch,
+          account_number: formData.account_number,
+          iban: formData.iban || "",
+          initial_balance, // decimal string
+          is_active: formData.is_active,
         });
       } else if (editingBank) {
-        await api.editBank([editingBank.id], {
-          ...formData,
-          initial_balance: parsedBalance,
+        await api.editBank(editingBank.id, {
+          institution: formData.institution,
+          account_type: formData.account_type,
+          currency: formData.currency,
+          branch: formData.branch,
+          account_number: formData.account_number,
+          iban: formData.iban || "",
+          initial_balance, // decimal string
+          is_active: formData.is_active,
         });
       }
+
       await fetchBanks();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar banco.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : "Erro ao salvar banco."
+      );
     }
   };
 
-  const deleteBank = async (bank: Bank) => {
-    if (!window.confirm(`Excluir banco "${bank.bank_institution}"?`)) return;
-
+  const deleteBank = async (bank: BankAccount) => {
+    if (!window.confirm(`Excluir conta "${bank.institution}"?`)) return;
     try {
-      await api.deleteBank([bank.id]);
+      await api.deleteBank(bank.id);
       await fetchBanks();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir banco.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : "Erro ao excluir banco."
+      );
     }
   };
 
@@ -234,8 +268,12 @@ const BankSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Bancos</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  Configurações
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  Bancos
+                </h1>
               </div>
             </div>
           </header>
@@ -245,7 +283,9 @@ const BankSettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Contas bancárias</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    Contas bancárias
+                  </span>
                   {isOwner && (
                     <Button onClick={openCreateModal} className="!py-1.5">
                       Adicionar banco
@@ -265,7 +305,9 @@ const BankSettings: React.FC = () => {
                   />
                 ))}
                 {banks.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">Nenhum banco cadastrado.</p>
+                  <p className="p-4 text-center text-sm text-gray-500">
+                    Nenhum banco cadastrado.
+                  </p>
                 )}
               </div>
             </div>
@@ -277,7 +319,7 @@ const BankSettings: React.FC = () => {
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             {/* Sem onClick no backdrop → não fecha ao clicar fora */}
             <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg overflow-y-auto max-h-[90vh]"
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg overflow-y-auto max-h={[90]}vh"
               role="dialog"
               aria-modal="true"
             >
@@ -297,8 +339,8 @@ const BankSettings: React.FC = () => {
               <form className="space-y-3" onSubmit={submitBank}>
                 <Input
                   label="Instituição bancária"
-                  name="bank_institution"
-                  value={formData.bank_institution}
+                  name="institution"
+                  value={formData.institution}
                   onChange={handleChange}
                   required
                 />
@@ -306,9 +348,15 @@ const BankSettings: React.FC = () => {
                 <SelectDropdown
                   label="Tipo de conta"
                   items={ACCOUNT_TYPES}
-                  selected={ACCOUNT_TYPES.filter((a) => a.value === formData.bank_account_type)}
+                  selected={ACCOUNT_TYPES.filter(
+                    (a) => a.value === formData.account_type
+                  )}
                   onChange={(items) =>
-                    items[0] && setFormData((p) => ({ ...p, bank_account_type: items[0].value }))
+                    items[0] &&
+                    setFormData((p) => ({
+                      ...p,
+                      account_type: items[0].value,
+                    }))
                   }
                   getItemKey={(item) => item.value}
                   getItemLabel={(item) => item.label}
@@ -317,28 +365,46 @@ const BankSettings: React.FC = () => {
                   buttonLabel="Selecione o tipo de conta"
                 />
 
-                <Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} />
-
-                <Input label="Conta" name="bank_account" value={formData.bank_account} onChange={handleChange} />
+                <Input
+                  label="Agência"
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                />
+                <Input
+                  label="Conta"
+                  name="account_number"
+                  value={formData.account_number}
+                  onChange={handleChange}
+                />
+                <Input
+                  label="IBAN"
+                  name="iban"
+                  value={formData.iban}
+                  onChange={handleChange}
+                />
 
                 <Input
                   label="Saldo inicial"
                   name="initial_balance"
                   type="text"
                   placeholder="0,00"
-                  value={formatCurrency(formData.initial_balance)}
-                  onChange={(e) => setFormData((p) => ({ ...p, initial_balance: e.target.value }))}
-                  onKeyDown={(e) =>
-                    handleUtilitaryAmountKeyDown(e, formData.initial_balance, (newVal: string) =>
-                      setFormData((p) => ({ ...p, initial_balance: newVal }))
-                    )
+                  value={formatCurrency(formData.initial_balance)}  // mantém formatação antiga
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, initial_balance: e.target.value }))
                   }
+                  onKeyDown={handleMoneyKeyDown}
                 />
 
                 <div className="flex items-center gap-3">
                   <Checkbox
-                    checked={formData.bank_status}
-                    onChange={(e) => setFormData((p) => ({ ...p, bank_status: e.target.checked }))}
+                    checked={formData.is_active}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        is_active: e.target.checked,
+                      }))
+                    }
                     size="sm"
                     colorClass="defaultColor"
                   />

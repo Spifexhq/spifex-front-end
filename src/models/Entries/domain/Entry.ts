@@ -3,7 +3,7 @@ import {
   DepartmentAllocation, Project,
   InventoryAllocation, Entity
 } from '@/models/enterprise_structure/domain';
-import { Bank } from '../../enterprise_structure/domain/Bank';
+import { BankAccount } from '../../enterprise_structure/domain/Bank';
 
 export interface Entry {
   id: number;
@@ -26,7 +26,7 @@ export interface Entry {
   inventory_item: InventoryAllocation[] | null;
   entity: Entity | null;
 
-  bank?: Bank | null;
+  bank?: BankAccount | null;
   settlement_due_date?: string | null;
   installments_correlation_id?: string | null;
   partial_settlement_correlation_id?: string | null;

@@ -1,9 +1,9 @@
-import { Bank } from "../domain/Bank";
+import { BankAccount } from "../domain/Bank";
 
 export interface GetBanks {
-  banks: Bank[];
+  banks: BankAccount[];
 }
 
 export interface GetBank {
-  bank: Bank;
+  bank: BankAccount;
 }

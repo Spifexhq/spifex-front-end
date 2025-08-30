@@ -23,7 +23,7 @@ export interface GetSettledEntry extends SECursorLinks {
 
 export type SettledEntryPayloadBase = {
   settlement_due_date: string;
-  bank_id: number;
+  bank_id?: string;
   is_partial: boolean;
   partial_amount?: string;
 };

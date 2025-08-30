@@ -9,6 +9,7 @@ import { api } from "src/api/requests";
 import FilterBar from "src/components/Filter/FilterBar";
 import KpiRow from "src/components/KPI/KpiRow";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
+import { useBanks } from "@/hooks/useBanks";
 
 const Settled = () => {
   useEffect(() => { document.title = "Realizado"; }, []);
@@ -23,8 +24,17 @@ const Settled = () => {
   const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [tableKey, setTableKey] = useState(0);
+  const [banksKey, setBanksKey] = useState(0); // to re-render banks panel after transfers if needed
 
   const tableRef = useRef<SettledEntriesTableHandle>(null);
+
+  // Fetch ALL banks here and pass down; KpiRow will filter locally by selectedBankIds
+  const {
+    banks,
+    totalConsolidatedBalance,
+    loading: banksLoading,
+    error: banksError,
+  } = useBanks();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
@@ -55,8 +65,17 @@ const Settled = () => {
           <KpiRow
             context="settled"
             filters={filters}
+            // banks panel filters locally by these ids
             selectedBankIds={filters.bank_id}
             refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey}
+            // inject banks data (unfiltered)
+            banksData={{
+              banks,
+              totalConsolidatedBalance,
+              loading: banksLoading,
+              error: banksError,
+            }}
           />
 
           {/* Table area with inner scroll inside the table component */}
@@ -108,7 +127,10 @@ const Settled = () => {
           <TransferenceModal
             isOpen={isTransferenceModalOpen}
             onClose={() => setIsTransferenceModalOpen(false)}
-            onSave={() => setIsTransferenceModalOpen(false)}
+            onSave={() => {
+              setIsTransferenceModalOpen(false);
+              setBanksKey((k) => k + 1); // nudge banks panel to re-render if you key anything by this
+            }}
           />
         )}
       </div>
