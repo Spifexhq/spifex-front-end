@@ -1,4 +1,4 @@
-import { User, UserEnterpriseDetail } from "../domain";
+import { User, UserOrganizationDetail } from "../domain";
 import { Subscription } from "./Subscription";
 
 export interface SignInRequest {
@@ -8,8 +8,9 @@ export interface SignInRequest {
 
 export interface SignInResponse {
   user: User;
-  enterprise: UserEnterpriseDetail;
+  organization: UserOrganizationDetail;
   subscription: Subscription | null;
+  permissions: string[];
   refresh: string;
   access: string;
 }

@@ -8,7 +8,7 @@ import {
   GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
-import { User, Enterprise, Employee, GroupDetail, CounterUsage, IncrementCounterUsage } from '@/models/auth/domain'
+import { User, Organization, Employee, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
 import { Entry, SettledEntry, Transference } from '@/models/entries/domain'
@@ -27,12 +27,22 @@ import {
   GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
 import { Bank, LedgerAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
+import { store } from '@/redux/store';
 
+const getOrgExternalId = (): string => {
+  const state = store.getState();
+  // Try explicit field then nested organization
+  const byField = state.auth.orgExternalId;
+  const byNested = state.auth.organization?.organization?.external_id;
+  const id = byField || byNested;
+  if (!id) throw new Error('Organization external_id is not available yet.');
+  return id;
+};
 
 export const api = {
   /* --- Auth --- */
   signIn: (payload: SignInRequest) =>
-    request<SignInResponse>('auth/signin', 'POST', payload),
+    request<SignInResponse>('auth/signin/', 'POST', payload),
 
   signUp: (payload: SignUpRequest) =>
     request<SignUpResponse>('auth/signup', 'POST', payload),
@@ -45,30 +55,48 @@ export const api = {
 
   /* --- User --- */
   getUser: () =>
-    request<GetUserResponse>('auth/user', "GET"),
+    request<GetUserResponse>('auth/me/', "GET"),
 
   editUser:(payload: Partial<User>) =>
-    request<User>('auth/user', 'PUT', payload),
+    request<User>('auth/me/', 'PUT', payload),
+
+  getPersonalSettings: () =>
+    request<PersonalSettings>('auth/me/settings/', "GET"),
+
+  editPersonalSettings:(payload: Partial<PersonalSettings>) =>
+    request<PersonalSettings>('auth/me/settings/', 'PATCH', payload),
 
   /* --- Password --- */
   changePassword: (payload: { current_password: string; new_password: string }) =>
-    request<unknown>('auth/password-change/', 'PUT', payload),
+    request<unknown>('auth/password/change/', 'PUT', payload),
 
   requestPasswordReset: (email: string) =>
-    axios.post('auth/password-reset/', { email }),
+    axios.post('auth/password/reset/', { email }),
 
   confirmPasswordReset: (uid: string, token: string, password: string) =>
-    axios.post(`auth/password-reset/${uid}/${token}/`, { password }),
+    axios.post(`auth/password/reset/${uid}/${token}/`, { password }),
 
   /* --- Subscriptions --- */
-  getSubscriptionStatus: () =>
-    request<Subscription>('payments/get-subscription-status', 'GET'),
-  
-  createCheckoutSession: (price_id: string) =>
-    request<{ url?: string; message?: string }>('payments/create-checkout-session/', 'POST', { price_id }),
-
-  createCustomerPortalSession: () =>
-    request<{ url?: string }>('payments/create-customer-portal-session/', 'POST', {}),
+  getSubscriptionStatus: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<Subscription>(`billing/${orgExternalId}/subscription`, 'GET');
+  },
+  createCheckoutSession: (price_id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<{ url?: string; message?: string }>(
+      `billing/${orgExternalId}/create-checkout-session/`,
+      'POST',
+      { price_id }
+    );
+  },
+  createCustomerPortalSession: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<{ url?: string }>(
+      `billing/${orgExternalId}/create-customer-portal-session/`,
+      'POST',
+      {}
+    );
+  },
 
   /* --- Counter --- */
   getCounter: (codeName: string) =>
@@ -77,12 +105,15 @@ export const api = {
   incrementCounter: (codeName: string) =>
     request<IncrementCounterUsage>(`companies/counter/${codeName}/`, 'PATCH'),
 
-  /* --- Enterprise --- */
-  getEnterprise: () =>
-    request<Enterprise>('companies/enterprise', "GET"),
-
-  editEnterprise: (payload: Partial<Enterprise>) =>
-    request<Enterprise>('companies/enterprise', 'PUT', payload),
+  /* --- Organization --- */
+  getOrganization: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<Organization>(`organizations/${orgExternalId}/`, "GET");
+  },
+  editOrganization: (payload: Partial<Organization>) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Organization>(`organizations/${orgExternalId}/update/`, "PUT", payload);
+  },
 
   /* --- Permissions --- */
   getPermissions: () =>

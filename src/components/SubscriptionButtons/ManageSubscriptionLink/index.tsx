@@ -9,7 +9,8 @@ const ManageSubscriptionLink: React.FC = () => {
   const { isSubscribed, isSuperUser, isOwner } = useAuthContext();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!isOwner || !isSubscribed || !isSuperUser) return null;
+  const canManage = isSubscribed && (isOwner || isSuperUser);
+  if (!canManage) return null;
 
   const handleManageSubscription = async () => {
     if (isProcessing) return;

@@ -7,6 +7,7 @@
  * -------------------------------------------------------------------------- */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
 
@@ -20,18 +21,18 @@ import { SuspenseLoader } from "@/components/Loaders";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { User, Enterprise } from "src/models/auth";
+import { PersonalSettings as PersonalSettingsModel, Organization } from "src/models/auth";
 import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 
 /* ----------------------------- Helpers/Types ----------------------------- */
 type EditableUserField =
   | "name"
   | "email"
-  | "phone_number"
+  | "phone"
   | "job_title"
   | "department"
-  | "user_timezone"
-  | "user_country";
+  | "timezone"
+  | "country";
 
 function getInitials(name?: string) {
   if (!name) return "US";
@@ -61,10 +62,12 @@ const Row = ({
 const PersonalSettings: React.FC = () => {
   useEffect(() => { document.title = "Configurações Pessoais"; }, []);
 
-  const { isOwner } = useAuthContext();
+  const navigate = useNavigate();
+  const { isOwner, organization: orgCtx } = useAuthContext();
+  const orgExternalId = orgCtx?.organization?.external_id ?? null;
 
-  const [user, setUser] = useState<User | null>(null);
-  const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
+  const [profile, setProfile] = useState<PersonalSettingsModel | null>(null);
+  const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -76,65 +79,49 @@ const PersonalSettings: React.FC = () => {
   const [useDeviceTz, setUseDeviceTz] = useState(true);
   const [selectedTimezone, setSelectedTimezone] = useState<{ label: string; value: string }[]>([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PersonalSettingsModel>({
     name: "",
     email: "",
-    phone_number: "",
+    phone: "",
     job_title: "",
     department: "",
-    user_timezone: "",
-    user_country: "",
+    timezone: "",
+    country: "",
   });
 
   /* ------------------------------ Load data ------------------------------ */
   useEffect(() => {
     (async () => {
       try {
-        const userResp = await api.getUser();
-        const u = userResp.data.user as User;
+        const { data } = await api.getPersonalSettings();
+        setProfile(data);
+        setFormData(data);
 
-        setUser(u);
-        setFormData({
-          name: u.name,
-          email: u.email,
-          phone_number: u.phone_number,
-          job_title: u.job_title,
-          department: u.department,
-          user_timezone: u.user_timezone,
-          user_country: u.user_country,
-        });
-
-        if (u.is_owner) {
-          const entResp = await api.getEnterprise();
-          setEnterprise(entResp.data);
-        }
-
-        const tzObj = TIMEZONES.find((t) => t.value === u.user_timezone);
+        const tzObj = TIMEZONES.find((t) => t.value === data.timezone);
         setSelectedTimezone(tzObj ? [tzObj] : []);
-        setUseDeviceTz(u.user_timezone === deviceTz);
-      } catch (e) {
-        console.error(e);
-        setSnackBarMessage("Erro ao buscar dados.");
+        setUseDeviceTz(data.timezone === deviceTz);
+
+        if (isOwner && orgExternalId) {
+          // keep your existing org fetcher if you have one elsewhere
+          // Assuming you already have an api.getOrganization
+          const res = await (await import("src/api/requests")).api.getOrganization();
+          setOrgProfile(res.data);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar dados pessoais", err);
+        setSnackBarMessage("Erro ao buscar dados pessoais.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [deviceTz]);
+  }, [deviceTz, orgExternalId, isOwner]);
 
   /* ------------------------------- Handlers ------------------------------ */
   const openModal = (field?: EditableUserField) => {
-    if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        phone_number: user.phone_number,
-        job_title: user.job_title,
-        department: user.department,
-        user_timezone: user.user_timezone,
-        user_country: user.user_country,
-      });
-      setUseDeviceTz(user.user_timezone === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
+    if (profile) {
+      setFormData(profile);
+      setUseDeviceTz(profile.timezone === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === profile.timezone);
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
     setEditingField(field ?? null);
@@ -142,39 +129,36 @@ const PersonalSettings: React.FC = () => {
   };
 
   const closeModal = useCallback(() => {
-    if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        phone_number: user.phone_number,
-        job_title: user.job_title,
-        department: user.department,
-        user_timezone: user.user_timezone,
-        user_country: user.user_country,
-      });
-      setUseDeviceTz(user.user_timezone === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === user.user_timezone);
+    if (profile) {
+      setFormData(profile);
+      setUseDeviceTz(profile.timezone === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === profile.timezone);
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
     setEditingField(null);
     setModalOpen(false);
-  }, [user, deviceTz]);
+  }, [profile, deviceTz]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setFormData((p) => ({ ...p, [e.target.name]: e.target.value } as PersonalSettingsModel));
 
   const handleSubmit = async () => {
-    const payload = editingField !== null ? { [editingField]: formData[editingField] } : formData;
+    const payload = editingField !== null
+      ? { [editingField]: (formData)[editingField] }
+      : formData;
 
     try {
-      const res = await api.editUser(payload);
-      if (!res.data) throw new Error("Erro ao atualizar dados.");
-      const updated = await api.getUser();
-      setUser(updated.data.user);
+      const { data } = await api.editPersonalSettings(payload);
+      setProfile(data);
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao atualizar dados.");
+      console.error("Erro ao atualizar os dados pessoais", err);
+      setSnackBarMessage("Erro ao atualizar os dados pessoais.");
     }
+  };
+
+  const handleSecurityNavigation = () => {
+    navigate('/settings/security');
   };
 
   /* ------------------------------ Modal UX ------------------------------- */
@@ -197,19 +181,17 @@ const PersonalSettings: React.FC = () => {
       {/* Navbar fixa (h-16) */}
       <Navbar />
 
-      {/* Sidebar de Settings (fixa abaixo da Navbar). 
-          Essa Sidebar já é do projeto; mantemos para alinhamento visual. */}
-      <SidebarSettings userName={user?.name} activeItem="personal" />
+      {/* Sidebar Settings */}
+      <SidebarSettings userName={profile?.name} activeItem="personal" />
 
-      {/* Conteúdo: desloca do topo (pt-16) e da sidebar (lg:ml-64). 
-          Clip horizontal para evitar overflow lateral. */}
+      {/* Conteúdo */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials(user?.name)}
+                {getInitials(profile?.name)}
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
@@ -223,13 +205,13 @@ const PersonalSettings: React.FC = () => {
             {/* LEFT */}
             <div className="col-span-12 lg:col-span-7 space-y-6">
               {/* Empresa (owner) */}
-              {isOwner && enterprise && (
+              {isOwner && orgProfile && (
                 <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                     <span className="text-[11px] uppercase tracking-wide text-gray-700">Empresa</span>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    <Row label="Nome da empresa" value={enterprise.name || "—"} />
+                    <Row label="Nome da empresa" value={orgProfile.name || "—"} />
                   </div>
                 </div>
               )}
@@ -242,7 +224,7 @@ const PersonalSettings: React.FC = () => {
                 <div className="divide-y divide-gray-200">
                   <Row
                     label="Nome completo"
-                    value={user?.name ?? ""}
+                    value={profile?.name ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("name")}>
                         Atualizar nome
@@ -251,7 +233,7 @@ const PersonalSettings: React.FC = () => {
                   />
                   <Row
                     label="Email principal"
-                    value={user?.email ?? ""}
+                    value={profile?.email ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("email")}>
                         Atualizar email
@@ -260,16 +242,16 @@ const PersonalSettings: React.FC = () => {
                   />
                   <Row
                     label="Telefone"
-                    value={user?.phone_number ?? ""}
+                    value={profile?.phone ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("phone_number")}>
+                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("phone")}>
                         Atualizar telefone
                       </Button>
                     }
                   />
                   <Row
                     label="Cargo"
-                    value={user?.job_title ?? ""}
+                    value={profile?.job_title ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("job_title")}>
                         Atualizar cargo
@@ -278,7 +260,7 @@ const PersonalSettings: React.FC = () => {
                   />
                   <Row
                     label="Departamento"
-                    value={user?.department ?? ""}
+                    value={profile?.department ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("department")}>
                         Atualizar departamento
@@ -287,9 +269,9 @@ const PersonalSettings: React.FC = () => {
                   />
                   <Row
                     label="País"
-                    value={user?.user_country ?? ""}
+                    value={profile?.country ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("user_country")}>
+                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("country")}>
                         Atualizar país
                       </Button>
                     }
@@ -300,7 +282,7 @@ const PersonalSettings: React.FC = () => {
 
             {/* RIGHT */}
             <div className="col-span-12 lg:col-span-5 space-y-6">
-              {/* Fuso horário (apenas texto + botão aqui) */}
+              {/* Fuso horário */}
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">Fuso horário</span>
@@ -310,13 +292,13 @@ const PersonalSettings: React.FC = () => {
                     <div>
                       <p className="text-[10px] uppercase tracking-wide text-gray-600">Atual</p>
                       <p className="text-[13px] font-medium text-gray-900">
-                        {formatTimezoneLabel(user?.user_timezone ?? "")}
+                        {formatTimezoneLabel(profile?.timezone ?? "")}
                       </p>
                     </div>
                     <Button
                       variant="outline"
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                      onClick={() => openModal("user_timezone")}
+                      onClick={() => openModal("timezone")}
                     >
                       Atualizar
                     </Button>
@@ -332,7 +314,11 @@ const PersonalSettings: React.FC = () => {
                 <div className="px-4 py-3">
                   <p className="text-[12px] text-gray-700">Gerencie senha, sessões e dispositivos conectados.</p>
                   <div className="mt-3">
-                    <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50">
+                    <Button 
+                      variant="outline" 
+                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                      onClick={handleSecurityNavigation}
+                    >
                       Gerenciar segurança
                     </Button>
                   </div>
@@ -373,20 +359,20 @@ const PersonalSettings: React.FC = () => {
                 {(editingField === null || editingField === "email") && (
                   <Input label="Email principal" name="email" type="email" value={formData.email} onChange={handleChange} required />
                 )}
-                {(editingField === null || editingField === "phone_number") && (
-                  <Input label="Telefone" name="phone_number" type="tel" value={formData.phone_number} onChange={handleChange} />
+                {(editingField === null || editingField === "phone") && (
+                  <Input label="Telefone" name="phone" type="tel" value={formData.phone ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "job_title") && (
-                  <Input label="Cargo" name="job_title" value={formData.job_title} onChange={handleChange} />
+                  <Input label="Cargo" name="job_title" value={formData.job_title ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "department") && (
-                  <Input label="Departamento" name="department" value={formData.department} onChange={handleChange} />
+                  <Input label="Departamento" name="department" value={formData.department ?? ""} onChange={handleChange} />
                 )}
-                {(editingField === null || editingField === "user_country") && (
-                  <Input label="País" name="user_country" value={formData.user_country} onChange={handleChange} />
+                {(editingField === null || editingField === "country") && (
+                  <Input label="País" name="country" value={formData.country ?? ""} onChange={handleChange} />
                 )}
 
-                {(editingField === null || editingField === "user_timezone") && (
+                {(editingField === null || editingField === "timezone") && (
                   <>
                     <div className="flex items-center justify-between">
                       <label className="text-[12px] text-gray-700">Usar fuso do dispositivo</label>
@@ -397,7 +383,7 @@ const PersonalSettings: React.FC = () => {
                           setUseDeviceTz(checked);
                           setFormData((p) => ({
                             ...p,
-                            user_timezone: checked ? deviceTz : p.user_timezone,
+                            timezone: checked ? deviceTz : p.timezone,
                           }));
                           if (checked) {
                             const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
@@ -416,7 +402,7 @@ const PersonalSettings: React.FC = () => {
                       onChange={(tz) => {
                         setSelectedTimezone(tz);
                         if (tz.length > 0) {
-                          setFormData((p) => ({ ...p, user_timezone: tz[0].value }));
+                          setFormData((p) => ({ ...p, timezone: tz[0].value }));
                         }
                       }}
                       getItemKey={(item) => item.value}

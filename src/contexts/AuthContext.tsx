@@ -1,21 +1,28 @@
+// contexts/AuthContext.tsx
 import { createContext } from "react";
 import { ApiSuccess } from "src/models";
-import { User, Subscription, UserEnterpriseDetail, SignInResponse } from "src/models/auth";
+import { User, Subscription, UserOrganizationDetail, SignInResponse } from "src/models/auth";
 
 export interface AuthContextType {
   user: User | null;
-  enterprise: UserEnterpriseDetail | null;
+  organization: UserOrganizationDetail | null;
   subscription: Subscription | null;
   isLogged: boolean;
-  accessToken: string;
   isOwner: boolean;
   isSuperUser: boolean;
   isStaff: boolean;
   isActive: boolean;
-  isSubscribed: boolean;
-  activePlanId: string | null;
   isEmailVerified: boolean;
   permissions: string[];
+
+  isSubscribed: boolean;
+  activePlanId: string | null;
+  activePlanCode: string | null;
+  activePlanName: string | null;
+  subscriptionStatus: string | null;
+  stripeCustomerId: string | null;
+  cancelAtPeriodEnd: boolean;
+
   handleInitUser: () => Promise<void>;
   handlePermissionExists: (permissionCodename: string) => boolean;
   handleSignIn: (email: string, password: string) => Promise<ApiSuccess<SignInResponse>>;

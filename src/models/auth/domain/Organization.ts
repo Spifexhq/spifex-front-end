@@ -1,17 +1,18 @@
+// models/auth/Enterprise.ts
 export interface Owner {
   name: string;
   email: string;
 }
 
-export interface Enterprise {
+export interface Organization {
   id: number;
   external_id: string;
   name: string;
-  enterprise_timezone: string;
-  address_line1?: string | null;
-  address_line2?: string | null;
+  timezone?: string;
+  line1?: string | null;
+  line2?: string | null;
   country?: string | null;
   city?: string | null;
-  zip_code?: string | null;
+  postal_code?: string | null;
   owner: Owner;
 }

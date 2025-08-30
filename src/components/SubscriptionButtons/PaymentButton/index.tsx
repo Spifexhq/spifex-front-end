@@ -43,7 +43,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCa
 
   return (
     <Button
-      className="flex justify-center items-center w-1/2 h-[50px] px-5 cursor-pointer text-white border-none rounded-[10px]"
       loaderColor="#FFFFFF"
       onClick={handlePayment}
       disabled={isProcessing}

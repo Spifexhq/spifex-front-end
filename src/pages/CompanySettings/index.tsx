@@ -19,7 +19,7 @@ import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { Enterprise } from "src/models/auth/domain";
+import { Organization } from "src/models/auth/domain";
 import { formatTimezoneLabel, TIMEZONES } from "src/lib";
 
 type EditableUserField = "none" | "name" | "timezone" | "address";
@@ -55,9 +55,11 @@ const CompanySettings: React.FC = () => {
     document.title = "Configurações da Empresa";
   }, []);
 
+  // 🔹 Rename context variable to avoid collision
   const { isOwner } = useAuthContext();
 
-  const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
+  // 🔹 Local profile loaded from API
+  const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -70,38 +72,38 @@ const CompanySettings: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    enterprise_timezone: "UTC",
-    address_line1: "",
-    address_line2: "",
+    timezone: "UTC",
+    line1: "",
+    line2: "",
     country: "",
     city: "",
-    zip_code: "",
+    postal_code: "",
   });
 
   /* ------------------------------ Carrega dados --------------------------- */
   useEffect(() => {
     (async () => {
       try {
-        const response = await api.getEnterprise(); // ApiSuccess<Enterprise>
-        const enterpriseData = response.data;
+        const response = await api.getOrganization();
+        const data = response.data;
 
-        setEnterprise(enterpriseData);
+        setOrgProfile(data);
         setFormData({
-          name: enterpriseData.name,
-          enterprise_timezone: enterpriseData.enterprise_timezone,
-          address_line1: enterpriseData.address_line1 ?? "",
-          address_line2: enterpriseData.address_line2 ?? "",
-          country: enterpriseData.country ?? "",
-          city: enterpriseData.city ?? "",
-          zip_code: enterpriseData.zip_code ?? "",
+          name: data.name,
+          timezone: data.timezone ?? "UTC",
+          line1: data.line1 ?? "",
+          line2: data.line2 ?? "",
+          country: data.country ?? "",
+          city: data.city ?? "",
+          postal_code: data.postal_code ?? "",
         });
 
-        const tzObj = TIMEZONES.find((t) => t.value === enterpriseData.enterprise_timezone);
+        const tzObj = TIMEZONES.find((t) => t.value === (data.timezone ?? "UTC"));
         setSelectedTimezone(tzObj ? [tzObj] : []);
-        setUseDeviceTz(enterpriseData.enterprise_timezone === deviceTz);
+        setUseDeviceTz((data.timezone ?? "UTC") === deviceTz);
       } catch (err) {
-        console.error("Erro ao buscar dados da empresa", err);
-        setSnackBarMessage("Erro ao buscar dados da empresa.");
+        console.error("Erro ao buscar dados da organização", err);
+        setSnackBarMessage("Erro ao buscar dados da organização.");
       } finally {
         setLoading(false);
       }
@@ -110,19 +112,19 @@ const CompanySettings: React.FC = () => {
 
   /* ------------------------------ Handlers ------------------------------- */
   const openModal = (field?: EditableUserField) => {
-    if (enterprise) {
+    if (orgProfile) {
       setFormData({
-        name: enterprise.name,
-        enterprise_timezone: enterprise.enterprise_timezone,
-        address_line1: enterprise.address_line1 ?? "",
-        address_line2: enterprise.address_line2 ?? "",
-        country: enterprise.country ?? "",
-        city: enterprise.city ?? "",
-        zip_code: enterprise.zip_code ?? "",
+        name: orgProfile.name,
+        timezone: orgProfile.timezone ?? "UTC",
+        line1: orgProfile.line1 ?? "",
+        line2: orgProfile.line2 ?? "",
+        country: orgProfile.country ?? "",
+        city: orgProfile.city ?? "",
+        postal_code: orgProfile.postal_code ?? "",
       });
 
-      setUseDeviceTz(enterprise.enterprise_timezone === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === enterprise.enterprise_timezone);
+      setUseDeviceTz((orgProfile.timezone ?? "UTC") === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === (orgProfile.timezone ?? "UTC"));
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
     setEditingField(field ?? null);
@@ -130,58 +132,56 @@ const CompanySettings: React.FC = () => {
   };
 
   const closeModal = useCallback(() => {
-    if (enterprise) {
+    if (orgProfile) {
       setFormData({
-        name: enterprise.name,
-        enterprise_timezone: enterprise.enterprise_timezone,
-        address_line1: enterprise.address_line1 ?? "",
-        address_line2: enterprise.address_line2 ?? "",
-        country: enterprise.country ?? "",
-        city: enterprise.city ?? "",
-        zip_code: enterprise.zip_code ?? "",
+        name: orgProfile.name,
+        timezone: orgProfile.timezone ?? "UTC",
+        line1: orgProfile.line1 ?? "",
+        line2: orgProfile.line2 ?? "",
+        country: orgProfile.country ?? "",
+        city: orgProfile.city ?? "",
+        postal_code: orgProfile.postal_code ?? "",
       });
 
-      setUseDeviceTz(enterprise.enterprise_timezone === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === enterprise.enterprise_timezone);
+      setUseDeviceTz((orgProfile.timezone ?? "UTC") === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === (orgProfile.timezone ?? "UTC"));
       setSelectedTimezone(tzObj ? [tzObj] : []);
     }
 
     setEditingField(null);
     setModalOpen(false);
-  }, [enterprise, deviceTz]);
+  }, [orgProfile, deviceTz]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const submitPartial = async (partialData: Partial<typeof formData>) => {
     try {
-      if (!enterprise || !enterprise.owner) {
-        setSnackBarMessage("Os dados da empresa não estão disponíveis.");
+      if (!orgProfile) {
+        setSnackBarMessage("Os dados da organização não estão disponíveis.");
         return;
       }
 
+      // 🔁 Flat payload. No nested address, no owner.
       const requestBody = {
         name: formData.name,
-        enterprise_timezone: formData.enterprise_timezone,
-        address: {
-          line1: formData.address_line1,
-          line2: formData.address_line2,
-          city: formData.city,
-          country: formData.country,
-          zip_code: formData.zip_code,
-        },
+        timezone: formData.timezone,
+        line1: formData.line1,
+        line2: formData.line2,
+        city: formData.city,
+        country: formData.country,
+        postal_code: formData.postal_code,
         ...partialData,
-        owner: enterprise.owner,
       };
 
-      const res = await api.editEnterprise(requestBody);
-      if (!res.data) throw new Error("Erro ao atualizar empresa.");
+      const res = await api.editOrganization(requestBody);
+      if (!res.data) throw new Error("Erro ao atualizar organização.");
 
-      const updated = await api.getEnterprise();
-      setEnterprise(updated.data);
+      const updated = await api.getOrganization();
+      setOrgProfile(updated.data);
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao atualizar empresa.");
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao atualizar organização.");
     }
   };
 
@@ -212,7 +212,7 @@ const CompanySettings: React.FC = () => {
             }}
           >
             <Input
-              label="Nome da empresa"
+              label="Nome da organização"
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -233,7 +233,7 @@ const CompanySettings: React.FC = () => {
             className="space-y-3"
             onSubmit={(e) => {
               e.preventDefault();
-              submitPartial({ enterprise_timezone: formData.enterprise_timezone });
+              submitPartial({ timezone: formData.timezone });
             }}
           >
             <div className="flex items-center justify-between">
@@ -245,7 +245,7 @@ const CompanySettings: React.FC = () => {
                   setUseDeviceTz(checked);
                   setFormData((p) => ({
                     ...p,
-                    enterprise_timezone: checked ? deviceTz : p.enterprise_timezone,
+                    timezone: checked ? deviceTz : p.timezone,
                   }));
                   if (checked) {
                     const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
@@ -264,7 +264,7 @@ const CompanySettings: React.FC = () => {
               onChange={(tz) => {
                 setSelectedTimezone(tz);
                 if (tz.length > 0) {
-                  setFormData((p) => ({ ...p, enterprise_timezone: tz[0].value }));
+                  setFormData((p) => ({ ...p, timezone: tz[0].value }));
                 }
               }}
               getItemKey={(item) => item.value}
@@ -293,19 +293,19 @@ const CompanySettings: React.FC = () => {
             onSubmit={(e) => {
               e.preventDefault();
               submitPartial({
-                address_line1: formData.address_line1,
-                address_line2: formData.address_line2,
+                line1: formData.line1,
+                line2: formData.line2,
                 city: formData.city,
                 country: formData.country,
-                zip_code: formData.zip_code,
+                postal_code: formData.postal_code,
               });
             }}
           >
-            <Input label="Endereço linha 1" name="address_line1" value={formData.address_line1} onChange={handleChange} />
-            <Input label="Endereço linha 2" name="address_line2" value={formData.address_line2} onChange={handleChange} />
+            <Input label="Endereço linha 1" name="line1" value={formData.line1} onChange={handleChange} />
+            <Input label="Endereço linha 2" name="line2" value={formData.line2} onChange={handleChange} />
             <Input label="Cidade" name="city" value={formData.city} onChange={handleChange} />
             <Input label="País" name="country" value={formData.country} onChange={handleChange} />
-            <Input label="CEP" name="zip_code" value={formData.zip_code} onChange={handleChange} />
+            <Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} />
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="cancel" type="button" onClick={closeModal}>
                 Cancelar
@@ -327,21 +327,20 @@ const CompanySettings: React.FC = () => {
       {/* Navbar fixa */}
       <Navbar />
       {/* Sidebar fixa de Settings */}
-      <SidebarSettings userName={enterprise?.name} activeItem="company-settings" />
+      <SidebarSettings userName={orgProfile?.name} activeItem="company-settings" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar (lg:ml-64);
-          evitar overflow horizontal. */}
+      {/* Conteúdo */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials(enterprise?.name)}
+                {getInitials(orgProfile?.name)}
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Empresa</h1>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Organização</h1>
               </div>
             </div>
           </header>
@@ -350,13 +349,13 @@ const CompanySettings: React.FC = () => {
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <span className="text-[11px] uppercase tracking-wide text-gray-700">Informações da empresa</span>
+                <span className="text-[11px] uppercase tracking-wide text-gray-700">Informações da organização</span>
               </div>
 
               <div className="divide-y divide-gray-200">
                 <Row
-                  label="Nome da empresa"
-                  value={enterprise?.name}
+                  label="Nome"
+                  value={orgProfile?.name}
                   action={
                     isOwner && (
                       <Button
@@ -372,7 +371,7 @@ const CompanySettings: React.FC = () => {
 
                 <Row
                   label="Fuso horário"
-                  value={formatTimezoneLabel(enterprise?.enterprise_timezone ?? "")}
+                  value={formatTimezoneLabel(orgProfile?.timezone ?? "")}
                   action={
                     isOwner && (
                       <Button
@@ -388,7 +387,7 @@ const CompanySettings: React.FC = () => {
 
                 <Row
                   label="Endereço linha 1"
-                  value={enterprise?.address_line1}
+                  value={orgProfile?.line1}
                   action={
                     isOwner && (
                       <Button
@@ -403,7 +402,7 @@ const CompanySettings: React.FC = () => {
                 />
                 <Row
                   label="Endereço linha 2"
-                  value={enterprise?.address_line2}
+                  value={orgProfile?.line2}
                   action={
                     isOwner && (
                       <Button
@@ -418,7 +417,7 @@ const CompanySettings: React.FC = () => {
                 />
                 <Row
                   label="Cidade"
-                  value={enterprise?.city}
+                  value={orgProfile?.city}
                   action={
                     isOwner && (
                       <Button
@@ -433,7 +432,7 @@ const CompanySettings: React.FC = () => {
                 />
                 <Row
                   label="País"
-                  value={enterprise?.country}
+                  value={orgProfile?.country}
                   action={
                     isOwner && (
                       <Button
@@ -448,7 +447,7 @@ const CompanySettings: React.FC = () => {
                 />
                 <Row
                   label="CEP"
-                  value={enterprise?.zip_code}
+                  value={orgProfile?.postal_code}
                   action={
                     isOwner && (
                       <Button

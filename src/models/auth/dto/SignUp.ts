@@ -1,4 +1,4 @@
-import { User, UserEnterpriseDetail } from "../domain";
+import { User, UserOrganizationDetail } from "../domain";
 
 export interface SignUpRequest {
   name: string;
@@ -13,7 +13,7 @@ export interface SignUpResponseSuccess {
   message: string;
   data: {
     user: User;
-    enterprise: UserEnterpriseDetail;
+    organization: UserOrganizationDetail;
   };
 }
 
