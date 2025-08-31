@@ -29,17 +29,16 @@ const CashFlow = () => {
 
   const [filters, setFilters] = useState<EntryFilters>({});
 
-  // 🔸 Single source of truth: fetch banks here and pass down
   const {
     banks,
     totalConsolidatedBalance,
     loading: banksLoading,
     error: banksError,
-  } = useBanks();
+  } = useBanks(undefined, banksKey);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
-  const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.transaction_type as ModalType); setIsModalOpen(true); };
+  const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.tx_type as ModalType); setIsModalOpen(true); };
   const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
 
   const handleSelectionChange = useCallback((ids: number[], rows: Entry[]) => {
@@ -67,7 +66,6 @@ const CashFlow = () => {
           <FilterBar onApply={handleApplyFilters} />
 
           <KpiRow
-            // filters used for entries KPIs
             selectedBankIds={filters.bank_id}
             filters={filters}
             context="cashflow"
@@ -141,7 +139,7 @@ const CashFlow = () => {
             onClose={() => setIsTransferenceModalOpen(false)}
             onSave={() => {
               setIsTransferenceModalOpen(false);
-              setBanksKey((prev) => prev + 1);
+              setBanksKey((k) => k + 1);
             }}
           />
         )}

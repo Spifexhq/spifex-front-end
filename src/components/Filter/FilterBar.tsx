@@ -32,7 +32,9 @@ function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
 
 /* -------------------------------- Component -------------------------------- */
 const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
-  const { banks } = useBanks();
+  const { banks: rawBanks } = useBanks();
+  const banks = useMemo(() => Array.isArray(rawBanks) ? rawBanks : [], [rawBanks]);
+  
   const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
 
   const [filters, setFilters] = useState<EntryFilters>({
@@ -61,13 +63,16 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
     fetchLedgerAccounts();
   }, []);
 
-  const selectedBanks = useMemo(
-    () => banks.filter(b => (filters.bank_id ?? []).includes(b.id)),
-    [banks, filters.bank_id]
-  );
+  const selectedBanks = useMemo(() => {
+    const sel = new Set((filters.bank_id ?? []).map(String));
+    return banks.filter(b => sel.has(String(b.id)));
+  }, [banks, filters.bank_id]);
 
   const selectedAccounts = useMemo(
-    () => ledgerAccounts.filter(a => filters.general_ledger_account_id?.includes(a.id)),
+    () =>
+      (ledgerAccounts ?? []).filter(a =>
+        (filters.general_ledger_account_id ?? []).includes(a.id)
+      ),
     [ledgerAccounts, filters.general_ledger_account_id]
   );
 
@@ -238,7 +243,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               label="Bancos"
               items={banks}
               selected={selectedBanks}
-              onChange={(list) => setFilters(f => ({ ...f, bank_id: list.map(x => x.id) }))}
+              onChange={(list) => setFilters(f => ({ ...f, bank_id: list.map(x => String(x.id)) }))}
               getItemKey={(item) => item.id}
               getItemLabel={(item) => item.institution}
               buttonLabel="Selecionar bancos"

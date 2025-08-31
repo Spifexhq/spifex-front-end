@@ -1,12 +1,19 @@
+// src/api/auth.ts
 import { useCallback } from 'react';
-import { setUser, setUserOrganization, setSubscriptionStatus, setPermissions, resetAuth } from '@/redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/rootReducer';
-import { api } from 'src/api/requests'
+import { api } from 'src/api/requests';
+import {
+  setUser,
+  setUserOrganization,
+  setSubscription,         // novo nome canônico
+  setSubscriptionStatus,   // alias p/ compat.
+  setPermissions,
+  resetAuth,
+} from '@/redux';
+import { getAccess, setTokens, clearTokens } from '@/lib/tokens';
 
-const LOCAL_STORAGE_KEY = 'AUTH_ACCESS';
-
-export const handleGetAccessToken = () => localStorage.getItem(LOCAL_STORAGE_KEY) ?? '';
+export const handleGetAccessToken = () => getAccess(); // compat. com código existente
 
 export const useAuth = () => {
   const auth = useSelector((s: RootState) => s.auth);
@@ -14,58 +21,54 @@ export const useAuth = () => {
 
   const handleSignOut = useCallback(() => {
     dispatch(resetAuth());
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    clearTokens();
   }, [dispatch]);
 
   const handleInitUser = useCallback(async () => {
-    const token = handleGetAccessToken();
+    const token = getAccess();
     if (!token || auth.user) return;
 
     try {
       const res = await api.getUser();
       dispatch(setUser(res.data.user));
       dispatch(setUserOrganization(res.data.organization));
-      
-      // Handle subscription if returned
+
       if (res.data.subscription) {
+        // tanto faz qual action você usa, mantive ambas
+        dispatch(setSubscription(res.data.subscription));
         dispatch(setSubscriptionStatus(res.data.subscription));
       }
     } catch (err) {
-      console.error("Erro ao buscar usuário:", err);
-      handleSignOut();
+      // ⚠️ Não desloga aqui. Interceptor lida com 401/refresh/429.
+      console.warn('handleInitUser falhou:', err);
     }
-  }, [auth.user, dispatch, handleSignOut]);
+  }, [auth.user, dispatch]);
 
   const handleSignIn = async (email: string, password: string) => {
     const res = await api.signIn({ email, password });
-    const token = res.data.access;
-    if (!token) throw new Error('Token ausente');
-    
-    localStorage.setItem('AUTH_ACCESS', token);
-    console.log('✅ token salvo (início):', token.slice(0, 25));
+    const access = res.data.access;
+    const refresh = res.data.refresh; // backend já envia
+
+    if (!access || !refresh) throw new Error('Tokens ausentes');
+    setTokens(access, refresh);
+    console.log('✅ access salvo:', access.slice(0, 25));
 
     dispatch(setUser(res.data.user));
     dispatch(setUserOrganization(res.data.organization));
-    
-    // Now subscription is included in signin response
+
     if (res.data.subscription) {
+      dispatch(setSubscription(res.data.subscription));
       dispatch(setSubscriptionStatus(res.data.subscription));
       console.log('💳 Assinatura:', res.data.subscription);
     }
 
     dispatch(setPermissions(res.data.permissions ?? []));
-
-    console.log('👤 Usuário logado:', res.data.user);
-    console.log('🏢 Organização:', res.data.organization);
-    console.log('🏢 Permissões:', res.data.permissions);
-
     return res;
   };
 
   const handlePermissionExists = useCallback(
     (code: string) => {
       if (auth.organization?.is_owner) return true;
-
       const list = auth.organization?.permissions ?? [];
       return list.includes(code);
     },
@@ -81,6 +84,6 @@ export const useAuth = () => {
     handlePermissionExists,
     handleSignIn,
     handleSignOut,
-    accessToken: handleGetAccessToken(),
+    accessToken: getAccess(),
   };
 };

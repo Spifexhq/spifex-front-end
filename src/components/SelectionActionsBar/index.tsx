@@ -4,14 +4,19 @@ import Button from "@/components/Button";
 /* ------------------------------ Types ------------------------------ */
 export type MinimalEntry = {
   amount: string | number;
-  transaction_type: "credit" | "debit" | string;
+  /** legacy */
+  transaction_type?: "credit" | "debit" | string;
+  /** new api label via get_tx_type_display */
+  tx_type?: "credit" | "debit" | string;
+  /** planned/forecast date */
   due_date?: string | null;
+  /** realized date (settlement value date) */
   settlement_due_date?: string | null;
 };
 
 type Props = {
   context?: "cashflow" | "settled";
-  selectedIds: number[];
+  selectedIds: Array<number | string>;
   selectedEntries: MinimalEntry[];
   onLiquidate?: () => void;
   onDelete?: () => void | Promise<void>;
@@ -25,7 +30,32 @@ function fmtBRL(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-/* SVGs */
+/** Parses "1234.56" or 1234.56. (Backend already sends dot-decimal.) */
+function parseAmount(a: string | number | null | undefined): number {
+  if (a == null) return 0;
+  if (typeof a === "number") return Number.isFinite(a) ? a : 0;
+  const trimmed = a.trim();
+  if (!trimmed) return 0;
+  // Keep digits, dot, minus. Back-end uses dot-decimal; keep it simple.
+  const normalized = trimmed.replace(/[^\d.-]/g, "");
+  const n = parseFloat(normalized);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Normalizes transaction type to "credit" | "debit" */
+function normalizeTxType(e: MinimalEntry): "credit" | "debit" {
+  const raw = String(e.transaction_type ?? e.tx_type ?? "").toLowerCase();
+  // Fallback: anything not "credit" treated as "debit"
+  return raw === "credit" ? "credit" : "debit";
+}
+
+/** Picks the most relevant date for context */
+function pickDate(e: MinimalEntry, context: "cashflow" | "settled"): string | null | undefined {
+  if (context === "settled") return e.settlement_due_date ?? e.due_date;
+  return e.due_date ?? e.settlement_due_date;
+}
+
+/* ------------------------------ Icons ------------------------------ */
 const IconMinimize = (p: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" {...p}>
     <path d="M4 10.5h12" strokeWidth={1.6} strokeLinecap="round" />
@@ -73,38 +103,49 @@ const SelectionActionsBar: React.FC<Props> = ({
   const { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue } =
     useMemo(() => {
       const count = selectedIds.length;
-      let sumCredits = 0, sumDebits = 0, credits = 0, debits = 0;
+
+      let sumCredits = 0;
+      let sumDebits = 0;
+      let credits = 0;
+      let debits = 0;
+
       const dates: Date[] = [];
-      const parseAmount = (a: string | number) => (typeof a === "string" ? parseFloat(a) : Number(a || 0));
 
       for (const e of selectedEntries) {
-        const amount = parseAmount(e.amount);
-        if (e.transaction_type === "credit") {
-          credits++; sumCredits += amount;
+        const amt = parseAmount(e.amount);
+        if (normalizeTxType(e) === "credit") {
+          credits += 1;
+          sumCredits += amt;
         } else {
-          debits++; sumDebits += amount;
+          debits += 1;
+          sumDebits += amt;
         }
-        const raw = e.due_date ?? e.settlement_due_date;
-        if (raw) {
-          const d = new Date(raw);
+
+        const rawDate = pickDate(e, context);
+        if (rawDate) {
+          const d = new Date(rawDate);
           if (!isNaN(d.getTime())) dates.push(d);
         }
       }
+
       const net = sumCredits - sumDebits;
       const minDue = dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))) : null;
       const maxDue = dates.length ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+
       return { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue };
-    }, [selectedIds, selectedEntries]);
+    }, [selectedIds, selectedEntries, context]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && onCancel) onCancel(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onCancel) onCancel();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
 
   if (selectedIds.length === 0) return null;
 
-  // Pill collapsed
+  // Collapsed pill
   if (collapsed) {
     return (
       <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none">
@@ -121,7 +162,7 @@ const SelectionActionsBar: React.FC<Props> = ({
           <span className={`text-[12px] ${net >= 0 ? "text-emerald-700" : "text-rose-700"} font-medium`}>
             {fmtBRL(net)}
           </span>
-          <svg viewBox="0 0 20 20" className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor">
+          <svg viewBox="0 0 20 20" className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" aria-hidden>
             <path d="M5 12l5-5 5 5" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
@@ -159,12 +200,21 @@ const SelectionActionsBar: React.FC<Props> = ({
               <b>{count}</b> selecionado{count > 1 ? "s" : ""}
             </div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-600">
-              <div>Créditos: <b className="text-emerald-700">{credits}</b></div>
-              <div>Débitos: <b className="text-rose-700">{debits}</b></div>
-              <div>Σ Créditos: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b></div>
-              <div>Σ Débitos: <b className="text-rose-700">{fmtBRL(sumDebits)}</b></div>
+              <div>
+                Créditos: <b className="text-emerald-700">{credits}</b>
+              </div>
+              <div>
+                Débitos: <b className="text-rose-700">{debits}</b>
+              </div>
+              <div>
+                Σ Créditos: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b>
+              </div>
+              <div>
+                Σ Débitos: <b className="text-rose-700">{fmtBRL(sumDebits)}</b>
+              </div>
               <div className="col-span-2">
-                Saldo líquido: <b className={net >= 0 ? "text-emerald-700" : "text-rose-700"}>{fmtBRL(net)}</b>
+                Saldo líquido:{" "}
+                <b className={net >= 0 ? "text-emerald-700" : "text-rose-700"}>{fmtBRL(net)}</b>
               </div>
               {minDue && maxDue && (
                 <div className="col-span-2">

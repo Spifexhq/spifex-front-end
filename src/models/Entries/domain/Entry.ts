@@ -1,36 +1,43 @@
-import {
-  LedgerAccount, DocumentType,
-  DepartmentAllocation, Project,
-  InventoryAllocation, Entity
-} from '@/models/enterprise_structure/domain';
-import { BankAccount } from '../../enterprise_structure/domain/Bank';
+// models/entries/domain/Entry.ts
+// Mirrors EntryReadSerializer
 
+import {
+  DepartmentAllocation,
+  InventoryAllocation,
+} from "@/models/enterprise_structure/domain";
+
+/**
+ * Entry coming from EntryReadSerializer
+ * - id is the entry external_id (string)
+ * - relateds are flat external_ids (strings) instead of nested objects
+ * - departments/items are snapshot arrays
+ */
 export interface Entry {
-  id: number;
-  due_date: string;
+  id: string;                         // entry.external_id
+  due_date: string;                   // YYYY-MM-DD
   description: string;
   observation: string | null;
-  amount: string;
-  current_installment: number | null;
-  total_installments: number | null;
-  tags: string | null;
-  transaction_type: "credit" | "debit";
   notes: string | null;
-  periods: string | null;
-  weekend_action: string | null;
-  creation_date: string;
-  general_ledger_account: LedgerAccount | null;
-  document_type: DocumentType | null;
-  departments: DepartmentAllocation[] | null;
-  project: Project | null;
-  inventory_item: InventoryAllocation[] | null;
-  entity: Entity | null;
 
-  bank?: BankAccount | null;
-  settlement_due_date?: string | null;
-  installments_correlation_id?: string | null;
-  partial_settlement_correlation_id?: string | null;
+  amount: string;                     // decimal as string
+  tx_type: string;                    // "credit"/"debit" label
 
-  settlement_state: 0 | 1;
-  enterprise: number;
-};
+  installment_group_id: string | null;
+  installment_index: number | null;
+  installment_count: number | null;
+
+  interval_months: number;
+  weekend_action: number;
+
+  last_settled_on: string | null;       // ISO datetime or null
+  settlement_value_date: string | null; // YYYY-MM-DD or null
+  is_settled: boolean;
+
+  gl_account: string | null;          // GL external_id
+  project: string | null;             // Project external_id
+  entity: string | null;              // Entity external_id
+  transfer_id: string | null;         // Transfer external_id
+
+  departments: DepartmentAllocation[]; // snapshot list
+  items: InventoryAllocation[];        // snapshot list
+}

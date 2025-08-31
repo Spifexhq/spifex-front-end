@@ -2,6 +2,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { User, UserOrganizationDetail } from "@/models/auth/domain"
 import { Subscription } from "src/models/auth/dto";
+export * from '../slices/authSlice';
 
 interface AuthState {
   user: User | null;

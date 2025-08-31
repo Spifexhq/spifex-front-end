@@ -9,9 +9,12 @@ export interface GetInventoryItem {
 }
 
 export interface InventoryItemPayloadBase {
-  inventory_item_code: string | null;
-  inventory_item: string | null;
-  inventory_item_quantity: number | null;
+  sku: string;
+  name: string;
+  description?: string | null;
+  uom?: string | null;
+  quantity_on_hand?: string;
+  is_active?: boolean;
 }
 
 export type AddInventoryItemRequest = InventoryItemPayloadBase;

@@ -1,11 +1,12 @@
 // src/redux/slices/authSlice.ts
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User, UserOrganizationDetail } from "@/models/auth/domain";
-import { Subscription } from "@/models/auth/dto";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { User, UserOrganizationDetail } from '@/models/auth/domain';
+import { Subscription } from '@/models/auth/dto';
 
 export interface AuthState {
   user: User | null;
   organization: UserOrganizationDetail | null;
+  orgExternalId: string | null;
   subscription: Subscription | null;
   permissions: string[];
 }
@@ -13,12 +14,13 @@ export interface AuthState {
 const initialState: AuthState = {
   user: null,
   organization: null,
+  orgExternalId: null,
   subscription: null,
   permissions: [],
 };
 
-const authSlice = createSlice({
-  name: "auth",
+const slice = createSlice({
+  name: 'auth',
   initialState,
   reducers: {
     setUser: (s, a: PayloadAction<User | null>) => {
@@ -26,8 +28,16 @@ const authSlice = createSlice({
     },
     setUserOrganization: (s, a: PayloadAction<UserOrganizationDetail | null>) => {
       s.organization = a.payload
-        ? { ...a.payload, permissions: Array.isArray(a.payload.permissions) ? a.payload.permissions : s.organization?.permissions }
+        ? {
+            ...a.payload,
+            permissions: Array.isArray(a.payload.permissions)
+              ? a.payload.permissions
+              : s.organization?.permissions,
+          }
         : null;
+    },
+    setOrgExternalId: (s, a: PayloadAction<string | null>) => {
+      s.orgExternalId = a.payload;
     },
     setOrganizationPermissions: (s, a: PayloadAction<string[]>) => {
       if (s.organization) s.organization.permissions = a.payload;
@@ -40,6 +50,13 @@ const authSlice = createSlice({
     setSubscription: (s, a: PayloadAction<Subscription | null>) => {
       s.subscription = a.payload;
     },
+    // Alias para compatibilidade com código que chama setSubscriptionStatus
+    setSubscriptionStatus: (s, a: PayloadAction<Subscription | null>) => {
+      s.subscription = a.payload;
+    },
+    clearSubscriptionStatus: (s) => {
+      s.subscription = null;
+    },
     resetAuth: () => initialState,
   },
 });
@@ -47,10 +64,13 @@ const authSlice = createSlice({
 export const {
   setUser,
   setUserOrganization,
+  setOrgExternalId,
   setOrganizationPermissions,
   setPermissions,
   setSubscription,
+  setSubscriptionStatus,
+  clearSubscriptionStatus,
   resetAuth,
-} = authSlice.actions;
+} = slice.actions;
 
-export default authSlice.reducer;
+export default slice.reducer;

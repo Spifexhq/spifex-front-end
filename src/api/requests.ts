@@ -11,7 +11,7 @@ import {
 import { User, Organization, Employee, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
-import { Entry, SettledEntry, Transference } from '@/models/entries/domain'
+import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis } from '@/models/entries/domain'
 import {
   GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
@@ -116,6 +116,13 @@ export const api = {
     return request<Organization>(`organizations/${orgExternalId}/update/`, "PUT", payload);
   },
 
+  getCashflowKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
+    return request<CashflowKpis>(`cashflow/${orgExtId}/kpis/cashflow/`, 'GET', params);
+  },
+  getSettledKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
+    return request<SettledKpis>(`cashflow/${orgExtId}/kpis/settled/`, 'GET', params);
+  },
+
   /* --- Permissions --- */
   getPermissions: () =>
     request<GetPermissions>('companies/permissions', "GET"),
@@ -175,45 +182,119 @@ export const api = {
     request<Employee>(`companies/employees/${ids.join(',')}`, 'DELETE'),
 
   /* --- Cash-flow Entries --- */
-  getEntries: (payload: GetEntryRequest) =>
-    request<GetEntryResponse>("cashflow/entries/paginated", "GET", payload),
+  getEntries: (payload: GetEntryRequest) => {
+    const org = getOrgExternalId();
+    return request<GetEntryResponse>(`cashflow/${org}/entries/`, "GET", payload);
+  },
 
-  getAllEntries: () =>
-    request<GetEntryResponse>("cashflow/entries", "GET"),
+  // Retrieve single by external_id
+  getEntry: (externalId: string) => {
+    const org = getOrgExternalId();
+    return request<Entry>(`cashflow/${org}/entries/${externalId}/`, "GET");
+  },
 
-  getEntry: (ids: number[], payload: GetEntryRequest) =>
-    request<GetEntryResponse>(`cashflow/entries/${ids.join(',')}`, "GET", payload),
+  // Batch fetch by external_ids (GET with ?ids=csv or POST body)
+  getEntriesBatch: (ids: string[]) => {
+    const org = getOrgExternalId();
+    return request<Entry[]>(
+      `cashflow/${org}/entries/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  addEntry: (payload: AddEntryRequest) =>
-    request<Entry>("cashflow/entries", "POST", payload),
+  // Create (may return one or many when creating installments)
+  addEntry: (payload: AddEntryRequest) => {
+    const org = getOrgExternalId();
+    return request<Entry | Entry[]>(
+      `cashflow/${org}/entries/`,
+      "POST",
+      payload
+    );
+  },
 
-  editEntry: (ids: number[], payload: Partial<EditEntryRequest>) =>
-    request<Entry>(`cashflow/entries/${ids.join(',')}`, 'PUT', payload),
+  // Update single (PATCH); backend may return one or many in edge cases
+  editEntry: (externalId: string, payload: Partial<EditEntryRequest>) => {
+    const org = getOrgExternalId();
+    return request<Entry | Entry[]>(
+      `cashflow/${org}/entries/${externalId}/`,
+      "PATCH",
+      payload
+    );
+  },
 
-  deleteAllEntries: () =>
-    request<Entry>("cashflow/entries", 'DELETE'),
+  // Bulk update (PUT or PATCH)
+  bulkUpdateEntries: (
+    ids: string[],
+    data: Partial<EditEntryRequest>,
+    atomic: boolean = true
+  ) => {
+    const org = getOrgExternalId();
+    return request<{ updated: Entry[] } | { updated: Entry[]; errors: Array<{ id: string; error: string }> }>(
+      `cashflow/${org}/entries/bulk/update/`,
+      "PATCH",
+      { ids, data, atomic }
+    );
+  },
 
-  deleteEntry: (ids: number[]) =>
-    request<Entry>(`cashflow/entries/${ids.join(',')}`, 'DELETE'),
+  // Delete single (204)
+  deleteEntry: (externalId: string) => {
+    const org = getOrgExternalId();
+    return request<void>(`cashflow/${org}/entries/${externalId}/`, "DELETE");
+  },
+
+  // Bulk delete (204)
+  bulkDeleteEntries: (ids: string[]) => {
+    const org = getOrgExternalId();
+    return request<void>(`cashflow/${org}/entries/bulk/delete/`, "POST", { ids });
+  },
 
   /* --- Settled Entries --- */
-  getSettledEntries: (payload: GetSettledEntryRequest) =>
-    request<GetSettledEntry>("cashflow/settled-entries/paginated", "GET", payload),
+  getSettledEntries: (payload: GetSettledEntryRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetSettledEntry>(
+      `cashflow/${orgExternalId}/settlements/`,
+      "GET",
+      payload
+    );
+  },
 
-  getAllSettledEntries: () =>
-    request<GetSettledEntry>("cashflow/settled-entries", "GET"),
+  // batch via ?ids=a,b,c
+  getSettledEntry: (ids: string[], payload?: GetSettledEntryRequest) => {
+    const orgExternalId = getOrgExternalId();
+    const params = { ...(payload || {}), ids: ids.join(",") };
+    return request<SettledEntry[]>(
+      `cashflow/${orgExternalId}/settlements/batch/`,
+      "GET",
+      params
+    );
+  },
 
-  getSettledEntry: (ids: number[], payload: GetSettledEntryRequest) =>
-    request<GetSettledEntry>(`cashflow/settled-entries/${ids.join(',')}`, "GET", payload),
+  // PATCH único (apenas value_date)
+  editSettledEntry: (id: string, payload: Partial<EditSettledEntryRequest>) => {
+    const orgExternalId = getOrgExternalId();
+    return request<SettledEntry>(
+      `cashflow/${orgExternalId}/settlements/${id}/`,
+      "PATCH",
+      payload
+    );
+  },
 
-  editSettledEntry: (ids: number[], payload: Partial<EditSettledEntryRequest>) =>
-    request<SettledEntry>(`cashflow/settled-entries/${ids.join(',')}`, 'PATCH', payload),
+  // bulk delete (POST com { ids })
+  bulkDeleteSettledEntries: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<void>(
+      `cashflow/${orgExternalId}/settlements/bulk/delete/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  deleteAllSettledEntries: () =>
-    request<SettledEntry>("cashflow/settled-entries", 'DELETE'),
-
-  deleteSettledEntry: (ids: number[]) =>
-    request<SettledEntry>(`cashflow/settled-entries/${ids.join(',')}`, 'DELETE'),
+  // DELETE único → backend retorna o Entry (para atualizar caches)
+  deleteSettledEntry: (id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Entry>(`cashflow/${orgExternalId}/settlements/${id}/`, "DELETE");
+  },
 
   /* --- Transferences --- */
   addTransference: (payload: AddTransferenceRequest) =>
@@ -272,8 +353,10 @@ export const api = {
   },
 
   /* --- General Ledger Acccounts --- */
-  getAllLedgerAccounts: () =>
-    request<GetLedgerAccounts>("enterprise_structure/general-ledger-accounts", "GET"),
+  getAllLedgerAccounts: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetLedgerAccounts>(`ledger/${orgExternalId}/ledger/accounts/`, "GET")
+  },
 
   getLedgerAccount: (ids: number[]) =>
     request<GetLedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, "GET"),

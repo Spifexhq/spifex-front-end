@@ -9,7 +9,9 @@ export interface GetDepartment {
 }
 
 export interface DepartmentPayloadBase {
-  department: string;
+  name: string;
+  code?: string;
+  is_active?: boolean;
 }
 
 export type AddDepartmentRequest = DepartmentPayloadBase;

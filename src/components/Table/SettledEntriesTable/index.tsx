@@ -1,8 +1,3 @@
-/* src/components/Table/SettledEntriesTable/index.tsx
- * Stripe/Brex-style list like CashFlowTable: inner scroller, monthly summary rows,
- * shift-select, cursor pagination, and running balance (reverse-walk).
- */
-
 import React, {
   useEffect,
   useState,
@@ -14,63 +9,64 @@ import React, {
 } from "react";
 import { api } from "src/api/requests";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
+import { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { useBanks } from "@/hooks/useBanks";
 import { getCursorFromUrl } from "src/lib/list";
 import { InlineLoader } from "@/components/Loaders";
 import Checkbox from "@/components/Checkbox";
-// Button intentionally not used on per-row (bulk actions live in SelectionActionsBar)
 
-export type SettledEntriesTableHandle = {
-  clearSelection: () => void;
+/* ------------------------------ Helpers ----------------------------------- */
+
+// hash 32-bit estável para id numérico no hook de seleção
+const hash32 = (s: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
 };
-
-type TableRow =
-  | {
-      id: string;
-      type: "entry";
-      entry: SettledEntry;
-      runningBalance: number;
-    }
-  | {
-      id: string;
-      type: "summary";
-      displayMonth: string; // MM/YYYY
-      monthlySum: number;
-      runningBalance: number;
-    };
-
-interface Props {
-  filters?: EntryFilters;
-  bankIds?: number[]; // kept for compatibility; uses filters.bank_id if present
-  onSelectionChange?: (ids: number[], entries: SettledEntry[]) => void;
-}
-
-/* --------------------------- Utils & Formatters --------------------------- */
 
 const formatCurrency = (amount: number): string =>
   amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const formatDate = (dateStr: string): string =>
-  new Date(dateStr).toLocaleDateString("pt-BR");
+const formatDate = (iso: string): string =>
+  new Date(iso).toLocaleDateString("pt-BR");
 
-const getMonthYear = (dateStr: string): string => {
-  const d = new Date(dateStr);
+const getMonthYear = (iso: string): string => {
+  const d = new Date(iso);
   return `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 };
 
 const formatMonthYearSummary = (isoDateStr: string): string => {
   const dt = new Date(isoDateStr);
-  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   return `${months[dt.getMonth()]}, ${dt.getFullYear()}`;
 };
 
+const isCredit = (t: string | null | undefined) =>
+  String(t || "").toLowerCase().includes("credit");
+
 const txValue = (e: SettledEntry) => {
   const n = parseFloat(e.amount) || 0;
-  return e.transaction_type === "credit" ? n : -n;
+  return isCredit(e.tx_type) ? n : -n;
 };
 
-/* --------------------------------- UI Bits -------------------------------- */
+/* ------------------------------ Tipos ------------------------------------- */
+
+export type SettledEntriesTableHandle = { clearSelection: () => void };
+
+type TableRow =
+  | { id: string; type: "entry"; entry: SettledEntry; runningBalance: number }
+  | { id: string; type: "summary"; displayMonth: string; monthlySum: number; runningBalance: number };
+
+interface Props {
+  filters?: EntryFilters;
+  onSelectionChange?: (ids: string[], entries: SettledEntry[]) => void; // settlement external_ids
+}
+
+/* ------------------------------ UI Bits ----------------------------------- */
 
 const TableHeader: React.FC<{
   selectedCount: number;
@@ -85,9 +81,7 @@ const TableHeader: React.FC<{
         size="sm"
       />
       <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-wide text-gray-600">
-          Realizados
-        </span>
+        <span className="text-[10px] uppercase tracking-wide text-gray-600">Realizados</span>
         <span className="text-[10px] text-gray-500">({totalCount})</span>
         {selectedCount > 0 && (
           <span className="text-[10px] text-blue-600 font-medium">
@@ -96,7 +90,6 @@ const TableHeader: React.FC<{
         )}
       </div>
     </div>
-
     <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
       <div className="w-[150px] text-center">Valor</div>
       <div className="w-[150px] text-center">Saldo</div>
@@ -109,16 +102,16 @@ const EntryRow: React.FC<{
   entry: SettledEntry;
   runningBalance: number;
   isSelected: boolean;
-  onSelect: (id: number, ev: React.MouseEvent) => void;
+  onSelect: (idNum: number, ev: React.MouseEvent) => void;
 }> = ({ entry, runningBalance, isSelected, onSelect }) => {
   const value = txValue(entry);
   const positive = value >= 0;
+  const idNum = hash32(entry.external_id); // <-- settlement id para seleção
 
   return (
     <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <Checkbox checked={isSelected} onClick={(e) => onSelect(entry.id, e)} size="sm" />
-
+        <Checkbox checked={isSelected} onClick={(e) => onSelect(idNum, e)} size="sm" />
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -127,36 +120,37 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                Liq: {formatDate(entry.settlement_due_date)}
-                {(entry.current_installment || entry.total_installments) && (
+                Liq: {formatDate(entry.value_date)}
+                {(entry.installment_index || entry.installment_count) && (
                   <span className="ml-2">
-                    Parcela {entry.current_installment ?? "-"}/{entry.total_installments ?? "-"}
+                    Parcela {entry.installment_index ?? "-"} / {entry.installment_count ?? "-"}
                   </span>
                 )}
-                {entry.bank?.bank_institution && (
-                  <span className="ml-2">Banco: {entry.bank.bank_institution}</span>
+                {entry.partial_index != null && (
+                  <span className="ml-2">Parcial: {entry.partial_index}</span>
+                )}
+                {entry.bank?.institution && (
+                  <span className="ml-2">Banco: {entry.bank.institution}</span>
                 )}
               </div>
             </div>
 
             <div className="flex items-center shrink-0">
               <div className="w-[150px] text-center">
-                <div className={`text-[13px] leading-none font-semibold tabular-nums ${
+                <div
+                  className={`text-[13px] leading-none font-semibold tabular-nums ${
                     positive ? "text-green-900" : "text-red-900"
-                  }`}>
+                  }`}
+                >
                   {formatCurrency(value)}
                 </div>
               </div>
-
               <div className="w-[150px] text-center">
                 <div className="text-[13px] leading-none font-semibold tabular-nums text-gray-900">
                   {formatCurrency(runningBalance)}
                 </div>
               </div>
-
-              <div className="w-8 flex justify-center">
-                {}
-              </div>
+              <div className="w-8 flex justify-center" />
             </div>
           </div>
         </div>
@@ -171,7 +165,7 @@ const SummaryRow: React.FC<{
   runningBalance: number;
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
   const [m, y] = displayMonth.split("/");
-  const monthDate = new Date(parseInt(y), parseInt(m) - 1, 1);
+  const monthDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
 
   return (
     <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
@@ -192,14 +186,11 @@ const SummaryRow: React.FC<{
             {formatCurrency(monthlySum)}
           </div>
         </div>
-
         <div className="w-[150px] text-center">
           <div className="text-[11px] font-semibold tabular-nums text-gray-900">
-            {runningBalance >= 0 ? "" : ""}
             {formatCurrency(runningBalance)}
           </div>
         </div>
-
         <div className="w-[32px]" />
       </div>
     </div>
@@ -210,7 +201,12 @@ const EmptyState: React.FC = () => (
   <div className="flex flex-col items-center justify-center py-8 px-4">
     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
       <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
       </svg>
     </div>
     <div className="text-center">
@@ -226,13 +222,12 @@ const LoadingSpinner: React.FC = () => (
   </div>
 );
 
-/* --------------------------------- Main ---------------------------------- */
+/* ------------------------------- Main ------------------------------------- */
 
 const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
-  ({ filters, bankIds, onSelectionChange }, ref) => {
-    const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(
-      filters?.bank_id ?? bankIds
-    );
+  ({ filters, onSelectionChange }, ref) => {
+    // saldo consolidado dos bancos filtrados
+    const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.bank_id as string[] | undefined);
 
     const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -242,64 +237,51 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     const [error, setError] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } =
-      useShiftSelect(entries);
+    // bancos selecionados (string)
+    const selectedBankIds = useMemo(() => new Set((filters?.bank_id ?? []).map(String)), [filters?.bank_id]);
 
-    useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
+    // payload: se houver 1 banco, manda para o backend; 0 ou >1, filtra local
+    const buildPayload = useCallback((reset: boolean): GetSettledEntryRequest => {
+      const f = filters;
+      const qCombined =
+        (f?.description ? String(f.description).trim() : "") +
+        (f?.observation ? ` ${String(f.observation).trim()}` : "");
+      const q = qCombined.trim() || undefined;
 
-    // keep latest refs
-    const latest = useRef<{
-      filters: EntryFilters | undefined;
-      nextCursor: string | null;
-      isFetching: boolean;
-    }>({ filters, nextCursor, isFetching });
+      const banks = (f?.bank_id ?? []).map(String);
+      const bank = banks.length === 1 ? banks[0] : undefined; // seu backend aceita "bank"
 
-    useEffect(() => {
-      latest.current = { filters, nextCursor, isFetching };
-    }, [filters, nextCursor, isFetching]);
-
-    // Notify parent selection
-    useEffect(() => {
-      const rows = entries.filter((e) => selectedIds.includes(e.id));
-      onSelectionChange?.(selectedIds, rows);
-    }, [selectedIds, entries, onSelectionChange]);
+      const base: GetSettledEntryRequest = {
+        page_size: 100,
+        value_from: f?.start_date || undefined,
+        value_to: f?.end_date || undefined,
+        bank,
+        q,
+      };
+      if (!reset && nextCursor) base.cursor = nextCursor;
+      return base;
+    }, [filters, nextCursor]);
 
     const fetchEntries = useCallback(
       async (reset = false) => {
-        if (latest.current.isFetching) return;
+        if (isFetching) return;
 
-        const currentFilters = latest.current.filters;
-        const cursorParam = reset ? {} : { cursor: latest.current.nextCursor ?? undefined };
-
-        const glaParam = currentFilters?.general_ledger_account_id?.length
-          ? currentFilters.general_ledger_account_id.join(",")
-          : undefined;
-        const bankParam = currentFilters?.bank_id?.length
-          ? currentFilters.bank_id.join(",")
-          : undefined;
-
-        const payload = {
-          ...cursorParam,
-          ...currentFilters,
-          general_ledger_account_id: glaParam,
-          bank_id: bankParam,
-        };
-
+        const payload = buildPayload(reset);
         setIsFetching(true);
         if (reset) setLoading(true);
         else setLoadingMore(true);
 
         try {
           const { data } = await api.getSettledEntries(payload);
-          const mapped: SettledEntry[] = data.results
-            .map((d: SettledEntry) => d)
-            .filter((e: SettledEntry) => !e.transference_correlation_id);
+          const incoming: SettledEntry[] = (data as GetSettledEntry).results ?? [];
 
           setEntries((prev) =>
-            reset ? mapped : [...prev, ...mapped.filter((e) => !prev.some((p) => p.id === e.id))]
+            reset ? incoming.slice() : [...prev, ...incoming.filter((e) => !prev.some((p) => p.external_id === e.external_id))]
           );
-          setNextCursor(getCursorFromUrl(data.next));
-          setHasMore(Boolean(data.next));
+
+          const nextUrl = (data as GetSettledEntry).next;
+          setNextCursor(getCursorFromUrl(nextUrl));
+          setHasMore(Boolean(nextUrl));
           setError(null);
         } catch (err) {
           setError(err instanceof Error ? err.message : "Erro ao buscar dados.");
@@ -309,56 +291,80 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           setIsFetching(false);
         }
       },
-      []
+      [buildPayload, isFetching]
     );
 
-    useEffect(() => {
-      fetchEntries(true);
-    }, [filters, fetchEntries]);
+    useEffect(() => { fetchEntries(true); }, [filters?.start_date, filters?.end_date, filters?.description, filters?.observation, filters?.bank_id, fetchEntries]);
 
-    // Inner scroller like CashFlow
+    // scroll infinito (container interno)
     const scrollerRef = useRef<HTMLDivElement>(null);
-
     const handleInnerScroll = useCallback(() => {
       const el = scrollerRef.current;
       if (!el || isFetching || !hasMore) return;
       const threshold = 150;
-      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
-      if (nearBottom) fetchEntries();
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) fetchEntries();
     }, [isFetching, hasMore, fetchEntries]);
 
-    // If first page doesn't fill container, fetch again
+    // se a 1ª página não preencher a área
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
-      if (!loading && hasMore && el.scrollHeight <= el.clientHeight + 50) {
-        fetchEntries();
-      }
+      if (!loading && hasMore && el.scrollHeight <= el.clientHeight + 50) fetchEntries();
     }, [loading, hasMore, entries.length, fetchEntries]);
 
-    // Build rows with monthly summaries and reverse running balance
-    const rows: TableRow[] = useMemo(() => {
-      if (loadingBanks || !entries.length) return [];
+    // 🔎 filtro local por bancos (0 => sem filtro; >=1 => inclui somente bank.id ∈ seleção)
+    const visibleEntries = useMemo(() => {
+      if (selectedBankIds.size === 0) return entries;
+      return entries.filter(e => {
+        const bId = e.bank?.id;
+        return bId ? selectedBankIds.has(String(bId)) : false;
+      });
+    }, [entries, selectedBankIds]);
 
-      // reverse-walk to get "running balance at that point in history"
+    // seleção baseada em settlement external_id (usa hash numérico só internamente)
+    const {
+      selectedIds: selectedNumIds,
+      handleSelectRow,
+      handleSelectAll,
+      clearSelection,
+    } = useShiftSelect(visibleEntries, (e) => hash32(e.external_id));
+
+    useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
+
+    // map numId -> entry (visíveis) e -> external_id
+    const numIdToEntry = useMemo(() => {
+      const m = new Map<number, SettledEntry>();
+      for (const e of visibleEntries) m.set(hash32(e.external_id), e);
+      return m;
+    }, [visibleEntries]);
+
+    // notifica o pai com settlement external_ids (string[])
+    useEffect(() => {
+      const rows = selectedNumIds.map((n) => numIdToEntry.get(n)).filter(Boolean) as SettledEntry[];
+      const extIds = rows.map(r => r.external_id);
+      onSelectionChange?.(extIds, rows);
+    }, [selectedNumIds, numIdToEntry, onSelectionChange]);
+
+    // monta linhas (apenas das visíveis)
+    const rows = useMemo<TableRow[]>(() => {
+      if (loadingBanks || !visibleEntries.length) return [];
+
+      // reverse-walk com saldo consolidado (dos bancos filtrados)
       let revBal = totalConsolidatedBalance ?? 0;
-      const revBalances = new Array(entries.length).fill(0);
-      for (let i = entries.length - 1; i >= 0; i--) {
+      const revBalances = new Array(visibleEntries.length).fill(0);
+      for (let i = visibleEntries.length - 1; i >= 0; i--) {
         revBalances[i] = revBal;
-        const amt = parseFloat(entries[i].amount) || 0;
-        // Going backwards: undo the effect of the past movement
-        // debit (payment) decreased balance back then => add it back
-        // credit (receipt) increased balance back then => subtract it back
-        revBal += entries[i].transaction_type === "debit" ? amt : -amt;
+        const amt = parseFloat(visibleEntries[i].amount) || 0;
+        revBal += isCredit(visibleEntries[i].tx_type) ? -amt : +amt;
       }
 
       const out: TableRow[] = [];
       let currentMonth = "";
       let monthlySum = 0;
 
-      entries.forEach((e, idx) => {
-        const mKey = getMonthYear(e.settlement_due_date);
-        const value = txValue(e);
+      visibleEntries.forEach((e, idx) => {
+        const mKey = getMonthYear(e.value_date);
+        const val = txValue(e);
 
         if (currentMonth && currentMonth !== mKey) {
           out.push({
@@ -372,16 +378,16 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         }
         if (!currentMonth || currentMonth !== mKey) currentMonth = mKey;
 
-        monthlySum += value;
+        monthlySum += val;
 
         out.push({
-          id: `entry-${e.id}`,
+          id: `entry-${e.external_id}`,   // ✅ chave única por liquidação
           type: "entry",
           entry: e,
           runningBalance: revBalances[idx],
         });
 
-        if (idx === entries.length - 1) {
+        if (idx === visibleEntries.length - 1) {
           out.push({
             id: `summary-${currentMonth}-final`,
             type: "summary",
@@ -393,7 +399,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       });
 
       return out;
-    }, [entries, totalConsolidatedBalance, loadingBanks]);
+    }, [visibleEntries, totalConsolidatedBalance, loadingBanks]);
 
     if (error) {
       return (
@@ -429,42 +435,34 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         ) : (
           <>
             <TableHeader
-              selectedCount={selectedIds.length}
-              totalCount={entries.length}
-              onSelectAll={handleSelectAll}
+              selectedCount={selectedNumIds.length}
+              totalCount={visibleEntries.length}         // ✅ conta do conjunto visível
+              onSelectAll={handleSelectAll}              // ✅ age sobre o conjunto base (visível)
             />
 
-            <div
-              ref={scrollerRef}
-              onScroll={handleInnerScroll}
-              className="flex-1 min-h-0 overflow-y-auto"
-            >
+            <div ref={scrollerRef} onScroll={handleInnerScroll} className="flex-1 min-h-0 overflow-y-auto">
               {rows.length === 0 ? (
                 <EmptyState />
               ) : (
                 <div className="divide-y divide-gray-200">
-                  {rows.map((r) => {
-                    if (r.type === "entry") {
-                      const is = selectedIds.includes(r.entry.id);
-                      return (
-                        <EntryRow
-                          key={r.id}
-                          entry={r.entry}
-                          runningBalance={r.runningBalance}
-                          isSelected={is}
-                          onSelect={handleSelectRow}
-                        />
-                      );
-                    }
-                    return (
+                  {rows.map((r) =>
+                    r.type === "entry" ? (
+                      <EntryRow
+                        key={r.id}
+                        entry={r.entry}
+                        runningBalance={r.runningBalance}
+                        isSelected={selectedNumIds.includes(hash32(r.entry.external_id))}
+                        onSelect={handleSelectRow}
+                      />
+                    ) : (
                       <SummaryRow
                         key={r.id}
                         displayMonth={r.displayMonth}
                         monthlySum={r.monthlySum}
                         runningBalance={r.runningBalance}
                       />
-                    );
-                  })}
+                    )
+                  )}
 
                   {loadingMore && (
                     <div className="py-3 flex items-center justify-center" role="status" aria-live="polite">

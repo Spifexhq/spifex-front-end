@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+// src/pages/Settled/index.tsx
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
@@ -8,7 +9,7 @@ import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
 import FilterBar from "src/components/Filter/FilterBar";
 import KpiRow from "src/components/KPI/KpiRow";
-import SelectionActionsBar from "src/components/SelectionActionsBar";
+import SelectionActionsBar, { MinimalEntry } from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
 
 const Settled = () => {
@@ -20,15 +21,14 @@ const Settled = () => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const [filters, setFilters] = useState<EntryFilters>({});
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);               // settlement external_ids
+  const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]); // selected rows
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [tableKey, setTableKey] = useState(0);
-  const [banksKey, setBanksKey] = useState(0); // to re-render banks panel after transfers if needed
+  const [banksKey, setBanksKey] = useState(0);
 
   const tableRef = useRef<SettledEntriesTableHandle>(null);
 
-  // Fetch ALL banks here and pass down; KpiRow will filter locally by selectedBankIds
   const {
     banks,
     totalConsolidatedBalance,
@@ -40,10 +40,19 @@ const Settled = () => {
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
   const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
 
-  const handleSelectionChange = useCallback((ids: number[], rows: SettledEntry[]) => {
-    setSelectedIds(ids);
+  const selectedAsMinimal: MinimalEntry[] = selectedEntries.map((e) => ({
+    amount: e.amount,
+    transaction_type: e.tx_type.toLowerCase().includes("credit") ? "credit" : "debit",
+    due_date: e.value_date,
+    settlement_due_date: e.value_date,
+  }));
+
+  const handleSelectionChange = useCallback((ids: string[], rows: SettledEntry[]) => {
+    setSelectedIds(ids);          // settlement external_ids
     setSelectedEntries(rows);
   }, []);
+
+  const orgId = "org_xoyrecajbkqs";
 
   return (
     <div className="flex">
@@ -56,35 +65,24 @@ const Settled = () => {
         mode="default"
       />
 
-      {/* Main Content */}
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        {/* Push main content below the fixed Navbar */}
         <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
           <FilterBar onApply={handleApplyFilters} />
 
           <KpiRow
             context="settled"
             filters={filters}
-            // banks panel filters locally by these ids
             selectedBankIds={filters.bank_id}
             refreshToken={kpiRefresh}
             banksRefreshKey={banksKey}
-            // inject banks data (unfiltered)
-            banksData={{
-              banks,
-              totalConsolidatedBalance,
-              loading: banksLoading,
-              error: banksError,
-            }}
+            banksData={{ banks, totalConsolidatedBalance, loading: banksLoading, error: banksError }}
           />
 
-          {/* Table area with inner scroll inside the table component */}
           <div className="min-h-0 h-full">
             <SettledEntriesTable
               ref={tableRef}
               key={tableKey}
               filters={filters}
-              bankIds={filters.bank_id}
               onSelectionChange={handleSelectionChange}
             />
           </div>
@@ -93,11 +91,11 @@ const Settled = () => {
             <SelectionActionsBar
               context="settled"
               selectedIds={selectedIds}
-              selectedEntries={selectedEntries}
+              selectedEntries={selectedAsMinimal}
               onCancel={() => tableRef.current?.clearSelection()}
               onReturn={async () => {
                 try {
-                  await api.deleteSettledEntry(selectedIds); // “Retornar selecionados”
+                  await api.deleteSettledEntry(orgId, selectedIds); // settlement external_ids
                   tableRef.current?.clearSelection();
                   setTableKey((k) => k + 1);
                   setKpiRefresh((k) => k + 1);
@@ -129,7 +127,7 @@ const Settled = () => {
             onClose={() => setIsTransferenceModalOpen(false)}
             onSave={() => {
               setIsTransferenceModalOpen(false);
-              setBanksKey((k) => k + 1); // nudge banks panel to re-render if you key anything by this
+              setBanksKey((k) => k + 1);
             }}
           />
         )}

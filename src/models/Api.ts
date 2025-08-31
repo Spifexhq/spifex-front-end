@@ -12,13 +12,25 @@ export interface ApiSuccess<T> {
   meta: Meta
 }
 
+export interface ApiErrorBody {
+  code: string;
+  /** mensagem simples (quando existir) */
+  message?: string;
+  /** payload bruto do DRF/handler */
+  detail?: unknown;
+  /** alias opcional para retrocompat (se algum endpoint ainda mandar 'details') */
+  details?: unknown;
+  /** erros por campo (ValidationError) */
+  fields?: Record<string, unknown>;
+  /** status HTTP retornado pelo backend (ex.: 429, 401, 400...) */
+  status?: number;
+  /** request id também pode vir aqui (o handler novo inclui) */
+  request_id?: string;
+}
+
 export interface ApiError {
-  error: {
-    code: string
-    message: string
-    details?: unknown
-  }
-  meta: Meta
+  error: ApiErrorBody;
+  meta?: Meta;
 }
 
 export type Paginated<T> = {

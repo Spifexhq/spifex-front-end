@@ -1,10 +1,13 @@
 export interface Department {
-  id: number;
-  department: string | null;
-  uuid_department: string | null;
-};
+  id: string;
+  name: string;
+  code?: string;
+  is_active: boolean;
+}
 
 export interface DepartmentAllocation {
-  department: Department;
-  percentage: string;
-};
+  department_id: string | null;
+  code: string;
+  name: string;
+  percent: string;
+}

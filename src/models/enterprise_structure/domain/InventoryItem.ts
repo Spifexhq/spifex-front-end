@@ -1,12 +1,16 @@
 export interface InventoryItem {
-  id: number;
-  inventory_item_code: string | null;
-  inventory_item: string | null;
-  inventory_item_quantity: number | null;
-  uuid_inventory_item: string | null;
-};
+  id: string;
+  sku: string;
+  name: string;
+  description: string | null;
+  uom: string | null;
+  quantity_on_hand: string;
+  is_active: boolean;
+}
 
 export interface InventoryAllocation {
-  inventory_item: InventoryItem;
-  inventory_item_quantity: number;
-};
+  item_id: string | null;
+  sku: string;
+  name: string;
+  quantity: string;
+}

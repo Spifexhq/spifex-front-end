@@ -1,11 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import dayjs from "dayjs";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { useSelector } from "react-redux";
 import { api } from "src/api/requests";
 import BanksTable from "src/components/Table/BanksTable";
-import type { Entry, SettledEntry, EntryFilters } from "src/models/entries";
+import type { EntryFilters } from "src/models/entries";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
-import { getCursorFromUrl } from "src/lib/list";
+import type { CashflowKpis, SettledKpis } from "@/models/entries";
+import type { RootState } from "@/redux/rootReducer";
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                       */
+/* -------------------------------------------------------------------------- */
 
 export type KpiItem = {
   key: string;
@@ -23,7 +28,7 @@ type BanksData = {
 };
 
 interface KpiRowProps {
-  items?: KpiItem[];
+  items?: KpiItem[]; // kept for API compatibility (not used; KPIs come from backend)
   selectedBankIds?: (string | number)[];
   filters?: EntryFilters;
   context?: "cashflow" | "settled";
@@ -32,20 +37,17 @@ interface KpiRowProps {
   banksData: BanksData;
 }
 
-type Parsed = {
-  amount: number;
-  isCredit: boolean;
-  due: dayjs.Dayjs;
-  settled: boolean;
-  settleDate?: dayjs.Dayjs;
-  raw: Entry | SettledEntry;
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                     */
+/* -------------------------------------------------------------------------- */
+
+// Convert integer minor units (cents) to formatted BRL currency string
+const currencyFromMinor = (vMinor: number) => {
+  const v = (vMinor || 0) / 100;
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-type Paginated<T> = { results: T[]; next?: string | null };
-
-const currency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
+// Small avatar initials for bank names
 function getInitials(name: string) {
   if (!name) return "BK";
   const parts = name.split(" ").filter(Boolean);
@@ -53,6 +55,10 @@ function getInitials(name: string) {
   const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
   return (first + last).toUpperCase();
 }
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                   */
+/* -------------------------------------------------------------------------- */
 
 const KpiRow: React.FC<KpiRowProps> = ({
   selectedBankIds,
@@ -63,17 +69,27 @@ const KpiRow: React.FC<KpiRowProps> = ({
   banksData,
 }) => {
   const { banks, loading: banksLoading } = banksData;
-  const [expanded, setExpanded] = useState(false);
 
-  const [rows, setRows] = useState<Array<Entry | SettledEntry>>([]);
+  // Organization external id (adjust selector to your auth slice shape)
+  const orgExternalId = useSelector(
+    (s: RootState) =>
+      (s).auth?.orgExternalId ||
+      (s).auth?.organization?.organization?.external_id ||
+      (s).auth?.organization?.external_id
+  ) as string | undefined;
+
+  // Backend-provided KPIs
+  const [cf, setCf] = useState<CashflowKpis | null>(null);
+  const [st, setSt] = useState<SettledKpis | null>(null);
   const [loading, setLoading] = useState(false);
 
-  /* ---------- FILTRO SÓ DO PAINEL DE BANCOS (local) ---------- */
+  /* -------------------- Panel-only bank filtering (local) ------------------- */
   const toKey = (v: unknown) => String(v);
   const filteredBanks = useMemo(() => {
-    if (!selectedBankIds || selectedBankIds.length === 0) return banks;
+    const bankList = Array.isArray(banks) ? banks : [];
+    if (!selectedBankIds || selectedBankIds.length === 0) return bankList;
     const set = new Set(selectedBankIds.map(toKey));
-    return banks.filter((b) => set.has(toKey(b.id)));
+    return bankList.filter((b) => set.has(toKey(b.id)));
   }, [banks, selectedBankIds]);
 
   const filteredTotalConsolidated = useMemo(
@@ -81,14 +97,8 @@ const KpiRow: React.FC<KpiRowProps> = ({
     [filteredBanks]
   );
 
-  /* ---------- Payloads e fetch das ENTRADAS (inalterados) ---------- */
-  const baseStart = useMemo(
-    () => dayjs().subtract(1, "month").startOf("month").format("YYYY-MM-DD"),
-    []
-  );
-  const baseEnd = useMemo(() => dayjs().endOf("month").format("YYYY-MM-DD"), []);
-
-  const glaParam = useMemo(
+  /* ---------------------- Build query params from filters ------------------- */
+  const glParam = useMemo(
     () =>
       filters?.general_ledger_account_id?.length
         ? filters.general_ledger_account_id.join(",")
@@ -101,274 +111,167 @@ const KpiRow: React.FC<KpiRowProps> = ({
     [filters?.bank_id]
   );
 
-  // Cashflow (sem bank_id)
-  const payloadCashflow = useMemo(
-    () => ({
-      page_size: 5000,
-      start_date: baseStart,
-      end_date: baseEnd,
-      description: filters?.description,
-      observation: filters?.observation,
-      general_ledger_account_id: glaParam,
-    }),
-    [baseStart, baseEnd, filters?.description, filters?.observation, glaParam]
-  );
-
-  // Settled (respeita bank_id)
-  const payloadSettled = useMemo(
-    () => ({
-      page_size: 5000,
-      start_date: baseStart,
-      end_date: baseEnd,
-      description: filters?.description,
-      observation: filters?.observation,
-      general_ledger_account_id: glaParam,
-      bank_id: bankParam,
-    }),
-    [baseStart, baseEnd, filters?.description, filters?.observation, glaParam, bankParam]
-  );
-
-  const [overdueSums, setOverdueSums] = useState({ rec: 0, pay: 0, net: 0, loading: false });
-  const yesterdayStr = useMemo(() => dayjs().subtract(1, "day").format("YYYY-MM-DD"), []);
-  const { loading: overdueLoading, rec: overdueRec, pay: overduePay, net: overdueNet } = overdueSums;
-
-  // Overdue (competência) — sem bank_id
-  const payloadOverdue = useMemo(
-    () => ({
-      page_size: 5000,
-      start_date: "1900-01-01",
-      end_date: yesterdayStr,
-      description: filters?.description,
-      observation: filters?.observation,
-      general_ledger_account_id: glaParam,
-    }),
-    [filters?.description, filters?.observation, glaParam, yesterdayStr]
-  );
-
+  /* --------------------------- Fetch KPIs from API -------------------------- */
   useEffect(() => {
+    if (!orgExternalId) return; // auth not ready yet
     let mounted = true;
+
     (async () => {
       setLoading(true);
       try {
         if (context === "settled") {
-          const { data } = (await api.getSettledEntries(
-            payloadSettled
-          )) as { data: Paginated<SettledEntry> };
-          const list = (data?.results ?? []).filter((e) => !e.transference_correlation_id);
-          const seen = new Set<number>();
-          const uniq = list.filter((e) => !seen.has(e.id) && (seen.add(e.id), true));
-          if (mounted) setRows(uniq);
+          const { data } = await api.getSettledKpis(orgExternalId, {
+            description: filters?.description,
+            observation: filters?.observation,
+            gl: glParam,
+            bank_id: bankParam,
+          });
+          if (mounted) {
+            setSt(data);
+            setCf(null);
+          }
         } else {
-          const { data } = (await api.getEntries(
-            payloadCashflow
-          )) as { data: Paginated<Entry> };
-          const list = data?.results ?? [];
-          const seen = new Set<number>();
-          const uniq = list.filter((e) => !seen.has(e.id) && (seen.add(e.id), true));
-          if (mounted) setRows(uniq);
+          const { data } = await api.getCashflowKpis(orgExternalId, {
+            description: filters?.description,
+            observation: filters?.observation,
+            gl: glParam,
+          });
+          if (mounted) {
+            setCf(data);
+            setSt(null);
+          }
         }
       } catch (e) {
-        if (mounted) setRows([]);
-        console.error("KPIs fetch failed", e);
+        // Soft-fail: keep UI usable with placeholders
+        console.error("KPI fetch failed", e);
+        if (mounted) {
+          setCf(null);
+          setSt(null);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [context, payloadCashflow, payloadSettled, refreshToken]);
-
-  useEffect(() => {
-    if (context !== "cashflow") return;
-
-    let mounted = true;
-    (async () => {
-      try {
-        if (mounted) setOverdueSums((s) => ({ ...s, loading: true }));
-
-        let cursor: string | undefined = undefined;
-        let totalRec = 0;
-        let totalPay = 0;
-
-        do {
-          const { data } = await api.getEntries({ ...payloadOverdue, cursor });
-          const batch = data?.results ?? [];
-
-          for (const e of batch) {
-            const settled = Boolean((e as Entry).settlement_state);
-            if (settled) continue;
-            const due = dayjs((e as Entry).due_date);
-            if (!due.isBefore(dayjs(), "day")) continue;
-
-            const amt = Math.abs(Number(e.amount)) || 0;
-            const isCredit = (e as Entry).transaction_type === "credit";
-            if (isCredit) totalRec += amt;
-            else totalPay += amt;
-          }
-
-          const next = data?.next ? getCursorFromUrl(data.next) : null;
-          cursor = next ?? undefined;
-        } while (cursor);
-
-        if (mounted) {
-          const net = totalRec - totalPay;
-          setOverdueSums({ rec: totalRec, pay: totalPay, net, loading: false });
-        }
-      } catch (err) {
-        console.error("Overdue fetch failed", err);
-        if (mounted) setOverdueSums({ rec: 0, pay: 0, net: 0, loading: false });
-      }
-    })();
 
     return () => {
       mounted = false;
     };
-  }, [context, payloadOverdue, refreshToken]);
+  }, [orgExternalId, context, glParam, bankParam, filters?.description, filters?.observation, refreshToken]);
 
-  const entriesParsed: Parsed[] = useMemo(() => {
-    return rows.map((item) => {
-      if ("settlement_due_date" in item) {
-        const e = item as SettledEntry;
-        const amt = Math.abs(Number(e.amount)) || 0;
-        const tx = String(e.transaction_type || "").toLowerCase();
-        const sdt = dayjs(e.settlement_due_date);
-        const isCredit = tx === "credit";
-        return { raw: e, amount: amt, isCredit, due: sdt, settled: true, settleDate: sdt };
-      }
-      const e = item as Entry;
-      const amt = Math.abs(Number(e.amount)) || 0;
-      return {
-        raw: e,
-        amount: amt,
-        isCredit: e.transaction_type === "credit",
-        due: dayjs(e.due_date),
-        settled: Boolean(e.settlement_state),
-        settleDate: e.settlement_due_date ? dayjs(e.settlement_due_date) : undefined,
-      };
-    });
-  }, [rows]);
-
-  /* ---------- KPIs (inalterados) ---------- */
+  /* ------------------------ Map server KPIs to UI cards --------------------- */
   const cashflowKpis: KpiItem[] = useMemo(() => {
-    const today = dayjs();
-    const mStart = today.startOf("month");
-    const mEnd = today.endOf("month");
-    const prevMonth = today.subtract(1, "month");
-    const prevStart = prevMonth.startOf("month");
-    const prevEnd = prevMonth.endOf("month");
-    const in7Start = today.startOf("day");
-    const in7End = today.add(7, "day").endOf("day");
+    if (!cf)
+      return [
+        { key: "mtdNet", label: "MTD: Resultado", value: "—", hint: "Carregando..." },
+        { key: "overdueNet", label: "Em atraso (não liquidado)", value: "—", hint: "Carregando..." },
+        { key: "next7Net", label: "Próx. 7 dias", value: "—", hint: "Carregando..." },
+      ];
 
-    let mtdIn = 0, mtdOutAbs = 0, mtdNet = 0, prevNet = 0;
-    let n7Rec = 0, n7Pay = 0;
+    const mom = cf.mom_change;
+    const momLabel = cf.mom_infinite
+      ? "∞%"
+      : mom == null
+      ? "—"
+      : `${(Math.abs(mom) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
-    for (const r of entriesParsed) {
-      const signed = r.isCredit ? r.amount : -r.amount;
-
-      if (!r.due.isBefore(mStart) && !r.due.isAfter(mEnd)) {
-        if (r.isCredit) mtdIn += r.amount; else mtdOutAbs += r.amount;
-        mtdNet += signed;
-      }
-      if (!r.due.isBefore(prevStart) && !r.due.isAfter(prevEnd)) prevNet += signed;
-
-      if (!r.settled && !r.due.isBefore(in7Start) && !r.due.isAfter(in7End)) {
-        if (r.isCredit) n7Rec += r.amount; else n7Pay += r.amount;
-      }
-    }
-
-    const momChange = prevNet === 0 ? (mtdNet === 0 ? 0 : Number.POSITIVE_INFINITY)
-                                    : (mtdNet - prevNet) / Math.abs(prevNet);
-    const momLabel = `${Math.abs(momChange * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+    // If infinite, consider "positive" following the sign of current MTD net
+    const momPositive = cf.mom_infinite
+      ? cf.mtd.net_minor >= 0
+      : cf.mtd.net_minor >= 0
+      ? (mom ?? 0) >= 0
+      : (mom ?? 0) <= 0;
 
     return [
       {
         key: "mtdNet",
         label: "MTD: Resultado",
-        value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
-        hint: loading ? "Carregando..." : `Entradas ${currency(mtdIn)} • Saídas -${currency(mtdOutAbs)}`,
-        delta: { value: `M/M ${momChange >= 0 ? "+" : ""}${momLabel}`, positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0 },
+        value: `${cf.mtd.net_minor >= 0 ? "+" : ""}${currencyFromMinor(cf.mtd.net_minor)}`,
+        hint: `Entradas ${currencyFromMinor(cf.mtd.in_minor)} • Saídas -${currencyFromMinor(cf.mtd.out_minor)}`,
+        delta: {
+          value: `M/M ${(cf.mtd.net_minor >= 0 ? "+" : "")}${momLabel}`,
+          positive: momPositive,
+        },
       },
       {
         key: "overdueNet",
         label: "Em atraso (não liquidado)",
-        value: overdueLoading ? "—" : `${overdueNet >= 0 ? "+" : ""}${currency(overdueNet)}`,
-        hint: overdueLoading ? "Carregando..." : `Recebimentos ${currency(overdueRec)} • Pagamentos -${currency(overduePay)}`,
+        value: `${cf.overdue.net_minor >= 0 ? "+" : ""}${currencyFromMinor(cf.overdue.net_minor)}`,
+        hint: `Recebimentos ${currencyFromMinor(cf.overdue.rec_minor)} • Pagamentos -${currencyFromMinor(
+          cf.overdue.pay_minor
+        )}`,
       },
       {
         key: "next7Net",
         label: "Próx. 7 dias",
-        value: loading ? "—" : `${currency(n7Rec - n7Pay)}`,
-        hint: loading ? "Carregando..." : `Recebimentos ${currency(n7Rec)} • Pagamentos ${currency(n7Pay)}`,
+        value: `${currencyFromMinor(cf.next7.net_minor)}`,
+        hint: `Recebimentos ${currencyFromMinor(cf.next7.rec_minor)} • Pagamentos ${currencyFromMinor(
+          cf.next7.pay_minor
+        )}`,
       },
     ];
-  }, [entriesParsed, loading, overdueLoading, overdueRec, overduePay, overdueNet]);
+  }, [cf]);
 
   const settledKpis: KpiItem[] = useMemo(() => {
-    const today = dayjs();
-    const mStart = today.startOf("month");
-    const mEnd = today.endOf("month");
-    const prevMonth = today.subtract(1, "month");
-    const prevStart = prevMonth.startOf("month");
-    const prevEnd = prevMonth.endOf("month");
+    if (!st)
+      return [
+        { key: "mtdSettledNet", label: "Realizado (mês atual)", value: "—", hint: "Carregando..." },
+        { key: "prevSettledNet", label: "Mês anterior", value: "—", hint: "Carregando..." },
+        { key: "last7Settled", label: "Últimos 7 dias", value: "—", hint: "Carregando..." },
+      ];
 
-    let mtdIn = 0, mtdOutAbs = 0, mtdNet = 0;
-    let prevIn = 0, prevOutAbs = 0, prevNet = 0;
-    const last7Start = today.subtract(6, "day").startOf("day");
-    const last7End = today.endOf("day");
-    let last7In = 0, last7OutAbs = 0, last7Net = 0;
+    const mom = st.mom_change;
+    const momLabel = st.mom_infinite
+      ? "∞%"
+      : mom == null
+      ? "—"
+      : `${(mom * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
-    for (const r of entriesParsed) {
-      const sDate = r.settleDate;
-      if (!sDate || !r.settled) continue;
-      const signed = r.isCredit ? r.amount : -r.amount;
-
-      if (!sDate.isBefore(mStart) && !sDate.isAfter(mEnd)) {
-        if (r.isCredit) mtdIn += r.amount; else mtdOutAbs += r.amount;
-        mtdNet += signed;
-      }
-      if (!sDate.isBefore(prevStart) && !sDate.isAfter(prevEnd)) {
-        if (r.isCredit) prevIn += r.amount; else prevOutAbs += r.amount;
-        prevNet += signed;
-      }
-      if (!sDate.isBefore(last7Start) && !sDate.isAfter(last7End)) {
-        if (r.isCredit) last7In += r.amount; else last7OutAbs += r.amount;
-        last7Net += signed;
-      }
-    }
-
-    const momChange =
-      prevNet === 0 ? (mtdNet === 0 ? 0 : Number.POSITIVE_INFINITY) : (mtdNet - prevNet) / Math.abs(prevNet);
-    const momLabel = Number.isFinite(momChange)
-      ? `${(momChange * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`
-      : "—";
+    const momPositive = st.mom_infinite
+      ? st.mtd.net_minor >= 0
+      : st.mtd.net_minor >= 0
+      ? (mom ?? 0) >= 0
+      : (mom ?? 0) <= 0;
 
     return [
       {
         key: "mtdSettledNet",
         label: "Realizado (mês atual)",
-        value: loading ? "—" : `${mtdNet >= 0 ? "+" : ""}${currency(mtdNet)}`,
-        hint: loading ? "Carregando..." : `Receb. ${currency(mtdIn)} • Pag. -${currency(mtdOutAbs)}`,
-        delta: { value: `M/M ${mtdNet >= 0 ? "+" : ""}${momLabel}`, positive: mtdNet >= 0 ? momChange >= 0 : momChange <= 0 },
+        value: `${st.mtd.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.mtd.net_minor)}`,
+        hint: `Receb. ${currencyFromMinor(st.mtd.in_minor)} • Pag. -${currencyFromMinor(st.mtd.out_minor)}`,
+        delta: {
+          value: `M/M ${(st.mtd.net_minor >= 0 ? "+" : "")}${momLabel}`,
+          positive: momPositive,
+        },
       },
       {
         key: "prevSettledNet",
         label: "Mês anterior",
-        value: loading ? "—" : `${prevNet >= 0 ? "+" : ""}${currency(prevNet)}`,
-        hint: loading ? "Carregando..." : `Receb. ${currency(prevIn)} • Pag. -${currency(prevOutAbs)}`,
+        value: `${st.prev.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.prev.net_minor)}`,
+        hint: `Receb. ${currencyFromMinor(st.prev.in_minor)} • Pag. -${currencyFromMinor(st.prev.out_minor)}`,
       },
       {
         key: "last7Settled",
         label: "Últimos 7 dias",
-        value: loading ? "—" : `${last7Net >= 0 ? "+" : ""}${currency(last7Net)}`,
-        hint: loading ? "Carregando..." : `Receb. ${currency(last7In)} • Pag. -${currency(last7OutAbs)}`,
+        value: `${st.last7.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.last7.net_minor)}`,
+        hint: `Receb. ${currencyFromMinor(st.last7.in_minor)} • Pag. -${currencyFromMinor(st.last7.out_minor)}`,
       },
     ];
-  }, [entriesParsed, loading]);
+  }, [st]);
 
   const autoKpis = context === "settled" ? settledKpis : cashflowKpis;
 
-  // --------- Painel Bancos (usa FILTRADOS) ---------
+  /* --------------------------------- UI state ------------------------------- */
+  const [expanded, setExpanded] = useState(false);
+
+  // Grid placement rules for KPI cards when the bank panel is expanded
+  const rightPlacement = (i: number) => {
+    if (!expanded) return "lg:col-span-3";
+    if (i === 0) return "lg:col-span-3 lg:col-start-7";
+    if (i === 1) return "lg:col-span-3 lg:col-start-10";
+    if (i === 2) return "lg:col-span-6 lg:col-start-7";
+    return "lg:col-span-3 lg:col-start-7";
+  };
+
   const totalFmt = useMemo(
     () =>
       Number(filteredTotalConsolidated || 0).toLocaleString("pt-BR", {
@@ -385,23 +288,18 @@ const KpiRow: React.FC<KpiRowProps> = ({
     )[0];
   }, [filteredBanks]);
 
-  const rightPlacement = (i: number) => {
-    if (!expanded) return "lg:col-span-3";
-    if (i === 0) return "lg:col-span-3 lg:col-start-7";
-    if (i === 1) return "lg:col-span-3 lg:col-start-10";
-    if (i === 2) return "lg:col-span-6 lg:col-start-7";
-    return "lg:col-span-3 lg:col-start-7";
-  };
-
+  /* --------------------------------- Render -------------------------------- */
   return (
     <section className="relative max-h-[35vh]">
       <LayoutGroup>
         <motion.div
           layout
-          className={`grid grid-cols-12 gap-3 w-full ${expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""}`}
+          className={`grid grid-cols-12 gap-3 w-full ${
+            expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""
+          }`}
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
         >
-          {/* Card/ Painel Bancos */}
+          {/* Bank panel (left) */}
           <AnimatePresence initial={false}>
             {!expanded ? (
               <motion.button
@@ -441,7 +339,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
                 className="col-span-12 lg:col-span-6 lg:col-start-1 row-span-2"
               >
                 <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full">
-                  {/* topo fixo */}
+                  {/* Sticky header */}
                   <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
                     <div className="text-[12px] text-gray-700">
                       Contas bancárias • Saldo consolidado:{" "}
@@ -454,7 +352,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
                       Fechar
                     </button>
                   </div>
-                  {/* área rolável */}
+                  {/* Scroll area */}
                   <div className="flex-1 min-h-0 overflow-y-auto">
                     <BanksTable
                       key={banksRefreshKey}
@@ -469,7 +367,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
             )}
           </AnimatePresence>
 
-          {/* KPIs à direita */}
+          {/* KPI cards (right) */}
           {autoKpis.map((kpi, i) => (
             <motion.div
               key={kpi.key}
@@ -485,8 +383,12 @@ const KpiRow: React.FC<KpiRowProps> = ({
                   </span>
                 )}
               </div>
-              <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">{kpi.value}</div>
-              {kpi.hint && <div className="mt-0.5 text-[11px] text-gray-500">{kpi.hint}</div>}
+              <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
+                {loading ? "—" : kpi.value}
+              </div>
+              {kpi.hint && (
+                <div className="mt-0.5 text-[11px] text-gray-500">{loading ? "Carregando..." : kpi.hint}</div>
+              )}
             </motion.div>
           ))}
         </motion.div>

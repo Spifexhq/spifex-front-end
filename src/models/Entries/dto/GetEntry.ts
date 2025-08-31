@@ -1,13 +1,25 @@
+// models/entries/dto/GetEntry.ts
 import { Entry } from "../domain";
 
+/** Matches /<org>/cashflow/entries/ query params */
 export interface GetEntryRequest {
   page_size?: number;
   cursor?: string;
-  start_date?: string;
-  end_date?: string;
-  description?: string;
-  observation?: string;
-  general_ledger_account_id?: string;
+
+  date_from?: string; // YYYY-MM-DD
+  date_to?: string;   // YYYY-MM-DD
+  q?: string;         // free text over description/observation/notes
+
+  gl?: string;        // GL external_id (CSV if multiple)
+  project?: string;   // Project external_id
+  entity?: string;    // Entity external_id
+
+  amount_min?: number;
+  amount_max?: number;
+
+  group?: string;     // installment_group_id
+  tx_type?: number;   // if you need it: backend accepts TxType enum ints
+  settled?: "1" | "0" | "true" | "false" | "yes" | "no"; // accepted; server enforces false for list
 }
 
 export interface CursorLinks {
@@ -19,29 +31,37 @@ export interface GetEntryResponse extends CursorLinks {
   results: Entry[];
 }
 
-// Payload
+/** Matches EntryWriteSerializer (create/update) */
 export interface EntryPayloadBase {
-  due_date: string;
+  due_date: string;                       // YYYY-MM-DD
   description?: string;
   observation?: string | null;
-  amount: string;
-  current_installment: number | null;
-  total_installments: number | null;
-  tags?: string | null;
-  transaction_type?: string;
   notes?: string | null;
-  periods?: string | null;
-  weekend_action?: string | null;
-  general_ledger_account_id?: string | null;
-  document_type_id?: string | null;
-  project_id?: string | null;
-  entity_id?: string | null;
-  department_id?: string | null;
-  department_percentage?: string | null;
-  inventory_item_id?: number | null;
-  inventory_item_quantity?: number | null;
-};
+
+  amount: string;                         // "1234.56"
+  tx_type: "credit" | "debit" | string;   // server is flexible on strings
+
+  installment_count?: number | null;
+  installment_index?: number | null;
+
+  interval_months?: number;               // int choice
+  weekend_action?: number;                // int choice
+
+  gl_account: string;                     // GL external_id (required on create)
+  document_type?: string | null;          // optional free string as in backend serializer
+  project?: string | null;                // Project external_id
+  entity?: string | null;                 // Entity external_id
+
+  departments?: Array<{
+    department_id: string;                // Department external_id
+    percent: string;                      // "100.00"
+  }>;
+
+  items?: Array<{
+    item_id: string;                      // InventoryItem external_id
+    quantity: string;                     // "1.000"
+  }>;
+}
 
 export type AddEntryRequest = EntryPayloadBase;
-
 export type EditEntryRequest = Partial<EntryPayloadBase>;
