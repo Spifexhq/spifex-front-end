@@ -1,8 +1,27 @@
-import axios from 'axios';
-import type { AxiosError, AxiosResponse, Method, AxiosRequestConfig } from 'axios';
-import { ApiError, ApiResponse, ApiSuccess } from '@/models/Api';
-import { getAccess, getRefresh, setTokens, clearTokens } from '@/lib/tokens';
+// src/lib/http.ts
+import axios, {
+  type AxiosError,
+  type AxiosResponse,
+  type Method,
+  type AxiosRequestConfig,
+} from 'axios';
 
+import {
+  type ApiErrorBody,
+  type ApiResponse,
+  type ApiSuccess,
+} from '@/models/Api';
+
+import {
+  getAccess,
+  getRefresh,
+  setTokens,
+  clearTokens,
+} from '@/lib/tokens';
+
+/* ============================================================================
+ * Base URL
+ * ==========================================================================*/
 const rawBaseURL =
   import.meta.env.VITE_ENVIRONMENT === 'development'
     ? import.meta.env.VITE_SPIFEX_DEVELOPMENT_URL_API
@@ -10,25 +29,49 @@ const rawBaseURL =
 
 const baseURL = rawBaseURL.endsWith('/') ? rawBaseURL : `${rawBaseURL}/`;
 
+/* ============================================================================
+ * Axios instance
+ * ==========================================================================*/
 export const http = axios.create({
   baseURL,
   withCredentials: false,
 });
 
-// ---- Request ----
+/* ============================================================================
+ * Request interceptor: injeta Authorization
+ * ==========================================================================*/
 http.interceptors.request.use((cfg) => {
   const token = getAccess();
-  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    cfg.headers = cfg.headers ?? {};
+    cfg.headers.Authorization = `Bearer ${token}`;
+  }
   return cfg;
 });
 
-// ---- Types auxiliares para flags de retry ----
+/* ============================================================================
+ * Flags da config para retry/refresh
+ * ==========================================================================*/
 type RetriableConfig = AxiosRequestConfig & {
-  _retry?: boolean;
-  _retried429?: number;
+  _retry?: boolean;       // já tentou refresh?
+  _retried429?: number;   // contador de retries 429
 };
 
-// ---- Refresh machinery ----
+/* ============================================================================
+ * Helpers de type-narrowing (sem any)
+ * ==========================================================================*/
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null;
+
+const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } =>
+  isObject(v) && 'error' in v;
+
+const hasAccessToken = (v: unknown): v is { access: string; refresh?: string } =>
+  isObject(v) && typeof v.access === 'string';
+
+/* ============================================================================
+ * Refresh single-flight
+ * ==========================================================================*/
 let refreshingPromise: Promise<void> | null = null;
 const subscribers: Array<() => void> = [];
 
@@ -36,54 +79,86 @@ function notifySubscribers() {
   subscribers.splice(0).forEach((fn) => fn());
 }
 
-async function doRefresh() {
+async function doRefresh(): Promise<void> {
   const refresh = getRefresh();
   if (!refresh) throw new Error('no-refresh-token');
 
-  // Usa axios "puro" para não passar pelos interceptors (evita loop)
-  const { data, status } = await axios.post(
+  // usar axios "cru" para não passar pelos interceptors (evita loops)
+  const res = await axios.post(
     `${baseURL}auth/refresh/`,
     { refresh },
     { validateStatus: (s) => s < 500 }
   );
 
-  if (status !== 200 || !data?.access) throw new Error('refresh-failed');
-  // Se backend retornar novo refresh, use; senão, mantém o atual
-  setTokens(data.access, data.refresh || refresh);
+  const { data, status } = res as AxiosResponse<unknown>;
+  if (status !== 200 || !hasAccessToken(data)) {
+    throw new Error('refresh-failed');
+  }
+
+  // se backend mandar um novo refresh, use; senão mantenha o atual
+  setTokens(data.access, data.refresh ?? refresh);
 }
 
+/* ============================================================================
+ * 429 backoff com Retry-After + jitter
+ * ==========================================================================*/
+function parseRetryAfter(headerValue: unknown): number {
+  // retorna delay em ms
+  if (typeof headerValue === 'string') {
+    // "120" segundos ou uma data HTTP (ex.: Wed, 21 Oct 2015 07:28:00 GMT)
+    const secs = Number(headerValue);
+    if (Number.isFinite(secs)) return Math.max(0, secs) * 1000;
+
+    const dateMs = Date.parse(headerValue);
+    if (!Number.isNaN(dateMs)) {
+      const delta = dateMs - Date.now();
+      return Math.max(0, delta);
+    }
+  }
+  return 1000; // padrão: 1s
+}
+
+function calc429DelayMs(err: AxiosError): number {
+  const ra = err.response?.headers?.['retry-after'];
+  const base = parseRetryAfter(ra);
+  const jitter = Math.random() * 250;
+  return base + jitter;
+}
+
+/* ============================================================================
+ * Response interceptor: log req-id, lida com 429/401
+ * ==========================================================================*/
 http.interceptors.response.use(
   (r) => {
-    // axios v1 expõe headers como AxiosResponseHeaders (tem get), mas manter simples:
     const reqId = (r.headers as Record<string, unknown> | undefined)?.['x-request-id'];
-    if (typeof reqId === 'string') console.debug('🔗 request-id', reqId);
+    if (typeof reqId === 'string') {
+      // deixe como debug para não poluir o console em produção
+      console.debug('🔗 request-id', reqId);
+    }
     return r;
   },
-  async (error: AxiosError<ApiError>) => {
-    const original: RetriableConfig = (error.config || {}) as RetriableConfig;
+  async (error: AxiosError) => {
+    const original = (error.config || {}) as RetriableConfig;
     const status = error.response?.status;
 
-    // 429 → respeita Retry-After + jitter; tenta até 3 vezes
+    // 429: respeita Retry-After e aplica até 3 tentativas
     if (status === 429) {
-      original._retried429 = (original._retried429 || 0) + 1;
+      original._retried429 = (original._retried429 ?? 0) + 1;
       if (original._retried429 <= 3) {
-        const retryAfter =
-          Number(error.response?.headers?.['retry-after']) || 1;
-        await new Promise((r) =>
-          setTimeout(r, retryAfter * 1000 + Math.random() * 250)
-        );
+        const delay = calc429DelayMs(error);
+        await new Promise((r) => setTimeout(r, delay));
         return http(original);
       }
     }
 
-    // 401 → tenta refresh (apenas 1 vez por request)
+    // 401: tenta refresh (uma única vez por request)
     if (status === 401 && !original._retry) {
       original._retry = true;
 
       if (!refreshingPromise) {
         refreshingPromise = doRefresh()
           .catch((e) => {
-            // Refresh falhou → limpa tokens
+            // refresh falhou → limpar tokens para impedir retentativas em loop
             clearTokens();
             throw e;
           })
@@ -93,17 +168,17 @@ http.interceptors.response.use(
           });
       }
 
-      // Espera o refresh terminar (sucesso ou falha)
+      // aguarda o refresh concluir (sucesso ou falha)
       await new Promise<void>((resolve, reject) => {
         if (!refreshingPromise) return resolve();
         subscribers.push(resolve);
-        refreshingPromise?.catch(reject);
+        refreshingPromise.catch(reject);
       });
 
-      // Se tokens foram limpos, não retenta
+      // se não temos mais access token, falhe
       if (!getAccess()) return Promise.reject(error);
 
-      // Retenta com novo access (o request interceptor injeta)
+      // retenta com novo access (o request interceptor injeta)
       return http(original);
     }
 
@@ -111,7 +186,15 @@ http.interceptors.response.use(
   }
 );
 
-// ---- Helper request envelope ----
+/* ============================================================================
+ * Envelope de request: retorna ApiSuccess<T> ou "vazio" para 204
+ * ==========================================================================*/
+/**
+ * Executa uma requisição e retorna o envelope `ApiSuccess<T>`.
+ * - 204 / corpo vazio: retorna um envelope "vazio" (compatível com o tipo).
+ * - Se o backend enviar `{ error: ... }`, lança essa estrutura tipada como erro.
+ * - Em demais erros HTTP, lança `Error` com mensagem legível.
+ */
 export async function request<T>(
   endpoint: string,
   method: Method = 'GET',
@@ -125,38 +208,44 @@ export async function request<T>(
       params: method === 'GET' ? payload : undefined,
     });
 
-    // ⚠️ 204/sem corpo ⇒ não tente acessar propriedades
+    const body = res.data;
+
+    // 204 ou corpo intencionalmente vazio
     if (
       res.status === 204 ||
-      res.data == null ||
-      (typeof res.data === 'string' && res.data.trim() === '')
+      body == null ||
+      (typeof body === 'string' && body.trim() === '')
     ) {
-      // Para compatibilidade de tipo com ApiSuccess<T>, devolvemos um envelope “vazio”.
+      // Mantém compat com o tipo, mesmo que esse endpoint não retorne dados
       return {} as ApiSuccess<T>;
     }
 
-    // Só use 'in' se for objeto
-    const payloadAny = res.data as unknown;
-    if (payloadAny && typeof payloadAny === 'object' && 'error' in (payloadAny as Record<string, unknown>)) {
-      throw (payloadAny as any).error;
+    // envelope de erro padronizado vindo do backend
+    if (hasErrorKey(body)) {
+      throw body.error;
     }
 
-    return payloadAny as ApiSuccess<T>;
+    // sucesso: retorna como envelope padronizado
+    return body as ApiSuccess<T>;
   } catch (e) {
-    const err = e as AxiosError<ApiError | unknown>;
-    if (axios.isAxiosError(err)) {
-      const data = err.response?.data as unknown;
+    const err = e as AxiosError<unknown>;
 
-      if (data && typeof data === 'object' && 'error' in (data as Record<string, unknown>)) {
-        throw (data as any).error;
+    if (axios.isAxiosError(err)) {
+      const body = err.response?.data;
+
+      // erro padronizado do backend
+      if (hasErrorKey(body)) {
+        throw body.error;
       }
 
-      // Fallback legível
+      // fallback legível
       const msg = err.response
         ? `${err.response.status} ${err.response.statusText || 'Erro na requisição'}`
         : err.message;
       throw new Error(msg);
     }
+
+    // erro não-Axios: propague
     throw e;
   }
 }
