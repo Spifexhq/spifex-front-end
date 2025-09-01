@@ -123,6 +123,11 @@ const SignIn = () => {
               Clique aqui.
             </Link>
           </div>
+          <div className="sign-in__footer">
+            <Link to="/forgot-password" className="sign-in__link">
+              Esqueceu a senha?
+            </Link>
+          </div>
         </div>
 
         {/* Snackbar */}

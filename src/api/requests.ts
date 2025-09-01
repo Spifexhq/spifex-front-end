@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { request } from '@/lib/http'
 import {
   GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,
@@ -45,13 +44,13 @@ export const api = {
     request<SignInResponse>('auth/signin/', 'POST', payload),
 
   signUp: (payload: SignUpRequest) =>
-    request<SignUpResponse>('auth/signup', 'POST', payload),
+    request<SignUpResponse>('auth/signup/', 'POST', payload),
 
   verifyEmail: <T>(uidb64: string, token: string) =>
     request<T>(`auth/verify-email/${uidb64}/${token}/`, "GET"),
 
   verifyNewEmail: <T>(uidb64: string, token: string) =>
-    request<T>(`auth/verify-pending-email/${uidb64}/${token}/`, "GET"),
+    request<T>(`auth/verify-email/${uidb64}/${token}/`, "GET"),
 
   /* --- User --- */
   getUser: () =>
@@ -71,10 +70,13 @@ export const api = {
     request<unknown>('auth/password/change/', 'PUT', payload),
 
   requestPasswordReset: (email: string) =>
-    axios.post('auth/password/reset/', { email }),
+    request<void>('auth/password/reset/', 'POST', { email }),
 
-  confirmPasswordReset: (uid: string, token: string, password: string) =>
-    axios.post(`auth/password/reset/${uid}/${token}/`, { password }),
+  confirmPasswordReset: (uidb64: string, token: string, password: string) =>
+    request<void>(`auth/password/reset/${uidb64}/${token}/`, 'POST', {
+      password,
+      password_confirm: password,
+    }),
 
   /* --- Subscriptions --- */
   getSubscriptionStatus: () => {

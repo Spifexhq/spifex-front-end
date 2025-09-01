@@ -15,6 +15,8 @@ const SignUp = Loader(lazy(() => import("@/pages/Auth/SignUp")));
 const SignIn = Loader(lazy(() => import("@/pages/Auth/SignIn")));
 const SignUpRedirect = Loader(lazy(() => import("@/pages/Auth/SignUpRedirect")));
 const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerification")));
+const ForgotPassword = Loader(lazy(() => import("@/pages/Auth/ForgotPassword")));
+const ResetPassword = Loader(lazy(() => import("@/pages/Auth/ResetPassword")));
 
 // Main Pages
 const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
@@ -78,6 +80,14 @@ const routes: RouteObject[] = [
             {
                 path: 'verify-pending-email/:uidb64/:token/',
                 element: <EmailVerification />
+            },
+            {
+                path: 'forgot-password',
+                element: <ForgotPassword />
+            },
+            {
+                path: 'reset-password/:uidb64/:token/',
+                element: <ResetPassword />
             },
             {
                 path: '',

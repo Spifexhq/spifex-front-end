@@ -79,7 +79,10 @@ const SignUp = () => {
       });
 
       if (isApiError(res)) {
-        setSnackBarMessage(res.error.message);
+        const fallback =
+          res.error.message ??
+          (typeof res.error.detail === "string" ? res.error.detail : "Não foi possível concluir o cadastro.");
+        setSnackBarMessage(fallback);
         return;
       }
 
