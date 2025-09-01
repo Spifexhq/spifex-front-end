@@ -118,19 +118,44 @@ export async function request<T>(
   payload?: object
 ): Promise<ApiSuccess<T>> {
   try {
-    const res: AxiosResponse<ApiResponse<T>> = await http.request({
+    const res: AxiosResponse<ApiResponse<T> | unknown> = await http.request({
       url: endpoint,
       method,
       data: method !== 'GET' ? payload : undefined,
       params: method === 'GET' ? payload : undefined,
     });
 
-    if ('error' in res.data) throw res.data.error;
-    return res.data;
+    // ⚠️ 204/sem corpo ⇒ não tente acessar propriedades
+    if (
+      res.status === 204 ||
+      res.data == null ||
+      (typeof res.data === 'string' && res.data.trim() === '')
+    ) {
+      // Para compatibilidade de tipo com ApiSuccess<T>, devolvemos um envelope “vazio”.
+      return {} as ApiSuccess<T>;
+    }
+
+    // Só use 'in' se for objeto
+    const payloadAny = res.data as unknown;
+    if (payloadAny && typeof payloadAny === 'object' && 'error' in (payloadAny as Record<string, unknown>)) {
+      throw (payloadAny as any).error;
+    }
+
+    return payloadAny as ApiSuccess<T>;
   } catch (e) {
-    const err = e as AxiosError<ApiError>;
-    if (err.isAxiosError && err.response?.data?.error) {
-      throw err.response.data.error;
+    const err = e as AxiosError<ApiError | unknown>;
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as unknown;
+
+      if (data && typeof data === 'object' && 'error' in (data as Record<string, unknown>)) {
+        throw (data as any).error;
+      }
+
+      // Fallback legível
+      const msg = err.response
+        ? `${err.response.status} ${err.response.statusText || 'Erro na requisição'}`
+        : err.message;
+      throw new Error(msg);
     }
     throw e;
   }

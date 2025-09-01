@@ -1,5 +1,5 @@
 // src/pages/Settled/index.tsx
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
@@ -21,8 +21,8 @@ const Settled = () => {
   const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const [filters, setFilters] = useState<EntryFilters>({});
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);               // settlement external_ids
-  const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]); // selected rows
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [tableKey, setTableKey] = useState(0);
   const [banksKey, setBanksKey] = useState(0);
@@ -48,11 +48,9 @@ const Settled = () => {
   }));
 
   const handleSelectionChange = useCallback((ids: string[], rows: SettledEntry[]) => {
-    setSelectedIds(ids);          // settlement external_ids
+    setSelectedIds(ids);
     setSelectedEntries(rows);
   }, []);
-
-  const orgId = "org_xoyrecajbkqs";
 
   return (
     <div className="flex">
@@ -95,7 +93,7 @@ const Settled = () => {
               onCancel={() => tableRef.current?.clearSelection()}
               onReturn={async () => {
                 try {
-                  await api.deleteSettledEntry(orgId, selectedIds); // settlement external_ids
+                  await api.bulkDeleteSettledEntries(selectedIds);
                   tableRef.current?.clearSelection();
                   setTableKey((k) => k + 1);
                   setKpiRefresh((k) => k + 1);

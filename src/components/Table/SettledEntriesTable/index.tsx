@@ -236,7 +236,8 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     const [hasMore, setHasMore] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
-
+    const fetchingRef = useRef(false);
+    
     // bancos selecionados (string)
     const selectedBankIds = useMemo(() => new Set((filters?.bank_id ?? []).map(String)), [filters?.bank_id]);
 
@@ -264,7 +265,8 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
 
     const fetchEntries = useCallback(
       async (reset = false) => {
-        if (isFetching) return;
+        if (fetchingRef.current) return;
+        fetchingRef.current = true;
 
         const payload = buildPayload(reset);
         setIsFetching(true);
@@ -289,9 +291,10 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           setLoading(false);
           setLoadingMore(false);
           setIsFetching(false);
+          fetchingRef.current = false;
         }
       },
-      [buildPayload, isFetching]
+      [buildPayload]
     );
 
     useEffect(() => { fetchEntries(true); }, [filters?.start_date, filters?.end_date, filters?.description, filters?.observation, filters?.bank_id, fetchEntries]);

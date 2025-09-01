@@ -22,7 +22,7 @@ const CashFlow = () => {
   const [cashflowKey, setCashflowKey] = useState(0);
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
   const tableRef = useRef<CashFlowTableHandle>(null);
@@ -41,7 +41,7 @@ const CashFlow = () => {
   const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.tx_type as ModalType); setIsModalOpen(true); };
   const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
 
-  const handleSelectionChange = useCallback((ids: number[], rows: Entry[]) => {
+  const handleSelectionChange = useCallback((ids: string[], rows: Entry[]) => {
     setSelectedIds(ids);
     setSelectedEntries(rows);
   }, []);
@@ -101,7 +101,8 @@ const CashFlow = () => {
               onLiquidate={() => setIsSettlementModalOpen(true)}
               onDelete={async () => {
                 try {
-                  await api.deleteEntry(selectedIds);
+                  // api.deleteEntry espera string (um id), não array
+                  await Promise.all(selectedIds.map((id) => api.deleteEntry(id)));
                   setCashflowKey((prev) => prev + 1);
                   setKpiRefresh((k) => k + 1);
                   setSelectedIds([]);
