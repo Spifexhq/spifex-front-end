@@ -1,5 +1,5 @@
 export * from "./Bank"
-export * from "./LedgerAccount"
+export * from "./GLAccount"
 export * from "./DocumentType"
 export * from "./Department"
 export * from "./Project"

@@ -100,10 +100,10 @@ const KpiRow: React.FC<KpiRowProps> = ({
   /* ---------------------- Build query params from filters ------------------- */
   const glParam = useMemo(
     () =>
-      filters?.general_ledger_account_id?.length
-        ? filters.general_ledger_account_id.join(",")
+      filters?.gla_id?.length
+        ? filters.gla_id.join(",")
         : undefined,
-    [filters?.general_ledger_account_id]
+    [filters?.gla_id]
   );
 
   const bankParam = useMemo(

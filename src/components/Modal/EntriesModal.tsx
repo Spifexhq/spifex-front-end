@@ -152,7 +152,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       notes: formData.details.notes || undefined,
       periods: isRecurring ? String(formData.recurrence.periods) : null,
       weekend_action: isRecurring ? formData.recurrence.weekend : null,
-      general_ledger_account_id: formData.details.accountingAccount || null,
+      gla_id: formData.details.accountingAccount || null,
       document_type_id: formData.details.documentType || null,
       project_id: formData.costCenters.projects || null,
       entity_id: formData.entities.entity || null,

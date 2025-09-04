@@ -5,15 +5,18 @@
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
-import { LedgerAccount } from "src/models/enterprise_structure";
+import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
-import { EntryFilters } from "src/models/entries/domain";
+import type { EntryFilters } from "src/models/entries/domain";
 import { api } from "src/api/requests";
 import Button from "../Button";
 
 /* ------------------------------ Types & helpers ----------------------------- */
 type ChipKey = "date" | "banks" | "accounts" | "observation";
+
+/** GLAccount pode vir como { id } (string ULID) ou { external_id } */
+type GLAccountLike = GLAccount & { id?: string; external_id?: string };
 
 interface FilterBarProps {
   onApply: (filters: EntryFilters) => void;
@@ -30,63 +33,96 @@ function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
   }, [ref, onOutside]);
 }
 
+/** Pega o ID da conta contábil como string (id ou external_id) */
+function getGlaId(a: GLAccountLike): string {
+  return String(a.id ?? a.external_id ?? "");
+}
+
 /* -------------------------------- Component -------------------------------- */
 const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
   const { banks: rawBanks } = useBanks();
-  const banks = useMemo(() => Array.isArray(rawBanks) ? rawBanks : [], [rawBanks]);
-  
-  const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
+  const banks = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
 
-  const [filters, setFilters] = useState<EntryFilters>({
+  const [ledgerAccounts, setLedgerAccounts] = useState<GLAccountLike[]>([]);
+
+  /**
+   * Mantemos estado LOCAL com ids como string para GL Accounts e bancos.
+   * Convertimos para EntryFilters no apply().
+   */
+  type LocalFilters = Omit<EntryFilters, "gla_id" | "bank_id"> & {
+    gla_id: string[];
+    bank_id: string[];
+  };
+
+  const [filters, setFilters] = useState<LocalFilters>(() => ({
     start_date: initial?.start_date || "",
     end_date: initial?.end_date || "",
     description: initial?.description || "",
     observation: initial?.observation || "",
-    general_ledger_account_id: initial?.general_ledger_account_id || [],
-    bank_id: initial?.bank_id || [],
-  });
+    gla_id: Array.isArray(initial?.gla_id)
+      ? (initial!.gla_id as unknown[]).map(String)
+      : [],
+    bank_id: Array.isArray(initial?.bank_id)
+      ? (initial!.bank_id as unknown[]).map(String)
+      : [],
+  }));
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [openEditor, setOpenEditor] = useState<ChipKey | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   useOutside(menuRef, () => setMenuOpen(false));
 
+  // Busca paginada das GL Accounts (novo backend)
   useEffect(() => {
-    const fetchLedgerAccounts = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await api.getAllLedgerAccounts();
-        setLedgerAccounts(res.data.general_ledger_accounts);
+        const all: GLAccountLike[] = [];
+        let cursor: string | undefined;
+        do {
+          const { data } = (await api.getLedgerAccounts({
+            page_size: 200,
+            cursor,
+          })) as { data: { results?: GLAccountLike[]; next?: string | null } };
+          const page = (data?.results ?? []) as GLAccountLike[];
+          all.push(...page);
+          cursor = (data?.next ?? undefined) || undefined;
+        } while (cursor);
+        setLedgerAccounts(all);
       } catch {
         setLedgerAccounts([]);
       }
     };
-    fetchLedgerAccounts();
+    fetchAll();
   }, []);
 
   const selectedBanks = useMemo(() => {
     const sel = new Set((filters.bank_id ?? []).map(String));
-    return banks.filter(b => sel.has(String(b.id)));
+    return banks.filter((b) => sel.has(String(b.id)));
   }, [banks, filters.bank_id]);
 
   const selectedAccounts = useMemo(
-    () =>
-      (ledgerAccounts ?? []).filter(a =>
-        (filters.general_ledger_account_id ?? []).includes(a.id)
-      ),
-    [ledgerAccounts, filters.general_ledger_account_id]
+    () => (ledgerAccounts ?? []).filter((a) => (filters.gla_id ?? []).includes(getGlaId(a))),
+    [ledgerAccounts, filters.gla_id]
   );
 
   function applyFilters() {
-    onApply(filters);
+    onApply({
+      start_date: filters.start_date,
+      end_date: filters.end_date,
+      description: filters.description,
+      observation: filters.observation,
+      gla_id: filters.gla_id,
+      bank_id: filters.bank_id,
+    });
   }
 
   function clearAll() {
-    const cleared: EntryFilters = {
+    const cleared: LocalFilters = {
       start_date: "",
       end_date: "",
       description: "",
       observation: "",
-      general_ledger_account_id: [],
+      gla_id: [],
       bank_id: [],
     };
     setFilters(cleared);
@@ -94,17 +130,17 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
   }
 
   function removeChip(k: ChipKey) {
-    if (k === "date") setFilters(f => ({ ...f, start_date: "", end_date: "" }));
-    if (k === "banks") setFilters(f => ({ ...f, bank_id: [] }));
-    if (k === "accounts") setFilters(f => ({ ...f, general_ledger_account_id: [] }));
-    if (k === "observation") setFilters(f => ({ ...f, observation: "" }));
+    if (k === "date") setFilters((f) => ({ ...f, start_date: "", end_date: "" }));
+    if (k === "banks") setFilters((f) => ({ ...f, bank_id: [] }));
+    if (k === "accounts") setFilters((f) => ({ ...f, gla_id: [] }));
+    if (k === "observation") setFilters((f) => ({ ...f, observation: "" }));
   }
 
   const hasActive =
     !!filters.start_date ||
     !!filters.end_date ||
     (filters.bank_id?.length ?? 0) > 0 ||
-    (filters.general_ledger_account_id?.length ?? 0) > 0 ||
+    (filters.gla_id?.length ?? 0) > 0 ||
     !!filters.observation ||
     !!filters.description;
 
@@ -126,16 +162,22 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
           {(filters.bank_id?.length ?? 0) > 0 && (
             <Chip
               icon="bank"
-              label={`Banco  ${selectedBanks.slice(0, 2).map(b => b.institution).join(", ")}${(selectedBanks.length > 2) ? ` +${selectedBanks.length - 2}` : ""}`}
+              label={`Banco  ${selectedBanks
+                .slice(0, 2)
+                .map((b) => b.institution)
+                .join(", ")}${selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""}`}
               onClick={() => setOpenEditor("banks")}
               onRemove={() => removeChip("banks")}
             />
           )}
 
-          {(filters.general_ledger_account_id?.length ?? 0) > 0 && (
+          {(filters.gla_id?.length ?? 0) > 0 && (
             <Chip
               icon="accounts"
-              label={`Conta contábil  ${selectedAccounts.slice(0, 2).map(a => a.general_ledger_account).join(", ")}${(selectedAccounts.length > 2) ? ` +${selectedAccounts.length - 2}` : ""}`}
+              label={`Conta contábil  ${selectedAccounts
+                .slice(0, 2)
+                .map((a) => a.name)
+                .join(", ")}${selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""}`}
               onClick={() => setOpenEditor("accounts")}
               onRemove={() => removeChip("accounts")}
             />
@@ -154,7 +196,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
             className="flex-[1_1_30%] min-w-[160px] h-6 bg-transparent outline-none text-xs placeholder-gray-400"
             placeholder="Buscar ou filtrar…"
             value={filters.description || ""}
-            onChange={(e) => setFilters(f => ({ ...f, description: e.target.value }))}
+            onChange={(e) => setFilters((f) => ({ ...f, description: e.target.value }))}
           />
         </div>
 
@@ -164,24 +206,52 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
             ⚙️
           </Button>
         </div>
-        <Button variant="outline" size="sm" className="font-semibold">Salvar visualização</Button>
-        <Button variant="outline" size="sm" className="font-semibold">Agrupar por</Button>
+        <Button variant="outline" size="sm" className="font-semibold">
+          Salvar visualização
+        </Button>
+        <Button variant="outline" size="sm" className="font-semibold">
+          Agrupar por
+        </Button>
       </div>
 
       {/* Second row: filter actions */}
       <div className="mt-2 flex items-center gap-2 flex-wrap">
         {/* Add filter + menu */}
         <div className="relative" ref={menuRef}>
-          <Button variant="outline" size="sm" className="font-semibold" onClick={() => setMenuOpen(v => !v)}>
+          <Button variant="outline" size="sm" className="font-semibold" onClick={() => setMenuOpen((v) => !v)}>
             Adicionar filtro +
           </Button>
 
           {menuOpen && (
             <div className="absolute left-0 top-full z-20 w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
-              <MenuItem label="Período" onClick={() => { setOpenEditor("date"); setMenuOpen(false); }} />
-              <MenuItem label="Banco" onClick={() => { setOpenEditor("banks"); setMenuOpen(false); }} />
-              <MenuItem label="Conta contábil" onClick={() => { setOpenEditor("accounts"); setMenuOpen(false); }} />
-              <MenuItem label="Observação" onClick={() => { setOpenEditor("observation"); setMenuOpen(false); }} />
+              <MenuItem
+                label="Período"
+                onClick={() => {
+                  setOpenEditor("date");
+                  setMenuOpen(false);
+                }}
+              />
+              <MenuItem
+                label="Banco"
+                onClick={() => {
+                  setOpenEditor("banks");
+                  setMenuOpen(false);
+                }}
+              />
+              <MenuItem
+                label="Conta contábil"
+                onClick={() => {
+                  setOpenEditor("accounts");
+                  setMenuOpen(false);
+                }}
+              />
+              <MenuItem
+                label="Observação"
+                onClick={() => {
+                  setOpenEditor("observation");
+                  setMenuOpen(false);
+                }}
+              />
             </div>
           )}
         </div>
@@ -213,7 +283,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
                   type="date"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
                   value={filters.start_date || ""}
-                  onChange={(e) => setFilters(f => ({ ...f, start_date: e.target.value }))}
+                  onChange={(e) => setFilters((f) => ({ ...f, start_date: e.target.value }))}
                 />
               </label>
               <label className="text-xs text-gray-600 space-y-1 block">
@@ -222,7 +292,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
                   type="date"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
                   value={filters.end_date || ""}
-                  onChange={(e) => setFilters(f => ({ ...f, end_date: e.target.value }))}
+                  onChange={(e) => setFilters((f) => ({ ...f, end_date: e.target.value }))}
                 />
               </label>
             </div>
@@ -230,7 +300,14 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               <Button variant="outline" size="sm" onClick={() => removeChip("date")}>
                 Remover
               </Button>
-              <Button variant="outline" size="sm" onClick={() => { setOpenEditor(null); applyFilters(); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setOpenEditor(null);
+                  applyFilters();
+                }}
+              >
                 Aplicar
               </Button>
             </div>
@@ -243,7 +320,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               label="Bancos"
               items={banks}
               selected={selectedBanks}
-              onChange={(list) => setFilters(f => ({ ...f, bank_id: list.map(x => String(x.id)) }))}
+              onChange={(list) => setFilters((f) => ({ ...f, bank_id: list.map((x) => String(x.id)) }))}
               getItemKey={(item) => item.id}
               getItemLabel={(item) => item.institution}
               buttonLabel="Selecionar bancos"
@@ -253,7 +330,15 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               <Button variant="outline" size="sm" className="font-semibold" onClick={() => removeChip("banks")}>
                 Remover
               </Button>
-              <Button variant="outline" size="sm" className="font-semibold" onClick={() => { setOpenEditor(null); applyFilters(); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-semibold"
+                onClick={() => {
+                  setOpenEditor(null);
+                  applyFilters();
+                }}
+              >
                 Aplicar
               </Button>
             </div>
@@ -262,22 +347,35 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
 
         {openEditor === "accounts" && (
           <Popover onClose={() => setOpenEditor(null)}>
-            <SelectDropdown<LedgerAccount>
+            <SelectDropdown<GLAccountLike>
               label="Contas contábeis"
               items={ledgerAccounts}
               selected={selectedAccounts}
-              onChange={(list) => setFilters(f => ({ ...f, general_ledger_account_id: list.map(x => Number(x.id)) }))}
-              getItemKey={(item) => item.id}
-              getItemLabel={(item) => item.general_ledger_account}
+              onChange={(list) =>
+                setFilters((f) => ({
+                  ...f,
+                  gla_id: list.map((x) => getGlaId(x)),
+                }))
+              }
+              getItemKey={(item) => getGlaId(item)}
+              getItemLabel={(item) => item.name}
               buttonLabel="Selecionar contas"
               customStyles={{ maxHeight: "240px" }}
-              groupBy={(item) => item.subgroup}
+              groupBy={(item) => item.subcategory || ""}
             />
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="font-semibold" onClick={() => removeChip("accounts")}>
                 Remover
               </Button>
-              <Button variant="outline" size="sm" className="font-semibold" onClick={() => { setOpenEditor(null); applyFilters(); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-semibold"
+                onClick={() => {
+                  setOpenEditor(null);
+                  applyFilters();
+                }}
+              >
                 Aplicar
               </Button>
             </div>
@@ -291,13 +389,26 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               placeholder="Digite uma observação…"
               className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
               value={filters.observation || ""}
-              onChange={(e) => setFilters(f => ({ ...f, observation: e.target.value }))}
+              onChange={(e) => setFilters((f) => ({ ...f, observation: e.target.value }))}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="font-semibold" onClick={() => removeChip("observation")}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-semibold"
+                onClick={() => removeChip("observation")}
+              >
                 Remover
               </Button>
-              <Button variant="outline" size="sm" className="font-semibold" onClick={() => { setOpenEditor(null); applyFilters(); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-semibold"
+                onClick={() => {
+                  setOpenEditor(null);
+                  applyFilters();
+                }}
+              >
                 Aplicar
               </Button>
             </div>
@@ -317,14 +428,10 @@ const Chip: React.FC<{
   onRemove(): void;
 }> = ({ icon, label, onClick, onRemove }) => {
   const Icon = () => {
-    if (icon === "calendar")
-      return <span className="text-[12px]" aria-hidden>📅</span>;
-    if (icon === "bank")
-      return <span className="text-[12px]" aria-hidden>🏦</span>;
-    if (icon === "accounts")
-      return <span className="text-[12px]" aria-hidden>🧾</span>;
-    if (icon === "note")
-      return <span className="text-[12px]" aria-hidden>📝</span>;
+    if (icon === "calendar") return <span className="text-[12px]" aria-hidden>📅</span>;
+    if (icon === "bank") return <span className="text-[12px]" aria-hidden>🏦</span>;
+    if (icon === "accounts") return <span className="text-[12px]" aria-hidden>🧾</span>;
+    if (icon === "note") return <span className="text-[12px]" aria-hidden>📝</span>;
     return null;
   };
   return (
@@ -337,7 +444,10 @@ const Chip: React.FC<{
       <button
         aria-label="remover filtro"
         className="ml-1 rounded px-1 text-gray-500 hover:bg-gray-200"
-        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
       >
         ×
       </button>
@@ -346,10 +456,7 @@ const Chip: React.FC<{
 };
 
 const MenuItem: React.FC<{ label: string; onClick(): void }> = ({ label, onClick }) => (
-  <button
-    className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50"
-    onClick={onClick}
-  >
+  <button className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50" onClick={onClick}>
     {label}
   </button>
 );
@@ -357,9 +464,10 @@ const MenuItem: React.FC<{ label: string; onClick(): void }> = ({ label, onClick
 const Popover: React.FC<{ children: React.ReactNode; onClose(): void }> = ({ children, onClose }) => {
   const ref = useRef<HTMLDivElement>(null);
   useOutside(ref, onClose);
+  // Sem sombra aqui (apenas borda), conforme especificação do componente
   return (
     <div className="absolute z-20 mt-2 w-full max-w-sm">
-      <div ref={ref} className="rounded-md border border-gray-300 bg-white p-3 shadow-lg">
+      <div ref={ref} className="rounded-md border border-gray-300 bg-white p-3">
         {children}
       </div>
     </div>

@@ -1,5 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/LedgerAccountSettings/LedgerAccountsGate.tsx              */
+/*  Goal: Onboarding p/ plano de contas                                       */
+/*        - Verifica se já existem contas (paginação nova)                    */
+/*        - Importa CSV / Manual / Plano Padrão                               */
+/*        - Envia category como número (1..4) para a API                      */
 /* -------------------------------------------------------------------------- */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -13,8 +17,12 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 
 import { api } from "src/api/requests";
+import type {
+  AddGLAccountRequest,
+  GetLedgerAccountsResponse,
+} from "src/models/enterprise_structure/dto";
 
-// ⚠️ Se não tiver @types/papaparse, ver instruções mais abaixo.
+// ⚠️ Se não tiver @types/papaparse, mantenha assim:
 import Papa from "papaparse";
 
 // Estes JSONs são opcionais no seu repo.
@@ -33,32 +41,60 @@ type CsvRow = {
   account?: string;
 };
 
-type NewLedgerItem = {
-  general_ledger_account: string;
-  group: string;
-  subgroup: string;
-  transaction_type: "debit" | "credit";
-};
-
 type Mode = "csv" | "manual" | "standard" | null;
 
-// request() lança este shape:
-type ApiErrorThrown = {
-  code: string;
-  message: string;
-  details?: unknown;
+type StandardRow = { account: string; group: string; subgroup: string };
+
+/* ------------------------- Categoria (1..4) Helpers ----------------------- */
+
+type CategoryValue = 1 | 2 | 3 | 4;
+
+const LABEL_TO_CATEGORY: Record<
+  | "Receitas Operacionais"
+  | "Receitas Não Operacionais"
+  | "Despesas Operacionais"
+  | "Despesas Não Operacionais",
+  CategoryValue
+> = {
+  "Receitas Operacionais": 1,
+  "Receitas Não Operacionais": 2,
+  "Despesas Operacionais": 3,
+  "Despesas Não Operacionais": 4,
 };
+
+function normalize(str: string): string {
+  return str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
+}
+
+/** Converte rótulo textual do grupo para CategoryValue (1..4) */
+function toCategoryValue(groupLabel: string): CategoryValue {
+  const g = groupLabel.trim();
+
+  // Match exato primeiro
+  if (g in LABEL_TO_CATEGORY) return LABEL_TO_CATEGORY[g as keyof typeof LABEL_TO_CATEGORY];
+
+  // Heurística: Receitas/Despesas + "não operacionais"
+  const n = normalize(g);
+  const isReceita = n.startsWith("receita") || n.startsWith("receitas");
+  const isDespesa = n.startsWith("despesa") || n.startsWith("despesas");
+  const isNaoOper = /\bnao\b.*\boperacionais?\b/.test(n) || /\bnao-operacionais?\b/.test(n);
+
+  if (isReceita && isNaoOper) return 2;
+  if (isReceita) return 1;
+  if (isDespesa && isNaoOper) return 4;
+  // default despesas operacionais
+  return 3;
+}
 
 /* ---------------------------- Componente único ---------------------------- */
 /*  - Se EXISTEM contas => redireciona para /settings/ledger-accounts        */
-/*  - Se NÃO existem/404/NOT_FOUND => permanece e exibe onboarding           */
-/*  - Se NOT_AUTHENTICATED => mostra aviso e permanece                       */
+/*  - Se NÃO existem => permanece e exibe onboarding                          */
 /* -------------------------------------------------------------------------- */
 
 const LedgerAccountsGate: React.FC = () => {
   const navigate = useNavigate();
 
-  // Hooks: TUDO no topo (antes de qualquer return condicional)
+  // Hooks no topo
   const [loading, setLoading] = useState(true);
   const [hasAccounts, setHasAccounts] = useState(false);
 
@@ -70,7 +106,7 @@ const LedgerAccountsGate: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [snack, setSnack] = useState("");
 
-  // NÃO chame hooks depois de returns condicionais
+  // CSV modelo
   const csvTemplate = useMemo(() => {
     const rows = [
       ["GRUPO", "SUBGRUPO", "CONTA"],
@@ -80,27 +116,18 @@ const LedgerAccountsGate: React.FC = () => {
     return rows.map((r) => r.join(",")).join("\n");
   }, []);
 
+  // Checa existência de contas (usa endpoint paginado)
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.getAllLedgerAccounts();
-        const list = res.data?.general_ledger_accounts ?? [];
+        const { data } = (await api.getLedgerAccounts({
+          page_size: 1,
+        })) as { data: GetLedgerAccountsResponse };
+        const list = data?.results ?? [];
         setHasAccounts(Array.isArray(list) && list.length > 0);
-      } catch (e) {
-        const err = e as ApiErrorThrown;
-        if (
-          err?.code === "NOT_FOUND_GENERAL_LEDGER_ACCOUNT" ||
-          // Alguns backends mandam 404 em GET de coleção vazia; trate como “sem contas”.
-          err?.code === "NOT_FOUND"
-        ) {
-          setHasAccounts(false);
-        } else if (err?.code === "NOT_AUTHENTICATED") {
-          setHasAccounts(false);
-          setSnack("Você precisa estar autenticado para cadastrar contas.");
-        } else {
-          setHasAccounts(false);
-          setSnack("Não foi possível verificar suas contas. Você pode cadastrá-las agora.");
-        }
+      } catch {
+        // Se der erro, assume que não há contas (onboarding permite registrar)
+        setHasAccounts(false);
       } finally {
         setLoading(false);
       }
@@ -111,7 +138,7 @@ const LedgerAccountsGate: React.FC = () => {
   if (loading) return <SuspenseLoader />;
   if (hasAccounts) return <Navigate to="/settings/ledger-accounts" replace />;
 
-  /* -------------------- Funções auxiliares (onboarding) ------------------- */
+  /* -------------------------- Funções auxiliares -------------------------- */
 
   const downloadTemplate = () => {
     const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
@@ -123,14 +150,18 @@ const LedgerAccountsGate: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const addMany = async (items: NewLedgerItem[]) => {
-    // Em produção convém fazer “batching” (ex.: em blocos de 20) para evitar saturar API
-    await Promise.all(items.map((item) => api.addLedgerAccount(item)));
+  /** Envia muitos AddGLAccountRequest em pequenos lotes para não saturar a API */
+  const addMany = async (items: AddGLAccountRequest[]) => {
+    const CHUNK = 30;
+    for (let i = 0; i < items.length; i += CHUNK) {
+      const slice = items.slice(i, i + CHUNK);
+      // paraleliza dentro do chunk
+      await Promise.all(slice.map((payload) => api.addLedgerAccount(payload)));
+    }
   };
 
-  const parseManual = (text: string): NewLedgerItem[] => {
-    // Formato por linha:
-    // GRUPO;SUBGRUPO;CONTA   (ou separado por vírgula)
+  /** Manual: cada linha "GRUPO;SUBGRUPO;CONTA" (ou vírgula) -> AddGLAccountRequest */
+  const parseManual = (text: string): AddGLAccountRequest[] => {
     return text
       .split(/\r?\n/)
       .map((l) => l.trim())
@@ -138,16 +169,17 @@ const LedgerAccountsGate: React.FC = () => {
       .map((line) => {
         const parts = line.split(/;|,/).map((p) => p.trim());
         const [group, subgroup, account] = parts;
-        const transaction_type: "debit" | "credit" =
-          (group ?? "").startsWith("Receitas") ? "credit" : "debit";
-        return {
-          general_ledger_account: account ?? "",
-          group: group ?? "",
-          subgroup: subgroup ?? "",
-          transaction_type,
+        const category = toCategoryValue(group ?? "");
+        const payload: AddGLAccountRequest = {
+          name: account ?? "",
+          category, // 1..4
+          subcategory: subgroup || undefined,
+          // code omitido => backend gera com prefixo por categoria
+          is_active: true,
         };
+        return payload;
       })
-      .filter((it) => it.group && it.general_ledger_account);
+      .filter((p) => p.name && p.category);
   };
 
   const handleUploadCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,24 +197,27 @@ const LedgerAccountsGate: React.FC = () => {
           return;
         }
         await new Promise<void>((resolve, reject) => {
-          Papa.parse(csvFile, {
+          Papa.parse<CsvRow>(csvFile, {
             header: true,
             skipEmptyLines: true,
-            complete: async (result: { data: CsvRow[] }) => {
+            complete: async (result) => {
               try {
-                const mapped: NewLedgerItem[] = (result.data || [])
+                const mapped: AddGLAccountRequest[] = (result.data || [])
                   .filter((r) => (r.GRUPO || r.group) && (r.CONTA || r.account))
                   .map((r) => {
-                    const group = r.GRUPO || r.group || "";
-                    const transaction_type: "debit" | "credit" =
-                      group.startsWith("Receitas") ? "credit" : "debit";
-                    return {
-                      general_ledger_account: r.CONTA || r.account || "",
-                      group,
-                      subgroup: r.SUBGRUPO || r.subgroup || "",
-                      transaction_type,
+                    const group = (r.GRUPO || r.group || "").trim();
+                    const subgroup = (r.SUBGRUPO || r.subgroup || "").trim();
+                    const account = (r.CONTA || r.account || "").trim();
+                    const category = toCategoryValue(group);
+                    const payload: AddGLAccountRequest = {
+                      name: account,
+                      category, // 1..4
+                      subcategory: subgroup || undefined,
+                      is_active: true,
                     };
+                    return payload;
                   });
+
                 if (mapped.length === 0) {
                   setSnack("CSV vazio ou inválido.");
                   return reject(new Error("CSV inválido"));
@@ -190,10 +225,10 @@ const LedgerAccountsGate: React.FC = () => {
                 await addMany(mapped);
                 resolve();
               } catch (err) {
-                reject(err);
+                reject(err instanceof Error ? err : new Error("Falha ao importar CSV"));
               }
             },
-            error: (err: unknown) => reject(err),
+            error: (err) => reject(err),
           });
         });
       } else if (mode === "manual") {
@@ -208,15 +243,12 @@ const LedgerAccountsGate: React.FC = () => {
           setSnack("Selecione um plano padrão (Pessoal ou Empresarial).");
           return;
         }
-        // Tipos dos JSONs padrão
-        type StandardRow = { account: string; group: string; subgroup: string };
         const src = (stdChoice === "personal" ? personalAccounts : businessAccounts) as StandardRow[];
-
-        const mapped: NewLedgerItem[] = src.map((e) => ({
-          general_ledger_account: e.account,
-          group: e.group,
-          subgroup: e.subgroup,
-          transaction_type: e.group?.startsWith("Receitas") ? "credit" : "debit",
+        const mapped: AddGLAccountRequest[] = src.map((e) => ({
+          name: e.account,
+          category: toCategoryValue(e.group), // 1..4
+          subcategory: e.subgroup || undefined,
+          is_active: true,
         }));
         await addMany(mapped);
       } else {
@@ -227,7 +259,7 @@ const LedgerAccountsGate: React.FC = () => {
       navigate("/settings/ledger-accounts", { replace: true });
     } catch (e) {
       const err = e as { message?: string };
-      setSnack(err?.message || "Erro ao registrar contas contábeis.");
+      setSnack(err?.message || "Erro ao cadastrar contas contábeis.");
     } finally {
       setBusy(false);
     }
@@ -264,7 +296,12 @@ const LedgerAccountsGate: React.FC = () => {
                 <Button variant="outline" onClick={downloadTemplate}>
                   Baixar modelo .csv
                 </Button>
-                <Input type="file" label="Enviar arquivo .csv" onChange={handleUploadCSV} />
+                <Input
+                  type="file"
+                  label="Enviar arquivo .csv"
+                  onChange={handleUploadCSV}
+                  accept=".csv,text/csv"
+                />
               </div>
             )}
           </div>

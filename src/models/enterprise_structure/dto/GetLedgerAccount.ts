@@ -1,19 +1,29 @@
-import { LedgerAccount } from "../domain/LedgerAccount";
+// models/enterprise_structure/dto/GetLedgerAccount
+import { GLAccount } from "../domain/GLAccount";
 
-export interface GetLedgerAccounts {
-  general_ledger_accounts: LedgerAccount[];
+export interface GetLedgerAccountsRequest {
+  active?: "true" | "false";
+  category?: string | number; // aceita label OU número
+  q?: string;
+  page_size?: number;
+  cursor?: string;
 }
 
-export interface GetLedgerAccount {
-  general_ledger_account: LedgerAccount;
+export interface CursorLinks {
+  next: string | null;
+  previous: string | null;
 }
 
-export interface LedgerAccountPayloadBase {
-  general_ledger_account: string;
-  group: string;
-  subgroup: string;
-  transaction_type: string;
+export interface GetLedgerAccountsResponse extends CursorLinks {
+  results: GLAccount[];
 }
 
-export type AddLedgerAccountRequest = LedgerAccountPayloadBase;
-export type EditLedgerAccountRequest = LedgerAccountPayloadBase;
+export type AddGLAccountRequest = {
+  name: string;
+  code?: string;
+  category: 1 | 2 | 3 | 4; // número fixo
+  subcategory?: string;
+  is_active?: boolean;
+};
+
+export type EditGLAccountRequest = Partial<AddGLAccountRequest>;

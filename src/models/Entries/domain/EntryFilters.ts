@@ -3,6 +3,6 @@ export type EntryFilters = {
     end_date?: string;
     description?: string;
     observation?: string;
-    general_ledger_account_id?: number[];
+    gla_id?: string[];
     bank_id?: string[];
   };

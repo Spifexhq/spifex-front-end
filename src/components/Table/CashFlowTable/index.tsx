@@ -319,8 +319,8 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         const q = qCombined.trim() || undefined;
 
         const gl =
-          f?.general_ledger_account_id && f.general_ledger_account_id.length
-            ? f.general_ledger_account_id.join(",")
+          f?.gla_id && f.gla_id.length
+            ? f.gla_id.join(",")
             : undefined;
 
         const base: GetEntryRequest = {

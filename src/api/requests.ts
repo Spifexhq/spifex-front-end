@@ -17,14 +17,14 @@ import {
   AddTransferenceRequest
 } from '@/models/entries/dto'
 import {
-  GetLedgerAccount, GetLedgerAccounts, AddLedgerAccountRequest, EditLedgerAccountRequest,
+  GetLedgerAccountsRequest, GetLedgerAccountsResponse, AddGLAccountRequest, EditGLAccountRequest,
   GetDocumentType, GetDocumentTypes,
   GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
   GetProject, GetProjects, AddProjectRequest, EditProjectRequest,
   GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
   GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
-import { BankAccount, LedgerAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
+import { BankAccount, GLAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
 import { Paginated } from '@/models/Api';
 import { store } from '@/redux/store';
 
@@ -355,25 +355,68 @@ export const api = {
   },
 
   /* --- General Ledger Acccounts --- */
-  getAllLedgerAccounts: () => {
+  getLedgerAccounts: (params?: GetLedgerAccountsRequest) => {
     const orgExternalId = getOrgExternalId();
-    return request<GetLedgerAccounts>(`ledger/${orgExternalId}/ledger/accounts/`, "GET")
+    return request<GetLedgerAccountsResponse>(
+      `ledger/${orgExternalId}/ledger/accounts/`,
+      "GET",
+      params
+    );
   },
 
-  getLedgerAccount: (ids: number[]) =>
-    request<GetLedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, "GET"),
+  // POST batch { ids: string[] } -> GLAccount[]
+  getLedgerAccountsBatch: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GLAccount[]>(
+      `ledger/${orgExternalId}/ledger/accounts/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  addLedgerAccount: (payload: AddLedgerAccountRequest) =>
-    request<LedgerAccount>("enterprise_structure/general-ledger-accounts", "POST", payload),
+  getLedgerAccount: (glaId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GLAccount>(
+      `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
+      "GET"
+    );
+  },
 
-  editLedgerAccount: (ids: number[], payload: Partial<EditLedgerAccountRequest>) =>
-    request<LedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, "PUT", payload),
-  
-  deleteAllLedgerAccounts: () =>
-    request<LedgerAccount>("enterprise_structure/general-ledger-accounts", 'DELETE'),
+  addLedgerAccount: (payload: AddGLAccountRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GLAccount>(
+      `ledger/${orgExternalId}/ledger/accounts/`,
+      "POST",
+      payload
+    );
+  },
 
-  deleteLedgerAccount: (ids: number[]) =>
-    request<LedgerAccount>(`enterprise_structure/general-ledger-accounts/${ids.join(',')}`, 'DELETE'),
+  editLedgerAccount: (glaId: string, payload: EditGLAccountRequest) => {
+    const orgExternalId = getOrgExternalId();
+    // PATCH lets you send only the fields you changed
+    return request<GLAccount>(
+      `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
+      "PATCH",
+      payload
+    );
+  },
+
+  deleteAllLedgerAccounts: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<{ message: string; deleted_count: number }>(
+      `ledger/${orgExternalId}/ledger/accounts/bulk-delete/`,
+      "DELETE",
+      { confirm_delete_all: true }
+    );
+  },
+
+  deleteLedgerAccount: (glaId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<unknown>(
+      `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
+      "DELETE"
+    );
+  },
 
   /* --- Document Types --- */
   getAllDocumentTypes: () =>
