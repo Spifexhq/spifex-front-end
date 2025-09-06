@@ -1,9 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/EntitySettings.tsx                                        */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
 /* -------------------------------------------------------------------------- */
-
 import React, { useEffect, useState, useCallback } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -16,9 +13,11 @@ import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { Entity } from "src/models/enterprise_structure/domain";
+import type { Entity } from "src/models/enterprise_structure/domain/Entity";
 import { useAuthContext } from "@/contexts/useAuthContext";
+import Checkbox from "src/components/Checkbox";
 
+/* tipos de entidade (adicione mais se necessário) */
 const ENTITY_TYPES = [
   { label: "Cliente", value: "client" },
   { label: "Fornecedor", value: "supplier" },
@@ -27,29 +26,38 @@ const ENTITY_TYPES = [
 
 const emptyForm = {
   full_name: "",
+  alias_name: "",
+  entity_type: "client",
+  is_active: true,
+
   ssn_tax_id: "",
   ein_tax_id: "",
-  alias_name: "",
-  area_code: "",
-  phone_number: "",
+  email: "",
+  phone: "",
+
   street: "",
   street_number: "",
-  state: "",
   city: "",
+  state: "",
   postal_code: "",
-  email: "",
+  country: "",
+
   bank_name: "",
   bank_branch: "",
   checking_account: "",
   account_holder_tax_id: "",
   account_holder_name: "",
-  entity_type: "client",
 };
 type FormState = typeof emptyForm;
 
-/* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
   return "EN";
+}
+
+function sortByName(a: Entity, b: Entity) {
+  const an = (a.full_name || a.alias_name || "").trim();
+  const bn = (b.full_name || b.alias_name || "").trim();
+  return an.localeCompare(bn, "pt-BR");
 }
 
 const Row = ({
@@ -67,6 +75,7 @@ const Row = ({
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
         {ENTITY_TYPES.find((t) => t.value === entity.entity_type)?.label ?? "—"}
+        {entity.is_active === false ? " • Inativa" : ""}
       </p>
       <p className="text-[13px] font-medium text-gray-900 truncate">
         {entity.full_name || entity.alias_name || "(sem nome)"}
@@ -89,7 +98,6 @@ const Row = ({
   </div>
 );
 
-/* -------------------------------------------------------------------------- */
 const EntitySettings: React.FC = () => {
   useEffect(() => {
     document.title = "Entidades";
@@ -107,23 +115,29 @@ const EntitySettings: React.FC = () => {
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
-  /* ------------------------------ Carrega dados ----------------------------- */
-  const fetchEntities = async () => {
+  /* ------------------------------ Carrega dados (paginado) ----------------- */
+  const fetchEntities = useCallback(async () => {
     try {
-      const res = await api.getAllEntities();
-      const sorted = res.data.entities.sort((a, b) => a.id - b.id);
-      setEntities(sorted);
+      const all: Entity[] = [];
+      let cursor: string | undefined;
+      do {
+        const { data } = await api.getEntities({ page_size: 200, cursor });
+        const page = (data?.results ?? []) as Entity[];
+        all.push(...page);
+        cursor = (data?.next ?? undefined) || undefined;
+      } while (cursor);
+      setEntities(all.sort(sortByName));
     } catch (err) {
       console.error("Erro ao buscar entidades", err);
       setSnackBarMessage("Erro ao buscar entidades.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchEntities();
-  }, []);
+  }, [fetchEntities]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -138,23 +152,27 @@ const EntitySettings: React.FC = () => {
     setEditingEntity(entity);
     setFormData({
       full_name: entity.full_name ?? "",
+      alias_name: entity.alias_name ?? "",
+      entity_type: entity.entity_type ?? "client",
+      is_active: entity.is_active ?? true,
+
       ssn_tax_id: entity.ssn_tax_id ?? "",
       ein_tax_id: entity.ein_tax_id ?? "",
-      alias_name: entity.alias_name ?? "",
-      area_code: entity.area_code ?? "",
-      phone_number: entity.phone_number ?? "",
+      email: entity.email ?? "",
+      phone: entity.phone ?? "",
+
       street: entity.street ?? "",
       street_number: entity.street_number ?? "",
-      state: entity.state ?? "",
       city: entity.city ?? "",
+      state: entity.state ?? "",
       postal_code: entity.postal_code ?? "",
-      email: entity.email ?? "",
+      country: entity.country ?? "",
+
       bank_name: entity.bank_name ?? "",
       bank_branch: entity.bank_branch ?? "",
       checking_account: entity.checking_account ?? "",
       account_holder_tax_id: entity.account_holder_tax_id ?? "",
       account_holder_name: entity.account_holder_name ?? "",
-      entity_type: entity.entity_type ?? "client",
     });
     setModalOpen(true);
   };
@@ -173,11 +191,26 @@ const EntitySettings: React.FC = () => {
 
   const submitEntity = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const payload = {
+      ...formData,
+      ssn_tax_id: formData.ssn_tax_id.trim() || null,
+      ein_tax_id: formData.ein_tax_id.trim() || null,
+      // (opcional) normalizar brancos em outros campos livres:
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      bank_name: formData.bank_name.trim(),
+      bank_branch: formData.bank_branch.trim(),
+      checking_account: formData.checking_account.trim(),
+      account_holder_tax_id: formData.account_holder_tax_id.trim(),
+      account_holder_name: formData.account_holder_name.trim(),
+    };
+
     try {
       if (mode === "create") {
-        await api.addEntity(formData);
+        await api.addEntity(payload);
       } else if (editingEntity) {
-        await api.editEntity([editingEntity.id], formData);
+        await api.editEntity(editingEntity.id, payload);
       }
       await fetchEntities();
       closeModal();
@@ -191,7 +224,7 @@ const EntitySettings: React.FC = () => {
       return;
 
     try {
-      await api.deleteEntity([entity.id]);
+      await api.deleteEntity(entity.id);
       await fetchEntities();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
@@ -220,10 +253,9 @@ const EntitySettings: React.FC = () => {
       <Navbar />
       <SidebarSettings activeItem="entities" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          {/* Header card */}
+          {/* Header */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -236,7 +268,7 @@ const EntitySettings: React.FC = () => {
             </div>
           </header>
 
-          {/* Card principal */}
+          {/* Lista */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
@@ -269,12 +301,11 @@ const EntitySettings: React.FC = () => {
           </section>
         </div>
 
-        {/* ------------------------------ Modal -------------------------------- */}
+        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
             <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl overflow-y-auto max-h-[90vh]"
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-4xl overflow-y-auto max-h-[90vh]"
               role="dialog"
               aria-modal="true"
             >
@@ -291,46 +322,102 @@ const EntitySettings: React.FC = () => {
                 </button>
               </header>
 
-              <form className="space-y-3" onSubmit={submitEntity}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Nome completo" name="full_name" value={formData.full_name} onChange={handleChange} />
-                  <Input label="Nome fantasia / apelido" name="alias_name" value={formData.alias_name} onChange={handleChange} />
-                  <Input label="CPF (SSN)" name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} />
-                  <Input label="CNPJ (EIN)" name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} />
+              <form className="space-y-5" onSubmit={submitEntity}>
+                {/* Identificação e contato */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="lg:col-span-2">
+                    <Input label="Nome completo" name="full_name" value={formData.full_name} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Nome fantasia / apelido" name="alias_name" value={formData.alias_name} onChange={handleChange} />
+                  </div>
 
-                  <Input label="DDD" name="area_code" value={formData.area_code} onChange={handleChange} />
-                  <Input label="Telefone" name="phone_number" value={formData.phone_number} onChange={handleChange} />
-                  <Input label="Email" name="email" value={formData.email} onChange={handleChange} />
+                  <div>
+                    <SelectDropdown
+                      label="Tipo de entidade"
+                      items={ENTITY_TYPES}
+                      selected={ENTITY_TYPES.filter((t) => t.value === formData.entity_type)}
+                      onChange={(items) => items[0] && setFormData((p) => ({ ...p, entity_type: items[0].value })) }
+                      getItemKey={(item) => item.value}
+                      getItemLabel={(item) => item.label}
+                      singleSelect
+                      hideCheckboxes
+                      buttonLabel="Selecione o tipo"
+                    />
+                  </div>
 
-                  <SelectDropdown
-                    label="Tipo de entidade"
-                    items={ENTITY_TYPES}
-                    selected={ENTITY_TYPES.filter((t) => t.value === formData.entity_type)}
-                    onChange={(items) => items[0] && setFormData((p) => ({ ...p, entity_type: items[0].value }))}
-                    getItemKey={(item) => item.value}
-                    getItemLabel={(item) => item.label}
-                    singleSelect
-                    hideCheckboxes
-                    buttonLabel="Selecione o tipo"
-                  />
+                  <div>
+                    <Input label="CPF (SSN)" name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="CNPJ (EIN)" name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Email" name="email" value={formData.email} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} />
+                  </div>
+                  <label className="col-span-1 flex items-center gap-2 text-sm pt-5">
+                    <Checkbox
+                      checked={formData.is_active}
+                      onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
+                    />
+                    Entidade ativa
+                  </label>
                 </div>
 
-                <h4 className="text-[12px] font-semibold text-gray-800 pt-1">Endereço</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Rua" name="street" value={formData.street} onChange={handleChange} />
-                  <Input label="Número" name="street_number" value={formData.street_number} onChange={handleChange} />
-                  <Input label="Cidade" name="city" value={formData.city} onChange={handleChange} />
-                  <Input label="Estado" name="state" value={formData.state} onChange={handleChange} />
-                  <Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} />
+                {/* Endereço */}
+                <h4 className="text-[12px] font-semibold text-gray-800">Endereço</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="lg:col-span-2">
+                    <Input label="Rua" name="street" value={formData.street} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Número" name="street_number" value={formData.street_number} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Cidade" name="city" value={formData.city} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Estado" name="state" value={formData.state} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="País" name="country" value={formData.country} onChange={handleChange} />
+                  </div>
                 </div>
 
-                <h4 className="text-[12px] font-semibold text-gray-800 pt-1">Dados bancários</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Banco" name="bank_name" value={formData.bank_name} onChange={handleChange} />
-                  <Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} />
-                  <Input label="Conta corrente" name="checking_account" value={formData.checking_account} onChange={handleChange} />
-                  <Input label="Titular (CPF/CNPJ)" name="account_holder_tax_id" value={formData.account_holder_tax_id} onChange={handleChange} />
-                  <Input label="Nome do titular" name="account_holder_name" value={formData.account_holder_name} onChange={handleChange} />
+                {/* Dados bancários */}
+                <h4 className="text-[12px] font-semibold text-gray-800">Dados bancários</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Input label="Banco" name="bank_name" value={formData.bank_name} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input label="Conta corrente" name="checking_account" value={formData.checking_account} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <Input
+                      label="Titular (CPF/CNPJ)"
+                      name="account_holder_tax_id"
+                      value={formData.account_holder_tax_id}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <Input
+                      label="Nome do titular"
+                      name="account_holder_name"
+                      value={formData.account_holder_name}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
@@ -345,7 +432,6 @@ const EntitySettings: React.FC = () => {
         )}
       </main>
 
-      {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar
         open={!!snackBarMessage}
         autoHideDuration={6000}

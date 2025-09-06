@@ -21,7 +21,7 @@ import {
   GetDocumentType, GetDocumentTypes,
   GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
   GetProjectsResponse, AddProjectRequest, EditProjectRequest,
-  GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
+  GetEntityResponse, GetEntitiesResponse, AddEntityRequest, EditEntityRequest,
   GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
 import { BankAccount, GLAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
@@ -545,21 +545,61 @@ export const api = {
   },
 
   /* --- Entities --- */
-  getAllEntities: () =>
-    request<GetEntities>("enterprise_structure/entities", "GET"),
+  getEntities: (params?: {
+    cursor?: string;
+    page_size?: number;
+    active?: "true" | "false";
+    type?: string; // client | supplier | employee ...
+    q?: string;
+  }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEntitiesResponse>(
+      `crm/${orgExternalId}/crm/entities/`,
+      "GET",
+      params
+    );
+  },
 
-  getEntity: (ids: number[]) =>
-    request<GetEntity>(`enterprise_structure/entities/${ids.join(',')}`, "GET"),
+  getEntitiesBatch: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Entity[]>(
+      `crm/${orgExternalId}/crm/entities/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  addEntity: (payload: AddEntityRequest) =>
-    request<Entity>("enterprise_structure/entities", "POST", payload),
+  getEntity: (id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEntityResponse>(
+      `crm/${orgExternalId}/crm/entities/${id}/`,
+      "GET"
+    );
+  },
 
-  editEntity: (ids: number[], payload: Partial<EditEntityRequest>) =>
-    request<Entity>(`enterprise_structure/entities/${ids.join(',')}`, "PUT", payload),
-  
-  deleteAllEntities: () =>
-    request<Entity>("enterprise_structure/entities", 'DELETE'),
+  addEntity: (payload: AddEntityRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Entity>(
+      `crm/${orgExternalId}/crm/entities/`,
+      "POST",
+      payload
+    );
+  },
 
-  deleteEntity: (ids: number[]) =>
-    request<Entity>(`enterprise_structure/entities/${ids.join(',')}`, 'DELETE'),
+  editEntity: (id: string, payload: EditEntityRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Entity>(
+      `crm/${orgExternalId}/crm/entities/${id}/`,
+      "PATCH",
+      payload
+    );
+  },
+
+  deleteEntity: (id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<void>(
+      `crm/${orgExternalId}/crm/entities/${id}/`,
+      "DELETE"
+    );
+  },
 }

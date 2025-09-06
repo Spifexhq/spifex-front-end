@@ -17,6 +17,7 @@ import Alert from "@/components/Alert";
 import { api } from "src/api/requests";
 import type { InventoryItem } from "src/models/enterprise_structure/domain/InventoryItem";
 import { useAuthContext } from "@/contexts/useAuthContext";
+import Checkbox from "src/components/Checkbox";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -318,7 +319,7 @@ const InventorySettings: React.FC = () => {
                   onChange={handleChange}
                 />
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={formData.is_active} onChange={handleActive} />
+                  <Checkbox checked={formData.is_active} onChange={handleActive} />
                   Item ativo
                 </label>
 

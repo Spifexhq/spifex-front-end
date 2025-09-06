@@ -30,6 +30,7 @@ import type {
   AddGLAccountRequest,
   EditGLAccountRequest,
 } from "src/models/enterprise_structure/dto";
+import Checkbox from "src/components/Checkbox";
 
 /* ----------------------------- Const & Types ----------------------------- */
 
@@ -788,7 +789,7 @@ const LedgerAccountSettings: React.FC = () => {
                 </div>
 
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={formData.is_active ?? true} onChange={handleActiveChange} />
+                  <Checkbox checked={formData.is_active ?? true} onChange={handleActiveChange} />
                   Conta ativa
                 </label>
 

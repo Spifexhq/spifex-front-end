@@ -16,6 +16,7 @@ import { SelectDropdown } from "@/components/SelectDropdown";
 import { api } from "src/api/requests";
 import type { Project } from "src/models/enterprise_structure/domain/Project";
 import { useAuthContext } from "@/contexts/useAuthContext";
+import Checkbox from "src/components/Checkbox";
 
 /* ------------------------- Constantes / helpers --------------------------- */
 const PROJECT_TYPES = [
@@ -291,8 +292,7 @@ const ProjectSettings: React.FC = () => {
               />
 
               <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={formData.is_active}
                   onChange={handleActiveChange}
                 />
