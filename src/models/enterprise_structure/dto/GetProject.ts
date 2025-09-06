@@ -1,19 +1,21 @@
+// models/enterprise_structure/dto/GetProject.ts
 import { Project } from "../domain/Project";
 
-export interface GetProjects {
-  projects: Project[];
+export interface GetProjectsResponse {
+  results: Project[];
+  next?: string | null;
+  previous?: string | null;
+  count?: number;
 }
 
-export interface GetProject {
-  project: Project;
-}
+export type GetProjectResponse = Project;
 
-export interface ProjectPayloadBase {
-  project: string | null;
-  project_code: string;
-  project_type: string;
-  project_description: string;
-}
+export type AddProjectRequest = {
+  name: string;
+  code?: string;
+  type: string;
+  description?: string;
+  is_active?: boolean;
+};
 
-export type AddProjectRequest = ProjectPayloadBase;
-export type EditProjectRequest = ProjectPayloadBase;
+export type EditProjectRequest = Partial<AddProjectRequest>;

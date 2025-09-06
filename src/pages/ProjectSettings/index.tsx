@@ -14,7 +14,7 @@ import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { Project } from "src/models/enterprise_structure/domain";
+import type { Project } from "src/models/enterprise_structure/domain/Project";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
 /* ------------------------- Constantes / helpers --------------------------- */
@@ -22,16 +22,33 @@ const PROJECT_TYPES = [
   { label: "Interno", value: "internal" },
   { label: "Cliente", value: "client" },
   { label: "Pesquisa", value: "research" },
+  // extras
+  { label: "Operacional", value: "operational" },
+  { label: "Marketing", value: "marketing" },
+  { label: "Produto", value: "product" },
+  { label: "TI", value: "it" },
+  { label: "Evento", value: "event" },
+  { label: "CapEx", value: "capex" },
 ];
 
 const emptyForm = {
-  project: "",
-  project_code: "",
-  project_type: "internal",
-  project_description: "",
+  name: "",
+  code: "",
+  type: "internal",
+  description: "",
+  is_active: true as boolean,
 };
 
 type FormState = typeof emptyForm;
+
+function sortByCodeThenName(a: Project, b: Project) {
+  const ca = (a.code || "").toString();
+  const cb = (b.code || "").toString();
+  if (ca && cb && ca !== cb) {
+    return ca.localeCompare(cb, "pt-BR", { numeric: true });
+  }
+  return (a.name || "").localeCompare(b.name || "", "pt-BR");
+}
 
 const ProjectSettings: React.FC = () => {
   /* ------------------------------ Setup ----------------------------------- */
@@ -52,21 +69,28 @@ const ProjectSettings: React.FC = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
   /* ----------------------------- API calls -------------------------------- */
-  const fetchProjects = async () => {
+  const fetchAllProjects = useCallback(async () => {
     try {
-      const res = await api.getAllProjects(); // ApiSuccess<{ projects: Project[] }>
-      setProjects(res.data.projects.sort((a, b) => a.id - b.id));
+      const all: Project[] = [];
+      let cursor: string | undefined;
+      do {
+        const { data } = await api.getProjects({ page_size: 200, cursor });
+        const page = (data?.results ?? []) as Project[];
+        all.push(...page);
+        cursor = (data?.next ?? undefined) || undefined;
+      } while (cursor);
+      setProjects(all.sort(sortByCodeThenName));
     } catch (err) {
       console.error("Erro ao buscar projetos", err);
       setSnackBarMessage("Erro ao buscar projetos.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    fetchAllProjects();
+  }, [fetchAllProjects]);
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
@@ -80,10 +104,11 @@ const ProjectSettings: React.FC = () => {
     setMode("edit");
     setEditingProject(project);
     setFormData({
-      project: project.project ?? "",
-      project_code: project.project_code,
-      project_type: project.project_type,
-      project_description: project.project_description,
+      name: project.name || "",
+      code: project.code || "",
+      type: project.type || "internal",
+      description: project.description || "",
+      is_active: project.is_active ?? true,
     });
     setModalOpen(true);
   };
@@ -94,21 +119,37 @@ const ProjectSettings: React.FC = () => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(p => ({ ...p, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
+  };
+
+  const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((p) => ({ ...p, is_active: e.target.checked }));
   };
 
   const submitProject = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (mode === "create") {
-        await api.addProject(formData);
+        await api.addProject({
+          name: formData.name,
+          code: formData.code || "",
+          type: formData.type,
+          description: formData.description || "",
+          is_active: formData.is_active,
+        });
       } else if (editingProject) {
-        await api.editProject([editingProject.id], formData);
+        await api.editProject(editingProject.id, {
+          name: formData.name,
+          code: formData.code,
+          type: formData.type,
+          description: formData.description,
+          is_active: formData.is_active,
+        });
       }
-      await fetchProjects();
+      await fetchAllProjects();
       closeModal();
     } catch (err) {
       setSnackBarMessage(
@@ -119,8 +160,8 @@ const ProjectSettings: React.FC = () => {
 
   const deleteProject = async (project: Project) => {
     try {
-      await api.deleteProject([project.id]);
-      await fetchProjects();
+      await api.deleteProject(project.id);
+      await fetchAllProjects();
     } catch (err) {
       setSnackBarMessage(
         err instanceof Error ? err.message : "Erro ao excluir projeto."
@@ -149,10 +190,10 @@ const ProjectSettings: React.FC = () => {
     <div className="flex items-center justify-between border-b last:border-0 py-4 px-4">
       <div>
         <p className="text-sm text-gray-500">
-          {PROJECT_TYPES.find(t => t.value === project.project_type)?.label ?? project.project_type}
+          {PROJECT_TYPES.find((t) => t.value === project.type)?.label ?? project.type}
         </p>
         <p className="text-base font-medium text-gray-900">
-          {project.project || project.project_code}
+          {project.name || project.code}
         </p>
       </div>
       {isOwner && (
@@ -183,11 +224,13 @@ const ProjectSettings: React.FC = () => {
           </div>
 
           <div className="border rounded-lg divide-y">
-            {projects.map(p => (
+            {projects.map((p) => (
               <Row key={p.id} project={p} />
             ))}
             {projects.length === 0 && (
-              <p className="p-4 text-center text-sm text-gray-500">Nenhum projeto cadastrado.</p>
+              <p className="p-4 text-center text-sm text-gray-500">
+                Nenhum projeto cadastrado.
+              </p>
             )}
           </div>
         </section>
@@ -197,14 +240,17 @@ const ProjectSettings: React.FC = () => {
       {modalOpen && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl max-h-[90vh]"
           >
             <header className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-gray-800">
                 {mode === "create" ? "Adicionar projeto" : "Editar projeto"}
               </h3>
-              <button className="text-2xl text-gray-400 hover:text-gray-700" onClick={closeModal}>
+              <button
+                className="text-2xl text-gray-400 hover:text-gray-700"
+                onClick={closeModal}
+              >
                 &times;
               </button>
             </header>
@@ -212,37 +258,46 @@ const ProjectSettings: React.FC = () => {
             <form className="space-y-4" onSubmit={submitProject}>
               <Input
                 label="Nome do projeto"
-                name="project"
-                value={formData.project}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 required
               />
               <Input
                 label="Código"
-                name="project_code"
-                value={formData.project_code}
+                name="code"
+                value={formData.code}
                 onChange={handleChange}
-                required
               />
 
               <SelectDropdown
                 label="Tipo de projeto"
                 items={PROJECT_TYPES}
-                selected={PROJECT_TYPES.filter(t => t.value === formData.project_type)}
-                onChange={items => items[0] && setFormData(p => ({ ...p, project_type: items[0].value }))}
-                getItemKey={i => i.value}
-                getItemLabel={i => i.label}
+                selected={PROJECT_TYPES.filter((t) => t.value === formData.type)}
+                onChange={(items) => items[0] && setFormData((p) => ({ ...p, type: items[0].value }))}
+                getItemKey={(i) => i.value}
+                getItemLabel={(i) => i.label}
                 singleSelect
                 hideCheckboxes
                 buttonLabel="Selecione o tipo"
+                customStyles={{ maxHeight: "240px" }}
               />
 
               <Input
                 label="Descrição"
-                name="project_description"
-                value={formData.project_description}
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
               />
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.is_active}
+                  onChange={handleActiveChange}
+                />
+                Projeto ativo
+              </label>
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="cancel" type="button" onClick={closeModal}>

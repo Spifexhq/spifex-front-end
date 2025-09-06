@@ -1,8 +1,9 @@
+// models/enterprise_structure/domain/Project.ts
 export type Project = {
-  id: number;
-  project: string | null;
-  project_code: string;
-  project_type: string;
-  project_description: string;
-  uuid_project: string | null;
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  description: string;
+  is_active: boolean;
 };

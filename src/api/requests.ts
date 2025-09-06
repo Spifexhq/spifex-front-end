@@ -20,7 +20,7 @@ import {
   GetLedgerAccountsRequest, GetLedgerAccountsResponse, AddGLAccountRequest, EditGLAccountRequest,
   GetDocumentType, GetDocumentTypes,
   GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
-  GetProject, GetProjects, AddProjectRequest, EditProjectRequest,
+  GetProjectsResponse, AddProjectRequest, EditProjectRequest,
   GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
   GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
@@ -432,23 +432,57 @@ export const api = {
     request<Department>(`enterprise_structure/departments/${ids.join(',')}`, 'DELETE'),
 
   /* --- Projects --- */
-  getAllProjects: () =>
-    request<GetProjects>("enterprise_structure/projects", "GET"),
+  getProjects: (params?: { cursor?: string; page_size?: number; active?: "true" | "false"; type?: string; q?: string }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetProjectsResponse>(
+      `projects/${orgExternalId}/projects/`,
+      "GET",
+      params
+    );
+  },
 
-  getProject: (ids: number[]) =>
-    request<GetProject>(`enterprise_structure/projects/${ids.join(',')}`, "GET"),
+  getProjectsBatch: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Project[]>(
+      `projects/${orgExternalId}/projects/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  addProject: (payload: AddProjectRequest) =>
-    request<Project>("enterprise_structure/projects", "POST", payload),
+  getProject: (projectId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Project>(
+      `projects/${orgExternalId}/projects/${projectId}/`,
+      "GET"
+    );
+  },
 
-  editProject: (ids: number[], payload: Partial<EditProjectRequest>) =>
-    request<Project>(`enterprise_structure/projects/${ids.join(',')}`, "PUT", payload),
-  
-  deleteAllProjects: () =>
-    request<Project>("enterprise_structure/projects", 'DELETE'),
+  addProject: (payload: AddProjectRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Project>(
+      `projects/${orgExternalId}/projects/`,
+      "POST",
+      payload
+    );
+  },
 
-  deleteProject: (ids: number[]) =>
-    request<Project>(`enterprise_structure/projects/${ids.join(',')}`, 'DELETE'),
+  editProject: (projectId: string, payload: EditProjectRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Project>(
+      `projects/${orgExternalId}/projects/${projectId}/`,
+      "PATCH",
+      payload
+    );
+  },
+
+  deleteProject: (projectId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<void>(
+      `projects/${orgExternalId}/projects/${projectId}/`,
+      "DELETE"
+    );
+  },
 
   /* --- Inventory --- */
   getAllInventoryItems: () =>
