@@ -189,13 +189,11 @@ export const api = {
     return request<GetEntryResponse>(`cashflow/${org}/entries/`, "GET", payload);
   },
 
-  // Retrieve single by external_id
   getEntry: (externalId: string) => {
     const org = getOrgExternalId();
     return request<Entry>(`cashflow/${org}/entries/${externalId}/`, "GET");
   },
 
-  // Batch fetch by external_ids (GET with ?ids=csv or POST body)
   getEntriesBatch: (ids: string[]) => {
     const org = getOrgExternalId();
     return request<Entry[]>(
@@ -205,7 +203,6 @@ export const api = {
     );
   },
 
-  // Create (may return one or many when creating installments)
   addEntry: (payload: AddEntryRequest) => {
     const org = getOrgExternalId();
     return request<Entry | Entry[]>(
@@ -215,7 +212,6 @@ export const api = {
     );
   },
 
-  // Update single (PATCH); backend may return one or many in edge cases
   editEntry: (externalId: string, payload: Partial<EditEntryRequest>) => {
     const org = getOrgExternalId();
     return request<Entry | Entry[]>(
@@ -225,7 +221,6 @@ export const api = {
     );
   },
 
-  // Bulk update (PUT or PATCH)
   bulkUpdateEntries: (
     ids: string[],
     data: Partial<EditEntryRequest>,
@@ -239,13 +234,11 @@ export const api = {
     );
   },
 
-  // Delete single (204)
   deleteEntry: (externalId: string) => {
     const org = getOrgExternalId();
     return request<void>(`cashflow/${org}/entries/${externalId}/`, "DELETE");
   },
 
-  // Bulk delete (204)
   bulkDeleteEntries: (ids: string[]) => {
     const org = getOrgExternalId();
     return request<void>(`cashflow/${org}/entries/bulk/delete/`, "POST", { ids });
@@ -261,7 +254,6 @@ export const api = {
     );
   },
 
-  // batch via ?ids=a,b,c
   getSettledEntry: (ids: string[], payload?: GetSettledEntryRequest) => {
     const orgExternalId = getOrgExternalId();
     const params = { ...(payload || {}), ids: ids.join(",") };
@@ -272,7 +264,6 @@ export const api = {
     );
   },
 
-  // PATCH único (apenas value_date)
   editSettledEntry: (id: string, payload: Partial<EditSettledEntryRequest>) => {
     const orgExternalId = getOrgExternalId();
     return request<SettledEntry>(
@@ -282,7 +273,6 @@ export const api = {
     );
   },
 
-  // bulk delete (POST com { ids })
   bulkDeleteSettledEntries: (ids: string[]) => {
     const orgExternalId = getOrgExternalId();
     return request<void>(
@@ -292,7 +282,6 @@ export const api = {
     );
   },
 
-  // DELETE único → backend retorna o Entry (para atualizar caches)
   deleteSettledEntry: (id: string) => {
     const orgExternalId = getOrgExternalId();
     return request<Entry>(`cashflow/${orgExternalId}/settlements/${id}/`, "DELETE");
@@ -364,7 +353,6 @@ export const api = {
     );
   },
 
-  // POST batch { ids: string[] } -> GLAccount[]
   getLedgerAccountsBatch: (ids: string[]) => {
     const orgExternalId = getOrgExternalId();
     return request<GLAccount[]>(
@@ -393,7 +381,6 @@ export const api = {
 
   editLedgerAccount: (glaId: string, payload: EditGLAccountRequest) => {
     const orgExternalId = getOrgExternalId();
-    // PATCH lets you send only the fields you changed
     return request<GLAccount>(
       `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
       "PATCH",

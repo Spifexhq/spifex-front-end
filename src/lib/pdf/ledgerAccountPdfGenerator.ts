@@ -8,9 +8,7 @@
 import { jsPDF } from "jspdf";
 import autoTable, { RowInput } from "jspdf-autotable";
 import { api } from "src/api/requests";
-import type {
-  GetLedgerAccountsResponse,
-} from "src/models/enterprise_structure/dto/GetLedgerAccount";
+import type { GetLedgerAccountsResponse } from "src/models/enterprise_structure/dto/GetLedgerAccount";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 
 /* ------------------------------- Types locais ------------------------------ */
@@ -28,17 +26,56 @@ interface AutoTableData {
 }
 
 /* -------------------------- Utilidades internas --------------------------- */
+
 function txLabel(tx?: string): "Crédito" | "Débito" | "-" {
   if (!tx) return "-";
-  return tx.toLowerCase() === "credit" ? "Crédito" : tx.toLowerCase() === "debit" ? "Débito" : "-";
+  const v = String(tx).toLowerCase();
+  return v === "credit" ? "Crédito" : v === "debit" ? "Débito" : "-";
+}
+
+// Mapeia category (que pode vir como number, label EN, label PT) -> label PT
+const CATEGORY_VALUE_TO_PT: Record<number, string> = {
+  1: "Receitas Operacionais",
+  2: "Receitas Não Operacionais",
+  3: "Despesas Operacionais",
+  4: "Despesas Não Operacionais",
+};
+const CATEGORY_EN_TO_PT: Record<string, string> = {
+  "Operational Revenue": "Receitas Operacionais",
+  "Non-operational Revenue": "Receitas Não Operacionais",
+  "Operational Expense": "Despesas Operacionais",
+  "Non-operational Expense": "Despesas Não Operacionais",
+};
+const CATEGORY_PT_SET = new Set(Object.values(CATEGORY_VALUE_TO_PT));
+
+function normalizeCategory(cat: unknown): string {
+  if (typeof cat === "number") {
+    return CATEGORY_VALUE_TO_PT[cat] ?? "(Sem categoria)";
+  }
+  if (typeof cat === "string") {
+    // numérico em string
+    const n = Number(cat);
+    if (!Number.isNaN(n) && CATEGORY_VALUE_TO_PT[n]) {
+      return CATEGORY_VALUE_TO_PT[n];
+    }
+    // já está em PT?
+    if (CATEGORY_PT_SET.has(cat)) return cat;
+    // label EN -> PT
+    if (CATEGORY_EN_TO_PT[cat]) return CATEGORY_EN_TO_PT[cat];
+  }
+  return "(Sem categoria)";
+}
+
+function safeStr(v: unknown): string {
+  return v == null ? "" : String(v);
 }
 
 function sortByCodeThenName(a: GLAccount, b: GLAccount) {
   // Ordena por code (string), depois por name
-  const ca = (a.code || "").toString();
-  const cb = (b.code || "").toString();
+  const ca = safeStr(a.code);
+  const cb = safeStr(b.code);
   if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
-  return (a.name || "").localeCompare(b.name || "", "pt-BR");
+  return safeStr(a.name).localeCompare(safeStr(b.name), "pt-BR", { numeric: true });
 }
 
 /* -------------------------- PDF Generator Class --------------------------- */
@@ -73,11 +110,13 @@ export class LedgerAccountPdfGenerator {
       // Conteúdo: agrupar por category → subcategory
       let y = 40;
       const categories = this.unique(
-        accounts.map((a) => a.category || "(Sem categoria)")
+        accounts.map((a) => normalizeCategory((a as unknown as { category?: unknown }).category))
       ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
       for (const category of categories) {
-        const inCat = accounts.filter((a) => (a.category || "(Sem categoria)") === category);
+        const inCat = accounts.filter(
+          (a) => normalizeCategory((a as unknown as { category?: unknown }).category) === category
+        );
         y = await this.renderCategory(category, inCat, y);
       }
 
@@ -103,17 +142,15 @@ export class LedgerAccountPdfGenerator {
     let cursor: string | undefined;
     const all: GLAccount[] = [];
 
-    // paginação por cursor (next)
-    // GET /ledger/<org>/ledger/accounts/?cursor=...
     do {
       const { data } = (await api.getLedgerAccounts({
         cursor,
-        page_size: 200, // ajuste conforme o backend
+        page_size: 200,
       })) as { data: GetLedgerAccountsResponse };
 
       const items = (data?.results ?? []).slice().sort(sortByCodeThenName);
       all.push(...items);
-      cursor = data?.next ?? undefined;
+      cursor = (data?.next ?? undefined) || undefined;
     } while (cursor);
 
     // Ordenação final estável
@@ -169,12 +206,13 @@ export class LedgerAccountPdfGenerator {
     y += 10;
 
     // subgroups
-    const subgroups = this.unique(accountsInCategory.map((a) => a.subcategory || "(Sem subgrupo)"))
-      .sort((a, b) => a.localeCompare(b, "pt-BR"));
+    const subgroups = this.unique(
+      accountsInCategory.map((a) => safeStr(a.subcategory) || "(Sem subgrupo)")
+    ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
     for (const sub of subgroups) {
       const inSub = accountsInCategory.filter(
-        (a) => (a.subcategory || "(Sem subgrupo)") === sub
+        (a) => (safeStr(a.subcategory) || "(Sem subgrupo)") === sub
       );
       y = await this.renderSubgroup(sub, inSub, y);
     }
@@ -199,39 +237,42 @@ export class LedgerAccountPdfGenerator {
 
     // tabela
     const body: RowInput[] = accounts.map((a) => [
-      a.code || "-",         // Código
-      a.name || "-",         // Conta Contábil
-      txLabel(a.default_tx), // Tipo padrão
+      safeStr(a.code) || "-", // Código
+      safeStr(a.name) || "-", // Conta Contábil
+      txLabel((a as unknown as { default_tx?: string }).default_tx), // Tipo padrão
       a.is_active ? "Ativa" : "Inativa",
     ]);
 
-    autoTable(this.doc, {
-      startY: y,
-      head: [["Código", "Conta Contábil", "Tipo padrão", "Status"]],
-      body,
-      theme: "striped",
-      styles: {
-        fontSize: 9,
-        cellPadding: 3,
-        textColor: [33, 37, 41],
-      },
-      headStyles: {
-        fillColor: [52, 144, 220],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-        fontSize: 10,
-      },
-      alternateRowStyles: {
-        fillColor: [248, 249, 250],
-      },
-      margin: { left: 25, right: 15 },
-      columnStyles: {
-        0: { cellWidth: 28 },    // Código
-        1: { cellWidth: 110 },   // Nome
-        2: { cellWidth: 28, halign: "center" }, // Tipo
-        3: { cellWidth: 24, halign: "center" }, // Status
-      },
-    });
+  autoTable(this.doc, {
+    startY: y,
+    head: [["Código", "Conta Contábil", "Tipo padrão", "Status"]],
+    body,
+    theme: "striped",
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+      textColor: [33, 37, 41],
+      overflow: "linebreak",      // 🔧 quebra texto dentro da célula
+    },
+    headStyles: {
+      fillColor: [52, 144, 220],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 10,
+    },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+
+    // 🔧 margens mais simétricas e dentro do A4
+    margin: { left: 15, right: 15 },
+
+    // 🔧 define apenas larguras pequenas; o nome fica "auto" (ajuste dinâmico)
+    columnStyles: {
+      0: { cellWidth: 24 },                 // Código
+      2: { cellWidth: 26, halign: "center" }, // Tipo padrão
+      3: { cellWidth: 24, halign: "center" }, // Status
+      // 1 (Conta Contábil) sem largura fixa → AutoTable ajusta e quebra linha
+    },
+  });
 
     const atData = (this.doc as jsPDF & { lastAutoTable: AutoTableData }).lastAutoTable;
     return atData.finalY + 8;
