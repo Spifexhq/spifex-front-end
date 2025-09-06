@@ -1,3 +1,4 @@
+// models/enterprise_structure/domain/Department.ts
 export interface Department {
   id: string;
   name: string;

@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/DepartmentSettings.tsx                                    */
 /*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
+/*  Notes: org-scoped, ids string (ULID), modal em 3 colunas                  */
 /* -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -15,26 +15,43 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 
 import { api } from "src/api/requests";
-import { Department } from "src/models/enterprise_structure/domain";
+import type { Department } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
+import Checkbox from "src/components/Checkbox";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
-  // Cabeçalho padrão desta página
   return "DP";
 }
 
+function sortByCodeThenName(a: Department, b: Department) {
+  const ca = (a.code || "").toString();
+  const cb = (b.code || "").toString();
+  if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
+  return (a.name || "").localeCompare(b.name || "", "pt-BR");
+}
+
 /* Row sem bordas próprias; o container usa divide-y */
-const Row = ({ dept, onEdit, onDelete, canEdit }:{
+const Row = ({
+  dept,
+  onEdit,
+  onDelete,
+  canEdit,
+}: {
   dept: Department;
   onEdit: (d: Department) => void;
   onDelete: (d: Department) => void;
   canEdit: boolean;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
-    <p className="text-[13px] font-medium text-gray-900 truncate">
-      {dept.department || "(sem nome)"}
-    </p>
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase tracking-wide text-gray-600">
+        {dept.code ? `Código: ${dept.code}` : "—"} {dept.is_active === false ? "• Inativo" : ""}
+      </p>
+      <p className="text-[13px] font-medium text-gray-900 truncate">
+        {dept.name || "(sem nome)"}
+      </p>
+    </div>
     {canEdit && (
       <div className="flex gap-2 shrink-0">
         <Button
@@ -53,6 +70,13 @@ const Row = ({ dept, onEdit, onDelete, canEdit }:{
 );
 
 /* -------------------------------------------------------------------------- */
+const emptyForm = {
+  name: "",
+  code: "",
+  is_active: true,
+};
+type FormState = typeof emptyForm;
+
 const DepartmentSettings: React.FC = () => {
   useEffect(() => {
     document.title = "Configurações de Departamentos";
@@ -67,56 +91,84 @@ const DepartmentSettings: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingDept, setEditingDept] = useState<Department | null>(null);
-  const [deptName, setDeptName] = useState("");
+  const [formData, setFormData] = useState<FormState>(emptyForm);
 
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
-  /* ------------------------------ Carrega dados ----------------------------- */
-  const fetchDepartments = async () => {
+  /* ------------------------------ Carrega dados (cursor) ------------------- */
+  const fetchDepartments = useCallback(async () => {
     try {
-      const res = await api.getAllDepartments();
-      const sorted = res.data.departments.sort((a, b) => a.id - b.id);
-      setDepartments(sorted);
+      const all: Department[] = [];
+      let cursor: string | undefined;
+
+      do {
+        const { data } = await api.getDepartments({ page_size: 200, cursor });
+        const page = data.results ?? [];
+        all.push(...page);
+        cursor = (data.next ?? undefined) || undefined;
+      } while (cursor);
+
+      setDepartments(all.sort(sortByCodeThenName));
     } catch (err) {
       console.error("Erro ao buscar departamentos", err);
       setSnackBarMessage("Erro ao buscar departamentos.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDepartments();
-  }, []);
+  }, [fetchDepartments]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
     setMode("create");
     setEditingDept(null);
-    setDeptName("");
+    setFormData(emptyForm);
     setModalOpen(true);
   };
 
   const openEditModal = (dept: Department) => {
     setMode("edit");
     setEditingDept(dept);
-    setDeptName(dept.department ?? "");
+    setFormData({
+      name: dept.name ?? "",
+      code: dept.code ?? "",
+      is_active: dept.is_active ?? true,
+    });
     setModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingDept(null);
-    setDeptName("");
+    setFormData(emptyForm);
   }, []);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({ ...p, [name]: value }));
+  };
+
+  const handleActive = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((p) => ({ ...p, is_active: e.target.checked }));
+  };
 
   const submitDepartment = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      name: formData.name.trim(),
+      code: formData.code, // pode ser "", serializer allow_blank=True
+      is_active: formData.is_active,
+    };
     try {
       if (mode === "create") {
-        await api.addDepartment({ department: deptName });
+        await api.addDepartment(payload);
       } else if (editingDept) {
-        await api.editDepartment([editingDept.id], { department: deptName });
+        await api.editDepartment(editingDept.id, payload);
       }
       await fetchDepartments();
       closeModal();
@@ -129,7 +181,7 @@ const DepartmentSettings: React.FC = () => {
 
   const deleteDepartment = async (dept: Department) => {
     try {
-      await api.deleteDepartment([dept.id]);
+      await api.deleteDepartment(dept.id);
       await fetchDepartments();
     } catch (err) {
       setSnackBarMessage(
@@ -158,8 +210,6 @@ const DepartmentSettings: React.FC = () => {
       <Navbar />
       <SidebarSettings activeItem="departments" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar (lg:ml-64);
-          evitar overflow horizontal. */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
@@ -214,7 +264,7 @@ const DepartmentSettings: React.FC = () => {
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl"
               role="dialog"
               aria-modal="true"
             >
@@ -232,13 +282,29 @@ const DepartmentSettings: React.FC = () => {
               </header>
 
               <form className="space-y-3" onSubmit={submitDepartment}>
-                <Input
-                  label="Nome do departamento"
-                  name="department"
-                  value={deptName}
-                  onChange={(e) => setDeptName(e.target.value)}
-                  required
-                />
+                {/* 3 colunas no desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Input
+                    label="Nome"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Input
+                    label="Código"
+                    name="code"
+                    value={formData.code}
+                    onChange={handleChange}
+                  />
+                  <label className="flex items-center gap-2 text-sm pt-5">
+                    <Checkbox
+                      checked={formData.is_active}
+                      onChange={handleActive}
+                    />
+                    Departamento ativo
+                  </label>
+                </div>
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>

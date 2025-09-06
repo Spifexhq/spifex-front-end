@@ -19,7 +19,7 @@ import {
 import {
   GetLedgerAccountsRequest, GetLedgerAccountsResponse, AddGLAccountRequest, EditGLAccountRequest,
   GetDocumentType, GetDocumentTypes,
-  GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
+  GetDepartmentResponse, GetDepartmentsResponse, AddDepartmentRequest, EditDepartmentRequest,
   GetProjectsResponse, AddProjectRequest, EditProjectRequest,
   GetEntityResponse, GetEntitiesResponse, AddEntityRequest, EditEntityRequest,
   GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
@@ -413,23 +413,57 @@ export const api = {
     request<GetDocumentType>(`enterprise_structure/document-types/${ids.join(',')}`, "GET"),
 
   /* --- Departments --- */
-  getAllDepartments: () =>
-    request<GetDepartments>("enterprise_structure/departments", "GET"),
+  getDepartments: (params?: { page_size?: number; cursor?: string; q?: string; active?: "true" | "false" }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetDepartmentsResponse>(
+      `departments/${orgExternalId}/departments/`,
+      "GET",
+      params
+    );
+  },
 
-  getDepartment: (ids: number[]) =>
-    request<GetDepartment>(`enterprise_structure/departments/${ids.join(',')}`, "GET"),
+  getDepartment: (departmentId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetDepartmentResponse>(
+      `departments/${orgExternalId}/departments/${departmentId}/`,
+      "GET"
+    );
+  },
 
-  addDepartment: (payload: AddDepartmentRequest) =>
-    request<Department>("enterprise_structure/departments", "POST", payload),
+  getDepartmentsBatch: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Department[]>(
+      `departments/${orgExternalId}/departments/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  editDepartment: (ids: number[], payload: Partial<EditDepartmentRequest>) =>
-    request<Department>(`enterprise_structure/departments/${ids.join(',')}`, "PUT", payload),
-  
-  deleteAllDepartments: () =>
-    request<Department>("enterprise_structure/departments", 'DELETE'),
+  addDepartment: (payload: AddDepartmentRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Department>(
+      `departments/${orgExternalId}/departments/`,
+      "POST",
+      payload
+    );
+  },
 
-  deleteDepartment: (ids: number[]) =>
-    request<Department>(`enterprise_structure/departments/${ids.join(',')}`, 'DELETE'),
+  editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>) => {
+    const orgExternalId = getOrgExternalId();
+    return request<Department>(
+      `departments/${orgExternalId}/departments/${departmentId}/`,
+      "PATCH",
+      payload
+    );
+  },
+
+  deleteDepartment: (departmentId: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<void>(
+      `departments/${orgExternalId}/departments/${departmentId}/`,
+      "DELETE"
+    );
+  },
 
   /* --- Projects --- */
   getProjects: (params?: { cursor?: string; page_size?: number; active?: "true" | "false"; type?: string; q?: string }) => {

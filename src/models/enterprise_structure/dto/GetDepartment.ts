@@ -1,10 +1,14 @@
+// models/enterprise_structure/dto/GetDepartment.ts
 import { Department } from "../domain/Department";
 
-export interface GetDepartments {
-  departments: Department[];
+export interface GetDepartmentsResponse {
+  results: Department[];
+  next?: string | null;
+  previous?: string | null;
+  count?: number;
 }
 
-export interface GetDepartment {
+export interface GetDepartmentResponse {
   department: Department;
 }
 
