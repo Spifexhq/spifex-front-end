@@ -1,21 +1,22 @@
+// models/enterprise_structure/dto/GetInventoryItem.ts
 import { InventoryItem } from "../domain/InventoryItem";
 
-export interface GetInventoryItems {
-  inventory_items: InventoryItem[];
+export interface GetInventoryItemsResponse {
+  results: InventoryItem[];
+  next?: string | null;
+  previous?: string | null;
+  count?: number;
 }
 
-export interface GetInventoryItem {
-  inventory_item: InventoryItem;
-}
+export type GetInventoryItemResponse = InventoryItem;
 
-export interface InventoryItemPayloadBase {
+export type AddInventoryItemRequest = {
   sku: string;
   name: string;
   description?: string | null;
   uom?: string | null;
-  quantity_on_hand?: string;
+  quantity_on_hand?: string; // mantém string
   is_active?: boolean;
-}
+};
 
-export type AddInventoryItemRequest = InventoryItemPayloadBase;
-export type EditInventoryItemRequest = InventoryItemPayloadBase;
+export type EditInventoryItemRequest = Partial<AddInventoryItemRequest>;

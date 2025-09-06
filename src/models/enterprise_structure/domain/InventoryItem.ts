@@ -1,3 +1,4 @@
+// models/enterprise_structure/domain/InventoryItem.ts
 export interface InventoryItem {
   id: string;
   sku: string;

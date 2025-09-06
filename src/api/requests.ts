@@ -22,7 +22,7 @@ import {
   GetDepartments, GetDepartment, AddDepartmentRequest, EditDepartmentRequest,
   GetProjectsResponse, AddProjectRequest, EditProjectRequest,
   GetEntities, GetEntity, AddEntityRequest, EditEntityRequest,
-  GetInventoryItem, GetInventoryItems, AddInventoryItemRequest, EditInventoryItemRequest
+  GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
 import { BankAccount, GLAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
 import { Paginated } from '@/models/Api';
@@ -485,23 +485,64 @@ export const api = {
   },
 
   /* --- Inventory --- */
-  getAllInventoryItems: () =>
-    request<GetInventoryItems>("enterprise_structure/inventory-items", "GET"),
+  getInventoryItems: (params?: {
+    cursor?: string;
+    page_size?: number;
+    active?: "true" | "false";
+    q?: string;
+    min_qoh?: string | number;
+    max_qoh?: string | number;
+  }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetInventoryItemsResponse>(
+      `inventory/${orgExternalId}/inventory/items/`,
+      "GET",
+      params
+    );
+  },
 
-  getInventoryItem: (ids: number[]) =>
-    request<GetInventoryItem>(`enterprise_structure/inventory-items/${ids.join(',')}`, "GET"),
+  getInventoryItemsBatch: (ids: string[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<InventoryItem[]>(
+      `inventory/${orgExternalId}/inventory/items/batch/`,
+      "POST",
+      { ids }
+    );
+  },
 
-  addInventoryItem: (payload: AddInventoryItemRequest) =>
-    request<InventoryItem>("enterprise_structure/inventory-items", "POST", payload),
+  getInventoryItem: (id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<InventoryItem>(
+      `inventory/${orgExternalId}/inventory/items/${id}/`,
+      "GET"
+    );
+  },
 
-  editInventoryItem: (ids: number[], payload: Partial<EditInventoryItemRequest>) =>
-    request<InventoryItem>(`enterprise_structure/inventory-items/${ids.join(',')}`, "PUT", payload),
-  
-  deleteAllInventoryItems: () =>
-    request<InventoryItem>("enterprise_structure/inventory-items", 'DELETE'),
+  addInventoryItem: (payload: AddInventoryItemRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<InventoryItem>(
+      `inventory/${orgExternalId}/inventory/items/`,
+      "POST",
+      payload
+    );
+  },
 
-  deleteInventoryItem: (ids: number[]) =>
-    request<InventoryItem>(`enterprise_structure/inventory-items/${ids.join(',')}`, 'DELETE'),
+  editInventoryItem: (id: string, payload: EditInventoryItemRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<InventoryItem>(
+      `inventory/${orgExternalId}/inventory/items/${id}/`,
+      "PATCH",
+      payload
+    );
+  },
+
+  deleteInventoryItem: (id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<void>(
+      `inventory/${orgExternalId}/inventory/items/${id}/`,
+      "DELETE"
+    );
+  },
 
   /* --- Entities --- */
   getAllEntities: () =>

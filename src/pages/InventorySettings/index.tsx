@@ -15,19 +15,30 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 
 import { api } from "src/api/requests";
-import { InventoryItem } from "src/models/enterprise_structure/domain";
+import type { InventoryItem } from "src/models/enterprise_structure/domain/InventoryItem";
 import { useAuthContext } from "@/contexts/useAuthContext";
-
-const emptyForm = {
-  inventory_item_code: "",
-  inventory_item: "",
-  inventory_item_quantity: 0,
-};
-type FormState = typeof emptyForm;
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
   return "IV"; // Inventário
+}
+
+const emptyForm = {
+  sku: "",
+  name: "",
+  description: "",
+  uom: "",
+  quantity_on_hand: "0",
+  is_active: true,
+};
+type FormState = typeof emptyForm;
+
+/* sort por SKU, depois nome */
+function sortBySkuThenName(a: InventoryItem, b: InventoryItem) {
+  const sa = (a.sku || "").toString();
+  const sb = (b.sku || "").toString();
+  if (sa && sb && sa !== sb) return sa.localeCompare(sb, "pt-BR", { numeric: true });
+  return (a.name || "").localeCompare(b.name || "", "pt-BR");
 }
 
 /* Linha sem bordas próprias; o container usa divide-y */
@@ -45,14 +56,16 @@ const Row = ({
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        Código: {item.inventory_item_code || "—"}
+        SKU: {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
       </p>
       <p className="text-[13px] font-medium text-gray-900 truncate">
-        {item.inventory_item || "(sem descrição)"}
+        {item.name || "(sem nome)"} {item.description ? `— ${item.description}` : ""}
       </p>
     </div>
     <div className="flex items-center gap-3 shrink-0">
-      <span className="text-[12px] text-gray-700">Qtd: {item.inventory_item_quantity}</span>
+      <span className="text-[12px] text-gray-700">
+        Qtd: {item.quantity_on_hand ?? "0"}
+      </span>
       {canEdit && (
         <>
           <Button
@@ -88,21 +101,28 @@ const InventorySettings: React.FC = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
   /* ------------------------------ Carrega dados ----------------------------- */
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
-      const res = await api.getAllInventoryItems();
-      setItems(res.data.inventory_items.sort((a, b) => a.id - b.id));
+      const all: InventoryItem[] = [];
+      let cursor: string | undefined;
+      do {
+        const { data } = await api.getInventoryItems({ page_size: 200, cursor });
+        const page = (data?.results ?? []) as InventoryItem[];
+        all.push(...page);
+        cursor = (data?.next ?? undefined) || undefined;
+      } while (cursor);
+      setItems(all.sort(sortBySkuThenName));
     } catch (err) {
       console.error("Erro ao buscar itens de inventário", err);
       setSnackBarMessage("Erro ao buscar itens de inventário.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [fetchItems]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -116,9 +136,12 @@ const InventorySettings: React.FC = () => {
     setMode("edit");
     setEditingItem(item);
     setFormData({
-      inventory_item_code: item.inventory_item_code ?? "",
-      inventory_item: item.inventory_item ?? "",
-      inventory_item_quantity: item.inventory_item_quantity ?? 0,
+      sku: item.sku ?? "",
+      name: item.name ?? "",
+      description: item.description ?? "",
+      uom: item.uom ?? "",
+      quantity_on_hand: item.quantity_on_hand ?? "0",
+      is_active: item.is_active ?? true,
     });
     setModalOpen(true);
   };
@@ -129,13 +152,14 @@ const InventorySettings: React.FC = () => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((p) => ({
-      ...p,
-      [name]: name === "inventory_item_quantity" ? parseFloat(value) || 0 : value,
-    }));
+    setFormData((p) => ({ ...p, [name]: value }));
+  };
+
+  const handleActive = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((p) => ({ ...p, is_active: e.target.checked }));
   };
 
   const submitItem = async (e: React.FormEvent) => {
@@ -144,7 +168,7 @@ const InventorySettings: React.FC = () => {
       if (mode === "create") {
         await api.addInventoryItem(formData);
       } else if (editingItem) {
-        await api.editInventoryItem([editingItem.id], formData);
+        await api.editInventoryItem(editingItem.id, formData);
       }
       await fetchItems();
       closeModal();
@@ -155,7 +179,7 @@ const InventorySettings: React.FC = () => {
 
   const deleteItem = async (item: InventoryItem) => {
     try {
-      await api.deleteInventoryItem([item.id]);
+      await api.deleteInventoryItem(item.id);
       await fetchItems();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir item.");
@@ -258,27 +282,45 @@ const InventorySettings: React.FC = () => {
 
               <form className="space-y-3" onSubmit={submitItem}>
                 <Input
-                  label="Código do item"
-                  name="inventory_item_code"
-                  value={formData.inventory_item_code}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Descrição do item"
-                  name="inventory_item"
-                  value={formData.inventory_item}
+                  label="SKU"
+                  name="sku"
+                  value={formData.sku}
                   onChange={handleChange}
                   required
                 />
                 <Input
-                  label="Quantidade"
-                  name="inventory_item_quantity"
+                  label="Nome"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+                <Input
+                  label="Descrição"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+                <Input
+                  label="Unidade (UoM)"
+                  name="uom"
+                  value={formData.uom}
+                  onChange={handleChange}
+                  placeholder="ex.: un, cx, kg, l…"
+                />
+                <Input
+                  label="Quantidade em estoque"
+                  name="quantity_on_hand"
                   type="number"
                   step="1"
                   min="0"
-                  value={formData.inventory_item_quantity}
+                  value={formData.quantity_on_hand}
                   onChange={handleChange}
                 />
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={formData.is_active} onChange={handleActive} />
+                  Item ativo
+                </label>
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
