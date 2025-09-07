@@ -23,7 +23,7 @@ import {
 
 import { api } from "src/api/requests";
 import { ApiError } from "@/models/Api";
-import { AddEntryRequest } from "@/models/entries/dto";
+import { AddEntryRequest, EditEntryRequest  } from "@/models/entries/dto";
 
 import type {
   GLAccount,
@@ -38,6 +38,22 @@ import documentTypesData from "@/data/documentTypes.json";
 
 /* ---------------------------------- Tipos --------------------------------- */
 type DocTypeItem = { id: string; label: string };
+
+type EntryDiffable = {
+  id: string;
+  due_date: string;
+  description?: string | null;
+  observation?: string | null;
+  notes?: string | null;
+  amount: number | string;
+  tx_type: "credit" | "debit";
+  gl_account?: string | null;
+  project?: string | null;
+  entity?: string | null;
+  installment_count?: number | null;
+  interval_months?: number | null;
+  weekend_action?: number | null;
+};
 
 /* --------------------------- Estado inicial --------------------------- */
 const initialFormData: FormData = {
@@ -93,6 +109,16 @@ const mapWeekendToNumber = (raw: string): number | undefined => {
   if (raw === "postpone") return 1;
   if (raw === "antedate") return -1;
   return undefined;
+};
+
+const normalizeAmountStr = (v: unknown): string => {
+  if (typeof v === "number" && isFinite(v)) return v.toFixed(2);
+  if (typeof v === "string") {
+    const n = Number(v);
+    if (!Number.isNaN(n)) return n.toFixed(2);
+    return v; // fallback, caso já venha "3000.00"
+  }
+  return "";
 };
 
 const normalizeDocTypes = (raw: unknown): DocTypeItem[] => {
@@ -229,6 +255,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     e.preventDefault();
     if (isSaveDisabled) return;
 
+    // manter essa validação simples
     if (!formData.details.accountingAccount) {
       alert("Selecione uma conta contábil.");
       return;
@@ -240,22 +267,21 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
     setIsSubmitting(true);
 
-    const isRecurring = formData.recurrence.recurrence === 1;
-    const installmentCount = isRecurring ? Number(formData.recurrence.installments || 1) : 1;
-
-    // departments -> [{department_id, percent}]
-    const departmentsPayload =
+    // Helpers
+    const cleanAmountNow = cleanCurrency(formData.details.amount);
+    const makeDepartments = () =>
       formData.costCenters.departments.length
         ? formData.costCenters.departments.map((id, idx) => ({
             department_id: id,
             percent: String(
-              parseFloat((formData.costCenters.department_percentage[idx] || "0").replace(",", ".")).toFixed(2)
+              parseFloat(
+                (formData.costCenters.department_percentage[idx] || "0").replace(",", ".")
+              ).toFixed(2)
             ),
           }))
         : undefined;
 
-    // items -> [{item_id, quantity}]
-    const itemsPayload =
+    const makeItems = () =>
       formData.inventory.product && formData.inventory.quantity
         ? [
             {
@@ -265,40 +291,127 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           ]
         : undefined;
 
-    const payload = {
-      due_date: formData.details.dueDate,
-      description: formData.details.description || "",
-      observation: formData.details.observation || "",
-      notes: formData.details.notes || "",
-      amount: cleanCurrency(formData.details.amount),
-      tx_type: type, // "credit" | "debit"
-
-      // recorrência (somente envia quando > 1)
-      ...(isRecurring && installmentCount > 1
-        ? {
-            installment_count: installmentCount,
-            interval_months: formData.recurrence.periods as IntervalMonths,
-            ...(formData.recurrence.weekend
-              ? { weekend_action: mapWeekendToNumber(formData.recurrence.weekend) }
-              : {}),
-          }
-        : {}),
-
-      // relações por external_id
-      gl_account: formData.details.accountingAccount, // obrigatório
-      document_type: formData.details.documentType || "", // string do JSON local
-      ...(formData.costCenters.projects ? { project: formData.costCenters.projects } : {}),
-      ...(formData.entities.entity ? { entity: formData.entities.entity } : {}),
-
-      // rateios e itens
-      ...(departmentsPayload ? { departments: departmentsPayload } : {}),
-      ...(itemsPayload ? { items: itemsPayload } : {}),
-    } as unknown as AddEntryRequest;
-
     try {
-      const res = initialEntry
-        ? await api.editEntry(initialEntry.id, payload)
-        : await api.addEntry(payload);
+      let res;
+
+      if (!initialEntry) {
+        // ---------- CREATE (POST): payload completo ----------
+        const isRecurring = formData.recurrence.recurrence === 1;
+        const installmentCount = isRecurring
+          ? Number(formData.recurrence.installments || 1)
+          : 1;
+
+        const payload = {
+          due_date: formData.details.dueDate,
+          description: formData.details.description || "",
+          observation: formData.details.observation || "",
+          notes: formData.details.notes || "",
+          amount: cleanAmountNow,
+          tx_type: type, // "credit" | "debit" (apenas no POST)
+
+          ...(isRecurring && installmentCount > 1
+            ? {
+                installment_count: installmentCount,
+                interval_months: formData.recurrence.periods as IntervalMonths,
+                ...(formData.recurrence.weekend
+                  ? { weekend_action: mapWeekendToNumber(formData.recurrence.weekend) }
+                  : {}),
+              }
+            : {}),
+
+          gl_account: formData.details.accountingAccount, // obrigatório
+          document_type: formData.details.documentType || "",
+          ...(formData.costCenters.projects
+            ? { project: formData.costCenters.projects }
+            : {}),
+          ...(formData.entities.entity ? { entity: formData.entities.entity } : {}),
+
+          ...(makeDepartments() ? { departments: makeDepartments() } : {}),
+          ...(makeItems() ? { items: makeItems() } : {}),
+        } as AddEntryRequest;
+
+        res = await api.addEntry(payload);
+      } else {
+        // ---------- EDIT (PATCH): somente o que mudou ----------
+        const ie = initialEntry as EntryDiffable;
+        const changes: Partial<EditEntryRequest> = {};
+
+        // campos simples
+        if (formData.details.dueDate !== ie.due_date) {
+          changes.due_date = formData.details.dueDate;
+        }
+        if ((formData.details.description || "") !== (ie.description || "")) {
+          changes.description = formData.details.description || "";
+        }
+        if ((formData.details.observation || "") !== (ie.observation || "")) {
+          changes.observation = formData.details.observation || "";
+        }
+        if ((formData.details.notes || "") !== (ie.notes || "")) {
+          changes.notes = formData.details.notes || "";
+        }
+
+        // amount (comparação por string decimal normalizada)
+        const initialAmountStr = normalizeAmountStr(ie.amount);
+        if (cleanAmountNow !== initialAmountStr) {
+          changes.amount = cleanAmountNow;
+        }
+
+        // gl_account (external_id)
+        const initialGl = ie.gl_account || "";
+        if (formData.details.accountingAccount && formData.details.accountingAccount !== initialGl) {
+          changes.gl_account = formData.details.accountingAccount;
+        }
+
+        // document_type (read não traz; só envia se o usuário escolheu algo)
+        if (formData.details.documentType) {
+          changes.document_type = formData.details.documentType;
+        }
+
+        // project (permite limpar: envia null quando o usuário zera)
+        const initialProject = ie.project || "";
+        const newProject = formData.costCenters.projects || "";
+        if (newProject !== initialProject) {
+          changes.project = newProject || null;
+        }
+
+        // entity (idem project)
+        const initialEntity = ie.entity || "";
+        const newEntity = formData.entities.entity || "";
+        if (newEntity !== initialEntity) {
+          changes.entity = newEntity || null;
+        }
+
+        // departamentos / itens (só se o usuário preencheu algo agora)
+        const deps = makeDepartments();
+        if (deps) changes.departments = deps;
+
+        const items = makeItems();
+        if (items) changes.items = items;
+
+        // recorrência: NUNCA mandar se já é parcelado
+        const initialRecCount = ie.installment_count ?? 1;
+        if (initialRecCount <= 1) {
+          const wantRecurring = formData.recurrence.recurrence === 1;
+          const count = wantRecurring ? Number(formData.recurrence.installments || 1) : 1;
+
+          if (wantRecurring && count > 1) {
+            changes.installment_count = count;
+            changes.interval_months = formData.recurrence.periods as IntervalMonths;
+            if (formData.recurrence.weekend) {
+              changes.weekend_action = mapWeekendToNumber(formData.recurrence.weekend);
+            }
+          }
+        }
+
+        // Se nada mudou, evita request
+        if (Object.keys(changes).length === 0) {
+          handleClose();
+          onSave();
+          return;
+        }
+
+        res = await api.editEntry(ie.id, changes);
+      }
 
       if (!("data" in res)) {
         const apiError = res as ApiError;
