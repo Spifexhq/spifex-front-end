@@ -50,10 +50,12 @@ export interface FormData {
     value: 0 | 1;
   }
 
+  export type IntervalMonths = 0 | 1 | 2 | 3 | 6 | 12;
+
   export type PeriodOption = {
-    id: number;
+    id: IntervalMonths;
     label: string;
-    value: 1 | 2 | 3 | 4 | 5;
+    value: IntervalMonths;
   };
 
   export type WeekendOption = {

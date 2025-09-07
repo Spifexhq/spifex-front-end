@@ -1,6 +1,6 @@
 // models/enterprise_structure/domain/InventoryItem.ts
 export interface InventoryItem {
-  id: string;
+  id: string;        // external_id from the API
   sku: string;
   name: string;
   description: string | null;

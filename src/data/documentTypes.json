@@ -1,0 +1,5 @@
+[
+  { "id": "NF", "label": "Nota Fiscal" },
+  { "id": "REC", "label": "Recibo" },
+  { "id": "NFE", "label": "NF-e" }
+]

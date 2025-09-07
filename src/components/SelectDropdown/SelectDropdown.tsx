@@ -42,8 +42,17 @@ function SelectDropdown<T>({
       }
     }
 
+    // Mantemos o ESC no document para fechar o dropdown mesmo se o foco
+    // não estiver dentro dele. Paramos a propagação para não acionar o modal.
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && isOpen) {
+        // impede que o modal também processe esse ESC nesta mesma tecla
+        if (typeof event.stopImmediatePropagation === "function") {
+          event.stopImmediatePropagation();
+        }
+        event.stopPropagation();
+        event.preventDefault();
+
         setIsOpen(false);
         setSearchTerm("");
       }
@@ -51,7 +60,7 @@ function SelectDropdown<T>({
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown, { passive: false });
     }
 
     return () => {
@@ -130,13 +139,11 @@ function SelectDropdown<T>({
 
     if (allSelected) {
       updatedSelected = selected.filter(
-        (sel) =>
-          !groupItems.some((item) => getItemKey(sel) === getItemKey(item))
+        (sel) => !groupItems.some((item) => getItemKey(sel) === getItemKey(item))
       );
     } else {
       const newItems = groupItems.filter(
-        (item) =>
-          !selected.some((sel) => getItemKey(sel) === getItemKey(item))
+        (item) => !selected.some((sel) => getItemKey(sel) === getItemKey(item))
       );
       updatedSelected = [...selected, ...newItems];
     }
@@ -158,6 +165,8 @@ function SelectDropdown<T>({
         className={`flex items-center text-[10px] p-2.5 font-normal transition duration-300 ease-in-out gap-1 select-none cursor-pointer
           ${hideCheckboxes && isChecked ? "bg-blue-100 text-blue-900 font-semibold" : "bg-white hover:bg-orange-100 hover:bg-opacity-20"}
         `}
+        role={hideCheckboxes ? "option" : "checkbox"}
+        aria-selected={isChecked}
       >
         {!hideCheckboxes && (
           <Checkbox
@@ -176,10 +185,19 @@ function SelectDropdown<T>({
     );
   };
 
+  // ID para o painel (acessibilidade)
+  const panelId = `${id}-panel`;
+
   return (
     <div className="flex flex-col w-full gap-[4px]">
       {label && <label className="text-[10px] py-[5px] font-bold select-none text-gray-700">{label}</label>}
-      <div ref={dropdownRef} className="relative w-full select-none">
+
+      {/* data-select-open="true" quando aberto → permite ao modal detectar */}
+      <div
+        ref={dropdownRef}
+        className="relative w-full select-none"
+        data-select-open={isOpen ? "true" : undefined}
+      >
         <button
           onClick={toggleDropdown}
           id={id}
@@ -190,15 +208,16 @@ function SelectDropdown<T>({
           }`}
           type="button"
           disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
         >
           <span className="truncate overflow-hidden whitespace-nowrap max-w-[90%] text-left text-gray-400">
             {selected.length === 0
               ? buttonLabel
               : effectiveSingleSelect
               ? getItemLabel(selected[0])
-              : selected
-                  .map((item) => getItemLabel(item))
-                  .join(", ")}
+              : selected.map((item) => getItemLabel(item)).join(", ")}
           </span>
           <svg
             className={`w-4 h-4 ml-3 transition-transform duration-200 ease-in-out ${
@@ -210,17 +229,15 @@ function SelectDropdown<T>({
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 9l-7 7-7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
         {isOpen && (
-          <div 
+          <div
+            id={panelId}
+            role="listbox"
+            aria-labelledby={id}
             className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 overflow-y-auto rounded-lg w-full z-[9999]"
             style={customStyles}
           >
@@ -229,14 +246,14 @@ function SelectDropdown<T>({
                 <button
                   type="button"
                   onClick={selectAll}
-                  className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
+                  className="bg-white border border-gray-300 m-0.5 p-1 w/full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
                 >
                   Marcar Tudo
                 </button>
                 <button
                   type="button"
                   onClick={deselectAll}
-                  className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
+                  className="bg-white border border-gray-300 m-0.5 p-1 w/full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
                 >
                   Desmarcar Tudo
                 </button>

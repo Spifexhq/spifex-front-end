@@ -1,6 +1,6 @@
 // models/enterprise_structure/domain/Project.ts
 export type Project = {
-  id: string;
+  id: string;        // external_id from the API
   name: string;
   code: string;
   type: string;

@@ -1,4 +1,3 @@
-// Modal.tsx
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 
@@ -12,7 +11,7 @@ import {
   PeriodOption,
   RecurrenceOption,
   Tab,
-  WeekendOption,
+  IntervalMonths,
 } from "./Modal.types";
 
 import {
@@ -25,16 +24,20 @@ import {
 import { api } from "src/api/requests";
 import { ApiError } from "@/models/Api";
 import { AddEntryRequest } from "@/models/entries/dto";
-import {
+
+import type {
+  GLAccount,
   Department,
-  DepartmentAllocation,
-  DocumentType,
-  Entity,
-  EntityType,
-  InventoryItem,
-  LedgerAccount,
   Project,
+  InventoryItem,
+  Entity,
 } from "@/models/enterprise_structure/domain";
+
+// 🔹 Document Types vindos de JSON local (sem requests)
+import documentTypesData from "@/data/documentTypes.json";
+
+/* ---------------------------------- Tipos --------------------------------- */
+type DocTypeItem = { id: string; label: string };
 
 /* --------------------------- Estado inicial --------------------------- */
 const initialFormData: FormData = {
@@ -68,6 +71,50 @@ const initialFormData: FormData = {
   },
 };
 
+// Novos valores compatíveis com IntervalMonths (0|1|2|3|6|12)
+const periodOptions: PeriodOption[] = [
+  { id: 0, label: "Semanal", value: 0 },
+  { id: 1, label: "Mensal", value: 1 },
+  { id: 2, label: "Bimestral", value: 2 },
+  { id: 3, label: "Trimestral", value: 3 },
+  { id: 6, label: "Semestral", value: 6 },
+  { id: 12, label: "Anual", value: 12 },
+];
+
+const ENTITY_TYPE_OPTIONS = [
+  { id: 1, label: "Cliente", value: "client" },
+  { id: 2, label: "Fornecedor", value: "supplier" },
+  { id: 3, label: "Funcionário", value: "employee" },
+];
+
+// KEEP=0, POSTPONE=1, ANTICIPATE=-1 (no backend)
+const mapWeekendToNumber = (raw: string): number | undefined => {
+  if (!raw) return undefined;
+  if (raw === "postpone") return 1;
+  if (raw === "antedate") return -1;
+  return undefined;
+};
+
+const normalizeDocTypes = (raw: unknown): DocTypeItem[] => {
+  // Esperado: [{id,label}], mas deixamos resiliente a array de strings
+  if (Array.isArray(raw)) {
+    const out: DocTypeItem[] = [];
+    for (const it of raw) {
+      if (typeof it === "string") out.push({ id: it, label: it });
+      else if (it && typeof it === "object" && "id" in it) {
+        const anyIt = it as { id?: string; label?: string; code?: string; name?: string };
+        const id = String(anyIt.id ?? anyIt.code ?? "");
+        const label = String(anyIt.label ?? anyIt.name ?? anyIt.id ?? anyIt.code ?? "");
+        if (id) out.push({ id, label });
+      }
+    }
+    // dedup por id
+    const seen = new Set<string>();
+    return out.filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
+  }
+  return [];
+};
+
 const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   isOpen,
   onClose,
@@ -81,28 +128,34 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   const amountRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
-  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<LedgerAccount[]>([]);
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocumentType[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem[]>([]);
-  const [entities, setEntities] = useState<Entity[]>([]);
-  const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
-  const [selectedEntityType, setSelectedEntityType] = useState<EntityType[]>([]);
-  const isRecurrenceLocked = !!initialEntry && (initialEntry.total_installments ?? 1) > 1;
+  // controle de confirmação interna
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
-  const periodOptions: PeriodOption[] = [
-    { id: 1, label: "Mensal", value: 1 },
-    { id: 2, label: "Semanal", value: 2 },
-    { id: 3, label: "Bimestral", value: 3 },
-    { id: 4, label: "Semestral", value: 4 },
-    { id: 5, label: "Anual", value: 5 },
-  ];
+  // fontes
+  const [ledgerAccounts, setLedgerAccounts] = useState<GLAccount[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocTypeItem[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [entities, setEntities] = useState<Entity[]>([]);
+
+  // selecionados
+  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GLAccount[]>([]);
+  const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocTypeItem[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project[]>([]);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem[]>([]);
+  const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
+  const [selectedEntityType, setSelectedEntityType] = useState<
+    { id: number; label: string; value: string }[]
+  >([]);
+
+  // se o entry for parcelado, bloqueia mudança de recorrência
+  const isRecurrenceLocked = useMemo(() => {
+    if (!initialEntry) return false;
+    const count = (initialEntry as unknown as { installment_count?: number }).installment_count ?? 1;
+    return count > 1;
+  }, [initialEntry]);
 
   const handleClose = useCallback(() => {
     setFormData(initialFormData);
@@ -113,6 +166,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     setSelectedProject([]);
     setSelectedInventoryItem([]);
     setSelectedEntity([]);
+    setSelectedEntityType([]);
+    setShowCloseConfirm(false);
     onClose();
   }, [onClose]);
 
@@ -133,50 +188,122 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     return Math.round(total * 100) / 100;
   }, [formData.costCenters.department_percentage]);
 
+  /* ---------------- Flag de dados preenchidos (ignora dueDate) --------------- */
+  const hasMeaningfulData = useMemo(() => {
+    // 1) amount > 0
+    if (amountCents > 0) return true;
+
+    // 2) details (ignorando dueDate)
+    const d = formData.details;
+    if (
+      d.description.trim() ||
+      d.observation.trim() ||
+      d.notes.trim() ||
+      d.accountingAccount ||
+      d.documentType
+    )
+      return true;
+
+    // 3) cost centers
+    const cc = formData.costCenters;
+    if (cc.departments.length > 0 || cc.projects) return true;
+
+    // 4) inventory
+    const inv = formData.inventory;
+    if (inv.product || (!!inv.quantity && Number(inv.quantity) > 0)) return true;
+
+    // 5) entities
+    const ent = formData.entities;
+    if (ent.entityType || ent.entity) return true;
+
+    // 6) recurrence
+    const rec = formData.recurrence;
+    if (rec.recurrence === 1 || !!rec.installments || !!rec.weekend || Number(rec.periods) !== 1)
+      return true;
+
+    return false;
+  }, [formData, amountCents]);
+
+  /* ------------------------ Submit --------------------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaveDisabled) return;
+
+    if (!formData.details.accountingAccount) {
+      alert("Selecione uma conta contábil.");
+      return;
+    }
+    if (formData.costCenters.departments.length > 0 && percentageSum !== 100) {
+      alert("A soma das porcentagens dos departamentos deve ser exatamente 100%.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const isRecurring = formData.recurrence.recurrence === 1;
-    const installments = isRecurring ? Number(formData.recurrence.installments || 1) : 1;
+    const installmentCount = isRecurring ? Number(formData.recurrence.installments || 1) : 1;
 
-    const payload: AddEntryRequest = {
+    // departments -> [{department_id, percent}]
+    const departmentsPayload =
+      formData.costCenters.departments.length
+        ? formData.costCenters.departments.map((id, idx) => ({
+            department_id: id,
+            percent: String(
+              parseFloat((formData.costCenters.department_percentage[idx] || "0").replace(",", ".")).toFixed(2)
+            ),
+          }))
+        : undefined;
+
+    // items -> [{item_id, quantity}]
+    const itemsPayload =
+      formData.inventory.product && formData.inventory.quantity
+        ? [
+            {
+              item_id: formData.inventory.product,
+              quantity: String(parseFloat(formData.inventory.quantity)),
+            },
+          ]
+        : undefined;
+
+    const payload = {
       due_date: formData.details.dueDate,
-      description: formData.details.description || undefined,
-      observation: formData.details.observation || undefined,
+      description: formData.details.description || "",
+      observation: formData.details.observation || "",
+      notes: formData.details.notes || "",
       amount: cleanCurrency(formData.details.amount),
-      current_installment: 1,
-      total_installments: installments,
-      transaction_type: type,
-      notes: formData.details.notes || undefined,
-      periods: isRecurring ? String(formData.recurrence.periods) : null,
-      weekend_action: isRecurring ? formData.recurrence.weekend : null,
-      gla_id: formData.details.accountingAccount || null,
-      document_type_id: formData.details.documentType || null,
-      project_id: formData.costCenters.projects || null,
-      entity_id: formData.entities.entity || null,
-      inventory_item_id: formData.inventory.product ? Number(formData.inventory.product) : null,
-      inventory_item_quantity: formData.inventory.quantity
-        ? Number(formData.inventory.quantity)
-        : null,
-      department_id: formData.costCenters.departments.length
-        ? formData.costCenters.departments.join(",")
-        : undefined,
-      department_percentage: formData.costCenters.department_percentage.length
-        ? formData.costCenters.department_percentage.join(",")
-        : undefined,
-    };
+      tx_type: type, // "credit" | "debit"
+
+      // recorrência (somente envia quando > 1)
+      ...(isRecurring && installmentCount > 1
+        ? {
+            installment_count: installmentCount,
+            interval_months: formData.recurrence.periods as IntervalMonths,
+            ...(formData.recurrence.weekend
+              ? { weekend_action: mapWeekendToNumber(formData.recurrence.weekend) }
+              : {}),
+          }
+        : {}),
+
+      // relações por external_id
+      gl_account: formData.details.accountingAccount, // obrigatório
+      document_type: formData.details.documentType || "", // string do JSON local
+      ...(formData.costCenters.projects ? { project: formData.costCenters.projects } : {}),
+      ...(formData.entities.entity ? { entity: formData.entities.entity } : {}),
+
+      // rateios e itens
+      ...(departmentsPayload ? { departments: departmentsPayload } : {}),
+      ...(itemsPayload ? { items: itemsPayload } : {}),
+    } as unknown as AddEntryRequest;
 
     try {
-      let res;
-      if (initialEntry) res = await api.editEntry([initialEntry.id], payload);
-      else res = await api.addEntry(payload);
+      const res = initialEntry
+        ? await api.editEntry(initialEntry.id, payload)
+        : await api.addEntry(payload);
 
       if (!("data" in res)) {
         const apiError = res as ApiError;
-        console.error("Erro API:", apiError.error.message, apiError.error.details);
-        alert(apiError.error.message || "Erro ao salvar lançamento.");
+        console.error("Erro API:", apiError?.error?.message, apiError?.error?.details);
+        alert(apiError?.error?.message || "Erro ao salvar lançamento.");
         return;
       }
 
@@ -194,27 +321,95 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     }
   };
 
+  /* --------------------------- Fetch helpers --------------------------- */
+  const fetchAllLedgerAccounts = useCallback(async () => {
+    const all: GLAccount[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await api.getLedgerAccounts({ page_size: 200, cursor });
+      const page = (data?.results ?? []) as GLAccount[];
+      all.push(...page);
+      cursor = (data?.next ?? undefined) || undefined;
+    } while (cursor);
+    const wanted = type === "credit" ? "credit" : "debit";
+    return all.filter((a) => (a?.default_tx || "").toLowerCase() === wanted);
+  }, [type]);
+
+  const fetchAllDepartments = useCallback(async () => {
+    const all: Department[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await api.getDepartments({ page_size: 200, cursor });
+      const page = (data?.results ?? []) as Department[];
+      all.push(...page);
+      cursor = (data?.next ?? undefined) || undefined;
+    } while (cursor);
+    return all;
+  }, []);
+
+  const fetchAllProjects = useCallback(async () => {
+    const all: Project[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await api.getProjects({ page_size: 200, cursor });
+      const page = (data?.results ?? []) as Project[];
+      all.push(...page);
+      cursor = (data?.next ?? undefined) || undefined;
+    } while (cursor);
+    return all;
+  }, []);
+
+  const fetchAllInventoryItems = useCallback(async () => {
+    const all: InventoryItem[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await api.getInventoryItems({ page_size: 200, cursor });
+      const page = (data?.results ?? []) as InventoryItem[];
+      all.push(...page);
+      cursor = (data?.next ?? undefined) || undefined;
+    } while (cursor);
+    return all;
+  }, []);
+
+  const fetchAllEntities = useCallback(async () => {
+    const all: Entity[] = [];
+    let cursor: string | undefined;
+    do {
+      const { data } = await api.getEntities({ page_size: 200, cursor });
+      const page = (data?.results ?? []) as Entity[];
+      all.push(...page);
+      cursor = (data?.next ?? undefined) || undefined;
+    } while (cursor);
+    return all;
+  }, []);
+
   /* --------------------------- Carregar dados --------------------------- */
   useEffect(() => {
     if (!isOpen) return;
 
-    api
-      .getAllLedgerAccounts()
-      .then((response) => {
-        let all: LedgerAccount[] = response.data?.general_ledger_accounts || [];
-        all =
-          type === "credit"
-            ? all.filter((a) => a.transaction_type === "credit")
-            : all.filter((a) => a.transaction_type === "debit");
-        setLedgerAccounts(all);
-      })
-      .catch((e) => console.error("Erro ao buscar contas contábeis:", e));
+    (async () => {
+      try {
+        // carrega fontes que vêm de API (sem document types)
+        const [la, deps, prjs, invs, ents] = await Promise.all([
+          fetchAllLedgerAccounts(),
+          fetchAllDepartments(),
+          fetchAllProjects(),
+          fetchAllInventoryItems(),
+          fetchAllEntities(),
+        ]);
 
-    api.getAllDocumentTypes().then((r) => setDocumentTypes(r.data?.document_types || []));
-    api.getAllDepartments().then((r) => setDepartments(r.data?.departments || []));
-    api.getAllProjects().then((r) => setProjects(r.data?.projects || []));
-    api.getAllInventoryItems().then((r) => setInventoryItems(r.data?.inventory_items || []));
-    api.getAllEntities().then((r) => setEntities(r.data?.entities || []));
+        setLedgerAccounts(la);
+        setDepartments(deps);
+        setProjects(prjs);
+        setInventoryItems(invs);
+        setEntities(ents);
+      } catch (e) {
+        console.error("Erro carregando fontes do modal:", e);
+      }
+
+      // carrega document types do JSON local
+      setDocumentTypes(normalizeDocTypes(documentTypesData));
+    })();
 
     if (!initialEntry) {
       setFormData((prev) => ({
@@ -223,16 +418,24 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       }));
     }
     setTimeout(() => amountRef.current?.focus(), 50);
-  }, [isOpen, type, initialEntry]);
+  }, [
+    isOpen,
+    initialEntry,
+    fetchAllLedgerAccounts,
+    fetchAllDepartments,
+    fetchAllProjects,
+    fetchAllInventoryItems,
+    fetchAllEntities,
+  ]);
 
   /* ------------------------ Preencher em edição ------------------------- */
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    const isRecurring = (initialEntry.total_installments ?? 1) > 1;
-    const deptIds =
-      initialEntry.departments?.map((d: DepartmentAllocation) => String(d.department.id)) || [];
-    const deptPercs = initialEntry.departments?.map((d: DepartmentAllocation) => d.percentage) || [];
+    // EntryRead: string ids (external_id) para gl_account, project, entity
+    const recCount = (initialEntry as unknown as { installment_count?: number }).installment_count ?? 1;
+    const interval = (initialEntry as unknown as { interval_months?: number }).interval_months ?? 1;
+    const weekendNum = (initialEntry as unknown as { weekend_action?: number }).weekend_action ?? 0;
 
     setFormData({
       details: {
@@ -240,100 +443,66 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         description: initialEntry.description ?? "",
         observation: initialEntry.observation ?? "",
         amount: decimalToCentsString(initialEntry.amount),
-        accountingAccount: String(initialEntry.general_ledger_account?.id ?? ""),
-        documentType: String(initialEntry.document_type?.id ?? ""),
+        accountingAccount: (initialEntry as unknown as { gl_account?: string }).gl_account || "",
+        // document_type não vem no read serializer → deixamos vazio
+        documentType: "",
         notes: initialEntry.notes ?? "",
       },
       costCenters: {
-        departments: deptIds,
-        department_percentage: deptPercs,
-        projects: String(initialEntry.project?.id ?? ""),
+        departments: [],
+        department_percentage: [],
+        projects: (initialEntry as unknown as { project?: string }).project || "",
       },
       inventory: {
-        product: String(initialEntry.inventory_item?.[0]?.inventory_item.id ?? ""),
-        quantity: initialEntry.inventory_item?.[0]?.inventory_item_quantity
-          ? String(initialEntry.inventory_item[0].inventory_item_quantity)
-          : "",
+        product: "",
+        quantity: "",
       },
       entities: {
-        entityType: initialEntry.entity?.entity_type ?? "",
-        entity: String(initialEntry.entity?.id ?? ""),
+        entityType: "",
+        entity: (initialEntry as unknown as { entity?: string }).entity || "",
       },
       recurrence: {
-        recurrence: isRecurring ? 1 : 0,
-        installments: isRecurring ? String(initialEntry.total_installments) : "",
-        periods: Number(initialEntry.periods ?? 1),
-        weekend: initialEntry.weekend_action ?? "",
+        recurrence: recCount > 1 ? 1 : 0,
+        installments: recCount > 1 ? String(recCount) : "",
+        periods: Number(interval as IntervalMonths),
+        weekend:
+          weekendNum === 1 ? "postpone" : weekendNum === -1 ? "antedate" : "",
       },
     });
   }, [isOpen, initialEntry]);
 
-  // Selecionados (dropdowns) em edição
+  // Selecionados em edição
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
-    const la = ledgerAccounts.find((a) => a.id === initialEntry.general_ledger_account?.id);
+
+    const glaId = (initialEntry as unknown as { gl_account?: string }).gl_account || "";
+    const la = ledgerAccounts.find((a) => a.id === glaId);
     setSelectedLedgerAccount(la ? [la] : []);
-    const dt = documentTypes.find((d) => d.id === initialEntry.document_type?.id);
-    setSelectedDocumentType(dt ? [dt] : []);
-    const deptIds =
-      initialEntry.departments?.map((d: DepartmentAllocation) => d.department.id) || [];
-    setSelectedDepartments(departments.filter((dep) => deptIds.includes(dep.id)));
-    const prj = projects.find((p) => p.id === initialEntry.project?.id);
+
+    const prjId = (initialEntry as unknown as { project?: string }).project || "";
+    const prj = projects.find((p) => p.id === prjId);
     setSelectedProject(prj ? [prj] : []);
-    const invId = initialEntry.inventory_item?.[0]?.inventory_item.id;
-    const inv = inventoryItems.find((i) => i.id === invId);
-    setSelectedInventoryItem(inv ? [inv] : []);
-    if (initialEntry.entity) {
-      const ent = entities.find((e) => e.id === initialEntry.entity!.id);
-      setSelectedEntity(ent ? [ent] : []);
-      setSelectedEntityType([{ id: 0, entity_type: initialEntry.entity.entity_type ?? "" }]);
+
+    const entId = (initialEntry as unknown as { entity?: string }).entity || "";
+    const ent = entities.find((e) => e.id === entId);
+    setSelectedEntity(ent ? [ent] : []);
+    if (ent && (ent as unknown as { entity_type?: string }).entity_type) {
+      const et = (ent as unknown as { entity_type?: string }).entity_type!;
+      const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === et);
+      setSelectedEntityType(opt ? [opt] : []);
     } else {
-      setSelectedEntity([]);
       setSelectedEntityType([]);
     }
-  }, [
-    isOpen,
-    initialEntry,
-    ledgerAccounts,
-    documentTypes,
-    departments,
-    projects,
-    inventoryItems,
-    entities,
-  ]);
-
-  /* ------------------------------ Lifecycle ------------------------------ */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-        const formEl = document.getElementById("modalForm") as HTMLFormElement | null;
-        formEl?.requestSubmit();
-      }
-      if (e.key === "Escape") handleClose();
-    };
-
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-    } else {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, handleClose]);
+  }, [isOpen, initialEntry, ledgerAccounts, projects, entities]);
 
   /* ------------------------------ Handlers ------------------------------ */
-  const handleLedgerAccountChange = (updated: LedgerAccount[]) => {
+  const handleLedgerAccountChange = (updated: GLAccount[]) => {
     setSelectedLedgerAccount(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, details: { ...p.details, accountingAccount: id } }));
   };
 
-  const handleDocumentTypeChange = (updated: DocumentType[]) => {
+  const handleDocumentTypeChange = (updated: DocTypeItem[]) => {
     setSelectedDocumentType(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, details: { ...p.details, documentType: id } }));
@@ -376,7 +545,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
   };
 
-  /* ---------------------------- Tabs compactas --------------------------- */
+  /* ---------------------------- Tabs --------------------------- */
   const Tabs = () => (
     <nav className="flex gap-3 overflow-x-auto">
       {(
@@ -408,14 +577,58 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     </nav>
   );
 
-  /* ---------------------------- Conteúdo das abas ------------------------- */
+  /* ---------------------- Fechamento com confirmação interna ----------------- */
+  const attemptClose = useCallback(() => {
+    // Se houver dropdown aberto, deixa o ESC atuar no dropdown
+    const dropdownOpen = document.querySelector('[data-select-open="true"]');
+    if (dropdownOpen) return;
+
+    if (hasMeaningfulData) {
+      setShowCloseConfirm(true);
+      return;
+    }
+    handleClose();
+  }, [hasMeaningfulData, handleClose]);
+
+  /* ----------------------- Teclado: ESC e Ctrl/Cmd+S ------------------------ */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      // ESC
+      if (e.key === "Escape") {
+        // prioridade: se o overlay de confirmação está visível, ESC = cancelar overlay
+        if (showCloseConfirm) {
+          e.stopPropagation();
+          setShowCloseConfirm(false);
+          return;
+        }
+        // depois: se houver dropdown aberto, deixa o próprio dropdown tratar
+        const dropdownOpen = document.querySelector('[data-select-open="true"]');
+        if (dropdownOpen) return;
+
+        // se nada estiver aberto, tenta fechar o modal
+        attemptClose();
+        return;
+      }
+
+      // Ctrl/Cmd + S → submit
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, attemptClose, showCloseConfirm]);
+
+  /* ---------------------------- Conteúdo ------------------------- */
   const renderTabContent = () => {
     switch (activeTab) {
       case "details":
-        // >>> Agora com 3 colunas <<<
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Linha 1: Vencimento / Valor / Conta contábil */}
             <Input
               label="Vencimento"
               type="date"
@@ -435,20 +648,21 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               }
               onKeyDown={(e) => handleAmountKeyDown(e, formData.details.amount, setFormData)}
             />
-            <SelectDropdown<LedgerAccount>
+            <SelectDropdown<GLAccount>
               label="Conta contábil"
               items={ledgerAccounts}
               selected={selectedLedgerAccounts}
               onChange={handleLedgerAccountChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.general_ledger_account}
+              getItemLabel={(i) => (i.code ? `${i.code} — ${i.name}` : i.name)}
               buttonLabel="Selecione a conta"
               singleSelect
-              customStyles={{ maxHeight: "160px" }}
-              groupBy={(i) => i.subgroup}
+              customStyles={{ maxHeight: "200px" }}
+              groupBy={(i) =>
+                i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || "Outros"
+              }
             />
 
-            {/* Linha 2: Descrição (full) */}
             <div className="md:col-span-3">
               <Input
                 label="Descrição"
@@ -465,20 +679,18 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               />
             </div>
 
-            {/* Linha 3: Tipo de documento */}
-            <SelectDropdown<DocumentType>
+            <SelectDropdown<DocTypeItem>
               label="Tipo de documento"
               items={documentTypes}
               selected={selectedDocumentTypes}
               onChange={handleDocumentTypeChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.document_type}
+              getItemLabel={(i) => i.label}
               buttonLabel="Selecione o tipo"
               singleSelect
-              customStyles={{ maxHeight: "160px" }}
+              customStyles={{ maxHeight: "180px" }}
             />
 
-            {/* Linha 4: Observação */}
             <div className="md:col-span-2">
               <Input
                 label="Observação"
@@ -493,9 +705,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 }
               />
             </div>
-            <div className="hidden md:block" /> {/* coluna vazia para fechar a linha */}
+            <div className="hidden md:block" />
 
-            {/* Linha 5: Notas (full) */}
             <div className="md:col-span-3">
               <Input
                 label="Notas"
@@ -519,13 +730,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 selected={selectedDepartments}
                 onChange={handleDepartmentChange}
                 getItemKey={(d) => d.id}
-                getItemLabel={(d) => d.department || "Departamento sem nome"}
+                getItemLabel={(d) => d.name || "Departamento sem nome"}
                 clearOnClickOutside={false}
                 buttonLabel="Selecione departamentos"
-                customStyles={{ maxHeight: "220px" }}
+                customStyles={{ maxHeight: "240px" }}
               />
 
-              {/* Box interno pode ter scroll próprio sem afetar o modal fixo */}
               <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] text-gray-700">Distribuição (%)</span>
@@ -543,7 +753,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   {selectedDepartments.map((dept, index) => (
                     <div key={dept.id} className="mb-3">
                       <Input
-                        label={`% - ${dept.department || `Departamento ${dept.id}`}`}
+                        label={`% - ${dept.name || `Departamento ${dept.id}`}`}
                         type="number"
                         name={`department_percentage_${dept.id}`}
                         value={formData.costCenters.department_percentage[index] || ""}
@@ -565,11 +775,11 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 selected={selectedProject}
                 onChange={handleProjectChange}
                 getItemKey={(p) => p.id}
-                getItemLabel={(p) => p.project || `Projeto ${p.id}`}
+                getItemLabel={(p) => p.name || p.code || `Projeto ${p.id}`}
                 buttonLabel="Selecione um projeto"
                 clearOnClickOutside={false}
                 singleSelect
-                customStyles={{ maxHeight: "180px" }}
+                customStyles={{ maxHeight: "200px" }}
               />
             </div>
           </div>
@@ -584,11 +794,11 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               selected={selectedInventoryItem}
               onChange={handleInventoryChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.inventory_item || "Produto sem nome"}
+              getItemLabel={(i) => (i.sku ? `${i.sku} — ${i.name}` : i.name)}
               buttonLabel="Selecione um produto"
               clearOnClickOutside={false}
               singleSelect
-              customStyles={{ maxHeight: "160px" }}
+              customStyles={{ maxHeight: "180px" }}
             />
             {selectedInventoryItem.length > 0 && (
               <Input
@@ -607,47 +817,50 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           </div>
         );
 
-      case "entities":
+      case "entities": {
+        const filteredEntities = formData.entities.entityType
+          ? entities.filter(
+              (e) => (e as unknown as { entity_type?: string }).entity_type === formData.entities.entityType
+            )
+          : entities;
+
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SelectDropdown<EntityType>
+            <SelectDropdown<{ id: number; label: string; value: string }>
               label="Tipo de entidade"
-              items={[
-                { id: 1, entity_type: "Cliente" },
-                { id: 2, entity_type: "Fornecedor" },
-                { id: 3, entity_type: "Funcionário" },
-              ]}
+              items={ENTITY_TYPE_OPTIONS}
               selected={selectedEntityType}
               onChange={(v) => {
                 setSelectedEntityType(v);
                 setFormData((p) => ({
                   ...p,
-                  entities: { ...p.entities, entityType: v[0]?.entity_type || "" },
+                  entities: { ...p.entities, entityType: v[0]?.value || "" },
                 }));
+                setSelectedEntity([]);
+                setFormData((p) => ({ ...p, entities: { ...p.entities, entity: "" } }));
               }}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.entity_type}
+              getItemLabel={(i) => i.label}
               buttonLabel="Selecione o tipo"
               singleSelect
-              customStyles={{ maxHeight: "140px" }}
+              customStyles={{ maxHeight: "160px" }}
               hideFilter
             />
 
-            {formData.entities.entityType !== "" && (
-              <SelectDropdown<Entity>
-                label="Entidade"
-                items={entities}
-                selected={selectedEntity}
-                onChange={handleEntityChange}
-                getItemKey={(i) => i.id}
-                getItemLabel={(i) => i.full_name || "Entidade sem nome"}
-                buttonLabel="Selecione a entidade"
-                singleSelect
-                customStyles={{ maxHeight: "160px" }}
-              />
-            )}
+            <SelectDropdown<Entity>
+              label="Entidade"
+              items={filteredEntities}
+              selected={selectedEntity}
+              onChange={handleEntityChange}
+              getItemKey={(i) => i.id}
+              getItemLabel={(i) => i.full_name || (i as unknown as { alias_name?: string }).alias_name || "Entidade sem nome"}
+              buttonLabel="Selecione a entidade"
+              singleSelect
+              customStyles={{ maxHeight: "200px" }}
+            />
           </div>
         );
+      }
 
       case "recurrence":
         return (
@@ -700,7 +913,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   onChange={(v) =>
                     setFormData((p) => ({
                       ...p,
-                      recurrence: { ...p.recurrence, periods: v[0]?.value ?? 0 },
+                      recurrence: { ...p.recurrence, periods: v[0]?.value ?? 1 },
                     }))
                   }
                   getItemKey={(i) => i.id}
@@ -712,21 +925,18 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   disabled={isRecurrenceLocked}
                 />
 
-                <SelectDropdown<WeekendOption>
+                <SelectDropdown<{ id: number; label: string; value: string }>
                   label="Fim de semana"
                   items={[
                     { id: 1, label: "Postergar", value: "postpone" },
-                    { id: 2, label: "Antecipar", value: "antedate" },
+                    { id: -1, label: "Antecipar", value: "antedate" },
                   ]}
                   selected={
                     formData.recurrence.weekend
                       ? [
-                          {
-                            id: formData.recurrence.weekend === "postpone" ? 1 : 2,
-                            label:
-                              formData.recurrence.weekend === "postpone" ? "Postergar" : "Antecipar",
-                            value: formData.recurrence.weekend as WeekendOption["value"],
-                          },
+                          formData.recurrence.weekend === "postpone"
+                            ? { id: 1, label: "Postergar", value: "postpone" }
+                            : { id: -1, label: "Antecipar", value: "antedate" },
                         ]
                       : []
                   }
@@ -754,18 +964,17 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     }
   };
 
-  // Não renderiza se fechado
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
-      {/* Tamanho fixo: evita overflow do container (sem scroll principal do modal) */}
+      {/* Modal container */}
       <div
         role="dialog"
         aria-modal="true"
-        className="bg-white border border-gray-200 rounded-lg shadow-xl w-[1100px] max-w-[95vw] h-[580px] max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative bg-white border border-gray-200 rounded-lg shadow-xl w-[1100px] max-w-[95vw] h-[580px] max-h-[90vh] overflow-hidden flex flex-col"
       >
-        {/* Header fixo */}
+        {/* Header */}
         <header className="border-b border-gray-200 bg-white">
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -782,30 +991,27 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             <Button
               variant="outline"
               className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-              onClick={handleClose}
+              onClick={attemptClose}
             >
               Fechar
             </Button>
           </div>
-
-          {/* Abas compactas (sub-nav) */}
           <div className="px-5 pb-2">
             <Tabs />
           </div>
         </header>
 
-        {/* Conteúdo: sem overflow do container; se precisar, caixas internas têm scroll próprio */}
+        {/* Body */}
         <form id="modalForm" className="flex-1 flex flex-col" onSubmit={handleSubmit}>
-          {/* Conteúdo rolável */}
-          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
-            {renderTabContent()}
-          </div>
+          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">{renderTabContent()}</div>
 
-          {/* Footer fixo */}
+          {/* Footer */}
           <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
             <p className="text-[12px] text-gray-600">
               {amountCents > 0 ? (
-                <>Valor: <b>{formatCurrency(formData.details.amount)}</b></>
+                <>
+                  Valor: <b>{formatCurrency(formData.details.amount)}</b>
+                </>
               ) : (
                 <>Informe um valor para salvar.</>
               )}
@@ -813,7 +1019,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             </p>
 
             <div className="flex gap-2">
-              <Button variant="cancel" type="button" onClick={handleClose}>
+              <Button variant="cancel" type="button" onClick={attemptClose}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSaveDisabled}>
@@ -822,6 +1028,44 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             </div>
           </footer>
         </form>
+
+        {/* Overlay de confirmação interna */}
+        {showCloseConfirm && (
+          <div
+            className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
+            aria-modal="true"
+            role="alertdialog"
+            aria-labelledby="close-confirm-title"
+            aria-describedby="close-confirm-desc"
+          >
+            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 id="close-confirm-title" className="text-[15px] font-semibold text-gray-900">
+                  Descartar informações preenchidas?
+                </h2>
+                <p id="close-confirm-desc" className="mt-1 text-[12px] text-gray-600">
+                  Você inseriu dados neste lançamento. Se sair agora, as informações serão perdidas.
+                </p>
+              </div>
+              <div className="px-5 py-4 flex items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  onClick={() => setShowCloseConfirm(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="danger"
+                  className="!bg-red-500 hover:!bg-red-600"
+                  onClick={handleClose}
+                >
+                  Descartar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

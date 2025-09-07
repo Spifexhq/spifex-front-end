@@ -1,6 +1,6 @@
 // models/enterprise_structure/domain/Department.ts
 export interface Department {
-  id: string;
+  id: string;        // external_id from the API
   name: string;
   code?: string;
   is_active: boolean;

@@ -1,6 +1,6 @@
 // models/enterprise_structure/domain/Entity.ts
 export interface Entity {
-  id: string;                 // external_id
+  id: string;        // external_id from the API
   full_name: string | null;
   alias_name: string | null;
   entity_type: string | null; // "client" | "supplier" | "employee" | ...
