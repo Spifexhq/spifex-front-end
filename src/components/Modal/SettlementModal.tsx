@@ -9,23 +9,21 @@ import { InlineLoader } from "@/components/Loaders";
 
 // Utils
 import {
-  centsToDecimalString,
   handleUtilitaryAmountKeyDown,
   formatCurrency,
 } from "src/lib";
 
 // API and models
 import { api } from "src/api/requests";
-import { Entry } from "src/models/entries/domain";
-import { EditSettledEntryRequest } from "@/models/entries/dto";
+import type { Entry } from "src/models/entries/domain";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
+import type { BulkSettleItem } from "@/models/entries/domain"; // só para cast
 
 interface SettlementModalProps {
   isOpen: boolean;
   onClose(): void;
   selectedEntries: Entry[];
   onSave(): void;
-  // 🔸 banks injected by parent
   banksData: {
     banks: BankAccount[];
     loading: boolean;
@@ -34,21 +32,21 @@ interface SettlementModalProps {
 }
 
 interface LocalEntryState {
-  id: number;
+  id: string;           // external_id da entry
   due_date: string;
   description: string;
-  amount: string;        // decimal "123.45"
+  amount: string;       // decimal "3000.00" (já vem correto)
   isPartial: boolean;
-  partialAmount: string; // cents string "0", "1234", ...
+  partialAmount: string; // string de centavos ("", "1234", ...)
 }
 
 /* -------------------------------- helpers -------------------------------- */
 const formatBRL = (valueNumber: number) =>
   valueNumber.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const decimalToCents = (dec: string) => {
-  const n = parseFloat(dec || "0");
-  if (Number.isNaN(n)) return 0;
+const decimalToCents = (decStr: string) => {
+  const n = parseFloat(decStr || "0");
+  if (!Number.isFinite(n)) return 0;
   return Math.round(n * 100);
 };
 
@@ -62,23 +60,23 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 }) => {
   const { banks, loading: loadingBanks, error } = banksData;
 
-  const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
+  const [selectedBankId, setSelectedBankId] = useState<string | null>(null); // não auto-seleciona
   const [entriesState, setEntriesState] = useState<LocalEntryState[]>([]);
   const [bulkDate, setBulkDate] = useState<string>("");
   const formRef = useRef<HTMLFormElement>(null);
 
   /* ----------------------------- derived data ----------------------------- */
   const typeById = useMemo(() => {
-    const m = new Map<number, "credit" | "debit" | undefined>();
-    selectedEntries.forEach((e) => m.set(e.id, (e).transaction_type));
+    const m = new Map<string, "credit" | "debit" | undefined>();
+    selectedEntries.forEach((e) => m.set(e.id, e.tx_type as "credit" | "debit" | undefined));
     return m;
   }, [selectedEntries]);
 
   const totalOriginalCentsSigned = useMemo(
     () =>
       selectedEntries.reduce((sum, e) => {
-        const sign = (e).transaction_type === "debit" ? -1 : 1;
-        return sum + sign * decimalToCents(e.amount);
+        const sign = (e.tx_type as string) === "debit" ? -1 : 1;
+        return sum + sign * decimalToCents(String(e.amount ?? "0"));
       }, 0),
     [selectedEntries]
   );
@@ -133,13 +131,14 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       const mapped: LocalEntryState[] = selectedEntries.map((e) => ({
         id: e.id,
         due_date: new Date(e.due_date) > new Date() ? today : e.due_date,
-        description: e.description,
-        amount: e.amount,
+        description: e.description ?? "",
+        amount: String(e.amount ?? "0"),
         isPartial: false,
         partialAmount: "",
       }));
       setEntriesState(mapped);
       setBulkDate(today);
+      // não escolher banco automaticamente
     }
 
     window.addEventListener("keydown", handleKey);
@@ -147,18 +146,18 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKey);
     };
-  }, [isOpen, onClose, selectedEntries, entriesState.length, isSubmitDisabled]);
+  }, [isOpen, onClose, entriesState.length, selectedEntries, isSubmitDisabled]);
 
   /* -------------------------------- handlers -------------------------------- */
-  const updateEntryDate = (id: number, val: string) =>
+  const updateEntryDate = (id: string, val: string) =>
     setEntriesState((prev) => prev.map((e) => (e.id === id ? { ...e, due_date: val } : e)));
 
-  const togglePartial = (id: number) =>
+  const togglePartial = (id: string) =>
     setEntriesState((prev) =>
       prev.map((e) => (e.id === id ? { ...e, isPartial: !e.isPartial, partialAmount: "" } : e))
     );
 
-  const updatePartialAmount = (id: number, val: string) =>
+  const updatePartialAmount = (id: string, val: string) =>
     setEntriesState((prev) => prev.map((e) => (e.id === id ? { ...e, partialAmount: val } : e)));
 
   const applyDateToAll = () => {
@@ -182,17 +181,36 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     if (!selectedBankId) return;
 
     try {
-      await Promise.all(
-        entriesState.map((e) => {
-          const payload: EditSettledEntryRequest = {
-            settlement_due_date: e.due_date,
-            bank_id: selectedBankId,
-            is_partial: e.isPartial,
-            partial_amount: e.isPartial ? centsToDecimalString(e.partialAmount) : undefined,
-          };
-          return api.editSettledEntry([e.id], payload);
-        })
-      );
+      // monta payload do bulk (sem settled_on, para casar com o backend)
+      const items = entriesState.map((row) => {
+        const amount_minor = row.isPartial
+          ? (parseInt(row.partialAmount || "0", 10) || 0)
+          : decimalToCents(row.amount);
+
+        return {
+          entry_id: row.id,
+          bank_id: selectedBankId,
+          amount_minor,
+          value_date: row.due_date,
+        };
+      }) as unknown as BulkSettleItem[];
+
+      const res = await api.bulkSettle(items, true);
+
+      // Se vier com errors, sinaliza por linha e mantém o modal aberto
+      if ("errors" in res && Array.isArray((res).errors) && (res).errors.length) {
+        const errs = (res).errors as Array<{ id?: string; entry_id?: string; error: string }>;
+        setEntriesState((prev) =>
+          prev.map((r) => {
+            const hit = errs.find((e) => e.entry_id === r.id || e.id === r.id);
+            return hit ? { ...r, /* podemos exibir embaixo se quiser */ } : r;
+          })
+        );
+        // opcional: mostrar toast/alert com resumo dos erros
+        console.error("Erros no bulk settle:", errs);
+        return;
+      }
+
       onSave();
       onClose();
     } catch (err) {
@@ -246,79 +264,79 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           className="flex-1 min-h-0 px-5 py-4 grid grid-cols-1 lg:grid-cols-[35%_65%] gap-4 min-w-0"
         >
           {/* ----------------- Banks Pane (35%) ----------------- */}
-        <section
-          aria-label="Selecionar banco"
-          className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
-        >
-          <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-wide text-gray-600">Bancos</span>
-              <span className="text-[10px] text-gray-500">({banks.length})</span>
-            </div>
-            {selectedBankId && (
-              <span className="text-[11px] text-gray-600">
-                Saldo:&nbsp;
-                <b className="text-gray-900">
-                  {formatBRL(
-                    Number(banks.find((b) => b.id === selectedBankId)?.consolidated_balance ?? "0")
-                  )}
-                </b>
-              </span>
-            )}
-          </div>
-
-          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 bg-white">
-            {loadingBanks ? (
-              <div className="py-4 grid place-items-center">
-                <InlineLoader color="orange" />
+          <section
+            aria-label="Selecionar banco"
+            className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-wide text-gray-600">Bancos</span>
+                <span className="text-[10px] text-gray-500">({banks.length})</span>
               </div>
-            ) : error ? (
-              <div className="py-4 text-center text-xs text-red-600">{error}</div>
-            ) : banks.length === 0 ? (
-              <div className="py-4 text-center text-xs text-gray-600">Nenhum banco disponível</div>
-            ) : (
-              banks
-                .slice()
-                .sort((a, b) => a.institution.localeCompare(b.institution))
-                .map((b) => {
-                  const selected = selectedBankId === b.id;
-                  const balance = formatBRL(Number(b.consolidated_balance ?? "0"));
-                  return (
-                    <button
-                      type="button"
-                      key={b.id}
-                      onClick={() => setSelectedBankId(selected ? null : b.id)}
-                      className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-gray-50 focus:bg-gray-50 ${
-                        selected ? "bg-gray-50" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span
-                          className={`h-4 w-4 rounded-full border ${
-                            selected
-                              ? "border-[color:var(--accentPrimary)] bg-[color:var(--accentPrimary)]"
-                              : "border-gray-300"
-                          }`}
-                          aria-hidden="true"
-                        />
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[13px] text-gray-800 truncate leading-tight">
-                            {b.institution}
-                          </span>
-                          <span className="text-[10px] text-gray-500 truncate leading-tight">
-                            Agência {b.branch} • Conta {b.account_number}
-                          </span>
+              {selectedBankId && (
+                <span className="text-[11px] text-gray-600">
+                  Saldo:&nbsp;
+                  <b className="text-gray-900">
+                    {formatBRL(
+                      Number(banks.find((b) => b.id === selectedBankId)?.consolidated_balance ?? "0")
+                    )}
+                  </b>
+                </span>
+              )}
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 bg-white">
+              {loadingBanks ? (
+                <div className="py-4 grid place-items-center">
+                  <InlineLoader color="orange" />
+                </div>
+              ) : error ? (
+                <div className="py-4 text-center text-xs text-red-600">{error}</div>
+              ) : banks.length === 0 ? (
+                <div className="py-4 text-center text-xs text-gray-600">Nenhum banco disponível</div>
+              ) : (
+                banks
+                  .slice()
+                  .sort((a, b) => a.institution.localeCompare(b.institution))
+                  .map((b) => {
+                    const selected = selectedBankId === b.id;
+                    const balance = formatBRL(Number(b.consolidated_balance ?? "0"));
+                    return (
+                      <button
+                        type="button"
+                        key={b.id}
+                        onClick={() => setSelectedBankId(selected ? null : b.id)}
+                        className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-gray-50 focus:bg-gray-50 ${
+                          selected ? "bg-gray-50" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className={`h-4 w-4 rounded-full border ${
+                              selected
+                                ? "border-[color:var(--accentPrimary)] bg-[color:var(--accentPrimary)]"
+                                : "border-gray-300"
+                            }`}
+                            aria-hidden="true"
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-[13px] text-gray-800 truncate leading-tight">
+                              {b.institution}
+                            </span>
+                            <span className="text-[10px] text-gray-500 truncate leading-tight">
+                              Agência {b.branch} • Conta {b.account_number}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
-                        {balance}
-                      </div>
-                    </button>
-                  );
-                })
-            )}
-          </div>
-        </section>
+                        <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
+                          {balance}
+                        </div>
+                      </button>
+                    );
+                  })
+              )}
+            </div>
+          </section>
 
           {/* ----------------- Entries Pane (65%) ----------------- */}
           <section
@@ -387,6 +405,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               ) : (
                 entriesState.map((e) => {
                   const invalid = rowHasError(e);
+                  const amountNumber = parseFloat(e.amount || "0"); // decimal correto
                   return (
                     <div
                       key={e.id}
@@ -404,7 +423,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                       <div className="truncate pr-2">{e.description}</div>
 
                       <div className="text-center tabular-nums font-semibold text-gray-900">
-                        {formatBRL(decimalToCents(e.amount) / 100)}
+                        {formatBRL(amountNumber)}
                       </div>
 
                       <div className="flex items-center justify-center">
@@ -467,7 +486,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               <span className="text-gray-600">
                 Banco:&nbsp;
                 <b className="text-gray-900">
-                  {(chosenBank.institution || chosenBank.institution)} • Ag. {(chosenBank.branch || chosenBank.branch)} • Conta {(chosenBank.account_number || chosenBank.account_number)}
+                  {chosenBank.institution} • Ag. {chosenBank.branch} • Conta {chosenBank.account_number}
                 </b>
               </span>
             ) : (

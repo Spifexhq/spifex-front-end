@@ -10,7 +10,7 @@ import {
 import { User, Organization, Employee, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
-import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis } from '@/models/entries/domain'
+import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis, BulkSettleItem, BulkSettleResponse } from '@/models/entries/domain'
 import {
   GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
@@ -242,6 +242,29 @@ export const api = {
   bulkDeleteEntries: (ids: string[]) => {
     const org = getOrgExternalId();
     return request<void>(`cashflow/${org}/entries/bulk/delete/`, "POST", { ids });
+  },
+
+  /* --- Settle Process --- */
+  bulkSettle: (items: BulkSettleItem[], atomic: boolean = true) => {
+    const org = getOrgExternalId();
+    return request<BulkSettleResponse>(
+      `cashflow/${org}/settlements/bulk/`,
+      "POST",
+      { items, atomic }
+    );
+  },
+
+  // Cria settlement para UMA entrada específica (opcional se quiseres usar sempre o bulk)
+  addSettlement: (
+    entryExternalId: string,
+    payload: { bank_id: string; amount_minor?: number; amount?: string; value_date: string }
+  ) => {
+    const org = getOrgExternalId();
+    return request<Entry>(
+      `cashflow/${org}/entries/${entryExternalId}/settlements/`,
+      "POST",
+      payload
+    );
   },
 
   /* --- Settled Entries --- */

@@ -1,4 +1,5 @@
 export * from "./Entry"
+export * from "./SettleItem"
 export * from "./SettledEntry"
 export * from "./Transference"
 export * from "./EntryFilters"
