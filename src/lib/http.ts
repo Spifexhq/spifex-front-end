@@ -19,6 +19,9 @@ import {
   clearTokens,
 } from '@/lib/tokens';
 
+// garante carregamento do singleton e da declaração global window.NetReport
+import '@/lib/netReport';
+
 /* ============================================================================
  * Base URL
  * ==========================================================================*/
@@ -30,11 +33,77 @@ const rawBaseURL =
 const baseURL = rawBaseURL.endsWith('/') ? rawBaseURL : `${rawBaseURL}/`;
 
 /* ============================================================================
+ * Pausa global (anti-stampede) após 429
+ * ==========================================================================*/
+let pauseUntil = 0; // epoch ms
+function setGlobalPause(ms: number) {
+  pauseUntil = Math.max(pauseUntil, Date.now() + ms);
+}
+
+const scopeMinGapMs: Record<string, number> = {
+  read: 300,   // ~3.3 req/s por usuário
+  auth: 500,   // auth é mais sensível
+  write: 0,    // POST/PUT/PATCH/DELETE deixam passar
+};
+const lastByScope = new Map<string, number>();
+
+function inferScope(method: Method, url: string): "read" | "auth" | "write" {
+  const m = (method || "GET").toUpperCase();
+  const u = url || "";
+  if (m !== "GET") return "write";
+  if (u.includes("/auth/")) return "auth";
+  return "read";
+}
+
+async function scheduleByScope(method: Method, url: string) {
+  const scope = inferScope(method, url);
+  const gap = scopeMinGapMs[scope];
+  if (!gap) return;
+
+  const now = Date.now();
+  const last = lastByScope.get(scope) ?? 0;
+  const wait = last + gap - now;
+  if (wait > 0) {
+    await new Promise((r) => setTimeout(r, wait));
+  }
+  lastByScope.set(scope, Date.now());
+}
+
+/* ============================================================================
  * Axios instance
  * ==========================================================================*/
 export const http = axios.create({
   baseURL,
   withCredentials: false,
+});
+
+/* ============================================================================
+ * Telemetria: início/fim de cada request
+ * ==========================================================================*/
+const startAt = new WeakMap<AxiosRequestConfig, number>();
+
+http.interceptors.request.use(async (cfg) => {
+  // PRE-EMPT: agenda por escopo para evitar burst
+  const method = (cfg.method || 'GET').toUpperCase() as Method;
+  const url = cfg.url || '';
+  await scheduleByScope(method, url);
+
+  // Respeita pausa global (pós-429)
+  if (pauseUntil > Date.now()) {
+    const wait = pauseUntil - Date.now();
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
+
+  // Agora comece a medir duração e logar a telemetria
+  startAt.set(cfg, performance.now());
+  window.NetReport?.push({
+    t: Date.now(),
+    method,
+    url,
+    fullUrl: cfg.baseURL ? (cfg.baseURL + (cfg.url || '')) : (cfg.url || ''),
+  });
+
+  return cfg;
 });
 
 /* ============================================================================
@@ -128,11 +197,37 @@ function calc429DelayMs(err: AxiosError): number {
 /* ============================================================================
  * Response interceptor: log req-id, lida com 429/401
  * ==========================================================================*/
+type TelemetryExtra = { retried429?: number; retryAfterMs?: number };
+
+function finishLog(
+  cfg: AxiosRequestConfig,
+  res?: AxiosResponse,
+  err?: AxiosError,
+  extra?: TelemetryExtra
+) {
+  const t0 = startAt.get(cfg) ?? performance.now();
+  const ms = performance.now() - t0;
+  const status = res?.status ?? err?.response?.status;
+  const reqId = (res?.headers?.['x-request-id'] || err?.response?.headers?.['x-request-id']) as string | undefined;
+
+  window.NetReport?.push({
+    t: Date.now(),
+    method: (cfg.method || 'GET').toUpperCase() as Method,
+    url: cfg.url || '',
+    fullUrl: cfg.baseURL ? (cfg.baseURL + (cfg.url || '')) : (cfg.url || ''),
+    status, ms, reqId,
+    ...extra
+  });
+}
+
 http.interceptors.response.use(
   (r) => {
+    // Telemetria de sucesso
+    finishLog(r.config, r);
+
+    // (opcional) debug: request-id
     const reqId = (r.headers as Record<string, unknown> | undefined)?.['x-request-id'];
     if (typeof reqId === 'string') {
-      // deixe como debug para não poluir o console em produção
       console.debug('🔗 request-id', reqId);
     }
     return r;
@@ -141,14 +236,24 @@ http.interceptors.response.use(
     const original = (error.config || {}) as RetriableConfig;
     const status = error.response?.status;
 
-    // 429: respeita Retry-After e aplica até 3 tentativas
+    // 429: respeita Retry-After, pausa global e aplica até 3 tentativas
     if (status === 429) {
       original._retried429 = (original._retried429 ?? 0) + 1;
+
+      const delay = calc429DelayMs(error);
+      // Telemetria do 429 (antes da espera/novo disparo)
+      finishLog(original, undefined, error, {
+        retried429: original._retried429,
+        retryAfterMs: delay,
+      });
+
+      setGlobalPause(delay * 1.1); // pequena margem
+
       if (original._retried429 <= 3) {
-        const delay = calc429DelayMs(error);
         await new Promise((r) => setTimeout(r, delay));
         return http(original);
       }
+      // estourou tentativas → cai para o fluxo de erro
     }
 
     // 401: tenta refresh (uma única vez por request)
@@ -158,8 +263,7 @@ http.interceptors.response.use(
       if (!refreshingPromise) {
         refreshingPromise = doRefresh()
           .catch((e) => {
-            // refresh falhou → limpar tokens para impedir retentativas em loop
-            clearTokens();
+            clearTokens(); // refresh falhou → evitar loops
             throw e;
           })
           .finally(() => {
@@ -172,41 +276,74 @@ http.interceptors.response.use(
       await new Promise<void>((resolve, reject) => {
         if (!refreshingPromise) return resolve();
         subscribers.push(resolve);
-        refreshingPromise.catch(reject);
+        refreshingPromise!.catch(reject);
       });
 
-      // se não temos mais access token, falhe
-      if (!getAccess()) return Promise.reject(error);
+      if (!getAccess()) {
+        // sem token → loga e retorna erro
+        finishLog(original, undefined, error);
+        return Promise.reject(error);
+      }
 
-      // retenta com novo access (o request interceptor injeta)
+      // retenta com novo access
       return http(original);
     }
 
+    // Outros erros → telemetria + propaga
+    finishLog(original, undefined, error);
     return Promise.reject(error);
   }
 );
 
 /* ============================================================================
+ * Single-flight para GETs idênticos (deduplicação) + cache leve (5s)
+ * ==========================================================================*/
+const inflight = new Map<string, Promise<AxiosResponse>>();
+const responseCache = new Map<string, { t: number; res: AxiosResponse }>();
+const CACHE_TTL_MS = 5000; // 5s: evita repingar /auth/me a cada render/rota
+
+function keyFrom(cfg: AxiosRequestConfig) {
+  const u = (cfg.baseURL || '') + (cfg.url || '');
+  const p = cfg.params ? JSON.stringify(cfg.params, Object.keys(cfg.params).sort()) : '';
+  return `${(cfg.method || 'GET').toUpperCase()} ${u}?${p}`;
+}
+
+/* ============================================================================
  * Envelope de request: retorna ApiSuccess<T> ou "vazio" para 204
  * ==========================================================================*/
-/**
- * Executa uma requisição e retorna o envelope `ApiSuccess<T>`.
- * - 204 / corpo vazio: retorna um envelope "vazio" (compatível com o tipo).
- * - Se o backend enviar `{ error: ... }`, lança essa estrutura tipada como erro.
- * - Em demais erros HTTP, lança `Error` com mensagem legível.
- */
 export async function request<T>(
   endpoint: string,
   method: Method = 'GET',
   payload?: object
 ): Promise<ApiSuccess<T>> {
   try {
-    const res: AxiosResponse<ApiResponse<T> | unknown> = await http.request({
+    const cfg: AxiosRequestConfig = {
       url: endpoint,
       method,
       data: method !== 'GET' ? payload : undefined,
       params: method === 'GET' ? payload : undefined,
-    });
+    };
+
+    let res: AxiosResponse<ApiResponse<T> | unknown>;
+
+    if ((cfg.method || 'GET').toUpperCase() === 'GET') {
+      const k = keyFrom(cfg);
+
+      // 1) Cache leve (5s)
+      const hit = responseCache.get(k);
+      if (hit && (Date.now() - hit.t) < CACHE_TTL_MS) {
+        res = hit.res as AxiosResponse<ApiResponse<T> | unknown>;
+      } else {
+        // 2) Single-flight: evita 2+ GETs iguais em paralelo
+        if (!inflight.has(k)) {
+          inflight.set(k, http.request<ApiResponse<T> | unknown>(cfg).finally(() => inflight.delete(k)));
+        }
+        res = await inflight.get(k)!;
+        responseCache.set(k, { t: Date.now(), res }); // salva no cache
+      }
+    } else {
+      res = await http.request<ApiResponse<T> | unknown>(cfg);
+    }
 
     const body = res.data;
 
@@ -216,7 +353,6 @@ export async function request<T>(
       body == null ||
       (typeof body === 'string' && body.trim() === '')
     ) {
-      // Mantém compat com o tipo, mesmo que esse endpoint não retorne dados
       return {} as ApiSuccess<T>;
     }
 
