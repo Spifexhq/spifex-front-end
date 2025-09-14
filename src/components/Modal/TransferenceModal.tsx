@@ -1,17 +1,13 @@
+// src/components/Modal/TransferenceModal.tsx
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { format } from "date-fns";
 
 import { api } from "src/api/requests";
 import Input from "@/components/Input";
+import Button from "@/components/Button";
 import { SelectDropdown } from "@/components/SelectDropdown";
-import { Bank } from "@/models/enterprise_structure";
-import Button from "../Button";
-import {
-  formatAmount,
-  formatCurrency,
-  formatDateToDDMMYYYY,
-  handleAmountKeyDown,
-} from "src/lib";
+import { formatCurrency, handleAmountKeyDown } from "src/lib";
+import type { BankAccount } from "@/models/enterprise_structure/domain";
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -19,35 +15,39 @@ interface TransferenceModalProps {
   onSave: () => void;
 }
 
-const initialForm = {
-  due_date: format(new Date(), "yyyy-MM-dd"),
+type FormState = {
+  date: string;          // ISO (YYYY-MM-DD)
+  amount: string;        // string usada no input (R$)
+  source_bank: string;   // external_id do banco origem
+  dest_bank: string;     // external_id do banco destino
+  description: string;   // observação/opcional
+};
+
+const initialForm: FormState = {
+  date: format(new Date(), "yyyy-MM-dd"),
   amount: "",
-  bank_out_id: "",
-  bank_in_id: "",
-  observation: "",
+  source_bank: "",
+  dest_bank: "",
+  description: "",
 };
 
 const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, onSave }) => {
-  const [formData, setFormData] = useState(initialForm);
-  const [banks, setBanks] = useState<Bank[]>([]);
+  const [formData, setFormData] = useState<FormState>(initialForm);
+  const [banks, setBanks] = useState<BankAccount[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
 
-  const resetForm = useCallback(() => {
-    setFormData(initialForm);
-  }, []);
+  const resetForm = useCallback(() => setFormData(initialForm), []);
 
   const handleClose = useCallback(() => {
     resetForm();
     onClose();
   }, [resetForm, onClose]);
 
-  // keyboard + scroll lock
+  // atalhos + focus + scroll lock
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Esc fecha
       if (e.key === "Escape") handleClose();
-      // Ctrl/Cmd+S salva
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         const formEl = document.getElementById("transferenceForm") as HTMLFormElement | null;
@@ -58,7 +58,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     if (isOpen) {
       document.body.style.overflow = "hidden";
       window.addEventListener("keydown", handleKeyDown);
-      // foco inicial
       setTimeout(() => amountRef.current?.focus(), 50);
     } else {
       document.body.style.overflow = "";
@@ -70,85 +69,101 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     };
   }, [isOpen, handleClose]);
 
+  // carrega bancos (usa somente ativos)
   useEffect(() => {
     if (!isOpen) return;
-    api
-      .getAllBanks()
-      .then((res) => {
-        const payload = res.data as { banks?: Bank[]; results?: Bank[] };
-        const fetched = payload.banks ?? payload.results ?? [];
-        setBanks(fetched.filter((b) => b.bank_status).sort((a, b) => a.id - b.id));
-      })
-      .catch((err) => console.error("Erro ao buscar bancos:", err));
+    (async () => {
+      try {
+        const { data } = await api.getAllBanks();
+        const page = (data?.results ?? []) as BankAccount[];
+        setBanks(page.filter((b) => b.is_active !== false));
+      } catch (err) {
+        console.error("Erro ao buscar bancos:", err);
+      }
+    })();
   }, [isOpen]);
 
+  // helpers de UI
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "amount" ? formatAmount(value) : value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleBankChange = (field: "bank_out_id" | "bank_in_id", selected: Bank[]) => {
-    const id = selected[0]?.id ? String(selected[0].id) : "";
+  const handleBankChange = (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
+    const id = selected[0]?.id ?? "";
     setFormData((prev) => ({ ...prev, [field]: id }));
   };
 
-  const swapBanks = () => {
-    setFormData((prev) => ({
-      ...prev,
-      bank_out_id: prev.bank_in_id,
-      bank_in_id: prev.bank_out_id,
-    }));
-  };
+  const swapBanks = () =>
+    setFormData((prev) => ({ ...prev, source_bank: prev.dest_bank, dest_bank: prev.source_bank }));
 
   const bankOutOptions = useMemo(
-    () => banks.filter((b) => b.id !== parseInt(formData.bank_in_id || "0")).sort((a, b) => a.id - b.id),
-    [banks, formData.bank_in_id]
+    () =>
+      banks
+        .filter((b) => b.id !== formData.dest_bank)
+        .slice()
+        .sort((a, b) => a.institution.localeCompare(b.institution)),
+    [banks, formData.dest_bank]
   );
+
   const bankInOptions = useMemo(
-    () => banks.filter((b) => b.id !== parseInt(formData.bank_out_id || "0")).sort((a, b) => a.id - b.id),
-    [banks, formData.bank_out_id]
+    () =>
+      banks
+        .filter((b) => b.id !== formData.source_bank)
+        .slice()
+        .sort((a, b) => a.institution.localeCompare(b.institution)),
+    [banks, formData.source_bank]
   );
 
-  const amountCents = useMemo(() => parseInt(formData.amount.replace(/\D/g, ""), 10) || 0, [formData.amount]);
-  const isValid =
-    amountCents > 0 &&
-    !!formData.due_date &&
-    !!formData.bank_out_id &&
-    !!formData.bank_in_id &&
-    formData.bank_out_id !== formData.bank_in_id;
+  const amountCents = useMemo(
+    () => parseInt((formData.amount || "").replace(/\D/g, ""), 10) || 0,
+    [formData.amount]
+  );
 
-  const labelFor = (b?: Bank) =>
-    b ? `${b.bank_institution} - ${b.bank_branch} - ${b.bank_account}` : "";
+  // label nas opções (somente institution + account_number)
+  const optionLabelFor = (b?: BankAccount) =>
+    b ? `${b.institution} • ${b.account_number}` : "";
+
+  // label mais completo apenas no rodapé
+  const footerLabelFor = (b?: BankAccount) =>
+    b ? `${b.institution} • Agência ${b.branch} • Conta ${b.account_number}` : "";
 
   const bankOutLabel = useMemo(
-    () => labelFor(banks.find((b) => String(b.id) === formData.bank_out_id)),
-    [banks, formData.bank_out_id]
+    () => footerLabelFor(banks.find((b) => b.id === formData.source_bank)),
+    [banks, formData.source_bank]
   );
   const bankInLabel = useMemo(
-    () => labelFor(banks.find((b) => String(b.id) === formData.bank_in_id)),
-    [banks, formData.bank_in_id]
+    () => footerLabelFor(banks.find((b) => b.id === formData.dest_bank)),
+    [banks, formData.dest_bank]
   );
 
+  const isValid =
+    amountCents > 0 &&
+    !!formData.date &&
+    !!formData.source_bank &&
+    !!formData.dest_bank &&
+    formData.source_bank !== formData.dest_bank;
+
+  // submit (sem uso de `any`)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid || isSubmitting) return;
     setIsSubmitting(true);
 
     try {
-      const data = {
-        due_date: formatDateToDDMMYYYY(formData.due_date),
-        amount: (parseInt(formData.amount, 10) / 100).toFixed(2),
-        bank_out_id: parseInt(formData.bank_out_id, 10),
-        bank_in_id: parseInt(formData.bank_in_id, 10),
-        observation: formData.observation || undefined,
+      const payload = {
+        amount: (amountCents / 100).toFixed(2), // string decimal "3000.00"
+        date: formData.date,                    // ISO "YYYY-MM-DD"
+        description: formData.description || "",
+        source_bank: formData.source_bank,      // external_id aceito pelo backend
+        dest_bank: formData.dest_bank,          // external_id aceito pelo backend
       };
 
-      await api.addTransference(data);
-      onSave();
+      // O wrapper `request` lança em erro, não precisamos inspecionar `any`
+      await api.addTransference(payload);
+
       resetForm();
+      onSave();
     } catch (err) {
       console.error("Erro ao salvar transferência:", err);
       alert("Erro ao salvar transferência.");
@@ -161,7 +176,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
-      {/* Tamanho fixo; header/footer fixos; sem overflow do container */}
       <div
         role="dialog"
         aria-modal="true"
@@ -176,32 +190,25 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">Transferência</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  Entre contas/bancos
-                </h1>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Entre contas/bancos</h1>
               </div>
             </div>
-            <Button
-              variant="outline"
-              className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+            <button
+              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={handleClose}
+              aria-label="Fechar"
             >
-              Fechar
-            </Button>
+              &times;
+            </button>
           </div>
         </header>
 
-        {/* Conteúdo (sem overflow global) */}
+        {/* Body */}
         <form id="transferenceForm" onSubmit={handleSubmit} className="relative z-10 px-5 py-4 overflow-visible flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Linha 1: Data / Valor / Observação curta */}
-            <Input
-              label="Data"
-              name="due_date"
-              type="date"
-              value={formData.due_date}
-              onChange={handleChange}
-            />
+            {/* Data / Valor / Observação */}
+            <Input label="Data" name="date" type="date" value={formData.date} onChange={handleChange} />
+
             <Input
               ref={amountRef}
               label="Valor"
@@ -211,26 +218,23 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               value={formatCurrency(formData.amount)}
               onKeyDown={(e) => handleAmountKeyDown(e, formData.amount, setFormData, true)}
             />
+
             <Input
               label="Observação (opcional)"
-              name="observation"
+              name="description"
               placeholder="Ex.: TED, motivo, etc."
-              value={formData.observation}
+              value={formData.description}
               onChange={handleChange}
             />
 
-            {/* Linha 2: Banco saída / trocar / Banco entrada */}
-            <SelectDropdown<Bank>
+            {/* Banco de saída / trocar / Banco de entrada */}
+            <SelectDropdown<BankAccount>
               label="Banco de saída"
               items={bankOutOptions}
-              selected={
-                formData.bank_out_id
-                  ? bankOutOptions.filter((b) => b.id === parseInt(formData.bank_out_id))
-                  : []
-              }
-              onChange={(sel) => handleBankChange("bank_out_id", sel)}
+              selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
+              onChange={(sel) => handleBankChange("source_bank", sel)}
               getItemKey={(b) => b.id}
-              getItemLabel={labelFor}
+              getItemLabel={optionLabelFor}
               singleSelect
               buttonLabel="Selecione o banco"
               customStyles={{ maxHeight: "180px" }}
@@ -242,31 +246,26 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 variant="outline"
                 className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                 onClick={swapBanks}
-                disabled={!formData.bank_out_id && !formData.bank_in_id}
+                disabled={!formData.source_bank && !formData.dest_bank}
                 title="Trocar bancos"
               >
                 ⇄
               </Button>
             </div>
 
-            <SelectDropdown<Bank>
+            <SelectDropdown<BankAccount>
               label="Banco de entrada"
               items={bankInOptions}
-              selected={
-                formData.bank_in_id
-                  ? bankInOptions.filter((b) => b.id === parseInt(formData.bank_in_id))
-                  : []
-              }
-              onChange={(sel) => handleBankChange("bank_in_id", sel)}
+              selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}
+              onChange={(sel) => handleBankChange("dest_bank", sel)}
               getItemKey={(b) => b.id}
-              getItemLabel={labelFor}
+              getItemLabel={optionLabelFor}
               singleSelect
               buttonLabel="Selecione o banco"
               customStyles={{ maxHeight: "180px" }}
             />
 
-            {/* Aviso se escolherem o mesmo banco */}
-            {formData.bank_in_id && formData.bank_out_id && formData.bank_in_id === formData.bank_out_id && (
+            {formData.source_bank && formData.dest_bank && formData.source_bank === formData.dest_bank && (
               <p className="md:col-span-3 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                 Os bancos de saída e entrada não podem ser o mesmo.
               </p>

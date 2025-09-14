@@ -247,13 +247,13 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                 </h1>
               </div>
             </div>
-            <Button
-              variant="outline"
-              className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+            <button
+              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={onClose}
+              aria-label="Fechar"
             >
-              Fechar
-            </Button>
+              &times;
+            </button>
           </div>
         </header>
 

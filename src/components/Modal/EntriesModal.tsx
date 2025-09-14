@@ -1101,13 +1101,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 </h1>
               </div>
             </div>
-            <Button
-              variant="outline"
-              className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+            <button
+              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={attemptClose}
+              aria-label="Fechar"
             >
-              Fechar
-            </Button>
+              &times;
+            </button>
           </div>
           <div className="px-5 pb-2">
             <Tabs />

@@ -311,8 +311,10 @@ export const api = {
   },
 
   /* --- Transferences --- */
-  addTransference: (payload: AddTransferenceRequest) =>
-    request<Transference>("cashflow/transferences", "POST", payload),
+  addTransference: (payload: AddTransferenceRequest) => {
+    const org = getOrgExternalId();
+    return request<Transference>(`cashflow/${org}/transfers/`, 'POST', payload);
+  },
 
   /* --- Banks --- */
   getAllBanks: () => {

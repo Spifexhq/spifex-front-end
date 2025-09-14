@@ -1,7 +1,9 @@
+// models/entries/domain/Transference.ts
 export interface Transference {
-  due_date: string;
+  date: string;
   amount: string;
-  bank_out_id: number;
-  bank_in_id: number;
-  observation?: string;
+  source_bank: string;
+  dest_bank: string;
+  description?: string;
+  // id?: string; created_at?: string; updated_at?: string; // opcional, se o backend retornar
 }
