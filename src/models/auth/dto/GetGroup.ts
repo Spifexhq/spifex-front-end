@@ -1,17 +1,14 @@
-import { GroupDetail } from "../domain";
+// models/auth/dto/GetGroup.ts
+import { GroupDetail, GroupListItem } from "../domain";
 
-export interface GetGroups {
-  groups: GroupDetail[];
-}
-
-export interface GetGroup {
-  group: GroupDetail;
-}
+export type GetGroups = GroupListItem[] | { results: GroupListItem[] };
+export type GetGroup = GroupDetail;
 
 export interface GroupPayloadBase {
   name: string;
-  banks: string;
-  permissions: string;
+  description?: string;
+  is_system?: boolean;
+  permission_codes?: string[];
 }
 
 export type AddGroupRequest = GroupPayloadBase;

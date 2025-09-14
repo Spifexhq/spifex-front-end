@@ -4,7 +4,7 @@ import {
   GetUserResponse,
   SignInRequest, SignInResponse, SignUpRequest, SignUpResponse,
   Subscription,
-  GetPermissions,
+  GetPermission, GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
 import { User, Organization, Employee, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
@@ -30,7 +30,6 @@ import { store } from '@/redux/store';
 
 const getOrgExternalId = (): string => {
   const state = store.getState();
-  // Try explicit field then nested organization
   const byField = state.auth.orgExternalId;
   const byNested = state.auth.organization?.organization?.external_id;
   const id = byField || byNested;
@@ -127,8 +126,42 @@ export const api = {
 
   /* --- Permissions --- */
   getPermissions: () =>
-    request<GetPermissions>('companies/permissions', "GET"),
+    request<GetPermissions>(`rbac/permissions/`, "GET"),
 
+  getPermission: (code: string) =>
+    request<GetPermission>(`rbac/permissions/${code}/`, "GET"),
+  
+  /* --- Groups --- */
+  getAllGroups: () => {
+    const org = getOrgExternalId();
+    return request<GetGroups>(`rbac/${org}/groups/`, "GET");
+  },
+
+  getGroup: (slug: string) => {
+    const org = getOrgExternalId();
+    return request<GetGroup>(`rbac/${org}/groups/${slug}/`, "GET");
+  },
+
+  addGroup: (payload: AddGroupRequest) => {
+    const org = getOrgExternalId();
+    return request<GroupDetail>(`rbac/${org}/groups/`, "POST", payload);
+  },
+
+  editGroup: (slug: string, payload: Partial<EditGroupRequest>) => {
+    const org = getOrgExternalId();
+    return request<GroupDetail>(`rbac/${org}/groups/${slug}/`, "PATCH", payload);
+  },
+
+  deleteAllGroups: () => {
+    const org = getOrgExternalId();
+    return request<void>(`rbac/${org}/groups/`, "DELETE");
+  },
+
+  deleteGroup: (slug: string) => {
+    const org = getOrgExternalId();
+    return request<void>(`rbac/${org}/groups/${slug}/`, "DELETE");
+  },
+  
   /* --- Tasks --- */
   getAllTasks: () =>
     request<GetTasks>("companies/tasks", "GET"),
@@ -147,26 +180,7 @@ export const api = {
 
   deleteTask: (ids: number[]) =>
     request<TaskDetail>(`companies/tasks/${ids.join(',')}`, 'DELETE'),
-
-  /* --- Groups --- */
-  getAllGroups: () =>
-    request<GetGroups>("companies/groups", "GET"),
-
-  getGroup: (ids: number[]) =>
-    request<GetGroup>(`companies/groups/${ids.join(',')}`, "GET"),
-
-  addGroup: (payload: AddGroupRequest) =>
-    request<GroupDetail>("companies/groups", "POST", payload),
-
-  editGroup: (ids: number[], payload: Partial<EditGroupRequest>) =>
-    request<GroupDetail>(`companies/groups/${ids.join(',')}`, "PUT", payload),
   
-  deleteAllGroups: () =>
-    request<GroupDetail>("companies/groups", 'DELETE'),
-
-  deleteGroup: (ids: number[]) =>
-    request<GroupDetail>(`companies/groups/${ids.join(',')}`, 'DELETE'),
-
   /* --- Employees --- */
   getEmployees: () =>
     request<GetEmployeesResponse>("companies/employees", "GET"),

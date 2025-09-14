@@ -1,3 +1,4 @@
+// models/auth/dto/GetPermission.ts
 import { Permission } from "../domain";
 
 export interface GetPermissions {

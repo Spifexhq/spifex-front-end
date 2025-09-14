@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/*  File: src/pages/GroupSettings.tsx                                         */
+/*  File: src/pages/GroupSettings/index.tsx                                   */
 /*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
 /*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
 /* -------------------------------------------------------------------------- */
@@ -16,118 +16,97 @@ import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { GroupDetail, Permission } from "src/models/auth/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { AddGroupRequest, Bank } from "src/models";
 
-/* ---------------------------- Form template ------------------------------ */
+import type { Permission } from "src/models/auth/domain/Permission";
+import type { GroupDetail, GroupListItem } from "src/models/auth/domain/Group";
+import type { AddGroupRequest, GetGroups, GetGroup } from "src/models/auth/dto/GetGroup";
+
+/* ---------------------------- Tipos locais -------------------------------- */
+
+type GroupRow = GroupListItem; // lista usa o tipo "leve" (sem permissions)
+
+// Form trabalha com objetos Permission; payload envia apenas codes
 const emptyForm = {
   name: "",
-  banks: [] as Bank[],
   permissions: [] as Permission[],
 };
 type FormState = typeof emptyForm;
 
 /* --------------------------------- Helpers -------------------------------- */
-type BankLike =
-  | Bank
-  | {
-      id?: number;
-      bank_id?: number;
-      bank?: Bank | null;
-      account?: string | null;
-      bank_institution?: string | null;
-      bank_account?: string | null;
-    };
 
-const getBankId = (b?: BankLike | null): number | null => {
-  if (!b) return null;
-  // id direto
-  if ("id" in b && typeof b.id === "number") return b.id;
-  // id vindo como bank_id
-  if ("bank_id" in b && typeof b.bank_id === "number") return b.bank_id;
-  // id dentro de bank
-  if ("bank" in b && b.bank && typeof b.bank.id === "number") return b.bank.id;
-  return null;
+const getInitials = () => "GR";
+
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null;
+
+/* --------- Groups (list + detail) --------- */
+
+const isGroupListItem = (v: unknown): v is GroupListItem =>
+  isRecord(v) &&
+  typeof v.id === "number" &&
+  typeof v.slug === "string" &&
+  typeof v.name === "string" &&
+  typeof v.is_system === "boolean" &&
+  typeof v.permissions_count === "number" &&
+  typeof v.members_count === "number";
+
+const toGroupArray = (payload: GetGroups): GroupRow[] => {
+  if (Array.isArray(payload) && payload.every(isGroupListItem)) return payload;
+  if (isRecord(payload) && Array.isArray((payload as { results?: unknown }).results)) {
+    const arr = (payload as { results: unknown[] }).results;
+    return arr.every(isGroupListItem) ? arr : [];
+  }
+  return [];
 };
 
-const toFullBank = (bLike: BankLike, allBanks: Bank[]): Bank => {
-  const id = getBankId(bLike);
-  const found = id ? allBanks.find((x) => x.id === id) : undefined;
+// Detalhe já é GroupDetail nos seus tipos
+const toGroupDetail = (payload: GetGroup): GroupDetail => payload;
 
-  // fallback: se vier como { bank: Bank }, usa o aninhado; senão, usa o próprio objeto tipado como Bank
-  const nested = ((): Bank | undefined => {
-    if (typeof bLike === "object" && bLike && "bank" in bLike) {
-      const maybe = (bLike as { bank?: Bank | null }).bank;
-      if (maybe && typeof maybe.id === "number") return maybe;
+/* --------- Permissions (vários formatos) --------- */
+
+const isPermission = (v: unknown): v is Permission =>
+  isRecord(v) &&
+  typeof (v as { code?: unknown }).code === "string" &&
+  (typeof (v as { name?: unknown }).name === "string" ||
+    typeof (v as { name?: unknown }).name === "undefined");
+
+/** Aceita: Permission[] | {permissions: Permission[]} | {results: Permission[]} | {data:{results: Permission[]}} */
+const toPermissions = (payload: unknown): Permission[] => {
+  // 1) Array direto
+  if (Array.isArray(payload) && payload.every(isPermission)) return payload;
+
+  if (isRecord(payload)) {
+    // 2) { permissions: [...] }
+    const p1 = (payload as Record<string, unknown>)["permissions"];
+    if (Array.isArray(p1) && p1.every(isPermission)) return p1;
+
+    // 3) { results: [...] }
+    const r1 = (payload as Record<string, unknown>)["results"];
+    if (Array.isArray(r1) && r1.every(isPermission)) return r1;
+
+    // 4) { data: { results: [...] } }
+    const data = (payload as Record<string, unknown>)["data"];
+    if (isRecord(data)) {
+      const r2 = (data as Record<string, unknown>)["results"];
+      if (Array.isArray(r2) && r2.every(isPermission)) return r2;
+      const p2 = (data as Record<string, unknown>)["permissions"];
+      if (Array.isArray(p2) && p2.every(isPermission)) return p2;
     }
-    return undefined;
-  })();
-
-  return found ?? nested ?? (bLike as Bank);
+  }
+  return [];
 };
 
-const bankLabel = (bLike: BankLike): string => {
-  const inst =
-    ("bank_institution" in bLike && bLike.bank_institution) ||
-    (("bank" in bLike && bLike.bank && bLike.bank.bank_institution) ?? "") ||
-    "";
-
-  const acc =
-    ("bank_account" in bLike && bLike.bank_account) ||
-    (("bank" in bLike && bLike.bank && bLike.bank.bank_account) ?? "") ||
-    (("account" in bLike && bLike.account) ?? "") ||
-    "";
-
-  return `${inst}${inst && acc ? " - " : ""}${acc}`.trim();
-};
-
-function getInitials() {
-  return "GR";
-}
-
-/* Linha sem bordas próprias; o container usa divide-y */
-const Row = ({
-  g,
-  onEdit,
-  onDelete,
-  canEdit,
-}: {
-  g: GroupDetail;
-  onEdit: (g: GroupDetail) => void;
-  onDelete: (g: GroupDetail) => void;
-  canEdit: boolean;
-}) => (
-  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
-    <p className="text-[13px] font-medium text-gray-900 truncate">{g.name}</p>
-    {canEdit && (
-      <div className="flex gap-2 shrink-0">
-        <Button
-          variant="outline"
-          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-          onClick={() => onEdit(g)}
-        >
-          Editar
-        </Button>
-        <Button variant="common" onClick={() => onDelete(g)}>
-          Excluir
-        </Button>
-      </div>
-    )}
-  </div>
-);
+/* ------------------------------- Componente -------------------------------- */
 
 const GroupSettings: React.FC = () => {
-  /* ------------------------------ Setup ----------------------------------- */
   useEffect(() => {
     document.title = "Grupos";
   }, []);
 
   const { isOwner } = useAuthContext();
 
-  /* ----------------------------- Estados ---------------------------------- */
-  const [groups, setGroups] = useState<GroupDetail[]>([]);
-  const [banks, setBanks] = useState<Bank[]>([]);
+  const [groups, setGroups] = useState<GroupRow[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -139,17 +118,25 @@ const GroupSettings: React.FC = () => {
 
   /* ----------------------------- API calls -------------------------------- */
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [groupRes, bankRes, permRes] = await Promise.all([
-        api.getAllGroups(),
-        api.getAllBanks(),
-        api.getPermissions(),
+      const [groupRes, permRes] = await Promise.all([
+        api.getAllGroups(),   // org é resolvido dentro do requests.ts
+        api.getPermissions(), // global
       ]);
-      setGroups(groupRes.data.groups.sort((a, b) => a.id - b.id));
-      setBanks(bankRes.data.banks.sort((a: Bank, b: Bank) => a.id - b.id));
-      setPermissions(permRes.data.permissions.sort((a: Permission, b: Permission) => a.id - b.id));
-    } catch (error) {
-      console.error("Erro ao buscar grupos/bancos/permissões", error);
+
+      const groupList = toGroupArray(groupRes.data);
+      setGroups(
+        [...groupList].sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      );
+
+      // Aceita qualquer formato (array, {permissions}, {results}, {data:{results}})
+      const perms = toPermissions(permRes.data as unknown);
+      setPermissions(
+        [...perms].sort((a, b) => (a.name || a.code).localeCompare(b.name || b.code))
+      );
+    } catch (err) {
+      console.error("Erro ao buscar grupos/permissões", err);
       setSnackBarMessage("Erro ao buscar dados.");
     } finally {
       setLoading(false);
@@ -157,7 +144,7 @@ const GroupSettings: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   /* ------------------------------ Handlers -------------------------------- */
@@ -168,15 +155,22 @@ const GroupSettings: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEditModal = (group: GroupDetail) => {
-    setMode("edit");
-    setEditingGroup(group);
-    setFormData({
-      name: group.name,
-      banks: (group.banks || []).map((b) => toFullBank(b, banks)), // 👈 aqui
-      permissions: group.permissions || [],
-    });
-    setModalOpen(true);
+  const openEditModal = async (group: GroupRow) => {
+    try {
+      const res = await api.getGroup(group.slug);
+      const detail = toGroupDetail(res.data);
+
+      setMode("edit");
+      setEditingGroup(detail);
+      setFormData({
+        name: detail.name,
+        permissions: detail.permissions ?? [],
+      });
+      setModalOpen(true);
+    } catch (err) {
+      console.error("Erro ao carregar o grupo", err);
+      setSnackBarMessage("Erro ao carregar o grupo.");
+    }
   };
 
   const closeModal = useCallback(() => {
@@ -193,34 +187,39 @@ const GroupSettings: React.FC = () => {
   };
 
   const buildPayload = (): AddGroupRequest => ({
-    name: formData.name,
-    banks: formData.banks.map((b) => getBankId(b)).filter(Boolean).join(","),   // 👈
-    permissions: formData.permissions.map((p) => p.id).join(","),
+    name: formData.name.trim(),
+    permission_codes: formData.permissions.map((p) => p.code),
   });
 
   const submitGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      setSnackBarMessage("Informe o nome do grupo.");
+      return;
+    }
     try {
       const payload = buildPayload();
       if (mode === "create") {
         await api.addGroup(payload);
       } else if (editingGroup) {
-        await api.editGroup([editingGroup.id], payload);
+        await api.editGroup(editingGroup.slug, payload);
       }
       await fetchData();
       closeModal();
-    } catch (error) {
-      setSnackBarMessage(error instanceof Error ? error.message : "Erro ao salvar grupo.");
+    } catch (err) {
+      console.error("Erro ao salvar grupo", err);
+      setSnackBarMessage("Erro ao salvar grupo.");
     }
   };
 
-  const deleteGroup = async (g: GroupDetail) => {
+  const deleteGroup = async (g: GroupRow) => {
     if (!window.confirm(`Excluir grupo "${g.name}"?`)) return;
     try {
-      await api.deleteGroup([g.id]);
+      await api.deleteGroup(g.slug);
       await fetchData();
-    } catch (error) {
-      setSnackBarMessage(error instanceof Error ? error.message : "Erro ao excluir grupo.");
+    } catch (err) {
+      console.error("Erro ao excluir grupo", err);
+      setSnackBarMessage("Erro ao excluir grupo.");
     }
   };
 
@@ -240,13 +239,12 @@ const GroupSettings: React.FC = () => {
 
   if (loading) return <SuspenseLoader />;
 
-  /* ------------------------------ UI -------------------------------------- */
+  /* ---------------------------------- UI ---------------------------------- */
   return (
     <>
       <Navbar />
       <SidebarSettings activeItem="groups" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
@@ -278,28 +276,35 @@ const GroupSettings: React.FC = () => {
 
               <div className="divide-y divide-gray-200">
                 {groups.map((g) => (
-                  <Row
-                    key={g.id}
-                    g={g}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={deleteGroup}
-                  />
+                  <div key={g.slug} className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+                    <p className="text-[13px] font-medium text-gray-900 truncate">{g.name}</p>
+                    {isOwner && (
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                          onClick={() => openEditModal(g)}
+                        >
+                          Editar
+                        </Button>
+                        <Button variant="common" onClick={() => deleteGroup(g)}>
+                          Excluir
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ))}
                 {groups.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">
-                    Nenhum grupo cadastrado.
-                  </p>
+                  <p className="p-4 text-center text-sm text-gray-500">Nenhum grupo cadastrado.</p>
                 )}
               </div>
             </div>
           </section>
         </div>
 
-        {/* ------------------------------ Modal -------------------------------- */}
+        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
             <div
               className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl max-h-[90vh]"
               role="dialog"
@@ -327,27 +332,14 @@ const GroupSettings: React.FC = () => {
                   required
                 />
 
-                <SelectDropdown
-                  label="Bancos"
-                  items={banks}
-                  selected={formData.banks}
-                  onChange={(items) => setFormData((p) => ({ ...p, banks: items }))}
-                  getItemKey={(b) => getBankId(b)!}
-                  getItemLabel={(b) => bankLabel(b)}          // 👈 evita "undefined"
-                  buttonLabel="Selecione os bancos"
-                  hideCheckboxes={false}
-                  clearOnClickOutside={false}
-                  customStyles={{ maxHeight: "250px" }}
-                />
-
                 <div className="col-span-2">
                   <SelectDropdown
                     label="Permissões"
                     items={permissions}
                     selected={formData.permissions}
-                    onChange={(items) => setFormData((p) => ({ ...p, permissions: items }))}
-                    getItemKey={(p) => p.id}
-                    getItemLabel={(p) => p.name}
+                    onChange={(items: Permission[]) => setFormData((p) => ({ ...p, permissions: items }))}
+                    getItemKey={(p: Permission) => p.code}
+                    getItemLabel={(p: Permission) => p.name || p.code}
                     buttonLabel="Selecione as permissões"
                     hideCheckboxes={false}
                     clearOnClickOutside={false}
@@ -367,7 +359,6 @@ const GroupSettings: React.FC = () => {
         )}
       </main>
 
-      {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar
         open={!!snackBarMessage}
         autoHideDuration={6000}
