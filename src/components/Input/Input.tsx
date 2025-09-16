@@ -35,6 +35,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       "w-full text-xs text-gray-800 px-4 py-3 rounded-[5px] outline-none " +
       "transition-all duration-200 ease-in-out placeholder-gray-400 " +
       "border focus:border-gray-400 " +
+      "hover:bg-gray-50 focus:bg-gray-50 " +
       "disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed";
 
     const variantClasses: Record<Variant, string> = {
