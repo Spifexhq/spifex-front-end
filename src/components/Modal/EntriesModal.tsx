@@ -545,10 +545,20 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    // EntryRead: string ids (external_id) para gl_account, project, entity
-    const recCount = (initialEntry as unknown as { installment_count?: number }).installment_count ?? 1;
-    const interval = (initialEntry as unknown as { interval_months?: number }).interval_months ?? 1;
-    const weekendNum = (initialEntry as unknown as { weekend_action?: number }).weekend_action ?? 0;
+    const recCount = (initialEntry).installment_count ?? 1;
+    const interval = (initialEntry).interval_months ?? 1;
+    const weekendNum = (initialEntry).weekend_action ?? 0;
+
+    const rawDeps =
+      ((initialEntry).departments ?? []) as Array<{
+        department_id: string;
+        percent: string | number;
+      }>;
+
+    const depIds = rawDeps.map(d => String(d.department_id));
+    const depPercs = rawDeps.map(d =>
+      typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent)
+    );
 
     setFormData({
       details: {
@@ -556,30 +566,25 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         description: initialEntry.description ?? "",
         observation: initialEntry.observation ?? "",
         amount: decimalToCentsString(initialEntry.amount),
-        accountingAccount: (initialEntry as unknown as { gl_account?: string }).gl_account || "",
-        // document_type não vem no read serializer → deixamos vazio
+        accountingAccount: (initialEntry).gl_account || "",
         documentType: "",
         notes: initialEntry.notes ?? "",
       },
       costCenters: {
-        departments: [],
-        department_percentage: [],
-        projects: (initialEntry as unknown as { project?: string }).project || "",
+        departments: depIds,
+        department_percentage: depPercs,
+        projects: (initialEntry).project || "",
       },
-      inventory: {
-        product: "",
-        quantity: "",
-      },
+      inventory: { product: "", quantity: "" },
       entities: {
         entityType: "",
-        entity: (initialEntry as unknown as { entity?: string }).entity || "",
+        entity: (initialEntry).entity || "",
       },
       recurrence: {
         recurrence: recCount > 1 ? 1 : 0,
         installments: recCount > 1 ? String(recCount) : "",
-        periods: Number(interval as IntervalMonths),
-        weekend:
-          weekendNum === 1 ? "postpone" : weekendNum === -1 ? "antedate" : "",
+        periods: Number(interval),
+        weekend: weekendNum === 1 ? "postpone" : weekendNum === -1 ? "antedate" : "",
       },
     });
   }, [isOpen, initialEntry]);
@@ -588,25 +593,58 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    const glaId = (initialEntry as unknown as { gl_account?: string }).gl_account || "";
-    const la = ledgerAccounts.find((a) => a.id === glaId);
+    // GL Account
+    const glaId = (initialEntry).gl_account || "";
+    const la = ledgerAccounts.find(a => a.id === glaId);
     setSelectedLedgerAccount(la ? [la] : []);
 
-    const prjId = (initialEntry as unknown as { project?: string }).project || "";
-    const prj = projects.find((p) => p.id === prjId);
+    // Project
+    const prjId = (initialEntry).project || "";
+    const prj = projects.find(p => p.id === prjId);
     setSelectedProject(prj ? [prj] : []);
 
-    const entId = (initialEntry as unknown as { entity?: string }).entity || "";
-    const ent = entities.find((e) => e.id === entId);
+    // Entity + tipo
+    const entId = (initialEntry).entity || "";
+    const ent = entities.find(e => e.id === entId);
     setSelectedEntity(ent ? [ent] : []);
-    if (ent && (ent as unknown as { entity_type?: string }).entity_type) {
-      const et = (ent as unknown as { entity_type?: string }).entity_type!;
-      const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === et);
+    if (ent && (ent).entity_type) {
+      const et = (ent).entity_type as string;
+      const opt = ENTITY_TYPE_OPTIONS.find(o => o.value === et);
       setSelectedEntityType(opt ? [opt] : []);
     } else {
       setSelectedEntityType([]);
     }
-  }, [isOpen, initialEntry, ledgerAccounts, projects, entities]);
+
+    // Department
+    const rawDeps =
+      ((initialEntry).departments ?? []) as Array<{
+        department_id: string;
+        percent: string | number;
+      }>;
+    const depIds = rawDeps.map(d => String(d.department_id));
+    const idToPercent = new Map(
+      rawDeps.map(d => [String(d.department_id), typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent)])
+    );
+
+    const selectedDeps = depIds
+      .map(id => departments.find(d => d.id === id))
+      .filter(Boolean) as Department[];
+
+    setSelectedDepartments(selectedDeps);
+
+    if (selectedDeps.length) {
+      const percsInOrder = selectedDeps.map(d => idToPercent.get(d.id) ?? "");
+      const idsInOrder = selectedDeps.map(d => String(d.id));
+      setFormData(prev => ({
+        ...prev,
+        costCenters: {
+          ...prev.costCenters,
+          departments: idsInOrder,
+          department_percentage: percsInOrder,
+        },
+      }));
+    }
+  }, [isOpen, initialEntry, ledgerAccounts, projects, entities, departments]);
 
   /* ------------------------------ Handlers ------------------------------ */
   const handleLedgerAccountChange = (updated: GLAccount[]) => {
