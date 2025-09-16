@@ -214,9 +214,13 @@ const GroupSettings: React.FC = () => {
 
   const deleteGroup = async (g: GroupRow) => {
     if (!window.confirm(`Excluir grupo "${g.name}"?`)) return;
+
     try {
       await api.deleteGroup(g.slug);
+
       await fetchData();
+
+      setGroups(prev => prev.filter(item => item.slug !== g.slug));
     } catch (err) {
       console.error("Erro ao excluir grupo", err);
       setSnackBarMessage("Erro ao excluir grupo.");
