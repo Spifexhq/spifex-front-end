@@ -36,7 +36,7 @@ const SignUp = () => {
   const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const { user_country: autoCountry } = useAutoCountry({ timeoutMs: 2500 });
+  const { country: autoCountry } = useAutoCountry({ timeoutMs: 2500 });
 
   const isFormIncomplete = Object.values(form).some((v) => v === "");
 
@@ -74,8 +74,8 @@ const SignUp = () => {
         name: form.name,
         email: form.email,
         password: form.password,
-        user_timezone: timezone,
-        user_country: (autoCountry || "").toUpperCase(), // <- fora do form, como timezone
+        timezone: timezone,
+        country: (autoCountry || "").toUpperCase(), // <- fora do form, como timezone
       });
 
       if (isApiError(res)) {

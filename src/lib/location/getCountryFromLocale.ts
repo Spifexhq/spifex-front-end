@@ -117,7 +117,7 @@ export async function detectCountry(
 /** Hook React */
 export function useAutoCountry(
   { timeoutMs = 3500, ipOnly = false }: { timeoutMs?: number; ipOnly?: boolean } = {}
-): { user_country: string; isLoading: boolean } {
+): { country: string; isLoading: boolean } {
   const [country, setCountry] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -143,5 +143,5 @@ export function useAutoCountry(
     return () => { alive = false; };
   }, [timeoutMs, ipOnly]);
 
-  return { user_country: country, isLoading };
+  return { country: country, isLoading };
 }

@@ -4,8 +4,8 @@ export interface SignUpRequest {
   name: string;
   email: string;
   password: string;
-  user_timezone: string;
-  user_country: string;
+  timezone: string;
+  country: string;
 }
 
 export interface SignUpResponseSuccess {
