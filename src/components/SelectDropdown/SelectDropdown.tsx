@@ -352,7 +352,7 @@ function SelectDropdown<T>({
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : `${
                     isOpen ? "bg-gray-50 border border-gray-400"
-                           : "bg-white border border-gray-300 hover:bg-gray-100"
+                           : "bg-white border border-gray-300 hover:bg-gray-50"
                   } focus-visible:bg-gray-100 focus-visible:border-gray-400`
             }
           `}
