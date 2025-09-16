@@ -23,7 +23,7 @@ import {
 
 import { api } from "src/api/requests";
 import { ApiError } from "@/models/Api";
-import { AddEntryRequest, EditEntryRequest  } from "@/models/entries/dto";
+import { AddEntryRequest, EditEntryRequest } from "@/models/entries/dto";
 
 import type {
   GLAccount,
@@ -101,6 +101,15 @@ const ENTITY_TYPE_OPTIONS = [
   { id: 1, label: "Cliente", value: "client" },
   { id: 2, label: "Fornecedor", value: "supplier" },
   { id: 3, label: "Funcionário", value: "employee" },
+];
+
+// 🔹 Lista de abas (constante estável no módulo para satisfazer exhaustive-deps)
+const TAB_LIST: { id: Tab; label: string }[] = [
+  { id: "details", label: "Detalhes" },
+  { id: "costCenters", label: "Centro de Custos" },
+  { id: "inventory", label: "Inventário" },
+  { id: "entities", label: "Envolvidos" },
+  { id: "recurrence", label: "Recorrência" },
 ];
 
 // KEEP=0, POSTPONE=1, ANTICIPATE=-1 (no backend)
@@ -545,18 +554,18 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    const recCount = (initialEntry).installment_count ?? 1;
-    const interval = (initialEntry).interval_months ?? 1;
-    const weekendNum = (initialEntry).weekend_action ?? 0;
+    const recCount = initialEntry.installment_count ?? 1;
+    const interval = initialEntry.interval_months ?? 1;
+    const weekendNum = initialEntry.weekend_action ?? 0;
 
     const rawDeps =
-      ((initialEntry).departments ?? []) as Array<{
+      (initialEntry.departments ?? []) as Array<{
         department_id: string;
         percent: string | number;
       }>;
 
-    const depIds = rawDeps.map(d => String(d.department_id));
-    const depPercs = rawDeps.map(d =>
+    const depIds = rawDeps.map((d) => String(d.department_id));
+    const depPercs = rawDeps.map((d) =>
       typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent)
     );
 
@@ -566,19 +575,19 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         description: initialEntry.description ?? "",
         observation: initialEntry.observation ?? "",
         amount: decimalToCentsString(initialEntry.amount),
-        accountingAccount: (initialEntry).gl_account || "",
+        accountingAccount: initialEntry.gl_account || "",
         documentType: "",
         notes: initialEntry.notes ?? "",
       },
       costCenters: {
         departments: depIds,
         department_percentage: depPercs,
-        projects: (initialEntry).project || "",
+        projects: initialEntry.project || "",
       },
       inventory: { product: "", quantity: "" },
       entities: {
         entityType: "",
-        entity: (initialEntry).entity || "",
+        entity: initialEntry.entity || "",
       },
       recurrence: {
         recurrence: recCount > 1 ? 1 : 0,
@@ -594,22 +603,22 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     if (!isOpen || !initialEntry) return;
 
     // GL Account
-    const glaId = (initialEntry).gl_account || "";
-    const la = ledgerAccounts.find(a => a.id === glaId);
+    const glaId = initialEntry.gl_account || "";
+    const la = ledgerAccounts.find((a) => a.id === glaId);
     setSelectedLedgerAccount(la ? [la] : []);
 
     // Project
-    const prjId = (initialEntry).project || "";
-    const prj = projects.find(p => p.id === prjId);
+    const prjId = initialEntry.project || "";
+    const prj = projects.find((p) => p.id === prjId);
     setSelectedProject(prj ? [prj] : []);
 
     // Entity + tipo
-    const entId = (initialEntry).entity || "";
-    const ent = entities.find(e => e.id === entId);
+    const entId = initialEntry.entity || "";
+    const ent = entities.find((e) => e.id === entId);
     setSelectedEntity(ent ? [ent] : []);
-    if (ent && (ent).entity_type) {
-      const et = (ent).entity_type as string;
-      const opt = ENTITY_TYPE_OPTIONS.find(o => o.value === et);
+    if (ent && ent.entity_type) {
+      const et = ent.entity_type as string;
+      const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === et);
       setSelectedEntityType(opt ? [opt] : []);
     } else {
       setSelectedEntityType([]);
@@ -617,25 +626,28 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
     // Department
     const rawDeps =
-      ((initialEntry).departments ?? []) as Array<{
+      (initialEntry.departments ?? []) as Array<{
         department_id: string;
         percent: string | number;
       }>;
-    const depIds = rawDeps.map(d => String(d.department_id));
+    const depIds = rawDeps.map((d) => String(d.department_id));
     const idToPercent = new Map(
-      rawDeps.map(d => [String(d.department_id), typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent)])
+      rawDeps.map((d) => [
+        String(d.department_id),
+        typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent),
+      ])
     );
 
     const selectedDeps = depIds
-      .map(id => departments.find(d => d.id === id))
+      .map((id) => departments.find((d) => d.id === id))
       .filter(Boolean) as Department[];
 
     setSelectedDepartments(selectedDeps);
 
     if (selectedDeps.length) {
-      const percsInOrder = selectedDeps.map(d => idToPercent.get(d.id) ?? "");
-      const idsInOrder = selectedDeps.map(d => String(d.id));
-      setFormData(prev => ({
+      const percsInOrder = selectedDeps.map((d) => idToPercent.get(d.id) ?? "");
+      const idsInOrder = selectedDeps.map((d) => String(d.id));
+      setFormData((prev) => ({
         ...prev,
         costCenters: {
           ...prev.costCenters,
@@ -696,18 +708,78 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
   };
 
-  /* ---------------------------- Tabs --------------------------- */
+  // 🔹 Navegação por abas: Ctrl/Cmd + ← / →
+  const goTabRelative = useCallback(
+    (delta: number) => {
+      const idx = TAB_LIST.findIndex((t) => t.id === activeTab);
+      if (idx === -1) return;
+      const nextIdx = (idx + delta + TAB_LIST.length) % TAB_LIST.length;
+      setActiveTab(TAB_LIST[nextIdx].id);
+    },
+    [activeTab]
+  );
+
+  /* ---------------------- Fechamento com confirmação interna ----------------- */
+  const attemptClose = useCallback(() => {
+    // Se houver dropdown aberto, deixa o ESC atuar no dropdown
+    const dropdownOpen = document.querySelector('[data-select-open="true"]');
+    if (dropdownOpen) return;
+
+    if (hasMeaningfulData) {
+      setShowCloseConfirm(true);
+      return;
+    }
+    handleClose();
+  }, [hasMeaningfulData, handleClose]);
+
+  /* ----------------------- Teclado: ESC, Ctrl/Cmd+S, Ctrl/Cmd+←/→ ----------- */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      // ESC
+      if (e.key === "Escape") {
+        if (showCloseConfirm) {
+          e.stopPropagation();
+          setShowCloseConfirm(false);
+          return;
+        }
+        const dropdownOpen = document.querySelector('[data-select-open="true"]');
+        if (dropdownOpen) return;
+        attemptClose();
+        return;
+      }
+
+      // Ctrl/Cmd + S → submit
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
+        return;
+      }
+
+      // Ctrl/Cmd + ArrowLeft/ArrowRight → trocar abas (AGORA MESMO COM FOCO EM INPUT)
+      if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        if (showCloseConfirm) return;
+
+        // opcional: ainda evita se um SelectDropdown estiver aberto
+        const dropdownOpen = document.querySelector('[data-select-open="true"]');
+        if (dropdownOpen) return;
+
+        // ⚠️ sem o guard de "isTyping": sempre troca a aba
+        e.preventDefault();
+        goTabRelative(e.key === "ArrowRight" ? 1 : -1);
+        return;
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, attemptClose, showCloseConfirm, goTabRelative]);
+
+  /* ---------------------------- Conteúdo ------------------------- */
   const Tabs = () => (
     <nav className="flex gap-3 overflow-x-auto">
-      {(
-        [
-          { id: "details", label: "Detalhes" },
-          { id: "costCenters", label: "Centro de Custos" },
-          { id: "inventory", label: "Inventário" },
-          { id: "entities", label: "Envolvidos" },
-          { id: "recurrence", label: "Recorrência" },
-        ] as { id: Tab; label: string }[]
-      ).map((t) => {
+      {TAB_LIST.map((t) => {
         const isActive = activeTab === t.id;
         return (
           <button
@@ -728,53 +800,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     </nav>
   );
 
-  /* ---------------------- Fechamento com confirmação interna ----------------- */
-  const attemptClose = useCallback(() => {
-    // Se houver dropdown aberto, deixa o ESC atuar no dropdown
-    const dropdownOpen = document.querySelector('[data-select-open="true"]');
-    if (dropdownOpen) return;
-
-    if (hasMeaningfulData) {
-      setShowCloseConfirm(true);
-      return;
-    }
-    handleClose();
-  }, [hasMeaningfulData, handleClose]);
-
-  /* ----------------------- Teclado: ESC e Ctrl/Cmd+S ------------------------ */
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      // ESC
-      if (e.key === "Escape") {
-        // prioridade: se o overlay de confirmação está visível, ESC = cancelar overlay
-        if (showCloseConfirm) {
-          e.stopPropagation();
-          setShowCloseConfirm(false);
-          return;
-        }
-        // depois: se houver dropdown aberto, deixa o próprio dropdown tratar
-        const dropdownOpen = document.querySelector('[data-select-open="true"]');
-        if (dropdownOpen) return;
-
-        // se nada estiver aberto, tenta fechar o modal
-        attemptClose();
-        return;
-      }
-
-      // Ctrl/Cmd + S → submit
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-        (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, attemptClose, showCloseConfirm]);
-
-  /* ---------------------------- Conteúdo ------------------------- */
   const renderTabContent = () => {
     switch (activeTab) {
       case "details":
@@ -971,7 +996,9 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       case "entities": {
         const filteredEntities = formData.entities.entityType
           ? entities.filter(
-              (e) => (e as unknown as { entity_type?: string }).entity_type === formData.entities.entityType
+              (e) =>
+                (e as unknown as { entity_type?: string }).entity_type ===
+                formData.entities.entityType
             )
           : entities;
 
@@ -1004,7 +1031,11 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               selected={selectedEntity}
               onChange={handleEntityChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.full_name || (i as unknown as { alias_name?: string }).alias_name || "Entidade sem nome"}
+              getItemLabel={(i) =>
+                i.full_name ||
+                (i as unknown as { alias_name?: string }).alias_name ||
+                "Entidade sem nome"
+              }
               buttonLabel="Selecione a entidade"
               singleSelect
               customStyles={{ maxHeight: "200px" }}
@@ -1166,7 +1197,9 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               ) : (
                 <>Informe um valor para salvar.</>
               )}
-              <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/Cmd+S (salvar)</span>
+              <span className="ml-3 text-gray-400">
+                Atalhos: Esc (fechar), Ctrl/Cmd+S (salvar), Ctrl/Cmd+←/→ (abas)
+              </span>
             </p>
 
             <div className="flex gap-2">
