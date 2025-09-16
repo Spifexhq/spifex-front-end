@@ -25,7 +25,6 @@ const PROJECT_TYPES = [
   { label: "Interno", value: "internal" },
   { label: "Cliente", value: "client" },
   { label: "Pesquisa", value: "research" },
-  // extras
   { label: "Operacional", value: "operational" },
   { label: "Marketing", value: "marketing" },
   { label: "Produto", value: "product" },
