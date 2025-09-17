@@ -2,40 +2,38 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { createPortal } from "react-dom";
 import type { SnackbarProps } from "./Snackbar.types";
 
-/**
- * Snackbar — 100% Tailwind, fluido, minimalista e acessível
- * - Portal no body
- * - Transições suaves (opacity + translate)
- * - Âncoras (top/bottom x left/center/right)
- * - Auto-hide com pausa em hover (opcional)
- * - Clique-para-fechar (opcional) + botão fechar
- * - Respeita cores via CSS variables do projeto (ex.: --accentSuccess, etc.)
- */
-
 const cls = (...p: Array<string | false | null | undefined>) => p.filter(Boolean).join(" ");
 
 const severityStyles = (severity: SnackbarProps["severity"]) => {
   switch (severity) {
     case "success":
       return {
-        bar: "bg-[color:var(--accentSuccess)]",
+        bg: "bg-[color:var(--accentSuccess)]/10",
+        border: "border-[color:var(--accentSuccess)]/30",
         ring: "ring-[color:var(--accentSuccess)]/20",
+        text: "text-gray-900",
       };
     case "error":
       return {
-        bar: "bg-[color:var(--accentDanger)]",
+        bg: "bg-[color:var(--accentDanger)]/10",
+        border: "border-[color:var(--accentDanger)]/30",
         ring: "ring-[color:var(--accentDanger)]/20",
+        text: "text-gray-900",
       };
     case "warning":
       return {
-        bar: "bg-[color:var(--accentWarning)]",
+        bg: "bg-[color:var(--accentWarning)]/10",
+        border: "border-[color:var(--accentWarning)]/30",
         ring: "ring-[color:var(--accentWarning)]/20",
+        text: "text-gray-900",
       };
     case "info":
     default:
       return {
-        bar: "bg-[color:var(--accentInfo)]",
-        ring: "ring-[color:var(--accentInfo)]/20",
+        bg: "bg-white",
+        border: "border-gray-200",
+        ring: "ring-[color:var(--accentInfo)]/15",
+        text: "text-gray-900",
       };
   }
 };
@@ -67,18 +65,15 @@ const Snackbar: React.FC<SnackbarProps> = ({
   showCloseButton = true,
   maxWidthClassName = "max-w-md",
 }) => {
-  /** controla montagem/desmontagem suave */
   const [mounted, setMounted] = useState(open);
-  /** controla estado visual (abre/fecha) para as classes de transição */
   const [show, setShow] = useState(open);
-  /** aceleração no clique */
   const [clickClosing, setClickClosing] = useState(false);
 
   const timerRef = useRef<number | null>(null);
   const endTimeRef = useRef<number | null>(null);
   const remainingRef = useRef<number | null>(null);
 
-  const clickFadeMs = 140; // fade mais rápido no clique
+  const clickFadeMs = 140;
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -114,11 +109,9 @@ const Snackbar: React.FC<SnackbarProps> = ({
     }
   }, [pauseOnHover, startTimer]);
 
-  // Monta/desmonta + animação sincronizada (texto + cartão)
   useEffect(() => {
     if (open) {
       setMounted(true);
-      // próximo tick para permitir a transição
       const t = window.setTimeout(() => setShow(true), 10);
       return () => window.clearTimeout(t);
     } else {
@@ -132,7 +125,6 @@ const Snackbar: React.FC<SnackbarProps> = ({
     }
   }, [open, transitionDuration, clickClosing]);
 
-  // Auto-hide
   useEffect(() => {
     if (open && autoHideDuration) {
       startTimer(autoHideDuration);
@@ -148,78 +140,91 @@ const Snackbar: React.FC<SnackbarProps> = ({
 
   const role = severity === "error" ? "alert" : "status";
   const ariaLive = severity === "error" ? "assertive" : "polite";
-
   const cardTransitionDuration = clickClosing ? clickFadeMs : transitionDuration;
 
-  // Cartão (texto + fundo + borda) anima junto -> sem “fantasma” de quadrado
-  const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div
-      className={cls(
-        "pointer-events-auto",
-        "rounded-lg border border-gray-200 shadow-lg ring-1",
-        sev.ring,
-        "bg-white text-gray-900",
-        "flex items-start",
-        maxWidthClassName
-      )}
-      style={{
-        transitionDuration: `${cardTransitionDuration}ms`,
-      }}
-      onMouseEnter={pauseTimer}
-      onMouseLeave={resumeTimer}
-      onClick={() => {
-        if (!dismissOnClick) return;
-        // acelera fade e chama onClose após o fade curto
-        clearTimer();
-        setClickClosing(true);
-        setShow(false);
-        window.setTimeout(() => onClose(), clickFadeMs);
-      }}
-      role={role}
-      aria-live={ariaLive}
-      aria-atomic="true"
-    >
-      {/* Barra lateral por severidade */}
-      <div className={cls("w-1 rounded-l-lg", sev.bar)} aria-hidden="true" />
-      <div className="py-3 px-3">{children}</div>
-      {showCloseButton && (
-        <button
-          type="button"
-          onClick={() => {
-            clearTimer();
-            setShow(false);
-            window.setTimeout(() => onClose(), cardTransitionDuration);
-          }}
-          className={cls(
-            "ml-auto p-2 text-gray-500 hover:text-gray-700",
-            "focus:outline-none",
-            "ring-[color:var(--accentPrimary)]"
-          )}
-          aria-label="Fechar notificação"
-        >
-          <span className="block h-4 w-4 leading-none">×</span>
-        </button>
-      )}
-    </div>
-  );
-
-  const content =
-    children ??
-    (message != null ? <div className="text-sm leading-relaxed">{message}</div> : null);
+  const isCustom = !!children;
 
   return createPortal(
     <div className={cls(container, "px-4 py-2", "pointer-events-none")}>
       <div
         className={cls(
-          "pointer-events-auto", // permite click apenas no card
           "transform transition-all motion-reduce:transition-none",
           show ? "opacity-100 translate-y-0" : cls("opacity-0", enterDir)
         )}
         style={{ transitionDuration: `${cardTransitionDuration}ms` }}
+        role={role}
+        aria-live={ariaLive}
+        aria-atomic="true"
       >
-        <div className={cls("flex justify-center", className)}>
-          <Card>{content}</Card>
-        </div>
+        {isCustom ? (
+          // ── CUSTOM CONTENT: sem card do Snackbar (zero bg/border/shadow) ─────────
+          <div
+            className={cls(
+              "pointer-events-auto mx-auto",
+              maxWidthClassName,
+              className // aplica somente utilitários do chamador
+            )}
+            onMouseEnter={pauseTimer}
+            onMouseLeave={resumeTimer}
+            onClick={() => {
+              if (!dismissOnClick) return;
+              clearTimer();
+              setClickClosing(true);
+              setShow(false);
+              window.setTimeout(() => onClose(), clickFadeMs);
+            }}
+            style={{ transitionDuration: `${cardTransitionDuration}ms` }}
+          >
+            {children}
+          </div>
+        ) : (
+          // ── MESSAGE SIMPLES: 1 ÚNICO CARD estilizado pelo Snackbar ───────────────
+          <div
+            className={cls(
+              "pointer-events-auto",
+              "mx-auto rounded-lg border shadow-lg ring-1",
+              sev.bg,
+              sev.border,
+              sev.ring,
+              sev.text,
+              "flex items-start",
+              maxWidthClassName,
+              className
+            )}
+            style={{ transitionDuration: `${cardTransitionDuration}ms` }}
+            onMouseEnter={pauseTimer}
+            onMouseLeave={resumeTimer}
+            onClick={() => {
+              if (!dismissOnClick) return;
+              clearTimer();
+              setClickClosing(true);
+              setShow(false);
+              window.setTimeout(() => onClose(), clickFadeMs);
+            }}
+          >
+            <div className="py-3 px-3 grow">
+              <div className="text-sm leading-relaxed">{message}</div>
+            </div>
+            {showCloseButton && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearTimer();
+                  setShow(false);
+                  window.setTimeout(() => onClose(), cardTransitionDuration);
+                }}
+                className={cls(
+                  "ml-auto p-2 text-gray-500 hover:text-gray-700",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accentPrimary)]"
+                )}
+                aria-label="Fechar notificação"
+              >
+                <span className="block h-4 w-4 leading-none">×</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>,
     document.body
