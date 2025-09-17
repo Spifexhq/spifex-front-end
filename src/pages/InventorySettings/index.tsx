@@ -292,7 +292,7 @@ const InventorySettings: React.FC = () => {
         {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w/full max-w-md"
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
                  role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
