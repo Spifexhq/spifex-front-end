@@ -350,6 +350,7 @@ const EmployeeSettings: React.FC = () => {
         open={!!snackBarMessage}
         autoHideDuration={6000}
         onClose={() => setSnackBarMessage("")}
+        severity="error"
       >
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>

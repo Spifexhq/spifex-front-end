@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 
 import { useAuth } from "@/api";
 import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 
@@ -12,9 +11,7 @@ import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
 
 import "./styles.css";
 
-// -----------------------------------------------------------------------------
-// Component
-// -----------------------------------------------------------------------------
+type Snack = { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null;
 
 const SignIn = () => {
   useEffect(() => {
@@ -28,7 +25,7 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const isFormIncomplete = !email || !password;
 
@@ -36,7 +33,7 @@ const SignIn = () => {
     e.preventDefault();
 
     if (isFormIncomplete) {
-      setSnackBarMessage("Preencha todos os campos");
+      setSnack({ message: "Preencha todos os campos", severity: "warning" });
       return;
     }
 
@@ -46,17 +43,14 @@ const SignIn = () => {
       await handleSignIn(email, password);
       navigate("/cashflow");
     } catch (error) {
-      setSnackBarMessage(
-        error instanceof Error ? error.message : "Erro inesperado. Tente novamente mais tarde."
-      );
+      setSnack({
+        message: error instanceof Error ? error.message : "Erro inesperado. Tente novamente mais tarde.",
+        severity: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
-  // -----------------------------------------------------------------------------
-  // Render
-  // -----------------------------------------------------------------------------
 
   return (
     <div className="sign-in">
@@ -132,18 +126,15 @@ const SignIn = () => {
 
         {/* Snackbar */}
         <Snackbar
-          className="sign-in__snackbar"
-          open={snackBarMessage !== ""}
+          open={!!snack}
+          onClose={() => setSnack(null)}
           autoHideDuration={6000}
-          onClose={() => setSnackBarMessage("")}
-        >
-          <Alert
-            className="sign-in__alert"
-            severity={typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso") ? "success" : "error"}
-          >
-            {snackBarMessage}
-          </Alert>
-        </Snackbar>
+          message={snack?.message}
+          severity={snack?.severity}
+          anchor={{ vertical: "bottom", horizontal: "center" }}
+          pauseOnHover
+          showCloseButton
+        />
       </div>
 
       {/* Right section */}

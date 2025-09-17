@@ -1,41 +1,43 @@
-/**
- * Snackbar.types.ts
- * 
- * This file defines the types for the Snackbar component.
- * 
- * Features:
- * - Controls the visibility of the Snackbar (`open` prop)
- * - Supports an automatic close timer (`autoHideDuration`)
- * - Executes a callback function when the Snackbar closes (`onClose`)
- * - Allows customization via a `className`
- * - Accepts children content, usually an `Alert` component
- * 
- * Usage:
- * ```tsx
- * <Snackbar open={true} autoHideDuration={3000} onClose={handleClose}>
- *   <Alert severity="success">Operation successful!</Alert>
- * </Snackbar>
- * ```
- */
-
 export interface SnackbarProps {
-  // Determines whether the Snackbar is open
+  /** Controla a abertura do Snackbar */
   open: boolean;
 
-  // Time (in ms) to automatically close the Snackbar
+  /** Tempo (ms) para fechar automaticamente */
   autoHideDuration?: number;
 
-  // Callback called when Snackbar closes
+  /** Callback ao fechar */
   onClose: () => void;
 
-  // Optional CSS class for customization
+  /** Classe extra opcional */
   className?: string;
 
-  /** Mensagem curta; se presente, o Snackbar cria internamente um <Alert> */
-  message?: string | JSX.Element;
-  /** Severidade usada quando message é fornecida */
+  /** Mensagem curta; se presente, o Snackbar renderiza um “alerta” minimalista */
+  message?: React.ReactNode;
+
+  /** Severidade usada quando `message` é fornecida */
   severity?: "success" | "error" | "warning" | "info";
 
-  // Content within the Snackbar (usually an Alert)
-  children: React.ReactNode;
+  /** Conteúdo livre (geralmente um Alert custom) */
+  children?: React.ReactNode;
+
+  /** Posição na tela (default: bottom-center) */
+  anchor?: {
+    vertical: "top" | "bottom";
+    horizontal: "left" | "center" | "right";
+  };
+
+  /** Duração da transição (ms). Default: 220 */
+  transitionDuration?: number;
+
+  /** Pausar o autoHide ao passar o mouse. Default: true */
+  pauseOnHover?: boolean;
+
+  /** Fechar ao clicar no próprio snackbar. Default: false */
+  dismissOnClick?: boolean;
+
+  /** Exibe botão de fechar. Default: true */
+  showCloseButton?: boolean;
+
+  /** Largura máxima do card. Default: 28rem (max-w-md) */
+  maxWidthClassName?: string; // e.g. "max-w-lg"
 }

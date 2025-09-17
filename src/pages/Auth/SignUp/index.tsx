@@ -104,6 +104,12 @@ const SignUp = () => {
   // Render
   // -----------------------------------------------------------------------------
 
+  // ⬇️ unificamos severidade para o Snackbar e o Alert (coerência visual)
+  const snackSeverity =
+    typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso")
+      ? "success"
+      : "error";
+
   return (
     <div className="sign-up">
       {/* Left section */}
@@ -206,11 +212,9 @@ const SignUp = () => {
           open={snackBarMessage !== ""}
           autoHideDuration={6000}
           onClose={() => setSnackBarMessage("")}
+          severity={snackSeverity}
         >
-          <Alert
-            className="sign-up__alert"
-            severity={typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso") ? "success" : "error"}
-          >
+          <Alert className="sign-up__alert" severity={snackSeverity}>
             {snackBarMessage}
           </Alert>
         </Snackbar>

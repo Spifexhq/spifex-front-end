@@ -1,11 +1,12 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { api } from "@/api/requests";
-import { validatePassword } from "src/lib"; // você já usa esse helper
+import { validatePassword } from "src/lib";
 import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+
+type Snack = { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null;
 
 const ResetPassword = () => {
   useEffect(() => { document.title = "Redefinir senha | Spifex"; }, []);
@@ -15,31 +16,34 @@ const ResetPassword = () => {
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [snack, setSnack] = useState<string | JSX.Element>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!p1 || !p2) {
-      setSnack("Preencha os dois campos de senha.");
+      setSnack({ message: "Preencha os dois campos de senha.", severity: "warning" });
       return;
     }
     if (p1 !== p2) {
-      setSnack("As senhas não coincidem.");
+      setSnack({ message: "As senhas não coincidem.", severity: "warning" });
       return;
     }
     const v = validatePassword(p1);
     if (!v.isValid) {
-      setSnack(v.message);
+      setSnack({ message: v.message, severity: "warning" });
       return;
     }
 
     setIsLoading(true);
     try {
       await api.confirmPasswordReset(uidb64, token, p1);
-      setSnack("Senha alterada com sucesso! Faça login.");
+      setSnack({ message: "Senha alterada com sucesso! Faça login.", severity: "success" });
       navigate("/signin");
     } catch (err) {
-      setSnack(err instanceof Error ? err.message : "Link inválido ou expirado.");
+      setSnack({
+        message: err instanceof Error ? err.message : "Link inválido ou expirado.",
+        severity: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -74,11 +78,16 @@ const ResetPassword = () => {
         <Link to="/signin" className="text-blue-600 hover:underline">Voltar ao login</Link>
       </div>
 
-      <Snackbar open={!!snack} onClose={() => setSnack("")} autoHideDuration={6000}>
-        <Alert severity={typeof snack === "string" && snack.includes("sucesso") ? "success" : "error"}>
-            {snack}
-        </Alert>
-      </Snackbar>
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={6000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </div>
   );
 };

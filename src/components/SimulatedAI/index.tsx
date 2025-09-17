@@ -1,112 +1,537 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import {
+  Copy,
+  Volume2,
+  VolumeX,
+  Pause,
+  Play,
+  FastForward,
+  RotateCcw,
+  HelpCircle,
+  CheckCircle2,
+} from "lucide-react";
+import qaData from "@/data/simulatedAI.qa.json"; // precisa de resolveJsonModule no tsconfig
+import Input from "../Input";
 
-interface SimulatedAIProps {
+/* -----------------------------------------------------------------------------
+ * SimulatedAI — Refatorado para consumir JSON (src/data/simulatedAI.qa.json)
+ * -----------------------------------------------------------------------------
+ * - Lê perguntas/respostas do JSON (campo `faqs`)
+ * - Mantém: typewriter com pausar/retomar/pular, TTS opcional, cópia, busca,
+ *   chips de recentes (máx. 2), acessível, atalhos (Esc fecha, Ctrl/Cmd+K foca busca)
+ * - Paleta via CSS variables (ex.: --accentPrimary) com Tailwind arbitrary values
+ * - ESLint-friendly (callbacks estáveis, efeitos bem declarados, sem catch vazio)
+ * --------------------------------------------------------------------------- */
+
+export interface SimulatedAIProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  /** Opcional: sobrescrever a lista do JSON */
+  qaList?: Array<{ id: string; question: string; answer: string; tags?: string[] }>;
 }
 
-const SimulatedAI: React.FC<SimulatedAIProps> = ({ isOpen, onClose }) => {
-  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
-  const [response, setResponse] = useState<string | null>(null);
-  const [typedResponse, setTypedResponse] = useState<string>('');
+const cls = (...parts: Array<string | false | null | undefined>) =>
+  parts.filter(Boolean).join(" ");
 
-  const questionsAndAnswers: { [key: string]: string } = {
-    'Como o software pode melhorar o controle de estoque da minha empresa?':
-      'Nosso software permite a automação do controle de estoque, reduzindo erros humanos e garantindo que você tenha sempre uma visão clara de seu inventário.',
-    'Quais são os benefícios do software para a gestão de entrada e saída de produtos?':
-      'Com a gestão automatizada de entradas e saídas, você pode rastrear o fluxo de produtos em tempo real, otimizando a reposição e reduzindo custos operacionais.',
-    'Como o software pode ajudar a aumentar a eficiência operacional?':
-      'Nosso software centraliza todas as operações, permitindo uma gestão mais ágil e integrada dos processos da sua empresa, o que resulta em maior eficiência.',
-    'De que forma o software pode auxiliar na tomada de decisões estratégicas?':
-      'Através de relatórios detalhados e análise de dados, nosso software fornece insights valiosos para apoiar decisões estratégicas e melhorar a performance da sua empresa.',
-    'Como o software pode otimizar o fluxo de trabalho da minha equipe?':
-      'Automatizando tarefas repetitivas e integrando diferentes departamentos, nosso software libera sua equipe para focar em atividades mais estratégicas e produtivas.',
-  };
+const SimulatedAI: React.FC<SimulatedAIProps> = ({
+  isOpen,
+  onClose,
+  title = "Pergunte ao Assistente",
+  qaList,
+}) => {
+  /* -------------------------------- State -------------------------------- */
+  const [search, setSearch] = useState("");
+  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
+  const [response, setResponse] = useState<string>("");
+  const [typedResponse, setTypedResponse] = useState<string>("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [speedMs, setSpeedMs] = useState(20); // menor = mais rápido
+  const [recentQs, setRecentQs] = useState<string[]>([]);
+  const [speakOn, setSpeakOn] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleQuestionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = event.target.value;
-    setSelectedQuestion(selected);
-    setResponse(questionsAndAnswers[selected]);
-    setTypedResponse('');
-  };
+  /* -------------------------------- Refs --------------------------------- */
+  const intervalRef = useRef<number | null>(null);
+  const indexRef = useRef<number>(0);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (response) {
-      let index = 0;
-      setTypedResponse('');
-      const intervalId = setInterval(() => {
-        setTypedResponse((prev) => prev + response[index]);
-        index++;
-        if (index === response.length) {
-          clearInterval(intervalId);
-        }
-      }, 50);
+  /* --------------------------- Dados (do JSON) --------------------------- */
+  type FAQ = { id: string; question: string; answer: string; tags?: string[] };
 
-      return () => clearInterval(intervalId);
+  const faqs: FAQ[] = useMemo(() => {
+    if (qaList?.length) return qaList;
+    // fallback para o JSON importado
+    const raw = (qaData as { faqs?: FAQ[] } | undefined)?.faqs ?? [];
+    return Array.isArray(raw) ? raw : [];
+  }, [qaList]);
+
+  const qaPairs = useMemo(
+    () => faqs.map(({ question, answer }) => [question, answer] as const),
+    [faqs]
+  );
+
+  const filteredQuestions = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const list = qaPairs.map(([q]) => q);
+    if (!s) return list;
+    return list.filter((q) => q.toLowerCase().includes(s));
+  }, [qaPairs, search]);
+
+  const progress = response.length
+    ? Math.min(100, Math.round((typedResponse.length / response.length) * 100))
+    : 0;
+
+  /* ----------------------------- Helpers -------------------------------- */
+  const clearTicker = useCallback(() => {
+    if (intervalRef.current) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  }, [response]);
+  }, []);
 
-  const handleCloseWithReset = () => {
-    setSelectedQuestion('');
-    setResponse(null);
-    setTypedResponse('');
+  const stopSpeaking = useCallback(() => {
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {
+      // ambiente pode não suportar TTS
+      void 0;
+    }
+  }, []);
+
+  const speakText = useCallback((text: string) => {
+    try {
+      if (!("speechSynthesis" in window)) return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "pt-BR";
+      window.speechSynthesis.speak(utter);
+    } catch {
+      // erro não-crítico
+      void 0;
+    }
+  }, []);
+
+  const startTyping = useCallback(
+    (text: string) => {
+      clearTicker();
+      stopSpeaking();
+      setIsTyping(true);
+      setTypedResponse("");
+      indexRef.current = 0;
+
+      intervalRef.current = window.setInterval(() => {
+        indexRef.current += 1;
+        setTypedResponse(text.slice(0, indexRef.current));
+        if (indexRef.current >= text.length) {
+          clearTicker();
+          setIsTyping(false);
+          if (speakOn) speakText(text);
+        }
+      }, Math.max(5, speedMs));
+    },
+    [clearTicker, stopSpeaking, speakOn, speakText, speedMs]
+  );
+
+  const pauseTyping = useCallback(() => {
+    clearTicker();
+    setIsTyping(false);
+  }, [clearTicker]);
+
+  const resumeTyping = useCallback(() => {
+    if (!response || isTyping) return;
+    setIsTyping(true);
+    clearTicker();
+    intervalRef.current = window.setInterval(() => {
+      indexRef.current += 1;
+      setTypedResponse(response.slice(0, indexRef.current));
+      if (indexRef.current >= response.length) {
+        clearTicker();
+        setIsTyping(false);
+        if (speakOn) speakText(response);
+      }
+    }, Math.max(5, speedMs));
+  }, [response, isTyping, clearTicker, speakOn, speakText, speedMs]);
+
+  const skipToEnd = useCallback(() => {
+    clearTicker();
+    setTypedResponse(response);
+    setIsTyping(false);
+    if (speakOn && response) speakText(response);
+  }, [clearTicker, response, speakOn, speakText]);
+
+  /* ----------------------------- Lifecycle ------------------------------ */
+  useEffect(() => {
+    return () => {
+      clearTicker();
+      stopSpeaking();
+    };
+  }, [clearTicker, stopSpeaking]);
+
+  // Reaplicar intervalo se mudar a velocidade durante a digitação
+  useEffect(() => {
+    if (isTyping && response) {
+      clearTicker();
+      intervalRef.current = window.setInterval(() => {
+        indexRef.current += 1;
+        setTypedResponse(response.slice(0, indexRef.current));
+        if (indexRef.current >= response.length) {
+          clearTicker();
+          setIsTyping(false);
+          if (speakOn) speakText(response);
+        }
+      }, Math.max(5, speedMs));
+    }
+  }, [isTyping, response, speedMs, clearTicker, speakOn, speakText]);
+
+  /* ------------------------------ Handlers ------------------------------ */
+  const handlePickQuestion = useCallback(
+    (q: string) => {
+      setSelectedQuestion(q);
+      const ans = qaPairs.find(([qq]) => qq === q)?.[1] ?? "";
+      setResponse(ans);
+      setTypedResponse("");
+      indexRef.current = 0;
+      setRecentQs((prev) => {
+        const arr = [q, ...prev.filter((p) => p !== q)];
+        return arr.slice(0, 2); // manter no máximo 2
+      });
+      startTyping(ans);
+    },
+    [qaPairs, startTyping]
+  );
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(typedResponse || response || "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // clipboard pode estar bloqueado
+      void 0;
+    }
+  }, [typedResponse, response]);
+
+  const handleClose = useCallback(() => {
+    clearTicker();
+    stopSpeaking();
+    setSearch("");
+    setSelectedQuestion("");
+    setResponse("");
+    setTypedResponse("");
+    setIsTyping(false);
     onClose();
-  };
+  }, [clearTicker, stopSpeaking, onClose]);
+
+  /* -------------------------- Focus + Atalhos --------------------------- */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const focusTimer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 10);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        handleClose();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === "Enter" && document.activeElement === searchInputRef.current) {
+        if (filteredQuestions[0]) handlePickQuestion(filteredQuestions[0]);
+      }
+      // Focus trap
+      if (e.key === "Tab") {
+        const root = dialogRef.current;
+        if (!root) return;
+        const focusable = root.querySelectorAll<HTMLElement>(
+          'a, button, textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, filteredQuestions, handleClose, handlePickQuestion]);
 
   if (!isOpen) return null;
 
+  /* --------------------------------- UI --------------------------------- */
   return (
-    <>
+    <div className="fixed inset-0 z-[1000]">
       {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={handleClose} />
+
+      {/* Dialog */}
       <div
-        className="fixed inset-0 bg-black opacity-50 z-40"
-        onClick={handleCloseWithReset}
-      ></div>
-
-      {/* Modal centralizado */}
-      <div className="fixed inset-0 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[500px] flex flex-col items-center">
-          <h3 className="text-lg font-semibold select-none mb-4">
-            Pergunte ao Assistente
-          </h3>
-
-          <div className="w-full bg-gray-100 rounded p-2 min-h-[100px] max-h-[150px] overflow-y-auto mb-2">
-            {typedResponse ? (
-              <p className="whitespace-pre-wrap text-base">{typedResponse}</p>
-            ) : (
-              <p className="text-sm text-gray-500">
-                Selecione uma pergunta para ver a resposta...
-              </p>
-            )}
-          </div>
-
-          <div className="w-full mb-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Selecione uma Pergunta
-            </label>
-            <select
-              value={selectedQuestion}
-              onChange={handleQuestionChange}
-              className="block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sim-ai-title"
+        className="absolute inset-0 grid place-items-center px-4"
+      >
+        <div className="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-white/80">
+            <div className="flex items-center gap-3">
+              <div
+                className={cls(
+                  "h-9 w-9 rounded-xl grid place-items-center border",
+                  "text-[color:var(--accentPrimary)]"
+                )}
+                style={{ borderColor: "var(--accentPrimary)", background: "var(--color3)" }}
+              >
+                <HelpCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 id="sim-ai-title" className="text-[12px] font-semibold text-gray-900">
+                  {title}
+                </h2>
+                <p className="text-[12px] text-gray-500">
+                  Enter: perguntar · Esc: fechar · Ctrl/Cmd + K: buscar
+                </p>
+              </div>
+            </div>
+            <button
+              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+              onClick={handleClose}
+              aria-label="Fechar"
             >
-              <option value="">Selecione...</option>
-              {Object.keys(questionsAndAnswers).map((question, index) => (
-                <option key={index} value={question}>
-                  {question}
-                </option>
-              ))}
-            </select>
+              &times;
+            </button>
           </div>
 
-          <button
-            onClick={handleCloseWithReset}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-          >
-            Fechar
-          </button>
+          {/* Body */}
+          <div className="grid md:grid-cols-2 gap-4 p-5">
+            {/* Answer panel */}
+            <section className="order-2 md:order-1">
+              {/* Progress */}
+              <div className="mb-3">
+                <div className="h-1 w-full rounded bg-gray-100 overflow-hidden">
+                  <div
+                    className="h-full transition-all bg-[color:var(--accentPrimary)]"
+                    style={{ width: `${progress}%` }}
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
+                  <span>
+                    {isTyping ? "Digitando…" : typedResponse ? "Concluído" : "Aguardando pergunta"}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+              </div>
+
+              {/* Output */}
+              <div
+                className={cls(
+                  "rounded-xl border p-3 min-h-[160px] max-h-[280px] overflow-y-auto",
+                  "bg-gradient-to-b from-white to-gray-50",
+                  "border-gray-200"
+                )}
+                aria-live="polite"
+              >
+                {typedResponse ? (
+                  <p className="whitespace-pre-wrap leading-relaxed text-[12px] text-gray-900">
+                    {typedResponse}
+                  </p>
+                ) : (
+                  <p className="text-[12px] text-gray-500">
+                    Selecione ou busque uma pergunta à direita para ver a resposta.
+                  </p>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  onClick={isTyping ? pauseTyping : resumeTyping}
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-[12px] hover:bg-gray-50"
+                >
+                  {isTyping ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  {isTyping ? "Pausar" : "Retomar"}
+                </button>
+                <button
+                  onClick={skipToEnd}
+                  disabled={!response || typedResponse === response}
+                  className={cls(
+                    "inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-[12px] hover:bg-gray-50",
+                    (!response || typedResponse === response) && "opacity-60 cursor-not-allowed"
+                  )}
+                >
+                  <FastForward className="h-4 w-4" />
+                  Pular digitação
+                </button>
+                <button
+                  onClick={handleCopy}
+                  disabled={!typedResponse && !response}
+                  className={cls(
+                    "inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-[12px] hover:bg-gray-50",
+                    (!typedResponse && !response) && "opacity-60 cursor-not-allowed"
+                  )}
+                  aria-live="polite"
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-[color:var(--accentSuccess)]" /> Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" /> Copiar
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setSpeakOn((s) => !s)}
+                  className={cls(
+                    "inline-flex items-center gap-2 rounded-md border px-3 py-2 text-[12px] hover:bg-gray-50",
+                    speakOn
+                      ? "border-[color:var(--accentPrimary)] text-[color:var(--accentPrimary)] bg-[color:var(--accentCancel)]"
+                      : "border-gray-200"
+                  )}
+                  title="Ler em voz alta quando concluir"
+                >
+                  {speakOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                  {speakOn ? "Voz: ligado" : "Voz: desligado"}
+                </button>
+                <div className="ml-auto flex items-center gap-2 text-[12px] text-gray-600">
+                  <span>Velocidade</span>
+                  <input
+                    type="range"
+                    min={5}
+                    max={120}
+                    step={5}
+                    value={speedMs}
+                    onChange={(e) => setSpeedMs(Number(e.target.value))}
+                    className="accent-[color:var(--accentPrimary)]"
+                    aria-label="Velocidade da digitação"
+                  />
+                </div>
+              </div>
+
+              {recentQs.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-[12px] text-gray-600 mb-1">Recentes</div>
+                  <div className="flex flex-wrap gap-2">
+                    {recentQs.map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => handlePickQuestion(q)}
+                        className="px-2.5 py-1.5 rounded-full border text-[12px] hover:bg-[color:var(--color3)] border-gray-300"
+                        title={q}
+                      >
+                        {q.length > 36 ? q.slice(0, 36) + "…" : q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Questions / Search panel */}
+            <aside className="order-1 md:order-2">
+              <div className="mb-2">
+                <label className="text-[12px] text-gray-600">Buscar pergunta</label>
+                <div className="mt-1 relative">
+                  <Input
+                    ref={searchInputRef}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Digite para filtrar…"
+                  />
+                </div>
+              </div>
+
+              <div className="max-h-[230px] overflow-y-auto rounded-md border border-gray-200">
+                {filteredQuestions.length ? (
+                  filteredQuestions.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => handlePickQuestion(q)}
+                      className={cls(
+                        "w-full text-left p-3 text-[12px] hover:bg-[color:var(--color3)]",
+                        selectedQuestion === q && "bg-[color:var(--color3)]"
+                      )}
+                    >
+                      {q}
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-3 text-[12px] text-gray-500">Nenhuma pergunta encontrada.</div>
+                )}
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className="mr-4 text-[12px] text-gray-500">
+                  {selectedQuestion ? "Pergunta selecionada:" : "Nenhuma pergunta selecionada"}
+                  {selectedQuestion && (
+                    <span className="block text-gray-700 mt-0.5 line-clamp-2">
+                      {selectedQuestion}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedQuestion("");
+                    setResponse("");
+                    setTypedResponse("");
+                    setIsTyping(false);
+                    indexRef.current = 0;
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-[12px] hover:bg-gray-50 border-gray-200"
+                >
+                  <RotateCcw className="h-4 w-4" /> Limpar
+                </button>
+              </div>
+            </aside>
+          </div>
+
+          {/* Footer */}
+          <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+            <div className="text-[12px] text-gray-600">
+              {typedResponse ? (
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-[color:var(--accentSuccess)]" />
+                  Resposta pronta para copiar ou enviar.
+                </span>
+              ) : (
+                <span>Selecione uma pergunta para ver a resposta.</span>
+              )}
+            </div>
+            <button
+              onClick={handleClose}
+              className={cls(
+                "rounded-md text-white text-[12px] px-4 py-2 hover:opacity-95 focus:outline-none focus:ring-2",
+                "bg-[color:var(--accentPrimary)] hover:bg-[color:var(--accentPrimaryHover)] ring-[color:var(--accentPrimary)]"
+              )}
+            >
+              Fechar
+            </button>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

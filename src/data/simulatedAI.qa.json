@@ -1,0 +1,34 @@
+{
+  "faqs": [
+    {
+      "id": "estoque-melhoria",
+      "question": "Como o software pode melhorar o controle de estoque da minha empresa?",
+      "answer": "Nosso software permite a automação do controle de estoque, reduzindo erros humanos e garantindo que você tenha sempre uma visão clara de seu inventário.",
+      "tags": ["estoque", "inventário", "automação"]
+    },
+    {
+      "id": "entradas-saidas-beneficios",
+      "question": "Quais são os benefícios do software para a gestão de entrada e saída de produtos?",
+      "answer": "Com a gestão automatizada de entradas e saídas, você pode rastrear o fluxo de produtos em tempo real, otimizando a reposição e reduzindo custos operacionais.",
+      "tags": ["entradas", "saídas", "rastreamento", "custos"]
+    },
+    {
+      "id": "eficiencia-operacional",
+      "question": "Como o software pode ajudar a aumentar a eficiência operacional?",
+      "answer": "Nosso software centraliza todas as operações, permitindo uma gestão mais ágil e integrada dos processos da sua empresa, o que resulta em maior eficiência.",
+      "tags": ["eficiência", "processos", "integração"]
+    },
+    {
+      "id": "decisoes-estrategicas",
+      "question": "De que forma o software pode auxiliar na tomada de decisões estratégicas?",
+      "answer": "Através de relatórios detalhados e análise de dados, nosso software fornece insights valiosos para apoiar decisões estratégicas e melhorar a performance da sua empresa.",
+      "tags": ["relatórios", "análises", "estratégia"]
+    },
+    {
+      "id": "fluxo-trabalho",
+      "question": "Como o software pode otimizar o fluxo de trabalho da minha equipe?",
+      "answer": "Automatizando tarefas repetitivas e integrando diferentes departamentos, nosso software libera sua equipe para focar em atividades mais estratégicas e produtivas.",
+      "tags": ["workflow", "automação", "produtividade"]
+    }
+  ]
+}

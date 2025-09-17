@@ -494,7 +494,12 @@ const CompanySettings: React.FC = () => {
       </main>
 
       {/* ----------------------------- Snackbar ----------------------------- */}
-      <Snackbar open={!!snackBarMessage} autoHideDuration={6000} onClose={() => setSnackBarMessage("")}>
+      <Snackbar
+        open={!!snackBarMessage}
+        autoHideDuration={6000}
+        onClose={() => setSnackBarMessage("")}
+        severity="error"
+      >
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>
     </>

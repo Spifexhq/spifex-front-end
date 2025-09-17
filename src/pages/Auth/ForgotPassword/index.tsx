@@ -2,29 +2,36 @@ import { useEffect, useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/api/requests";
 import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+
+type Snack = { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null;
 
 const ForgotPassword = () => {
   useEffect(() => { document.title = "Esqueci minha senha | Spifex"; }, []);
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [snack, setSnack] = useState<string>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setSnack("Informe seu email.");
+      setSnack({ message: "Informe seu email.", severity: "warning" });
       return;
     }
     setIsLoading(true);
     try {
       await api.requestPasswordReset(email.trim());
-      setSnack("Se existir uma conta com este email, enviaremos um link para redefinir a senha.");
+      setSnack({
+        message: "Se existir uma conta com este email, enviaremos um link para redefinir a senha.",
+        severity: "info",
+      });
       setEmail("");
     } catch (err) {
-      setSnack(err instanceof Error ? err.message : "Erro ao solicitar redefinição.");
+      setSnack({
+        message: err instanceof Error ? err.message : "Erro ao solicitar redefinição.",
+        severity: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +61,16 @@ const ForgotPassword = () => {
         <Link to="/signin" className="text-blue-600 hover:underline">Voltar ao login</Link>
       </div>
 
-      <Snackbar open={!!snack} onClose={() => setSnack("")} autoHideDuration={6000}>
-        <Alert severity="info">{snack}</Alert>
-      </Snackbar>
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={6000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </div>
   );
 };
