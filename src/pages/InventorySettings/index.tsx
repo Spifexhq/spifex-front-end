@@ -1,8 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/InventorySettings.tsx                                     */
 /*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
+/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
 /* -------------------------------------------------------------------------- */
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -101,6 +102,10 @@ const InventorySettings: React.FC = () => {
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
+  /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
+  const [added, setAdded] = useState<InventoryItem[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
   /* ----------------------------- Filtro (click-to-search) ------------------ */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -132,6 +137,32 @@ const InventorySettings: React.FC = () => {
     if (trimmed === appliedQuery) refresh();
     else setAppliedQuery(trimmed);
   }, [query, appliedQuery, refresh]);
+
+  /* ------------------------------ Helpers overlay ------------------------- */
+  const matchesQuery = useCallback((i: InventoryItem, q: string) => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (
+      (i.sku || "").toLowerCase().includes(s) ||
+      (i.name || "").toLowerCase().includes(s) ||
+      (i.description || "").toLowerCase().includes(s)
+    );
+  }, []);
+
+  useEffect(() => {
+    // mantém só os recém-criados que combinam com a busca aplicada
+    setAdded((prev) => prev.filter((i) => matchesQuery(i, appliedQuery)));
+    // se preferir, pode limpar deletes ao trocar a busca:
+    // setDeletedIds(new Set());
+  }, [appliedQuery, matchesQuery]);
+
+  const visibleItems = useMemo(() => {
+    const addedFiltered = added.filter((i) => matchesQuery(i, appliedQuery));
+    const addedIds = new Set(addedFiltered.map((i) => i.id));
+    const base = pager.items.filter((i) => !deletedIds.has(i.id) && !addedIds.has(i.id));
+    // Mostra primeiro os recém-adicionados, depois os do servidor
+    return [...addedFiltered, ...base];
+  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -172,8 +203,14 @@ const InventorySettings: React.FC = () => {
   const submitItem = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (mode === "create") await api.addInventoryItem(formData);
-      else if (editingItem) await api.editInventoryItem(editingItem.id, formData);
+      if (mode === "create") {
+        // request<T> retorna ApiSuccess<T>
+        const { data: created } = await api.addInventoryItem(formData);
+        // UI imediata
+        setAdded((prev) => [created, ...prev]);
+      } else if (editingItem) {
+        await api.editInventoryItem(editingItem.id, formData);
+      }
       await pager.refresh();
       closeModal();
     } catch (err) {
@@ -183,9 +220,27 @@ const InventorySettings: React.FC = () => {
 
   const deleteItem = async (item: InventoryItem) => {
     try {
+      // UI imediata
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(item.id);
+        return next;
+      });
+
       await api.deleteInventoryItem(item.id);
+
+      // Revalida servidor
       await pager.refresh();
+
+      // Se o item também estava na lista "added", remove
+      setAdded((prev) => prev.filter((i) => i.id !== item.id));
     } catch (err) {
+      // rollback overlay
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir item.");
     }
   };
@@ -259,10 +314,10 @@ const InventorySettings: React.FC = () => {
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
-                    {pager.items.length === 0 ? (
+                    {visibleItems.length === 0 ? (
                       <p className="p-4 text-center text-sm text-gray-500">Nenhum item encontrado.</p>
                     ) : (
-                      pager.items.map((i) => (
+                      visibleItems.map((i) => (
                         <Row
                           key={i.id}
                           item={i}

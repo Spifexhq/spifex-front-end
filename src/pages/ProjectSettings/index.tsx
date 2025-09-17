@@ -1,8 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/ProjectSettings.tsx                                       */
 /*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
+/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
 /* -------------------------------------------------------------------------- */
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -57,7 +58,7 @@ const emptyForm = {
 };
 type FormState = typeof emptyForm;
 
-/* sort por CODE, depois nome */
+/* (opcional) sort estável, igual ao que você já usava */
 function sortByCodeThenName(a: Project, b: Project) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
@@ -126,6 +127,10 @@ const ProjectSettings: React.FC = () => {
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
+  /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
+  const [added, setAdded] = useState<Project[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
   /* ----------------------------- Filtro (click-to-search) ------------------ */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -152,11 +157,38 @@ const ProjectSettings: React.FC = () => {
   });
 
   const { refresh } = pager;
+
   const onSearch = useCallback(() => {
     const trimmed = query.trim();
     if (trimmed === appliedQuery) refresh();
     else setAppliedQuery(trimmed);
   }, [query, appliedQuery, refresh]);
+
+  /* ------------------------------ Helpers overlay ------------------------- */
+  const matchesQuery = useCallback((p: Project, q: string) => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (
+      (p.code || "").toLowerCase().includes(s) ||
+      (p.name || "").toLowerCase().includes(s) ||
+      (p.description || "").toLowerCase().includes(s)
+    );
+  }, []);
+
+  // sincroniza overlay ao trocar a busca
+  useEffect(() => {
+    setAdded((prev) => prev.filter((p) => matchesQuery(p, appliedQuery)));
+    // deletedIds pode ficar (não atrapalha); se quiser zerar, descomente:
+    // setDeletedIds(new Set());
+  }, [appliedQuery, matchesQuery]);
+
+  const visibleItems = useMemo(() => {
+    const addedFiltered = added.filter((p) => matchesQuery(p, appliedQuery));
+    const addedIds = new Set(addedFiltered.map((p) => p.id));
+    const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIds.has(p.id));
+    // Mostra primeiro os recém-adicionados, depois o que veio do servidor
+    return [...addedFiltered, ...base];
+  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
@@ -197,13 +229,14 @@ const ProjectSettings: React.FC = () => {
     e.preventDefault();
     try {
       if (mode === "create") {
-        await api.addProject({
+        const { data: created } = await api.addProject({
           name: formData.name,
           code: formData.code || "",
           type: formData.type,
           description: formData.description || "",
           is_active: formData.is_active,
         });
+        setAdded((prev) => [created, ...prev]);
       } else if (editingProject) {
         await api.editProject(editingProject.id, {
           name: formData.name,
@@ -222,13 +255,28 @@ const ProjectSettings: React.FC = () => {
 
   const deleteProject = async (project: Project) => {
     try {
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(project.id);
+        return next;
+      });
       await api.deleteProject(project.id);
+      // Revalida com o servidor
       await pager.refresh();
+      // Se o item também estava na lista "added", remove para evitar “fantasma”
+      setAdded((prev) => prev.filter((p) => p.id !== project.id));
     } catch (err) {
+      // Reverte o overlay de deleção se falhar
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(project.id);
+        return next;
+      });
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir projeto.");
     }
   };
 
+  /* ------------------------------ Esc key / scroll lock -------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
@@ -237,7 +285,9 @@ const ProjectSettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [modalOpen]);
 
   if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
@@ -280,9 +330,13 @@ const ProjectSettings: React.FC = () => {
                       placeholder="Buscar por nome ou código…"
                       aria-label="Buscar projetos"
                     />
-                    <Button onClick={onSearch} variant="outline">Buscar</Button>
+                    <Button onClick={onSearch} variant="outline">
+                      Buscar
+                    </Button>
                     {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">Adicionar projeto</Button>
+                      <Button onClick={openCreateModal} className="!py-1.5">
+                        Adicionar projeto
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -292,15 +346,17 @@ const ProjectSettings: React.FC = () => {
                 <div className="p-6 text-center">
                   <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>Tentar novamente</Button>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                    Tentar novamente
+                  </Button>
                 </div>
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
-                    {pager.items.length === 0 ? (
+                    {visibleItems.length === 0 ? (
                       <p className="p-4 text-center text-sm text-gray-500">Nenhum projeto encontrado.</p>
                     ) : (
-                      pager.items.map((p) => (
+                      visibleItems.map((p) => (
                         <Row
                           key={p.id}
                           project={p}
@@ -330,14 +386,20 @@ const ProjectSettings: React.FC = () => {
         {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-                 role="dialog" aria-modal="true">
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {mode === "create" ? "Adicionar projeto" : "Editar projeto"}
                 </h3>
-                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                        onClick={closeModal} aria-label="Fechar">
+                <button
+                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                  onClick={closeModal}
+                  aria-label="Fechar"
+                >
                   &times;
                 </button>
               </header>
@@ -350,7 +412,9 @@ const ProjectSettings: React.FC = () => {
                   label="Tipo de projeto"
                   items={TYPE_OPTIONS}
                   selected={TYPE_OPTIONS.filter((t) => t.value === formData.type)}
-                  onChange={(items) => { if (items[0]) setFormData((p) => ({ ...p, type: items[0].value })); }}
+                  onChange={(items) => {
+                    if (items[0]) setFormData((p) => ({ ...p, type: items[0].value }));
+                  }}
                   getItemKey={(i) => i.value}
                   getItemLabel={(i) => i.label}
                   singleSelect
@@ -366,7 +430,9 @@ const ProjectSettings: React.FC = () => {
                 </label>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>Cancelar</Button>
+                  <Button variant="cancel" type="button" onClick={closeModal}>
+                    Cancelar
+                  </Button>
                   <Button type="submit">Salvar</Button>
                 </div>
               </form>
@@ -375,8 +441,12 @@ const ProjectSettings: React.FC = () => {
         )}
       </main>
 
-      <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
-                onClose={() => setSnackBarMessage("")} severity="error">
+      <Snackbar
+        open={!!snackBarMessage}
+        autoHideDuration={6000}
+        onClose={() => setSnackBarMessage("")}
+        severity="error"
+      >
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>
     </>

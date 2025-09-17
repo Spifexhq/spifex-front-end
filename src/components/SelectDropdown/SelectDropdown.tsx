@@ -25,6 +25,9 @@ function SelectDropdown<T>({
   hideCheckboxes = false,
   hideFilter = false,
 }: SelectDropdownProps<T>) {
+  // ---------------------------------------------------------------------------
+  // State & refs
+  // ---------------------------------------------------------------------------
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -39,7 +42,7 @@ function SelectDropdown<T>({
   const panelId = `${id}-panel`;
   const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
-  /** Abrir ao focar apenas quando veio por teclado (Tab/Shift+Tab) */
+  // Detecta foco via Tab (para abrir ao focar)
   const lastFocusByTabRef = useRef(false);
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -61,11 +64,68 @@ function SelectDropdown<T>({
     };
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+  const keyToStr = (k: string | number) => String(k);
+
+  const selectedKeys = useMemo(
+    () => new Set(selected.map((s) => keyToStr(getItemKey(s)))),
+    [selected, getItemKey]
+  );
+
+  // Filtragem
+  const filteredItems = useMemo(() => {
+    const st = searchTerm.trim().toLowerCase();
+    if (!st) return items;
+    return items.filter((item) => (getItemLabel(item) || "").toLowerCase().includes(st));
+  }, [items, searchTerm, getItemLabel]);
+
+  // Agrupamento opcional
+  const groupedItems: Record<string, T[]> = useMemo(() => {
+    if (!groupBy) return {};
+    const acc: Record<string, T[]> = {};
+    filteredItems.forEach((it) => {
+      const g = groupBy(it);
+      (acc[g] ??= []).push(it);
+    });
+    return acc;
+  }, [filteredItems, groupBy]);
+
+  // Lista plana
+  const flatItems: T[] = useMemo(() => {
+    return groupBy ? Object.values(groupedItems).flat() : filteredItems;
+  }, [groupedItems, filteredItems, groupBy]);
+
+  // Mapa key -> idx
+  const flatKeyIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    flatItems.forEach((it, i) => map.set(keyToStr(getItemKey(it)), i));
+    return map;
+  }, [flatItems, getItemKey]);
+
+  // ---------------------------------------------------------------------------
+  // “Última interação vence” (mouse x teclado)
+  // ---------------------------------------------------------------------------
+  const lastSourceRef = useRef<"keyboard" | "mouse" | null>(null);
+  const suppressMouseUntilTsRef = useRef(0); // ignora hover ruidoso após setas
+
+  const setActiveFrom = (idx: number | null, source: "keyboard" | "mouse") => {
+    lastSourceRef.current = source;
+    setActiveIndex(idx);
+    if (source === "keyboard") {
+      // pequena janela p/ ignorar mouseenter disparado por scroll
+      suppressMouseUntilTsRef.current = performance.now() + 120;
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // Abertura/fechamento
+  // ---------------------------------------------------------------------------
   const toggleDropdown = () => {
     if (!disabled) setIsOpen((p) => !p);
   };
 
-  /** Fechar ao clicar fora + fechar com ESC sem vazar pro modal */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -77,7 +137,6 @@ function SelectDropdown<T>({
     };
     const handleDocKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isOpen) {
-        // evita que o modal/escopo pai também processe o ESC
         event.stopImmediatePropagation?.();
         event.stopPropagation();
         event.preventDefault();
@@ -97,59 +156,48 @@ function SelectDropdown<T>({
     };
   }, [isOpen, onChange, clearOnClickOutside]);
 
-  /** Filtragem + agrupamento */
-  const filteredItems = useMemo(() => {
-    const st = searchTerm.trim().toLowerCase();
-    if (!st) return items;
-    return items.filter((item) => getItemLabel(item).toLowerCase().includes(st));
-  }, [items, searchTerm, getItemLabel]);
-
-  const groupedItems: Record<string, T[]> = useMemo(() => {
-    if (!groupBy) return {};
-    const acc: Record<string, T[]> = {};
-    filteredItems.forEach((it) => {
-      const g = groupBy(it);
-      (acc[g] ??= []).push(it);
-    });
-    return acc;
-  }, [filteredItems, groupBy]);
-
-  /** Lista "plana" para navegação por setas */
-  const flatItems: T[] = useMemo(() => {
-    return groupBy ? Object.values(groupedItems).flat() : filteredItems;
-  }, [groupedItems, filteredItems, groupBy]);
-
-  /** Ao abrir, define item ativo e foco inicial */
+  // Define item ativo e foco **apenas ao abrir**
   useEffect(() => {
     if (!isOpen) return;
 
     let idx: number | null = null;
     if (flatItems.length > 0) {
       if (selected.length > 0) {
-        const firstKey = getItemKey(selected[0]);
-        const found = flatItems.findIndex((it) => getItemKey(it) === firstKey);
-        idx = found >= 0 ? found : 0;
+        const firstKey = keyToStr(getItemKey(selected[0]));
+        const found = flatKeyIndexMap.get(firstKey);
+        idx = typeof found === "number" ? found : 0;
       } else {
         idx = 0;
       }
     }
-    setActiveIndex(idx);
+    setActiveIndex(idx); // inicialização neutra (sem suprimir mouse)
 
     if (!hideFilter && searchInputRef.current) {
-      searchInputRef.current.focus();
+      (searchInputRef.current as HTMLInputElement).focus?.({ preventScroll: true });
     } else {
-      panelRef.current?.focus();
+      panelRef.current?.focus?.({ preventScroll: true });
     }
-  }, [isOpen, flatItems, selected, getItemKey, hideFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
-  /** Mantém item ativo visível */
+  // Mantém item ativo visível sem autoscroll desnecessário
   useEffect(() => {
     if (!isOpen || activeIndex == null) return;
+    const panel = panelRef.current;
     const el = itemElsRef.current[activeIndex];
-    el?.scrollIntoView({ block: "nearest" });
+    if (!panel || !el) return;
+
+    const panelRect = panel.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const above = elRect.top < panelRect.top;
+    const below = elRect.bottom > panelRect.bottom;
+
+    if (above || below) {
+      el.scrollIntoView({ block: "nearest" });
+    }
   }, [activeIndex, isOpen]);
 
-  /** Ajusta activeIndex se a lista mudar de tamanho */
+  // Ajusta activeIndex se a lista mudar de tamanho
   useEffect(() => {
     if (activeIndex == null) return;
     if (flatItems.length === 0) {
@@ -159,20 +207,39 @@ function SelectDropdown<T>({
     }
   }, [flatItems, activeIndex]);
 
-  /** Seleção */
+  // ---------------------------------------------------------------------------
+  // Seleção
+  // ---------------------------------------------------------------------------
   const handleCheckboxChange = (item: T) => {
-    const itemKey = getItemKey(item);
-    const isCurrentlySelected = selected.some((s) => getItemKey(s) === itemKey);
+    const k = keyToStr(getItemKey(item));
+    const isCurrentlySelected = selectedKeys.has(k);
+
+    // Snapshot do scroll antes da atualização
+    const panel = panelRef.current;
+    const prevScrollTop = panel?.scrollTop ?? 0;
+
     let updated: T[];
     if (effectiveSingleSelect) {
       updated = isCurrentlySelected ? [] : [item];
     } else {
       updated = isCurrentlySelected
-        ? selected.filter((s) => getItemKey(s) !== itemKey)
+        ? selected.filter((s) => keyToStr(getItemKey(s)) !== k)
         : [...selected, item];
     }
+
     onChange(updated);
-    if (hideCheckboxes || effectiveSingleSelect) setIsOpen(false);
+
+    if (hideCheckboxes || effectiveSingleSelect) {
+      setIsOpen(false);
+    } else {
+      // Restaura scroll e foco no próximo frame
+      requestAnimationFrame(() => {
+        if (panel) {
+          panel.scrollTop = prevScrollTop;
+          panel.focus?.({ preventScroll: true });
+        }
+      });
+    }
   };
 
   const selectAll = () => {
@@ -185,24 +252,26 @@ function SelectDropdown<T>({
 
   const handleGroupToggle = (groupItems: T[]) => {
     if (effectiveSingleSelect) return;
+
     const allSelected = groupItems.every((it) =>
-      selected.some((sel) => getItemKey(sel) === getItemKey(it))
+      selectedKeys.has(keyToStr(getItemKey(it)))
     );
+
     let updated: T[];
     if (allSelected) {
-      updated = selected.filter(
-        (sel) => !groupItems.some((it) => getItemKey(sel) === getItemKey(it))
-      );
+      const groupSet = new Set(groupItems.map((it) => keyToStr(getItemKey(it))));
+      updated = selected.filter((sel) => !groupSet.has(keyToStr(getItemKey(sel))));
     } else {
-      const newOnes = groupItems.filter(
-        (it) => !selected.some((sel) => getItemKey(sel) === getItemKey(it))
-      );
+      const existing = new Set(selected.map((s) => keyToStr(getItemKey(s))));
+      const newOnes = groupItems.filter((it) => !existing.has(keyToStr(getItemKey(it))));
       updated = [...selected, ...newOnes];
     }
     onChange(updated);
   };
 
-  /** Seletores de foco para Tab/Shift+Tab sair do dropdown */
+  // ---------------------------------------------------------------------------
+  // Acessibilidade de Tab (sair do dropdown para vizinhos do trigger)
+  // ---------------------------------------------------------------------------
   const TABBABLE_SELECTOR =
     'a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
@@ -224,13 +293,14 @@ function SelectDropdown<T>({
     const tabbables = getTabbables(dialogScope);
     const idx = tabbables.indexOf(trigger);
     const target = tabbables[idx + dir];
-    // Deixa o React fechar/renderizar primeiro
     setTimeout(() => {
       target?.focus();
     }, 0);
   };
 
-  /** Teclado no botão: abre com ↓, Enter, Space; abrir ao focar via Tab */
+  // ---------------------------------------------------------------------------
+  // Interação de teclado (usa setActiveFrom para “última interação vence”)
+  // ---------------------------------------------------------------------------
   const handleButtonKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
     if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
@@ -243,11 +313,10 @@ function SelectDropdown<T>({
     if (!disabled && lastFocusByTabRef.current) setIsOpen(true);
   };
 
-  /** Teclado dentro do painel (lista) */
   const handlePanelKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (!isOpen) return;
 
-    // Tab e Shift+Tab → sair do dropdown para o anterior/próximo ao botão
+    // Tab e Shift+Tab → sair para anterior/próximo do botão
     if (e.key === "Tab") {
       e.preventDefault();
       setIsOpen(false);
@@ -266,19 +335,23 @@ function SelectDropdown<T>({
     if (flatItems.length === 0) return;
 
     if (e.key === "Home") {
-      setActiveIndex(0);
+      setActiveFrom(0, "keyboard");
       return;
     }
     if (e.key === "End") {
-      setActiveIndex(flatItems.length - 1);
+      setActiveFrom(flatItems.length - 1, "keyboard");
       return;
     }
     if (e.key === "ArrowDown") {
-      setActiveIndex((p) => (p == null ? 0 : Math.min(p + 1, flatItems.length - 1)));
+      const next =
+        activeIndex == null ? 0 : Math.min(activeIndex + 1, flatItems.length - 1);
+      setActiveFrom(next, "keyboard");
       return;
     }
     if (e.key === "ArrowUp") {
-      setActiveIndex((p) => (p == null ? flatItems.length - 1 : Math.max(p - 1, 0)));
+      const prev =
+        activeIndex == null ? flatItems.length - 1 : Math.max(activeIndex - 1, 0);
+      setActiveFrom(prev, "keyboard");
       return;
     }
     if (e.key === "Enter" && activeIndex != null) {
@@ -286,20 +359,38 @@ function SelectDropdown<T>({
     }
   };
 
-  /** Render de item da lista */
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
   const renderItem = (item: T, flatIndex: number) => {
-    const key = getItemKey(item);
+    const k = keyToStr(getItemKey(item));
     const label = getItemLabel(item);
-    const isChecked = selected.some((s) => getItemKey(s) === key);
+    const isChecked = selectedKeys.has(k);
     const isActive = activeIndex === flatIndex;
     const optionId = `${id}-opt-${flatIndex}`;
 
+    const handleMouseEnter = () => {
+      const now = performance.now();
+      // ignora hovers gerados por scroll logo após interação por teclado
+      if (now < suppressMouseUntilTsRef.current) return;
+      setActiveFrom(flatIndex, "mouse");
+    };
+
+    // opcional: também pode usar onMouseMove para ficar ainda mais “grudento”
+    const handleMouseMove = () => {
+      const now = performance.now();
+      if (now < suppressMouseUntilTsRef.current) return;
+      if (activeIndex !== flatIndex) setActiveFrom(flatIndex, "mouse");
+    };
+
     return (
       <div
-        key={key}
+        key={k}
         id={optionId}
         ref={(el) => (itemElsRef.current[flatIndex] = el)}
         onClick={() => handleCheckboxChange(item)}
+        onMouseEnter={handleMouseEnter}
+        onMouseMove={handleMouseMove}
         className={`flex items-center text-[10px] p-2.5 font-normal transition duration-300 ease-in-out gap-1 select-none cursor-pointer
           ${hideCheckboxes && isChecked ? "bg-blue-100 text-blue-900 font-semibold" : ""}
           ${isActive ? "bg-orange-100 bg-opacity-30" : "bg-white hover:bg-orange-100 hover:bg-opacity-20"}
@@ -317,15 +408,22 @@ function SelectDropdown<T>({
             size="small"
           />
         )}
-        <span className={`${!hideCheckboxes ? "pl-2" : ""} user-select-none`}>{label}</span>
+        <span className={`${!hideCheckboxes ? "pl-2" : ""} select-none`}>{label}</span>
       </div>
     );
   };
 
+  const selectedLabel =
+    selected.length === 0
+      ? buttonLabel
+      : effectiveSingleSelect
+      ? getItemLabel(selected[0])
+      : selected.map((it) => getItemLabel(it)).join(", ");
+
   return (
     <div className="flex flex-col w-full gap-[4px]">
       {label && (
-        <label className="text-[10px] py-[5px] font-bold select-none text-gray-700">
+        <label className="text-[10px] py-[5px] font-bold select-none text-gray-700" htmlFor={id}>
           {label}
         </label>
       )}
@@ -358,11 +456,7 @@ function SelectDropdown<T>({
           `}
         >
           <span className="truncate overflow-hidden whitespace-nowrap max-w-[90%] text-left text-gray-400">
-            {selected.length === 0
-              ? buttonLabel
-              : effectiveSingleSelect
-              ? getItemLabel(selected[0])
-              : selected.map((it) => getItemLabel(it)).join(", ")}
+            {selectedLabel}
           </span>
           <svg
             className={`w-4 h-4 ml-3 transition-transform duration-200 ease-in-out ${
@@ -383,7 +477,7 @@ function SelectDropdown<T>({
             id={panelId}
             role="listbox"
             aria-labelledby={id}
-            aria-multiselectable={!effectiveSingleSelect}
+            aria-multiselectable={!effectiveSingleSelect || undefined}
             aria-activedescendant={
               activeIndex != null && flatItems.length > 0 ? `${id}-opt-${activeIndex}` : undefined
             }
@@ -421,9 +515,8 @@ function SelectDropdown<T>({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 ref={searchInputRef}
-                className="border-b border-gray-300 w-full p-1 pl-5 box-sizing border-box text-[12px]"
+                className="border-b border-gray-300 w-full p-1 pl-5 box-border text-[12px]"
                 onKeyDown={(e) => {
-                  // evita submit acidental ao pressionar Enter dentro do input
                   if (e.key === "Enter") e.preventDefault();
                 }}
               />
@@ -442,10 +535,8 @@ function SelectDropdown<T>({
                         {groupName}
                       </div>
                       {groupItems.map((item) => {
-                        const idx = flatItems.findIndex(
-                          (fi) => getItemKey(fi) === getItemKey(item)
-                        );
-                        return renderItem(item, idx);
+                        const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
+                        return idx >= 0 ? renderItem(item, idx) : null;
                       })}
                     </div>
                   ))

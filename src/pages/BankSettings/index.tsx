@@ -2,9 +2,10 @@
 /*  File: src/pages/BankSettings.tsx                                         */
 /*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
 /*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
+/*  Dinâmica: overlay local p/ add/delete + refresh do fetch                  */
 /* -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -95,7 +96,7 @@ const BankSettings: React.FC = () => {
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingBank, setEditingBank] = useState<BankAccount | null>(null);
 
-  // Mantemos "initial_balance" como dígitos de centavos (ex.: "123456") — mesma lógica antiga
+  // Mantemos "initial_balance" como dígitos de centavos (ex.: "123456")
   const [formData, setFormData] = useState({
     institution: "",
     account_type: "checking",
@@ -103,19 +104,23 @@ const BankSettings: React.FC = () => {
     branch: "",
     account_number: "",
     iban: "",
-    initial_balance: "0", // <-- dígitos de centavos para edição/mascara
+    initial_balance: "0", // dígitos de centavos para edição/máscara
     is_active: true,
   });
 
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
+  /* --------- Overlay dinâmico: adicionados e ids excluídos (UI imediata) --- */
+  const [added, setAdded] = useState<BankAccount[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
   /* ------------------------------ Carrega dados ----------------------------- */
   const fetchBanks = useCallback(async () => {
     try {
-      const res = await api.getAllBanks(); // Paginated<BankAccount>
-      const list: BankAccount[] = res.data?.results ?? [];
+      const { data } = await api.getAllBanks(); // ApiSuccess<Paginated<BankAccount>>
+      const list: BankAccount[] = data?.results ?? [];
       const sorted = [...list].sort((a, b) =>
-        a.institution.localeCompare(b.institution)
+        (a.institution || "").localeCompare(b.institution || "")
       );
       setBanks(sorted);
     } catch (err) {
@@ -129,6 +134,13 @@ const BankSettings: React.FC = () => {
   useEffect(() => {
     fetchBanks();
   }, [fetchBanks]);
+
+  /* ---------------------------- Lista visível ------------------------------- */
+  const visibleBanks = useMemo(() => {
+    const addedIds = new Set(added.map((b) => b.id));
+    const base = banks.filter((b) => !deletedIds.has(b.id) && !addedIds.has(b.id));
+    return [...added, ...base];
+  }, [banks, added, deletedIds]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -187,12 +199,12 @@ const BankSettings: React.FC = () => {
 
   const submitBank = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Converter dígitos -> decimal "1234.56" para a API (read/write serializers novos)
     const initial_balance = digitsToDecimalString(formData.initial_balance);
 
     try {
       if (mode === "create") {
-        await api.addBank({
+        // request<T> => ApiSuccess<T>
+        const { data: created } = await api.addBank({
           institution: formData.institution,
           account_type: formData.account_type,
           currency: formData.currency,
@@ -202,20 +214,38 @@ const BankSettings: React.FC = () => {
           initial_balance, // decimal string
           is_active: formData.is_active,
         });
-      } else if (editingBank) {
-        await api.editBank(editingBank.id, {
-          institution: formData.institution,
-          account_type: formData.account_type,
-          currency: formData.currency,
-          branch: formData.branch,
-          account_number: formData.account_number,
-          iban: formData.iban || "",
-          initial_balance, // decimal string
-          is_active: formData.is_active,
-        });
-      }
+        // UI imediata
+        setAdded((prev) => [created, ...prev]);
+    } else if (editingBank) {
+      await api.editBank(editingBank.id, {
+        institution: formData.institution,
+        account_type: formData.account_type,
+        currency: formData.currency,
+        branch: formData.branch,
+        account_number: formData.account_number,
+        iban: formData.iban || "",
+        initial_balance,
+        is_active: formData.is_active,
+      });
 
-      await fetchBanks();
+      // update otimista (mantém tipos corretos)
+      const updatedLocal: BankAccount = {
+        ...editingBank,
+        institution: formData.institution,
+        account_type: formData.account_type as BankAccount["account_type"],
+        currency: formData.currency,
+        branch: formData.branch,
+        account_number: formData.account_number,
+        iban: formData.iban || "",
+        initial_balance,
+        is_active: formData.is_active,
+      };
+
+      setBanks(prev => prev.map(b => b.id === updatedLocal.id ? updatedLocal : b));
+      setAdded(prev => prev.map(b => b.id === updatedLocal.id ? updatedLocal : b));
+    }
+
+      await fetchBanks(); // mantém consistente
       closeModal();
     } catch (err) {
       setSnackBarMessage(
@@ -227,9 +257,27 @@ const BankSettings: React.FC = () => {
   const deleteBank = async (bank: BankAccount) => {
     if (!window.confirm(`Excluir conta "${bank.institution}"?`)) return;
     try {
+      // UI imediata
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(bank.id);
+        return next;
+      });
+
       await api.deleteBank(bank.id);
+
+      // Revalida servidor
       await fetchBanks();
+
+      // Se estava em "added", remove para evitar fantasma
+      setAdded((prev) => prev.filter((b) => b.id !== bank.id));
     } catch (err) {
+      // rollback overlay
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(bank.id);
+        return next;
+      });
       setSnackBarMessage(
         err instanceof Error ? err.message : "Erro ao excluir banco."
       );
@@ -295,7 +343,7 @@ const BankSettings: React.FC = () => {
               </div>
 
               <div className="divide-y divide-gray-200">
-                {banks.map((b) => (
+                {visibleBanks.map((b) => (
                   <Row
                     key={b.id}
                     bank={b}
@@ -304,7 +352,7 @@ const BankSettings: React.FC = () => {
                     onDelete={deleteBank}
                   />
                 ))}
-                {banks.length === 0 && (
+                {visibleBanks.length === 0 && (
                   <p className="p-4 text-center text-sm text-gray-500">
                     Nenhum banco cadastrado.
                   </p>
@@ -319,7 +367,7 @@ const BankSettings: React.FC = () => {
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             {/* Sem onClick no backdrop → não fecha ao clicar fora */}
             <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg overflow-y-auto max-h={[90]}vh"
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg overflow-y-auto max-h-[90vh]"
               role="dialog"
               aria-modal="true"
             >

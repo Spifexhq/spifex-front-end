@@ -1,8 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/EntitySettings.tsx                                        */
 /*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
+/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
 /* -------------------------------------------------------------------------- */
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -117,6 +118,10 @@ const EntitySettings: React.FC = () => {
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
+  /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
+  const [added, setAdded] = useState<Entity[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
   /* ------------------------------- Filtro (click-to-search) ---------------- */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -199,6 +204,31 @@ const EntitySettings: React.FC = () => {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
+  /* ------------------------------ Overlay helpers -------------------------- */
+  const matchesQuery = useCallback((e: Entity, q: string) => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (
+      (e.full_name || "").toLowerCase().includes(s) ||
+      (e.alias_name || "").toLowerCase().includes(s)
+    );
+  }, []);
+
+  useEffect(() => {
+    // mantém só os recém-criados que combinam com a busca aplicada
+    setAdded((prev) => prev.filter((e) => matchesQuery(e, appliedQuery)));
+    // se preferir, pode limpar deletes ao trocar a busca:
+    // setDeletedIds(new Set());
+  }, [appliedQuery, matchesQuery]);
+
+  const visibleItems = useMemo(() => {
+    const addedFiltered = added.filter((e) => matchesQuery(e, appliedQuery));
+    const addedIds = new Set(addedFiltered.map((e) => e.id));
+    const base = pager.items.filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id));
+    // Mostra primeiro os recém-adicionados, depois os do servidor
+    return [...addedFiltered, ...base];
+  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
+
   const submitEntity = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
@@ -215,8 +245,14 @@ const EntitySettings: React.FC = () => {
     };
 
     try {
-      if (mode === "create") await api.addEntity(payload);
-      else if (editingEntity) await api.editEntity(editingEntity.id, payload);
+      if (mode === "create") {
+        // request<T> => ApiSuccess<T>
+        const { data: created } = await api.addEntity(payload);
+        // UI imediata
+        setAdded((prev) => [created, ...prev]);
+      } else if (editingEntity) {
+        await api.editEntity(editingEntity.id, payload);
+      }
       await pager.refresh();
       closeModal();
     } catch (err) {
@@ -227,9 +263,27 @@ const EntitySettings: React.FC = () => {
   const deleteEntity = async (entity: Entity) => {
     if (!window.confirm(`Excluir entidade "${entity.full_name ?? entity.alias_name ?? ""}"?`)) return;
     try {
+      // UI imediata
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(entity.id);
+        return next;
+      });
+
       await api.deleteEntity(entity.id);
+
+      // Revalida servidor
       await pager.refresh();
+
+      // Se estava em "added", remove para evitar fantasma
+      setAdded((prev) => prev.filter((e) => e.id !== entity.id));
     } catch (err) {
+      // rollback overlay
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(entity.id);
+        return next;
+      });
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
     }
   };
@@ -303,10 +357,10 @@ const EntitySettings: React.FC = () => {
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
-                    {pager.items.length === 0 ? (
+                    {visibleItems.length === 0 ? (
                       <p className="p-4 text-center text-sm text-gray-500">Nenhuma entidade encontrada.</p>
                     ) : (
-                      pager.items.map((e) => (
+                      visibleItems.map((e) => (
                         <Row
                           key={e.id}
                           entity={e}

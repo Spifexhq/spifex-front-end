@@ -2,9 +2,10 @@
 /*  File: src/pages/DepartmentSettings.tsx                                    */
 /*  Style: Fixed Navbar + SidebarSettings, light borders, compact labels      */
 /*  Notes: org-scoped, string ids (ULID), modal in 3 columns                  */
+/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
 /* -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -63,7 +64,7 @@ const Row = ({
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(dept)}
         >
-          Edit
+          Editar
         </Button>
         <Button variant="common" onClick={() => onDelete(dept)}>
           Delete
@@ -96,22 +97,23 @@ const DepartmentSettings: React.FC = () => {
 
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
+  /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
+  const [added, setAdded] = useState<Department[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
   /* ------------------------------- Filter state ---------------------------- */
-  // query: what the user is typing
-  // appliedQuery: the filter actually used in API calls (only changes on button click)
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
 
   /* --------------------------- Pagination (reusable) ----------------------- */
-  // Stable page fetcher for the hook (page size = 100)
   const fetchDepartmentsPage = useCallback(
     async (cursor?: string) => {
       const { data, meta } = await api.getDepartments({
         page_size: 100,
         cursor,
-        q: appliedQuery || undefined, // filter by name/code only when the button is clicked
+        q: appliedQuery || undefined,
       });
-      const items = (data.results ?? []).slice().sort(sortByCodeThenName);
+      const items = (data.results ?? []).slice().sort(sortByCodeThenName) as Department[];
       const nextUrl = meta?.pagination?.next ?? data.next ?? null;
       const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
       return { items, nextCursor };
@@ -121,7 +123,7 @@ const DepartmentSettings: React.FC = () => {
 
   const pager = useCursorPager<Department>(fetchDepartmentsPage, {
     autoLoadFirst: true,
-    deps: [appliedQuery], // reset + load first page when the applied filter changes
+    deps: [appliedQuery],
   });
 
   const { refresh } = pager;
@@ -134,6 +136,31 @@ const DepartmentSettings: React.FC = () => {
       setAppliedQuery(trimmed);
     }
   }, [query, appliedQuery, refresh]);
+
+  /* ------------------------------ Overlay helpers -------------------------- */
+  const matchesQuery = useCallback((d: Department, q: string) => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (
+      (d.code || "").toLowerCase().includes(s) ||
+      (d.name || "").toLowerCase().includes(s)
+    );
+  }, []);
+
+  useEffect(() => {
+    // mantém só os recém-criados que combinam com a busca aplicada
+    setAdded((prev) => prev.filter((d) => matchesQuery(d, appliedQuery)));
+    // se preferir, pode limpar deletes ao trocar a busca:
+    // setDeletedIds(new Set());
+  }, [appliedQuery, matchesQuery]);
+
+  const visibleItems = useMemo(() => {
+    const addedFiltered = added.filter((d) => matchesQuery(d, appliedQuery));
+    const addedIds = new Set(addedFiltered.map((d) => d.id));
+    const base = pager.items.filter((d) => !deletedIds.has(d.id) && !addedIds.has(d.id));
+    // Mostra primeiro os recém-adicionados, depois os do servidor
+    return [...addedFiltered, ...base];
+  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -175,16 +202,19 @@ const DepartmentSettings: React.FC = () => {
     e.preventDefault();
     const payload = {
       name: formData.name.trim(),
-      code: formData.code, // can be "", serializer allow_blank=True
+      code: formData.code,
       is_active: formData.is_active,
     };
     try {
       if (mode === "create") {
-        await api.addDepartment(payload);
+        // request<T> => ApiSuccess<T>
+        const { data: created } = await api.addDepartment(payload);
+        // UI imediata
+        setAdded((prev) => [created as Department, ...prev]);
       } else if (editingDept) {
         await api.editDepartment(editingDept.id, payload);
       }
-      await pager.refresh(); // reset to first page & reload with current appliedQuery
+      await pager.refresh();
       closeModal();
     } catch (err) {
       setSnackBarMessage(
@@ -195,9 +225,27 @@ const DepartmentSettings: React.FC = () => {
 
   const deleteDepartment = async (dept: Department) => {
     try {
+      // UI imediata
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(dept.id);
+        return next;
+      });
+
       await api.deleteDepartment(dept.id);
-      await pager.refresh(); // keep cursor state consistent (respecting appliedQuery)
+
+      // Revalida servidor
+      await pager.refresh();
+
+      // Se estava em "added", remove para evitar fantasma
+      setAdded((prev) => prev.filter((d) => d.id !== dept.id));
     } catch (err) {
+      // rollback overlay
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(dept.id);
+        return next;
+      });
       setSnackBarMessage(
         err instanceof Error ? err.message : "Failed to delete department."
       );
@@ -257,20 +305,18 @@ const DepartmentSettings: React.FC = () => {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => {
-                        // Do NOT search on Enter to comply with requirement:
-                        // "Need to click a button to search. Don't update automatically."
                         if (e.key === "Enter") e.preventDefault();
                       }}
                       placeholder="Search by name or code…"
                       aria-label="Search departments"
                     />
                     <Button onClick={onSearch} variant="outline" aria-label="Run search">
-                      Search
+                      Buscar
                     </Button>
 
                     {isOwner && (
                       <Button onClick={openCreateModal} className="!py-1.5">
-                        Add department
+                        Adicionar departamento
                       </Button>
                     )}
                   </div>
@@ -289,12 +335,12 @@ const DepartmentSettings: React.FC = () => {
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
-                    {pager.items.length === 0 ? (
+                    {visibleItems.length === 0 ? (
                       <p className="p-4 text-center text-sm text-gray-500">
                         No departments found on this page.
                       </p>
                     ) : (
-                      pager.items.map((d) => (
+                      visibleItems.map((d) => (
                         <Row
                           key={d.id}
                           dept={d}
