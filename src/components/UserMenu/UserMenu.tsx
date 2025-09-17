@@ -47,16 +47,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
       className="user-menu absolute top-[85%] z-50 w-64 max-w-[calc(100vw-1rem)] bg-white 
                  shadow-lg rounded-md py-1 border-[0.5px] border-[#d6d6d6] right-2"
     >
-      {/* Configurações da Empresa */}
-      <Link
-        to="/settings/company-settings"
-        onClick={onClose}
-        className="flex items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-      >
-        <img alt="Settings" src={settingsIcon} className="w-5 h-5" />
-        <span className="ml-2">Configurações da Empresa</span>
-      </Link>
-
       {/* Configurações Pessoais */}
       <Link
         to="/settings/personal"
@@ -65,6 +55,16 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
       >
         <img alt="Personal Settings" src={personalIcon} className="w-5 h-5" />
         <span className="ml-2">Configurações Pessoais</span>
+      </Link>
+
+      {/* Configurações da Empresa */}
+      <Link
+        to="/settings/company-settings"
+        onClick={onClose}
+        className="flex items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+      >
+        <img alt="Settings" src={settingsIcon} className="w-5 h-5" />
+        <span className="ml-2">Configurações da Empresa</span>
       </Link>
 
       {/* Notificações */}
