@@ -1,183 +1,225 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+// src/hooks/useCursorPager.ts
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export type FetchPageResult<T> = {
+export type FetchPage<T> = (cursor?: string) => Promise<{
   items: T[];
-  /** next cursor token; undefined/null means “no next page” */
-  nextCursor?: string | null;
-};
-
-export type CursorPage<T> = { items: T[]; nextCursor?: string | null };
+  nextCursor?: string; // undefined/null -> end reached
+}>;
 
 export type UseCursorPagerOptions = {
-  /** auto-load first page on mount/deps change (default: true) */
+  /** Load first page automatically */
   autoLoadFirst?: boolean;
-  /** reset & refetch when any dependency changes (e.g., search query) */
-  deps?: React.DependencyList;
+  /** External deps that should reset & reload page 0 when they change (shallow compare) */
+  deps?: unknown[];
 };
 
 export type UseCursorPagerReturn<T> = {
-  /** items of the current page */
   items: T[];
-  /** 0-based index of the current page */
   index: number;
-  /** known page count (doesn’t imply the true total when end not reached) */
   knownPages: number;
-  /** true when server indicated there is no next page */
   reachedEnd: boolean;
-  /** true while loading the first page or a hard refresh */
+
   loading: boolean;
-  /** last error message (if any) */
   error: string | null;
 
-  /** go to previous page (no-op if already at first) */
   prev: () => Promise<void>;
-  /** go to next page (discovers sequentially if needed) */
   next: () => Promise<void>;
-  /** go to a specific 0-based index (discovers intermediate pages) */
-  goto: (idx: number) => Promise<void>;
-  /** reset pagination and (re)load first page */
+  goto: (index: number) => Promise<void>;
   refresh: () => Promise<void>;
 
-  /** convenience flags for UI */
   canPrev: boolean;
   canNext: boolean;
 };
 
-/**
- * Generic cursor-based pager with arrow-only navigation.
- * - Caches pages & next-cursors.
- * - Discovers intermediate pages when jumping forward.
- * - Safe from “maximum update depth exceeded” loops.
- *
- * IMPORTANT: Pass a **stable** fetcher (wrap with useCallback in the caller).
- */
 export function useCursorPager<T>(
-  fetchPageFn: (cursor?: string) => Promise<FetchPageResult<T>>,
-  options: UseCursorPagerOptions = {}
+  fetchPage: FetchPage<T>,
+  opts: UseCursorPagerOptions = {}
 ): UseCursorPagerReturn<T> {
-  const { autoLoadFirst = true, deps = [] } = options;
+  const { autoLoadFirst = true, deps = [] } = opts;
 
-  const [pages, setPages] = useState<Array<CursorPage<T> | undefined>>([]);
-  const [pageStartTokens, setPageStartTokens] = useState<Array<string | undefined>>([undefined]); // page 0 starts at undefined
+  /** ---------- Internal refs (source of truth, no staleness) ---------- */
+  const pagesRef = useRef<Array<{ items: T[]; nextCursor?: string }>>([]);
+  const tokensRef = useRef<Array<string | undefined>>([undefined]); // token for page i
+  const reachedEndRef = useRef(false);
+  const indexRef = useRef(0);
+  const loadingRef = useRef(false);
+
+  /** ---------- State for rendering ---------- */
+  const [items, setItems] = useState<T[]>([]);
   const [index, setIndex] = useState(0);
+  const [knownPages, setKnownPages] = useState(0);
   const [reachedEnd, setReachedEnd] = useState(false);
-
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const items = useMemo(() => pages[index]?.items ?? [], [pages, index]);
+  // keep indexRef in sync with state
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
 
-  /** low-level fetch for a given page index using its start token */
-  const fetchAt = useCallback(
-    async (pageIndex: number, startToken: string | undefined) => {
-      const res = await fetchPageFn(startToken);
-      setPages((prev) => {
-        const clone = prev.slice();
-        clone[pageIndex] = { items: res.items, nextCursor: res.nextCursor ?? undefined };
-        return clone;
-      });
-      setPageStartTokens((prev) => {
-        const clone = prev.slice();
-        clone[pageIndex + 1] = (res.nextCursor ?? undefined) || undefined;
-        return clone;
-      });
-      if (!res.nextCursor) setReachedEnd(true);
-    },
-    [fetchPageFn]
-  );
+  const syncDerivedState = useCallback(() => {
+    setKnownPages(pagesRef.current.length);
+    setReachedEnd(reachedEndRef.current);
+  }, []);
 
-  /** ensure a given page exists by discovering sequentially if needed */
-  const ensure = useCallback(
-    async (targetIndex: number) => {
-      for (let i = 0; i <= targetIndex; i++) {
-        if (!pages[i]) {
-          const start = pageStartTokens[i];
-          if (i > 0 && start == null) break; // cannot discover further; reached end
-          await fetchAt(i, start);
+  /** Load page `i` if missing. Returns true if it exists after the call. */
+  const ensurePage = useCallback(
+    async (i: number): Promise<boolean> => {
+      if (pagesRef.current[i]) return true;
+
+      const startToken = tokensRef.current[i];
+      if (i > 0 && startToken == null) {
+        // we tried to go beyond the end
+        reachedEndRef.current = true;
+        syncDerivedState();
+        return false;
+      }
+
+      loadingRef.current = true;
+      setLoading(true);
+      setError(null);
+
+      try {
+        const { items, nextCursor } = await fetchPage(startToken);
+
+        const p = pagesRef.current.slice();
+        p[i] = { items, nextCursor };
+        pagesRef.current = p;
+
+        const t = tokensRef.current.slice();
+        t[i + 1] = nextCursor;
+        tokensRef.current = t;
+
+        if (!nextCursor) {
+          reachedEndRef.current = true;
         }
+
+        if (i === indexRef.current) {
+          setItems(items);
+        }
+
+        syncDerivedState();
+        setError(null);
+        return true;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to load data.";
+        setError(msg);
+        return false;
+      } finally {
+        loadingRef.current = false;
+        setLoading(false);
       }
     },
-    [fetchAt, pages, pageStartTokens]
+    [fetchPage, syncDerivedState]
   );
 
-  /** goto helpers */
+  /** Go to target page (load if needed). */
   const goto = useCallback(
     async (target: number) => {
       if (target < 0) return;
-      const lastKnown = Math.max(0, pages.length - 1);
-      const clamped = reachedEnd ? Math.min(target, lastKnown) : target;
-      await ensure(clamped);
-      const last = Math.max(0, pages.length - 1);
-      setIndex(Math.min(clamped, last));
+      const ok = await ensurePage(target);
+      if (!ok) return;
+
+      const page = pagesRef.current[target];
+      if (!page) return;
+
+      setIndex(target);
+      setItems(page.items);
+      syncDerivedState();
     },
-    [ensure, pages.length, reachedEnd]
+    [ensurePage, syncDerivedState]
   );
 
-  const prev = useCallback(async () => {
-    if (index > 0) await goto(index - 1);
-  }, [goto, index]);
-
   const next = useCallback(async () => {
-    await goto(index + 1);
-  }, [goto, index]);
+    if (loadingRef.current) return;
+    const target = indexRef.current + 1;
+    await goto(target); // load & advance in a single click
+  }, [goto]);
 
-  /** hard refresh: reset and (optionally) load the first page */
+  const prev = useCallback(async () => {
+    if (loadingRef.current) return;
+    const target = indexRef.current - 1;
+    if (target < 0) return;
+
+    await ensurePage(target);
+    const page = pagesRef.current[target];
+    if (!page) return;
+
+    setIndex(target);
+    setItems(page.items);
+    syncDerivedState();
+  }, [ensurePage, syncDerivedState]);
+
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setPages([]);
-    setPageStartTokens([undefined]);
+    pagesRef.current = [];
+    tokensRef.current = [undefined];
+    reachedEndRef.current = false;
+    indexRef.current = 0;
+
     setIndex(0);
+    setItems([]);
+    setKnownPages(0);
     setReachedEnd(false);
     setError(null);
-    if (autoLoadFirst) {
-      try {
-        await fetchAt(0, undefined);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load data.");
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
+
+    await ensurePage(0);
+    const first = pagesRef.current[0];
+    if (first) {
+      setIndex(0);
+      setItems(first.items);
+      syncDerivedState();
     }
-  }, [autoLoadFirst, fetchAt]);
+  }, [ensurePage, syncDerivedState]);
 
-  /** initial load + reset on deps change */
+  /** ========= Effects without spread-in-deps ========= */
+
+  // 1) Initial auto-load (and when autoLoadFirst flag toggles)
   useEffect(() => {
-    const alive = true;
-    (async () => {
-      try {
-        setLoading(true);
-        setPages([]);
-        setPageStartTokens([undefined]);
-        setIndex(0);
-        setReachedEnd(false);
-        setError(null);
-        if (autoLoadFirst) await fetchAt(0, undefined);
-      } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : "Failed to load data.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchAt, autoLoadFirst, ...deps]);
+    if (!autoLoadFirst) return;
+    void refresh();
+  }, [autoLoadFirst, refresh]);
 
-  const knownPages = pages.length || 1;
-  const canPrev = index > 0;
-  const canNext = !(reachedEnd && index >= knownPages - 1);
+  // 2) Reset and reload when external deps (array) change — shallow compare
+  const prevDepsRef = useRef<unknown[]>(deps);
+  useEffect(() => {
+    const prev = prevDepsRef.current;
+    const curr = deps;
+    const changed =
+      prev.length !== curr.length ||
+      prev.some((v, i) => !Object.is(v, curr[i]));
+
+    if (changed) {
+      prevDepsRef.current = curr;
+      void refresh();
+    }
+  }, [deps, refresh]);
+
+  /** UI booleans */
+  const canPrev = useMemo(() => index > 0 && !loading, [index, loading]);
+  const canNext = useMemo(
+    () =>
+      !loading &&
+      (
+        index < pagesRef.current.length - 1 ||
+        !reachedEndRef.current
+      ),
+    [index, loading]
+  );
 
   return {
     items,
     index,
     knownPages,
     reachedEnd,
+
     loading,
     error,
+
     prev,
     next,
     goto,
     refresh,
+
     canPrev,
     canNext,
   };
