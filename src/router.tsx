@@ -134,6 +134,10 @@ const routes: RouteObject[] = [
             element: <SettingsLayout />,
             children: [
                 {
+                index: true,
+                element: <Navigate to="personal" replace />
+                },
+                {
                 path: 'personal',
                 element: <Personal />
                 },
