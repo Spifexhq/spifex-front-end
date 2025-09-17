@@ -1,9 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/InventorySettings.tsx                                     */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
+/*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
 /* -------------------------------------------------------------------------- */
-
 import React, { useEffect, useState, useCallback } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -18,6 +16,10 @@ import { api } from "src/api/requests";
 import type { InventoryItem } from "src/models/enterprise_structure/domain/InventoryItem";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import Checkbox from "src/components/Checkbox";
+
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import { useCursorPager } from "@/hooks/useCursorPager";
+import { getCursorFromUrl } from "src/lib/list";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -42,7 +44,7 @@ function sortBySkuThenName(a: InventoryItem, b: InventoryItem) {
   return (a.name || "").localeCompare(b.name || "", "pt-BR");
 }
 
-/* Linha sem bordas próprias; o container usa divide-y */
+/* Linha */
 const Row = ({
   item,
   onEdit,
@@ -92,38 +94,44 @@ const InventorySettings: React.FC = () => {
 
   const { isOwner } = useAuthContext();
 
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  /* ----------------------------- Estados ---------------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
-  /* ------------------------------ Carrega dados ----------------------------- */
-  const fetchItems = useCallback(async () => {
-    try {
-      const all: InventoryItem[] = [];
-      let cursor: string | undefined;
-      do {
-        const { data } = await api.getInventoryItems({ page_size: 200, cursor });
-        const page = (data?.results ?? []) as InventoryItem[];
-        all.push(...page);
-        cursor = (data?.next ?? undefined) || undefined;
-      } while (cursor);
-      setItems(all.sort(sortBySkuThenName));
-    } catch (err) {
-      console.error("Erro ao buscar itens de inventário", err);
-      setSnackBarMessage("Erro ao buscar itens de inventário.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  /* ----------------------------- Filtro (click-to-search) ------------------ */
+  const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  /* ----------------------------- Paginação por cursor ---------------------- */
+  const fetchItemsPage = useCallback(
+    async (cursor?: string) => {
+      const { data, meta } = await api.getInventoryItems({
+        page_size: 100,
+        cursor,
+        q: appliedQuery || undefined,
+      });
+      const items = ((data?.results ?? []) as InventoryItem[]).slice().sort(sortBySkuThenName);
+      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+      return { items, nextCursor };
+    },
+    [appliedQuery]
+  );
+
+  const pager = useCursorPager<InventoryItem>(fetchItemsPage, {
+    autoLoadFirst: true,
+    deps: [appliedQuery],
+  });
+
+  const { refresh } = pager;
+  const onSearch = useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed === appliedQuery) refresh();
+    else setAppliedQuery(trimmed);
+  }, [query, appliedQuery, refresh]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -152,9 +160,7 @@ const InventorySettings: React.FC = () => {
     setEditingItem(null);
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
   };
@@ -166,12 +172,9 @@ const InventorySettings: React.FC = () => {
   const submitItem = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (mode === "create") {
-        await api.addInventoryItem(formData);
-      } else if (editingItem) {
-        await api.editInventoryItem(editingItem.id, formData);
-      }
-      await fetchItems();
+      if (mode === "create") await api.addInventoryItem(formData);
+      else if (editingItem) await api.editInventoryItem(editingItem.id, formData);
+      await pager.refresh();
       closeModal();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar item.");
@@ -181,7 +184,7 @@ const InventorySettings: React.FC = () => {
   const deleteItem = async (item: InventoryItem) => {
     try {
       await api.deleteInventoryItem(item.id);
-      await fetchItems();
+      await pager.refresh();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir item.");
     }
@@ -196,12 +199,10 @@ const InventorySettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
 
   /* --------------------------------- UI ----------------------------------- */
   return (
@@ -209,7 +210,6 @@ const InventorySettings: React.FC = () => {
       <Navbar />
       <SidebarSettings activeItem="inventory" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
@@ -229,104 +229,95 @@ const InventorySettings: React.FC = () => {
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    Itens do inventário
-                  </span>
-                  {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
-                      Adicionar item
-                    </Button>
-                  )}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Itens do inventário</span>
+
+                  {/* Busca (clique para aplicar) */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                      placeholder="Buscar por nome ou SKU…"
+                      aria-label="Buscar itens"
+                    />
+                    <Button onClick={onSearch} variant="outline">Buscar</Button>
+                    {isOwner && (
+                      <Button onClick={openCreateModal} className="!py-1.5">Adicionar item</Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-200">
-                {items.map((i) => (
-                  <Row
-                    key={i.id}
-                    item={i}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={deleteItem}
+              {pager.error ? (
+                <div className="p-6 text-center">
+                  <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
+                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>Tentar novamente</Button>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y divide-gray-200">
+                    {pager.items.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-gray-500">Nenhum item encontrado.</p>
+                    ) : (
+                      pager.items.map((i) => (
+                        <Row
+                          key={i.id}
+                          item={i}
+                          canEdit={!!isOwner}
+                          onEdit={openEditModal}
+                          onDelete={deleteItem}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  <PaginationArrows
+                    onPrev={pager.prev}
+                    onNext={pager.next}
+                    disabledPrev={!pager.canPrev}
+                    disabledNext={!pager.canNext}
+                    label={`Página ${pager.index + 1} de ${
+                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
+                    }`}
                   />
-                ))}
-                {items.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">Nenhum item cadastrado.</p>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </section>
         </div>
 
-        {/* ------------------------------ Modal -------------------------------- */}
+        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w/full max-w-md"
+                 role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {mode === "create" ? "Adicionar item" : "Editar item"}
                 </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label="Fechar"
-                >
+                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                        onClick={closeModal} aria-label="Fechar">
                   &times;
                 </button>
               </header>
 
               <form className="space-y-3" onSubmit={submitItem}>
-                <Input
-                  label="SKU"
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  label="Nome"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  label="Descrição"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-                <Input
-                  label="Unidade (UoM)"
-                  name="uom"
-                  value={formData.uom}
-                  onChange={handleChange}
-                  placeholder="ex.: un, cx, kg, l…"
-                />
-                <Input
-                  label="Quantidade em estoque"
-                  name="quantity_on_hand"
-                  type="number"
-                  step="1"
-                  min="0"
-                  value={formData.quantity_on_hand}
-                  onChange={handleChange}
-                />
+                <Input label="SKU" name="sku" value={formData.sku} onChange={handleChange} required />
+                <Input label="Nome" name="name" value={formData.name} onChange={handleChange} required />
+                <Input label="Descrição" name="description" value={formData.description} onChange={handleChange} />
+                <Input label="Unidade (UoM)" name="uom" value={formData.uom} onChange={handleChange} placeholder="ex.: un, cx, kg, l…" />
+                <Input label="Quantidade em estoque" name="quantity_on_hand" type="number" step="1" min="0"
+                       value={formData.quantity_on_hand} onChange={handleChange} />
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={formData.is_active} onChange={handleActive} />
                   Item ativo
                 </label>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
-                  </Button>
+                  <Button variant="cancel" type="button" onClick={closeModal}>Cancelar</Button>
                   <Button type="submit">Salvar</Button>
                 </div>
               </form>
@@ -335,13 +326,8 @@ const InventorySettings: React.FC = () => {
         )}
       </main>
 
-      {/* ----------------------------- Snackbar ------------------------------ */}
-      <Snackbar
-        open={!!snackBarMessage}
-        autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
+      <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
+                onClose={() => setSnackBarMessage("")} severity="error">
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>
     </>

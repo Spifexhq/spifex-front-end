@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/DepartmentSettings.tsx                                    */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: org-scoped, ids string (ULID), modal em 3 colunas                  */
+/*  Style: Fixed Navbar + SidebarSettings, light borders, compact labels      */
+/*  Notes: org-scoped, string ids (ULID), modal in 3 columns                  */
 /* -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -19,6 +19,10 @@ import type { Department } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import Checkbox from "src/components/Checkbox";
 
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import { useCursorPager } from "@/hooks/useCursorPager";
+import { getCursorFromUrl } from "src/lib/list";
+
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
   return "DP";
@@ -27,11 +31,11 @@ function getInitials() {
 function sortByCodeThenName(a: Department, b: Department) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
-  if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
-  return (a.name || "").localeCompare(b.name || "", "pt-BR");
+  if (ca && cb && ca !== cb) return ca.localeCompare(cb, "en", { numeric: true });
+  return (a.name || "").localeCompare(b.name || "", "en");
 }
 
-/* Row sem bordas próprias; o container usa divide-y */
+/* Row without its own borders; container uses divide-y */
 const Row = ({
   dept,
   onEdit,
@@ -46,10 +50,10 @@ const Row = ({
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        {dept.code ? `Código: ${dept.code}` : "—"} {dept.is_active === false ? "• Inativo" : ""}
+        {dept.code ? `Code: ${dept.code}` : "—"} {dept.is_active === false ? "• Inactive" : ""}
       </p>
       <p className="text-[13px] font-medium text-gray-900 truncate">
-        {dept.name || "(sem nome)"}
+        {dept.name || "(no name)"}
       </p>
     </div>
     {canEdit && (
@@ -59,10 +63,10 @@ const Row = ({
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(dept)}
         >
-          Editar
+          Edit
         </Button>
         <Button variant="common" onClick={() => onDelete(dept)}>
-          Excluir
+          Delete
         </Button>
       </div>
     )}
@@ -79,15 +83,12 @@ type FormState = typeof emptyForm;
 
 const DepartmentSettings: React.FC = () => {
   useEffect(() => {
-    document.title = "Configurações de Departamentos";
+    document.title = "Department Settings";
   }, []);
 
   const { isOwner } = useAuthContext();
 
-  /* --------------------------- Estados principais --------------------------- */
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  /* ------------------------------- Modal state ----------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingDept, setEditingDept] = useState<Department | null>(null);
@@ -95,31 +96,44 @@ const DepartmentSettings: React.FC = () => {
 
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
-  /* ------------------------------ Carrega dados (cursor) ------------------- */
-  const fetchDepartments = useCallback(async () => {
-    try {
-      const all: Department[] = [];
-      let cursor: string | undefined;
+  /* ------------------------------- Filter state ---------------------------- */
+  // query: what the user is typing
+  // appliedQuery: the filter actually used in API calls (only changes on button click)
+  const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
 
-      do {
-        const { data } = await api.getDepartments({ page_size: 200, cursor });
-        const page = data.results ?? [];
-        all.push(...page);
-        cursor = (data.next ?? undefined) || undefined;
-      } while (cursor);
+  /* --------------------------- Pagination (reusable) ----------------------- */
+  // Stable page fetcher for the hook (page size = 100)
+  const fetchDepartmentsPage = useCallback(
+    async (cursor?: string) => {
+      const { data, meta } = await api.getDepartments({
+        page_size: 100,
+        cursor,
+        q: appliedQuery || undefined, // filter by name/code only when the button is clicked
+      });
+      const items = (data.results ?? []).slice().sort(sortByCodeThenName);
+      const nextUrl = meta?.pagination?.next ?? data.next ?? null;
+      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+      return { items, nextCursor };
+    },
+    [appliedQuery]
+  );
 
-      setDepartments(all.sort(sortByCodeThenName));
-    } catch (err) {
-      console.error("Erro ao buscar departamentos", err);
-      setSnackBarMessage("Erro ao buscar departamentos.");
-    } finally {
-      setLoading(false);
+  const pager = useCursorPager<Department>(fetchDepartmentsPage, {
+    autoLoadFirst: true,
+    deps: [appliedQuery], // reset + load first page when the applied filter changes
+  });
+
+  const { refresh } = pager;
+
+  const onSearch = useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed === appliedQuery) {
+      refresh();
+    } else {
+      setAppliedQuery(trimmed);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
+  }, [query, appliedQuery, refresh]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -161,7 +175,7 @@ const DepartmentSettings: React.FC = () => {
     e.preventDefault();
     const payload = {
       name: formData.name.trim(),
-      code: formData.code, // pode ser "", serializer allow_blank=True
+      code: formData.code, // can be "", serializer allow_blank=True
       is_active: formData.is_active,
     };
     try {
@@ -170,11 +184,11 @@ const DepartmentSettings: React.FC = () => {
       } else if (editingDept) {
         await api.editDepartment(editingDept.id, payload);
       }
-      await fetchDepartments();
+      await pager.refresh(); // reset to first page & reload with current appliedQuery
       closeModal();
     } catch (err) {
       setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao salvar departamento."
+        err instanceof Error ? err.message : "Failed to save department."
       );
     }
   };
@@ -182,10 +196,10 @@ const DepartmentSettings: React.FC = () => {
   const deleteDepartment = async (dept: Department) => {
     try {
       await api.deleteDepartment(dept.id);
-      await fetchDepartments();
+      await pager.refresh(); // keep cursor state consistent (respecting appliedQuery)
     } catch (err) {
       setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao excluir departamento."
+        err instanceof Error ? err.message : "Failed to delete department."
       );
     }
   };
@@ -199,10 +213,12 @@ const DepartmentSettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
 
   /* --------------------------------- UI ----------------------------------- */
   return (
@@ -219,43 +235,90 @@ const DepartmentSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Departamentos</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Settings</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Departments</h1>
               </div>
             </div>
           </header>
 
-          {/* Card principal */}
+          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de departamentos</span>
-                  {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
-                      Adicionar departamento
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    Department list
+                  </span>
+
+                  {/* Search area: only triggers on button click */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        // Do NOT search on Enter to comply with requirement:
+                        // "Need to click a button to search. Don't update automatically."
+                        if (e.key === "Enter") e.preventDefault();
+                      }}
+                      placeholder="Search by name or code…"
+                      aria-label="Search departments"
+                    />
+                    <Button onClick={onSearch} variant="outline" aria-label="Run search">
+                      Search
                     </Button>
-                  )}
+
+                    {isOwner && (
+                      <Button onClick={openCreateModal} className="!py-1.5">
+                        Add department
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-200">
-                {departments.map((d) => (
-                  <Row
-                    key={d.id}
-                    dept={d}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={deleteDepartment}
-                  />
-                ))}
+              {/* --------- LIST AREA with ARROW-ONLY pagination footer --------- */}
+              {pager.error ? (
+                <div className="p-6 text-center">
+                  <p className="text-[13px] font-medium text-red-700 mb-2">Failed to load</p>
+                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                    Try again
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y divide-gray-200">
+                    {pager.items.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-gray-500">
+                        No departments found on this page.
+                      </p>
+                    ) : (
+                      pager.items.map((d) => (
+                        <Row
+                          key={d.id}
+                          dept={d}
+                          canEdit={!!isOwner}
+                          onEdit={openEditModal}
+                          onDelete={deleteDepartment}
+                        />
+                      ))
+                    )}
+                  </div>
 
-                {departments.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">
-                    Nenhum departamento cadastrado.
-                  </p>
-                )}
-              </div>
+                  {/* Arrow-only footer */}
+                  <PaginationArrows
+                    onPrev={pager.prev}
+                    onNext={pager.next}
+                    disabledPrev={!pager.canPrev}
+                    disabledNext={!pager.canNext}
+                    label={`Page ${pager.index + 1} of ${
+                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
+                    }`}
+                  />
+                </>
+              )}
+              {/* ------------------------ /LIST AREA -------------------------- */}
             </div>
           </section>
         </div>
@@ -270,29 +333,29 @@ const DepartmentSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar departamento" : "Editar departamento"}
+                  {mode === "create" ? "Add department" : "Edit department"}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Fechar"
+                  aria-label="Close"
                 >
                   &times;
                 </button>
               </header>
 
               <form className="space-y-3" onSubmit={submitDepartment}>
-                {/* 3 colunas no desktop */}
+                {/* 3 columns on desktop */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Input
-                    label="Nome"
+                    label="Name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
                   />
                   <Input
-                    label="Código"
+                    label="Code"
                     name="code"
                     value={formData.code}
                     onChange={handleChange}
@@ -302,15 +365,15 @@ const DepartmentSettings: React.FC = () => {
                       checked={formData.is_active}
                       onChange={handleActive}
                     />
-                    Departamento ativo
+                    Active department
                   </label>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
+                    Cancel
                   </Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit">Save</Button>
                 </div>
               </form>
             </div>

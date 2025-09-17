@@ -1,5 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/EntitySettings.tsx                                        */
+/*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
 /* -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback } from "react";
 
@@ -16,6 +17,10 @@ import { api } from "src/api/requests";
 import type { Entity } from "src/models/enterprise_structure/domain/Entity";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import Checkbox from "src/components/Checkbox";
+
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import { useCursorPager } from "@/hooks/useCursorPager";
+import { getCursorFromUrl } from "src/lib/list";
 
 /* tipos de entidade (adicione mais se necessário) */
 const ENTITY_TYPES = [
@@ -105,39 +110,44 @@ const EntitySettings: React.FC = () => {
 
   const { isOwner } = useAuthContext();
 
-  const [entities, setEntities] = useState<Entity[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  /* ------------------------------- Modal state ----------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
-
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState<string>("");
 
-  /* ------------------------------ Carrega dados (paginado) ----------------- */
-  const fetchEntities = useCallback(async () => {
-    try {
-      const all: Entity[] = [];
-      let cursor: string | undefined;
-      do {
-        const { data } = await api.getEntities({ page_size: 200, cursor });
-        const page = (data?.results ?? []) as Entity[];
-        all.push(...page);
-        cursor = (data?.next ?? undefined) || undefined;
-      } while (cursor);
-      setEntities(all.sort(sortByName));
-    } catch (err) {
-      console.error("Erro ao buscar entidades", err);
-      setSnackBarMessage("Erro ao buscar entidades.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  /* ------------------------------- Filtro (click-to-search) ---------------- */
+  const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
 
-  useEffect(() => {
-    fetchEntities();
-  }, [fetchEntities]);
+  /* ------------------------------- Página por cursores --------------------- */
+  const fetchEntitiesPage = useCallback(
+    async (cursor?: string) => {
+      const { data, meta } = await api.getEntities({
+        page_size: 100,
+        cursor,
+        q: appliedQuery || undefined,
+      });
+      const items = ((data?.results ?? []) as Entity[]).slice().sort(sortByName);
+      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+      return { items, nextCursor };
+    },
+    [appliedQuery]
+  );
+
+  const pager = useCursorPager<Entity>(fetchEntitiesPage, {
+    autoLoadFirst: true,
+    deps: [appliedQuery],
+  });
+
+  const { refresh } = pager;
+  const onSearch = useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed === appliedQuery) refresh();
+    else setAppliedQuery(trimmed);
+  }, [query, appliedQuery, refresh]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -191,12 +201,10 @@ const EntitySettings: React.FC = () => {
 
   const submitEntity = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const payload = {
       ...formData,
       ssn_tax_id: formData.ssn_tax_id.trim() || null,
       ein_tax_id: formData.ein_tax_id.trim() || null,
-      // (opcional) normalizar brancos em outros campos livres:
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       bank_name: formData.bank_name.trim(),
@@ -207,12 +215,9 @@ const EntitySettings: React.FC = () => {
     };
 
     try {
-      if (mode === "create") {
-        await api.addEntity(payload);
-      } else if (editingEntity) {
-        await api.editEntity(editingEntity.id, payload);
-      }
-      await fetchEntities();
+      if (mode === "create") await api.addEntity(payload);
+      else if (editingEntity) await api.editEntity(editingEntity.id, payload);
+      await pager.refresh();
       closeModal();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar entidade.");
@@ -220,12 +225,10 @@ const EntitySettings: React.FC = () => {
   };
 
   const deleteEntity = async (entity: Entity) => {
-    if (!window.confirm(`Excluir entidade "${entity.full_name ?? entity.alias_name ?? ""}"?`))
-      return;
-
+    if (!window.confirm(`Excluir entidade "${entity.full_name ?? entity.alias_name ?? ""}"?`)) return;
     try {
       await api.deleteEntity(entity.id);
-      await fetchEntities();
+      await pager.refresh();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
     }
@@ -240,12 +243,10 @@ const EntitySettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
 
   /* --------------------------------- UI ----------------------------------- */
   return (
@@ -272,31 +273,62 @@ const EntitySettings: React.FC = () => {
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de entidades</span>
-                  {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
-                      Adicionar entidade
-                    </Button>
-                  )}
+
+                  {/* Busca (clique no botão para aplicar) */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                      placeholder="Buscar por nome ou apelido…"
+                      aria-label="Buscar entidades"
+                    />
+                    <Button onClick={onSearch} variant="outline">Buscar</Button>
+                    {isOwner && (
+                      <Button onClick={openCreateModal} className="!py-1.5">Adicionar entidade</Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-200">
-                {entities.map((e) => (
-                  <Row
-                    key={e.id}
-                    entity={e}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={deleteEntity}
-                  />
-                ))}
+              {pager.error ? (
+                <div className="p-6 text-center">
+                  <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
+                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>Tentar novamente</Button>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y divide-gray-200">
+                    {pager.items.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-gray-500">Nenhuma entidade encontrada.</p>
+                    ) : (
+                      pager.items.map((e) => (
+                        <Row
+                          key={e.id}
+                          entity={e}
+                          canEdit={!!isOwner}
+                          onEdit={openEditModal}
+                          onDelete={deleteEntity}
+                        />
+                      ))
+                    )}
+                  </div>
 
-                {entities.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">Nenhuma entidade cadastrada.</p>
-                )}
-              </div>
+                  <PaginationArrows
+                    onPrev={pager.prev}
+                    onNext={pager.next}
+                    disabledPrev={!pager.canPrev}
+                    disabledNext={!pager.canNext}
+                    label={`Página ${pager.index + 1} de ${
+                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
+                    }`}
+                  />
+                </>
+              )}
             </div>
           </section>
         </div>
@@ -304,20 +336,14 @@ const EntitySettings: React.FC = () => {
         {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-4xl overflow-y-auto max-h-[90vh]"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-4xl overflow-y-auto max-h-[90vh]"
+                 role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {mode === "create" ? "Adicionar entidade" : "Editar entidade"}
                 </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label="Fechar"
-                >
+                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                        onClick={closeModal} aria-label="Fechar">
                   &times;
                 </button>
               </header>
@@ -331,7 +357,6 @@ const EntitySettings: React.FC = () => {
                   <div>
                     <Input label="Nome fantasia / apelido" name="alias_name" value={formData.alias_name} onChange={handleChange} />
                   </div>
-
                   <div>
                     <SelectDropdown
                       label="Tipo de entidade"
@@ -345,24 +370,13 @@ const EntitySettings: React.FC = () => {
                       buttonLabel="Selecione o tipo"
                     />
                   </div>
-
-                  <div>
-                    <Input label="CPF (SSN)" name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="CNPJ (EIN)" name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Email" name="email" value={formData.email} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} />
-                  </div>
+                  <div><Input label="CPF (SSN)" name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} /></div>
+                  <div><Input label="CNPJ (EIN)" name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} /></div>
+                  <div><Input label="Email" name="email" value={formData.email} onChange={handleChange} /></div>
+                  <div><Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} /></div>
                   <label className="col-span-1 flex items-center gap-2 text-sm pt-5">
-                    <Checkbox
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                    />
+                    <Checkbox checked={formData.is_active}
+                              onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))} />
                     Entidade ativa
                   </label>
                 </div>
@@ -370,60 +384,26 @@ const EntitySettings: React.FC = () => {
                 {/* Endereço */}
                 <h4 className="text-[12px] font-semibold text-gray-800">Endereço</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="lg:col-span-2">
-                    <Input label="Rua" name="street" value={formData.street} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Número" name="street_number" value={formData.street_number} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Cidade" name="city" value={formData.city} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Estado" name="state" value={formData.state} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="País" name="country" value={formData.country} onChange={handleChange} />
-                  </div>
+                  <div className="lg:col-span-2"><Input label="Rua" name="street" value={formData.street} onChange={handleChange} /></div>
+                  <div><Input label="Número" name="street_number" value={formData.street_number} onChange={handleChange} /></div>
+                  <div><Input label="Cidade" name="city" value={formData.city} onChange={handleChange} /></div>
+                  <div><Input label="Estado" name="state" value={formData.state} onChange={handleChange} /></div>
+                  <div><Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} /></div>
+                  <div><Input label="País" name="country" value={formData.country} onChange={handleChange} /></div>
                 </div>
 
                 {/* Dados bancários */}
                 <h4 className="text-[12px] font-semibold text-gray-800">Dados bancários</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <Input label="Banco" name="bank_name" value={formData.bank_name} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Conta corrente" name="checking_account" value={formData.checking_account} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input
-                      label="Titular (CPF/CNPJ)"
-                      name="account_holder_tax_id"
-                      value={formData.account_holder_tax_id}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="lg:col-span-2">
-                    <Input
-                      label="Nome do titular"
-                      name="account_holder_name"
-                      value={formData.account_holder_name}
-                      onChange={handleChange}
-                    />
-                  </div>
+                  <div><Input label="Banco" name="bank_name" value={formData.bank_name} onChange={handleChange} /></div>
+                  <div><Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} /></div>
+                  <div><Input label="Conta corrente" name="checking_account" value={formData.checking_account} onChange={handleChange} /></div>
+                  <div><Input label="Titular (CPF/CNPJ)" name="account_holder_tax_id" value={formData.account_holder_tax_id} onChange={handleChange} /></div>
+                  <div className="lg:col-span-2"><Input label="Nome do titular" name="account_holder_name" value={formData.account_holder_name} onChange={handleChange} /></div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
-                  </Button>
+                  <Button variant="cancel" type="button" onClick={closeModal}>Cancelar</Button>
                   <Button type="submit">Salvar</Button>
                 </div>
               </form>
@@ -432,12 +412,8 @@ const EntitySettings: React.FC = () => {
         )}
       </main>
 
-      <Snackbar
-        open={!!snackBarMessage}
-        autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
+      <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
+                onClose={() => setSnackBarMessage("")} severity="error">
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>
     </>

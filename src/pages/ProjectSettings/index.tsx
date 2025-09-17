@@ -1,9 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/ProjectSettings.tsx                                       */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
+/*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
 /* -------------------------------------------------------------------------- */
-
 import React, { useEffect, useState, useCallback } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -19,6 +17,10 @@ import { api } from "src/api/requests";
 import type { Project } from "src/models/enterprise_structure/domain/Project";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import Checkbox from "src/components/Checkbox";
+
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import { useCursorPager } from "@/hooks/useCursorPager";
+import { getCursorFromUrl } from "src/lib/list";
 
 /* ------------------------- Tipos / constantes ----------------------------- */
 const PROJECT_TYPES = [
@@ -43,7 +45,7 @@ function isProjectType(v: unknown): v is ProjectType {
 }
 
 function getInitials() {
-  return "PJ"; // Projetos
+  return "PJ";
 }
 
 const emptyForm = {
@@ -59,13 +61,11 @@ type FormState = typeof emptyForm;
 function sortByCodeThenName(a: Project, b: Project) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
-  if (ca && cb && ca !== cb) {
-    return ca.localeCompare(cb, "pt-BR", { numeric: true });
-  }
+  if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
   return (a.name || "").localeCompare(b.name || "", "pt-BR");
 }
 
-/* Linha sem bordas próprias; o container usa divide-y */
+/* Linha */
 const Row = ({
   project,
   onEdit,
@@ -88,14 +88,11 @@ const Row = ({
           CÓD: {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
         </p>
         <p className="text-[13px] font-medium text-gray-900 truncate">
-          {project.name || "(sem nome)"}{" "}
-          {project.description ? `— ${project.description}` : ""}
+          {project.name || "(sem nome)"} {project.description ? `— ${project.description}` : ""}
         </p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        <span className="text-[12px] text-gray-700">
-          {project.is_active ? "Ativo" : "Inativo"}
-        </span>
+        <span className="text-[12px] text-gray-700">{project.is_active ? "Ativo" : "Inativo"}</span>
         {canEdit && (
           <>
             <Button
@@ -116,7 +113,6 @@ const Row = ({
 };
 
 const ProjectSettings: React.FC = () => {
-  /* ------------------------------ Setup ----------------------------------- */
   useEffect(() => {
     document.title = "Projetos";
   }, []);
@@ -124,38 +120,43 @@ const ProjectSettings: React.FC = () => {
   const { isOwner } = useAuthContext();
 
   /* ----------------------------- Estados ---------------------------------- */
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
-  /* ----------------------------- API calls -------------------------------- */
-  const fetchProjects = useCallback(async () => {
-    try {
-      const all: Project[] = [];
-      let cursor: string | undefined;
-      do {
-        const { data } = await api.getProjects({ page_size: 200, cursor });
-        const page = (data?.results ?? []) as Project[];
-        all.push(...page);
-        cursor = (data?.next ?? undefined) || undefined;
-      } while (cursor);
-      setProjects(all.sort(sortByCodeThenName));
-    } catch (err) {
-      console.error("Erro ao buscar projetos", err);
-      setSnackBarMessage("Erro ao buscar projetos.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  /* ----------------------------- Filtro (click-to-search) ------------------ */
+  const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
 
-  useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+  /* ----------------------------- Paginação por cursor ---------------------- */
+  const fetchProjectsPage = useCallback(
+    async (cursor?: string) => {
+      const { data, meta } = await api.getProjects({
+        page_size: 100,
+        cursor,
+        q: appliedQuery || undefined,
+      });
+      const items = ((data?.results ?? []) as Project[]).slice().sort(sortByCodeThenName);
+      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+      return { items, nextCursor };
+    },
+    [appliedQuery]
+  );
+
+  const pager = useCursorPager<Project>(fetchProjectsPage, {
+    autoLoadFirst: true,
+    deps: [appliedQuery],
+  });
+
+  const { refresh } = pager;
+  const onSearch = useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed === appliedQuery) refresh();
+    else setAppliedQuery(trimmed);
+  }, [query, appliedQuery, refresh]);
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
@@ -183,9 +184,7 @@ const ProjectSettings: React.FC = () => {
     setEditingProject(null);
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
   };
@@ -214,27 +213,22 @@ const ProjectSettings: React.FC = () => {
           is_active: formData.is_active,
         });
       }
-      await fetchProjects();
+      await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao salvar projeto."
-      );
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar projeto.");
     }
   };
 
   const deleteProject = async (project: Project) => {
     try {
       await api.deleteProject(project.id);
-      await fetchProjects();
+      await pager.refresh();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao excluir projeto."
-      );
+      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir projeto.");
     }
   };
 
-  /* ------------------------------ Esc key / scroll lock ------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
@@ -243,20 +237,17 @@ const ProjectSettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
 
-  /* --------------------------------- UI ----------------------------------- */
+  /* -------------------------------- UI ------------------------------------ */
   return (
     <>
       <Navbar />
       <SidebarSettings activeItem="projects" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
@@ -266,12 +257,8 @@ const ProjectSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  Configurações
-                </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  Projetos
-                </h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Projetos</h1>
               </div>
             </div>
           </header>
@@ -280,82 +267,90 @@ const ProjectSettings: React.FC = () => {
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    Lista de projetos
-                  </span>
-                  {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
-                      Adicionar projeto
-                    </Button>
-                  )}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de projetos</span>
+
+                  {/* Busca (clique para aplicar) */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                      placeholder="Buscar por nome ou código…"
+                      aria-label="Buscar projetos"
+                    />
+                    <Button onClick={onSearch} variant="outline">Buscar</Button>
+                    {isOwner && (
+                      <Button onClick={openCreateModal} className="!py-1.5">Adicionar projeto</Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-200">
-                {projects.map((p) => (
-                  <Row
-                    key={p.id}
-                    project={p}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={deleteProject}
+              {pager.error ? (
+                <div className="p-6 text-center">
+                  <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
+                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>Tentar novamente</Button>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y divide-gray-200">
+                    {pager.items.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-gray-500">Nenhum projeto encontrado.</p>
+                    ) : (
+                      pager.items.map((p) => (
+                        <Row
+                          key={p.id}
+                          project={p}
+                          canEdit={!!isOwner}
+                          onEdit={openEditModal}
+                          onDelete={deleteProject}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  <PaginationArrows
+                    onPrev={pager.prev}
+                    onNext={pager.next}
+                    disabledPrev={!pager.canPrev}
+                    disabledNext={!pager.canNext}
+                    label={`Página ${pager.index + 1} de ${
+                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
+                    }`}
                   />
-                ))}
-                {projects.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">
-                    Nenhum projeto cadastrado.
-                  </p>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </section>
         </div>
 
-        {/* ------------------------------ Modal -------------------------------- */}
+        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+                 role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {mode === "create" ? "Adicionar projeto" : "Editar projeto"}
                 </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label="Fechar"
-                >
+                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                        onClick={closeModal} aria-label="Fechar">
                   &times;
                 </button>
               </header>
 
               <form className="space-y-3" onSubmit={submitProject}>
-                <Input
-                  label="Nome do projeto"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  label="Código"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleChange}
-                />
+                <Input label="Nome do projeto" name="name" value={formData.name} onChange={handleChange} required />
+                <Input label="Código" name="code" value={formData.code} onChange={handleChange} />
 
                 <SelectDropdown<TypeOption>
                   label="Tipo de projeto"
                   items={TYPE_OPTIONS}
                   selected={TYPE_OPTIONS.filter((t) => t.value === formData.type)}
-                  onChange={(items) => {
-                    if (items[0]) setFormData((p) => ({ ...p, type: items[0].value }));
-                  }}
+                  onChange={(items) => { if (items[0]) setFormData((p) => ({ ...p, type: items[0].value })); }}
                   getItemKey={(i) => i.value}
                   getItemLabel={(i) => i.label}
                   singleSelect
@@ -364,22 +359,14 @@ const ProjectSettings: React.FC = () => {
                   customStyles={{ maxHeight: "240px" }}
                 />
 
-                <Input
-                  label="Descrição"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-
+                <Input label="Descrição" name="description" value={formData.description} onChange={handleChange} />
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={formData.is_active} onChange={handleActiveChange} />
                   Projeto ativo
                 </label>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
-                  </Button>
+                  <Button variant="cancel" type="button" onClick={closeModal}>Cancelar</Button>
                   <Button type="submit">Salvar</Button>
                 </div>
               </form>
@@ -388,13 +375,8 @@ const ProjectSettings: React.FC = () => {
         )}
       </main>
 
-      {/* ----------------------------- Snackbar ------------------------------ */}
-      <Snackbar
-        open={!!snackBarMessage}
-        autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
+      <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
+                onClose={() => setSnackBarMessage("")} severity="error">
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>
     </>
