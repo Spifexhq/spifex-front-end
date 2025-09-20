@@ -161,6 +161,22 @@ export const api = {
     const org = getOrgExternalId();
     return request<void>(`rbac/${org}/groups/${slug}/`, "DELETE");
   },
+
+  /* --- Employees --- */
+  getEmployees: () =>
+    request<GetEmployeesResponse>("companies/employees", "GET"),
+
+  getEmployee: (ids: number[]) =>
+    request<GetEmployeeResponse>(`companies/employees/${ids.join(',')}`, "GET"),
+
+  addEmployee: (payload: AddEmployeeRequest) =>
+    request<Employee>("companies/employees", "POST", payload),
+
+  editEmployee: (ids: number[], payload: Partial<EditEmployeeRequest>) =>
+    request<Employee>(`companies/employees/${ids.join(',')}`, 'PUT', payload),
+
+  deleteEmployee: (ids: number[]) =>
+    request<Employee>(`companies/employees/${ids.join(',')}`, 'DELETE'),
   
   /* --- Tasks --- */
   getAllTasks: () =>
@@ -181,22 +197,6 @@ export const api = {
   deleteTask: (ids: number[]) =>
     request<TaskDetail>(`companies/tasks/${ids.join(',')}`, 'DELETE'),
   
-  /* --- Employees --- */
-  getEmployees: () =>
-    request<GetEmployeesResponse>("companies/employees", "GET"),
-
-  getEmployee: (ids: number[]) =>
-    request<GetEmployeeResponse>(`companies/employees/${ids.join(',')}`, "GET"),
-
-  addEmployee: (payload: AddEmployeeRequest) =>
-    request<Employee>("companies/employees", "POST", payload),
-
-  editEmployee: (ids: number[], payload: Partial<EditEmployeeRequest>) =>
-    request<Employee>(`companies/employees/${ids.join(',')}`, 'PUT', payload),
-
-  deleteEmployee: (ids: number[]) =>
-    request<Employee>(`companies/employees/${ids.join(',')}`, 'DELETE'),
-
   /* --- Cash-flow Entries --- */
   getEntries: (payload: GetEntryRequest) => {
     const org = getOrgExternalId();
