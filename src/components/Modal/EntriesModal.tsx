@@ -4,6 +4,7 @@ import axios from "axios";
 import Button from "../Button";
 import Input from "../Input";
 import { SelectDropdown } from "@/components/SelectDropdown";
+import { getCursorFromUrl } from "src/lib/list";
 
 import {
   FormData,
@@ -444,6 +445,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   };
 
   /* --------------------------- Fetch helpers --------------------------- */
+  // Ledger Accounts
   const fetchAllLedgerAccounts = useCallback(async () => {
     const all: GLAccount[] = [];
     let cursor: string | undefined;
@@ -451,12 +453,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const { data } = await api.getLedgerAccounts({ page_size: 200, cursor });
       const page = (data?.results ?? []) as GLAccount[];
       all.push(...page);
-      cursor = (data?.next ?? undefined) || undefined;
+      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
     } while (cursor);
     const wanted = type === "credit" ? "credit" : "debit";
     return all.filter((a) => (a?.default_tx || "").toLowerCase() === wanted);
   }, [type]);
 
+  // Departments
   const fetchAllDepartments = useCallback(async () => {
     const all: Department[] = [];
     let cursor: string | undefined;
@@ -464,11 +467,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const { data } = await api.getDepartments({ page_size: 200, cursor });
       const page = (data?.results ?? []) as Department[];
       all.push(...page);
-      cursor = (data?.next ?? undefined) || undefined;
+      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
     } while (cursor);
     return all;
   }, []);
 
+  // Projects
   const fetchAllProjects = useCallback(async () => {
     const all: Project[] = [];
     let cursor: string | undefined;
@@ -476,11 +480,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const { data } = await api.getProjects({ page_size: 200, cursor });
       const page = (data?.results ?? []) as Project[];
       all.push(...page);
-      cursor = (data?.next ?? undefined) || undefined;
+      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
     } while (cursor);
     return all;
   }, []);
 
+  // Inventory Items
   const fetchAllInventoryItems = useCallback(async () => {
     const all: InventoryItem[] = [];
     let cursor: string | undefined;
@@ -488,11 +493,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const { data } = await api.getInventoryItems({ page_size: 200, cursor });
       const page = (data?.results ?? []) as InventoryItem[];
       all.push(...page);
-      cursor = (data?.next ?? undefined) || undefined;
+      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
     } while (cursor);
     return all;
   }, []);
 
+  // Entities (CRM)
   const fetchAllEntities = useCallback(async () => {
     const all: Entity[] = [];
     let cursor: string | undefined;
@@ -500,10 +506,11 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const { data } = await api.getEntities({ page_size: 200, cursor });
       const page = (data?.results ?? []) as Entity[];
       all.push(...page);
-      cursor = (data?.next ?? undefined) || undefined;
+      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
     } while (cursor);
     return all;
   }, []);
+
 
   /* --------------------------- Carregar dados --------------------------- */
   useEffect(() => {
