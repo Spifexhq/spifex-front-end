@@ -118,6 +118,7 @@ const sections: {
     items: [
       { id: "company-settings", icon: "building", label: "Company settings" },
       { id: "employees", icon: "employees", label: "Employees" },
+      { id: "groups", icon: "groups", label: "Groups" },
       { id: "subscription-management", icon: "layers", label: "Plan" },
       { id: "integrations", icon: "integrations", label: "Integrations" },
     ],
@@ -143,7 +144,6 @@ const sections: {
     title: "Accounting & Structure",
     items: [
       { id: "ledger-accounts", icon: "ledger", label: "Ledger Accounts" },
-      { id: "groups", icon: "groups", label: "Groups" },
       { id: "departments", icon: "departments", label: "Departments" },
       { id: "entities", icon: "entities", label: "Entities" },
     ],

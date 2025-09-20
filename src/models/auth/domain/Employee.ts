@@ -1,11 +1,11 @@
-import { Group } from "./Group";
+import { GroupListItem as Group } from "./Group";
+
+export type Role = "owner" | "admin" | "member";
 
 export interface Employee {
-  id: number;
+  id: number;      // membership id
   name: string;
   email: string;
-}
-
-export interface EmployeeDetail extends Employee {
+  role: Role;
   groups: Group[];
 }

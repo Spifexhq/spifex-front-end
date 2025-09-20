@@ -7,7 +7,7 @@ import {
   GetPermission, GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
-import { User, Organization, Employee, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
+import { User, Organization, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
 import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis, BulkSettleItem, BulkSettleResponse } from '@/models/entries/domain'
@@ -163,20 +163,30 @@ export const api = {
   },
 
   /* --- Employees --- */
-  getEmployees: () =>
-    request<GetEmployeesResponse>("companies/employees", "GET"),
+  getEmployees: () => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEmployeesResponse>(`organizations/${orgExternalId}/members/`, "GET");
+  },
 
-  getEmployee: (ids: number[]) =>
-    request<GetEmployeeResponse>(`companies/employees/${ids.join(',')}`, "GET"),
+  getEmployee: (membershipId: number) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipId}/`, "GET");
+  },
 
-  addEmployee: (payload: AddEmployeeRequest) =>
-    request<Employee>("companies/employees", "POST", payload),
+  addEmployee: (payload: AddEmployeeRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/`, "POST", payload);
+  },
 
-  editEmployee: (ids: number[], payload: Partial<EditEmployeeRequest>) =>
-    request<Employee>(`companies/employees/${ids.join(',')}`, 'PUT', payload),
+  editEmployee: (membershipId: number, payload: EditEmployeeRequest) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipId}/`, "PATCH", payload);
+  },
 
-  deleteEmployee: (ids: number[]) =>
-    request<Employee>(`companies/employees/${ids.join(',')}`, 'DELETE'),
+  deleteEmployee: (membershipId: number) => {
+    const orgExternalId = getOrgExternalId();
+    return request<void>(`organizations/${orgExternalId}/members/${membershipId}/`, "DELETE");
+  },
   
   /* --- Tasks --- */
   getAllTasks: () =>

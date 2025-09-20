@@ -16,7 +16,9 @@ import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { Employee, Group } from "src/models/auth/domain";
+import { Employee } from "src/models/auth/domain"; // Employee ok
+import type { GroupListItem } from "src/models/auth/domain/Group"; // ✅ use GroupListItem
+import type { GetGroups } from "src/models/auth/dto/GetGroup";     // for normalization helper
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { validatePassword } from "src/lib";
 
@@ -26,7 +28,7 @@ const emptyForm = {
   email: "",
   password: "",
   confirmPassword: "",
-  groups: [] as Group[],
+  groups: [] as GroupListItem[], // ✅
 };
 type FormState = typeof emptyForm;
 
@@ -34,6 +36,36 @@ type FormState = typeof emptyForm;
 function getInitials() {
   return "FN"; // Funcionários
 }
+
+/* -- Same normalization helpers used in GroupSettings ---------------------- */
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null;
+
+const isGroupListItem = (v: unknown): v is GroupListItem => {
+  if (!isRecord(v)) return false;
+  const o = v as Record<string, unknown>;
+  return (
+    typeof o.id === "number" &&
+    typeof o.slug === "string" &&
+    typeof o.name === "string" &&
+    typeof o.is_system === "boolean" &&
+    typeof o.permissions_count === "number" &&
+    typeof o.members_count === "number"
+  );
+};
+
+const isResultsWrapper = (v: unknown): v is { results: unknown[] } =>
+  isRecord(v) && "results" in v && Array.isArray((v as Record<string, unknown>).results);
+
+/** Accepts: GroupListItem[] | {results: GroupListItem[]} */
+const toGroupArray = (payload: GetGroups): GroupListItem[] => {
+  if (Array.isArray(payload) && payload.every(isGroupListItem)) return payload;
+  if (isResultsWrapper(payload)) {
+    const { results } = payload;
+    return results.every(isGroupListItem) ? (results as GroupListItem[]) : [];
+  }
+  return [];
+};
 
 /* Linha sem bordas próprias; o container usa divide-y */
 const Row = ({
@@ -79,7 +111,7 @@ const EmployeeSettings: React.FC = () => {
 
   /* ----------------------------- Estados ---------------------------------- */
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<GroupListItem[]>([]); // ✅
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -92,8 +124,13 @@ const EmployeeSettings: React.FC = () => {
   const fetchData = async () => {
     try {
       const [empRes, groupRes] = await Promise.all([api.getEmployees(), api.getAllGroups()]);
-      setEmployees(empRes.data.employees.sort((a, b) => a.id - b.id));
-      setGroups(groupRes.data.groups.sort((a: Group, b: Group) => a.id - b.id));
+      // Only list "members" of the company (exclude owner/admin)
+      const onlyMembers = (empRes.data.employees || []).filter((e) => e.role === "member");
+      setEmployees(onlyMembers.sort((a, b) => a.id - b.id));
+
+      // ✅ normalize groups regardless of backend format
+      const groupList = toGroupArray(groupRes.data as GetGroups);
+      setGroups([...groupList].sort((a, b) => a.id - b.id));
     } catch (err) {
       console.error("Erro ao buscar funcionários/grupos", err);
       setSnackBarMessage("Erro ao buscar dados.");
@@ -118,14 +155,14 @@ const EmployeeSettings: React.FC = () => {
     setMode("edit");
     setEditingEmployee(employee);
     try {
-      const res = await api.getEmployee([employee.id]);
-      const detail = res.data.employee ?? res.data;
+      const res = await api.getEmployee(employee.id); // membershipId
+      const detail = res.data.employee;               // ✅ no 'any'
       setFormData({
         name: detail.name,
         email: detail.email,
         password: "",
         confirmPassword: "",
-        groups: detail.groups,
+        groups: (detail.groups as GroupListItem[]) || [],
       });
       setModalOpen(true);
     } catch (error) {
@@ -168,13 +205,13 @@ const EmployeeSettings: React.FC = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password || undefined,
-          groups: formData.groups.map((g) => g.id),
+          group_ids: formData.groups.map((g) => g.id), // ✅ inline groups via IDs
         });
       } else if (editingEmployee) {
-        await api.editEmployee([editingEmployee.id], {
+        await api.editEmployee(editingEmployee.id, {
           name: formData.name,
           email: formData.email,
-          groups: formData.groups.map((g) => g.id),
+          group_ids: formData.groups.map((g) => g.id),
         });
       }
       await fetchData();
@@ -187,7 +224,7 @@ const EmployeeSettings: React.FC = () => {
   const deleteEmployee = async (emp: Employee) => {
     if (!window.confirm(`Excluir funcionário "${emp.name}"?`)) return;
     try {
-      await api.deleteEmployee([emp.id]);
+      await api.deleteEmployee(emp.id); // membershipId
       await fetchData();
     } catch (err) {
       setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir funcionário.");
@@ -237,7 +274,9 @@ const EmployeeSettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de funcionários</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    Lista de funcionários
+                  </span>
                   {isOwner && <Button onClick={openCreateModal} className="!py-1.5">Adicionar funcionário</Button>}
                 </div>
               </div>
@@ -320,7 +359,7 @@ const EmployeeSettings: React.FC = () => {
                 )}
 
                 <div className="col-span-2">
-                  <SelectDropdown
+                  <SelectDropdown<GroupListItem>
                     label="Grupos"
                     items={groups}
                     selected={formData.groups}

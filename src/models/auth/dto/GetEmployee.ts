@@ -1,20 +1,20 @@
-import { Employee, EmployeeDetail } from "../domain";
+import { Employee, Role } from "../domain";
 
 export interface GetEmployeesResponse {
   employees: Employee[];
 }
 
 export interface GetEmployeeResponse {
-  employee: EmployeeDetail;
+  employee: Employee;
 }
 
-export interface EmployeePayloadBase {
-  name: string;
+export type AddEmployeeRequest = {
+  name?: string;
   email: string;
-  groups: number[];
-}
-
-export type AddEmployeeRequest = EmployeePayloadBase & {
   password?: string;
-}
-export type EditEmployeeRequest = EmployeePayloadBase;
+  role?: Exclude<Role, "owner">;
+  group_ids?: number[];
+  group_slugs?: string[];
+};
+
+export type EditEmployeeRequest = Partial<Omit<AddEmployeeRequest, "password">>;
