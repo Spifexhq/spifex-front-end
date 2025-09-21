@@ -15,4 +15,7 @@ export interface SelectDropdownProps<T> {
     groupBy?: (item: T) => string;
     hideCheckboxes?: boolean;
     hideFilter?: boolean;
+    virtualize?: boolean;
+    virtualThreshold?: number;
+    virtualRowHeight?: number; 
 }

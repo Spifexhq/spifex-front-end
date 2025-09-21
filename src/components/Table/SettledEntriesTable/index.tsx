@@ -18,7 +18,6 @@ import Checkbox from "@/components/Checkbox";
 
 /* ------------------------------ Helpers ----------------------------------- */
 
-// hash 32-bit estável para id numérico no hook de seleção
 const hash32 = (s: string) => {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -106,7 +105,7 @@ const EntryRow: React.FC<{
 }> = ({ entry, runningBalance, isSelected, onSelect }) => {
   const value = txValue(entry);
   const positive = value >= 0;
-  const idNum = hash32(entry.external_id); // <-- settlement id para seleção
+  const idNum = hash32(entry.external_id);
 
   return (
     <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
@@ -222,12 +221,13 @@ const LoadingSpinner: React.FC = () => (
   </div>
 );
 
-/* ------------------------------- Main ------------------------------------- */
+/* ------------------------------- Main + Virtualização --------------------- */
 
 const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
   ({ filters, onSelectionChange }, ref) => {
-    // saldo consolidado dos bancos filtrados
-    const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(filters?.bank_id as string[] | undefined);
+    const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(
+      filters?.bank_id as string[] | undefined
+    );
 
     const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -236,21 +236,34 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     const [hasMore, setHasMore] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
-    const fetchingRef = useRef(false);
-    
-    // bancos selecionados (string)
-    const selectedBankIds = useMemo(() => new Set((filters?.bank_id ?? []).map(String)), [filters?.bank_id]);
 
-    // payload: se houver 1 banco, manda para o backend; 0 ou >1, filtra local
+    const fetchingRef = useRef(false);
+    const scrollerRef = useRef<HTMLDivElement>(null);
+
+    // valores “atuais” para funções estáveis
+    const latest = useRef<{ filters?: EntryFilters; nextCursor: string | null; isFetching: boolean }>({
+      filters,
+      nextCursor,
+      isFetching,
+    });
+    useEffect(() => {
+      latest.current = { filters, nextCursor, isFetching };
+    }, [filters, nextCursor, isFetching]);
+
+    const selectedBankIds = useMemo(
+      () => new Set((filters?.bank_id ?? []).map(String)),
+      [filters?.bank_id]
+    );
+
     const buildPayload = useCallback((reset: boolean): GetSettledEntryRequest => {
-      const f = filters;
+      const f = latest.current.filters;
       const qCombined =
         (f?.description ? String(f.description).trim() : "") +
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
       const banks = (f?.bank_id ?? []).map(String);
-      const bank = banks.length === 1 ? banks[0] : undefined; // seu backend aceita "bank"
+      const bank = banks.length === 1 ? banks[0] : undefined;
 
       const base: GetSettledEntryRequest = {
         page_size: 100,
@@ -259,31 +272,47 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         bank,
         q,
       };
-      if (!reset && nextCursor) base.cursor = nextCursor;
+
+      const cursor = latest.current.nextCursor;
+      if (!reset && cursor) base.cursor = cursor;
+
       return base;
-    }, [filters, nextCursor]);
+    }, []);
 
     const fetchEntries = useCallback(
       async (reset = false) => {
         if (fetchingRef.current) return;
         fetchingRef.current = true;
 
-        const payload = buildPayload(reset);
+        // guard sincronizado no ref (evita corrida)
         setIsFetching(true);
+        latest.current.isFetching = true;
+
         if (reset) setLoading(true);
         else setLoadingMore(true);
 
         try {
+          const payload = buildPayload(reset);
           const { data } = await api.getSettledEntries(payload);
           const incoming: SettledEntry[] = (data as GetSettledEntry).results ?? [];
 
           setEntries((prev) =>
-            reset ? incoming.slice() : [...prev, ...incoming.filter((e) => !prev.some((p) => p.external_id === e.external_id))]
+            reset
+              ? incoming.slice()
+              : [
+                  ...prev,
+                  ...incoming.filter(
+                    (e) => !prev.some((p) => p.external_id === e.external_id)
+                  ),
+                ]
           );
 
+          // Extrai cursor da resposta e sincroniza no ref imediatamente
           const nextUrl = (data as GetSettledEntry).next;
-          setNextCursor(getCursorFromUrl(nextUrl));
-          setHasMore(Boolean(nextUrl));
+          const cursor = getCursorFromUrl(nextUrl) ?? null;
+          setNextCursor(cursor);
+          latest.current.nextCursor = cursor; // <- **crítico** para não voltar à página 1
+          setHasMore(Boolean(cursor));
           setError(null);
         } catch (err) {
           setError(err instanceof Error ? err.message : "Erro ao buscar dados.");
@@ -291,68 +320,85 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           setLoading(false);
           setLoadingMore(false);
           setIsFetching(false);
+          latest.current.isFetching = false;
           fetchingRef.current = false;
         }
       },
       [buildPayload]
     );
 
-    useEffect(() => { fetchEntries(true); }, [filters?.start_date, filters?.end_date, filters?.description, filters?.observation, filters?.bank_id, fetchEntries]);
+    // carregar / recarregar quando filtros mudarem
+    useEffect(() => {
+      setNextCursor(null);
+      latest.current.nextCursor = null;
+      setEntries([]);
+      // reseta o scroll para não “travar” em um fundo antigo
+      if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
+      void fetchEntries(true);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+      filters?.start_date,
+      filters?.end_date,
+      filters?.description,
+      filters?.observation,
+      filters?.bank_id,
+    ]);
 
-    // scroll infinito (container interno)
-    const scrollerRef = useRef<HTMLDivElement>(null);
+    // scroll infinito
     const handleInnerScroll = useCallback(() => {
       const el = scrollerRef.current;
       if (!el || isFetching || !hasMore) return;
       const threshold = 150;
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) fetchEntries();
+      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+      if (nearBottom) void fetchEntries(false);
     }, [isFetching, hasMore, fetchEntries]);
 
-    // se a 1ª página não preencher a área
+    // 1ª página não preenche
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
-      if (!loading && hasMore && el.scrollHeight <= el.clientHeight + 50) fetchEntries();
+      if (!loading && hasMore && el.scrollHeight <= el.clientHeight + 50) {
+        void fetchEntries(false);
+      }
     }, [loading, hasMore, entries.length, fetchEntries]);
 
-    // 🔎 filtro local por bancos (0 => sem filtro; >=1 => inclui somente bank.id ∈ seleção)
+    // filtro local de bancos
     const visibleEntries = useMemo(() => {
       if (selectedBankIds.size === 0) return entries;
-      return entries.filter(e => {
+      return entries.filter((e) => {
         const bId = e.bank?.id;
         return bId ? selectedBankIds.has(String(bId)) : false;
       });
     }, [entries, selectedBankIds]);
 
-    // seleção baseada em settlement external_id (usa hash numérico só internamente)
+    // seleção
     const {
       selectedIds: selectedNumIds,
       handleSelectRow,
       handleSelectAll,
       clearSelection,
-    } = useShiftSelect(visibleEntries, (e) => hash32(e.external_id));
+    } = useShiftSelect<SettledEntry, number>(visibleEntries, (e) => hash32(e.external_id));
 
     useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
 
-    // map numId -> entry (visíveis) e -> external_id
     const numIdToEntry = useMemo(() => {
       const m = new Map<number, SettledEntry>();
       for (const e of visibleEntries) m.set(hash32(e.external_id), e);
       return m;
     }, [visibleEntries]);
 
-    // notifica o pai com settlement external_ids (string[])
     useEffect(() => {
-      const rows = selectedNumIds.map((n) => numIdToEntry.get(n)).filter(Boolean) as SettledEntry[];
-      const extIds = rows.map(r => r.external_id);
+      const rows = selectedNumIds
+        .map((n) => numIdToEntry.get(n))
+        .filter(Boolean) as SettledEntry[];
+      const extIds = rows.map((r) => r.external_id);
       onSelectionChange?.(extIds, rows);
     }, [selectedNumIds, numIdToEntry, onSelectionChange]);
 
-    // monta linhas (apenas das visíveis)
+    // linhas (apenas visíveis)
     const rows = useMemo<TableRow[]>(() => {
       if (loadingBanks || !visibleEntries.length) return [];
 
-      // reverse-walk com saldo consolidado (dos bancos filtrados)
       let revBal = totalConsolidatedBalance ?? 0;
       const revBalances = new Array(visibleEntries.length).fill(0);
       for (let i = visibleEntries.length - 1; i >= 0; i--) {
@@ -384,7 +430,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         monthlySum += val;
 
         out.push({
-          id: `entry-${e.external_id}`,   // ✅ chave única por liquidação
+          id: `entry-${e.external_id}`,
           type: "entry",
           entry: e,
           runningBalance: revBalances[idx],
@@ -404,6 +450,61 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       return out;
     }, [visibleEntries, totalConsolidatedBalance, loadingBanks]);
 
+    /* ------------------------------ Virtualização -------------------------- */
+    const ENTRY_ROW_H = 42;   // h-10.5 ≈ 42px
+    const SUMMARY_ROW_H = 40; // px
+    const OVERSCAN = 8;
+
+    const [scrollTop, setScrollTop] = useState(0);
+    const [viewportH, setViewportH] = useState(0);
+
+    useEffect(() => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      const ro = new ResizeObserver(() => setViewportH(el.clientHeight));
+      ro.observe(el);
+      setViewportH(el.clientHeight);
+      return () => ro.disconnect();
+    }, []);
+
+    const rowHeights = useMemo(
+      () => rows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
+      [rows]
+    );
+
+    const rowOffsets = useMemo(() => {
+      const off = new Array(rowHeights.length + 1);
+      off[0] = 0;
+      for (let i = 0; i < rowHeights.length; i++) off[i + 1] = off[i] + rowHeights[i];
+      return off;
+    }, [rowHeights]);
+
+    const totalHeight = rowOffsets[rowOffsets.length - 1] || 0;
+
+    const findStartIndex = useCallback(
+      (st: number) => {
+        let lo = 0, hi = rowOffsets.length - 1;
+        while (lo < hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          if (rowOffsets[mid] <= st) lo = mid + 1;
+          else hi = mid;
+        }
+        return Math.max(0, lo - 1);
+      },
+      [rowOffsets]
+    );
+
+    const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
+
+    const endIndex = useMemo(() => {
+      const limit = scrollTop + (viewportH || 0);
+      let i = startIndex;
+      // usa offset da PRÓXIMA linha pra garantir inclusão da última parcialmente visível
+      while (i < rowHeights.length && rowOffsets[i + 1] <= limit) i++;
+      return Math.min(rowHeights.length - 1, i + OVERSCAN);
+    }, [startIndex, scrollTop, viewportH, rowHeights.length, rowOffsets]);
+
+    /* --------------------------------- UI ---------------------------------- */
     if (error) {
       return (
         <div className="border border-gray-300 rounded-md bg-white overflow-hidden">
@@ -417,7 +518,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
               <p className="text-[13px] font-medium text-red-800 mb-1">Erro ao carregar dados</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
               <button
-                onClick={() => fetchEntries(true)}
+                onClick={() => void fetchEntries(true)}
                 className="text-[11px] font-semibold border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50"
               >
                 Tentar novamente
@@ -439,36 +540,60 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           <>
             <TableHeader
               selectedCount={selectedNumIds.length}
-              totalCount={visibleEntries.length}         // ✅ conta do conjunto visível
-              onSelectAll={handleSelectAll}              // ✅ age sobre o conjunto base (visível)
+              totalCount={visibleEntries.length}
+              onSelectAll={handleSelectAll}
             />
 
-            <div ref={scrollerRef} onScroll={handleInnerScroll} className="flex-1 min-h-0 overflow-y-auto">
+            <div
+              ref={scrollerRef}
+              onScroll={(e) => {
+                setScrollTop(e.currentTarget.scrollTop); // virtualização
+                handleInnerScroll();                      // infinite scroll
+              }}
+              className="flex-1 min-h-0 overflow-y-auto"
+            >
               {rows.length === 0 ? (
                 <EmptyState />
               ) : (
-                <div className="divide-y divide-gray-200">
-                  {rows.map((r) =>
-                    r.type === "entry" ? (
-                      <EntryRow
-                        key={r.id}
-                        entry={r.entry}
-                        runningBalance={r.runningBalance}
-                        isSelected={selectedNumIds.includes(hash32(r.entry.external_id))}
-                        onSelect={handleSelectRow}
-                      />
-                    ) : (
-                      <SummaryRow
-                        key={r.id}
-                        displayMonth={r.displayMonth}
-                        monthlySum={r.monthlySum}
-                        runningBalance={r.runningBalance}
-                      />
-                    )
-                  )}
+                <div className="divide-y divide-gray-200 relative">
+                  {/* trilho */}
+                  <div style={{ height: totalHeight, position: "relative" }}>
+                    {/* janela */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: rowOffsets[startIndex],
+                        left: 0,
+                        right: 0,
+                      }}
+                    >
+                      {rows.slice(startIndex, endIndex + 1).map((r) =>
+                        r.type === "entry" ? (
+                          <EntryRow
+                            key={r.id}
+                            entry={r.entry}
+                            runningBalance={r.runningBalance}
+                            isSelected={selectedNumIds.includes(hash32(r.entry.external_id))}
+                            onSelect={handleSelectRow}
+                          />
+                        ) : (
+                          <SummaryRow
+                            key={r.id}
+                            displayMonth={r.displayMonth}
+                            monthlySum={r.monthlySum}
+                            runningBalance={r.runningBalance}
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
 
                   {loadingMore && (
-                    <div className="py-3 flex items-center justify-center" role="status" aria-live="polite">
+                    <div
+                      className="py-3 flex items-center justify-center absolute bottom-0 left-0 right-0"
+                      role="status"
+                      aria-live="polite"
+                    >
                       <InlineLoader color="orange" />
                     </div>
                   )}

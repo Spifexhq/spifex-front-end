@@ -56,7 +56,7 @@ export type CashFlowTableHandle = {
 interface CashFlowTableProps {
   filters?: EntryFilters;
   onEdit(entry: Entry): void;
-  onSelectionChange?: (ids: string[], entries: Entry[]) => void; // <-- ids are external_id strings
+  onSelectionChange?: (ids: string[], entries: Entry[]) => void; // ids são external_id strings
 }
 
 /* -------------------------------------------------------------------------- */
@@ -88,7 +88,7 @@ const getTransactionValue = (entry: Entry): number => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Subcomponents                                                               */
+/* Subcomponents (estilo original mantido)                                     */
 /* -------------------------------------------------------------------------- */
 
 const TableHeader: React.FC<{
@@ -125,7 +125,7 @@ const EntryRow: React.FC<{
   entry: Entry;
   runningBalance: number;
   isSelected: boolean;
-  onSelect: (id: string, event: React.MouseEvent) => void; // <-- string id
+  onSelect: (id: string, event: React.MouseEvent) => void;
   onEdit: (entry: Entry) => void;
 }> = ({ entry, runningBalance, isSelected, onSelect, onEdit }) => {
   const transactionValue = getTransactionValue(entry);
@@ -235,7 +235,6 @@ const SummaryRow: React.FC<{
 
         <div className="w-[150px] text-center">
           <div className="text-[11px] font-semibold tabular-nums text-gray-900">
-            {runningBalance >= 0 ? "+" : ""}
             {formatCurrency(runningBalance)}
           </div>
         </div>
@@ -267,7 +266,7 @@ const LoadingSpinner: React.FC = () => (
 );
 
 /* -------------------------------------------------------------------------- */
-/* Main                                                                        */
+/* Main + Virtualização (estilo preservado)                                    */
 /* -------------------------------------------------------------------------- */
 
 const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
@@ -283,33 +282,26 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const [error, setError] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-    // Selection (now string IDs)
-    const {
-      selectedIds,
-      handleSelectRow,
-      handleSelectAll,
-      clearSelection,
-    } = useShiftSelect<Entry, string>(entries, getId);
+    // Selection
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } =
+      useShiftSelect<Entry, string>(entries, getId);
     useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
 
-    // Keep latest values
+    // Latest for fetch
     const latest = useRef<{ filters: EntryFilters | undefined; nextCursor: string | null; isFetching: boolean }>({
       filters,
       nextCursor,
       isFetching,
     });
-
     useEffect(() => {
       latest.current = { filters, nextCursor, isFetching };
     }, [filters, nextCursor, isFetching]);
 
-    // Notify parent on selection change
     useEffect(() => {
       const selectedRows = entries.filter((e) => selectedIds.includes(getId(e)));
       onSelectionChange?.(selectedIds, selectedRows);
     }, [selectedIds, entries, onSelectionChange]);
 
-    // Build typed payload
     const buildPayload = useCallback(
       (reset: boolean): GetEntryRequest => {
         const f = latest.current.filters;
@@ -318,10 +310,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           (f?.observation ? ` ${String(f.observation).trim()}` : "");
         const q = qCombined.trim() || undefined;
 
-        const gl =
-          f?.gla_id && f.gla_id.length
-            ? f.gla_id.join(",")
-            : undefined;
+        const gl = f?.gla_id && f.gla_id.length ? f.gla_id.join(",") : undefined;
 
         const base: GetEntryRequest = {
           page_size: 100,
@@ -331,7 +320,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           gl,
         };
 
-        // only send cursor when we're not resetting
         if (!reset && latest.current.nextCursor) {
           base.cursor = latest.current.nextCursor;
         }
@@ -340,13 +328,11 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       []
     );
 
-    // Fetch entries
     const fetchEntries = useCallback(
       async (reset = false) => {
         if (latest.current.isFetching) return;
 
         const payload = buildPayload(reset);
-
         setIsFetching(true);
         if (reset) setLoading(true);
         else setLoadingMore(true);
@@ -358,11 +344,8 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           setEntries((prev) => {
             const merged = reset
               ? incoming.slice()
-              : [...prev, ...incoming.filter((e) => !prev.some((p) => getId(p) === getId(e)))]
-                  // keep original order from API for stability
-                  ;
+              : [...prev, ...incoming.filter((e) => !prev.some((p) => getId(p) === getId(e)))];
             if (reset) {
-              // Ensure due_date, id ordering (id is string; use localeCompare)
               merged.sort((a, b) => {
                 const ad = new Date(getDueDate(a)).getTime();
                 const bd = new Date(getDueDate(b)).getTime();
@@ -373,7 +356,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
             return merged;
           });
 
-          setNextCursor(getCursorFromUrl((data as GetEntryResponse).next));
+          setNextCursor(getCursorFromUrl((data as GetEntryResponse).next) ?? null);
           setHasMore(Boolean((data as GetEntryResponse).next));
           setError(null);
         } catch (err) {
@@ -387,9 +370,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       [buildPayload]
     );
 
-    // First load + on filters change
     useEffect(() => {
-      // when filters change, start from the first page
       setNextCursor(null);
       fetchEntries(true);
     }, [filters, fetchEntries]);
@@ -406,7 +387,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       if (nearBottom) fetchEntries();
     }, [isFetching, hasMore, fetchEntries]);
 
-    // If the first page doesn't fill the container, fetch one more
+    // If first page doesn't fill, fetch one more
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
@@ -467,6 +448,62 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       return rows;
     }, [entries, totalConsolidatedBalance, loadingBanks]);
 
+    /* ------------------------------ Virtualização -------------------------- */
+    // Alturas correspondentes ao estilo atual
+    const ENTRY_ROW_H = 42;   // h-10.5 ≈ 42px
+    const SUMMARY_ROW_H = 40; // px
+    const OVERSCAN = 8;
+
+    const [scrollTop, setScrollTop] = useState(0);
+    const [viewportH, setViewportH] = useState(0);
+
+    // acompanha altura visível do scroller
+    useEffect(() => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      const ro = new ResizeObserver(() => setViewportH(el.clientHeight));
+      ro.observe(el);
+      setViewportH(el.clientHeight);
+      return () => ro.disconnect();
+    }, []);
+
+    // alturas por linha
+    const rowHeights = useMemo(
+      () => tableRows.map(r => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
+      [tableRows]
+    );
+
+    // prefix-sum de offsets
+    const rowOffsets = useMemo(() => {
+      const off = new Array(rowHeights.length + 1);
+      off[0] = 0;
+      for (let i = 0; i < rowHeights.length; i++) off[i + 1] = off[i] + rowHeights[i];
+      return off;
+    }, [rowHeights]);
+
+    const totalHeight = rowOffsets[rowOffsets.length - 1] || 0;
+
+    const findStartIndex = useCallback(
+      (st: number) => {
+        let lo = 0, hi = rowOffsets.length - 1;
+        while (lo < hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          if (rowOffsets[mid] <= st) lo = mid + 1;
+          else hi = mid;
+        }
+        return Math.max(0, lo - 1);
+      },
+      [rowOffsets]
+    );
+
+    const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
+    const endIndex = useMemo(() => {
+      const limit = scrollTop + (viewportH || 0);
+      let i = startIndex;
+      while (i < rowHeights.length && rowOffsets[i] < limit) i++;
+      return Math.min(rowHeights.length - 1, i + OVERSCAN);
+    }, [startIndex, scrollTop, viewportH, rowHeights.length, rowOffsets]);
+
     /* --------------------------------- UI ---------------------------------- */
     if (error) {
       return (
@@ -480,7 +517,12 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
             <div className="text-center">
               <p className="text-[13px] font-medium text-red-800 mb-1">Erro ao carregar dados</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
-              <Button variant="outline" size="sm" className="text-[11px] font-semibold" onClick={() => fetchEntries(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-[11px] font-semibold"
+                onClick={() => fetchEntries(true)}
+              >
                 Tentar novamente
               </Button>
             </div>
@@ -504,42 +546,61 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
               onSelectAll={handleSelectAll}
             />
 
-            <div ref={scrollerRef} onScroll={handleInnerScroll} className="flex-1 min-h-0 overflow-y-auto">
+            <div
+              ref={scrollerRef}
+              onScroll={(e) => {
+                setScrollTop(e.currentTarget.scrollTop); // <-- para virtualização
+                handleInnerScroll();                      // <-- mantém seu infinite
+              }}
+              className="flex-1 min-h-0 overflow-y-auto"
+            >
               {tableRows.length === 0 ? (
                 <EmptyState />
               ) : (
-                <div className="divide-y divide-gray-200">
-                  {tableRows.map((row) => {
-                    if (row.type === "entry" && row.entry) {
-                      const isSelected = selectedIds.includes(getId(row.entry));
-                      return (
-                        <EntryRow
-                          key={row.id}
-                          entry={row.entry}
-                          runningBalance={row.runningBalance!}
-                          isSelected={isSelected}
-                          onSelect={handleSelectRow}
-                          onEdit={onEdit}
-                        />
-                      );
-                    }
-
-                    if (row.type === "summary") {
-                      return (
-                        <SummaryRow
-                          key={row.id}
-                          displayMonth={row.displayMonth!}
-                          monthlySum={row.monthlySum!}
-                          runningBalance={row.runningBalance!}
-                        />
-                      );
-                    }
-
-                    return null;
-                  })}
+                // Mantemos o wrapper com divide-y para preservar aparência
+                <div className="divide-y divide-gray-200 relative">
+                  {/* Trilho com altura total */}
+                  <div style={{ height: totalHeight, position: "relative" }}>
+                    {/* Janela renderizada na posição correta */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: rowOffsets[startIndex],
+                        left: 0,
+                        right: 0,
+                      }}
+                    >
+                      {tableRows.slice(startIndex, endIndex + 1).map((row) => {
+                        if (row.type === "entry" && row.entry) {
+                          const isSelected = selectedIds.includes(getId(row.entry));
+                          return (
+                            <EntryRow
+                              key={row.id}
+                              entry={row.entry}
+                              runningBalance={row.runningBalance!}
+                              isSelected={isSelected}
+                              onSelect={handleSelectRow}
+                              onEdit={onEdit}
+                            />
+                          );
+                        }
+                        if (row.type === "summary") {
+                          return (
+                            <SummaryRow
+                              key={row.id}
+                              displayMonth={row.displayMonth!}
+                              monthlySum={row.monthlySum!}
+                              runningBalance={row.runningBalance!}
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </div>
 
                   {loadingMore && (
-                    <div className="py-3 flex items-center justify-center" role="status" aria-live="polite">
+                    <div className="py-3 flex items-center justify-center absolute bottom-0 left-0 right-0" role="status" aria-live="polite">
                       <InlineLoader color="orange" />
                     </div>
                   )}

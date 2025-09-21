@@ -24,6 +24,11 @@ function SelectDropdown<T>({
   groupBy,
   hideCheckboxes = false,
   hideFilter = false,
+
+  // 🔹 Novas props
+  virtualize = true,
+  virtualThreshold = 300,
+  virtualRowHeight = 36,
 }: SelectDropdownProps<T>) {
   // ---------------------------------------------------------------------------
   // State & refs
@@ -37,6 +42,9 @@ function SelectDropdown<T>({
   const panelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const itemElsRef = useRef<Array<HTMLDivElement | null>>([]);
+
+  // 🔹 virtual scroll states
+  const [scrollTop, setScrollTop] = useState(0);
 
   const id = useId();
   const panelId = `${id}-panel`;
@@ -92,7 +100,7 @@ function SelectDropdown<T>({
     return acc;
   }, [filteredItems, groupBy]);
 
-  // Lista plana
+  // Lista plana (para navegação/virtualização)
   const flatItems: T[] = useMemo(() => {
     return groupBy ? Object.values(groupedItems).flat() : filteredItems;
   }, [groupedItems, filteredItems, groupBy]);
@@ -108,13 +116,12 @@ function SelectDropdown<T>({
   // “Última interação vence” (mouse x teclado)
   // ---------------------------------------------------------------------------
   const lastSourceRef = useRef<"keyboard" | "mouse" | null>(null);
-  const suppressMouseUntilTsRef = useRef(0); // ignora hover ruidoso após setas
+  const suppressMouseUntilTsRef = useRef(0);
 
   const setActiveFrom = (idx: number | null, source: "keyboard" | "mouse") => {
     lastSourceRef.current = source;
     setActiveIndex(idx);
     if (source === "keyboard") {
-      // pequena janela p/ ignorar mouseenter disparado por scroll
       suppressMouseUntilTsRef.current = performance.now() + 120;
     }
   };
@@ -170,32 +177,57 @@ function SelectDropdown<T>({
         idx = 0;
       }
     }
-    setActiveIndex(idx); // inicialização neutra (sem suprimir mouse)
+    setActiveIndex(idx);
 
     if (!hideFilter && searchInputRef.current) {
       (searchInputRef.current as HTMLInputElement).focus?.({ preventScroll: true });
     } else {
       panelRef.current?.focus?.({ preventScroll: true });
     }
+
+    // zera scroll para listas grandes
+    setScrollTop(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Mantém item ativo visível sem autoscroll desnecessário
+  // Mantém item ativo visível
   useEffect(() => {
     if (!isOpen || activeIndex == null) return;
     const panel = panelRef.current;
+    if (!panel) return;
+
+    const rowH = virtualRowHeight ?? 36;
+    const hasGroup = !!groupBy;
+    const shouldVirtualize =
+      virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
+
+    if (shouldVirtualize) {
+      const panelH = panel.clientHeight || 320;
+      const itemTop = activeIndex * rowH;
+      const itemBottom = itemTop + rowH;
+      const viewTop = panel.scrollTop;
+      const viewBottom = viewTop + panelH;
+
+      if (itemTop < viewTop) {
+        panel.scrollTop = itemTop;
+      } else if (itemBottom > viewBottom) {
+        panel.scrollTop = itemBottom - panelH;
+      }
+      return;
+    }
+
+    // modo normal (sem virtualização): usa a ref do item renderizado
     const el = itemElsRef.current[activeIndex];
-    if (!panel || !el) return;
+    if (!el) return;
 
     const panelRect = panel.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
     const above = elRect.top < panelRect.top;
     const below = elRect.bottom > panelRect.bottom;
-
     if (above || below) {
       el.scrollIntoView({ block: "nearest" });
     }
-  }, [activeIndex, isOpen]);
+  }, [activeIndex, isOpen, flatItems.length, virtualRowHeight, virtualize, virtualThreshold, groupBy]);
 
   // Ajusta activeIndex se a lista mudar de tamanho
   useEffect(() => {
@@ -232,7 +264,6 @@ function SelectDropdown<T>({
     if (hideCheckboxes || effectiveSingleSelect) {
       setIsOpen(false);
     } else {
-      // Restaura scroll e foco no próximo frame
       requestAnimationFrame(() => {
         if (panel) {
           panel.scrollTop = prevScrollTop;
@@ -299,7 +330,7 @@ function SelectDropdown<T>({
   };
 
   // ---------------------------------------------------------------------------
-  // Interação de teclado (usa setActiveFrom para “última interação vence”)
+  // Interação de teclado
   // ---------------------------------------------------------------------------
   const handleButtonKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
@@ -360,7 +391,7 @@ function SelectDropdown<T>({
   };
 
   // ---------------------------------------------------------------------------
-  // Render
+  // Render helpers
   // ---------------------------------------------------------------------------
   const renderItem = (item: T, flatIndex: number) => {
     const k = keyToStr(getItemKey(item));
@@ -371,12 +402,10 @@ function SelectDropdown<T>({
 
     const handleMouseEnter = () => {
       const now = performance.now();
-      // ignora hovers gerados por scroll logo após interação por teclado
       if (now < suppressMouseUntilTsRef.current) return;
       setActiveFrom(flatIndex, "mouse");
     };
 
-    // opcional: também pode usar onMouseMove para ficar ainda mais “grudento”
     const handleMouseMove = () => {
       const now = performance.now();
       if (now < suppressMouseUntilTsRef.current) return;
@@ -393,12 +422,12 @@ function SelectDropdown<T>({
         onMouseMove={handleMouseMove}
         className={`flex items-center text-[10px] p-2.5 font-normal transition duration-300 ease-in-out gap-1 select-none cursor-pointer
           ${hideCheckboxes && isChecked ? "bg-blue-100 text-blue-900 font-semibold" : ""}
-          ${isActive ? "bg-orange-100 bg-opacity-30" : "bg-white hover:bg-orange-100 hover:bg-opacity-20"}
-        `}
+          ${isActive ? "bg-orange-100 bg-opacity-30" : "bg-white hover:bg-orange-100 hover:bg-opacity-20"}`}
         role="option"
         aria-selected={isChecked}
         tabIndex={-1}
         data-active={isActive ? "true" : undefined}
+        style={{ height: virtualRowHeight }} /* mantém altura consistente */
       >
         {!hideCheckboxes && (
           <Checkbox
@@ -419,6 +448,17 @@ function SelectDropdown<T>({
       : effectiveSingleSelect
       ? getItemLabel(selected[0])
       : selected.map((it) => getItemLabel(it)).join(", ");
+
+  // Virtualização: somente quando não há groupBy (lista plana)
+  const hasGroup = !!groupBy;
+  const shouldVirtualize =
+    virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
+
+  const onPanelScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (shouldVirtualize) setScrollTop(e.currentTarget.scrollTop);
+  };
+
+  const panelStyle = customStyles;
 
   return (
     <div className="flex flex-col w-full gap-[4px]">
@@ -448,12 +488,9 @@ function SelectDropdown<T>({
             ${
               disabled
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : `${
-                    isOpen ? "bg-gray-50 border border-gray-400"
-                           : "bg-white border border-gray-300 hover:bg-gray-50"
-                  } focus-visible:bg-gray-100 focus-visible:border-gray-400`
-            }
-          `}
+                : `${isOpen ? "bg-gray-50 border border-gray-400"
+                            : "bg-white border border-gray-300 hover:bg-gray-50"} focus-visible:bg-gray-100 focus-visible:border-gray-400`
+            }`}
         >
           <span className="truncate overflow-hidden whitespace-nowrap max-w-[90%] text-left text-gray-400">
             {selectedLabel}
@@ -484,8 +521,9 @@ function SelectDropdown<T>({
             ref={panelRef}
             tabIndex={-1}
             onKeyDown={handlePanelKeyDown}
+            onScroll={onPanelScroll}
             className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 overflow-y-auto rounded-lg w-full z-[9999] outline-none"
-            style={customStyles}
+            style={panelStyle}
           >
             {!effectiveSingleSelect && !hideCheckboxes && (
               <div className="flex flex-row p-2.5 pb-0 text-center select-none">
@@ -522,25 +560,64 @@ function SelectDropdown<T>({
               />
             )}
 
+            {/* Lista */}
             <div className="flex flex-col py-2.5">
-              {groupBy
-                ? Object.entries(groupedItems).map(([groupName, groupItems]) => (
-                    <div key={groupName}>
+              {shouldVirtualize ? (
+                // ---------- Virtualizado (flat) ----------
+                (() => {
+                  const panelH = panelRef.current?.clientHeight || 320;
+                  const rowH = virtualRowHeight || 36;
+                  const overscan = 8;
+
+                  const total = flatItems.length;
+                  const totalHeight = total * rowH;
+
+                  const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
+                  const visibleCount = Math.ceil(panelH / rowH) + overscan * 2;
+                  const end = Math.min(total, start + visibleCount);
+
+                  const slice = flatItems.slice(start, end);
+
+                  return (
+                    <div style={{ height: totalHeight, position: "relative" }}>
                       <div
-                        className={`font-bold px-2.5 text-xs mt-2 mb-1 ${
-                          !effectiveSingleSelect ? "cursor-pointer" : ""
-                        }`}
-                        onClick={() => handleGroupToggle(groupItems)}
+                        style={{
+                          position: "absolute",
+                          top: start * rowH,
+                          left: 0,
+                          right: 0,
+                        }}
                       >
-                        {groupName}
+                        {slice.map((item, idx) => {
+                          const flatIndex = start + idx;
+                          return renderItem(item, flatIndex);
+                        })}
                       </div>
-                      {groupItems.map((item) => {
-                        const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
-                        return idx >= 0 ? renderItem(item, idx) : null;
-                      })}
                     </div>
-                  ))
-                : flatItems.map((item, idx) => renderItem(item, idx))}
+                  );
+                })()
+              ) : groupBy ? (
+                // ---------- Agrupado (sem virtualização) ----------
+                Object.entries(groupedItems).map(([groupName, groupItems]) => (
+                  <div key={groupName}>
+                    <div
+                      className={`font-bold px-2.5 text-xs mt-2 mb-1 ${
+                        !effectiveSingleSelect ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() => handleGroupToggle(groupItems)}
+                    >
+                      {groupName}
+                    </div>
+                    {groupItems.map((item) => {
+                      const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
+                      return idx >= 0 ? renderItem(item, idx) : null;
+                    })}
+                  </div>
+                ))
+              ) : (
+                // ---------- Plano (sem virtualização) ----------
+                flatItems.map((item, idx) => renderItem(item, idx))
+              )}
             </div>
           </div>
         )}

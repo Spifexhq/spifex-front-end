@@ -4,7 +4,7 @@ import axios from "axios";
 import Button from "../Button";
 import Input from "../Input";
 import { SelectDropdown } from "@/components/SelectDropdown";
-import { getCursorFromUrl } from "src/lib/list";
+import { fetchAllCursor } from "src/lib/list";
 
 import {
   FormData,
@@ -447,69 +447,34 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   /* --------------------------- Fetch helpers --------------------------- */
   // Ledger Accounts
   const fetchAllLedgerAccounts = useCallback(async () => {
-    const all: GLAccount[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.getLedgerAccounts({ page_size: 200, cursor });
-      const page = (data?.results ?? []) as GLAccount[];
-      all.push(...page);
-      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
-    } while (cursor);
+    const all = await fetchAllCursor<GLAccount>(api.getLedgerAccounts, 500);
     const wanted = type === "credit" ? "credit" : "debit";
-    return all.filter((a) => (a?.default_tx || "").toLowerCase() === wanted);
+    return all.filter(a => (a?.default_tx || "").toLowerCase() === wanted);
   }, [type]);
 
   // Departments
-  const fetchAllDepartments = useCallback(async () => {
-    const all: Department[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.getDepartments({ page_size: 200, cursor });
-      const page = (data?.results ?? []) as Department[];
-      all.push(...page);
-      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
-    } while (cursor);
-    return all;
-  }, []);
+  const fetchAllDepartments = useCallback(
+    () => fetchAllCursor<Department>(api.getDepartments, 500),
+    []
+  );
 
   // Projects
-  const fetchAllProjects = useCallback(async () => {
-    const all: Project[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.getProjects({ page_size: 200, cursor });
-      const page = (data?.results ?? []) as Project[];
-      all.push(...page);
-      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
-    } while (cursor);
-    return all;
-  }, []);
+  const fetchAllProjects = useCallback(
+    () => fetchAllCursor<Project>(api.getProjects, 500),
+    []
+  );
 
   // Inventory Items
-  const fetchAllInventoryItems = useCallback(async () => {
-    const all: InventoryItem[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.getInventoryItems({ page_size: 200, cursor });
-      const page = (data?.results ?? []) as InventoryItem[];
-      all.push(...page);
-      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
-    } while (cursor);
-    return all;
-  }, []);
+  const fetchAllInventoryItems = useCallback(
+    () => fetchAllCursor<InventoryItem>(api.getInventoryItems, 500),
+    []
+  );
 
   // Entities (CRM)
-  const fetchAllEntities = useCallback(async () => {
-    const all: Entity[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = await api.getEntities({ page_size: 200, cursor });
-      const page = (data?.results ?? []) as Entity[];
-      all.push(...page);
-      cursor = getCursorFromUrl(data?.next as string | undefined) || undefined;
-    } while (cursor);
-    return all;
-  }, []);
+  const fetchAllEntities = useCallback(
+    () => fetchAllCursor<Entity>(api.getEntities, 500),
+    []
+  );
 
 
   /* --------------------------- Carregar dados --------------------------- */
@@ -841,9 +806,10 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               buttonLabel="Selecione a conta"
               singleSelect
               customStyles={{ maxHeight: "200px" }}
-              groupBy={(i) =>
-                i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || "Outros"
-              }
+              groupBy={(i) => i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || "Outros"}
+              virtualize
+              virtualRowHeight={32}
+              virtualThreshold={300}
             />
 
             <div className="md:col-span-3">
@@ -917,6 +883,9 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 clearOnClickOutside={false}
                 buttonLabel="Selecione departamentos"
                 customStyles={{ maxHeight: "240px" }}
+                virtualize
+                virtualRowHeight={32}
+                virtualThreshold={300}
               />
 
               <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -963,6 +932,9 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 clearOnClickOutside={false}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
+                virtualize
+                virtualRowHeight={32}
+                virtualThreshold={300}
               />
             </div>
           </div>
@@ -982,6 +954,9 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               clearOnClickOutside={false}
               singleSelect
               customStyles={{ maxHeight: "180px" }}
+              virtualize
+              virtualRowHeight={32}
+              virtualThreshold={300}
             />
             {selectedInventoryItem.length > 0 && (
               <Input
@@ -1038,14 +1013,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               selected={selectedEntity}
               onChange={handleEntityChange}
               getItemKey={(i) => i.id}
-              getItemLabel={(i) =>
-                i.full_name ||
-                (i as unknown as { alias_name?: string }).alias_name ||
-                "Entidade sem nome"
-              }
+              getItemLabel={(i) => i.full_name || (i).alias_name || "Entidade sem nome"}
               buttonLabel="Selecione a entidade"
               singleSelect
               customStyles={{ maxHeight: "200px" }}
+              virtualize
+              virtualRowHeight={32}
+              virtualThreshold={300}
             />
           </div>
         );
