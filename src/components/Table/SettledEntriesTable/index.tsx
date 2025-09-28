@@ -13,7 +13,7 @@ import { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto"
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { useBanks } from "@/hooks/useBanks";
 import { getCursorFromUrl } from "src/lib/list";
-import { InlineLoader } from "@/components/Loaders";
+// Removed InlineLoader usage per your request
 import Checkbox from "@/components/Checkbox";
 
 /* ------------------------------ Helpers ----------------------------------- */
@@ -215,9 +215,87 @@ const EmptyState: React.FC = () => (
   </div>
 );
 
-const LoadingSpinner: React.FC = () => (
-  <div className="flex justify-center items-center py-6">
-    <InlineLoader color="orange" />
+/* ------------------------------ Skeletons --------------------------------- */
+
+const SkeletonDot = ({ className = "" }: { className?: string }) => (
+  <div className={`bg-gray-200 rounded ${className} animate-pulse`} />
+);
+
+const SkeletonEntryRow: React.FC = () => (
+  <div className="flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 border-b border-gray-200">
+    <div className="flex items-center gap-3 min-w-0 flex-1">
+      <SkeletonDot className="h-4 w-4 rounded border border-gray-300" />
+      <div className="flex flex-col min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
+            <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-1" />
+          </div>
+          <div className="flex items-center shrink-0">
+            <div className="w-[150px] text-center">
+              <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+            </div>
+            <div className="w-[150px] text-center">
+              <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+            </div>
+            <div className="w-8 flex justify-center">
+              <div className="h-6 w-6 rounded-md bg-gray-200 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonSummaryRow: React.FC = () => (
+  <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-1.5 bg-gray-300 rounded-full" />
+      <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
+    </div>
+    <div className="flex items-center">
+      <div className="w-[150px] text-center">
+        <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+      </div>
+      <div className="w-[150px] text-center">
+        <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+      </div>
+      <div className="w-[32px]" />
+    </div>
+  </div>
+);
+
+const TableSkeleton: React.FC<{ rows?: number; showSummariesEvery?: number }> = ({
+  rows = 10,
+  showSummariesEvery = 4,
+}) => (
+  <div
+    className="divide-y divide-gray-200"
+    role="progressbar"
+    aria-label="Carregando realizados"
+    aria-busy="true"
+  >
+    {Array.from({ length: rows }).map((_, i) => (
+      <React.Fragment key={i}>
+        <SkeletonEntryRow />
+        {(i + 1) % showSummariesEvery === 0 && <SkeletonSummaryRow />}
+      </React.Fragment>
+    ))}
+  </div>
+);
+
+/* ------------------------------ Bottom Loader ------------------------------ */
+
+const BottomLoader: React.FC = () => (
+  <div
+    className="flex items-center justify-center gap-2 py-3 border-t border-gray-300 bg-white"
+    role="status"
+    aria-live="polite"
+    aria-label="Carregando mais resultados"
+  >
+    <span className="inline-block h-4 w-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+    <span className="text-[11px] text-gray-500">Carregando mais...</span>
   </div>
 );
 
@@ -311,7 +389,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           const nextUrl = (data as GetSettledEntry).next;
           const cursor = getCursorFromUrl(nextUrl) ?? null;
           setNextCursor(cursor);
-          latest.current.nextCursor = cursor; // <- **crítico** para não voltar à página 1
+          latest.current.nextCursor = cursor; // crítico p/ não voltar à página 1
           setHasMore(Boolean(cursor));
           setError(null);
         } catch (err) {
@@ -534,74 +612,65 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         aria-label="Entradas liquidadas"
         className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
       >
-        {loading && !entries.length ? (
-          <LoadingSpinner />
-        ) : (
-          <>
-            <TableHeader
-              selectedCount={selectedNumIds.length}
-              totalCount={visibleEntries.length}
-              onSelectAll={handleSelectAll}
-            />
+        {/* Header sempre visível para layout estável */}
+        <TableHeader
+          selectedCount={selectedNumIds.length}
+          totalCount={visibleEntries.length}
+          onSelectAll={handleSelectAll}
+        />
 
-            <div
-              ref={scrollerRef}
-              onScroll={(e) => {
-                setScrollTop(e.currentTarget.scrollTop); // virtualização
-                handleInnerScroll();                      // infinite scroll
-              }}
-              className="flex-1 min-h-0 overflow-y-auto"
-            >
-              {rows.length === 0 ? (
-                <EmptyState />
-              ) : (
-                <div className="divide-y divide-gray-200 relative">
-                  {/* trilho */}
-                  <div style={{ height: totalHeight, position: "relative" }}>
-                    {/* janela */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: rowOffsets[startIndex],
-                        left: 0,
-                        right: 0,
-                      }}
-                    >
-                      {rows.slice(startIndex, endIndex + 1).map((r) =>
-                        r.type === "entry" ? (
-                          <EntryRow
-                            key={r.id}
-                            entry={r.entry}
-                            runningBalance={r.runningBalance}
-                            isSelected={selectedNumIds.includes(hash32(r.entry.external_id))}
-                            onSelect={handleSelectRow}
-                          />
-                        ) : (
-                          <SummaryRow
-                            key={r.id}
-                            displayMonth={r.displayMonth}
-                            monthlySum={r.monthlySum}
-                            runningBalance={r.runningBalance}
-                          />
-                        )
-                      )}
-                    </div>
-                  </div>
-
-                  {loadingMore && (
-                    <div
-                      className="py-3 flex items-center justify-center absolute bottom-0 left-0 right-0"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      <InlineLoader color="orange" />
-                    </div>
+        <div
+          ref={scrollerRef}
+          onScroll={(e) => {
+            setScrollTop(e.currentTarget.scrollTop); // virtualização
+            handleInnerScroll();                      // infinite scroll
+          }}
+          className="flex-1 min-h-0 overflow-y-auto"
+        >
+          {/* Initial load -> table skeleton */}
+          {loading && !entries.length ? (
+            <TableSkeleton rows={Math.max(10, Math.ceil((viewportH || 400) / 42))} />
+          ) : rows.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="divide-y divide-gray-200 relative">
+              {/* trilho */}
+              <div style={{ height: totalHeight, position: "relative" }}>
+                {/* janela */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: rowOffsets[startIndex],
+                    left: 0,
+                    right: 0,
+                  }}
+                >
+                  {rows.slice(startIndex, endIndex + 1).map((r) =>
+                    r.type === "entry" ? (
+                      <EntryRow
+                        key={r.id}
+                        entry={r.entry}
+                        runningBalance={r.runningBalance}
+                        isSelected={selectedNumIds.includes(hash32(r.entry.external_id))}
+                        onSelect={handleSelectRow}
+                      />
+                    ) : (
+                      <SummaryRow
+                        key={r.id}
+                        displayMonth={r.displayMonth}
+                        monthlySum={r.monthlySum}
+                        runningBalance={r.runningBalance}
+                      />
+                    )
                   )}
                 </div>
-              )}
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        {/* Footer loader fora da tabela/scroll */}
+        {loadingMore && <BottomLoader />}
       </section>
     );
   }
