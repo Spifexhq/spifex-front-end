@@ -1,3 +1,4 @@
+// src/pages/Reports/index.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import {
@@ -24,8 +25,12 @@ import Button from "@/components/Button";
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
 
-// Ajuste o tipo conforme seu modelo real
+// Use your real Entry model; we’ll map only what we need
 import type { Entry } from "@/models/entries";
+
+/* -------------------------------------------------------------------------- */
+/* Config & helpers                                                            */
+/* -------------------------------------------------------------------------- */
 
 const PAGE_SIZE = 10000;
 const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
@@ -39,6 +44,39 @@ const pct = (v: number) =>
 
 const POS_BAR = "#1E3A8A"; // azul
 const NEG_BAR = "#991B1B"; // vermelho
+
+/* -------------------------------------------------------------------------- */
+/* Minimal shapes (avoid any)                                                 */
+/* -------------------------------------------------------------------------- */
+
+type NameObj = { name?: string | null } | null | undefined;
+
+type MinimalEntry = {
+  id?: string | number;
+  amount?: number | string | null;
+  tx_type?: "credit" | "debit" | string | null;
+  due_date?: string | null;
+  settlement_state?: boolean | string | number | null;
+  description?: string | null;
+  general_ledger_account?: NameObj;
+  document_type?: NameObj;
+  project?: NameObj;
+  entity?: NameObj;
+  tags?: string | null;
+};
+
+type ParsedEntry = {
+  raw: Entry;
+  amount: number;
+  isCredit: boolean;
+  signed: number;
+  due: dayjs.Dayjs;
+  settled: boolean;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                   */
+/* -------------------------------------------------------------------------- */
 
 const Report: React.FC = () => {
   useEffect(() => {
@@ -82,14 +120,20 @@ const Report: React.FC = () => {
   // --------- Preparos comuns ----------
   const today = dayjs();
 
-  const entriesParsed = useMemo(() => {
+  const entriesParsed = useMemo<ParsedEntry[]>(() => {
     return entries.map((e) => {
-      const amount = parseFloat((e as any).amount as unknown as string);
-      const isCredit = (e as any).transaction_type === "credit";
-      const signed = isCredit ? amount : -amount;
-      const due = dayjs((e as any).due_date);
-      const settled = Boolean((e as any).settlement_state);
-      return { raw: e, amount, isCredit, signed, due, settled };
+      const src = e as unknown as MinimalEntry;
+      const amountNum = Number.parseFloat(String(src.amount ?? 0));
+      const tx = (src.tx_type ?? "").toString();
+      const isCredit = tx === "credit";
+      const signed = isCredit ? amountNum : -amountNum;
+      const due = dayjs(src.due_date ?? undefined);
+      const settled =
+        typeof src.settlement_state === "boolean"
+          ? src.settlement_state
+          : Boolean(src.settlement_state);
+
+      return { raw: e, amount: amountNum, isCredit, signed, due, settled };
     });
   }, [entries]);
 
@@ -101,7 +145,6 @@ const Report: React.FC = () => {
     mtdInflow,
     mtdOutflowAbs,
     mtdNet,
-    prevMonthNet,
     momChange,
     settlementRate,
     overdueReceivables,
@@ -123,7 +166,6 @@ const Report: React.FC = () => {
         mtdInflow: 0,
         mtdOutflowAbs: 0,
         mtdNet: 0,
-        prevMonthNet: 0,
         momChange: 0,
         settlementRate: 0,
         overdueReceivables: 0,
@@ -180,7 +222,7 @@ const Report: React.FC = () => {
         else mtdOutAbs += r.amount;
       }
 
-      // Prev month net
+      // Prev month net (para M/M)
       if (r.due.isAfter(prevStart.subtract(1, "day")) && r.due.isBefore(prevEnd.add(1, "day"))) {
         prevNet += r.signed;
       }
@@ -238,7 +280,6 @@ const Report: React.FC = () => {
       mtdInflow: mtdIn,
       mtdOutflowAbs: mtdOutAbs,
       mtdNet: mtdNetV,
-      prevMonthNet: prevNet,
       momChange: mom,
       settlementRate: settledCount / entriesParsed.length,
       overdueReceivables: overdueRec,
@@ -294,19 +335,19 @@ const Report: React.FC = () => {
 
   // --------- Pizza por "categoria" (flexível) ----------
   const pieData = useMemo(() => {
-    // Tentativas de label: GLA > Document Type > Project > Entity > Tags > "Outros"
-    const labelOf = (e: any) =>
-      e?.general_ledger_account?.name ||
-      e?.document_type?.name ||
-      e?.project?.name ||
-      e?.entity?.name ||
-      e?.tags ||
+    const labelOf = (e: MinimalEntry): string =>
+      e?.general_ledger_account?.name ??
+      e?.document_type?.name ??
+      e?.project?.name ??
+      e?.entity?.name ??
+      e?.tags ??
       "Outros";
 
     const map: Record<string, number> = {};
     for (const r of entriesParsed) {
       if (!r.isCredit) {
-        const lbl = labelOf(r.raw);
+        const raw = r.raw as unknown as MinimalEntry;
+        const lbl = labelOf(raw);
         map[lbl] = (map[lbl] ?? 0) + r.amount;
       }
     }
@@ -325,20 +366,68 @@ const Report: React.FC = () => {
 
   // --------- Itens em atraso (top 10) ----------
   const overdueItems = useMemo(() => {
-    const items = entriesParsed
+    return entriesParsed
       .filter((r) => !r.settled && r.due.isBefore(today, "day"))
       .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10);
-    return items.map((r) => ({
-      id: (r.raw as any).id,
-      date: r.due.format("DD/MM/YYYY"),
-      desc: (r.raw as any).description,
-      type: r.isCredit ? "Receber" : "Pagar",
-      amount: r.amount,
-    }));
+      .slice(0, 10)
+      .map((r) => {
+        const raw = r.raw as unknown as MinimalEntry;
+        return {
+          id: raw.id ?? `${r.due.valueOf()}-${r.amount}`,
+          date: r.due.format("DD/MM/YYYY"),
+          desc: raw.description ?? "",
+          type: r.isCredit ? "Receber" : "Pagar",
+          amount: r.amount,
+        };
+      });
   }, [entriesParsed, today]);
 
+  // --------- Insights textuais (UX) ----------
+  const insights = useMemo(() => {
+    const lines: string[] = [];
+
+    if (Number.isFinite(runwayMonths) && runwayMonths < 3) {
+      lines.push("A runway estimada está abaixo de 3 meses. Considere reduzir saídas ou reforçar caixa.");
+    } else if (Number.isFinite(runwayMonths) && runwayMonths >= 6) {
+      lines.push("Runway confortável (≥ 6 meses). Avalie antecipar investimentos planejados com critério.");
+    }
+
+    if (mtdNet < 0) {
+      lines.push("O resultado do mês está negativo. Revise as principais categorias da pizza de despesas.");
+    } else if (mtdNet > 0) {
+      lines.push("O resultado do mês está positivo. Monitore recebimentos previstos para manter o ritmo.");
+    }
+
+    if (overduePayablesSum > overdueReceivablesSum) {
+      lines.push("Pagamentos vencidos superam recebimentos vencidos — risco de pressão de caixa no curtíssimo prazo.");
+    } else if (overdueReceivablesSum > 0) {
+      lines.push("Há recebimentos vencidos significativos. Considere ações de cobrança focadas no top 10 atrasos.");
+    }
+
+    if (Number.isFinite(momChange) && momChange !== 0) {
+      lines.push(
+        `Variação M/M do resultado do mês: ${(momChange >= 0 ? "+" : "")}${pct(momChange)}.`
+      );
+    }
+
+    return lines;
+  }, [
+    runwayMonths,
+    mtdNet,
+    overduePayablesSum,
+    overdueReceivablesSum,
+    momChange,
+  ]);
+
   const toggleSidebar = useCallback(() => setIsSidebarOpen((p) => !p), []);
+
+  /* ------------------------------------------------------------------------ */
+  /* Render                                                                    */
+  /* ------------------------------------------------------------------------ */
+
+  // Common card style to mirror KpiRow
+  const cardCls =
+    "border border-gray-300 rounded-md bg-white px-3 py-2 shadow-none";
 
   return (
     <div className="flex min-h-screen bg-white text-gray-900">
@@ -365,139 +454,179 @@ const Report: React.FC = () => {
           {(loading || loadingBanks) && (
             <div className="flex items-center gap-3 text-sm">
               <InlineLoader color="orange" className="w-8 h-8" />
+              <span className="text-gray-600">Carregando lançamentos e saldos…</span>
             </div>
           )}
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           {!loading && !loadingBanks && !error && (
             <>
               {/* KPI Cards */}
-              <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">Saldo Consolidado</p>
-                  <p className="text-xl font-semibold">{currency(totalConsolidatedBalance ?? 0)}</p>
-                  <p className="text-[11px] text-gray-500">Somatório de contas bancárias</p>
+              <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Saldo consolidado</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
+                    {currency(totalConsolidatedBalance ?? 0)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">Somatório de contas bancárias</p>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">Entradas (Período)</p>
-                  <p className="text-xl font-semibold text-green-700">{currency(totalInflow)}</p>
-                  <p className="text-[11px] text-gray-500">Todas as entradas carregadas</p>
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Entradas (período)</p>
+                  <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">
+                    {currency(totalInflow)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">
+                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
+                  </p>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">Saídas (Período)</p>
-                  <p className="text-xl font-semibold text-red-700">-{currency(totalOutflowAbs)}</p>
-                  <p className="text-[11px] text-gray-500">Todas as saídas carregadas</p>
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Saídas (período)</p>
+                  <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">
+                    -{currency(totalOutflowAbs)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">
+                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
+                  </p>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">Resultado (Período)</p>
-                  <p className={`text-xl font-semibold ${netTotal >= 0 ? "text-blue-900" : "text-red-700"}`}>
+                <div className={cardCls}>
+                  <div className="flex items-start justify-between">
+                    <p className="text-[11px] uppercase tracking-wide text-gray-600">Resultado (período)</p>
+                    <span
+                      className={`text-[11px] ${
+                        Number.isFinite(momChange)
+                          ? momChange >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      M/M {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + pct(momChange) : "—"}
+                    </span>
+                  </div>
+                  <p className={`mt-1 text-lg font-semibold tabular-nums ${netTotal >= 0 ? "text-blue-900" : "text-red-700"}`}>
                     {netTotal >= 0 ? "+" : ""}
                     {currency(netTotal)}
                   </p>
-                  <p className="text-[11px] text-gray-500">{dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">
+                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
+                  </p>
                 </div>
               </section>
 
               {/* KPIs Operacionais */}
-              <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">MTD: Entradas</p>
-                  <p className="text-lg font-semibold text-green-700">{currency(mtdInflow)}</p>
-                  <p className="text-xs text-gray-500">Mês atual</p>
+              <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Entradas</p>
+                  <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">{currency(mtdInflow)}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">Mês atual</p>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">MTD: Saídas</p>
-                  <p className="text-lg font-semibold text-red-700">-{currency(mtdOutflowAbs)}</p>
-                  <p className="text-xs text-gray-500">Mês atual</p>
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Saídas</p>
+                  <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">-{currency(mtdOutflowAbs)}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">Mês atual</p>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">MTD: Resultado</p>
-                  <p className={`text-lg font-semibold ${mtdNet >= 0 ? "text-blue-900" : "text-red-700"}`}>
+                <div className={cardCls}>
+                  <div className="flex items-start justify-between">
+                    <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Resultado</p>
+                    <span
+                      className={`text-[11px] ${
+                        Number.isFinite(momChange)
+                          ? mtdNet >= 0
+                            ? (momChange ?? 0) >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                            : (momChange ?? 0) <= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      M/M {Number.isFinite(momChange) ? (mtdNet >= 0 ? "+" : "") + pct(Math.abs(momChange)) : "—"}
+                    </span>
+                  </div>
+                  <p className={`mt-1 text-lg font-semibold tabular-nums ${mtdNet >= 0 ? "text-blue-900" : "text-red-700"}`}>
                     {mtdNet >= 0 ? "+" : ""}
                     {currency(mtdNet)}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    M/M: {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + pct(momChange) : "—"}
+                  <p className="mt-0.5 text-[11px] text-gray-500">
+                    Entradas {currency(mtdInflow)} • Saídas -{currency(mtdOutflowAbs)}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500">Taxa de Liquidação</p>
-                  <p className="text-lg font-semibold">{pct(settlementRate)}</p>
-                  <p className="text-xs text-gray-500">No universo carregado</p>
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Taxa de liquidação</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">{pct(settlementRate)}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">No universo carregado</p>
                 </div>
               </section>
 
               {/* Alertas de Curto Prazo */}
-              <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500 mb-1">Vencidos (não liquidados)</p>
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Vencidos (não liquidados)</p>
                   <div className="flex items-end gap-6">
                     <div>
-                      <p className="text-sm text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900">
-                        {currency(overdueReceivablesSum)} <span className="text-xs text-gray-500">({overdueReceivables})</span>
+                      <p className="text-[12px] text-gray-600">A Receber</p>
+                      <p className="text-lg font-semibold text-blue-900 tabular-nums">
+                        {currency(overdueReceivablesSum)} <span className="text-[11px] text-gray-500">({overdueReceivables})</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700">
-                        {currency(overduePayablesSum)} <span className="text-xs text-gray-500">({overduePayables})</span>
+                      <p className="text-[12px] text-gray-600">A Pagar</p>
+                      <p className="text-lg font-semibold text-red-700 tabular-nums">
+                        {currency(overduePayablesSum)} <span className="text-[11px] text-gray-500">({overduePayables})</span>
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500 mb-1">Próximos 7 dias</p>
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Próximos 7 dias</p>
                   <div className="flex items-end gap-6">
                     <div>
-                      <p className="text-sm text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900">{currency(next7Receivables)}</p>
+                      <p className="text-[12px] text-gray-600">A Receber</p>
+                      <p className="text-lg font-semibold text-blue-900 tabular-nums">{currency(next7Receivables)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700">{currency(next7Payables)}</p>
+                      <p className="text-[12px] text-gray-600">A Pagar</p>
+                      <p className="text-lg font-semibold text-red-700 tabular-nums">{currency(next7Payables)}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500 mb-1">Próximos 30 dias</p>
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Próximos 30 dias</p>
                   <div className="flex items-end gap-6">
                     <div>
-                      <p className="text-sm text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900">{currency(next30Receivables)}</p>
+                      <p className="text-[12px] text-gray-600">A Receber</p>
+                      <p className="text-lg font-semibold text-blue-900 tabular-nums">{currency(next30Receivables)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700">{currency(next30Payables)}</p>
+                      <p className="text-[12px] text-gray-600">A Pagar</p>
+                      <p className="text-lg font-semibold text-red-700 tabular-nums">{currency(next30Payables)}</p>
                     </div>
                   </div>
                 </div>
               </section>
 
-              {/* Runway */}
-              <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <div className="xl:col-span-1 rounded-2xl border p-4 shadow-sm">
-                  <p className="text-xs text-gray-500 mb-1">Média Mensal de Saídas</p>
-                  <p className="text-lg font-semibold text-red-700">-{currency(avgMonthlyOutflowAbs)}</p>
-                  <p className="text-xs text-gray-500 mt-2">Runway Estimada</p>
-                  <p className="text-lg font-semibold">
-                    {Number.isFinite(runwayMonths)
-                      ? `${runwayMonths.toFixed(1)} mês(es)`
-                      : "—"}
+              {/* Runway + Acumulado */}
+              <section className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+                <div className={cardCls}>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Média mensal de saídas</p>
+                  <p className="text-lg font-semibold text-red-700 tabular-nums">-{currency(avgMonthlyOutflowAbs)}</p>
+                  <p className="mt-2 text-[11px] text-gray-600">Runway estimada</p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {Number.isFinite(runwayMonths) ? `${runwayMonths.toFixed(1)} mês(es)` : "—"}
                   </p>
                 </div>
 
-                {/* Gráfico acumulado */}
-                <div className="xl:col-span-2 rounded-2xl border p-4 shadow-sm">
-                  <p className="text-sm font-medium mb-3">Saldo Acumulado (por competência)</p>
+                <div className="xl:col-span-2 border border-gray-300 rounded-md bg-white px-3 py-2">
+                  <p className="text-[12px] font-medium mb-3">Saldo acumulado (por competência)</p>
                   <div className="w-full h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={monthlySeries.cumulative}>
@@ -530,10 +659,10 @@ const Report: React.FC = () => {
               </section>
 
               {/* Barras Entradas x Saídas x Resultado */}
-              <section className="rounded-2xl border p-4 shadow-sm">
+              <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-medium">Entradas x Saídas (mensal)</p>
-                  <span className="text-xs text-gray-500">
+                  <p className="text-[12px] font-medium">Entradas x Saídas (mensal)</p>
+                  <span className="text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
                   </span>
                 </div>
@@ -570,9 +699,9 @@ const Report: React.FC = () => {
               </section>
 
               {/* Pizza por Categoria (Saídas) + Tabela de Atrasos */}
-              <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="rounded-2xl border p-4 shadow-sm">
-                  <p className="text-sm font-medium mb-3">Distribuição de Despesas por Categoria</p>
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="border border-gray-300 rounded-md bg-white px-3 py-2">
+                  <p className="text-[12px] font-medium mb-3">Distribuição de despesas por categoria</p>
                   <div className="w-full h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -591,8 +720,8 @@ const Report: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border p-4 shadow-sm overflow-hidden">
-                  <p className="text-sm font-medium mb-3">Top 10 Lançamentos em Atraso</p>
+                <div className="border border-gray-300 rounded-md bg-white px-3 py-2 overflow-hidden">
+                  <p className="text-[12px] font-medium mb-3">Top 10 lançamentos em atraso</p>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                       <thead className="bg-gray-50 text-gray-600">
@@ -612,7 +741,7 @@ const Report: React.FC = () => {
                           </tr>
                         )}
                         {overdueItems.map((it) => (
-                          <tr key={it.id} className="border-t">
+                          <tr key={String(it.id)} className="border-t">
                             <td className="px-3 py-2">{it.date}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{it.desc}</td>
                             <td className="px-3 py-2 text-center">
@@ -626,7 +755,7 @@ const Report: React.FC = () => {
                                 {it.type}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-right">{currency(it.amount)}</td>
+                            <td className="px-3 py-2 text-right tabular-nums">{currency(it.amount)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -634,6 +763,18 @@ const Report: React.FC = () => {
                   </div>
                 </div>
               </section>
+
+              {/* Insights */}
+              {insights.length > 0 && (
+                <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
+                  <p className="text-[12px] font-medium mb-2">Insights</p>
+                  <ul className="list-disc pl-5 text-[13px] text-gray-700 space-y-1">
+                    {insights.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </>
           )}
         </div>
