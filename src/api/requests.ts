@@ -10,7 +10,7 @@ import {
 import { User, Organization, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
-import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis, BulkSettleItem, BulkSettleResponse } from '@/models/entries/domain'
+import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis, BulkSettleItem, BulkSettleResponse, ReportsSummary } from '@/models/entries/domain'
 import {
   GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
@@ -117,11 +117,30 @@ export const api = {
     return request<Organization>(`organizations/${orgExternalId}/update/`, "PUT", payload);
   },
 
+  /* --- KPIs --- */
   getCashflowKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
     return request<CashflowKpis>(`cashflow/${orgExtId}/kpis/cashflow/`, 'GET', params);
   },
   getSettledKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
     return request<SettledKpis>(`cashflow/${orgExtId}/kpis/settled/`, 'GET', params);
+  },
+
+  /* --- Reports --- */
+  getReportsSummary(
+    orgExternalId: string,
+    params?: {
+      description?: string;
+      observation?: string;
+      gl?: string;         // comma-separated external_ids
+      date_from?: string;  // YYYY-MM-DD
+      date_to?: string;    // YYYY-MM-DD
+    }
+  ) {
+    return request<ReportsSummary>(
+      `cashflow/${orgExternalId}/reports/summary/`,
+      'GET',
+      params
+    );
   },
 
   /* --- Permissions --- */

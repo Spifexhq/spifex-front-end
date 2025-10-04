@@ -1,6 +1,7 @@
 // src/pages/Reports/index.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
+import { useSelector } from "react-redux";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -19,415 +20,166 @@ import {
 
 import Navbar from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { InlineLoader } from "@/components/Loaders";
 import Button from "@/components/Button";
+import { InlineLoader } from "@/components/Loaders";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
-
-// Use your real Entry model; we’ll map only what we need
-import type { Entry } from "@/models/entries";
+import type { RootState } from "@/redux/rootReducer";
+import type { ReportsSummary } from "@/models/entries/domain";
 
 /* -------------------------------------------------------------------------- */
-/* Config & helpers                                                            */
+/* Helpers                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const PAGE_SIZE = 10000;
 const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
-const endDate = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
+const endDate   = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
 
-const currency = (v: number) =>
+const currencyBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const pct = (v: number) =>
   `${(v * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
 
-const POS_BAR = "#1E3A8A"; // azul
-const NEG_BAR = "#991B1B"; // vermelho
-
-/* -------------------------------------------------------------------------- */
-/* Minimal shapes (avoid any)                                                 */
-/* -------------------------------------------------------------------------- */
-
-type NameObj = { name?: string | null } | null | undefined;
-
-type MinimalEntry = {
-  id?: string | number;
-  amount?: number | string | null;
-  tx_type?: "credit" | "debit" | string | null;
-  due_date?: string | null;
-  settlement_state?: boolean | string | number | null;
-  description?: string | null;
-  general_ledger_account?: NameObj;
-  document_type?: NameObj;
-  project?: NameObj;
-  entity?: NameObj;
-  tags?: string | null;
-};
-
-type ParsedEntry = {
-  raw: Entry;
-  amount: number;
-  isCredit: boolean;
-  signed: number;
-  due: dayjs.Dayjs;
-  settled: boolean;
-};
+const POS_BAR = "#1E3A8A";
+const NEG_BAR = "#991B1B";
 
 /* -------------------------------------------------------------------------- */
 /* Component                                                                   */
 /* -------------------------------------------------------------------------- */
 
-const Report: React.FC = () => {
+const ReportsPage: React.FC = () => {
   useEffect(() => {
     document.title = "Relatórios";
   }, []);
 
+  // Mesmo padrão do KpiRow para pegar orgExternalId com fallback
+  const orgExternalId = useSelector((s: RootState) =>
+    s.auth.orgExternalId ??
+    s.auth.organization?.organization?.external_id ??
+    s.auth.organization?.external_id
+  ) as string | undefined;
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [data, setData] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // saldo consolidado para runway
+  // Saldo consolidado (para runway)
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
 
-  const payload = useMemo(
+  const params = useMemo(
     () => ({
-      page_size: PAGE_SIZE,
-      start_date: startDate,
-      end_date: endDate,
+      date_from: startDate,
+      date_to: endDate,
     }),
     []
   );
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!orgExternalId) return;
+    (async () => {
       try {
         setLoading(true);
-        const response = await api.getEntries(payload);
-        setEntries(response.data?.results ?? []);
+        const res = await api.getReportsSummary(orgExternalId, params);
+        setData(res.data);
       } catch (e) {
-        console.error("Failed to fetch entries", e);
-        setError("Erro ao buscar lançamentos.");
+        console.error(e);
+        setError("Erro ao buscar dados do relatório.");
       } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, [orgExternalId, params]);
 
-    fetchData();
-  }, [payload]);
+  /* ------------------------------ Derived data ----------------------------- */
 
-  // --------- Preparos comuns ----------
-  const today = dayjs();
+  const totalsInMinor       = data?.totals.in_minor ?? 0;
+  const totalsOutAbsMinor   = data?.totals.out_abs_minor ?? 0;
+  const totalsNetMinor      = data?.totals.net_minor ?? 0;
+  const settlementRate      = data?.totals.settlement_rate ?? 0;
 
-  const entriesParsed = useMemo<ParsedEntry[]>(() => {
-    return entries.map((e) => {
-      const src = e as unknown as MinimalEntry;
-      const amountNum = Number.parseFloat(String(src.amount ?? 0));
-      const tx = (src.tx_type ?? "").toString();
-      const isCredit = tx === "credit";
-      const signed = isCredit ? amountNum : -amountNum;
-      const due = dayjs(src.due_date ?? undefined);
-      const settled =
-        typeof src.settlement_state === "boolean"
-          ? src.settlement_state
-          : Boolean(src.settlement_state);
+  const mtdInMinor          = data?.mtd.in_minor ?? 0;
+  const mtdOutMinor         = data?.mtd.out_minor ?? 0;
+  const mtdNetMinor         = data?.mtd.net_minor ?? 0;
 
-      return { raw: e, amount: amountNum, isCredit, signed, due, settled };
-    });
-  }, [entries]);
+  const momInfinite         = data?.mom.infinite ?? false;
+  const momChange           = momInfinite ? Infinity : (data?.mom.change ?? 0);
 
-  // --------- KPIs rápidos ----------
-  const {
-    totalInflow,
-    totalOutflowAbs,
-    netTotal,
-    mtdInflow,
-    mtdOutflowAbs,
-    mtdNet,
-    momChange,
-    settlementRate,
-    overdueReceivables,
-    overduePayables,
-    overdueReceivablesSum,
-    overduePayablesSum,
-    next7Payables,
-    next7Receivables,
-    next30Payables,
-    next30Receivables,
-    avgMonthlyOutflowAbs,
-    runwayMonths,
-  } = useMemo(() => {
-    if (entriesParsed.length === 0) {
-      return {
-        totalInflow: 0,
-        totalOutflowAbs: 0,
-        netTotal: 0,
-        mtdInflow: 0,
-        mtdOutflowAbs: 0,
-        mtdNet: 0,
-        momChange: 0,
-        settlementRate: 0,
-        overdueReceivables: 0,
-        overduePayables: 0,
-        overdueReceivablesSum: 0,
-        overduePayablesSum: 0,
-        next7Payables: 0,
-        next7Receivables: 0,
-        next30Payables: 0,
-        next30Receivables: 0,
-        avgMonthlyOutflowAbs: 0,
-        runwayMonths: Infinity,
-      };
-    }
+  const overdueRecMinor     = data?.overdue.rec_minor ?? 0;
+  const overduePayMinor     = data?.overdue.pay_minor ?? 0;
 
-    let totalIn = 0;
-    let totalOutAbs = 0;
-    let settledCount = 0;
+  const next7RecMinor       = data?.next7.rec_minor ?? 0;
+  const next7PayMinor       = data?.next7.pay_minor ?? 0;
+  const next30RecMinor      = data?.next30.rec_minor ?? 0;
+  const next30PayMinor      = data?.next30.pay_minor ?? 0;
 
-    const mStart = dayjs().startOf("month");
-    const mEnd = dayjs().endOf("month");
-    let mtdIn = 0;
-    let mtdOutAbs = 0;
+  const monthlyBars = (data?.monthly.bars ?? []).map(d => ({
+    key: d.key,
+    month: d.month,
+    inflow: d.inflow_minor / 100,
+    outflow: d.outflow_minor / 100,
+    net: d.net_minor / 100,
+  }));
 
-    const prevStart = dayjs().subtract(1, "month").startOf("month");
-    const prevEnd = dayjs().subtract(1, "month").endOf("month");
-    let prevNet = 0;
+  const monthlyCumulative = (data?.monthly.cumulative ?? []).map(d => ({
+    key: d.key,
+    month: d.month,
+    cumulative: d.cumulative_minor / 100,
+  }));
 
-    // overdue / próximos
-    let overdueRec = 0;
-    let overduePay = 0;
-    let overdueRecSum = 0;
-    let overduePaySum = 0;
+  const pieData = (data?.pie ?? []).map(p => ({ name: p.name, value: p.value_minor / 100 }));
 
-    let n7Pay = 0,
-      n7Rec = 0,
-      n30Pay = 0,
-      n30Rec = 0;
-    const in7 = today.add(7, "day");
-    const in30 = today.add(30, "day");
+  const overdueItems = (data?.overdue_items ?? []).map(it => ({
+    ...it,
+    amount: it.amount_minor / 100,
+  }));
 
-    // para média de saídas mensais
-    const monthlyAgg: Record<string, { in: number; outAbs: number }> = {};
+  const avgMonthlyOutflowAbs =
+    monthlyBars.length === 0
+      ? 0
+      : monthlyBars.reduce((acc, x) => acc + (x.outflow || 0), 0) / monthlyBars.length;
 
-    for (const r of entriesParsed) {
-      if (r.isCredit) totalIn += r.amount;
-      else totalOutAbs += r.amount;
+  const runwayMonths =
+    avgMonthlyOutflowAbs > 0
+      ? (totalConsolidatedBalance ?? 0) / avgMonthlyOutflowAbs
+      : Infinity;
 
-      if (r.settled) settledCount += 1;
-
-      // MTD
-      if (r.due.isAfter(mStart.subtract(1, "day")) && r.due.isBefore(mEnd.add(1, "day"))) {
-        if (r.isCredit) mtdIn += r.amount;
-        else mtdOutAbs += r.amount;
-      }
-
-      // Prev month net (para M/M)
-      if (r.due.isAfter(prevStart.subtract(1, "day")) && r.due.isBefore(prevEnd.add(1, "day"))) {
-        prevNet += r.signed;
-      }
-
-      // Overdue (não liquidado e vencido)
-      if (!r.settled && r.due.isBefore(today, "day")) {
-        if (r.isCredit) {
-          overdueRec += 1;
-          overdueRecSum += r.amount;
-        } else {
-          overduePay += 1;
-          overduePaySum += r.amount;
-        }
-      }
-
-      // Próximos 7 / 30 dias
-      if (!r.settled && r.due.isAfter(today.subtract(1, "day"))) {
-        if (r.due.isBefore(in7.add(1, "day"))) {
-          if (r.isCredit) n7Rec += r.amount;
-          else n7Pay += r.amount;
-        }
-        if (r.due.isBefore(in30.add(1, "day"))) {
-          if (r.isCredit) n30Rec += r.amount;
-          else n30Pay += r.amount;
-        }
-      }
-
-      // Agg mensal
-      const key = r.due.startOf("month").format("YYYY-MM");
-      if (!monthlyAgg[key]) monthlyAgg[key] = { in: 0, outAbs: 0 };
-      if (r.isCredit) monthlyAgg[key].in += r.amount;
-      else monthlyAgg[key].outAbs += r.amount;
-    }
-
-    const net = totalIn - totalOutAbs;
-    const mtdNetV = mtdIn - mtdOutAbs;
-
-    const mom =
-      prevNet === 0 ? (mtdNetV === 0 ? 0 : Infinity) : (mtdNetV - prevNet) / Math.abs(prevNet);
-
-    // média de saída mensal (somente meses com dados)
-    const months = Object.keys(monthlyAgg);
-    const avgOutAbs =
-      months.length === 0
-        ? 0
-        : months.reduce((acc, k) => acc + monthlyAgg[k].outAbs, 0) / months.length;
-
-    const runway =
-      avgOutAbs > 0 ? (totalConsolidatedBalance ?? 0) / avgOutAbs : Infinity;
-
-    return {
-      totalInflow: totalIn,
-      totalOutflowAbs: totalOutAbs,
-      netTotal: net,
-      mtdInflow: mtdIn,
-      mtdOutflowAbs: mtdOutAbs,
-      mtdNet: mtdNetV,
-      momChange: mom,
-      settlementRate: settledCount / entriesParsed.length,
-      overdueReceivables: overdueRec,
-      overduePayables: overduePay,
-      overdueReceivablesSum: overdueRecSum,
-      overduePayablesSum: overduePaySum,
-      next7Payables: n7Pay,
-      next7Receivables: n7Rec,
-      next30Payables: n30Pay,
-      next30Receivables: n30Rec,
-      avgMonthlyOutflowAbs: avgOutAbs,
-      runwayMonths: runway,
-    };
-  }, [entriesParsed, totalConsolidatedBalance, today]);
-
-  // --------- Dados mensais para gráficos ----------
-  const monthlySeries = useMemo(() => {
-    // YYYY-MM -> {in, outAbs, net}
-    const map: Record<string, { in: number; outAbs: number; net: number }> = {};
-    for (const r of entriesParsed) {
-      const key = r.due.startOf("month").format("YYYY-MM");
-      if (!map[key]) map[key] = { in: 0, outAbs: 0, net: 0 };
-      if (r.isCredit) map[key].in += r.amount;
-      else map[key].outAbs += r.amount;
-      map[key].net += r.signed;
-    }
-    const keys = Object.keys(map).sort();
-    // garantir mês atual presente
-    const thisKey = dayjs().startOf("month").format("YYYY-MM");
-    if (!map[thisKey]) {
-      map[thisKey] = { in: 0, outAbs: 0, net: 0 };
-      keys.push(thisKey);
-      keys.sort();
-    }
-
-    const out = keys.map((k) => ({
-      key: k,
-      month: dayjs(k).format("MMM/YY"),
-      inflow: map[k].in,
-      outflow: map[k].outAbs,
-      net: map[k].net,
-    }));
-
-    // série acumulada
-    let acc = 0;
-    const cumulative = out.map((d) => {
-      acc += d.net;
-      return { ...d, cumulative: acc };
-    });
-
-    return { bars: out, cumulative };
-  }, [entriesParsed]);
-
-  // --------- Pizza por "categoria" (flexível) ----------
-  const pieData = useMemo(() => {
-    const labelOf = (e: MinimalEntry): string =>
-      e?.general_ledger_account?.name ??
-      e?.document_type?.name ??
-      e?.project?.name ??
-      e?.entity?.name ??
-      e?.tags ??
-      "Outros";
-
-    const map: Record<string, number> = {};
-    for (const r of entriesParsed) {
-      if (!r.isCredit) {
-        const raw = r.raw as unknown as MinimalEntry;
-        const lbl = labelOf(raw);
-        map[lbl] = (map[lbl] ?? 0) + r.amount;
-      }
-    }
-    const arr = Object.entries(map)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
-
-    // agrupar cauda como "Outros" (depois do top 7)
-    if (arr.length > 8) {
-      const top = arr.slice(0, 7);
-      const tail = arr.slice(7).reduce((acc, x) => acc + x.value, 0);
-      return [...top, { name: "Outros", value: tail }];
-    }
-    return arr;
-  }, [entriesParsed]);
-
-  // --------- Itens em atraso (top 10) ----------
-  const overdueItems = useMemo(() => {
-    return entriesParsed
-      .filter((r) => !r.settled && r.due.isBefore(today, "day"))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10)
-      .map((r) => {
-        const raw = r.raw as unknown as MinimalEntry;
-        return {
-          id: raw.id ?? `${r.due.valueOf()}-${r.amount}`,
-          date: r.due.format("DD/MM/YYYY"),
-          desc: raw.description ?? "",
-          type: r.isCredit ? "Receber" : "Pagar",
-          amount: r.amount,
-        };
-      });
-  }, [entriesParsed, today]);
-
-  // --------- Insights textuais (UX) ----------
   const insights = useMemo(() => {
     const lines: string[] = [];
 
     if (Number.isFinite(runwayMonths) && runwayMonths < 3) {
-      lines.push("A runway estimada está abaixo de 3 meses. Considere reduzir saídas ou reforçar caixa.");
+      lines.push("Runway estimada abaixo de 3 meses. Considere reduzir saídas ou reforçar caixa.");
     } else if (Number.isFinite(runwayMonths) && runwayMonths >= 6) {
-      lines.push("Runway confortável (≥ 6 meses). Avalie antecipar investimentos planejados com critério.");
+      lines.push("Runway confortável (≥ 6 meses). Avalie antecipar investimentos com critério.");
     }
 
-    if (mtdNet < 0) {
-      lines.push("O resultado do mês está negativo. Revise as principais categorias da pizza de despesas.");
-    } else if (mtdNet > 0) {
-      lines.push("O resultado do mês está positivo. Monitore recebimentos previstos para manter o ritmo.");
+    if (mtdNetMinor < 0) {
+      lines.push("Resultado do mês negativo. Revise a pizza de despesas para atacar maiores categorias.");
+    } else if (mtdNetMinor > 0) {
+      lines.push("Resultado do mês positivo. Monitore recebimentos previstos para manter o ritmo.");
     }
 
-    if (overduePayablesSum > overdueReceivablesSum) {
-      lines.push("Pagamentos vencidos superam recebimentos vencidos — risco de pressão de caixa no curtíssimo prazo.");
-    } else if (overdueReceivablesSum > 0) {
-      lines.push("Há recebimentos vencidos significativos. Considere ações de cobrança focadas no top 10 atrasos.");
+    if (overduePayMinor > overdueRecMinor) {
+      lines.push("Pagamentos vencidos > recebimentos vencidos — risco de pressão de caixa no curtíssimo prazo.");
+    } else if (overdueRecMinor > 0) {
+      lines.push("Há recebimentos vencidos relevantes. Foque a cobrança nos top 10 atrasos.");
     }
 
     if (Number.isFinite(momChange) && momChange !== 0) {
-      lines.push(
-        `Variação M/M do resultado do mês: ${(momChange >= 0 ? "+" : "")}${pct(momChange)}.`
-      );
+      lines.push(`Variação M/M do resultado do mês: ${(momChange >= 0 ? "+" : "")}${pct(momChange)}.`);
     }
 
     return lines;
-  }, [
-    runwayMonths,
-    mtdNet,
-    overduePayablesSum,
-    overdueReceivablesSum,
-    momChange,
-  ]);
+  }, [runwayMonths, mtdNetMinor, overduePayMinor, overdueRecMinor, momChange]);
 
-  const toggleSidebar = useCallback(() => setIsSidebarOpen((p) => !p), []);
+  const toggleSidebar = useCallback(() => setIsSidebarOpen(p => !p), []);
+
+  const cardCls = "border border-gray-300 rounded-md bg-white px-3 py-2 shadow-none";
 
   /* ------------------------------------------------------------------------ */
   /* Render                                                                    */
   /* ------------------------------------------------------------------------ */
-
-  // Common card style to mirror KpiRow
-  const cardCls =
-    "border border-gray-300 rounded-md bg-white px-3 py-2 shadow-none";
 
   return (
     <div className="flex min-h-screen bg-white text-gray-900">
@@ -441,7 +193,7 @@ const Report: React.FC = () => {
       />
 
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        <div className="mt-[80px] w-full px-6 md:px-10 py-6 space-y-6">
+        <div className="mt-[80px] w/full px-6 md:px-10 py-6 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold">Relatórios de Fluxo de Caixa</h1>
             <div className="flex gap-2">
@@ -454,19 +206,20 @@ const Report: React.FC = () => {
           {(loading || loadingBanks) && (
             <div className="flex items-center gap-3 text-sm">
               <InlineLoader color="orange" className="w-8 h-8" />
-              <span className="text-gray-600">Carregando lançamentos e saldos…</span>
+              <span className="text-gray-600">Carregando dados do relatório…</span>
             </div>
           )}
+
           {error && <p className="text-sm text-red-600">{error}</p>}
 
-          {!loading && !loadingBanks && !error && (
+          {!loading && !loadingBanks && !error && data && (
             <>
               {/* KPI Cards */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">Saldo consolidado</p>
                   <p className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-                    {currency(totalConsolidatedBalance ?? 0)}
+                    {currencyBRL(totalConsolidatedBalance ?? 0)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">Somatório de contas bancárias</p>
                 </div>
@@ -474,7 +227,7 @@ const Report: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">Entradas (período)</p>
                   <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">
-                    {currency(totalInflow)}
+                    {currencyBRL(totalsInMinor / 100)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -484,7 +237,7 @@ const Report: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">Saídas (período)</p>
                   <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">
-                    -{currency(totalOutflowAbs)}
+                    -{currencyBRL(totalsOutAbsMinor / 100)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -506,9 +259,9 @@ const Report: React.FC = () => {
                       M/M {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + pct(momChange) : "—"}
                     </span>
                   </div>
-                  <p className={`mt-1 text-lg font-semibold tabular-nums ${netTotal >= 0 ? "text-blue-900" : "text-red-700"}`}>
-                    {netTotal >= 0 ? "+" : ""}
-                    {currency(netTotal)}
+                  <p className={`mt-1 text-lg font-semibold tabular-nums ${totalsNetMinor >= 0 ? "text-blue-900" : "text-red-700"}`}>
+                    {totalsNetMinor >= 0 ? "+" : ""}
+                    {currencyBRL(totalsNetMinor / 100)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -520,41 +273,33 @@ const Report: React.FC = () => {
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Entradas</p>
-                  <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">{currency(mtdInflow)}</p>
+                  <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">
+                    {currencyBRL(mtdInMinor / 100)}
+                  </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">Mês atual</p>
                 </div>
 
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Saídas</p>
-                  <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">-{currency(mtdOutflowAbs)}</p>
+                  <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">
+                    -{currencyBRL(mtdOutMinor / 100)}
+                  </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">Mês atual</p>
                 </div>
 
                 <div className={cardCls}>
                   <div className="flex items-start justify-between">
                     <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Resultado</p>
-                    <span
-                      className={`text-[11px] ${
-                        Number.isFinite(momChange)
-                          ? mtdNet >= 0
-                            ? (momChange ?? 0) >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
-                            : (momChange ?? 0) <= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      M/M {Number.isFinite(momChange) ? (mtdNet >= 0 ? "+" : "") + pct(Math.abs(momChange)) : "—"}
+                    <span className="text-[11px] text-gray-500">
+                      M/M {Number.isFinite(momChange) ? (mtdNetMinor >= 0 ? "+" : "") + pct(Math.abs(momChange)) : "—"}
                     </span>
                   </div>
-                  <p className={`mt-1 text-lg font-semibold tabular-nums ${mtdNet >= 0 ? "text-blue-900" : "text-red-700"}`}>
-                    {mtdNet >= 0 ? "+" : ""}
-                    {currency(mtdNet)}
+                  <p className={`mt-1 text-lg font-semibold tabular-nums ${mtdNetMinor >= 0 ? "text-blue-900" : "text-red-700"}`}>
+                    {mtdNetMinor >= 0 ? "+" : ""}
+                    {currencyBRL(mtdNetMinor / 100)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
-                    Entradas {currency(mtdInflow)} • Saídas -{currency(mtdOutflowAbs)}
+                    Entradas {currencyBRL(mtdInMinor / 100)} • Saídas -{currencyBRL(mtdOutMinor / 100)}
                   </p>
                 </div>
 
@@ -573,13 +318,13 @@ const Report: React.FC = () => {
                     <div>
                       <p className="text-[12px] text-gray-600">A Receber</p>
                       <p className="text-lg font-semibold text-blue-900 tabular-nums">
-                        {currency(overdueReceivablesSum)} <span className="text-[11px] text-gray-500">({overdueReceivables})</span>
+                        {currencyBRL(overdueRecMinor / 100)}
                       </p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">A Pagar</p>
                       <p className="text-lg font-semibold text-red-700 tabular-nums">
-                        {currency(overduePayablesSum)} <span className="text-[11px] text-gray-500">({overduePayables})</span>
+                        {currencyBRL(overduePayMinor / 100)}
                       </p>
                     </div>
                   </div>
@@ -590,11 +335,15 @@ const Report: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900 tabular-nums">{currency(next7Receivables)}</p>
+                      <p className="text-lg font-semibold text-blue-900 tabular-nums">
+                        {currencyBRL(next7RecMinor / 100)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700 tabular-nums">{currency(next7Payables)}</p>
+                      <p className="text-lg font-semibold text-red-700 tabular-nums">
+                        {currencyBRL(next7PayMinor / 100)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -604,11 +353,15 @@ const Report: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900 tabular-nums">{currency(next30Receivables)}</p>
+                      <p className="text-lg font-semibold text-blue-900 tabular-nums">
+                        {currencyBRL(next30RecMinor / 100)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700 tabular-nums">{currency(next30Payables)}</p>
+                      <p className="text-lg font-semibold text-red-700 tabular-nums">
+                        {currencyBRL(next30PayMinor / 100)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -618,7 +371,7 @@ const Report: React.FC = () => {
               <section className="grid grid-cols-1 xl:grid-cols-3 gap-3">
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Média mensal de saídas</p>
-                  <p className="text-lg font-semibold text-red-700 tabular-nums">-{currency(avgMonthlyOutflowAbs)}</p>
+                  <p className="text-lg font-semibold text-red-700 tabular-nums">-{currencyBRL(avgMonthlyOutflowAbs)}</p>
                   <p className="mt-2 text-[11px] text-gray-600">Runway estimada</p>
                   <p className="text-lg font-semibold tabular-nums">
                     {Number.isFinite(runwayMonths) ? `${runwayMonths.toFixed(1)} mês(es)` : "—"}
@@ -629,7 +382,7 @@ const Report: React.FC = () => {
                   <p className="text-[12px] font-medium mb-3">Saldo acumulado (por competência)</p>
                   <div className="w-full h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={monthlySeries.cumulative}>
+                      <LineChart data={monthlyCumulative}>
                         <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
                         <XAxis dataKey="month" tick={{ fill: "#374151", fontSize: 12 }} />
                         <YAxis
@@ -643,7 +396,7 @@ const Report: React.FC = () => {
                           }
                         />
                         <Tooltip
-                          formatter={(value: number) => currency(value)}
+                          formatter={(value: number) => currencyBRL(value)}
                           labelFormatter={(label: string, payload) =>
                             payload?.[0]?.payload?.key
                               ? dayjs(payload[0].payload.key).format("MMMM/YYYY")
@@ -668,7 +421,7 @@ const Report: React.FC = () => {
                 </div>
                 <div className="w-full h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlySeries.bars}>
+                    <BarChart data={monthlyBars}>
                       <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
                       <XAxis dataKey="month" tick={{ fill: "#374151", fontSize: 12 }} />
                       <YAxis
@@ -683,7 +436,7 @@ const Report: React.FC = () => {
                       />
                       <Tooltip
                         formatter={(value: number, name: string) => [
-                          currency(value),
+                          currencyBRL(value),
                           name === "inflow" ? "Entradas" : name === "outflow" ? "Saídas" : "Resultado",
                         ]}
                         contentStyle={{ backgroundColor: "#F9FAFB", border: "1px solid #D1D5DB", color: "#111827" }}
@@ -698,7 +451,7 @@ const Report: React.FC = () => {
                 </div>
               </section>
 
-              {/* Pizza por Categoria (Saídas) + Tabela de Atrasos */}
+              {/* Pizza + Tabela Atrasos */}
               <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <div className="border border-gray-300 rounded-md bg-white px-3 py-2">
                   <p className="text-[12px] font-medium mb-3">Distribuição de despesas por categoria</p>
@@ -706,7 +459,7 @@ const Report: React.FC = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Tooltip
-                          formatter={(value: number) => currency(value)}
+                          formatter={(value: number) => currencyBRL(value)}
                           contentStyle={{ backgroundColor: "#F9FAFB", border: "1px solid #D1D5DB", color: "#111827" }}
                         />
                         <Legend />
@@ -747,15 +500,13 @@ const Report: React.FC = () => {
                             <td className="px-3 py-2 text-center">
                               <span
                                 className={`px-2 py-0.5 rounded-full text-xs ${
-                                  it.type === "Pagar"
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-blue-100 text-blue-700"
+                                  it.type === "Pagar" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
                                 }`}
                               >
                                 {it.type}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-right tabular-nums">{currency(it.amount)}</td>
+                            <td className="px-3 py-2 text-right tabular-nums">{currencyBRL(it.amount)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -783,4 +534,4 @@ const Report: React.FC = () => {
   );
 };
 
-export default Report;
+export default ReportsPage;
