@@ -34,7 +34,6 @@ import type {
   Entity,
 } from "@/models/enterprise_structure/domain";
 
-// 🔹 Document Types vindos de JSON local (sem requests)
 import documentTypesData from "@/data/documentTypes.json";
 
 /* ---------------------------------- Tipos --------------------------------- */
@@ -132,7 +131,6 @@ const normalizeAmountStr = (v: unknown): string => {
 };
 
 const normalizeDocTypes = (raw: unknown): DocTypeItem[] => {
-  // Esperado: [{id,label}], mas deixamos resiliente a array de strings
   if (Array.isArray(raw)) {
     const out: DocTypeItem[] = [];
     for (const it of raw) {
@@ -144,7 +142,6 @@ const normalizeDocTypes = (raw: unknown): DocTypeItem[] => {
         if (id) out.push({ id, label });
       }
     }
-    // dedup por id
     const seen = new Set<string>();
     return out.filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
   }
@@ -162,10 +159,22 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // controle de confirmação interna
+  // 🔸 IDs/Refs para focar com precisão (SelectDropdown será focado pelo botão)
+  const IDS = {
+    ledgerWrap: "ledger-select-wrap",
+    installmentsInput: "installments-input",
+    inventoryQty: "inventory-qty-input",
+    entityTypeWrap: "entity-type-wrap",
+    entityWrap: "entity-wrap",
+    deptPercPrefix: "dept-perc-",
+  } as const;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+
+  // Novo: overlay de aviso/validação
+  const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
 
   // fontes
   const [ledgerAccounts, setLedgerAccounts] = useState<GLAccount[]>([]);
@@ -186,7 +195,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     { id: number; label: string; value: string }[]
   >([]);
 
-  // se o entry for parcelado, bloqueia mudança de recorrência
   const isRecurrenceLocked = useMemo(() => {
     if (!initialEntry) return false;
     const count = (initialEntry as unknown as { installment_count?: number }).installment_count ?? 1;
@@ -203,6 +211,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     setSelectedInventoryItem([]);
     setSelectedEntity([]);
     setSelectedEntityType([]);
+    setWarning(null);
     setShowCloseConfirm(false);
     onClose();
   }, [onClose]);
@@ -214,8 +223,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     () => parseInt(formData.details.amount.replace(/\D/g, ""), 10) || 0,
     [formData.details.amount]
   );
-  const isSaveDisabled = isSubmitting || amountCents <= 0;
 
+  // Soma de % para badge
   const percentageSum = useMemo(() => {
     const nums = formData.costCenters.department_percentage
       .map((p) => parseFloat(String(p).replace(",", ".")))
@@ -226,10 +235,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
   /* ---------------- Flag de dados preenchidos (ignora dueDate) --------------- */
   const hasMeaningfulData = useMemo(() => {
-    // 1) amount > 0
     if (amountCents > 0) return true;
 
-    // 2) details (ignorando dueDate)
     const d = formData.details;
     if (
       d.description.trim() ||
@@ -237,22 +244,17 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       d.notes.trim() ||
       d.accountingAccount ||
       d.documentType
-    )
-      return true;
+    ) return true;
 
-    // 3) cost centers
     const cc = formData.costCenters;
     if (cc.departments.length > 0 || cc.projects) return true;
 
-    // 4) inventory
     const inv = formData.inventory;
     if (inv.product || (!!inv.quantity && Number(inv.quantity) > 0)) return true;
 
-    // 5) entities
     const ent = formData.entities;
     if (ent.entityType || ent.entity) return true;
 
-    // 6) recurrence
     const rec = formData.recurrence;
     if (rec.recurrence === 1 || !!rec.installments || !!rec.weekend || Number(rec.periods) !== 1)
       return true;
@@ -260,18 +262,126 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     return false;
   }, [formData, amountCents]);
 
+  /* ---------------------------- VALIDATIONS ---------------------------- */
+
+  // Foca um input/botão dentro de um wrapper ID
+  const focusFirstInteractive = (wrapId?: string) => {
+    if (!wrapId) return;
+    if (wrapId === "amount-input") {
+      amountRef.current?.focus();
+      return;
+    }
+    const scope =
+      document.getElementById(wrapId) || document.querySelector<HTMLElement>(`#${wrapId}`);
+    const el =
+      scope?.querySelector<HTMLElement>("input,button,select,[tabindex]") || scope || null;
+    el?.focus();
+  };
+
+  type ValidationResult = { ok: boolean; tab?: Tab; focusId?: string; title?: string; message?: string };
+
+  const validateAll = (): ValidationResult => {
+    // 1) Amount: obrigatório e > 0
+    if (amountCents <= 0) {
+      return {
+        ok: false,
+        tab: "details",
+        focusId: "amount-input",
+        title: "Valor inválido",
+        message: "O campo Valor é obrigatório e deve ser maior que 0.",
+      };
+    }
+
+    // 2) Conta contábil: obrigatória
+    if (!formData.details.accountingAccount) {
+      return {
+        ok: false,
+        tab: "details",
+        focusId: IDS.ledgerWrap,
+        title: "Conta contábil obrigatória",
+        message: "Selecione uma conta contábil antes de salvar.",
+      };
+    }
+
+    // 3) Recorrência: se 'Sim', installments > 0 (inteiro)
+    if (formData.recurrence.recurrence === 1 && !isRecurrenceLocked) {
+      const n = Number(formData.recurrence.installments);
+      if (!formData.recurrence.installments || !Number.isFinite(n) || n <= 0 || !Number.isInteger(n)) {
+        return {
+          ok: false,
+          tab: "recurrence",
+          focusId: IDS.installmentsInput,
+          title: "Parcelas inválidas",
+          message: "Informe um número de parcelas inteiro e maior que 0 ou desative a recorrência.",
+        };
+      }
+    }
+
+    // 4) Inventário: se produto escolhido, quantidade > 0
+    if (formData.inventory.product) {
+      const q = Number(formData.inventory.quantity);
+      if (!formData.inventory.quantity || !Number.isFinite(q) || q <= 0) {
+        return {
+          ok: false,
+          tab: "inventory",
+          focusId: IDS.inventoryQty,
+          title: "Quantidade inválida",
+          message: "Informe uma quantidade maior que 0 para o produto selecionado.",
+        };
+      }
+    }
+
+    // 5) Entidades: se tipo escolhido, entidade obrigatória
+    if (formData.entities.entityType && !formData.entities.entity) {
+      return {
+        ok: false,
+        tab: "entities",
+        focusId: IDS.entityWrap,
+        title: "Selecione a entidade",
+        message: "Escolha uma entidade correspondente ao tipo selecionado ou remova o tipo.",
+      };
+    }
+
+    // 6) Centros de custo: se departamentos escolhidos, cada % > 0 e não vazio
+    if (formData.costCenters.departments.length > 0) {
+      const percs = formData.costCenters.department_percentage;
+      for (let i = 0; i < percs.length; i++) {
+        const raw = String(percs[i] ?? "").trim();
+        const n = Number(raw.replace(",", "."));
+        if (!raw || !Number.isFinite(n) || n <= 0) {
+          return {
+            ok: false,
+            tab: "costCenters",
+            focusId: `${IDS.deptPercPrefix}${i}`,
+            title: "Percentual inválido",
+            message: "Todos os departamentos devem ter percentuais maiores que 0.",
+          };
+        }
+      }
+      // Mantém sua regra existente de total = 100%
+      if (Math.abs(percentageSum - 100) > 0.001) {
+        return {
+          ok: false,
+          tab: "costCenters",
+          focusId: `${IDS.deptPercPrefix}0`,
+          title: "Distribuição incorreta",
+          message: "A soma dos percentuais dos departamentos deve ser exatamente 100%.",
+        };
+      }
+    }
+
+    return { ok: true };
+  };
+
   /* ------------------------ Submit --------------------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSaveDisabled) return;
 
-    // manter essa validação simples
-    if (!formData.details.accountingAccount) {
-      alert("Selecione uma conta contábil.");
-      return;
-    }
-    if (formData.costCenters.departments.length > 0 && percentageSum !== 100) {
-      alert("A soma das porcentagens dos departamentos deve ser exatamente 100%.");
+    // 🔒 Bloqueio defensivo contra manipulação do front-end
+    const v = validateAll();
+    if (!v.ok) {
+      setActiveTab(v.tab || "details");
+      setWarning({ title: v.title || "Campos inválidos", message: v.message || "Corrija os campos destacados para continuar.", focusId: v.focusId });
       return;
     }
 
@@ -346,7 +456,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         const ie = initialEntry as EntryDiffable;
         const changes: Partial<EditEntryRequest> = {};
 
-        // campos simples
         if (formData.details.dueDate !== ie.due_date) {
           changes.due_date = formData.details.dueDate;
         }
@@ -360,45 +469,38 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           changes.notes = formData.details.notes || "";
         }
 
-        // amount (comparação por string decimal normalizada)
         const initialAmountStr = normalizeAmountStr(ie.amount);
         if (cleanAmountNow !== initialAmountStr) {
           changes.amount = cleanAmountNow;
         }
 
-        // gl_account (external_id)
         const initialGl = ie.gl_account || "";
         if (formData.details.accountingAccount && formData.details.accountingAccount !== initialGl) {
           changes.gl_account = formData.details.accountingAccount;
         }
 
-        // document_type (read não traz; só envia se o usuário escolheu algo)
         if (formData.details.documentType) {
           changes.document_type = formData.details.documentType;
         }
 
-        // project (permite limpar: envia null quando o usuário zera)
         const initialProject = ie.project || "";
         const newProject = formData.costCenters.projects || "";
         if (newProject !== initialProject) {
           changes.project = newProject || null;
         }
 
-        // entity (idem project)
         const initialEntity = ie.entity || "";
         const newEntity = formData.entities.entity || "";
         if (newEntity !== initialEntity) {
           changes.entity = newEntity || null;
         }
 
-        // departamentos / itens (só se o usuário preencheu algo agora)
         const deps = makeDepartments();
         if (deps) changes.departments = deps;
 
         const items = makeItems();
         if (items) changes.items = items;
 
-        // recorrência: NUNCA mandar se já é parcelado
         const initialRecCount = ie.installment_count ?? 1;
         if (initialRecCount <= 1) {
           const wantRecurring = formData.recurrence.recurrence === 1;
@@ -413,7 +515,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           }
         }
 
-        // Se nada mudou, evita request
         if (Object.keys(changes).length === 0) {
           handleClose();
           onSave();
@@ -426,7 +527,10 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       if (!("data" in res)) {
         const apiError = res as ApiError;
         console.error("Erro API:", apiError?.error?.message, apiError?.error?.details);
-        alert(apiError?.error?.message || "Erro ao salvar lançamento.");
+        setWarning({
+          title: "Erro ao salvar",
+          message: apiError?.error?.message || "Não foi possível salvar o lançamento.",
+        });
         return;
       }
 
@@ -434,48 +538,42 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       onSave();
     } catch (err) {
       console.error("Erro ao salvar lançamento:", err);
-      if (axios.isAxiosError(err) && err.response?.data?.error?.message) {
-        alert(err.response.data.error.message);
-      } else {
-        alert("Erro inesperado ao salvar lançamento.");
-      }
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.error?.message
+          ? err.response.data.error.message
+          : "Erro inesperado ao salvar lançamento.";
+      setWarning({ title: "Erro ao salvar", message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   /* --------------------------- Fetch helpers --------------------------- */
-  // Ledger Accounts
   const fetchAllLedgerAccounts = useCallback(async () => {
     const all = await fetchAllCursor<GLAccount>(api.getLedgerAccounts, 500);
     const wanted = type === "credit" ? "credit" : "debit";
     return all.filter(a => (a?.default_tx || "").toLowerCase() === wanted);
   }, [type]);
 
-  // Departments
   const fetchAllDepartments = useCallback(
     () => fetchAllCursor<Department>(api.getDepartments, 500),
     []
   );
 
-  // Projects
   const fetchAllProjects = useCallback(
     () => fetchAllCursor<Project>(api.getProjects, 500),
     []
   );
 
-  // Inventory Items
   const fetchAllInventoryItems = useCallback(
     () => fetchAllCursor<InventoryItem>(api.getInventoryItems, 500),
     []
   );
 
-  // Entities (CRM)
   const fetchAllEntities = useCallback(
     () => fetchAllCursor<Entity>(api.getEntities, 500),
     []
   );
-
 
   /* --------------------------- Carregar dados --------------------------- */
   useEffect(() => {
@@ -483,7 +581,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
     (async () => {
       try {
-        // carrega fontes que vêm de API (sem document types)
         const [la, deps, prjs, invs, ents] = await Promise.all([
           fetchAllLedgerAccounts(),
           fetchAllDepartments(),
@@ -491,7 +588,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           fetchAllInventoryItems(),
           fetchAllEntities(),
         ]);
-
         setLedgerAccounts(la);
         setDepartments(deps);
         setProjects(prjs);
@@ -500,8 +596,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       } catch (e) {
         console.error("Erro carregando fontes do modal:", e);
       }
-
-      // carrega document types do JSON local
       setDocumentTypes(normalizeDocTypes(documentTypesData));
     })();
 
@@ -574,29 +668,25 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    // GL Account
     const glaId = initialEntry.gl_account || "";
     const la = ledgerAccounts.find((a) => a.id === glaId);
     setSelectedLedgerAccount(la ? [la] : []);
 
-    // Project
     const prjId = initialEntry.project || "";
     const prj = projects.find((p) => p.id === prjId);
     setSelectedProject(prj ? [prj] : []);
 
-    // Entity + tipo
     const entId = initialEntry.entity || "";
     const ent = entities.find((e) => e.id === entId);
     setSelectedEntity(ent ? [ent] : []);
-    if (ent && ent.entity_type) {
-      const et = ent.entity_type as string;
+    if (ent && (ent).entity_type) {
+      const et = (ent).entity_type as string;
       const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === et);
       setSelectedEntityType(opt ? [opt] : []);
     } else {
       setSelectedEntityType([]);
     }
 
-    // Department
     const rawDeps =
       (initialEntry.departments ?? []) as Array<{
         department_id: string;
@@ -680,7 +770,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
   };
 
-  // 🔹 Navegação por abas: Ctrl/Cmd + ← / →
+  // 🔹 Navegação por abas
   const goTabRelative = useCallback(
     (delta: number) => {
       const idx = TAB_LIST.findIndex((t) => t.id === activeTab);
@@ -693,7 +783,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
   /* ---------------------- Fechamento com confirmação interna ----------------- */
   const attemptClose = useCallback(() => {
-    // Se houver dropdown aberto, deixa o ESC atuar no dropdown
     const dropdownOpen = document.querySelector('[data-select-open="true"]');
     if (dropdownOpen) return;
 
@@ -709,8 +798,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      // ESC
       if (e.key === "Escape") {
+        if (warning) {
+          e.stopPropagation();
+          setWarning(null);
+          return;
+        }
         if (showCloseConfirm) {
           e.stopPropagation();
           setShowCloseConfirm(false);
@@ -722,22 +815,16 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         return;
       }
 
-      // Ctrl/Cmd + S → submit
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
         return;
       }
 
-      // Ctrl/Cmd + ArrowLeft/ArrowRight → trocar abas (AGORA MESMO COM FOCO EM INPUT)
       if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
-        if (showCloseConfirm) return;
-
-        // opcional: ainda evita se um SelectDropdown estiver aberto
+        if (warning || showCloseConfirm) return;
         const dropdownOpen = document.querySelector('[data-select-open="true"]');
         if (dropdownOpen) return;
-
-        // ⚠️ sem o guard de "isTyping": sempre troca a aba
         e.preventDefault();
         goTabRelative(e.key === "ArrowRight" ? 1 : -1);
         return;
@@ -746,7 +833,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, attemptClose, showCloseConfirm, goTabRelative]);
+  }, [isOpen, attemptClose, showCloseConfirm, goTabRelative, warning]);
 
   /* ---------------------------- Conteúdo ------------------------- */
   const Tabs = () => (
@@ -772,6 +859,34 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     </nav>
   );
 
+  // Estados de validação mínimos para desabilitar o botão de salvar
+  const isAmountValid = amountCents > 0;
+  const isLedgerValid = !!formData.details.accountingAccount;
+  const isRecurrenceValid =
+    isRecurrenceLocked ||
+    formData.recurrence.recurrence !== 1 ||
+    (Number.isInteger(Number(formData.recurrence.installments)) &&
+      Number(formData.recurrence.installments) > 0);
+
+  const isInventoryValid =
+    !formData.inventory.product ||
+    (!!formData.inventory.quantity && Number(formData.inventory.quantity) > 0);
+
+  const areDepartmentsValid =
+    formData.costCenters.departments.length === 0 ||
+    (formData.costCenters.department_percentage.every((raw) => {
+      const n = Number(String(raw).replace(",", "."));
+      return !!String(raw).trim() && Number.isFinite(n) && n > 0;
+    }) && Math.abs(percentageSum - 100) <= 0.001);
+
+  const isSaveDisabled =
+    isSubmitting ||
+    !isAmountValid ||
+    !isLedgerValid ||
+    !isRecurrenceValid ||
+    !isInventoryValid ||
+    !areDepartmentsValid;
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "details":
@@ -786,6 +901,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               }
             />
             <Input
+              id="amount-input"
               label="Valor"
               type="text"
               ref={amountRef}
@@ -796,21 +912,23 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               }
               onKeyDown={(e) => handleAmountKeyDown(e, formData.details.amount, setFormData)}
             />
-            <SelectDropdown<GLAccount>
-              label="Conta contábil"
-              items={ledgerAccounts}
-              selected={selectedLedgerAccounts}
-              onChange={handleLedgerAccountChange}
-              getItemKey={(i) => i.id}
-              getItemLabel={(i) => (i.code ? `${i.code} — ${i.name}` : i.name)}
-              buttonLabel="Selecione a conta"
-              singleSelect
-              customStyles={{ maxHeight: "200px" }}
-              groupBy={(i) => i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || "Outros"}
-              virtualize
-              virtualRowHeight={32}
-              virtualThreshold={300}
-            />
+            <div id={IDS.ledgerWrap}>
+              <SelectDropdown<GLAccount>
+                label="Conta contábil"
+                items={ledgerAccounts}
+                selected={selectedLedgerAccounts}
+                onChange={handleLedgerAccountChange}
+                getItemKey={(i) => i.id}
+                getItemLabel={(i) => (i.code ? `${i.code} — ${i.name}` : i.name)}
+                buttonLabel="Selecione a conta"
+                singleSelect
+                customStyles={{ maxHeight: "200px" }}
+                groupBy={(i) => i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || "Outros"}
+                virtualize
+                virtualRowHeight={32}
+                virtualThreshold={300}
+              />
+            </div>
 
             <div className="md:col-span-3">
               <Input
@@ -893,7 +1011,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   <span className="text-[12px] text-gray-700">Distribuição (%)</span>
                   <span
                     className={`text-[11px] px-2 py-[2px] rounded-full border ${
-                      percentageSum === 100
+                      Math.abs(percentageSum - 100) <= 0.001 && selectedDepartments.length > 0
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                         : "border-amber-200 bg-amber-50 text-amber-700"
                     }`}
@@ -905,6 +1023,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   {selectedDepartments.map((dept, index) => (
                     <div key={dept.id} className="mb-3">
                       <Input
+                        id={`${IDS.deptPercPrefix}${index}`}
                         label={`% - ${dept.name || `Departamento ${dept.id}`}`}
                         type="number"
                         name={`department_percentage_${dept.id}`}
@@ -960,6 +1079,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             />
             {selectedInventoryItem.length > 0 && (
               <Input
+                id={IDS.inventoryQty}
                 label="Quantidade"
                 type="number"
                 placeholder="0"
@@ -986,41 +1106,45 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <SelectDropdown<{ id: number; label: string; value: string }>
-              label="Tipo de entidade"
-              items={ENTITY_TYPE_OPTIONS}
-              selected={selectedEntityType}
-              onChange={(v) => {
-                setSelectedEntityType(v);
-                setFormData((p) => ({
-                  ...p,
-                  entities: { ...p.entities, entityType: v[0]?.value || "" },
-                }));
-                setSelectedEntity([]);
-                setFormData((p) => ({ ...p, entities: { ...p.entities, entity: "" } }));
-              }}
-              getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.label}
-              buttonLabel="Selecione o tipo"
-              singleSelect
-              customStyles={{ maxHeight: "160px" }}
-              hideFilter
-            />
+            <div id={IDS.entityTypeWrap}>
+              <SelectDropdown<{ id: number; label: string; value: string }>
+                label="Tipo de entidade"
+                items={ENTITY_TYPE_OPTIONS}
+                selected={selectedEntityType}
+                onChange={(v) => {
+                  setSelectedEntityType(v);
+                  setFormData((p) => ({
+                    ...p,
+                    entities: { ...p.entities, entityType: v[0]?.value || "" },
+                  }));
+                  setSelectedEntity([]);
+                  setFormData((p) => ({ ...p, entities: { ...p.entities, entity: "" } }));
+                }}
+                getItemKey={(i) => i.id}
+                getItemLabel={(i) => i.label}
+                buttonLabel="Selecione o tipo"
+                singleSelect
+                customStyles={{ maxHeight: "160px" }}
+                hideFilter
+              />
+            </div>
 
-            <SelectDropdown<Entity>
-              label="Entidade"
-              items={filteredEntities}
-              selected={selectedEntity}
-              onChange={handleEntityChange}
-              getItemKey={(i) => i.id}
-              getItemLabel={(i) => i.full_name || (i).alias_name || "Entidade sem nome"}
-              buttonLabel="Selecione a entidade"
-              singleSelect
-              customStyles={{ maxHeight: "200px" }}
-              virtualize
-              virtualRowHeight={32}
-              virtualThreshold={300}
-            />
+            <div id={IDS.entityWrap}>
+              <SelectDropdown<Entity>
+                label="Entidade"
+                items={filteredEntities}
+                selected={selectedEntity}
+                onChange={handleEntityChange}
+                getItemKey={(i) => i.id}
+                getItemLabel={(i) => i.full_name || (i).alias_name || "Entidade sem nome"}
+                buttonLabel="Selecione a entidade"
+                singleSelect
+                customStyles={{ maxHeight: "200px" }}
+                virtualize
+                virtualRowHeight={32}
+                virtualThreshold={300}
+              />
+            </div>
           </div>
         );
       }
@@ -1057,6 +1181,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             {formData.recurrence.recurrence === 1 && (
               <>
                 <Input
+                  id={IDS.installmentsInput}
                   label="Parcelas"
                   type="number"
                   value={formData.recurrence.installments}
@@ -1226,6 +1351,41 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   onClick={handleClose}
                 >
                   Descartar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🔔 Overlay de avisos/validações */}
+        {warning && (
+          <div
+            className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
+            aria-modal="true"
+            role="alertdialog"
+            aria-labelledby="warn-title"
+            aria-describedby="warn-desc"
+          >
+            <div className="w-full max-w-md rounded-lg border border-amber-200 bg-white shadow-2xl">
+              <div className="px-5 py-4 border-b border-amber-100">
+                <h2 id="warn-title" className="text-[15px] font-semibold text-amber-800">
+                  {warning.title}
+                </h2>
+                <p id="warn-desc" className="mt-1 text-[12px] text-amber-700">
+                  {warning.message}
+                </p>
+              </div>
+              <div className="px-5 py-4 flex items-center justify-end gap-2">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    const fId = warning.focusId;
+                    setWarning(null);
+                    // foca após fechar o overlay
+                    setTimeout(() => focusFirstInteractive(fId), 0);
+                  }}
+                >
+                  Entendi
                 </Button>
               </div>
             </div>
