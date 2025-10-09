@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
- * File: src/components/FilterBar.tsx
- * Style: Minimalist and compact. No shadows (except in the "Adicionar filtro +" menu).
- * Chips + Search + Filters menu + "Limpar filtros" + "Aplicar".
+ * File: src/components/Filter/FilterBar.tsx
+ * Style: Minimalist / compact. No shadows (except in "Adicionar filtro +" menu).
+ * Adds: Save visualization, Load, Config (columns/sort), extra filters. (No Group By)
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
@@ -9,20 +9,19 @@ import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import type { EntryFilters } from "src/models/entries/domain";
+import {
+  ChipKey,
+  ColumnKey,
+  SortDir,
+  ConfigState,
+  LocalFilters,
+  Visualization,
+} from "src/models/entries/domain";
 import { api } from "src/api/requests";
 import Button from "../Button";
+import Checkbox from "../Checkbox";
 
-/* ------------------------------ Types & helpers ----------------------------- */
-type ChipKey = "date" | "banks" | "accounts" | "observation";
-
-/** GLAccount pode vir como { id } (string ULID) ou { external_id } */
-type GLAccountLike = GLAccount & { id?: string; external_id?: string };
-
-interface FilterBarProps {
-  onApply: (filters: EntryFilters) => void;
-  initial?: EntryFilters;
-}
-
+/* ------------------------------ Utils ------------------------------ */
 function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -33,9 +32,15 @@ function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
   }, [ref, onOutside]);
 }
 
-/** Pega o ID da conta contábil como string (id ou external_id) */
+/** GLAccount pode vir como { id } (string ULID) ou { external_id } */
+type GLAccountLike = GLAccount & { id?: string; external_id?: string };
 function getGlaId(a: GLAccountLike): string {
   return String(a.id ?? a.external_id ?? "");
+}
+
+interface FilterBarProps {
+  onApply: (payload: { filters: EntryFilters; config?: ConfigState }) => void;
+  initial?: EntryFilters;
 }
 
 /* -------------------------------- Component -------------------------------- */
@@ -45,54 +50,74 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GLAccountLike[]>([]);
 
-  /**
-   * Mantemos estado LOCAL com ids como string para GL Accounts e bancos.
-   * Convertimos para EntryFilters no apply().
-   */
-  type LocalFilters = Omit<EntryFilters, "gla_id" | "bank_id"> & {
-    gla_id: string[];
-    bank_id: string[];
-  };
-
   const [filters, setFilters] = useState<LocalFilters>(() => ({
     start_date: initial?.start_date || "",
     end_date: initial?.end_date || "",
     description: initial?.description || "",
     observation: initial?.observation || "",
-    gla_id: Array.isArray(initial?.gla_id)
-      ? (initial!.gla_id as unknown[]).map(String)
-      : [],
-    bank_id: Array.isArray(initial?.bank_id)
-      ? (initial!.bank_id as unknown[]).map(String)
-      : [],
+    gla_id: Array.isArray(initial?.gla_id) ? (initial!.gla_id as unknown[]).map(String) : [],
+    bank_id: Array.isArray(initial?.bank_id) ? (initial!.bank_id as unknown[]).map(String) : [],
+    tx_type: undefined,
+    amount_min: "",
+    amount_max: "",
   }));
 
+  /* Table Config */
+  const [config, setConfig] = useState<ConfigState>({
+    columns: ["due_date", "description", "gl_account", "project", "entity", "amount"],
+    sortBy: "due_date",
+    sortDir: "asc",
+  });
+
+  /* Saved visualizations */
+  const [views, setViews] = useState<Visualization[]>([]);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [viewName, setViewName] = useState("");
+  const [viewDefault, setViewDefault] = useState(false);
+  const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
+
+  /* Menus/Popovers */
   const [menuOpen, setMenuOpen] = useState(false);
   const [openEditor, setOpenEditor] = useState<ChipKey | null>(null);
+  const [configOpen, setConfigOpen] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
   useOutside(menuRef, () => setMenuOpen(false));
 
-  // Busca paginada das GL Accounts (novo backend)
+  /* Load GL Accounts (cursor API) */
   useEffect(() => {
     const fetchAll = async () => {
       try {
         const all: GLAccountLike[] = [];
         let cursor: string | undefined;
         do {
-          const { data } = (await api.getLedgerAccounts({
-            page_size: 200,
-            cursor,
-          })) as { data: { results?: GLAccountLike[]; next?: string | null } };
+          const { data } = await api.getLedgerAccounts({ page_size: 200, cursor });
           const page = (data?.results ?? []) as GLAccountLike[];
           all.push(...page);
           cursor = (data?.next ?? undefined) || undefined;
         } while (cursor);
         setLedgerAccounts(all);
-      } catch {
+      } catch (err) {
+        console.error("Failed to load GL Accounts", err);
         setLedgerAccounts([]);
       }
     };
     fetchAll();
+  }, []);
+
+  /* Saved views (read org id from store inside requests) */
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.getEntryViews();
+        const list = Array.isArray(data)
+          ? data
+          : (data as unknown as { results?: Visualization[] })?.results ?? [];
+        setViews(list as Visualization[]);
+      } catch (err) {
+        console.error("Failed to load saved views", err);
+      }
+    })();
   }, []);
 
   const selectedBanks = useMemo(() => {
@@ -105,14 +130,24 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
     [ledgerAccounts, filters.gla_id]
   );
 
+  function toEntryFilters(f: LocalFilters): EntryFilters {
+    return {
+      start_date: f.start_date,
+      end_date: f.end_date,
+      description: f.description,
+      observation: f.observation,
+      gla_id: f.gla_id,
+      bank_id: f.bank_id,
+      tx_type: f.tx_type,
+      amount_min: f.amount_min ? Math.round(parseFloat(f.amount_min) * 100) : undefined,
+      amount_max: f.amount_max ? Math.round(parseFloat(f.amount_max) * 100) : undefined,
+    } as EntryFilters;
+  }
+
   function applyFilters() {
     onApply({
-      start_date: filters.start_date,
-      end_date: filters.end_date,
-      description: filters.description,
-      observation: filters.observation,
-      gla_id: filters.gla_id,
-      bank_id: filters.bank_id,
+      filters: toEntryFilters(filters),
+      config,
     });
   }
 
@@ -124,9 +159,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
       observation: "",
       gla_id: [],
       bank_id: [],
+      tx_type: undefined,
+      amount_min: "",
+      amount_max: "",
     };
     setFilters(cleared);
-    onApply(cleared);
+    onApply({ filters: toEntryFilters(cleared), config });
   }
 
   function removeChip(k: ChipKey) {
@@ -134,6 +172,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
     if (k === "banks") setFilters((f) => ({ ...f, bank_id: [] }));
     if (k === "accounts") setFilters((f) => ({ ...f, gla_id: [] }));
     if (k === "observation") setFilters((f) => ({ ...f, observation: "" }));
+    if (k === "tx_type") setFilters((f) => ({ ...f, tx_type: undefined }));
+    if (k === "amount") setFilters((f) => ({ ...f, amount_min: "", amount_max: "" }));
   }
 
   const hasActive =
@@ -142,54 +182,98 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
     (filters.bank_id?.length ?? 0) > 0 ||
     (filters.gla_id?.length ?? 0) > 0 ||
     !!filters.observation ||
-    !!filters.description;
+    !!filters.description ||
+    !!filters.tx_type ||
+    !!filters.amount_min ||
+    !!filters.amount_max;
+
+  /* ------------------------------ Saved Views ------------------------------ */
+  async function saveVisualization() {
+    if (!viewName.trim()) return;
+    const payload = {
+      name: viewName.trim(),
+      is_default: viewDefault,
+      // group_by intentionally removed (backend may accept default)
+      config,
+      filters,
+    };
+
+    const existing = views.find((v) => v.name.toLowerCase() === payload.name.toLowerCase());
+    try {
+      if (existing) await api.editEntryView(existing.id, payload);
+      else await api.addEntryView(payload);
+
+      const { data } = await api.getEntryViews();
+      const list = Array.isArray(data)
+        ? data
+        : (data as unknown as { results?: Visualization[] })?.results ?? [];
+      setViews(list as Visualization[]);
+      setSaveOpen(false);
+      setViewName("");
+      setViewDefault(false);
+    } catch (err) {
+      console.error("Failed to save visualization", err);
+    }
+  }
+
+  function applyVisualization(v: Visualization) {
+    setFilters(v.filters);
+    setConfig(v.config);
+    onApply({ filters: toEntryFilters(v.filters), config: v.config });
+  }
 
   /* ---------------------------------- Render -------------------------------- */
   return (
     <div className="w-full">
       <div className="flex items-center gap-2">
-        {/* Search field + chips */}
-        <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-md px-2 h-8 whitespace-nowrap overflow-x-auto">
+        {/* Search + chips */}
+        <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-md px-2 h-8 whitespace-nowrap overflow-x-auto bg-white">
           {(filters.start_date || filters.end_date) && (
             <Chip
               icon="calendar"
-              label={`Datas  ${filters.start_date || "mm/dd/yyyy"} - ${filters.end_date || "mm/dd/yyyy"}`}
+              label={`Datas  ${filters.start_date || "yyyy-mm-dd"} - ${filters.end_date || "yyyy-mm-dd"}`}
               onClick={() => setOpenEditor("date")}
               onRemove={() => removeChip("date")}
             />
           )}
-
           {(filters.bank_id?.length ?? 0) > 0 && (
             <Chip
               icon="bank"
-              label={`Banco  ${selectedBanks
-                .slice(0, 2)
-                .map((b) => b.institution)
-                .join(", ")}${selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""}`}
+              label={`Banco  ${selectedBanks.slice(0, 2).map((b) => b.institution).join(", ")}${
+                selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""
+              }`}
               onClick={() => setOpenEditor("banks")}
               onRemove={() => removeChip("banks")}
             />
           )}
-
           {(filters.gla_id?.length ?? 0) > 0 && (
             <Chip
               icon="accounts"
-              label={`Conta contábil  ${selectedAccounts
-                .slice(0, 2)
-                .map((a) => a.name)
-                .join(", ")}${selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""}`}
+              label={`Conta contábil  ${selectedAccounts.slice(0, 2).map((a) => a.name).join(", ")}${
+                selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""
+              }`}
               onClick={() => setOpenEditor("accounts")}
               onRemove={() => removeChip("accounts")}
             />
           )}
-
-          {!!filters.observation && (
+          {!!filters.tx_type && (
             <Chip
               icon="note"
-              label={`Observação  ${filters.observation}`}
-              onClick={() => setOpenEditor("observation")}
-              onRemove={() => removeChip("observation")}
+              label={`Tipo ${filters.tx_type === "credit" ? "Receita" : "Despesa"}`}
+              onClick={() => setOpenEditor("tx_type")}
+              onRemove={() => removeChip("tx_type")}
             />
+          )}
+          {(filters.amount_min || filters.amount_max) && (
+            <Chip
+              icon="note"
+              label={`Valor ${filters.amount_min ? `≥ ${filters.amount_min}` : ""} ${filters.amount_max ? `≤ ${filters.amount_max}` : ""}`}
+              onClick={() => setOpenEditor("amount")}
+              onRemove={() => removeChip("amount")}
+            />
+          )}
+          {!!filters.observation && (
+            <Chip icon="note" label={`Observação  ${filters.observation}`} onClick={() => setOpenEditor("observation")} onRemove={() => removeChip("observation")} />
           )}
 
           <input
@@ -200,58 +284,145 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
           />
         </div>
 
-        {/* Dummy buttons to keep layout similar to references */}
-        <div className="hidden sm:block">
-          <Button variant="outline" size="sm" className="text-sm" aria-label="Configurações">
+        {/* Config */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Configurações"
+            onClick={() => setConfigOpen((v) => !v)}
+            className={`text-sm bg-white hover:bg-gray-50 ${configOpen ? "!bg-white !border-gray-400" : ""}`}
+          >
             ⚙️
           </Button>
+          {configOpen && (
+            <Popover onClose={() => setConfigOpen(false)}>
+              <div className="text-xs text-gray-700 space-y-2">
+                <div>
+                  <div className="font-semibold mb-1">Colunas</div>
+                  <ColumnsPicker value={config.columns} onChange={(cols) => setConfig((c) => ({ ...c, columns: cols }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="space-y-1">
+                    <span className="block">Ordenar por</span>
+                    <select
+                      className="w-full border border-gray-300 rounded px-2 py-1"
+                      value={config.sortBy}
+                      onChange={(e) => setConfig((c) => ({ ...c, sortBy: e.target.value as ColumnKey }))}
+                    >
+                      {["due_date","description","observation","gl_account","project","entity","amount","is_settled","installment_index"].map((k) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1">
+                    <span className="block">Direção</span>
+                    <select
+                      className="w-full border border-gray-300 rounded px-2 py-1"
+                      value={config.sortDir}
+                      onChange={(e) => setConfig((c) => ({ ...c, sortDir: e.target.value as SortDir }))}
+                    >
+                      <option value="asc">asc</option>
+                      <option value="desc">desc</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setConfigOpen(false)} className="bg-white hover:bg-gray-50">Fechar</Button>
+                  <Button variant="outline" size="sm" onClick={applyFilters} className="bg-white hover:bg-gray-50">Aplicar</Button>
+                </div>
+              </div>
+            </Popover>
+          )}
         </div>
-        <Button variant="outline" size="sm" className="font-semibold">
-          Salvar visualização
-        </Button>
-        <Button variant="outline" size="sm" className="font-semibold">
-          Agrupar por
-        </Button>
+
+        {/* Save visualization */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`font-semibold bg-white hover:bg-gray-50 ${saveOpen ? "!bg-white !border-gray-400" : ""}`}
+            onClick={() => setSaveOpen((v) => !v)}
+          >
+            Salvar visualização
+          </Button>
+          {saveOpen && (
+            <Popover onClose={() => setSaveOpen(false)}>
+              <div className="text-xs text-gray-700 space-y-2">
+                <label className="block space-y-1">
+                  <span>Nome</span>
+                  <input
+                    className="w-full border border-gray-300 rounded px-2 py-1"
+                    value={viewName}
+                    onChange={(e) => setViewName(e.target.value)}
+                    placeholder="Ex.: 'Pagamentos mês atual por projeto'"
+                  />
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <Checkbox checked={viewDefault} size="small" onChange={(e) => setViewDefault(e.target.checked)} />
+                  <span>Definir como padrão</span>
+                </label>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setSaveOpen(false)} className="bg-white hover:bg-gray-50">Cancelar</Button>
+                  <Button variant="outline" size="sm" onClick={saveVisualization} className="bg-white hover:bg-gray-50">Salvar</Button>
+                </div>
+              </div>
+            </Popover>
+          )}
+        </div>
+
+        {/* Load visualization */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`font-semibold bg-white hover:bg-gray-50 ${viewsMenuOpen ? "!bg-white !border-gray-400" : ""}`}
+            onClick={() => setViewsMenuOpen((v) => !v)}
+          >
+            Visualizações
+          </Button>
+          {viewsMenuOpen && (
+            <div className="absolute right-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
+              {(views.length ? views : []).map((v) => (
+                <MenuItem
+                  key={v.id}
+                  label={`${v.name}${(v).is_default ? " ⭐" : ""}`}
+                  onClick={() => {
+                    setViewsMenuOpen(false);
+                    applyVisualization(v);
+                  }}
+                />
+              ))}
+              {views.length === 0 && <div className="text-xs text-gray-500 px-2 py-1">Nenhuma visualização salva</div>}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Second row: filter actions */}
+      {/* Second row: actions */}
       <div className="mt-2 flex items-center gap-2 flex-wrap">
         {/* Add filter + menu */}
         <div className="relative" ref={menuRef}>
-          <Button variant="outline" size="sm" className="font-semibold" onClick={() => setMenuOpen((v) => !v)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className={`font-semibold bg-white hover:bg-gray-50 ${menuOpen ? "!bg-white !border-gray-400" : ""}`}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
             Adicionar filtro +
           </Button>
 
           {menuOpen && (
-            <div className="absolute left-0 top-full z-20 w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
-              <MenuItem
-                label="Período"
-                onClick={() => {
-                  setOpenEditor("date");
-                  setMenuOpen(false);
-                }}
-              />
-              <MenuItem
-                label="Banco"
-                onClick={() => {
-                  setOpenEditor("banks");
-                  setMenuOpen(false);
-                }}
-              />
-              <MenuItem
-                label="Conta contábil"
-                onClick={() => {
-                  setOpenEditor("accounts");
-                  setMenuOpen(false);
-                }}
-              />
-              <MenuItem
-                label="Observação"
-                onClick={() => {
-                  setOpenEditor("observation");
-                  setMenuOpen(false);
-                }}
-              />
+            <div
+              className="absolute left-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg"
+            >
+              <MenuItem label="Período" onClick={() => (setOpenEditor("date"), setMenuOpen(false))} />
+              <MenuItem label="Banco" onClick={() => (setOpenEditor("banks"), setMenuOpen(false))} />
+              <MenuItem label="Conta contábil" onClick={() => (setOpenEditor("accounts"), setMenuOpen(false))} />
+              <MenuItem label="Observação" onClick={() => (setOpenEditor("observation"), setMenuOpen(false))} />
+              <div className="my-1 border-t border-gray-200" />
+              <MenuItem label="Tipo (Receita/Despesa)" onClick={() => (setOpenEditor("tx_type"), setMenuOpen(false))} />
+              <MenuItem label="Valor (mín/máx)" onClick={() => (setOpenEditor("amount"), setMenuOpen(false))} />
             </div>
           )}
         </div>
@@ -266,13 +437,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
 
         {/* Apply */}
         <div className="ml-auto sm:ml-0">
-          <Button variant="outline" size="sm" className="font-semibold" onClick={applyFilters}>
+          <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={applyFilters}>
             Aplicar
           </Button>
         </div>
       </div>
 
-      {/* Editors: popovers without shadow (border only) */}
+      {/* Editors (border-only, no shadow) */}
       <div className="relative">
         {openEditor === "date" && (
           <Popover onClose={() => setOpenEditor(null)}>
@@ -297,19 +468,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               </label>
             </div>
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" onClick={() => removeChip("date")}>
-                Remover
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setOpenEditor(null);
-                  applyFilters();
-                }}
-              >
-                Aplicar
-              </Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>Remover</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>Aplicar</Button>
             </div>
           </Popover>
         )}
@@ -327,17 +487,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               customStyles={{ maxHeight: "240px" }}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="font-semibold" onClick={() => removeChip("banks")}>
-                Remover
-              </Button>
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("banks")}>Remover</Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="font-semibold"
-                onClick={() => {
-                  setOpenEditor(null);
-                  applyFilters();
-                }}
+                className="font-semibold bg-white hover:bg-gray-50"
+                onClick={() => (setOpenEditor(null), applyFilters())}
               >
                 Aplicar
               </Button>
@@ -351,12 +506,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               label="Contas contábeis"
               items={ledgerAccounts}
               selected={selectedAccounts}
-              onChange={(list) =>
-                setFilters((f) => ({
-                  ...f,
-                  gla_id: list.map((x) => getGlaId(x)),
-                }))
-              }
+              onChange={(list) => setFilters((f) => ({ ...f, gla_id: list.map((x) => getGlaId(x)) }))}
               getItemKey={(item) => getGlaId(item)}
               getItemLabel={(item) => item.name}
               buttonLabel="Selecionar contas"
@@ -364,17 +514,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               groupBy={(item) => item.subcategory || ""}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="font-semibold" onClick={() => removeChip("accounts")}>
-                Remover
-              </Button>
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("accounts")}>Remover</Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="font-semibold"
-                onClick={() => {
-                  setOpenEditor(null);
-                  applyFilters();
-                }}
+                className="font-semibold bg-white hover:bg-gray-50"
+                onClick={() => (setOpenEditor(null), applyFilters())}
               >
                 Aplicar
               </Button>
@@ -392,25 +537,61 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
               onChange={(e) => setFilters((f) => ({ ...f, observation: e.target.value }))}
             />
             <div className="flex justify-end gap-2 mt-3">
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("observation")}>Remover</Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="font-semibold"
-                onClick={() => removeChip("observation")}
-              >
-                Remover
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold"
-                onClick={() => {
-                  setOpenEditor(null);
-                  applyFilters();
-                }}
+                className="font-semibold bg-white hover:bg-gray-50"
+                onClick={() => (setOpenEditor(null), applyFilters())}
               >
                 Aplicar
               </Button>
+            </div>
+          </Popover>
+        )}
+
+        {openEditor === "tx_type" && (
+          <Popover onClose={() => setOpenEditor(null)}>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "credit" }))}>Receita</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "debit" }))}>Despesa</Button>
+            </div>
+            <div className="flex justify-end gap-2 mt-3">
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("tx_type")}>Remover</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>Aplicar</Button>
+            </div>
+          </Popover>
+        )}
+
+        {openEditor === "amount" && (
+          <Popover onClose={() => setOpenEditor(null)}>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs text-gray-600 space-y-1 block">
+                <span className="block">Mínimo (R$)</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
+                  value={filters.amount_min || ""}
+                  onChange={(e) => setFilters((f) => ({ ...f, amount_min: e.target.value }))}
+                />
+              </label>
+              <label className="text-xs text-gray-600 space-y-1 block">
+                <span className="block">Máximo (R$)</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
+                  value={filters.amount_max || ""}
+                  onChange={(e) => setFilters((f) => ({ ...f, amount_max: e.target.value }))}
+                />
+              </label>
+            </div>
+            <div className="flex justify-end gap-2 mt-3">
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>Remover</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>Aplicar</Button>
             </div>
           </Popover>
         )}
@@ -455,6 +636,27 @@ const Chip: React.FC<{
   );
 };
 
+const ColumnsPicker: React.FC<{
+  value: ColumnKey[];
+  onChange(v: ColumnKey[]): void;
+}> = ({ value, onChange }) => {
+  const all: ColumnKey[] = ["due_date","description","observation","gl_account","project","entity","amount","is_settled","installment_index"];
+  const toggle = (k: ColumnKey) => {
+    if (value.includes(k)) onChange(value.filter((x) => x !== k));
+    else onChange([...value, k]);
+  };
+  return (
+    <div className="flex flex-wrap gap-2">
+      {all.map((k) => (
+        <label key={k} className="inline-flex items-center gap-1 text-xs">
+          <Checkbox checked={value.includes(k)} size="small" onChange={() => toggle(k)} />
+          <span>{k}</span>
+        </label>
+      ))}
+    </div>
+  );
+};
+
 const MenuItem: React.FC<{ label: string; onClick(): void }> = ({ label, onClick }) => (
   <button className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50" onClick={onClick}>
     {label}
@@ -464,9 +666,8 @@ const MenuItem: React.FC<{ label: string; onClick(): void }> = ({ label, onClick
 const Popover: React.FC<{ children: React.ReactNode; onClose(): void }> = ({ children, onClose }) => {
   const ref = useRef<HTMLDivElement>(null);
   useOutside(ref, onClose);
-  // Sem sombra aqui (apenas borda), conforme especificação do componente
   return (
-    <div className="absolute z-20 mt-2 w-full max-w-sm">
+    <div className="absolute z-[99999] mt-2">
       <div ref={ref} className="rounded-md border border-gray-300 bg-white p-3">
         {children}
       </div>

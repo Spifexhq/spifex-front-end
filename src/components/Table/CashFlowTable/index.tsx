@@ -1,3 +1,4 @@
+// src/components/Table/CashFlowTable/index.tsx
 import React, {
   useEffect,
   useState,
@@ -429,19 +430,39 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
     const buildPayload = useCallback((reset: boolean): GetEntryRequest => {
       const f = latest.current.filters;
+
+      // Optional: you can send direct fields AND/OR "q"
       const qCombined =
         (f?.description ? String(f.description).trim() : "") +
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const gl = f?.gla_id && f.gla_id.length ? f.gla_id.join(",") : undefined;
+      // Backend expects single gl; pick the first if multiple selected
+      const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
+
+      // Map tx_type "credit"/"debit" -> 1 / -1 (backend list expects int)
+      const tx_type =
+        f?.tx_type === "credit" ? 1 :
+        f?.tx_type === "debit"  ? -1 :
+        undefined;
 
       const base: GetEntryRequest = {
         page_size: 100,
         date_from: f?.start_date || undefined,
-        date_to: f?.end_date || undefined,
+        date_to:   f?.end_date   || undefined,
+
+        // text
+        description: f?.description || undefined,
+        observation: f?.observation || undefined,
         q,
+
+        // categorical
         gl,
+        tx_type,
+
+        // amounts already in MINOR units (FilterBar → toEntryFilters did the conversion)
+        amount_min: f?.amount_min,
+        amount_max: f?.amount_max,
       };
 
       if (!reset && latest.current.nextCursor) {

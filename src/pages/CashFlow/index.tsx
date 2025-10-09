@@ -10,6 +10,7 @@ import { api } from "src/api/requests";
 import KpiRow from "src/components/KPI/KpiRow";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
+import { ConfigState } from "src/models/entries/domain";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -39,7 +40,18 @@ const CashFlow = () => {
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
   const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.tx_type as ModalType); setIsModalOpen(true); };
-  const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
+
+  // ✅ Accept the payload shape from FilterBar, set filters, and refresh views
+  const handleApplyFilters = useCallback(
+    ({ filters: newFilters }: { filters: EntryFilters; config?: ConfigState }) => {
+      setFilters(newFilters);
+      // Refresh everything immediately
+      setCashflowKey((k) => k + 1);
+      setBanksKey((k) => k + 1);
+      setKpiRefresh((k) => k + 1);
+    },
+    []
+  );
 
   const handleSelectionChange = useCallback((ids: string[], rows: Entry[]) => {
     setSelectedIds(ids);
@@ -57,12 +69,9 @@ const CashFlow = () => {
         mode="default"
       />
 
-      {/* Main Content */}
-      <div
-        className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        {/* Push main content below the fixed Navbar */}
-        <div
-          className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+      <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
+        <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+          {/* ✅ pass the correct handler signature */}
           <FilterBar onApply={handleApplyFilters} />
 
           <KpiRow
@@ -79,7 +88,6 @@ const CashFlow = () => {
             }}
           />
 
-          {/* Table row fills the rest — enables inner scrolling */}
           <div className="min-h-0 h-full">
             <CashFlowTable
               ref={tableRef}
@@ -101,7 +109,6 @@ const CashFlow = () => {
               onLiquidate={() => setIsSettlementModalOpen(true)}
               onDelete={async () => {
                 try {
-                  // api.deleteEntry espera string (um id), não array
                   await Promise.all(selectedIds.map((id) => api.deleteEntry(id)));
                   setCashflowKey((prev) => prev + 1);
                   setKpiRefresh((k) => k + 1);
@@ -158,7 +165,6 @@ const CashFlow = () => {
             setKpiRefresh((k) => k + 1);
             setSelectedIds([]);
           }}
-          // 🔸 pass banks data to modal too
           banksData={{
             banks,
             loading: banksLoading,

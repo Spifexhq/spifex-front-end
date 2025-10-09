@@ -5,4 +5,7 @@ export type EntryFilters = {
     observation?: string;
     gla_id?: string[];
     bank_id?: string[];
+    tx_type?: "credit" | "debit";
+    amount_min?: number;
+    amount_max?: number;
   };

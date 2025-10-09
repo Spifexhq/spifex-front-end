@@ -10,6 +10,9 @@ export interface GetEntryRequest {
   date_to?: string;   // YYYY-MM-DD
   q?: string;         // free text over description/observation/notes
 
+  description?: string;   // backend supports icontains on description
+  observation?: string;   // backend supports icontains on observation
+
   gl?: string;        // GL external_id (CSV if multiple)
   project?: string;   // Project external_id
   entity?: string;    // Entity external_id

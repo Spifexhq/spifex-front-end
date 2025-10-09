@@ -225,6 +225,55 @@ export const api = {
 
   deleteTask: (ids: number[]) =>
     request<TaskDetail>(`companies/tasks/${ids.join(',')}`, 'DELETE'),
+
+  /* --- Entries: saved views --- */
+  getEntryViews: () => {
+    const org = getOrgExternalId();
+    return request<Array<{
+      id: string;
+      name: string;
+      is_default: boolean;
+      config: unknown;
+      filters: unknown;
+    }>>(`cashflow/${org}/entry-views/`, "GET");
+  },
+
+  addEntryView: (payload: {
+    name: string;
+    is_default?: boolean;
+    config: unknown;
+    filters: unknown;
+  }) => {
+    const org = getOrgExternalId();
+    return request<{
+      id: string;
+      name: string;
+      is_default: boolean;
+      config: unknown;
+      filters: unknown;
+    }>(`cashflow/${org}/entry-views/`, "POST", payload);
+  },
+
+  editEntryView: (viewId: string, payload: {
+    name?: string;
+    is_default?: boolean;
+    config?: unknown;
+    filters?: unknown;
+  }) => {
+    const org = getOrgExternalId();
+    return request<{
+      id: string;
+      name: string;
+      is_default: boolean;
+      config: unknown;
+      filters: unknown;
+    }>(`cashflow/${org}/entry-views/${viewId}/`, "PATCH", payload);
+  },
+
+  deleteEntryView: (viewId: string) => {
+    const org = getOrgExternalId();
+    return request<void>(`cashflow/${org}/entry-views/${viewId}/`, "DELETE");
+  },
   
   /* --- Cash-flow Entries --- */
   getEntries: (payload: GetEntryRequest) => {
