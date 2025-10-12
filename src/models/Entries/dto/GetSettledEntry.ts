@@ -5,22 +5,23 @@ export interface GetSettledEntryRequest {
   page_size?: number;
   cursor?: string;
 
-  /** filter by settlement value_date range */
-  value_from?: string; // YYYY-MM-DD
-  value_to?: string;   // YYYY-MM-DD
+  // existing
+  value_from?: string;          // YYYY-MM-DD
+  value_to?: string;            // YYYY-MM-DD
+  bank?: string;                // single bank external_id (as used today)
+  q?: string;                   // free text
 
-  /** filter by "settled_on" (when settlement was created) */
-  settled_from?: string; // YYYY-MM-DD
-  settled_to?: string;   // YYYY-MM-DD
+  // ✅ add these to match backend filters (parallel to entries)
+  description?: string;         // icontains
+  observation?: string;         // icontains
 
-  /** bank external_id */
-  bank?: string;
+  gl?: string;                  // GL external_id (first selected)
+  project?: string;             // if you want later
+  entity?: string;              // if you want later
 
-  /** entry external_id */
-  entry?: string;
-
-  /** free text over entry.{description,observation,notes,document_type} */
-  q?: string;
+  tx_type?: number;             // -1 | 1
+  amount_min?: number;          // minor units
+  amount_max?: number;          // minor units
 }
 
 export interface SECursorLinks {

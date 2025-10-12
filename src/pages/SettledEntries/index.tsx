@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
+import type { ConfigState } from "src/models/entries/domain";
 import { ModalType } from "@/components/Modal/Modal.types";
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
@@ -38,7 +39,17 @@ const Settled = () => {
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
-  const handleApplyFilters = (newFilters: EntryFilters) => setFilters(newFilters);
+
+  // ✅ Same pattern as CashFlow: accept FilterBar payload and refresh everything
+  const handleApplyFilters = useCallback(
+    ({ filters: newFilters }: { filters: EntryFilters; config?: ConfigState }) => {
+      setFilters(newFilters);
+      setTableKey((k) => k + 1);
+      setBanksKey((k) => k + 1);
+      setKpiRefresh((k) => k + 1);
+    },
+    []
+  );
 
   const selectedAsMinimal: MinimalEntry[] = selectedEntries.map((e) => ({
     amount: e.amount,
@@ -65,6 +76,7 @@ const Settled = () => {
 
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+          {/* ✅ passes the correct handler signature */}
           <FilterBar onApply={handleApplyFilters} />
 
           <KpiRow

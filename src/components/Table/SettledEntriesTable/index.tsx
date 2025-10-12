@@ -335,20 +335,44 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
 
     const buildPayload = useCallback((reset: boolean): GetSettledEntryRequest => {
       const f = latest.current.filters;
+
+      // combine text
       const qCombined =
         (f?.description ? String(f.description).trim() : "") +
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
+      // one bank (API expects one; you already filter multiple locally)
       const banks = (f?.bank_id ?? []).map(String);
       const bank = banks.length === 1 ? banks[0] : undefined;
 
+      // first GL (keep same behavior as open entries table)
+      const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
+
+      // "credit"/"debit" -> 1 / -1
+      const tx_type =
+        f?.tx_type === "credit" ? 1 :
+        f?.tx_type === "debit"  ? -1 :
+        undefined;
+
       const base: GetSettledEntryRequest = {
         page_size: 100,
-        value_from: f?.start_date || undefined,
-        value_to: f?.end_date || undefined,
+        value_from:  f?.start_date || undefined,
+        value_to:    f?.end_date   || undefined,
+
         bank,
         q,
+
+        // ✅ new direct fields the backend supports
+        description: f?.description || undefined,
+        observation: f?.observation || undefined,
+
+        gl,
+        tx_type,
+
+        // ✅ amounts are already in MINOR units (FilterBar does the conversion)
+        amount_min: f?.amount_min,
+        amount_max: f?.amount_max,
       };
 
       const cursor = latest.current.nextCursor;
@@ -410,16 +434,22 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       setNextCursor(null);
       latest.current.nextCursor = null;
       setEntries([]);
-      // reseta o scroll para não “travar” em um fundo antigo
       if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
       void fetchEntries(true);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
+      // existing
       filters?.start_date,
       filters?.end_date,
       filters?.description,
       filters?.observation,
       filters?.bank_id,
+
+      // ✅ new
+      filters?.gla_id,
+      filters?.tx_type,
+      filters?.amount_min,
+      filters?.amount_max,
     ]);
 
     // scroll infinito
