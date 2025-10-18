@@ -23,9 +23,14 @@ export interface GetEntryRequest {
   group?: string;     // installment_group_id
   tx_type?: number;   // if you need it: backend accepts TxType enum ints
   settled?: "1" | "0" | "true" | "false" | "yes" | "no"; // accepted; server enforces false for list
+
+  bank?: string;
+  running_seed_minor?: number;
+  running_seed?: string;
 }
 
 export interface CursorLinks {
+  count: number;
   next: string | null;
   previous: string | null;
 }

@@ -11,9 +11,7 @@ import { api } from "src/api/requests";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
 import { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
-import { useBanks } from "@/hooks/useBanks";
 import { getCursorFromUrl } from "src/lib/list";
-// Removed InlineLoader usage per your request
 import Checkbox from "@/components/Checkbox";
 
 /* ------------------------------ Helpers ----------------------------------- */
@@ -50,6 +48,18 @@ const isCredit = (t: string | null | undefined) =>
 const txValue = (e: SettledEntry) => {
   const n = parseFloat(e.amount) || 0;
   return isCredit(e.tx_type) ? n : -n;
+};
+
+/** lê o running do servidor; prefere *_minor (centavos → reais) */
+const getServerRunning = (e: SettledEntry): number | null => {
+  if (typeof e.running_balance_minor === "number") {
+    return e.running_balance_minor / 100;
+  }
+  if (typeof e.running_balance === "string" && e.running_balance.length) {
+    const n = Number(e.running_balance);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 };
 
 /* ------------------------------ Tipos ------------------------------------- */
@@ -303,10 +313,6 @@ const BottomLoader: React.FC = () => (
 
 const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
   ({ filters, onSelectionChange }, ref) => {
-    const { totalConsolidatedBalance, loading: loadingBanks } = useBanks(
-      filters?.bank_id as string[] | undefined
-    );
-
     const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -328,11 +334,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       latest.current = { filters, nextCursor, isFetching };
     }, [filters, nextCursor, isFetching]);
 
-    const selectedBankIds = useMemo(
-      () => new Set((filters?.bank_id ?? []).map(String)),
-      [filters?.bank_id]
-    );
-
     const buildPayload = useCallback((reset: boolean): GetSettledEntryRequest => {
       const f = latest.current.filters;
 
@@ -342,11 +343,13 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      // one bank (API expects one; you already filter multiple locally)
-      const banks = (f?.bank_id ?? []).map(String);
-      const bank = banks.length === 1 ? banks[0] : undefined;
+      // ✅ bancos em CSV (0..n)
+      const bank =
+        Array.isArray(f?.bank_id) && f!.bank_id!.length
+          ? f!.bank_id!.map(String).join(",")
+          : undefined;
 
-      // first GL (keep same behavior as open entries table)
+      // first GL (mesmo comportamento da tabela de abertos)
       const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
 
       // "credit"/"debit" -> 1 / -1
@@ -363,14 +366,14 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         bank,
         q,
 
-        // ✅ new direct fields the backend supports
+        // campos diretos
         description: f?.description || undefined,
         observation: f?.observation || undefined,
 
         gl,
         tx_type,
 
-        // ✅ amounts are already in MINOR units (FilterBar does the conversion)
+        // valores em MINOR units (FilterBar converte)
         amount_min: f?.amount_min,
         amount_max: f?.amount_max,
       };
@@ -386,7 +389,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         if (fetchingRef.current) return;
         fetchingRef.current = true;
 
-        // guard sincronizado no ref (evita corrida)
         setIsFetching(true);
         latest.current.isFetching = true;
 
@@ -409,11 +411,11 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
                 ]
           );
 
-          // Extrai cursor da resposta e sincroniza no ref imediatamente
+          // cursor
           const nextUrl = (data as GetSettledEntry).next;
           const cursor = getCursorFromUrl(nextUrl) ?? null;
           setNextCursor(cursor);
-          latest.current.nextCursor = cursor; // crítico p/ não voltar à página 1
+          latest.current.nextCursor = cursor;
           setHasMore(Boolean(cursor));
           setError(null);
         } catch (err) {
@@ -438,62 +440,32 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       void fetchEntries(true);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-      // existing
       filters?.start_date,
       filters?.end_date,
       filters?.description,
       filters?.observation,
       filters?.bank_id,
-
-      // ✅ new
       filters?.gla_id,
       filters?.tx_type,
       filters?.amount_min,
       filters?.amount_max,
     ]);
 
-    // scroll infinito
-    const handleInnerScroll = useCallback(() => {
-      const el = scrollerRef.current;
-      if (!el || isFetching || !hasMore) return;
-      const threshold = 150;
-      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
-      if (nearBottom) void fetchEntries(false);
-    }, [isFetching, hasMore, fetchEntries]);
-
-    // 1ª página não preenche
-    useEffect(() => {
-      const el = scrollerRef.current;
-      if (!el) return;
-      if (!loading && hasMore && el.scrollHeight <= el.clientHeight + 50) {
-        void fetchEntries(false);
-      }
-    }, [loading, hasMore, entries.length, fetchEntries]);
-
-    // filtro local de bancos
-    const visibleEntries = useMemo(() => {
-      if (selectedBankIds.size === 0) return entries;
-      return entries.filter((e) => {
-        const bId = e.bank?.id;
-        return bId ? selectedBankIds.has(String(bId)) : false;
-      });
-    }, [entries, selectedBankIds]);
-
-    // seleção
+    // seleção (agora sobre o array completo devolvido pelo servidor)
     const {
       selectedIds: selectedNumIds,
       handleSelectRow,
       handleSelectAll,
       clearSelection,
-    } = useShiftSelect<SettledEntry, number>(visibleEntries, (e) => hash32(e.external_id));
+    } = useShiftSelect<SettledEntry, number>(entries, (e) => hash32(e.external_id));
 
     useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
 
     const numIdToEntry = useMemo(() => {
       const m = new Map<number, SettledEntry>();
-      for (const e of visibleEntries) m.set(hash32(e.external_id), e);
+      for (const e of entries) m.set(hash32(e.external_id), e);
       return m;
-    }, [visibleEntries]);
+    }, [entries]);
 
     useEffect(() => {
       const rows = selectedNumIds
@@ -503,60 +475,58 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       onSelectionChange?.(extIds, rows);
     }, [selectedNumIds, numIdToEntry, onSelectionChange]);
 
-    // linhas (apenas visíveis)
+    // linhas (somários por mês usando o running do servidor)
     const rows = useMemo<TableRow[]>(() => {
-      if (loadingBanks || !visibleEntries.length) return [];
+      if (!entries.length) return [];
 
-      let revBal = totalConsolidatedBalance ?? 0;
-      const revBalances = new Array(visibleEntries.length).fill(0);
-      for (let i = visibleEntries.length - 1; i >= 0; i--) {
-        revBalances[i] = revBal;
-        const amt = parseFloat(visibleEntries[i].amount) || 0;
-        revBal += isCredit(visibleEntries[i].tx_type) ? -amt : +amt;
-      }
-
-      const out: TableRow[] = [];
       let currentMonth = "";
       let monthlySum = 0;
+      const out: TableRow[] = [];
 
-      visibleEntries.forEach((e, idx) => {
-        const mKey = getMonthYear(e.value_date);
+      entries.forEach((e, idx) => {
+        const monthKey = getMonthYear(e.value_date);
         const val = txValue(e);
 
-        if (currentMonth && currentMonth !== mKey) {
+        if (currentMonth && currentMonth !== monthKey) {
+          // running = saldo da última linha do mês anterior
+          const lastRow = out[out.length - 1];
+          const lastRunning =
+            lastRow?.type === "entry" ? lastRow.runningBalance : 0;
+
           out.push({
             id: `summary-${currentMonth}-${idx}`,
             type: "summary",
             displayMonth: currentMonth,
             monthlySum,
-            runningBalance: revBalances[idx - 1],
+            runningBalance: lastRunning,
           });
           monthlySum = 0;
         }
-        if (!currentMonth || currentMonth !== mKey) currentMonth = mKey;
+        if (!currentMonth || currentMonth !== monthKey) currentMonth = monthKey;
 
         monthlySum += val;
 
+        const serverRunning = getServerRunning(e) ?? 0;
         out.push({
           id: `entry-${e.external_id}`,
           type: "entry",
           entry: e,
-          runningBalance: revBalances[idx],
+          runningBalance: serverRunning,
         });
 
-        if (idx === visibleEntries.length - 1) {
+        if (idx === entries.length - 1) {
           out.push({
             id: `summary-${currentMonth}-final`,
             type: "summary",
             displayMonth: currentMonth,
             monthlySum,
-            runningBalance: revBalances[idx],
+            runningBalance: serverRunning,
           });
         }
       });
 
       return out;
-    }, [visibleEntries, totalConsolidatedBalance, loadingBanks]);
+    }, [entries]);
 
     /* ------------------------------ Virtualização -------------------------- */
     const ENTRY_ROW_H = 42;   // h-10.5 ≈ 42px
@@ -607,7 +577,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     const endIndex = useMemo(() => {
       const limit = scrollTop + (viewportH || 0);
       let i = startIndex;
-      // usa offset da PRÓXIMA linha pra garantir inclusão da última parcialmente visível
       while (i < rowHeights.length && rowOffsets[i + 1] <= limit) i++;
       return Math.min(rowHeights.length - 1, i + OVERSCAN);
     }, [startIndex, scrollTop, viewportH, rowHeights.length, rowOffsets]);
@@ -642,10 +611,10 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         aria-label="Entradas liquidadas"
         className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
       >
-        {/* Header sempre visível para layout estável */}
+        {/* Header sempre visível */}
         <TableHeader
           selectedCount={selectedNumIds.length}
-          totalCount={visibleEntries.length}
+          totalCount={entries.length}
           onSelectAll={handleSelectAll}
         />
 
@@ -653,20 +622,21 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           ref={scrollerRef}
           onScroll={(e) => {
             setScrollTop(e.currentTarget.scrollTop); // virtualização
-            handleInnerScroll();                      // infinite scroll
+            if (!isFetching && hasMore) {
+              const el = e.currentTarget;
+              const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 150;
+              if (nearBottom) void fetchEntries(false);
+            }
           }}
           className="flex-1 min-h-0 overflow-y-auto"
         >
-          {/* Initial load -> table skeleton */}
           {loading && !entries.length ? (
             <TableSkeleton rows={Math.max(10, Math.ceil((viewportH || 400) / 42))} />
           ) : rows.length === 0 ? (
             <EmptyState />
           ) : (
             <div className="divide-y divide-gray-200 relative">
-              {/* trilho */}
               <div style={{ height: totalHeight, position: "relative" }}>
-                {/* janela */}
                 <div
                   style={{
                     position: "absolute",
@@ -699,7 +669,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           )}
         </div>
 
-        {/* Footer loader fora da tabela/scroll */}
         {loadingMore && <BottomLoader />}
       </section>
     );

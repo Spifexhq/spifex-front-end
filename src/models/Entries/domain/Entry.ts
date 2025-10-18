@@ -40,4 +40,7 @@ export interface Entry {
 
   departments: DepartmentAllocation[]; // snapshot list
   items: InventoryAllocation[];        // snapshot list
+
+  running_balance_minor?: number | null;
+  running_balance?: string | null;
 }

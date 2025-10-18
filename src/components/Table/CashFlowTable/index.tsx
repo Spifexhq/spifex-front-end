@@ -9,7 +9,6 @@ import React, {
   forwardRef,
 } from "react";
 import Button from "@/components/Button";
-// Removed InlineLoader usage per request
 import Checkbox from "@/components/Checkbox";
 import { api } from "src/api/requests";
 import { getCursorFromUrl } from "src/lib/list";
@@ -21,7 +20,6 @@ import type {
 } from "src/models/entries/dto/GetEntry";
 
 import { useShiftSelect } from "@/hooks/useShiftSelect";
-import { useBanks } from "@/hooks/useBanks";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers (strongly typed to backend EntryReadSerializer)                    */
@@ -39,6 +37,23 @@ const getInstallments = (e: Entry) => ({
   index: e.installment_index ?? null,
   count: e.installment_count ?? null,
 });
+
+/**
+ * Reads the backend-provided running balance.
+ * Prefer *_minor if present (convert minor->major). Fallback to decimal string.
+ * NOTE: assumes 2 decimal places (BRL). If you support multi-currency with different
+ * exponents, adapt this conversion.
+ */
+const getServerRunning = (e: Entry): number | null => {
+  if (typeof e.running_balance_minor === "number") {
+    return e.running_balance_minor / 100; // minor -> major
+  }
+  if (typeof e.running_balance === "string" && e.running_balance.length) {
+    const n = Number(e.running_balance);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+};
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -99,6 +114,7 @@ const formatMonthYearSummary = (isoDate: string): string => {
   return `${months[d.getMonth()]}, ${d.getFullYear()}`;
 };
 
+/** + for credits, - for debits (major units) */
 const getTransactionValue = (entry: Entry): number => {
   const amount = getAmount(entry);
   return isCredit(entry) ? amount : -amount;
@@ -386,10 +402,6 @@ const BottomLoader: React.FC = () => (
 
 const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
   ({ filters, onEdit, onSelectionChange }, ref) => {
-    const { totalConsolidatedBalance = 0, loading: loadingBanks } = useBanks(
-      filters?.bank_id
-    );
-
     // Data
     const [entries, setEntries] = useState<Entry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -431,38 +443,39 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const buildPayload = useCallback((reset: boolean): GetEntryRequest => {
       const f = latest.current.filters;
 
-      // Optional: you can send direct fields AND/OR "q"
       const qCombined =
         (f?.description ? String(f.description).trim() : "") +
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      // Backend expects single gl; pick the first if multiple selected
       const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
-
-      // Map tx_type "credit"/"debit" -> 1 / -1 (backend list expects int)
       const tx_type =
         f?.tx_type === "credit" ? 1 :
         f?.tx_type === "debit"  ? -1 :
         undefined;
+
+      // NEW: bancos em CSV para o seed do backend
+      const bank =
+        Array.isArray(f?.bank_id) && f!.bank_id!.length
+          ? f!.bank_id!.join(",")
+          : undefined;
 
       const base: GetEntryRequest = {
         page_size: 100,
         date_from: f?.start_date || undefined,
         date_to:   f?.end_date   || undefined,
 
-        // text
         description: f?.description || undefined,
         observation: f?.observation || undefined,
         q,
 
-        // categorical
         gl,
         tx_type,
 
-        // amounts already in MINOR units (FilterBar → toEntryFilters did the conversion)
         amount_min: f?.amount_min,
         amount_max: f?.amount_max,
+
+        bank, // <--- aqui
       };
 
       if (!reset && latest.current.nextCursor) {
@@ -549,23 +562,27 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
     /* ------------------------- Build rows + summaries ---------------------- */
     const tableRows = useMemo((): TableRow[] => {
-      if (loadingBanks || !entries.length) return [];
+      if (!entries.length) return [];
 
       let currentMonth = "";
       let monthlySum = 0;
-      let runningBalance = totalConsolidatedBalance;
       const rows: TableRow[] = [];
 
       entries.forEach((entry, index) => {
-        const txValue = getTransactionValue(entry);
+        const txValue = getTransactionValue(entry); // major units
         const entryMonth = getMonthYear(getDueDate(entry));
 
+        // Month change → flush summary for previous month
         if (currentMonth && currentMonth !== entryMonth) {
+          const lastRow = rows[rows.length - 1];
+          const lastRunning =
+            lastRow?.type === "entry" ? lastRow.runningBalance ?? 0 : 0;
+
           rows.push({
             id: `summary-${currentMonth}-${index}`,
             type: "summary",
             monthlySum,
-            runningBalance,
+            runningBalance: lastRunning,
             displayMonth: currentMonth,
           });
           monthlySum = 0;
@@ -576,7 +593,10 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         }
 
         monthlySum += txValue;
-        runningBalance += txValue;
+
+        // ✅ Use backend running balance per row (pagination-safe)
+        const serverRunning = getServerRunning(entry);
+        const runningBalance = serverRunning ?? 0;
 
         rows.push({
           id: `entry-${getId(entry)}`,
@@ -585,6 +605,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           runningBalance,
         });
 
+        // Close last month at the very end
         if (index === entries.length - 1) {
           rows.push({
             id: `summary-${currentMonth}-final`,
@@ -597,7 +618,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       });
 
       return rows;
-    }, [entries, totalConsolidatedBalance, loadingBanks]);
+    }, [entries]);
 
     /* ------------------------------ Virtualização -------------------------- */
     const ENTRY_ROW_H = 42; // ≈ h-10.5

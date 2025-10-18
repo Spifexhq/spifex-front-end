@@ -1,27 +1,33 @@
-import { SettledEntry } from "../domain";
+import { SettledEntry } from "../domain/SettledEntry";
 
-/** Matches /cashflow/settlements/ list query */
+/** Query da lista de settlements (root) */
 export interface GetSettledEntryRequest {
   page_size?: number;
   cursor?: string;
 
-  // existing
-  value_from?: string;          // YYYY-MM-DD
-  value_to?: string;            // YYYY-MM-DD
-  bank?: string;                // single bank external_id (as used today)
-  q?: string;                   // free text
+  // período (datas de valor)
+  value_from?: string; // YYYY-MM-DD
+  value_to?: string;   // YYYY-MM-DD
 
-  // ✅ add these to match backend filters (parallel to entries)
-  description?: string;         // icontains
-  observation?: string;         // icontains
+  /**
+   * ✅ bancos como CSV de external_ids (ex.: "b1,b2,b3")
+   * o backend já aceita CSV (e usa para o seed do consolidated balance).
+   */
+  bank?: string;
 
-  gl?: string;                  // GL external_id (first selected)
-  project?: string;             // if you want later
-  entity?: string;              // if you want later
+  // texto livre e filtros diretos
+  q?: string;
+  description?: string; // icontains
+  observation?: string; // icontains
 
-  tx_type?: number;             // -1 | 1
-  amount_min?: number;          // minor units
-  amount_max?: number;          // minor units
+  // categóricos
+  gl?: string;
+  project?: string;
+  entity?: string;
+
+  tx_type?: number;   // 1 (credit) | -1 (debit)
+  amount_min?: number; // minor units (centavos)
+  amount_max?: number; // minor units
 }
 
 export interface SECursorLinks {
@@ -31,13 +37,11 @@ export interface SECursorLinks {
 
 export interface GetSettledEntry extends SECursorLinks {
   results: SettledEntry[];
+  // (opcionalmente o backend envia:)
+  running_seed_minor?: number;
+  running_seed?: string;
 }
 
-/**
- * Single-settlement PATCH payload (server allows updating value_date only).
- * For creating settlements you POST to /entries/{entry_id}/settlements/
- * with { bank_id, amount | amount_minor, value_date } — that uses a different DTO.
- */
 export interface EditSettledEntryRequest {
   value_date: string; // YYYY-MM-DD
 }
