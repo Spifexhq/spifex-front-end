@@ -28,6 +28,8 @@ export interface GetSettledEntryRequest {
   tx_type?: number;   // 1 (credit) | -1 (debit)
   amount_min?: number; // minor units (centavos)
   amount_max?: number; // minor units
+
+  include_inactive?: boolean,
 }
 
 export interface SECursorLinks {

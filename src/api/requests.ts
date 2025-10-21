@@ -362,16 +362,17 @@ export const api = {
   /* --- Settled Entries --- */
   getSettledEntries: (payload: GetSettledEntryRequest) => {
     const orgExternalId = getOrgExternalId();
+    const params = { include_inactive: true, ...payload };
     return request<GetSettledEntry>(
       `cashflow/${orgExternalId}/settlements/`,
       "GET",
-      payload
+      params
     );
   },
 
   getSettledEntry: (ids: string[], payload?: GetSettledEntryRequest) => {
     const orgExternalId = getOrgExternalId();
-    const params = { ...(payload || {}), ids: ids.join(",") };
+    const params = { include_inactive: true, ...(payload || {}), ids: ids.join(",") };
     return request<SettledEntry[]>(
       `cashflow/${orgExternalId}/settlements/batch/`,
       "GET",
@@ -409,11 +410,14 @@ export const api = {
   },
 
   /* --- Banks --- */
-  getAllBanks: () => {
+  getAllBanks: (active?: boolean) => {
     const orgExternalId = getOrgExternalId();
+    const params = active == null ? undefined : { active: active ? "true" : "false" };
+
     return request<Paginated<BankAccount>>(
       `banking/${orgExternalId}/banking/accounts/`,
-      "GET"
+      "GET",
+      params
     );
   },
 

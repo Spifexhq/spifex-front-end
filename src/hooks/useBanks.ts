@@ -11,27 +11,23 @@ type State = {
 };
 
 function toKey(id: unknown) { return String(id); }
-
 function computeTotal(list: BankAccount[]) {
   return list.reduce((s, b) => s + Number(b.consolidated_balance ?? 0), 0);
 }
 
 type HttpLikeError = {
-  response?: {
-    status?: number;
-    headers?: Record<string, string | string[] | undefined>;
-  };
+  response?: { status?: number; headers?: Record<string, string | string[] | undefined>; };
 };
 
-// Backoff apenas para 429 (mantido; não é cache)
-async function getAllBanksWithBackoff() {
-  let delay = 300;        // ms
-  const maxDelay = 5000;  // ms
+// 🔁 recebe o filtro de “ativos” e repassa para a API com backoff
+async function getAllBanksWithBackoff(active?: boolean) {
+  let delay = 300;
+  const maxDelay = 5000;
   const maxTries = 5;
 
   for (let attempt = 0; attempt < maxTries; attempt++) {
     try {
-      const { data } = await api.getAllBanks(); // Paginated<BankAccount>
+      const { data } = await api.getAllBanks(active); // ← passa o booleano
       return data;
     } catch (err: unknown) {
       const e = err as HttpLikeError;
@@ -39,9 +35,7 @@ async function getAllBanksWithBackoff() {
       if (status === 429 && attempt < maxTries - 1) {
         const raHeader = e.response?.headers?.["retry-after"];
         const ra = Array.isArray(raHeader) ? raHeader[0] : raHeader;
-        const wait = ra && !Number.isNaN(Number(ra))
-          ? Number(ra) * 1000
-          : delay + Math.floor(Math.random() * delay);
+        const wait = ra && !Number.isNaN(Number(ra)) ? Number(ra) * 1000 : delay + Math.floor(Math.random() * delay);
         await new Promise((r) => setTimeout(r, wait));
         delay = Math.min(delay * 2, maxDelay);
         continue;
@@ -52,15 +46,22 @@ async function getAllBanksWithBackoff() {
   throw new Error("Falha ao carregar bancos (limite de tentativas).");
 }
 
+/**
+ * useBanks
+ * @param selectedBankIds  lista opcional de IDs para filtrar localmente
+ * @param refreshKey       bump para refetch
+ * @param active           filtro remoto: true=ativos, false=inativos, undefined=todos
+ */
 export function useBanks(
   selectedBankIds?: Array<string | number>,
-  refreshKey: number = 0 // aumente para forçar nova busca
+  refreshKey: number = 0,
+  active?: boolean
 ): State {
   const [allBanks, setAllBanks] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Busca sempre no mount e quando refreshKey mudar
+  // Busca sempre no mount / refreshKey / active
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -68,7 +69,7 @@ export function useBanks(
 
     (async () => {
       try {
-        const data = await getAllBanksWithBackoff();
+        const data = await getAllBanksWithBackoff(active);
         const list: BankAccount[] = data?.results ?? [];
         if (!alive) return;
         setAllBanks(list);
@@ -82,24 +83,19 @@ export function useBanks(
     })();
 
     return () => { alive = false; };
-  }, [refreshKey]);
+  }, [refreshKey, active]); // ← depende do filtro
 
-  // Conjunto estável de IDs selecionados
   const selectedIdsSet = useMemo(
     () => new Set((selectedBankIds ?? []).map(toKey)),
     [selectedBankIds]
   );
 
-  // Filtrados sem disparar rede
   const banks = useMemo(() => {
     if (!selectedBankIds?.length) return allBanks;
     return allBanks.filter((b) => selectedIdsSet.has(toKey(b.id)));
   }, [allBanks, selectedBankIds, selectedIdsSet]);
 
-  const totalConsolidatedBalance = useMemo(
-    () => computeTotal(banks),
-    [banks]
-  );
+  const totalConsolidatedBalance = useMemo(() => computeTotal(banks), [banks]);
 
   return { banks, totalConsolidatedBalance, loading, error };
 }

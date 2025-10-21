@@ -35,7 +35,7 @@ const CashFlow = () => {
     totalConsolidatedBalance,
     loading: banksLoading,
     error: banksError,
-  } = useBanks(undefined, banksKey);
+  } = useBanks(undefined, banksKey, true);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
@@ -45,7 +45,6 @@ const CashFlow = () => {
   const handleApplyFilters = useCallback(
     ({ filters: newFilters }: { filters: EntryFilters; config?: ConfigState }) => {
       setFilters(newFilters);
-      // Refresh everything immediately
       setCashflowKey((k) => k + 1);
       setBanksKey((k) => k + 1);
       setKpiRefresh((k) => k + 1);
@@ -71,8 +70,8 @@ const CashFlow = () => {
 
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          {/* ✅ pass the correct handler signature */}
-          <FilterBar onApply={handleApplyFilters} />
+
+          <FilterBar onApply={handleApplyFilters} bankActive={true} />
 
           <KpiRow
             selectedBankIds={filters.bank_id}

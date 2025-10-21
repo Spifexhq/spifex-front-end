@@ -376,6 +376,8 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         // valores em MINOR units (FilterBar converte)
         amount_min: f?.amount_min,
         amount_max: f?.amount_max,
+
+        include_inactive: true,
       };
 
       const cursor = latest.current.nextCursor;

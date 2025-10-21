@@ -41,11 +41,12 @@ function getGlaId(a: GLAccountLike): string {
 interface FilterBarProps {
   onApply: (payload: { filters: EntryFilters; config?: ConfigState }) => void;
   initial?: EntryFilters;
+  bankActive?: boolean;
 }
 
 /* -------------------------------- Component -------------------------------- */
-const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial }) => {
-  const { banks: rawBanks } = useBanks();
+const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) => {
+  const { banks: rawBanks } = useBanks(undefined, 0, bankActive);
   const banks = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GLAccountLike[]>([]);

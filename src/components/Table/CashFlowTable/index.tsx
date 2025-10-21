@@ -70,6 +70,7 @@ interface TableRow {
 
 export type CashFlowTableHandle = {
   clearSelection: () => void;
+  refresh: () => void;
 };
 
 interface CashFlowTableProps {
@@ -418,7 +419,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       handleSelectAll,
       clearSelection,
     } = useShiftSelect<Entry, string>(entries, getId);
-    useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
 
     // Latest for fetch
     const latest = useRef<{
@@ -498,14 +498,16 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
 
           setEntries((prev) => {
-            const merged = reset
-              ? incoming.slice()
-              : [
-                  ...prev,
-                  ...incoming.filter(
-                    (e) => !prev.some((p) => getId(p) === getId(e))
-                  ),
-                ];
+            // quando reset: começamos limpos; quando não: partimos do estado atual
+            const map = new Map<string, Entry>(reset ? [] : prev.map((e) => [getId(e), e]));
+
+            // para cada item novo que chegou do servidor, substitui o existente
+            for (const e of incoming) {
+              map.set(getId(e), e);
+            }
+
+            const merged = Array.from(map.values());
+
             if (reset) {
               merged.sort((a, b) => {
                 const ad = new Date(getDueDate(a)).getTime();
@@ -531,6 +533,27 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         }
       },
       [buildPayload]
+    );
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        clearSelection,
+        refresh: () => {
+          // opcional: limpar seleção e voltar pro topo
+          clearSelection();
+          scrollerRef.current?.scrollTo?.({ top: 0 });
+
+          // resetar paginação E refazer a 1ª página
+          setEntries([]);        // opcional, para evitar flicker de dados antigos
+          setNextCursor(null);
+          setHasMore(true);
+          setError(null);
+          setLoading(true);
+          fetchEntries(true);
+        },
+      }),
+      [clearSelection, fetchEntries]
     );
 
     useEffect(() => {

@@ -1,3 +1,4 @@
+// models/enterprise_structure/domain/Banks.ts
 export interface BankAccount {
   id: string;
   institution: string;

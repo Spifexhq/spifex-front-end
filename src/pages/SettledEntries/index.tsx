@@ -35,7 +35,7 @@ const Settled = () => {
     totalConsolidatedBalance,
     loading: banksLoading,
     error: banksError,
-  } = useBanks();
+  } = useBanks(undefined, banksKey);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
@@ -107,6 +107,7 @@ const Settled = () => {
                 try {
                   await api.bulkDeleteSettledEntries(selectedIds);
                   tableRef.current?.clearSelection();
+                  setBanksKey((k) => k + 1);
                   setTableKey((k) => k + 1);
                   setKpiRefresh((k) => k + 1);
                 } catch (err) {

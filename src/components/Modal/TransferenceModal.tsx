@@ -74,9 +74,9 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     if (!isOpen) return;
     (async () => {
       try {
-        const { data } = await api.getAllBanks();
+        const { data } = await api.getAllBanks(true);
         const page = (data?.results ?? []) as BankAccount[];
-        setBanks(page.filter((b) => b.is_active !== false));
+        setBanks(page);
       } catch (err) {
         console.error("Erro ao buscar bancos:", err);
       }

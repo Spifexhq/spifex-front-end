@@ -17,7 +17,7 @@ import {
 import { api } from "src/api/requests";
 import type { Entry } from "src/models/entries/domain";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
-import type { BulkSettleItem } from "@/models/entries/domain"; // só para cast
+import type { BulkSettleItem } from "@/models/entries/domain";
 
 interface SettlementModalProps {
   isOpen: boolean;
