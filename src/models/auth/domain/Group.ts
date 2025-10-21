@@ -3,6 +3,7 @@ import { Permission } from "./Permission";
 
 export interface GroupListItem {
   id: number;
+  external_id: string;
   slug: string;
   name: string;
   description?: string;
@@ -15,6 +16,7 @@ export interface GroupListItem {
 
 export interface GroupDetail {
   id: number;
+  external_id: string;
   slug: string;
   name: string;
   description?: string;

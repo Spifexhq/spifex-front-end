@@ -16,6 +16,7 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 import Checkbox from "@/components/Checkbox";
 import { SelectDropdown } from "@/components/SelectDropdown";
+import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
 
 import { api } from "src/api/requests";
 import { BankAccount } from "src/models/enterprise_structure/domain";
@@ -112,7 +113,13 @@ const BankSettings: React.FC = () => {
 
   /* --------- Overlay dinâmico: adicionados e ids excluídos (UI imediata) --- */
   const [added, setAdded] = useState<BankAccount[]>([]);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set<string>());
+
+  /* ---------------- Confirm Toast (reusable) ---------------- */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
   /* ------------------------------ Carrega dados ----------------------------- */
   const fetchBanks = useCallback(async () => {
@@ -216,34 +223,34 @@ const BankSettings: React.FC = () => {
         });
         // UI imediata
         setAdded((prev) => [created, ...prev]);
-    } else if (editingBank) {
-      await api.editBank(editingBank.id, {
-        institution: formData.institution,
-        account_type: formData.account_type,
-        currency: formData.currency,
-        branch: formData.branch,
-        account_number: formData.account_number,
-        iban: formData.iban || "",
-        initial_balance,
-        is_active: formData.is_active,
-      });
+      } else if (editingBank) {
+        await api.editBank(editingBank.id, {
+          institution: formData.institution,
+          account_type: formData.account_type,
+          currency: formData.currency,
+          branch: formData.branch,
+          account_number: formData.account_number,
+          iban: formData.iban || "",
+          initial_balance,
+          is_active: formData.is_active,
+        });
 
-      // update otimista (mantém tipos corretos)
-      const updatedLocal: BankAccount = {
-        ...editingBank,
-        institution: formData.institution,
-        account_type: formData.account_type as BankAccount["account_type"],
-        currency: formData.currency,
-        branch: formData.branch,
-        account_number: formData.account_number,
-        iban: formData.iban || "",
-        initial_balance,
-        is_active: formData.is_active,
-      };
+        // update otimista (mantém tipos corretos)
+        const updatedLocal: BankAccount = {
+          ...editingBank,
+          institution: formData.institution,
+          account_type: formData.account_type as BankAccount["account_type"],
+          currency: formData.currency,
+          branch: formData.branch,
+          account_number: formData.account_number,
+          iban: formData.iban || "",
+          initial_balance,
+          is_active: formData.is_active,
+        };
 
-      setBanks(prev => prev.map(b => b.id === updatedLocal.id ? updatedLocal : b));
-      setAdded(prev => prev.map(b => b.id === updatedLocal.id ? updatedLocal : b));
-    }
+        setBanks((prev) => prev.map((b) => (b.id === updatedLocal.id ? updatedLocal : b)));
+        setAdded((prev) => prev.map((b) => (b.id === updatedLocal.id ? updatedLocal : b)));
+      }
 
       await fetchBanks(); // mantém consistente
       closeModal();
@@ -254,34 +261,41 @@ const BankSettings: React.FC = () => {
     }
   };
 
-  const deleteBank = async (bank: BankAccount) => {
-    if (!window.confirm(`Excluir conta "${bank.institution}"?`)) return;
-    try {
-      // UI imediata
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.add(bank.id);
-        return next;
-      });
+  /** Abre o ConfirmToast e executa exclusão com UI otimista */
+  const requestDeleteBank = (bank: BankAccount) => {
+    setConfirmText(`Excluir conta "${bank.institution}"?`);
+    setConfirmAction(() => async () => {
+      try {
+        // UI imediata
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(bank.id);
+          return next;
+        });
 
-      await api.deleteBank(bank.id);
+        await api.deleteBank(bank.id);
 
-      // Revalida servidor
-      await fetchBanks();
+        // Revalida servidor
+        await fetchBanks();
 
-      // Se estava em "added", remove para evitar fantasma
-      setAdded((prev) => prev.filter((b) => b.id !== bank.id));
-    } catch (err) {
-      // rollback overlay
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(bank.id);
-        return next;
-      });
-      setSnackBarMessage(
-        err instanceof Error ? err.message : "Erro ao excluir banco."
-      );
-    }
+        // Limpa possíveis duplicatas de "added"
+        setAdded((prev) => prev.filter((b) => b.id !== bank.id));
+      } catch (err) {
+        // rollback overlay
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(bank.id);
+          return next;
+        });
+        setSnackBarMessage(
+          err instanceof Error ? err.message : "Erro ao excluir banco."
+        );
+      } finally {
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   /* ------------------------------- UX hooks -------------------------------- */
@@ -349,7 +363,7 @@ const BankSettings: React.FC = () => {
                     bank={b}
                     canEdit={!!isOwner}
                     onEdit={openEditModal}
-                    onDelete={deleteBank}
+                    onDelete={requestDeleteBank}
                   />
                 ))}
                 {visibleBanks.length === 0 && (
@@ -470,6 +484,30 @@ const BankSettings: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* -------------------------- Confirm Toast ---------------------------- */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction?.()
+            .catch((err) => {
+              console.error(err);
+              setSnackBarMessage("Falha ao confirmar.");
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
 
       {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar

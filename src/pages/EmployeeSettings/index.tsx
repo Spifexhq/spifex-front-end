@@ -28,13 +28,13 @@ const emptyForm = {
   email: "",
   password: "",
   confirmPassword: "",
-  groups: [] as GroupListItem[], // ✅
+  groups: [] as GroupListItem[],
 };
 type FormState = typeof emptyForm;
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
-  return "FN"; // Funcionários
+  return "FN";
 }
 
 /* -- Same normalization helpers used in GroupSettings ---------------------- */
@@ -46,6 +46,7 @@ const isGroupListItem = (v: unknown): v is GroupListItem => {
   const o = v as Record<string, unknown>;
   return (
     typeof o.id === "number" &&
+    typeof o.external_id === "string" &&
     typeof o.slug === "string" &&
     typeof o.name === "string" &&
     typeof o.is_system === "boolean" &&
@@ -111,7 +112,7 @@ const EmployeeSettings: React.FC = () => {
 
   /* ----------------------------- Estados ---------------------------------- */
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [groups, setGroups] = useState<GroupListItem[]>([]); // ✅
+  const [groups, setGroups] = useState<GroupListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -364,7 +365,7 @@ const EmployeeSettings: React.FC = () => {
                     items={groups}
                     selected={formData.groups}
                     onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
-                    getItemKey={(g) => g.id}
+                    getItemKey={(g) => g.external_id}
                     getItemLabel={(g) => g.name}
                     buttonLabel="Selecione os grupos"
                     hideCheckboxes={false}

@@ -1,10 +1,10 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/pages/GroupSettings/index.tsx                                   */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
+/*  Style: Navbar fixa + SidebarSettings, cards claros, grid por categoria    */
+/*  UX: sem modais; seleção rápida; salvar/desfazer; busca por grupo/permiss. */
 /* -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -13,363 +13,598 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
+import Checkbox from "src/components/Checkbox";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
 import type { Permission } from "src/models/auth/domain/Permission";
 import type { GroupDetail, GroupListItem } from "src/models/auth/domain/Group";
-import type { AddGroupRequest, GetGroups, GetGroup } from "src/models/auth/dto/GetGroup";
+import type { AddGroupRequest, GetGroups } from "src/models/auth/dto/GetGroup";
 
-/* ---------------------------- Tipos locais -------------------------------- */
-
-type GroupRow = GroupListItem; // lista usa o tipo "leve" (sem permissions)
-
-// Form trabalha com objetos Permission; payload envia apenas codes
-const emptyForm = {
-  name: "",
-  permissions: [] as Permission[],
-};
-type FormState = typeof emptyForm;
-
-/* --------------------------------- Helpers -------------------------------- */
-
-const getInitials = () => "GR";
+/* ------------------------------ Type guards -------------------------------- */
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 
-/* --------- Groups (list + detail) --------- */
+const isPermission = (v: unknown): v is Permission =>
+  isRecord(v) &&
+  typeof v.code === "string" &&
+  (typeof v.name === "string" || typeof v.name === "undefined");
+
+const isPermissionArray = (v: unknown): v is Permission[] =>
+  Array.isArray(v) && v.every(isPermission);
+
+type PermissionsEnvelope = { permissions: Permission[] };
+type ResultsEnvelope = { results: Permission[] };
+type DataEnvelope = { data?: unknown };
+
+const hasPermissionsArray = (v: unknown): v is PermissionsEnvelope =>
+  isRecord(v) && Array.isArray((v as PermissionsEnvelope).permissions) && (v as PermissionsEnvelope).permissions.every(isPermission);
+
+const hasResultsArray = (v: unknown): v is ResultsEnvelope =>
+  isRecord(v) && Array.isArray((v as ResultsEnvelope).results) && (v as ResultsEnvelope).results.every(isPermission);
 
 const isGroupListItem = (v: unknown): v is GroupListItem =>
   isRecord(v) &&
-  typeof v.id === "number" &&
-  typeof v.slug === "string" &&
-  typeof v.name === "string" &&
-  typeof v.is_system === "boolean" &&
-  typeof v.permissions_count === "number" &&
-  typeof v.members_count === "number";
+  typeof (v).id === "number" &&
+  typeof (v).external_id === "string" &&
+  typeof (v).slug === "string" &&
+  typeof (v).name === "string" &&
+  typeof (v).is_system === "boolean" &&
+  typeof (v).permissions_count === "number" &&
+  typeof (v).members_count === "number";
 
-const toGroupArray = (payload: GetGroups): GroupRow[] => {
+const toGroupArray = (payload: GetGroups): GroupListItem[] => {
   if (Array.isArray(payload) && payload.every(isGroupListItem)) return payload;
-  if (isRecord(payload) && Array.isArray((payload as { results?: unknown }).results)) {
-    const arr = (payload as { results: unknown[] }).results;
-    return arr.every(isGroupListItem) ? arr : [];
-  }
-  return [];
-};
-
-// Detalhe já é GroupDetail nos seus tipos
-const toGroupDetail = (payload: GetGroup): GroupDetail => payload;
-
-/* --------- Permissions (vários formatos) --------- */
-
-const isPermission = (v: unknown): v is Permission =>
-  isRecord(v) &&
-  typeof (v as { code?: unknown }).code === "string" &&
-  (typeof (v as { name?: unknown }).name === "string" ||
-    typeof (v as { name?: unknown }).name === "undefined");
-
-/** Aceita: Permission[] | {permissions: Permission[]} | {results: Permission[]} | {data:{results: Permission[]}} */
-const toPermissions = (payload: unknown): Permission[] => {
-  // 1) Array direto
-  if (Array.isArray(payload) && payload.every(isPermission)) return payload;
-
   if (isRecord(payload)) {
-    // 2) { permissions: [...] }
-    const p1 = (payload as Record<string, unknown>)["permissions"];
-    if (Array.isArray(p1) && p1.every(isPermission)) return p1;
-
-    // 3) { results: [...] }
-    const r1 = (payload as Record<string, unknown>)["results"];
-    if (Array.isArray(r1) && r1.every(isPermission)) return r1;
-
-    // 4) { data: { results: [...] } }
-    const data = (payload as Record<string, unknown>)["data"];
-    if (isRecord(data)) {
-      const r2 = (data as Record<string, unknown>)["results"];
-      if (Array.isArray(r2) && r2.every(isPermission)) return r2;
-      const p2 = (data as Record<string, unknown>)["permissions"];
-      if (Array.isArray(p2) && p2.every(isPermission)) return p2;
+    const results = (payload as { results?: unknown[] }).results;
+    if (Array.isArray(results) && results.every(isGroupListItem)) {
+      return results as GroupListItem[];
     }
   }
   return [];
 };
 
-/* ------------------------------- Componente -------------------------------- */
+/** Accepts: Permission[] | {permissions: Permission[]} | {results: Permission[]} | {data:{permissions|results}} */
+const parsePermissionsResponse = (payload: unknown): Permission[] => {
+  if (isPermissionArray(payload)) return payload;
 
+  if (isRecord(payload)) {
+    if (hasPermissionsArray(payload)) return (payload as PermissionsEnvelope).permissions;
+    if (hasResultsArray(payload)) return (payload as ResultsEnvelope).results;
+
+    const data = (payload as DataEnvelope).data;
+    if (isRecord(data)) {
+      if (hasPermissionsArray(data)) return (data as PermissionsEnvelope).permissions;
+      if (hasResultsArray(data)) return (data as ResultsEnvelope).results;
+    }
+  }
+  return [];
+};
+
+/* ------------------------- Category helpers -------------------------------- */
+
+const normalizeCategoryLabel = (c?: string) => {
+  switch ((c || "").toLowerCase()) {
+    case "navbar": return "Navigation";
+    case "sidebar": return "Sidebar";
+    case "page_components": return "Page Components";
+    case "entries": return "Entries (Cashflow)";
+    case "users": return "Users";
+    case "banks": return "Banks";
+    case "employees": return "Employees";
+    case "groups": return "Groups";
+    case "general_ledger_accounts": return "General Ledger";
+    case "departments": return "Departments";
+    case "projects": return "Projects";
+    case "inventory": return "Inventory";
+    case "entities": return "Entities";
+    default: return c || "Other";
+  }
+};
+
+const CATEGORY_ORDER = [
+  "Navigation",
+  "Sidebar",
+  "Page Components",
+  "Entries (Cashflow)",
+  "Users",
+  "Banks",
+  "Employees",
+  "Groups",
+  "General Ledger",
+  "Departments",
+  "Projects",
+  "Inventory",
+  "Entities",
+  "Other",
+];
+
+/* --------------------------- Page Component -------------------------------- */
 const GroupSettings: React.FC = () => {
+  const { isOwner } = useAuthContext();
+
+  const [loading, setLoading] = useState(true);
+  const [snackBarMessage, setSnackBarMessage] = useState<string>("");
+
+  // Data
+  const [groups, setGroups] = useState<GroupListItem[]>([]);
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+
+  // Selection & edits
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null); // external_id
+  const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
+
+  // Searches
+  const [groupSearch, setGroupSearch] = useState("");
+  const [permSearch, setPermSearch] = useState("");
+
+  // Inline create
+  const [newGroupName, setNewGroupName] = useState("");
+
+  // Confirm Toast
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+  /* ----------------------------- Bootstrap -------------------------------- */
   useEffect(() => {
     document.title = "Grupos";
   }, []);
 
-  const { isOwner } = useAuthContext();
-
-  const [groups, setGroups] = useState<GroupRow[]>([]);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingGroup, setEditingGroup] = useState<GroupDetail | null>(null);
-  const [formData, setFormData] = useState<FormState>(emptyForm);
-  const [snackBarMessage, setSnackBarMessage] = useState("");
-
-  /* ----------------------------- API calls -------------------------------- */
-  const fetchData = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const [groupRes, permRes] = await Promise.all([
-        api.getAllGroups(),   // org é resolvido dentro do requests.ts
-        api.getPermissions(), // global
+      const [groupRes, permsRes] = await Promise.all([
+        api.getAllGroups(),
+        api.getPermissions(),
       ]);
 
-      const groupList = toGroupArray(groupRes.data);
-      setGroups(
-        [...groupList].sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-      );
+      const groupList = toGroupArray(groupRes.data as GetGroups);
+      setGroups(groupList.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
 
-      // Aceita qualquer formato (array, {permissions}, {results}, {data:{results}})
-      const perms = toPermissions(permRes.data as unknown);
-      setPermissions(
-        [...perms].sort((a, b) => (a.name || a.code).localeCompare(b.name || b.code))
-      );
-    } catch (err) {
-      console.error("Erro ao buscar grupos/permissões", err);
-      setSnackBarMessage("Erro ao buscar dados.");
+      const perms = parsePermissionsResponse(permsRes.data);
+      const cleaned: Permission[] = perms.map((p) => ({
+        code: p.code,
+        name: p.name ?? p.code,
+        description: p.description ?? "",
+        category: p.category ?? "Other",
+      }));
+      setAllPermissions(cleaned);
+    } catch (e) {
+      console.error(e);
+      setSnackBarMessage("Erro ao carregar grupos/permissões.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    void fetchData();
+    void fetchAll();
   }, []);
 
-  /* ------------------------------ Handlers -------------------------------- */
-  const openCreateModal = () => {
-    setMode("create");
-    setEditingGroup(null);
-    setFormData(emptyForm);
-    setModalOpen(true);
-  };
-
-  const openEditModal = async (group: GroupRow) => {
-    try {
-      const res = await api.getGroup(group.slug);
-      const detail = toGroupDetail(res.data);
-
-      setMode("edit");
-      setEditingGroup(detail);
-      setFormData({
-        name: detail.name,
-        permissions: detail.permissions ?? [],
-      });
-      setModalOpen(true);
-    } catch (err) {
-      console.error("Erro ao carregar o grupo", err);
-      setSnackBarMessage("Erro ao carregar o grupo.");
+  /* ------------------------- Load group detail/permissions ----------------- */
+  useEffect(() => {
+    if (!selectedGroupId) {
+      setSelectedGroupDetail(null);
+      setSelectedCodes(new Set<string>());
+      return;
     }
+    const load = async () => {
+      try {
+        const [detailRes, permRes] = await Promise.all([
+          api.getGroup(selectedGroupId),
+          api.getGroupPermissions(selectedGroupId),
+        ]);
+        const detail = detailRes.data as GroupDetail;
+        setSelectedGroupDetail(detail);
+
+        const currentPerms = parsePermissionsResponse(permRes.data);
+        const activeCodes = new Set<string>(currentPerms.map((p) => p.code));
+        setSelectedCodes(activeCodes);
+      } catch (e) {
+        console.error(e);
+        setSnackBarMessage("Erro ao carregar detalhes do grupo.");
+      }
+    };
+    void load();
+  }, [selectedGroupId]);
+
+  /* ------------------------------- Derived -------------------------------- */
+  const groupedPermissions = useMemo(() => {
+    const buckets: Record<string, Permission[]> = {};
+    for (const p of allPermissions) {
+      const key = normalizeCategoryLabel(p.category);
+      (buckets[key] ||= []).push(p);
+    }
+    for (const k of Object.keys(buckets)) {
+      buckets[k].sort((a, b) => (a.name || a.code).localeCompare(b.name || b.code));
+    }
+    const entries = Object.entries(buckets).sort(
+      (a, b) => CATEGORY_ORDER.indexOf(a[0]) - CATEGORY_ORDER.indexOf(b[0])
+    );
+
+    if (!permSearch.trim()) return entries;
+    const q = permSearch.trim().toLowerCase();
+    return entries
+      .map(
+        ([cat, perms]) =>
+          [cat, perms.filter((p) => (p.name || p.code).toLowerCase().includes(q))] as const
+      )
+      .filter(([, perms]) => perms.length > 0);
+  }, [allPermissions, permSearch]);
+
+  const filteredGroups = useMemo(() => {
+    if (!groupSearch.trim()) return groups;
+    const q = groupSearch.trim().toLowerCase();
+    return groups.filter((g) => (g.name || "").toLowerCase().includes(q));
+  }, [groups, groupSearch]);
+
+  const dirty =
+    !!selectedGroupDetail &&
+    selectedGroupDetail.permissions &&
+    (() => {
+      const orig = new Set<string>((selectedGroupDetail.permissions || []).map((p) => p.code));
+      if (orig.size !== selectedCodes.size) return true;
+      for (const c of selectedCodes) if (!orig.has(c)) return true;
+      return false;
+    })();
+
+  /* ----------------------------- Actions ---------------------------------- */
+  const toggleCode = (code: string) => {
+    setSelectedCodes((prev) => {
+      const next = new Set<string>(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
   };
 
-  const closeModal = useCallback(() => {
-    setModalOpen(false);
-    setEditingGroup(null);
-  }, []);
-
-  /* --------------------------- Form helpers ------------------------------- */
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
+  const selectAllInCategory = (codes: string[]) => {
+    setSelectedCodes((prev) => {
+      const next = new Set<string>(prev);
+      codes.forEach((c) => next.add(c));
+      return next;
+    });
   };
 
-  const buildPayload = (): AddGroupRequest => ({
-    name: formData.name.trim(),
-    permission_codes: formData.permissions.map((p) => p.code),
-  });
+  const clearCategory = (codes: string[]) => {
+    setSelectedCodes((prev) => {
+      const next = new Set<string>(prev);
+      codes.forEach((c) => next.delete(c));
+      return next;
+    });
+  };
 
-  const submitGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setSnackBarMessage("Informe o nome do grupo.");
+  const handleCreateGroup = async () => {
+    const name = newGroupName.trim();
+    if (!name) {
+      setSnackBarMessage("Informe um nome para o novo grupo.");
       return;
     }
     try {
-      const payload = buildPayload();
-      if (mode === "create") {
-        await api.addGroup(payload);
-      } else if (editingGroup) {
-        await api.editGroup(editingGroup.slug, payload);
-      }
-      await fetchData();
-      closeModal();
-    } catch (err) {
-      console.error("Erro ao salvar grupo", err);
-      setSnackBarMessage("Erro ao salvar grupo.");
+      const payload: AddGroupRequest = { name, permission_codes: [] };
+      const res = await api.addGroup(payload);
+      const created = res.data as GroupDetail;
+      setNewGroupName("");
+      await fetchAll();
+      setSelectedGroupId(created.external_id);
+    } catch (e) {
+      console.error(e);
+      setSnackBarMessage("Erro ao criar grupo.");
     }
   };
 
-  const deleteGroup = async (g: GroupRow) => {
-    if (!window.confirm(`Excluir grupo "${g.name}"?`)) return;
-
+  const handleRenameGroup = async () => {
+    if (!selectedGroupDetail) return;
+    const name = (selectedGroupDetail.name || "").trim();
+    if (!name) {
+      setSnackBarMessage("O nome do grupo não pode ser vazio.");
+      return;
+    }
     try {
-      await api.deleteGroup(g.slug);
-
-      await fetchData();
-
-      setGroups(prev => prev.filter(item => item.slug !== g.slug));
-    } catch (err) {
-      console.error("Erro ao excluir grupo", err);
-      setSnackBarMessage("Erro ao excluir grupo.");
+      await api.editGroup(selectedGroupDetail.external_id, { name });
+      await fetchAll();
+    } catch (e) {
+      console.error(e);
+      setSnackBarMessage("Erro ao renomear o grupo.");
     }
   };
 
-  /* ------------------------------ Esc / Scroll ---------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
+  const requestDeleteGroup = () => {
+    if (!selectedGroupDetail) return;
+    setConfirmText(`Excluir grupo "${selectedGroupDetail.name}"?`);
+    setConfirmAction(() => async () => {
+      if (!selectedGroupDetail) return;
+      try {
+        await api.deleteGroup(selectedGroupDetail.external_id);
+        await fetchAll();
+        setSelectedGroupId(null);
+        setSnackBarMessage("Grupo excluído com sucesso.");
+      } catch (e) {
+        console.error(e);
+        setSnackBarMessage("Erro ao excluir grupo.");
+      } finally {
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
+  };
 
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalOpen]);
+  const handleSavePermissions = async () => {
+    if (!selectedGroupDetail) return;
+    try {
+      await api.updateGroupPermissions(
+        selectedGroupDetail.external_id,
+        Array.from(selectedCodes)
+      );
+      await fetchAll();
+      const detail = (await api.getGroup(selectedGroupDetail.external_id)).data as GroupDetail;
+      setSelectedGroupDetail(detail);
+      setSnackBarMessage("Permissões salvas com sucesso.");
+    } catch (e) {
+      console.error(e);
+      setSnackBarMessage("Erro ao salvar permissões.");
+    }
+  };
 
+  const handleDiscard = () => {
+    if (!selectedGroupDetail) return;
+    const orig = new Set<string>((selectedGroupDetail.permissions || []).map((p) => p.code));
+    setSelectedCodes(orig);
+  };
+
+  /* -------------------------------- Render -------------------------------- */
   if (loading) return <SuspenseLoader />;
 
-  /* ---------------------------------- UI ---------------------------------- */
   return (
     <>
       <Navbar />
       <SidebarSettings activeItem="groups" />
 
-      <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          {/* Header card */}
+      <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64">
+        <div className="max-w-[1200px] mx-auto px-6 py-8">
+          {/* Header */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials()}
+                GR
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Grupos</h1>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Grupos & Permissões</h1>
               </div>
             </div>
           </header>
 
-          {/* Card principal */}
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de grupos</span>
-                  {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
-                      Adicionar grupo
-                    </Button>
-                  )}
+          <section className="mt-6 grid grid-cols-12 gap-6">
+            {/* LEFT: Groups */}
+            <aside className="col-span-12 lg:col-span-4">
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div className="p-3 border-b border-gray-200 bg-gray-50">
+                  <div className="text-[11px] uppercase tracking-wide text-gray-700">Grupos</div>
                 </div>
-              </div>
 
-              <div className="divide-y divide-gray-200">
-                {groups.map((g) => (
-                  <div key={g.slug} className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
-                    <p className="text-[13px] font-medium text-gray-900 truncate">{g.name}</p>
-                    {isOwner && (
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                          onClick={() => openEditModal(g)}
-                        >
-                          Editar
-                        </Button>
-                        <Button variant="common" onClick={() => deleteGroup(g)}>
-                          Excluir
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {groups.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">Nenhum grupo cadastrado.</p>
-                )}
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Modal */}
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl max-h-[90vh]"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar grupo" : "Editar grupo"}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label="Fechar"
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form className="grid grid-cols-2 gap-4" onSubmit={submitGroup}>
-                <Input
-                  label="Nome do grupo"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-
-                <div className="col-span-2">
-                  <SelectDropdown
-                    label="Permissões"
-                    items={permissions}
-                    selected={formData.permissions}
-                    onChange={(items: Permission[]) => setFormData((p) => ({ ...p, permissions: items }))}
-                    getItemKey={(p: Permission) => p.code}
-                    getItemLabel={(p: Permission) => p.name || p.code}
-                    buttonLabel="Selecione as permissões"
-                    hideCheckboxes={false}
-                    clearOnClickOutside={false}
-                    customStyles={{ maxHeight: "250px" }}
+                <div className="p-3 border-b border-gray-200">
+                  <Input
+                    placeholder="Buscar grupo..."
+                    name="groupSearch"
+                    value={groupSearch}
+                    onChange={(e) => setGroupSearch(e.target.value)}
                   />
                 </div>
 
-                <div className="col-span-2 flex justify-end gap-3 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Salvar</Button>
+                <div className="max-h-[380px] overflow-auto divide-y divide-gray-200">
+                  {filteredGroups.map((g) => (
+                    <button
+                      key={g.external_id}
+                      onClick={() =>
+                        setSelectedGroupId((prev) => (prev === g.external_id ? null : g.external_id))
+                      }
+                      className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 ${
+                        selectedGroupId === g.external_id ? "bg-gray-50" : ""
+                      }`}
+                    >
+                      <div className="text-[13px] font-medium text-gray-900 truncate">{g.name}</div>
+                      <div className="text-[11px] text-gray-500">
+                        {g.permissions_count} perms · {g.members_count} membros
+                      </div>
+                    </button>
+                  ))}
+                  {filteredGroups.length === 0 && (
+                    <p className="p-4 text-center text-sm text-gray-500">Nenhum grupo encontrado.</p>
+                  )}
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
+
+                {isOwner && (
+                  <div className="p-3 border-t border-gray-200 bg-gray-50">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Novo grupo..."
+                        name="newGroupName"
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
+                      />
+                      <Button onClick={handleCreateGroup}>Criar</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            {/* RIGHT: Permissions panel */}
+            <section className="col-span-12 lg:col-span-8">
+              {!selectedGroupDetail ? (
+                <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+                  Selecione um grupo para gerenciar as permissões.
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  {/* group header / actions */}
+                  <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+                    <div className="flex flex-col max-w-[70%]">
+                      <label className="text-[11px] uppercase tracking-wide text-gray-700">Nome</label>
+                      <input
+                        className="mt-1 text-[14px] border border-gray-200 rounded px-2 py-1.5 outline-none focus:ring-2 focus:ring-gray-200"
+                        value={selectedGroupDetail.name}
+                        onChange={(e) =>
+                          setSelectedGroupDetail((prev) => (prev ? { ...prev, name: e.target.value } : prev))
+                        }
+                        disabled={!isOwner}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {isOwner && (
+                        <>
+                          <Button variant="outline" onClick={handleRenameGroup}>Renomear</Button>
+                          {!selectedGroupDetail.is_system && (
+                            <Button variant="common" onClick={requestDeleteGroup}>Excluir</Button>
+                          )}
+                        </>
+                      )}
+                      {/* Close panel */}
+                      <button
+                        type="button"
+                        aria-label="Fechar painel de permissões"
+                        className="text-[18px] leading-none px-2 text-gray-400 hover:text-gray-700"
+                        onClick={() => setSelectedGroupId(null)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* filter + actions */}
+                  <div className="p-4 border-b border-gray-200 flex items-center gap-3">
+                    <Input
+                      placeholder="Buscar permissões..."
+                      name="permSearch"
+                      value={permSearch}
+                      onChange={(e) => setPermSearch(e.target.value)}
+                    />
+                    <div className="ml-auto flex gap-2">
+                      <Button
+                        variant="cancel"
+                        onClick={handleDiscard}
+                        disabled={!dirty}
+                      >
+                        Desfazer
+                      </Button>
+                      <Button onClick={handleSavePermissions} disabled={!isOwner || !dirty}>
+                        Salvar permissões
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* categories grid */}
+                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {groupedPermissions.map(([category, perms]) => {
+                      const codes = perms.map((p) => p.code);
+                      const allSelected = codes.every((c) => selectedCodes.has(c));
+                      const noneSelected = codes.every((c) => !selectedCodes.has(c));
+                      return (
+                        <div key={category} className="border border-gray-200 rounded-lg">
+                          <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                            <span className="text-[12px] font-medium text-gray-800">{category}</span>
+                            {isOwner && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  className="!py-1 !px-2"
+                                  onClick={() => selectAllInCategory(codes)}
+                                  disabled={allSelected}
+                                >
+                                  Selecionar tudo
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="!py-1 !px-2"
+                                  onClick={() => clearCategory(codes)}
+                                  disabled={noneSelected}
+                                >
+                                  Limpar
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                          <ul className="max-h-[260px] overflow-auto divide-y divide-gray-200">
+                            {perms.map((p) => {
+                              const checked = selectedCodes.has(p.code);
+                              return (
+                                <li key={p.code} className="flex items-start justify-between px-3 py-2">
+                                  <div className="min-w-0">
+                                    <div className="text-[13px] text-gray-900 truncate">
+                                      {p.name || p.code}
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 truncate">
+                                      {p.code}
+                                    </div>
+                                  </div>
+                                  <label className="inline-flex items-center gap-2">
+                                    <Checkbox
+                                      checked={checked}
+                                      disabled={!isOwner}
+                                      size="sm"
+                                      onChange={() => toggleCode(p.code)}
+                                    />
+                                  </label>
+                                </li>
+                              );
+                            })}
+                            {perms.length === 0 && (
+                              <li className="px-3 py-2 text-[12px] text-gray-500">Sem itens</li>
+                            )}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          </section>
+        </div>
       </main>
+
+      {/* Confirm Toast */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction?.()
+            .catch((err) => {
+              console.error(err);
+              setSnackBarMessage("Falha ao confirmar.");
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
 
       <Snackbar
         open={!!snackBarMessage}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={() => setSnackBarMessage("")}
-        severity="error"
+        severity={snackBarMessage.includes("sucesso") ? "success" : "error"}
       >
-        <Alert severity="error">{snackBarMessage}</Alert>
+        <Alert severity={snackBarMessage.includes("sucesso") ? "success" : "error"}>
+          {snackBarMessage}
+        </Alert>
       </Snackbar>
     </>
   );

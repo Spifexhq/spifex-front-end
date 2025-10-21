@@ -13,6 +13,7 @@ import Button from "@/components/Button";
 import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
+import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
 
 import { api } from "src/api/requests";
 import type { Entity } from "src/models/enterprise_structure/domain/Entity";
@@ -125,6 +126,12 @@ const EntitySettings: React.FC = () => {
   /* ------------------------------- Filtro (click-to-search) ---------------- */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
+
+  /* --------------------------- Confirm Toast state ------------------------- */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
   /* ------------------------------- Página por cursores --------------------- */
   const fetchEntitiesPage = useCallback(
@@ -260,32 +267,40 @@ const EntitySettings: React.FC = () => {
     }
   };
 
-  const deleteEntity = async (entity: Entity) => {
-    if (!window.confirm(`Excluir entidade "${entity.full_name ?? entity.alias_name ?? ""}"?`)) return;
-    try {
-      // UI imediata
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.add(entity.id);
-        return next;
-      });
+  /* ---------- ConfirmToast wrapper para exclusão (substitui window.confirm) ---------- */
+  const requestDeleteEntity = (entity: Entity) => {
+    const name = entity.full_name ?? entity.alias_name ?? "";
+    setConfirmText(`Excluir entidade "${name}"?`);
+    setConfirmAction(() => async () => {
+      try {
+        // UI imediata (overlay)
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(entity.id);
+          return next;
+        });
 
-      await api.deleteEntity(entity.id);
+        await api.deleteEntity(entity.id);
 
-      // Revalida servidor
-      await pager.refresh();
+        // Revalida servidor
+        await pager.refresh();
 
-      // Se estava em "added", remove para evitar fantasma
-      setAdded((prev) => prev.filter((e) => e.id !== entity.id));
-    } catch (err) {
-      // rollback overlay
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(entity.id);
-        return next;
-      });
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
-    }
+        // Se estava em "added", remove para evitar fantasma
+        setAdded((prev) => prev.filter((e) => e.id !== entity.id));
+      } catch (err) {
+        // rollback overlay
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(entity.id);
+          return next;
+        });
+        setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
+      } finally {
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   /* ------------------------------- UX hooks -------------------------------- */
@@ -366,7 +381,7 @@ const EntitySettings: React.FC = () => {
                           entity={e}
                           canEdit={!!isOwner}
                           onEdit={openEditModal}
-                          onDelete={deleteEntity}
+                          onDelete={requestDeleteEntity}
                         />
                       ))
                     )}
@@ -465,6 +480,30 @@ const EntitySettings: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Confirm Toast (reutilizável) */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction?.()
+            .catch((err) => {
+              console.error(err);
+              setSnackBarMessage("Falha ao confirmar.");
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
 
       <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
                 onClose={() => setSnackBarMessage("")} severity="error">

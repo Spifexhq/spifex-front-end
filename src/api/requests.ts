@@ -7,7 +7,7 @@ import {
   GetPermission, GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
-import { User, Organization, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
+import { User, Organization, Permission, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
 import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis, BulkSettleItem, BulkSettleResponse, ReportsSummary } from '@/models/entries/domain'
@@ -149,6 +149,23 @@ export const api = {
 
   getPermission: (code: string) =>
     request<GetPermission>(`rbac/permissions/${code}/`, "GET"),
+
+  getGroupPermissions: (groupId: string) => {
+    const org = getOrgExternalId();
+    return request<{ group: { external_id: string; name: string; slug: string }; permissions: Permission[] }>(
+      `rbac/${org}/groups/${groupId}/permissions/`,
+      "GET"
+    );
+  },
+
+  updateGroupPermissions: (groupId: string, permission_codes: string[]) => {
+    const org = getOrgExternalId();
+    return request<{ message: string; permissions: string[] }>(
+      `rbac/${org}/groups/${groupId}/permissions/`,
+      "POST",
+      { permission_codes }
+    );
+  },
   
   /* --- Groups --- */
   getAllGroups: () => {
@@ -156,9 +173,9 @@ export const api = {
     return request<GetGroups>(`rbac/${org}/groups/`, "GET");
   },
 
-  getGroup: (slug: string) => {
+  getGroup: (groupId: string) => {
     const org = getOrgExternalId();
-    return request<GetGroup>(`rbac/${org}/groups/${slug}/`, "GET");
+    return request<GetGroup>(`rbac/${org}/groups/${groupId}/`, "GET");
   },
 
   addGroup: (payload: AddGroupRequest) => {
@@ -166,9 +183,9 @@ export const api = {
     return request<GroupDetail>(`rbac/${org}/groups/`, "POST", payload);
   },
 
-  editGroup: (slug: string, payload: Partial<EditGroupRequest>) => {
+  editGroup: (groupId: string, payload: Partial<EditGroupRequest>) => {
     const org = getOrgExternalId();
-    return request<GroupDetail>(`rbac/${org}/groups/${slug}/`, "PATCH", payload);
+    return request<GroupDetail>(`rbac/${org}/groups/${groupId}/`, "PATCH", payload);
   },
 
   deleteAllGroups: () => {
@@ -176,9 +193,9 @@ export const api = {
     return request<void>(`rbac/${org}/groups/`, "DELETE");
   },
 
-  deleteGroup: (slug: string) => {
+  deleteGroup: (groupId: string) => {
     const org = getOrgExternalId();
-    return request<void>(`rbac/${org}/groups/${slug}/`, "DELETE");
+    return request<void>(`rbac/${org}/groups/${groupId}/`, "DELETE");
   },
 
   /* --- Employees --- */

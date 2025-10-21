@@ -19,6 +19,7 @@ import Snackbar from "@/components/Snackbar";
 import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
 import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
+import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -197,6 +198,12 @@ const LedgerAccountSettings: React.FC = () => {
     }
   };
 
+  /* ---------------- Confirm Toast state ---------------- */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
   /* ------------------------ Load & gate logic ----------------------------- */
   const fetchAllAccounts = useCallback(async (): Promise<GLAccount[]> => {
     const all: GLAccount[] = [];
@@ -366,33 +373,44 @@ const LedgerAccountSettings: React.FC = () => {
     }
   };
 
-  const deleteAccount = async (acc: GLAccount) => {
-    if (!window.confirm(`Excluir conta "${acc.name}"?`)) return;
-    try {
-      const glaId = getGlaId(acc);
-      await api.deleteLedgerAccount(glaId);
-      const refreshed = await fetchAllAccounts();
-      setAccounts(refreshed);
-    } catch {
-      setSnackBarMessage("Erro ao excluir conta.");
-    }
+  /** Abre o ConfirmToast para EXCLUIR UMA conta */
+  const requestDeleteAccount = (acc: GLAccount) => {
+    setConfirmText(`Excluir conta "${acc.name}"?`);
+    setConfirmAction(() => async () => {
+      try {
+        const glaId = getGlaId(acc);
+        await api.deleteLedgerAccount(glaId);
+        const refreshed = await fetchAllAccounts();
+        setAccounts(refreshed);
+      } catch {
+        setSnackBarMessage("Erro ao excluir conta.");
+      } finally {
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
-  const handleDeleteAll = async () => {
+  /** Abre o ConfirmToast para EXCLUIR TODAS as contas */
+  const requestDeleteAll = () => {
     if (deletingAll) return;
-    if (!window.confirm("Tem certeza que deseja excluir TODAS as contas contábeis? Esta ação não pode ser desfeita.")) {
-      return;
-    }
-    try {
-      setDeletingAll(true);
-      await api.deleteAllLedgerAccounts(); // DELETE body: { confirm_delete_all: true }
-      navigate("/settings/register/ledger-accounts", { replace: true });
-    } catch {
-      setSnackBarMessage("Erro ao excluir todas as contas.");
-    } finally {
-      setDeletingAll(false);
-      setMenuOpen(false);
-    }
+    setConfirmText("Tem certeza que deseja excluir TODAS as contas contábeis? Esta ação não pode ser desfeita.");
+    setConfirmAction(() => async () => {
+      try {
+        setDeletingAll(true);
+        await api.deleteAllLedgerAccounts(); // DELETE body: { confirm_delete_all: true }
+        navigate("/settings/register/ledger-accounts", { replace: true });
+      } catch {
+        setSnackBarMessage("Erro ao excluir todas as contas.");
+      } finally {
+        setDeletingAll(false);
+        setMenuOpen(false);
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   // Fecha menu ⋯ ao clicar fora
@@ -437,7 +455,7 @@ const LedgerAccountSettings: React.FC = () => {
             >
               Editar
             </Button>
-            <Button variant="common" onClick={() => deleteAccount(a)}>
+            <Button variant="common" onClick={() => requestDeleteAccount(a)}>
               Excluir
             </Button>
           </div>
@@ -527,7 +545,7 @@ const LedgerAccountSettings: React.FC = () => {
                         <button
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
-                          onClick={handleDeleteAll}
+                          onClick={requestDeleteAll}
                           disabled={deletingAll || accounts.length === 0}
                           title={deletingAll ? "Processando..." : "Excluir todas as contas"}
                         >
@@ -676,7 +694,7 @@ const LedgerAccountSettings: React.FC = () => {
                                               >
                                                 Editar
                                               </Button>
-                                              <Button variant="common" onClick={() => deleteAccount(a)}>
+                                              <Button variant="common" onClick={() => requestDeleteAccount(a)}>
                                                 Excluir
                                               </Button>
                                             </div>
@@ -821,6 +839,30 @@ const LedgerAccountSettings: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* -------------------------- Confirm Toast ---------------------------- */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction?.()
+            .catch((err) => {
+              console.error(err);
+              setSnackBarMessage("Falha ao confirmar.");
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
 
       <Snackbar open={!!snackBarMessage} autoHideDuration={6000} onClose={() => setSnackBarMessage("")}>
         <Alert
