@@ -10,7 +10,6 @@ import { api } from "src/api/requests";
 import KpiRow from "src/components/KPI/KpiRow";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
-import { ConfigState } from "src/models/entries/domain";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -28,7 +27,7 @@ const CashFlow = () => {
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
   const tableRef = useRef<CashFlowTableHandle>(null);
 
-  const [filters, setFilters] = useState<EntryFilters>({});
+  const [filters, setFilters] = useState<EntryFilters | null>(null);
 
   const {
     banks,
@@ -41,9 +40,9 @@ const CashFlow = () => {
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
   const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.tx_type as ModalType); setIsModalOpen(true); };
 
-  // ✅ Accept the payload shape from FilterBar, set filters, and refresh views
+  // Accept the payload shape from FilterBar, set filters, and refresh views
   const handleApplyFilters = useCallback(
-    ({ filters: newFilters }: { filters: EntryFilters; config?: ConfigState }) => {
+    ({ filters: newFilters }: { filters: EntryFilters; }) => {
       setFilters(newFilters);
       setCashflowKey((k) => k + 1);
       setBanksKey((k) => k + 1);
@@ -71,31 +70,30 @@ const CashFlow = () => {
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
 
-          <FilterBar onApply={handleApplyFilters} bankActive={true} />
+          <FilterBar onApply={handleApplyFilters} bankActive={true} contextSettlement={false} />
 
-          <KpiRow
-            selectedBankIds={filters.bank_id}
-            filters={filters}
-            context="cashflow"
-            refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey}
-            banksData={{
-              banks,
-              totalConsolidatedBalance,
-              loading: banksLoading,
-              error: banksError,
-            }}
-          />
+          {filters && (
+            <>
+              <KpiRow
+                selectedBankIds={filters.bank_id}
+                filters={filters}
+                context="cashflow"
+                refreshToken={kpiRefresh}
+                banksRefreshKey={banksKey}
+                banksData={{ banks, totalConsolidatedBalance, loading: banksLoading, error: banksError }}
+              />
 
-          <div className="min-h-0 h-full">
-            <CashFlowTable
-              ref={tableRef}
-              key={cashflowKey}
-              filters={filters}
-              onEdit={handleEditEntry}
-              onSelectionChange={handleSelectionChange}
-            />
-          </div>
+              <div className="min-h-0 h-full">
+                <CashFlowTable
+                  ref={tableRef}
+                  key={cashflowKey}
+                  filters={filters}
+                  onEdit={handleEditEntry}
+                  onSelectionChange={handleSelectionChange}
+                />
+              </div>
+            </>
+          )}
 
           {selectedIds.length > 0 && (
             <SelectionActionsBar

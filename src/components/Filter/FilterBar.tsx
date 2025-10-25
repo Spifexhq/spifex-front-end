@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  * File: src/components/Filter/FilterBar.tsx
  * Style: Minimalist / compact. No shadows (except in "Adicionar filtro +" menu).
- * Adds: Save visualization, Load, Config (columns/sort), extra filters. (No Group By)
+ * Adds: Save visualization (modal), Load, Config modal for saved views only, extra filters. (No Group By)
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
@@ -11,9 +11,6 @@ import { useBanks } from "@/hooks/useBanks";
 import type { EntryFilters } from "src/models/entries/domain";
 import {
   ChipKey,
-  ColumnKey,
-  SortDir,
-  ConfigState,
   LocalFilters,
   Visualization,
 } from "src/models/entries/domain";
@@ -39,13 +36,14 @@ function getGlaId(a: GLAccountLike): string {
 }
 
 interface FilterBarProps {
-  onApply: (payload: { filters: EntryFilters; config?: ConfigState }) => void;
+  onApply: (payload: { filters: EntryFilters }) => void;
   initial?: EntryFilters;
   bankActive?: boolean;
+  contextSettlement: false | true;
 }
 
 /* -------------------------------- Component -------------------------------- */
-const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) => {
+const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, contextSettlement }) => {
   const { banks: rawBanks } = useBanks(undefined, 0, bankActive);
   const banks = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
 
@@ -61,27 +59,35 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
     tx_type: undefined,
     amount_min: "",
     amount_max: "",
+    settlement_status: initial?.settlement_status ?? contextSettlement,
   }));
-
-  /* Table Config */
-  const [config, setConfig] = useState<ConfigState>({
-    columns: ["due_date", "description", "gl_account", "project", "entity", "amount"],
-    sortBy: "due_date",
-    sortDir: "asc",
-  });
 
   /* Saved visualizations */
   const [views, setViews] = useState<Visualization[]>([]);
-  const [saveOpen, setSaveOpen] = useState(false);
-  const [viewName, setViewName] = useState("");
-  const [viewDefault, setViewDefault] = useState(false);
+  const scopedViews = useMemo(
+    () => views.filter((v) => v.settlement_status === contextSettlement),
+    [views, contextSettlement]
+  );
+
   const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
+  const [viewsLoaded, setViewsLoaded] = useState(false);
+
+  /* “Salvar visualização” — agora modal */
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveDefault, setSaveDefault] = useState(false);
+  const [saveMode, setSaveMode] = useState<"create" | "overwrite">("create");
+  const [overwriteId, setOverwriteId] = useState<string | null>(null);
+
+  /* Config modal (somente “Visualizações salvas”) */
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renamingName, setRenamingName] = useState("");
 
   /* Menus/Popovers */
   const [menuOpen, setMenuOpen] = useState(false);
   const [openEditor, setOpenEditor] = useState<ChipKey | null>(null);
-  const [configOpen, setConfigOpen] = useState(false);
-
   const menuRef = useRef<HTMLDivElement>(null);
   useOutside(menuRef, () => setMenuOpen(false));
 
@@ -107,19 +113,63 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
   }, []);
 
   /* Saved views (read org id from store inside requests) */
+  const refreshViews = async () => {
+    try {
+      const { data } = await api.getEntryViews();
+      const list = Array.isArray(data)
+        ? data
+        : (data as unknown as { results?: Visualization[] })?.results ?? [];
+      setViews(list as Visualization[]);
+    } catch (err) {
+      console.error("Failed to load saved views", err);
+    } finally {
+      setViewsLoaded(true);           // <-- tell boot logic we can decide now
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await api.getEntryViews();
-        const list = Array.isArray(data)
-          ? data
-          : (data as unknown as { results?: Visualization[] })?.results ?? [];
-        setViews(list as Visualization[]);
-      } catch (err) {
-        console.error("Failed to load saved views", err);
-      }
-    })();
+    void refreshViews();
   }, []);
+
+  const didInitialApply = useRef(false);
+  useEffect(() => {
+    if (didInitialApply.current || !viewsLoaded) return;
+
+    const def = scopedViews.find((v) => v.is_default);
+    if (def) {
+      const nextLocal: LocalFilters = {
+        ...(def.filters as LocalFilters),
+        settlement_status: !!def.settlement_status,
+      };
+      setFilters((prev) => ({ ...prev, ...nextLocal }));    // reflect in chips
+      onApply({ filters: toEntryFilters(nextLocal) });      // single initial request WITH filters
+    } else {
+      onApply({ filters: toEntryFilters(filters) });        // single initial request WITHOUT filters
+    }
+
+    didInitialApply.current = true;
+  }, [viewsLoaded, scopedViews, filters, onApply]);
+
+  /* Apply default view automatically ONCE (when available for this context) */
+  const bootstrappedRef = useRef(false);
+  useEffect(() => {
+    if (bootstrappedRef.current) return;
+
+    const def = scopedViews.find((v) => v.is_default);
+    if (!def) return;
+
+    // 1) Update local UI state so chips reflect the default
+    const nextLocal = {
+      ...(def.filters as LocalFilters),
+      settlement_status: !!def.settlement_status,
+    };
+    setFilters((prev) => ({ ...prev, ...nextLocal }));
+
+    // 2) Auto-apply to parent (no need to click "Aplicar")
+    onApply({ filters: toEntryFilters(nextLocal) });
+
+    bootstrappedRef.current = true;
+  }, [scopedViews, contextSettlement, onApply]);
 
   const selectedBanks = useMemo(() => {
     const sel = new Set((filters.bank_id ?? []).map(String));
@@ -142,13 +192,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
       tx_type: f.tx_type,
       amount_min: f.amount_min ? Math.round(parseFloat(f.amount_min) * 100) : undefined,
       amount_max: f.amount_max ? Math.round(parseFloat(f.amount_max) * 100) : undefined,
+      settlement_status: f.settlement_status as false | true,
     } as EntryFilters;
   }
 
   function applyFilters() {
     onApply({
       filters: toEntryFilters(filters),
-      config,
     });
   }
 
@@ -163,9 +213,19 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
       tx_type: undefined,
       amount_min: "",
       amount_max: "",
+      settlement_status: contextSettlement,
     };
+
+    // Clear local state (chips will disappear)
     setFilters(cleared);
-    onApply({ filters: toEntryFilters(cleared), config });
+
+    // Close any open editor/menu so the UI updates cleanly
+    setOpenEditor(null);
+    setMenuOpen(false);
+    setViewsMenuOpen(false);
+
+    // Tell parent to refetch with cleared filters
+    onApply({ filters: toEntryFilters(cleared) });
   }
 
   function removeChip(k: ChipKey) {
@@ -188,40 +248,124 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
     !!filters.amount_min ||
     !!filters.amount_max;
 
-  /* ------------------------------ Saved Views ------------------------------ */
-  async function saveVisualization() {
-    if (!viewName.trim()) return;
+  /* ------------------------------ Save Visualization (Modal) ------------------------------ */
+
+  function resetSaveModalState() {
+    setSaveName("");
+    setSaveDefault(false);
+    setSaveMode("create");
+    setOverwriteId(null);
+  }
+  const openSaveModal = () => {
+    resetSaveModalState();
+    setSaveModalOpen(true);
+  };
+  const closeSaveModal = () => {
+    setSaveModalOpen(false);
+    setTimeout(() => resetSaveModalState(), 0);
+  };
+
+  // Close modals with ESC
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (saveModalOpen) setSaveModalOpen(false);
+        if (configModalOpen) setConfigModalOpen(false);
+      }
+    }
+    if (saveModalOpen || configModalOpen) {
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }
+  }, [saveModalOpen, configModalOpen]);
+
+  const handleSaveVisualization = async () => {
+    const name = saveName.trim();
+    if (!name) return;
+
     const payload = {
-      name: viewName.trim(),
-      is_default: viewDefault,
-      // group_by intentionally removed (backend may accept default)
-      config,
+      name,
+      is_default: saveDefault,
+      settlement_status: !!filters.settlement_status,
       filters,
     };
 
-    const existing = views.find((v) => v.name.toLowerCase() === payload.name.toLowerCase());
     try {
-      if (existing) await api.editEntryView(existing.id, payload);
-      else await api.addEntryView(payload);
-
-      const { data } = await api.getEntryViews();
-      const list = Array.isArray(data)
-        ? data
-        : (data as unknown as { results?: Visualization[] })?.results ?? [];
-      setViews(list as Visualization[]);
-      setSaveOpen(false);
-      setViewName("");
-      setViewDefault(false);
+      if (saveMode === "overwrite" && overwriteId) {
+        await api.editEntryView(overwriteId, payload);
+      } else {
+        const sameName = views.find(
+          (v) => v.name.toLowerCase() === name.toLowerCase() && v.settlement_status === !!filters.settlement_status
+        );
+        if (sameName) await api.editEntryView(sameName.id, payload);
+        else await api.addEntryView(payload);
+      }
+      await refreshViews();
     } catch (err) {
       console.error("Failed to save visualization", err);
+    } finally {
+      closeSaveModal();
     }
-  }
+  };
 
   function applyVisualization(v: Visualization) {
-    setFilters(v.filters);
-    setConfig(v.config);
-    onApply({ filters: toEntryFilters(v.filters), config: v.config });
+    const next = { ...(v.filters as LocalFilters), settlement_status: !!v.settlement_status };
+    setFilters(next);
+    // For non-default views, we keep "Aplicar" manual on purpose.
   }
+
+  /* ---------- Manage views inside config modal ---------- */
+  const toggleDefaultView = async (view: Visualization) => {
+    try {
+      if (view.is_default) {
+        // Unset current default (allow zero defaults)
+        await api.editEntryView(view.id, { is_default: false });
+      } else {
+        // Set this as default…
+        await api.editEntryView(view.id, { is_default: true });
+        // …and unset any other default in the same scope (safety)
+        const others = scopedViews.filter((v) => v.id !== view.id && v.is_default);
+        if (others.length) {
+          await Promise.all(others.map((o) => api.editEntryView(o.id, { is_default: false })));
+        }
+        bootstrappedRef.current = false;
+      }
+      await refreshViews();
+    } catch (err) {
+      console.error("Failed to toggle default view", err);
+    }
+  };
+
+  const deleteView = async (viewId: string) => {
+    try {
+      await api.deleteEntryView(viewId);
+      setViews((prev) => prev.filter((v) => v.id !== viewId));
+    } catch (err) {
+      console.error("Failed to delete view", err);
+    }
+  };
+
+  const startRenaming = (v: Visualization) => {
+    setRenamingId(v.id);
+    setRenamingName(v.name);
+  };
+  const cancelRenaming = () => {
+    setRenamingId(null);
+    setRenamingName("");
+  };
+  const saveRenaming = async () => {
+    const id = renamingId;
+    const name = renamingName.trim();
+    if (!id || !name) return;
+    try {
+      await api.editEntryView(id, { name });
+      await refreshViews();
+    } catch (err) {
+      console.error("Failed to rename view", err);
+    } finally {
+      cancelRenaming();
+    }
+  };
 
   /* ---------------------------------- Render -------------------------------- */
   return (
@@ -274,7 +418,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
             />
           )}
           {!!filters.observation && (
-            <Chip icon="note" label={`Observação  ${filters.observation}`} onClick={() => setOpenEditor("observation")} onRemove={() => removeChip("observation")} />
+            <Chip
+              icon="note"
+              label={`Observação  ${filters.observation}`}
+              onClick={() => setOpenEditor("observation")}
+              onRemove={() => removeChip("observation")}
+            />
           )}
 
           <input
@@ -285,94 +434,32 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
           />
         </div>
 
-        {/* Config */}
+        {/* Config — MODAL (apenas 'Visualizações salvas') */}
         <div className="relative">
           <Button
             variant="outline"
             size="sm"
             aria-label="Configurações"
-            onClick={() => setConfigOpen((v) => !v)}
-            className={`text-sm bg-white hover:bg-gray-50 ${configOpen ? "!bg-white !border-gray-400" : ""}`}
+            onClick={() => setConfigModalOpen(true)}
+            className="text-sm bg-white hover:bg-gray-50"
           >
             ⚙️
           </Button>
-          {configOpen && (
-            <Popover onClose={() => setConfigOpen(false)}>
-              <div className="text-xs text-gray-700 space-y-2">
-                <div>
-                  <div className="font-semibold mb-1">Colunas</div>
-                  <ColumnsPicker value={config.columns} onChange={(cols) => setConfig((c) => ({ ...c, columns: cols }))} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="space-y-1">
-                    <span className="block">Ordenar por</span>
-                    <select
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                      value={config.sortBy}
-                      onChange={(e) => setConfig((c) => ({ ...c, sortBy: e.target.value as ColumnKey }))}
-                    >
-                      {["due_date","description","observation","gl_account","project","entity","amount","is_settled","installment_index"].map((k) => (
-                        <option key={k} value={k}>{k}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-1">
-                    <span className="block">Direção</span>
-                    <select
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                      value={config.sortDir}
-                      onChange={(e) => setConfig((c) => ({ ...c, sortDir: e.target.value as SortDir }))}
-                    >
-                      <option value="asc">asc</option>
-                      <option value="desc">desc</option>
-                    </select>
-                  </label>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setConfigOpen(false)} className="bg-white hover:bg-gray-50">Fechar</Button>
-                  <Button variant="outline" size="sm" onClick={applyFilters} className="bg-white hover:bg-gray-50">Aplicar</Button>
-                </div>
-              </div>
-            </Popover>
-          )}
         </div>
 
-        {/* Save visualization */}
+        {/* Save visualization — MODAL */}
         <div className="relative">
           <Button
             variant="outline"
             size="sm"
-            className={`font-semibold bg-white hover:bg-gray-50 ${saveOpen ? "!bg-white !border-gray-400" : ""}`}
-            onClick={() => setSaveOpen((v) => !v)}
+            className="font-semibold bg-white hover:bg-gray-50"
+            onClick={openSaveModal}
           >
             Salvar visualização
           </Button>
-          {saveOpen && (
-            <Popover onClose={() => setSaveOpen(false)}>
-              <div className="text-xs text-gray-700 space-y-2">
-                <label className="block space-y-1">
-                  <span>Nome</span>
-                  <input
-                    className="w-full border border-gray-300 rounded px-2 py-1"
-                    value={viewName}
-                    onChange={(e) => setViewName(e.target.value)}
-                    placeholder="Ex.: 'Pagamentos mês atual por projeto'"
-                  />
-                </label>
-                <label className="inline-flex items-center gap-2">
-                  <Checkbox checked={viewDefault} size="small" onChange={(e) => setViewDefault(e.target.checked)} />
-                  <span>Definir como padrão</span>
-                </label>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setSaveOpen(false)} className="bg-white hover:bg-gray-50">Cancelar</Button>
-                  <Button variant="outline" size="sm" onClick={saveVisualization} className="bg-white hover:bg-gray-50">Salvar</Button>
-                </div>
-              </div>
-            </Popover>
-          )}
         </div>
 
-        {/* Load visualization */}
+        {/* Load visualization (menu rápido) */}
         <div className="relative">
           <Button
             variant="outline"
@@ -384,17 +471,19 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
           </Button>
           {viewsMenuOpen && (
             <div className="absolute right-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
-              {(views.length ? views : []).map((v) => (
+              {(scopedViews.length ? scopedViews : []).map((v) => (
                 <MenuItem
                   key={v.id}
-                  label={`${v.name}${(v).is_default ? " ⭐" : ""}`}
+                  label={`${v.name}${v.is_default ? " ⭐" : ""}`}
                   onClick={() => {
                     setViewsMenuOpen(false);
                     applyVisualization(v);
                   }}
                 />
               ))}
-              {views.length === 0 && <div className="text-xs text-gray-500 px-2 py-1">Nenhuma visualização salva</div>}
+              {scopedViews.length === 0 && (
+                <div className="text-xs text-gray-500 px-2 py-1">Nenhuma visualização salva</div>
+              )}
             </div>
           )}
         </div>
@@ -414,9 +503,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
           </Button>
 
           {menuOpen && (
-            <div
-              className="absolute left-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg"
-            >
+            <div className="absolute left-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
               <MenuItem label="Período" onClick={() => (setOpenEditor("date"), setMenuOpen(false))} />
               <MenuItem label="Banco" onClick={() => (setOpenEditor("banks"), setMenuOpen(false))} />
               <MenuItem label="Conta contábil" onClick={() => (setOpenEditor("accounts"), setMenuOpen(false))} />
@@ -469,8 +556,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
               </label>
             </div>
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>Remover</Button>
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>Aplicar</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>
+                Remover
+              </Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
+                Aplicar
+              </Button>
             </div>
           </Popover>
         )}
@@ -488,7 +579,9 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
               customStyles={{ maxHeight: "240px" }}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("banks")}>Remover</Button>
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("banks")}>
+                Remover
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -515,7 +608,9 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
               groupBy={(item) => item.subcategory || ""}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("accounts")}>Remover</Button>
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("accounts")}>
+                Remover
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -538,7 +633,9 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
               onChange={(e) => setFilters((f) => ({ ...f, observation: e.target.value }))}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("observation")}>Remover</Button>
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("observation")}>
+                Remover
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -554,12 +651,20 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
         {openEditor === "tx_type" && (
           <Popover onClose={() => setOpenEditor(null)}>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "credit" }))}>Receita</Button>
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "debit" }))}>Despesa</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "credit" }))}>
+                Receita
+              </Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "debit" }))}>
+                Despesa
+              </Button>
             </div>
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("tx_type")}>Remover</Button>
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>Aplicar</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("tx_type")}>
+                Remover
+              </Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
+                Aplicar
+              </Button>
             </div>
           </Popover>
         )}
@@ -591,12 +696,196 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive }) =
               </label>
             </div>
             <div className="flex justify-end gap-2 mt-3">
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>Remover</Button>
-              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>Aplicar</Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>
+                Remover
+              </Button>
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
+                Aplicar
+              </Button>
             </div>
           </Popover>
         )}
       </div>
+
+      {/* ---------------------- CONFIG MODAL (only views) --------------------- */}
+      {configModalOpen && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
+          <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
+              <h3 className="text-[14px] font-semibold text-gray-800">Visualizações salvas</h3>
+              <button
+                className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                onClick={() => setConfigModalOpen(false)}
+                aria-label="Fechar"
+              >
+                &times;
+              </button>
+            </header>
+
+            <div>
+              <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
+                {scopedViews.length === 0 && (
+                  <div className="px-3 py-2 text-xs text-gray-500">Nenhuma visualização salva.</div>
+                )}
+                {scopedViews.map((v) => {
+                  const isRenaming = renamingId === v.id;
+                  return (
+                    <div key={v.id} className="px-3 py-2 flex items-center gap-3">
+                      <label className="inline-flex items-center gap-2">
+                        {/* was: <input type="radio" … /> */}
+                        <Checkbox
+                          checked={!!v.is_default}
+                          size="small"
+                          onChange={() => toggleDefaultView(v)}
+                        />
+                        {isRenaming ? (
+                          <input
+                            className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            value={renamingName}
+                            onChange={(e) => setRenamingName(e.target.value)}
+                          />
+                        ) : (
+                          <span className="text-sm text-gray-800">{v.name}</span>
+                        )}
+                        {v.is_default ? <span className="text-[11px] text-amber-600">Padrão</span> : null}
+                      </label>
+
+                      <div className="ml-auto flex items-center gap-2">
+                        {isRenaming ? (
+                          <>
+                            <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={saveRenaming}>
+                              Salvar nome
+                            </Button>
+                            <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={cancelRenaming}>
+                              Cancelar
+                            </Button>
+                          </>
+                        ) : (
+                          <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => startRenaming(v)}>
+                            Renomear
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-white hover:bg-gray-50"
+                          onClick={() => applyVisualization(v)}
+                        >
+                          Aplicar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="!text-red-600 !border-red-200 hover:!bg-red-50"
+                          onClick={() => deleteView(v.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-end mt-3">
+                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setConfigModalOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------- SAVE MODAL ---------------------------- */}
+      {saveModalOpen && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
+          <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
+              <h3 className="text-[14px] font-semibold text-gray-800">Salvar visualização</h3>
+              <button
+                className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                onClick={() => setSaveModalOpen(false)}
+                aria-label="Fechar"
+              >
+                &times;
+              </button>
+            </header>
+
+            <div className="space-y-4 text-xs text-gray-700">
+              <label className="block space-y-1">
+                <span>Nome</span>
+                <input
+                  className="w-full border border-gray-300 rounded px-2 py-1"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  placeholder="Ex.: 'Pagamentos mês atual por projeto'"
+                />
+              </label>
+
+              <label className="inline-flex items-center gap-2">
+                <Checkbox checked={saveDefault} size="small" onChange={(e) => setSaveDefault(e.target.checked)} />
+                <span>Definir como padrão</span>
+              </label>
+
+              <div className="space-y-2">
+                <div className="font-semibold">Modo</div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="save_mode"
+                    checked={saveMode === "create"}
+                    onChange={() => setSaveMode("create")}
+                  />
+                  <span>Criar nova visualização</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="save_mode"
+                    checked={saveMode === "overwrite"}
+                    onChange={() => setSaveMode("overwrite")}
+                  />
+                  <span>Sobrescrever existente</span>
+                </label>
+
+                {saveMode === "overwrite" && (
+                  <label className="block space-y-1 mt-2">
+                    <span>Escolha a visualização</span>
+                    <select
+                      className="w-full border border-gray-300 rounded px-2 py-1"
+                      value={overwriteId ?? ""}
+                      onChange={(e) => setOverwriteId(e.target.value || null)}
+                    >
+                      <option value="">— selecione —</option>
+                      {scopedViews.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} {v.is_default ? "⭐" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={closeSaveModal}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-gray-50"
+                  onClick={handleSaveVisualization}
+                  disabled={!saveName.trim() || (saveMode === "overwrite" && !overwriteId)}
+                >
+                  Salvar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -633,27 +922,6 @@ const Chip: React.FC<{
       >
         ×
       </button>
-    </div>
-  );
-};
-
-const ColumnsPicker: React.FC<{
-  value: ColumnKey[];
-  onChange(v: ColumnKey[]): void;
-}> = ({ value, onChange }) => {
-  const all: ColumnKey[] = ["due_date","description","observation","gl_account","project","entity","amount","is_settled","installment_index"];
-  const toggle = (k: ColumnKey) => {
-    if (value.includes(k)) onChange(value.filter((x) => x !== k));
-    else onChange([...value, k]);
-  };
-  return (
-    <div className="flex flex-wrap gap-2">
-      {all.map((k) => (
-        <label key={k} className="inline-flex items-center gap-1 text-xs">
-          <Checkbox checked={value.includes(k)} size="small" onChange={() => toggle(k)} />
-          <span>{k}</span>
-        </label>
-      ))}
     </div>
   );
 };

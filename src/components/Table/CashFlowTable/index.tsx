@@ -454,7 +454,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         f?.tx_type === "debit"  ? -1 :
         undefined;
 
-      // NEW: bancos em CSV para o seed do backend
       const bank =
         Array.isArray(f?.bank_id) && f!.bank_id!.length
           ? f!.bank_id!.join(",")
@@ -475,7 +474,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         amount_min: f?.amount_min,
         amount_max: f?.amount_max,
 
-        bank, // <--- aqui
+        bank,
       };
 
       if (!reset && latest.current.nextCursor) {

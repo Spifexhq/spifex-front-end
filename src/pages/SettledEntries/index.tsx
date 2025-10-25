@@ -4,7 +4,6 @@ import { Sidebar } from "@/components/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
-import type { ConfigState } from "src/models/entries/domain";
 import { ModalType } from "@/components/Modal/Modal.types";
 import Navbar from "src/components/Navbar";
 import { api } from "src/api/requests";
@@ -21,7 +20,9 @@ const Settled = () => {
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
 
-  const [filters, setFilters] = useState<EntryFilters>({});
+  // 👇 gate until FilterBar decides (default view or empty)
+  const [filters, setFilters] = useState<EntryFilters | null>(null);
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
   const [kpiRefresh, setKpiRefresh] = useState(0);
@@ -40,10 +41,9 @@ const Settled = () => {
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
 
-  // ✅ Same pattern as CashFlow: accept FilterBar payload and refresh everything
   const handleApplyFilters = useCallback(
-    ({ filters: newFilters }: { filters: EntryFilters; config?: ConfigState }) => {
-      setFilters(newFilters);
+    ({ filters: newFilters }: { filters: EntryFilters }) => {
+      setFilters(newFilters);          // first time this becomes non-null → first and only initial fetch
       setTableKey((k) => k + 1);
       setBanksKey((k) => k + 1);
       setKpiRefresh((k) => k + 1);
@@ -76,26 +76,31 @@ const Settled = () => {
 
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          {/* ✅ passes the correct handler signature */}
-          <FilterBar onApply={handleApplyFilters} />
+          {/* FilterBar decides defaults and calls onApply once */}
+          <FilterBar onApply={handleApplyFilters} contextSettlement={true} />
 
-          <KpiRow
-            context="settled"
-            filters={filters}
-            selectedBankIds={filters.bank_id}
-            refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey}
-            banksData={{ banks, totalConsolidatedBalance, loading: banksLoading, error: banksError }}
-          />
+          {/* Render KPI/Table only when filters are ready */}
+          {filters && (
+            <>
+              <KpiRow
+                context="settled"
+                filters={filters}
+                selectedBankIds={filters.bank_id}
+                refreshToken={kpiRefresh}
+                banksRefreshKey={banksKey}
+                banksData={{ banks, totalConsolidatedBalance, loading: banksLoading, error: banksError }}
+              />
 
-          <div className="min-h-0 h-full">
-            <SettledEntriesTable
-              ref={tableRef}
-              key={tableKey}
-              filters={filters}
-              onSelectionChange={handleSelectionChange}
-            />
-          </div>
+              <div className="min-h-0 h-full">
+                <SettledEntriesTable
+                  ref={tableRef}
+                  key={tableKey}
+                  filters={filters}
+                  onSelectionChange={handleSelectionChange}
+                />
+              </div>
+            </>
+          )}
 
           {selectedIds.length > 0 && (
             <SelectionActionsBar

@@ -10,26 +10,6 @@ export type ChipKey =
   | "tx_type"
   | "amount";
 
-export type SortDir = "asc" | "desc";
-
-export type ColumnKey =
-  | "due_date"
-  | "description"
-  | "observation"
-  | "gl_account"
-  | "project"
-  | "entity"
-  | "amount"
-  | "is_settled"
-  | "installment_index";
-
-/** Table config stored in saved views */
-export interface ConfigState {
-  columns: ColumnKey[];
-  sortBy: ColumnKey;
-  sortDir: SortDir;
-}
-
 /** LocalFilters: UI strings for amounts; arrays for pickers */
 export type LocalFilters =
   Omit<EntryFilters, "gla_id" | "bank_id" | "amount_min" | "amount_max"> & {
@@ -45,6 +25,6 @@ export type Visualization = {
   id: string;
   name: string;
   is_default: boolean;
-  config: ConfigState;
   filters: LocalFilters;
+  settlement_status: boolean;
 };

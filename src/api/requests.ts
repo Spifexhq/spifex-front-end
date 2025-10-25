@@ -250,7 +250,6 @@ export const api = {
       id: string;
       name: string;
       is_default: boolean;
-      config: unknown;
       filters: unknown;
     }>>(`cashflow/${org}/entry-views/`, "GET");
   },
@@ -258,7 +257,6 @@ export const api = {
   addEntryView: (payload: {
     name: string;
     is_default?: boolean;
-    config: unknown;
     filters: unknown;
   }) => {
     const org = getOrgExternalId();
@@ -266,7 +264,6 @@ export const api = {
       id: string;
       name: string;
       is_default: boolean;
-      config: unknown;
       filters: unknown;
     }>(`cashflow/${org}/entry-views/`, "POST", payload);
   },
@@ -274,7 +271,6 @@ export const api = {
   editEntryView: (viewId: string, payload: {
     name?: string;
     is_default?: boolean;
-    config?: unknown;
     filters?: unknown;
   }) => {
     const org = getOrgExternalId();
@@ -282,7 +278,6 @@ export const api = {
       id: string;
       name: string;
       is_default: boolean;
-      config: unknown;
       filters: unknown;
     }>(`cashflow/${org}/entry-views/${viewId}/`, "PATCH", payload);
   },
