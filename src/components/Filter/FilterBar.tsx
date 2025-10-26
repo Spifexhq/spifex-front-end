@@ -1,9 +1,12 @@
 /* --------------------------------------------------------------------------
  * File: src/components/Filter/FilterBar.tsx
  * Style: Minimalist / compact. No shadows (except in "Adicionar filtro +" menu).
- * Adds: Save visualization (modal), Load, Config modal for saved views only, extra filters. (No Group By)
+ * Adds (this patch): Keyboard shortcuts + quick date-range helpers
+ *   - Ctrl/Cmd+Enter → Apply
+ *   - Ctrl/Cmd+K → focus search
+ *   - Quick ranges in date popover: Hoje / Esta semana / Mês atual / Trimestre / Ano
  * -------------------------------------------------------------------------- */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 import { SelectDropdown } from "@/components/SelectDropdown";
@@ -17,6 +20,8 @@ import {
 import { api } from "src/api/requests";
 import Button from "../Button";
 import Checkbox from "../Checkbox";
+import { formatCurrency } from "src/lib/currency";
+import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
 
 /* ------------------------------ Utils ------------------------------ */
 function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
@@ -34,6 +39,38 @@ type GLAccountLike = GLAccount & { id?: string; external_id?: string };
 function getGlaId(a: GLAccountLike): string {
   return String(a.id ?? a.external_id ?? "");
 }
+
+/* ---- Date helpers (for quick ranges) ---- */
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+function startOfWeekISO(d = new Date()) {
+  const day = d.getDay(); // 0..6 (Sun..Sat)
+  const diff = (day + 6) % 7; // start Monday
+  const start = new Date(d);
+  start.setDate(d.getDate() - diff);
+  return start.toISOString().slice(0, 10);
+}
+function startOfMonthISO(d = new Date()) {
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+}
+function startOfQuarterISO(d = new Date()) {
+  const q = Math.floor(d.getMonth() / 3) * 3;
+  return new Date(d.getFullYear(), q, 1).toISOString().slice(0, 10);
+}
+function startOfYearISO(d = new Date()) {
+  return new Date(d.getFullYear(), 0, 1).toISOString().slice(0, 10);
+}
+
+/* ---- Chip amount helper ---- */
+function amountChipLabel(minDigits?: string, maxDigits?: string) {
+  const parts: string[] = [];
+  if (minDigits) parts.push(`≥ ${formatCurrency(minDigits)}`);
+  if (maxDigits) parts.push(`≤ ${formatCurrency(maxDigits)}`);
+  return `Valor ${parts.join(" ")}`.trim();
+}
+const centsDigitsToInt = (s: string | undefined) =>
+  Number(String(s ?? "").replace(/\D/g, "")) || 0;
 
 interface FilterBarProps {
   onApply: (payload: { filters: EntryFilters }) => void;
@@ -88,8 +125,45 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
   /* Menus/Popovers */
   const [menuOpen, setMenuOpen] = useState(false);
   const [openEditor, setOpenEditor] = useState<ChipKey | null>(null);
+
+  const toggleEditor = useCallback((k: ChipKey) => {
+    setOpenEditor((curr) => (curr === k ? null : k));
+  }, []);
+
   const menuRef = useRef<HTMLDivElement>(null);
   useOutside(menuRef, () => setMenuOpen(false));
+
+  const viewsMenuRef = useRef<HTMLDivElement>(null);
+  useOutside(viewsMenuRef, () => setViewsMenuOpen(false));
+
+  /* ---- Keyboard shortcuts ---- */
+  const applyFilters = useCallback(() => {
+    onApply({ filters: toEntryFilters(filters) });
+  }, [onApply, filters]);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const cmdOrCtrl = e.metaKey || e.ctrlKey;
+      if (cmdOrCtrl && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+      if (cmdOrCtrl && e.key === "Enter") {
+        e.preventDefault();
+        applyFilters();
+        return;
+      }
+      if (e.key === "Escape") {
+        setOpenEditor(null);
+        setViewsMenuOpen(false);
+        setMenuOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [applyFilters]);
 
   /* Load GL Accounts (cursor API) */
   useEffect(() => {
@@ -190,16 +264,10 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
       gla_id: f.gla_id,
       bank_id: f.bank_id,
       tx_type: f.tx_type,
-      amount_min: f.amount_min ? Math.round(parseFloat(f.amount_min) * 100) : undefined,
-      amount_max: f.amount_max ? Math.round(parseFloat(f.amount_max) * 100) : undefined,
+      amount_min: f.amount_min ? centsDigitsToInt(f.amount_min) : undefined,
+      amount_max: f.amount_max ? centsDigitsToInt(f.amount_max) : undefined,
       settlement_status: f.settlement_status as false | true,
     } as EntryFilters;
-  }
-
-  function applyFilters() {
-    onApply({
-      filters: toEntryFilters(filters),
-    });
   }
 
   function clearAll() {
@@ -265,7 +333,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
     setTimeout(() => resetSaveModalState(), 0);
   };
 
-  // Close modals with ESC
+  // Close modals with ESC (keep original behavior)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -377,7 +445,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             <Chip
               icon="calendar"
               label={`Datas  ${filters.start_date || "yyyy-mm-dd"} - ${filters.end_date || "yyyy-mm-dd"}`}
-              onClick={() => setOpenEditor("date")}
+              onClick={() => toggleEditor("date")}
               onRemove={() => removeChip("date")}
             />
           )}
@@ -387,7 +455,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
               label={`Banco  ${selectedBanks.slice(0, 2).map((b) => b.institution).join(", ")}${
                 selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""
               }`}
-              onClick={() => setOpenEditor("banks")}
+              onClick={() => toggleEditor("banks")}
               onRemove={() => removeChip("banks")}
             />
           )}
@@ -397,7 +465,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
               label={`Conta contábil  ${selectedAccounts.slice(0, 2).map((a) => a.name).join(", ")}${
                 selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""
               }`}
-              onClick={() => setOpenEditor("accounts")}
+              onClick={() => toggleEditor("accounts")}
               onRemove={() => removeChip("accounts")}
             />
           )}
@@ -405,15 +473,15 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             <Chip
               icon="note"
               label={`Tipo ${filters.tx_type === "credit" ? "Receita" : "Despesa"}`}
-              onClick={() => setOpenEditor("tx_type")}
+              onClick={() => toggleEditor("tx_type")}
               onRemove={() => removeChip("tx_type")}
             />
           )}
           {(filters.amount_min || filters.amount_max) && (
             <Chip
               icon="note"
-              label={`Valor ${filters.amount_min ? `≥ ${filters.amount_min}` : ""} ${filters.amount_max ? `≤ ${filters.amount_max}` : ""}`}
-              onClick={() => setOpenEditor("amount")}
+              label={amountChipLabel(filters.amount_min, filters.amount_max)}
+              onClick={() => toggleEditor("amount")}
               onRemove={() => removeChip("amount")}
             />
           )}
@@ -421,16 +489,20 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             <Chip
               icon="note"
               label={`Observação  ${filters.observation}`}
-              onClick={() => setOpenEditor("observation")}
+              onClick={() => toggleEditor("observation")}
               onRemove={() => removeChip("observation")}
             />
           )}
 
           <input
+            ref={searchInputRef}
             className="flex-[1_1_30%] min-w-[160px] h-6 bg-transparent outline-none text-xs placeholder-gray-400"
-            placeholder="Buscar ou filtrar…"
+            placeholder="Buscar ou filtrar… (Ctrl/Cmd+K)"
             value={filters.description || ""}
             onChange={(e) => setFilters((f) => ({ ...f, description: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyFilters();
+            }}
           />
         </div>
 
@@ -460,17 +532,22 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         </div>
 
         {/* Load visualization (menu rápido) */}
-        <div className="relative">
+        <div className="relative" ref={viewsMenuRef}>
           <Button
             variant="outline"
             size="sm"
             className={`font-semibold bg-white hover:bg-gray-50 ${viewsMenuOpen ? "!bg-white !border-gray-400" : ""}`}
             onClick={() => setViewsMenuOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={viewsMenuOpen}
           >
             Visualizações
           </Button>
           {viewsMenuOpen && (
-            <div className="absolute right-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
+            <div
+              className="absolute right-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg"
+              role="menu"
+            >
               {(scopedViews.length ? scopedViews : []).map((v) => (
                 <MenuItem
                   key={v.id}
@@ -515,6 +592,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           )}
         </div>
 
+        {/* Apply */}
+        <div className="ml-auto sm:ml-0">
+          <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={applyFilters}>
+            Aplicar
+          </Button>
+        </div>
+
         {/* Clear filters */}
         <button
           className={`text-xs font-semibold text-red-600 ${hasActive ? "" : "opacity-40 cursor-not-allowed"}`}
@@ -523,18 +607,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           Limpar filtros
         </button>
 
-        {/* Apply */}
-        <div className="ml-auto sm:ml-0">
-          <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={applyFilters}>
-            Aplicar
-          </Button>
-        </div>
       </div>
 
       {/* Editors (border-only, no shadow) */}
       <div className="relative">
         {openEditor === "date" && (
-          <Popover onClose={() => setOpenEditor(null)}>
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[360px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">Início</span>
@@ -555,6 +633,29 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                 />
               </label>
             </div>
+
+            {/* Quick date-range helpers */}
+            <div className="mt-2">
+              <div className="text-[11px] text-gray-500 mb-1">Atalhos</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: todayISO(), end_date: todayISO() }))}>
+                  Hoje
+                </QuickButton>
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfWeekISO(), end_date: todayISO() }))}>
+                  Esta semana
+                </QuickButton>
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfMonthISO(), end_date: todayISO() }))}>
+                  Mês atual
+                </QuickButton>
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfQuarterISO(), end_date: todayISO() }))}>
+                  Trimestre
+                </QuickButton>
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfYearISO(), end_date: todayISO() }))}>
+                  Ano
+                </QuickButton>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>
                 Remover
@@ -567,7 +668,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         )}
 
         {openEditor === "banks" && (
-          <Popover onClose={() => setOpenEditor(null)}>
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <SelectDropdown<BankAccount>
               label="Bancos"
               items={banks}
@@ -595,7 +696,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         )}
 
         {openEditor === "accounts" && (
-          <Popover onClose={() => setOpenEditor(null)}>
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <SelectDropdown<GLAccountLike>
               label="Contas contábeis"
               items={ledgerAccounts}
@@ -624,7 +725,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         )}
 
         {openEditor === "observation" && (
-          <Popover onClose={() => setOpenEditor(null)}>
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <input
               type="text"
               placeholder="Digite uma observação…"
@@ -649,7 +750,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         )}
 
         {openEditor === "tx_type" && (
-          <Popover onClose={() => setOpenEditor(null)}>
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "credit" }))}>
                 Receita
@@ -670,31 +771,51 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         )}
 
         {openEditor === "amount" && (
-          <Popover onClose={() => setOpenEditor(null)}>
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">Mínimo (R$)</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  value={filters.amount_min || ""}
-                  onChange={(e) => setFilters((f) => ({ ...f, amount_min: e.target.value }))}
+                  placeholder="R$ 0,00"
+                  value={filters.amount_min ? formatCurrency(filters.amount_min) : ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, amount_min: e.target.value }))
+                  }
+                  onKeyDown={(e) =>
+                    handleUtilitaryAmountKeyDown(
+                      e,
+                      filters.amount_min ?? "0",
+                      (newVal: string) => setFilters((f) => ({ ...f, amount_min: newVal }))
+                    )
+                  }
                 />
               </label>
+
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">Máximo (R$)</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  value={filters.amount_max || ""}
-                  onChange={(e) => setFilters((f) => ({ ...f, amount_max: e.target.value }))}
+                  placeholder="R$ 0,00"
+                  value={filters.amount_max ? formatCurrency(filters.amount_max) : ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, amount_max: e.target.value }))
+                  }
+                  onKeyDown={(e) =>
+                    handleUtilitaryAmountKeyDown(
+                      e,
+                      filters.amount_max ?? "0",
+                      (newVal: string) => setFilters((f) => ({ ...f, amount_max: newVal }))
+                    )
+                  }
                 />
               </label>
             </div>
+
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>
                 Remover
@@ -892,6 +1013,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
 
 /* ------------------------------- Subcomponents ------------------------------ */
 
+const QuickButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ className = "", ...props }) => (
+  <button
+    {...props}
+    className={`text-[11px] border border-gray-300 rounded px-2 py-[3px] bg-white hover:bg-gray-50 ${className}`}
+  />
+);
+
 const Chip: React.FC<{
   icon?: "calendar" | "bank" | "accounts" | "note";
   label: string;
@@ -905,9 +1033,11 @@ const Chip: React.FC<{
     if (icon === "note") return <span className="text-[12px]" aria-hidden>📝</span>;
     return null;
   };
+
   return (
     <div
       className="shrink-0 inline-flex items-center gap-1 text-xs border border-gray-300 rounded-md px-2 h-6 bg-white cursor-pointer"
+      onMouseDown={(e) => e.stopPropagation()}
       onClick={onClick}
     >
       <Icon />
@@ -915,6 +1045,7 @@ const Chip: React.FC<{
       <button
         aria-label="remover filtro"
         className="ml-1 rounded px-1 text-gray-500 hover:bg-gray-200"
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
@@ -932,12 +1063,15 @@ const MenuItem: React.FC<{ label: string; onClick(): void }> = ({ label, onClick
   </button>
 );
 
-const Popover: React.FC<{ children: React.ReactNode; onClose(): void }> = ({ children, onClose }) => {
+const Popover: React.FC<{ children: React.ReactNode; onClose(): void; className?: string }> = ({ children, onClose, className }) => {
   const ref = useRef<HTMLDivElement>(null);
   useOutside(ref, onClose);
   return (
     <div className="absolute z-[99999] mt-2">
-      <div ref={ref} className="rounded-md border border-gray-300 bg-white p-3">
+      <div
+        ref={ref}
+        className={`rounded-md border border-gray-300 bg-white p-3 ${className || ""}`}
+      >
         {children}
       </div>
     </div>
