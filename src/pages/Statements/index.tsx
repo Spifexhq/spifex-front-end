@@ -285,7 +285,7 @@ const Statements: React.FC = () => {
                   Financeiro
                 </div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  Extratos bancários (PDF)
+                  Extratos bancários
                 </h1>
               </div>
               <div className="ml-auto flex items-center gap-2">
