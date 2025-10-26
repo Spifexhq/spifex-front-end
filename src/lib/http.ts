@@ -308,6 +308,18 @@ function keyFrom(cfg: AxiosRequestConfig) {
   return `${(cfg.method || 'GET').toUpperCase()} ${u}?${p}`;
 }
 
+function pruneParams(p: unknown) {
+  if (!p || typeof p !== "object") return p;
+  const src = p as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(src)) {
+    const v = src[k];
+    if (v === "" || v === undefined || v === null) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
 /* ============================================================================
  * Envelope de request: retorna ApiSuccess<T> ou "vazio" para 204
  * ==========================================================================*/
@@ -321,7 +333,9 @@ export async function request<T>(
       url: endpoint,
       method,
       data: method !== 'GET' ? payload : undefined,
-      params: method === 'GET' ? payload : undefined,
+      params: method === 'GET' ? pruneParams(payload) : undefined,
+      // === [NOVO] 304 não é falha ===
+      validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
     };
 
     let res: AxiosResponse<ApiResponse<T> | unknown>;
@@ -336,10 +350,46 @@ export async function request<T>(
       } else {
         // 2) Single-flight: evita 2+ GETs iguais em paralelo
         if (!inflight.has(k)) {
-          inflight.set(k, http.request<ApiResponse<T> | unknown>(cfg).finally(() => inflight.delete(k)));
+          inflight.set(
+            k,
+            http.request<ApiResponse<T> | unknown>(cfg).finally(() => inflight.delete(k))
+          );
         }
         res = await inflight.get(k)!;
-        responseCache.set(k, { t: Date.now(), res }); // salva no cache
+
+        // === [NOVO] 304 → materializar corpo 200 anterior, ou fazer refresh forçado ===
+        if (res.status === 304) {
+          const cached = responseCache.get(k);
+          if (cached) {
+            res = cached.res as AxiosResponse<ApiResponse<T> | unknown>;
+          } else {
+            // Não há 200 materializada ainda → fazer um GET "forçado" (bypass ao cache do navegador)
+            const refreshKey = `REFRESH ${k}`;
+            // muda levemente a URL (param _r) para garantir ida à origem
+            const ts = Date.now();
+            const forceCfg: AxiosRequestConfig = {
+              ...cfg,
+              params: { ...(cfg.params), _r: ts },
+            };
+            if (!inflight.has(refreshKey)) {
+              inflight.set(
+                refreshKey,
+                http.request<ApiResponse<T> | unknown>(forceCfg).finally(() => inflight.delete(refreshKey))
+              );
+            }
+            const fresh = await inflight.get(refreshKey)!;
+            if (fresh.status >= 200 && fresh.status < 300) {
+              res = fresh;
+            } else {
+              throw new Error(`Revalidação retornou ${fresh.status} — não foi possível materializar a resposta.`);
+            }
+          }
+        }
+
+        // guarda a última resposta 2xx para reuso
+        if (res.status >= 200 && res.status < 300) {
+          responseCache.set(k, { t: Date.now(), res });
+        }
       }
     } else {
       res = await http.request<ApiResponse<T> | unknown>(cfg);
@@ -367,6 +417,7 @@ export async function request<T>(
     const err = e as AxiosError<unknown>;
 
     if (axios.isAxiosError(err)) {
+      // 304 nunca deve cair aqui por causa do validateStatus acima.
       const body = err.response?.data;
 
       // erro padronizado do backend
