@@ -109,7 +109,7 @@ const sections: {
     items: [
       { id: "personal", icon: "personal", label: "Personal settings" },
       { id: "notifications", icon: "bell", label: "Notifications" },
-      { id: "copilots", icon: "robot", label: "Copilots" },
+      // { id: "copilots", icon: "robot", label: "Copilots" },
       { id: "security", icon: "shield", label: "Security and privacy" },
     ],
   },
@@ -120,7 +120,7 @@ const sections: {
       { id: "employees", icon: "employees", label: "Employees" },
       { id: "groups", icon: "groups", label: "Groups" },
       { id: "subscription-management", icon: "layers", label: "Plan" },
-      { id: "integrations", icon: "integrations", label: "Integrations" },
+      // { id: "integrations", icon: "integrations", label: "Integrations" },
     ],
   },
   {
@@ -134,7 +134,7 @@ const sections: {
   {
     title: "Management",
     items: [
-      { id: "assistant", icon: "assistant", label: "Assistant" },
+      // { id: "assistant", icon: "assistant", label: "Assistant" },
       { id: "projects", icon: "projects", label: "Projects" },
       { id: "inventory", icon: "inventory", label: "Inventory" },
       { id: "entities", icon: "inventory", label: "Entities" },
