@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { api } from "src/api/requests";
 import BanksTable from "src/components/Table/BanksTable";
@@ -82,6 +83,11 @@ const KpiRow: React.FC<KpiRowProps> = ({
   const [cf, setCf] = useState<CashflowKpis | null>(null);
   const [st, setSt] = useState<SettledKpis | null>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const goToBanks = React.useCallback(() => {
+    if (navigate) navigate("/settings/banks");
+    else window.location.assign("/settings/banks");
+  }, [navigate]);
 
   /* -------------------- Panel-only bank filtering (local) ------------------- */
   const toKey = (v: unknown) => String(v);
@@ -343,7 +349,15 @@ const KpiRow: React.FC<KpiRowProps> = ({
                   <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
                     <div className="text-[12px] text-gray-700">
                       Contas bancárias • Saldo consolidado:{" "}
-                      <span className="font-semibold text-gray-800 tabular-nums">{totalFmt}</span>
+                      <button
+                        type="button"
+                        onClick={goToBanks}
+                        className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
+                        aria-label="Ir para configurações de bancos"
+                        title="Abrir Bancos"
+                      >
+                        {totalFmt}
+                      </button>
                     </div>
                     <button
                       className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"

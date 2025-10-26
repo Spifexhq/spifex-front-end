@@ -492,7 +492,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             ) : (
               <span className="text-gray-500">Selecione um banco</span>
             )}
-            <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/Cmd+Enter (salvar)</span>
+            <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/⌘+Enter (salvar)</span>
           </div>
 
           <div className="flex gap-2">

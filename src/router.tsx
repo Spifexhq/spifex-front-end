@@ -37,6 +37,7 @@ const EmployeeSettings = Loader(lazy(() => import("@/pages/EmployeeSettings")));
 const GroupSettings = Loader(lazy(() => import("@/pages/GroupSettings")));
 const LedgerAccountSettings = Loader(lazy(() => import("@/pages/LedgerAccountSettings")));
 const LedgerAccountsGate = Loader(lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsGate")));
+const Statements = Loader(lazy(() => import("@/pages/Statements")));
 
 // Status Pages
 const PurchaseConfirmation = Loader(lazy(() => import("@/pages/Status/PurchaseConfirmation")));
@@ -192,6 +193,10 @@ const routes: RouteObject[] = [
                 {
                 path: 'register/ledger-accounts',
                 element: <LedgerAccountsGate />
+                },
+                {
+                path: 'bank-statements',
+                element: <Statements />
                 },
             ]
             },

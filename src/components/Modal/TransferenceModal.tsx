@@ -290,7 +290,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
             ) : (
               <>Informe um valor, selecione os bancos e a data.</>
             )}
-            <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/Cmd+S (salvar)</span>
+            <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/⌘+S (salvar)</span>
           </div>
 
           <div className="flex gap-2">

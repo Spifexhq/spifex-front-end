@@ -18,7 +18,7 @@ import Input from "../Input";
  * -----------------------------------------------------------------------------
  * - Lê perguntas/respostas do JSON (campo `faqs`)
  * - Mantém: typewriter com pausar/retomar/pular, TTS opcional, cópia, busca,
- *   chips de recentes (máx. 2), acessível, atalhos (Esc fecha, Ctrl/Cmd+K foca busca)
+ *   chips de recentes (máx. 2), acessível, atalhos (Esc fecha, Ctrl/⌘+K foca busca)
  * - Paleta via CSS variables (ex.: --accentPrimary) com Tailwind arbitrary values
  * - ESLint-friendly (callbacks estáveis, efeitos bem declarados, sem catch vazio)
  * --------------------------------------------------------------------------- */
@@ -308,7 +308,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                   {title}
                 </h2>
                 <p className="text-[12px] text-gray-500">
-                  Enter: perguntar · Esc: fechar · Ctrl/Cmd + K: buscar
+                  Enter: perguntar · Esc: fechar · Ctrl/⌘ + K: buscar
                 </p>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import { request } from '@/lib/http'
+import { request, http } from '@/lib/http'
+import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import {
   GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,
   GetUserResponse,
@@ -769,4 +770,87 @@ export const api = {
       "DELETE"
     );
   },
+
+  // -------------- Statements (PDF) --------------
+
+  // list with filters { q?, status?, bank? }
+  getStatements: (params?: { q?: string; status?: string; bank?: string }) => {
+    const org = getOrgExternalId();
+    return request<Paginated<{
+      id: string;
+      bank_account_id: string | null;
+      bank_account_label: string | null;
+      original_filename: string;
+      content_type: string;
+      size_bytes: number;
+      pages: number | null;
+      status: "uploaded" | "processing" | "ready" | "failed";
+      created_at: string;
+    }>>(
+      `banking/${org}/banking/statements/`,
+      "GET",
+      params
+    );
+  },
+
+  // upload with progress (FormData: file, optional bank_account_id)
+  uploadStatement: (form: FormData, onProgress?: (pct: number) => void) => {
+    const org = getOrgExternalId();
+    return http.post(
+      `banking/${org}/banking/statements/`,
+      form,
+      {
+        onUploadProgress: (evt: AxiosProgressEvent) => {
+          if (!onProgress || !evt.total) return;
+          onProgress(Math.round((evt.loaded * 100) / evt.total));
+        },
+      }
+    ).then((r: AxiosResponse) => r.data);
+  },
+
+  deleteStatement: (statementId: string) => {
+    const org = getOrgExternalId();
+    return request<void>(
+      `banking/${org}/banking/statements/${statementId}/`,
+      "DELETE"
+    );
+  },
+
+  triggerStatementAnalysis: (statementId: string) => {
+    const org = getOrgExternalId();
+    return request<{
+      id: string;
+      status: "processing" | "ready" | "failed" | "uploaded";
+      started_at: string;
+      finished_at: string | null;
+      error_message: string;
+    }>(
+      `banking/${org}/banking/statements/${statementId}/analyze/`,
+      "POST",
+      {}
+    );
+  },
+
+  // download binary (Blob) via axios responseType: 'blob'
+  downloadStatement: async (statementId: string) => {
+    const org = getOrgExternalId();
+    const res = await http.get(
+      `banking/${org}/banking/statements/${statementId}/download/`,
+      { responseType: "blob", validateStatus: (s: number) => s >= 200 && s < 300 }
+    );
+    const blob = res.data as Blob;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "extrato.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  },
+
+
+
+
+
+
+
 }

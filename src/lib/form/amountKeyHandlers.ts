@@ -1,4 +1,5 @@
 // src/lib/form/amountKeyHandlers.ts
+
 export function handleAmountKeyDown(
   e: React.KeyboardEvent<HTMLInputElement>,
   currentAmount: string,
@@ -8,35 +9,45 @@ export function handleAmountKeyDown(
   const updateAmount = (newValue: string) => {
     setFormData((prev: any) => {
       if (isRoot) {
-        return {
-          ...prev,
-          amount: newValue,
-        };
-      } else {
-        return {
-          ...prev,
-          details: {
-            ...prev.details,
-            amount: newValue,
-          },
-        };
+        return { ...prev, amount: newValue };
       }
+      return {
+        ...prev,
+        details: { ...prev.details, amount: newValue },
+      };
     });
   };
+
+  // ✅ Let the browser handle:
+  // - Ctrl/Cmd + 1..9 (switch browser tabs)
+  // - Common shortcuts: A,C,V,X,Z,Y (select all, copy, paste, cut, undo, redo)
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    const key = e.key.toLowerCase();
+    if (/^[0-9]$/.test(key)) return; // tab switching
+    if (["a", "c", "v", "x", "z", "y"].includes(key)) return; // common shortcuts
+  }
+
+  // Allow default behavior for navigation keys
+  if (["Tab", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+    return;
+  }
 
   if (/^\d$/.test(e.key)) {
     e.preventDefault();
     const newAmount = parseInt(currentAmount || "0", 10) * 10 + parseInt(e.key, 10);
     updateAmount(newAmount.toString());
-  } else if (e.key === "Backspace") {
+    return;
+  }
+
+  if (e.key === "Backspace") {
     e.preventDefault();
     const newAmount = Math.floor(parseInt(currentAmount || "0", 10) / 10);
     updateAmount(newAmount.toString());
-  } else if (["Tab", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-  // Allow default behavior for navigation keys
-  } else {
-    e.preventDefault();
+    return;
   }
+
+  // Block everything else (keeps the numeric-only masked behavior)
+  e.preventDefault();
 }
 
 export function handleUtilitaryAmountKeyDown(
@@ -44,17 +55,30 @@ export function handleUtilitaryAmountKeyDown(
   currentValue: string,
   update: (newVal: string) => void
 ) {
+  // ✅ Same pass-throughs here too
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    const key = e.key.toLowerCase();
+    if (/^[0-9]$/.test(key)) return; // browser tab switching
+    if (["a", "c", "v", "x", "z", "y"].includes(key)) return; // common shortcuts
+  }
+
+  if (["Tab", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+    return;
+  }
+
   if (/^\d$/.test(e.key)) {
     e.preventDefault();
     const newVal = (parseInt(currentValue || "0", 10) * 10 + parseInt(e.key, 10)).toString();
     update(newVal);
-  } else if (e.key === "Backspace") {
+    return;
+  }
+
+  if (e.key === "Backspace") {
     e.preventDefault();
     const newVal = Math.floor(parseInt(currentValue || "0", 10) / 10).toString();
     update(newVal);
-  } else if (["Tab", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-  // Allow default behavior for navigation keys
-  } else {
-    e.preventDefault();
+    return;
   }
+
+  e.preventDefault();
 }

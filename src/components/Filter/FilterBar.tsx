@@ -2,8 +2,8 @@
  * File: src/components/Filter/FilterBar.tsx
  * Style: Minimalist / compact. No shadows (except in "Adicionar filtro +" menu).
  * Adds (this patch): Keyboard shortcuts + quick date-range helpers
- *   - Ctrl/Cmd+Enter → Apply
- *   - Ctrl/Cmd+K → focus search
+ *   - Ctrl/⌘+Enter → Apply
+ *   - Ctrl/⌘+K → focus search
  *   - Quick ranges in date popover: Hoje / Esta semana / Mês atual / Trimestre / Ano
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
@@ -497,7 +497,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <input
             ref={searchInputRef}
             className="flex-[1_1_30%] min-w-[160px] h-6 bg-transparent outline-none text-xs placeholder-gray-400"
-            placeholder="Buscar ou filtrar… (Ctrl/Cmd+K)"
+            placeholder="Buscar ou filtrar… (Ctrl/⌘+K)"
             value={filters.description || ""}
             onChange={(e) => setFilters((f) => ({ ...f, description: e.target.value }))}
             onKeyDown={(e) => {

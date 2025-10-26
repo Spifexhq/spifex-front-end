@@ -793,7 +793,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     handleClose();
   }, [hasMeaningfulData, handleClose]);
 
-  /* ----------------------- Teclado: ESC, Ctrl/Cmd+S, Ctrl/Cmd+←/→ ----------- */
+  /* ----------------------- Teclado: ESC, Ctrl/⌘+S, Ctrl/⌘+←/→ ----------- */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -815,18 +815,24 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         return;
       }
 
+      // Save: keep Ctrl/⌘ + S
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
         return;
       }
 
-      if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      // ✅ Tabs: require Ctrl + Alt + ArrowLeft/Right (Ctrl alone does nothing special)
+      if (e.ctrlKey && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         if (warning || showCloseConfirm) return;
         const dropdownOpen = document.querySelector('[data-select-open="true"]');
         if (dropdownOpen) return;
         e.preventDefault();
         goTabRelative(e.key === "ArrowRight" ? 1 : -1);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && /^[0-9]$/.test(e.key)) {
         return;
       }
     };
@@ -1304,7 +1310,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 <>Informe um valor para salvar.</>
               )}
               <span className="ml-3 text-gray-400">
-                Atalhos: Esc (fechar), Ctrl/Cmd+S (salvar), Ctrl/Cmd+←/→ (abas)
+                Atalhos: Esc (fechar), Ctrl/⌘+S (salvar), Ctrl+Alt+←/→ (abas)
               </span>
             </p>
 
