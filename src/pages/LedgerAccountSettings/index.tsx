@@ -2,7 +2,7 @@
 /*  File: src/pages/LedgerAccountSettings.tsx                                 */
 /*  Refactor: GLAccount (id string) + paginação                               */
 /*           Campos: name, code?, category(1..4), subcategory, default_tx,    */
-/*           is_active                                                         */
+/*           is_active                                                        */
 /*           - Backend recebe APENAS números (1..4)                           */
 /*           - Front exibe labels em PT                                       */
 /* -------------------------------------------------------------------------- */
@@ -23,6 +23,7 @@ import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
+import { useTranslation } from "react-i18next";
 
 /** Tipos do domínio/DTO */
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
@@ -37,7 +38,7 @@ import Checkbox from "src/components/Checkbox";
 
 type TxType = "debit" | "credit";
 
-/** Labels exibidos (UI) */
+/** Labels exibidos (UI) — permanecem em PT para manter o mapeamento estável */
 type CategoryLabel =
   | "Receitas Operacionais"
   | "Receitas Não Operacionais"
@@ -67,7 +68,7 @@ const CATEGORY_DEFAULT_TX: Record<CategoryValue, TxType> = {
   4: "debit",
 };
 
-/** Opções para o Select */
+/** Opções para o Select – labels em PT, conforme requisito */
 const GROUP_OPTIONS: { label: CategoryLabel; value: CategoryLabel; inferredTx: TxType }[] = [
   { label: "Receitas Operacionais", value: "Receitas Operacionais", inferredTx: "credit" },
   { label: "Receitas Não Operacionais", value: "Receitas Não Operacionais", inferredTx: "credit" },
@@ -122,9 +123,9 @@ function getCategoryValue(acc: GLX): CategoryValue | undefined {
 }
 
 /** Converte para label UI */
-function getCategoryLabel(acc: GLX): CategoryLabel | "(Sem categoria)" {
+function getCategoryLabel(acc: GLX): CategoryLabel | string {
   const v = getCategoryValue(acc);
-  return v ? CATEGORY_VALUE_TO_LABEL[v] : "(Sem categoria)";
+  return v ? CATEGORY_VALUE_TO_LABEL[v] : "settings:ledgerAccounts.tags.noGroup";
 }
 
 /** Pega default_tx (se não vier do back, infere pela categoria) */
@@ -143,9 +144,15 @@ function getGlaId(acc: GLAccount): string {
 
 /* ---------------------------- Main component ----------------------------- */
 const LedgerAccountSettings: React.FC = () => {
+  const { t, i18n } = useTranslation(["settings"]);
+
   useEffect(() => {
-    document.title = "Contas Contábeis";
-  }, []);
+    document.title = t("settings:ledgerAccounts.title");
+  }, [t]);
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
 
@@ -186,13 +193,13 @@ const LedgerAccountSettings: React.FC = () => {
   const handleDownloadPDF = async () => {
     try {
       const result = await generateLedgerAccountsPDF({
-        companyName: "Spifex",
-        title: "Plano de Contas Contábeis",
+        companyName: t("settings:ledgerAccounts.pdf.company"),
+        title: t("settings:ledgerAccounts.pdf.title"),
       });
-      setSnackBarMessage(result.message || "PDF gerado.");
+      setSnackBarMessage(result.message || t("settings:ledgerAccounts.toast.pdfOk"));
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
-      setSnackBarMessage("Erro inesperado ao gerar o PDF.");
+      setSnackBarMessage(t("settings:ledgerAccounts.toast.pdfError"));
     } finally {
       setMenuOpen(false);
     }
@@ -222,9 +229,7 @@ const LedgerAccountSettings: React.FC = () => {
     return all.sort((a, b) => {
       const ca = (a.code || "").toString();
       const cb = (b.code || "").toString();
-      if (ca && cb && ca !== cb) {
-        return ca.localeCompare(cb, "pt-BR", { numeric: true });
-      }
+      if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
       return (a.name || "").localeCompare(b.name || "", "pt-BR");
     });
   }, []);
@@ -253,7 +258,12 @@ const LedgerAccountSettings: React.FC = () => {
   const accountsFiltered = useMemo(() => {
     const s = search.trim().toLowerCase();
     return accounts.filter((a) => {
-      const label = getCategoryLabel(a as GLX);
+      const labelOrKey = getCategoryLabel(a as GLX);
+      const label =
+        labelOrKey.startsWith("settings:ledgerAccounts")
+          ? t(labelOrKey)
+          : (labelOrKey as string);
+
       const byGroup = !filterGroup || label === filterGroup;
       const bySearch =
         !s ||
@@ -263,24 +273,29 @@ const LedgerAccountSettings: React.FC = () => {
         (a.code || "").toLowerCase().includes(s);
       return byGroup && bySearch;
     });
-  }, [accounts, search, filterGroup]);
+  }, [accounts, search, filterGroup, t]);
 
   const groups = useMemo(() => {
     const labels = accountsFiltered
       .map((a) => getCategoryLabel(a as GLX))
-      .filter((l): l is CategoryLabel => l !== "(Sem categoria)");
+      .map((lab) => (lab.startsWith("settings:ledgerAccounts") ? t(lab) : lab))
+      .filter((l): l is CategoryLabel => !!l && !l.startsWith("settings:ledgerAccounts"));
     return Array.from(new Set(labels)) as CategoryLabel[];
-  }, [accountsFiltered]);
+  }, [accountsFiltered, t]);
 
   const subgroupOptions = useMemo(() => {
     if (!formData.category) return [] as { label: string; value: string }[];
     const list = accounts
-      .filter((a) => getCategoryLabel(a as GLX) === formData.category)
+      .filter((a) => {
+        const lab = getCategoryLabel(a as GLX);
+        const resolved = lab.startsWith("settings:ledgerAccounts") ? t(lab) : lab;
+        return resolved === formData.category;
+      })
       .map((a) => a.subcategory || "")
       .filter(Boolean);
     const unique = Array.from(new Set(list));
     return unique.map((sg) => ({ label: sg, value: sg }));
-  }, [accounts, formData.category]);
+  }, [accounts, formData.category, t]);
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
@@ -295,9 +310,11 @@ const LedgerAccountSettings: React.FC = () => {
     setMode("edit");
     setEditing(acc);
     setAddingNewSubgroup(false);
+    const labelOrKey = getCategoryLabel(acc as GLX);
+    const label = labelOrKey.startsWith("settings:ledgerAccounts") ? t(labelOrKey) : (labelOrKey as CategoryLabel | "");
     setFormData({
       name: acc.name || "",
-      category: getCategoryLabel(acc as GLX) as CategoryLabel | "",
+      category: label as CategoryLabel | "",
       subcategory: acc.subcategory || "",
       code: acc.code || "",
       is_active: acc.is_active ?? true,
@@ -343,7 +360,7 @@ const LedgerAccountSettings: React.FC = () => {
   const submitAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!formData.category) throw new Error("Categoria obrigatória");
+      if (!formData.category) throw new Error("required");
       const categoryValue: CategoryValue = CATEGORY_LABEL_TO_VALUE[formData.category as CategoryLabel];
 
       const basePayload = {
@@ -359,23 +376,23 @@ const LedgerAccountSettings: React.FC = () => {
         await api.addLedgerAccount(payload);
       } else if (editing) {
         const glaId = getGlaId(editing);
-        const payload: EditGLAccountRequest = basePayload; // PATCH parcial é aceito
+        const payload: EditGLAccountRequest = basePayload;
         await api.editLedgerAccount(glaId, payload);
       }
 
       const refreshed = await fetchAllAccounts();
       setAccounts(refreshed);
       closeModal();
-      setSnackBarMessage("Conta salva com sucesso.");
+      setSnackBarMessage(t("settings:ledgerAccounts.toast.saved"));
     } catch (err) {
       console.error(err);
-      setSnackBarMessage("Erro ao salvar conta contábil.");
+      setSnackBarMessage(t("settings:ledgerAccounts.toast.saveError"));
     }
   };
 
   /** Abre o ConfirmToast para EXCLUIR UMA conta */
   const requestDeleteAccount = (acc: GLAccount) => {
-    setConfirmText(`Excluir conta "${acc.name}"?`);
+    setConfirmText(t("settings:ledgerAccounts.confirm.deleteOne", { name: acc.name ?? "" }));
     setConfirmAction(() => async () => {
       try {
         const glaId = getGlaId(acc);
@@ -383,7 +400,7 @@ const LedgerAccountSettings: React.FC = () => {
         const refreshed = await fetchAllAccounts();
         setAccounts(refreshed);
       } catch {
-        setSnackBarMessage("Erro ao excluir conta.");
+        setSnackBarMessage(t("settings:ledgerAccounts.toast.deleteError"));
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
@@ -395,14 +412,14 @@ const LedgerAccountSettings: React.FC = () => {
   /** Abre o ConfirmToast para EXCLUIR TODAS as contas */
   const requestDeleteAll = () => {
     if (deletingAll) return;
-    setConfirmText("Tem certeza que deseja excluir TODAS as contas contábeis? Esta ação não pode ser desfeita.");
+    setConfirmText(t("settings:ledgerAccounts.confirm.deleteAll"));
     setConfirmAction(() => async () => {
       try {
         setDeletingAll(true);
-        await api.deleteAllLedgerAccounts(); // DELETE body: { confirm_delete_all: true }
+        await api.deleteAllLedgerAccounts();
         navigate("/settings/register/ledger-accounts", { replace: true });
       } catch {
-        setSnackBarMessage("Erro ao excluir todas as contas.");
+        setSnackBarMessage(t("settings:ledgerAccounts.toast.deleteAllError"));
       } finally {
         setDeletingAll(false);
         setMenuOpen(false);
@@ -432,18 +449,21 @@ const LedgerAccountSettings: React.FC = () => {
 
   /* ----------------------- View render helpers --------------------------- */
   const RowAccountList = ({ a }: { a: GLAccount }) => {
-    const label = getCategoryLabel(a as GLX);
+    const labelOrKey = getCategoryLabel(a as GLX);
+    const label = labelOrKey.startsWith("settings:ledgerAccounts") ? t(labelOrKey) : labelOrKey;
     const tx = getDefaultTx(a as GLX);
     return (
       <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-gray-900 truncate">{a.name || "(sem nome)"}</p>
+          <p className="text-[13px] font-medium text-gray-900 truncate">
+            {a.name || t("settings:ledgerAccounts.tags.noName")}
+          </p>
           <div className="mt-1 flex flex-wrap gap-2">
-            {a.code ? <Badge>Cód: {a.code}</Badge> : null}
+            {a.code ? <Badge>{t("settings:ledgerAccounts.tags.code")}: {a.code}</Badge> : null}
             <Badge>{label}</Badge>
             {a.subcategory ? <Badge>{a.subcategory}</Badge> : null}
-            {tx ? <Badge>{tx === "credit" ? "Crédito" : "Débito"}</Badge> : null}
-            {a.is_active === false ? <Badge>Inativa</Badge> : null}
+            {tx ? <Badge>{tx === "credit" ? t("settings:ledgerAccounts.tags.credit") : t("settings:ledgerAccounts.tags.debit")}</Badge> : null}
+            {a.is_active === false ? <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge> : null}
           </div>
         </div>
         {isOwner && (
@@ -453,10 +473,10 @@ const LedgerAccountSettings: React.FC = () => {
               className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
               onClick={() => openEditModal(a)}
             >
-              Editar
+              {t("settings:ledgerAccounts.buttons.edit")}
             </Button>
             <Button variant="common" onClick={() => requestDeleteAccount(a)}>
-              Excluir
+              {t("settings:ledgerAccounts.buttons.delete")}
             </Button>
           </div>
         )}
@@ -466,9 +486,11 @@ const LedgerAccountSettings: React.FC = () => {
 
   const renderListView = () => {
     const sorted = [...accountsFiltered].sort((a, b) => {
-      const ga = getCategoryLabel(a as GLX);
-      const gb = getCategoryLabel(b as GLX);
-      const g = (ga || "").localeCompare(gb || "");
+      const ga = (getCategoryLabel(a as GLX) as string);
+      const gb = (getCategoryLabel(b as GLX) as string);
+      const gaR = ga.startsWith("settings:ledgerAccounts") ? t(ga) : ga;
+      const gbR = gb.startsWith("settings:ledgerAccounts") ? t(gb) : gb;
+      const g = (gaR || "").localeCompare(gbR || "");
       if (g !== 0) return g;
       const sg = (a.subcategory || "").localeCompare(b.subcategory || "");
       if (sg !== 0) return sg;
@@ -479,14 +501,16 @@ const LedgerAccountSettings: React.FC = () => {
     return (
       <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
         <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-          <span className="text-[11px] uppercase tracking-wide text-gray-700">Todas as contas</span>
+          <span className="text-[11px] uppercase tracking-wide text-gray-700">
+            {t("settings:ledgerAccounts.list.all")}
+          </span>
         </div>
         <div className="divide-y divide-gray-200">
           {sorted.map((a) => (
             <RowAccountList key={getGlaId(a)} a={a} />
           ))}
           {sorted.length === 0 && (
-            <p className="p-4 text-center text-sm text-gray-500">Nenhuma conta encontrada.</p>
+            <p className="p-4 text-center text-sm text-gray-500">{t("settings:ledgerAccounts.list.empty")}</p>
           )}
         </div>
       </div>
@@ -510,20 +534,26 @@ const LedgerAccountSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div className="flex-1">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Contas contábeis</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:ledgerAccounts.header.section")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:ledgerAccounts.header.title")}
+                </h1>
               </div>
 
               {isOwner && (
                 <div className="flex items-center gap-2">
-                  <Button onClick={openCreateModal} className="!py-1.5">Adicionar conta</Button>
+                  <Button onClick={openCreateModal} className="!py-1.5">
+                    {t("settings:ledgerAccounts.buttons.add")}
+                  </Button>
                   <div className="relative" ref={menuRef}>
                     <Button
                       variant="outline"
                       onClick={() => setMenuOpen((v) => !v)}
                       aria-haspopup="menu"
                       aria-expanded={menuOpen}
-                      title="Opções"
+                      title={t("settings:ledgerAccounts.buttons.options")}
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                     >
                       ⋯
@@ -538,18 +568,22 @@ const LedgerAccountSettings: React.FC = () => {
                           className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 border-b border-gray-100 transition-colors"
                           onClick={handleDownloadPDF}
                           disabled={accounts.length === 0}
-                          title={accounts.length === 0 ? "Nenhuma conta disponível" : "Baixar lista em PDF"}
+                          title={
+                            accounts.length === 0
+                              ? t("settings:ledgerAccounts.buttons.downloadPdfDisabled")
+                              : t("settings:ledgerAccounts.buttons.downloadPdf")
+                          }
                         >
-                          Baixar contas contábeis em PDF
+                          {t("settings:ledgerAccounts.buttons.downloadPdf")}
                         </button>
                         <button
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
                           onClick={requestDeleteAll}
                           disabled={deletingAll || accounts.length === 0}
-                          title={deletingAll ? "Processando..." : "Excluir todas as contas"}
+                          title={deletingAll ? t("settings:ledgerAccounts.buttons.deletingAll") : t("settings:ledgerAccounts.buttons.resetAll")}
                         >
-                          {deletingAll ? "Excluindo…" : "Resetar contas contábeis"}
+                          {deletingAll ? t("settings:ledgerAccounts.buttons.deletingAll") : t("settings:ledgerAccounts.buttons.resetAll")}
                         </button>
                       </div>
                     )}
@@ -567,26 +601,24 @@ const LedgerAccountSettings: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <div className="w-72">
                       <Input
-                        label="Busca"
-                        placeholder="Buscar por conta, código, categoria ou subcategoria..."
+                        label={t("settings:ledgerAccounts.buttons.search")}
+                        placeholder={t("settings:ledgerAccounts.filters.placeholder")}
                         name="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                       />
                     </div>
 
-                    <SelectDropdown
-                      label="Categoria"
+                    <SelectDropdown<{ label: CategoryLabel; value: CategoryLabel }>
+                      label={t("settings:ledgerAccounts.filters.category")}
                       items={GROUP_OPTIONS.map((g) => ({ label: g.label, value: g.value }))}
                       selected={filterGroup ? [{ label: filterGroup, value: filterGroup }] : []}
-                      onChange={(items: { label: CategoryLabel; value: CategoryLabel }[]) =>
-                        setFilterGroup(items[0]?.value ?? null)
-                      }
+                      onChange={(items) => setFilterGroup(items[0]?.value ?? null)}
                       getItemKey={(i) => i.value}
                       getItemLabel={(i) => i.label}
                       singleSelect
                       hideCheckboxes
-                      buttonLabel="Filtrar por categoria"
+                      buttonLabel={t("settings:ledgerAccounts.buttons.filterCategory")}
                       clearOnClickOutside={false}
                       customStyles={{ maxHeight: "240px" }}
                     />
@@ -600,7 +632,7 @@ const LedgerAccountSettings: React.FC = () => {
                           setFilterGroup(null);
                         }}
                       >
-                        Limpar
+                        {t("settings:ledgerAccounts.buttons.clear")}
                       </Button>
                     )}
                   </div>
@@ -612,7 +644,9 @@ const LedgerAccountSettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => (openAccordions.size === groups.length ? collapseAll() : expandAll(groups))}
                       >
-                        {openAccordions.size === groups.length ? "Recolher todos" : "Expandir todos"}
+                        {openAccordions.size === groups.length
+                          ? t("settings:ledgerAccounts.buttons.collapseAll")
+                          : t("settings:ledgerAccounts.buttons.expandAll")}
                       </Button>
                     )}
 
@@ -621,7 +655,9 @@ const LedgerAccountSettings: React.FC = () => {
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={() => setViewMode((v) => (v === "accordion" ? "list" : "accordion"))}
                     >
-                      {viewMode === "accordion" ? "Ver como Lista" : "Ver como Acordeão"}
+                      {viewMode === "accordion"
+                        ? t("settings:ledgerAccounts.buttons.viewList")
+                        : t("settings:ledgerAccounts.buttons.viewAccordion")}
                     </Button>
                   </div>
                 </div>
@@ -634,10 +670,16 @@ const LedgerAccountSettings: React.FC = () => {
                 ) : (
                   <div className="space-y-4">
                     {groups.map((g) => {
-                      const accInGroup = accountsFiltered.filter((a) => getCategoryLabel(a as GLX) === g);
+                      const accInGroup = accountsFiltered.filter((a) => {
+                        const lab = getCategoryLabel(a as GLX);
+                        const resolved = lab.startsWith("settings:ledgerAccounts") ? t(lab) : lab;
+                        return resolved === g;
+                      });
                       if (accInGroup.length === 0) return null;
 
-                      const subsInGroup = Array.from(new Set(accInGroup.map((a) => a.subcategory || "(Sem subgrupo)")));
+                      const subsInGroup = Array.from(
+                        new Set(accInGroup.map((a) => a.subcategory || t("settings:ledgerAccounts.tags.noSubgroup")))
+                      );
                       const isOpen = openAccordions.has(g);
 
                       return (
@@ -669,20 +711,35 @@ const LedgerAccountSettings: React.FC = () => {
                                   <p className="text-[12px] font-semibold text-gray-800 mb-2">{sg}</p>
                                   <div className="divide-y divide-gray-200">
                                     {accInGroup
-                                      .filter((a) => (a.subcategory || "(Sem subgrupo)") === sg)
+                                      .filter((a) => (a.subcategory || t("settings:ledgerAccounts.tags.noSubgroup")) === sg)
                                       .map((a) => (
-                                        <div key={getGlaId(a)} className="flex items-center justify-between px-2 py-2 hover:bg-gray-50">
+                                        <div
+                                          key={getGlaId(a)}
+                                          className="flex items-center justify-between px-2 py-2 hover:bg-gray-50"
+                                        >
                                           <div className="min-w-0">
                                             <p className="text-[13px] font-medium text-gray-900 truncate">
-                                              {a.name || "(sem nome)"}
+                                              {a.name || t("settings:ledgerAccounts.tags.noName")}
                                             </p>
                                             <div className="mt-1 flex gap-2 flex-wrap">
-                                              {a.code ? <Badge>Cód: {a.code}</Badge> : null}
+                                              {a.code ? (
+                                                <Badge>
+                                                  {t("settings:ledgerAccounts.tags.code")}: {a.code}
+                                                </Badge>
+                                              ) : null}
                                               {(() => {
-                                                const t = getDefaultTx(a as GLX);
-                                                return t ? <Badge>{t === "credit" ? "Crédito" : "Débito"}</Badge> : null;
+                                                const txx = getDefaultTx(a as GLX);
+                                                return txx ? (
+                                                  <Badge>
+                                                    {txx === "credit"
+                                                      ? t("settings:ledgerAccounts.tags.credit")
+                                                      : t("settings:ledgerAccounts.tags.debit")}
+                                                  </Badge>
+                                                ) : null;
                                               })()}
-                                              {a.is_active === false ? <Badge>Inativa</Badge> : null}
+                                              {a.is_active === false ? (
+                                                <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge>
+                                              ) : null}
                                             </div>
                                           </div>
                                           {isOwner && (
@@ -692,10 +749,10 @@ const LedgerAccountSettings: React.FC = () => {
                                                 className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                                                 onClick={() => openEditModal(a)}
                                               >
-                                                Editar
+                                                {t("settings:ledgerAccounts.buttons.edit")}
                                               </Button>
                                               <Button variant="common" onClick={() => requestDeleteAccount(a)}>
-                                                Excluir
+                                                {t("settings:ledgerAccounts.buttons.delete")}
                                               </Button>
                                             </div>
                                           )}
@@ -711,7 +768,9 @@ const LedgerAccountSettings: React.FC = () => {
                     })}
 
                     {groups.length === 0 && (
-                      <p className="p-4 text-center text-sm text-gray-500">Nenhuma conta encontrada.</p>
+                      <p className="p-4 text-center text-sm text-gray-500">
+                        {t("settings:ledgerAccounts.list.groupEmpty")}
+                      </p>
                     )}
                   </div>
                 )}
@@ -730,16 +789,20 @@ const LedgerAccountSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar conta" : "Editar conta"}
+                  {mode === "create" ? t("settings:ledgerAccounts.modal.createTitle") : t("settings:ledgerAccounts.modal.editTitle")}
                 </h3>
-                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none" onClick={closeModal} aria-label="Fechar">
+                <button
+                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                  onClick={closeModal}
+                  aria-label={t("settings:ledgerAccounts.buttons.cancel")}
+                >
                   &times;
                 </button>
               </header>
 
               <form className="space-y-3" onSubmit={submitAccount}>
                 <Input
-                  label="Conta contábil"
+                  label={t("settings:ledgerAccounts.modal.name")}
                   name="name"
                   value={formData.name}
                   onChange={handleNameChange}
@@ -747,15 +810,15 @@ const LedgerAccountSettings: React.FC = () => {
                 />
 
                 <Input
-                  label="Código (opcional)"
+                  label={t("settings:ledgerAccounts.modal.code")}
                   name="code"
                   value={formData.code || ""}
                   onChange={handleCodeChange}
-                  placeholder="Ex.: 3-0001"
+                  placeholder={t("settings:ledgerAccounts.modal.codePlaceholder")}
                 />
 
-                <SelectDropdown
-                  label="Categoria"
+                <SelectDropdown<{ label: CategoryLabel; value: CategoryLabel }>
+                  label={t("settings:ledgerAccounts.filters.category")}
                   items={GROUP_OPTIONS.map((g) => ({ label: g.label, value: g.value }))}
                   selected={formData.category ? [{ label: formData.category, value: formData.category }] : []}
                   onChange={handleGroupChange}
@@ -763,14 +826,14 @@ const LedgerAccountSettings: React.FC = () => {
                   getItemLabel={(i) => i.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Selecione uma categoria"
+                  buttonLabel={t("settings:ledgerAccounts.buttons.selectCategory")}
                   disabled={!formData.name}
                 />
 
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
                   {addingNewSubgroup ? (
                     <Input
-                      label="Subcategoria (nova)"
+                      label={t("settings:ledgerAccounts.modal.subcategoryNew")}
                       name="subcategory"
                       value={formData.subcategory}
                       onChange={(e) => setFormData((p) => ({ ...p, subcategory: e.target.value }))}
@@ -778,16 +841,20 @@ const LedgerAccountSettings: React.FC = () => {
                       required
                     />
                   ) : (
-                    <SelectDropdown
-                      label="Subcategoria"
+                    <SelectDropdown<{ label: string; value: string }>
+                      label={t("settings:ledgerAccounts.modal.subcategory")}
                       items={subgroupOptions}
-                      selected={formData.subcategory ? [{ label: formData.subcategory, value: formData.subcategory }] : []}
+                      selected={
+                        formData.subcategory
+                          ? [{ label: formData.subcategory, value: formData.subcategory }]
+                          : []
+                      }
                       onChange={handleSubgroupChange}
                       getItemKey={(i) => i.value}
                       getItemLabel={(i) => i.label}
                       singleSelect
                       hideCheckboxes
-                      buttonLabel="Selecione uma subcategoria"
+                      buttonLabel={t("settings:ledgerAccounts.buttons.selectSubcategory")}
                       disabled={!formData.category}
                     />
                   )}
@@ -802,36 +869,36 @@ const LedgerAccountSettings: React.FC = () => {
                     disabled={!formData.category}
                     className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   >
-                    {addingNewSubgroup ? "Cancelar" : "+"}
+                    {addingNewSubgroup ? t("settings:ledgerAccounts.buttons.toggleNewSubCancel") : t("settings:ledgerAccounts.buttons.toggleNewSub")}
                   </Button>
                 </div>
 
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={formData.is_active ?? true} onChange={handleActiveChange} />
-                  Conta ativa
+                  {t("settings:ledgerAccounts.modal.active")}
                 </label>
 
                 <p className="text-[12px] text-gray-600">
                   {formData.category ? (
                     <>
-                      Tipo de transação padrão:{" "}
+                      {t("settings:ledgerAccounts.modal.defaultTxLabel")}{" "}
                       <b>
                         {CATEGORY_DEFAULT_TX[CATEGORY_LABEL_TO_VALUE[formData.category as CategoryLabel]] === "credit"
-                          ? "Crédito"
-                          : "Débito"}
+                          ? t("settings:ledgerAccounts.tags.credit")
+                          : t("settings:ledgerAccounts.tags.debit")}
                       </b>
                     </>
                   ) : (
-                    "Selecione uma categoria para definir o tipo de transação padrão."
+                    t("settings:ledgerAccounts.modal.defaultTxHint")
                   )}
                 </p>
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
+                    {t("settings:ledgerAccounts.buttons.cancel")}
                   </Button>
                   <Button type="submit" disabled={!formData.name || !formData.category || !formData.subcategory}>
-                    Salvar
+                    {t("settings:ledgerAccounts.buttons.save")}
                   </Button>
                 </div>
               </form>
@@ -844,8 +911,8 @@ const LedgerAccountSettings: React.FC = () => {
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel="Excluir"
-        cancelLabel="Cancelar"
+        confirmLabel={t("settings:ledgerAccounts.buttons.delete")}
+        cancelLabel={t("settings:ledgerAccounts.buttons.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -855,9 +922,8 @@ const LedgerAccountSettings: React.FC = () => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
           confirmAction?.()
-            .catch((err) => {
-              console.error(err);
-              setSnackBarMessage("Falha ao confirmar.");
+            .catch(() => {
+              setSnackBarMessage(t("settings:ledgerAccounts.toast.confirmFailed"));
             })
             .finally(() => setConfirmBusy(false));
         }}
@@ -867,7 +933,9 @@ const LedgerAccountSettings: React.FC = () => {
       <Snackbar open={!!snackBarMessage} autoHideDuration={6000} onClose={() => setSnackBarMessage("")}>
         <Alert
           severity={
-            typeof snackBarMessage === "string" && /sucesso|gerado|conclu/i.test(snackBarMessage) ? "success" : "error"
+            typeof snackBarMessage === "string" && /sucesso|gerado|conclu|success|generated/i.test(snackBarMessage)
+              ? "success"
+              : "error"
           }
         >
           {snackBarMessage}

@@ -1,13 +1,13 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/SecurityAndPrivacy.tsx                                    */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/SecurityAndPrivacy.tsx
+ * Style: Navbar fixa + SidebarSettings, light borders, compact labels
+ * Notes: i18n group "securityAndPrivacy" inside the "settings" namespace
+ * -------------------------------------------------------------------------- */
 
 import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR, enUS, fr, de } from "date-fns/locale";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -21,6 +21,7 @@ import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { User } from "src/models/auth";
 import { validatePassword } from "src/lib";
+import { useTranslation } from "react-i18next";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials(name?: string) {
@@ -49,9 +50,31 @@ const Row = ({
 
 /* -------------------------------------------------------------------------- */
 const SecurityAndPrivacy = () => {
-  useEffect(() => {
-    document.title = "Segurança e Privacidade";
-  }, []);
+  // ✅ Use the "settings" namespace; "securityAndPrivacy" is a group inside it
+  const { t, i18n } = useTranslation(["settings"]);
+
+  // Title + <html lang="...">
+  useEffect(() => { document.title = t("settings:securityAndPrivacy.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+
+  // date-fns locale + pattern by language
+  const dateLocale = useMemo(() => {
+    const base = (i18n.language || "en").split("-")[0];
+    switch (base) {
+      case "pt": return ptBR;
+      case "fr": return fr;
+      case "de": return de;
+      default: return enUS;
+    }
+  }, [i18n.language]);
+
+  const datePattern = useMemo(() => {
+    const base = (i18n.language || "en").split("-")[0];
+    if (base === "pt") return "d 'de' MMM, yyyy";
+    if (base === "fr") return "d MMM yyyy";
+    if (base === "de") return "d. MMM yyyy";
+    return "MMM d, yyyy";
+  }, [i18n.language]);
 
   const { user: authUser } = useAuthContext();
 
@@ -81,30 +104,33 @@ const SecurityAndPrivacy = () => {
     const { current_password, new_password, confirm } = pwData;
 
     if (new_password !== confirm) {
-      setSnackBarMessage("As senhas não coincidem.");
+      setSnackBarMessage(t("settings:securityAndPrivacy.toast.passwordMismatch"));
       return;
     }
     if (current_password === new_password) {
-      setSnackBarMessage("A nova senha não pode ser igual à senha atual.");
+      setSnackBarMessage(t("settings:securityAndPrivacy.toast.samePassword"));
       return;
     }
     const validation = validatePassword(new_password);
     if (!validation.isValid) {
-      setSnackBarMessage(validation.message);
+      setSnackBarMessage(validation.message || t("settings:securityAndPrivacy.toast.weakPassword"));
       return;
     }
 
     try {
       await api.changePassword({ current_password, new_password });
       closeModal();
-      setSnackBarMessage("Senha alterada com sucesso.");
+      setSnackBarMessage(t("settings:securityAndPrivacy.toast.success"));
     } catch (err) {
-      if (axios.isAxiosError(err))
-        setSnackBarMessage(err.response?.data?.message ?? "Erro ao alterar senha.");
-      else if (err instanceof Error)
+      if (axios.isAxiosError(err)) {
+        setSnackBarMessage(
+          err.response?.data?.message ?? t("settings:securityAndPrivacy.toast.changeError")
+        );
+      } else if (err instanceof Error) {
         setSnackBarMessage(err.message);
-      else
-        setSnackBarMessage("Erro inesperado.");
+      } else {
+        setSnackBarMessage(t("settings:securityAndPrivacy.toast.unexpected"));
+      }
     }
   };
 
@@ -137,7 +163,6 @@ const SecurityAndPrivacy = () => {
   /* --------------------------- UI --------------------------- */
   return (
     <>
-      {/* Navbar fixa + SidebarSettings (offsets) */}
       <Navbar />
       <SidebarSettings userName={authUser?.name ?? ""} activeItem="security" />
 
@@ -145,14 +170,22 @@ const SecurityAndPrivacy = () => {
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials(authUser?.name)}
+            <div className="px-5 py-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+                  {getInitials(authUser?.name)}
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:securityAndPrivacy.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:securityAndPrivacy.header.title")}
+                  </h1>
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Segurança e privacidade</h1>
-              </div>
+
+              {/* (No LanguageSwitcher here, per request) */}
             </div>
           </header>
 
@@ -160,18 +193,20 @@ const SecurityAndPrivacy = () => {
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <span className="text-[11px] uppercase tracking-wide text-gray-700">Acesso e credenciais</span>
+                <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                  {t("settings:securityAndPrivacy.section.access")}
+                </span>
               </div>
 
               <div className="divide-y divide-gray-200">
                 <Row
-                  label="Senha"
+                  label={t("settings:securityAndPrivacy.field.password")}
                   value={
                     <>
-                      Última alteração:&nbsp;
+                      {t("settings:securityAndPrivacy.field.lastChange")}{" "}
                       {user?.last_password_change
-                        ? format(new Date(user.last_password_change), "d 'de' MMM, yyyy", { locale: ptBR })
-                        : "nunca"}
+                        ? format(new Date(user.last_password_change), datePattern, { locale: dateLocale })
+                        : t("settings:securityAndPrivacy.field.never")}
                     </>
                   }
                   action={
@@ -180,7 +215,7 @@ const SecurityAndPrivacy = () => {
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={openModal}
                     >
-                      Alterar senha
+                      {t("settings:securityAndPrivacy.btn.changePassword")}
                     </Button>
                   }
                 />
@@ -198,11 +233,13 @@ const SecurityAndPrivacy = () => {
               aria-modal="true"
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">Alterar senha</h3>
+                <h3 className="text-[14px] font-semibold text-gray-800">
+                  {t("settings:securityAndPrivacy.modal.title")}
+                </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Fechar"
+                  aria-label={t("settings:securityAndPrivacy.modal.close")}
                 >
                   &times;
                 </button>
@@ -216,7 +253,7 @@ const SecurityAndPrivacy = () => {
                 }}
               >
                 <Input
-                  label="Senha atual"
+                  label={t("settings:securityAndPrivacy.field.current")}
                   name="current_password"
                   type="password"
                   value={pwData.current_password}
@@ -225,7 +262,7 @@ const SecurityAndPrivacy = () => {
                   required
                 />
                 <Input
-                  label="Nova senha"
+                  label={t("settings:securityAndPrivacy.field.new")}
                   name="new_password"
                   type="password"
                   value={pwData.new_password}
@@ -234,7 +271,7 @@ const SecurityAndPrivacy = () => {
                   required
                 />
                 <Input
-                  label="Confirmar nova senha"
+                  label={t("settings:securityAndPrivacy.field.confirm")}
                   name="confirm"
                   type="password"
                   value={pwData.confirm}
@@ -245,9 +282,9 @@ const SecurityAndPrivacy = () => {
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
+                    {t("settings:securityAndPrivacy.btn.cancel")}
                   </Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit">{t("settings:securityAndPrivacy.btn.save")}</Button>
                 </div>
               </form>
             </div>
@@ -264,7 +301,7 @@ const SecurityAndPrivacy = () => {
         <Alert
           severity={
             typeof snackBarMessage === "string" &&
-            snackBarMessage.includes("sucesso")
+            snackBarMessage.includes(t("settings:securityAndPrivacy.toast.successSnippet"))
               ? "success"
               : "error"
           }

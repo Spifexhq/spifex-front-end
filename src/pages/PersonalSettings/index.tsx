@@ -23,6 +23,8 @@ import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { PersonalSettings as PersonalSettingsModel, Organization } from "src/models/auth";
 import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /* ----------------------------- Helpers/Types ----------------------------- */
 type EditableUserField =
@@ -60,7 +62,10 @@ const Row = ({
 );
 
 const PersonalSettings: React.FC = () => {
-  useEffect(() => { document.title = "Configurações Pessoais"; }, []);
+  const { t, i18n } = useTranslation(["settings", "common"]);
+
+  useEffect(() => { document.title = t("settings:personal.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const navigate = useNavigate();
   const { isOwner, organization: orgCtx } = useAuthContext();
@@ -102,19 +107,17 @@ const PersonalSettings: React.FC = () => {
         setUseDeviceTz(data.timezone === deviceTz);
 
         if (isOwner && orgExternalId) {
-          // keep your existing org fetcher if you have one elsewhere
-          // Assuming you already have an api.getOrganization
           const res = await (await import("src/api/requests")).api.getOrganization();
           setOrgProfile(res.data);
         }
       } catch (err) {
         console.error("Erro ao buscar dados pessoais", err);
-        setSnackBarMessage("Erro ao buscar dados pessoais.");
+        setSnackBarMessage(t("settings:personal.toast.loadError"));
       } finally {
         setLoading(false);
       }
     })();
-  }, [deviceTz, orgExternalId, isOwner]);
+  }, [deviceTz, orgExternalId, isOwner, t]);
 
   /* ------------------------------- Handlers ------------------------------ */
   const openModal = (field?: EditableUserField) => {
@@ -152,13 +155,13 @@ const PersonalSettings: React.FC = () => {
       setProfile(data);
       closeModal();
     } catch (err) {
-      console.error("Erro ao atualizar os dados pessoais", err);
-      setSnackBarMessage("Erro ao atualizar os dados pessoais.");
+      console.error(t("settings:personal.toast.updateError"), err);
+      setSnackBarMessage(t("settings:personal.toast.updateError"));
     }
   };
 
   const handleSecurityNavigation = () => {
-    navigate('/settings/security');
+    navigate("/settings/security");
   };
 
   /* ------------------------------ Modal UX ------------------------------- */
@@ -178,25 +181,29 @@ const PersonalSettings: React.FC = () => {
 
   return (
     <>
-      {/* Navbar fixa (h-16) */}
       <Navbar />
-
-      {/* Sidebar Settings */}
       <SidebarSettings userName={profile?.name} activeItem="personal" />
 
-      {/* Conteúdo */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials(profile?.name)}
+            <div className="px-5 py-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+                  {getInitials(profile?.name)}
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:personal.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:personal.header.personal")}
+                  </h1>
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Pessoais</h1>
-              </div>
+
+              <LanguageSwitcher />
             </div>
           </header>
 
@@ -208,10 +215,15 @@ const PersonalSettings: React.FC = () => {
               {isOwner && orgProfile && (
                 <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                    <span className="text-[11px] uppercase tracking-wide text-gray-700">Empresa</span>
+                    <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                      {t("settings:personal.section.company")}
+                    </span>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    <Row label="Nome da empresa" value={orgProfile.name || "—"} />
+                    <Row
+                      label={t("settings:personal.field.companyName")}
+                      value={orgProfile.name || "—"}
+                    />
                   </div>
                 </div>
               )}
@@ -219,60 +231,62 @@ const PersonalSettings: React.FC = () => {
               {/* Dados pessoais */}
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Dados pessoais</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:personal.section.personalData")}
+                  </span>
                 </div>
                 <div className="divide-y divide-gray-200">
                   <Row
-                    label="Nome completo"
+                    label={t("settings:personal.field.fullName")}
                     value={profile?.name ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("name")}>
-                        Atualizar nome
+                        {t("settings:personal.btn.updateName")}
                       </Button>
                     }
                   />
                   <Row
-                    label="Email principal"
+                    label={t("settings:personal.field.primaryEmail")}
                     value={profile?.email ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("email")}>
-                        Atualizar email
+                        {t("settings:personal.btn.updateEmail")}
                       </Button>
                     }
                   />
                   <Row
-                    label="Telefone"
+                    label={t("settings:personal.field.phone")}
                     value={profile?.phone ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("phone")}>
-                        Atualizar telefone
+                        {t("settings:personal.btn.updatePhone")}
                       </Button>
                     }
                   />
                   <Row
-                    label="Cargo"
+                    label={t("settings:personal.field.jobTitle")}
                     value={profile?.job_title ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("job_title")}>
-                        Atualizar cargo
+                        {t("settings:personal.btn.updateJobTitle")}
                       </Button>
                     }
                   />
                   <Row
-                    label="Departamento"
+                    label={t("settings:personal.field.department")}
                     value={profile?.department ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("department")}>
-                        Atualizar departamento
+                        {t("settings:personal.btn.updateDepartment")}
                       </Button>
                     }
                   />
                   <Row
-                    label="País"
+                    label={t("settings:personal.field.country")}
                     value={profile?.country ?? ""}
                     action={
                       <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("country")}>
-                        Atualizar país
+                        {t("settings:personal.btn.updateCountry")}
                       </Button>
                     }
                   />
@@ -285,12 +299,16 @@ const PersonalSettings: React.FC = () => {
               {/* Fuso horário */}
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Fuso horário</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:personal.section.timezone")}
+                  </span>
                 </div>
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-gray-600">Atual</p>
+                      <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                        {t("settings:personal.label.current")}
+                      </p>
                       <p className="text-[13px] font-medium text-gray-900">
                         {formatTimezoneLabel(profile?.timezone ?? "")}
                       </p>
@@ -300,7 +318,7 @@ const PersonalSettings: React.FC = () => {
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={() => openModal("timezone")}
                     >
-                      Atualizar
+                      {t("settings:personal.btn.update")}
                     </Button>
                   </div>
                 </div>
@@ -309,17 +327,21 @@ const PersonalSettings: React.FC = () => {
               {/* Segurança (atalho) */}
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Segurança</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:personal.section.security")}
+                  </span>
                 </div>
                 <div className="px-4 py-3">
-                  <p className="text-[12px] text-gray-700">Gerencie senha, sessões e dispositivos conectados.</p>
+                  <p className="text-[12px] text-gray-700">
+                    {t("settings:personal.security.subtitle")}
+                  </p>
                   <div className="mt-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={handleSecurityNavigation}
                     >
-                      Gerenciar segurança
+                      {t("settings:personal.btn.manageSecurity")}
                     </Button>
                   </div>
                 </div>
@@ -336,11 +358,13 @@ const PersonalSettings: React.FC = () => {
               className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">Editar informações</h3>
+                <h3 className="text-[14px] font-semibold text-gray-800">
+                  {t("settings:personal.modal.title")}
+                </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Fechar"
+                  aria-label={t("settings:personal.modal.close")}
                 >
                   &times;
                 </button>
@@ -354,28 +378,30 @@ const PersonalSettings: React.FC = () => {
                 }}
               >
                 {(editingField === null || editingField === "name") && (
-                  <Input label="Nome completo" name="name" value={formData.name} onChange={handleChange} required />
+                  <Input label={t("settings:personal.field.fullName")} name="name" value={formData.name} onChange={handleChange} required />
                 )}
                 {(editingField === null || editingField === "email") && (
-                  <Input label="Email principal" name="email" type="email" value={formData.email} onChange={handleChange} required />
+                  <Input label={t("settings:personal.field.primaryEmail")} name="email" type="email" value={formData.email} onChange={handleChange} required />
                 )}
                 {(editingField === null || editingField === "phone") && (
-                  <Input label="Telefone" name="phone" type="tel" value={formData.phone ?? ""} onChange={handleChange} />
+                  <Input label={t("settings:personal.field.phone")} name="phone" type="tel" value={formData.phone ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "job_title") && (
-                  <Input label="Cargo" name="job_title" value={formData.job_title ?? ""} onChange={handleChange} />
+                  <Input label={t("settings:personal.field.jobTitle")} name="job_title" value={formData.job_title ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "department") && (
-                  <Input label="Departamento" name="department" value={formData.department ?? ""} onChange={handleChange} />
+                  <Input label={t("settings:personal.field.department")} name="department" value={formData.department ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "country") && (
-                  <Input label="País" name="country" value={formData.country ?? ""} onChange={handleChange} />
+                  <Input label={t("settings:personal.field.country")} name="country" value={formData.country ?? ""} onChange={handleChange} />
                 )}
 
                 {(editingField === null || editingField === "timezone") && (
                   <>
                     <div className="flex items-center justify-between">
-                      <label className="text-[12px] text-gray-700">Usar fuso do dispositivo</label>
+                      <label className="text-[12px] text-gray-700">
+                        {t("settings:personal.modal.useDeviceTz")}
+                      </label>
                       <Checkbox
                         checked={useDeviceTz}
                         onChange={(e) => {
@@ -396,7 +422,7 @@ const PersonalSettings: React.FC = () => {
                     </div>
 
                     <SelectDropdown
-                      label="Fuso horário"
+                      label={t("settings:personal.modal.tzLabel")}
                       items={TIMEZONES}
                       selected={selectedTimezone}
                       onChange={(tz) => {
@@ -410,7 +436,7 @@ const PersonalSettings: React.FC = () => {
                       singleSelect
                       hideCheckboxes
                       clearOnClickOutside={false}
-                      buttonLabel="Selecione o fuso horário"
+                      buttonLabel={t("settings:personal.btnLabel.tz")}
                       customStyles={{ maxHeight: "250px" }}
                       disabled={useDeviceTz}
                     />
@@ -419,9 +445,9 @@ const PersonalSettings: React.FC = () => {
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
+                    {t("settings:personal.btn.cancel")}
                   </Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit">{t("settings:personal.btn.save")}</Button>
                 </div>
               </form>
             </div>

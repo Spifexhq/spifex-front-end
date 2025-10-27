@@ -1,9 +1,7 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/CompanySettings.tsx                                       */
-/*  Style: light borders, compact labels; Navbar + SidebarSettings            */
-/*  Honors fixed heights (Navbar h-16) => pt-16; no horizontal overflow       */
-/*  Timezone Select ONLY inside modal                                         */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/CompanySettings.tsx
+ * Style: light borders; Navbar + SidebarSettings; compact labels
+ * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
 
@@ -21,6 +19,7 @@ import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { Organization } from "src/models/auth/domain";
 import { formatTimezoneLabel, TIMEZONES } from "src/lib";
+import { useTranslation } from "react-i18next";
 
 type EditableUserField = "none" | "name" | "timezone" | "address";
 
@@ -51,14 +50,13 @@ const Row = ({
 );
 
 const CompanySettings: React.FC = () => {
-  useEffect(() => {
-    document.title = "Configurações da Empresa";
-  }, []);
+  const { t, i18n } = useTranslation(["settings", "common"]);
 
-  // 🔹 Rename context variable to avoid collision
+  useEffect(() => { document.title = t("settings:company.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+
   const { isOwner } = useAuthContext();
 
-  // 🔹 Local profile loaded from API
   const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,12 +101,12 @@ const CompanySettings: React.FC = () => {
         setUseDeviceTz((data.timezone ?? "UTC") === deviceTz);
       } catch (err) {
         console.error("Erro ao buscar dados da organização", err);
-        setSnackBarMessage("Erro ao buscar dados da organização.");
+        setSnackBarMessage(t("settings:company.toast.orgLoadError"));
       } finally {
         setLoading(false);
       }
     })();
-  }, [deviceTz]);
+  }, [deviceTz, t]);
 
   /* ------------------------------ Handlers ------------------------------- */
   const openModal = (field?: EditableUserField) => {
@@ -158,11 +156,10 @@ const CompanySettings: React.FC = () => {
   const submitPartial = async (partialData: Partial<typeof formData>) => {
     try {
       if (!orgProfile) {
-        setSnackBarMessage("Os dados da organização não estão disponíveis.");
+        setSnackBarMessage(t("settings:company.toast.orgUpdateError"));
         return;
       }
 
-      // 🔁 Flat payload. No nested address, no owner.
       const requestBody = {
         name: formData.name,
         timezone: formData.timezone,
@@ -175,13 +172,13 @@ const CompanySettings: React.FC = () => {
       };
 
       const res = await api.editOrganization(requestBody);
-      if (!res.data) throw new Error("Erro ao atualizar organização.");
+      if (!res.data) throw new Error(("settings:company.toast.orgUpdateError"));
 
       const updated = await api.getOrganization();
       setOrgProfile(updated.data);
       closeModal();
-    } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao atualizar organização.");
+    } catch {
+      setSnackBarMessage(t("settings:company.toast.orgUpdateError"));
     }
   };
 
@@ -212,7 +209,7 @@ const CompanySettings: React.FC = () => {
             }}
           >
             <Input
-              label="Nome da organização"
+              label={t("settings:company.field.orgNameInput")}
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -220,9 +217,9 @@ const CompanySettings: React.FC = () => {
             />
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="cancel" type="button" onClick={closeModal}>
-                Cancelar
+                {t("settings:company.btn.cancel")}
               </Button>
-              <Button type="submit">Salvar</Button>
+              <Button type="submit">{t("settings:company.btn.save")}</Button>
             </div>
           </form>
         );
@@ -237,7 +234,7 @@ const CompanySettings: React.FC = () => {
             }}
           >
             <div className="flex items-center justify-between">
-              <label className="text-[12px] text-gray-700">Usar fuso do dispositivo</label>
+              <label className="text-[12px] text-gray-700">{t("settings:company.modal.useDeviceTz")}</label>
               <Checkbox
                 checked={useDeviceTz}
                 onChange={(e) => {
@@ -258,7 +255,7 @@ const CompanySettings: React.FC = () => {
             </div>
 
             <SelectDropdown
-              label="Fuso horário"
+              label={t("settings:company.modal.tzLabel")}
               items={TIMEZONES}
               selected={selectedTimezone}
               onChange={(tz) => {
@@ -272,16 +269,16 @@ const CompanySettings: React.FC = () => {
               singleSelect
               hideCheckboxes
               clearOnClickOutside={false}
-              buttonLabel="Selecione o fuso horário"
+              buttonLabel={t("settings:company.btnLabel.tz")}
               customStyles={{ maxHeight: "250px" }}
               disabled={useDeviceTz}
             />
 
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="cancel" type="button" onClick={closeModal}>
-                Cancelar
+                {t("settings:company.btn.cancel")}
               </Button>
-              <Button type="submit">Salvar</Button>
+              <Button type="submit">{t("settings:company.btn.save")}</Button>
             </div>
           </form>
         );
@@ -301,16 +298,16 @@ const CompanySettings: React.FC = () => {
               });
             }}
           >
-            <Input label="Endereço linha 1" name="line1" value={formData.line1} onChange={handleChange} />
-            <Input label="Endereço linha 2" name="line2" value={formData.line2} onChange={handleChange} />
-            <Input label="Cidade" name="city" value={formData.city} onChange={handleChange} />
-            <Input label="País" name="country" value={formData.country} onChange={handleChange} />
-            <Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} />
+            <Input label={t("settings:company.field.address1")} name="line1" value={formData.line1} onChange={handleChange} />
+            <Input label={t("settings:company.field.address2")} name="line2" value={formData.line2} onChange={handleChange} />
+            <Input label={t("settings:company.field.city")} name="city" value={formData.city} onChange={handleChange} />
+            <Input label={t("settings:company.field.country")} name="country" value={formData.country} onChange={handleChange} />
+            <Input label={t("settings:company.field.postalCode")} name="postal_code" value={formData.postal_code} onChange={handleChange} />
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="cancel" type="button" onClick={closeModal}>
-                Cancelar
+                {t("settings:company.btn.cancel")}
               </Button>
-              <Button type="submit">Salvar</Button>
+              <Button type="submit">{t("settings:company.btn.save")}</Button>
             </div>
           </form>
         );
@@ -324,12 +321,9 @@ const CompanySettings: React.FC = () => {
 
   return (
     <>
-      {/* Navbar fixa */}
       <Navbar />
-      {/* Sidebar fixa de Settings */}
       <SidebarSettings userName={orgProfile?.name} activeItem="company-settings" />
 
-      {/* Conteúdo */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
@@ -339,8 +333,12 @@ const CompanySettings: React.FC = () => {
                 {getInitials(orgProfile?.name)}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Organização</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:company.header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:company.header.organization")}
+                </h1>
               </div>
             </div>
           </header>
@@ -349,12 +347,14 @@ const CompanySettings: React.FC = () => {
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <span className="text-[11px] uppercase tracking-wide text-gray-700">Informações da organização</span>
+                <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                  {t("settings:company.section.orgInfo")}
+                </span>
               </div>
 
               <div className="divide-y divide-gray-200">
                 <Row
-                  label="Nome"
+                  label={t("settings:company.field.name")}
                   value={orgProfile?.name}
                   action={
                     isOwner && (
@@ -363,14 +363,14 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("name")}
                       >
-                        Atualizar nome
+                        {t("settings:company.btn.updateName")}
                       </Button>
                     )
                   }
                 />
 
                 <Row
-                  label="Fuso horário"
+                  label={t("settings:company.field.timezone")}
                   value={formatTimezoneLabel(orgProfile?.timezone ?? "")}
                   action={
                     isOwner && (
@@ -379,14 +379,14 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("timezone")}
                       >
-                        Atualizar fuso horário
+                        {t("settings:company.btn.updateTimezone")}
                       </Button>
                     )
                   }
                 />
 
                 <Row
-                  label="Endereço linha 1"
+                  label={t("settings:company.field.address1")}
                   value={orgProfile?.line1}
                   action={
                     isOwner && (
@@ -395,13 +395,13 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                       >
-                        Atualizar
+                        {t("settings:company.btn.update")}
                       </Button>
                     )
                   }
                 />
                 <Row
-                  label="Endereço linha 2"
+                  label={t("settings:company.field.address2")}
                   value={orgProfile?.line2}
                   action={
                     isOwner && (
@@ -410,13 +410,13 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                       >
-                        Atualizar
+                        {t("settings:company.btn.update")}
                       </Button>
                     )
                   }
                 />
                 <Row
-                  label="Cidade"
+                  label={t("settings:company.field.city")}
                   value={orgProfile?.city}
                   action={
                     isOwner && (
@@ -425,13 +425,13 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                       >
-                        Atualizar cidade
+                        {t("settings:company.btn.updateCity")}
                       </Button>
                     )
                   }
                 />
                 <Row
-                  label="País"
+                  label={t("settings:company.field.country")}
                   value={orgProfile?.country}
                   action={
                     isOwner && (
@@ -440,13 +440,13 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                       >
-                        Atualizar país
+                        {t("settings:company.btn.updateCountry")}
                       </Button>
                     )
                   }
                 />
                 <Row
-                  label="CEP"
+                  label={t("settings:company.field.postalCode")}
                   value={orgProfile?.postal_code}
                   action={
                     isOwner && (
@@ -455,7 +455,7 @@ const CompanySettings: React.FC = () => {
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                       >
-                        Atualizar CEP
+                        {t("settings:company.btn.updatePostalCode")}
                       </Button>
                     )
                   }
@@ -474,14 +474,14 @@ const CompanySettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {editingField === "name" && "Editar nome"}
-                  {editingField === "timezone" && "Editar fuso horário"}
-                  {editingField === "address" && "Editar endereço"}
+                  {editingField === "name" && t("settings:company.modal.editName")}
+                  {editingField === "timezone" && t("settings:company.modal.editTimezone")}
+                  {editingField === "address" && t("settings:company.modal.editAddress")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Fechar"
+                  aria-label={t("settings:company.modal.close")}
                 >
                   &times;
                 </button>

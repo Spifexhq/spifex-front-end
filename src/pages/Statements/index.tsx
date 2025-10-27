@@ -3,6 +3,7 @@
  * Style: Minimalist / compact; no heavy shadows; light borders.
  * UX: Drag & drop, multi-upload with per-file progress, associate to Bank,
  *     auto-refresh list, optimistic rows, keyboard shortcuts.
+ * i18n: group "statements" inside namespace "settings"
  * -------------------------------------------------------------------------- */
 
 import React, {
@@ -25,6 +26,7 @@ import Input from "@/components/Input";
 
 import { api } from "@/api/requests";
 import type { BankAccount } from "src/models/enterprise_structure/domain";
+import { useTranslation } from "react-i18next";
 
 /* --------------------------------- Types ---------------------------------- */
 type StatementStatus = "uploaded" | "processing" | "ready" | "failed";
@@ -57,7 +59,7 @@ const formatBytes = (n: number) => {
   return `${(n / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${u[i]}`;
 };
 
-const statusChip: Record<StatementStatus, string> = {
+const chipClass: Record<StatementStatus, string> = {
   uploaded: "bg-gray-100 text-gray-700",
   processing: "bg-amber-100 text-amber-800",
   ready: "bg-emerald-100 text-emerald-800",
@@ -74,9 +76,9 @@ const toStatus = (v?: string): "" | StatementStatus =>
 
 /* --------------------------------- Page ----------------------------------- */
 const Statements: React.FC = () => {
-  useEffect(() => {
-    document.title = "Extratos";
-  }, []);
+  const { t, i18n } = useTranslation(["settings"]);
+  useEffect(() => { document.title = t("settings:statements.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const [snack, setSnack] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -113,9 +115,9 @@ const Statements: React.FC = () => {
       const { data } = await api.getAllBanks();
       setBanks(data?.results ?? []);
     } catch {
-      setSnack("Erro ao carregar bancos.");
+      setSnack(t("settings:statements.toast.banksFetchError"));
     }
-  }, []);
+  }, [t]);
 
   const refreshStatements = useCallback(async () => {
     try {
@@ -126,11 +128,11 @@ const Statements: React.FC = () => {
       });
       setStatements(data?.results ?? []);
     } catch {
-      setSnack("Erro ao buscar extratos.");
+      setSnack(t("settings:statements.toast.listFetchError"));
     } finally {
       setLoading(false);
     }
-  }, [q, statusFilter, bankFilter]);
+  }, [q, statusFilter, bankFilter, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -142,7 +144,7 @@ const Statements: React.FC = () => {
     const rows: UploadRow[] = [];
     Array.from(files).forEach((file) => {
       if (!isPDF(file)) {
-        setSnack(`Arquivo ignorado (não-PDF): ${file.name}`);
+        setSnack(t("settings:statements.toast.nonPdfIgnored", { name: file.name }));
         return;
       }
       const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random()
@@ -193,7 +195,7 @@ const Statements: React.FC = () => {
       removeFromQueue(row.id);
       await refreshStatements();
     } catch (err: unknown) {
-      let msg = "Falha no upload do extrato.";
+      let msg = t("settings:statements.toast.uploadFail");
       if (err && typeof err === "object") {
         const maybe = err as {
           response?: { data?: { detail?: string } };
@@ -228,7 +230,7 @@ const Statements: React.FC = () => {
       await api.deleteStatement(id);
       await refreshStatements();
     } catch {
-      setSnack("Falha ao excluir extrato.");
+      setSnack(t("settings:statements.toast.deleteFail"));
     } finally {
       setConfirmBusy(false);
       setConfirmOpen(false);
@@ -239,10 +241,10 @@ const Statements: React.FC = () => {
   const triggerAnalysis = async (id: string) => {
     try {
       await api.triggerStatementAnalysis(id);
-      setSnack("Análise iniciada. O status será atualizado em instantes.");
+      setSnack(t("settings:statements.toast.analysisStarted"));
       await refreshStatements();
     } catch {
-      setSnack("Não foi possível iniciar a análise.");
+      setSnack(t("settings:statements.toast.analysisFail"));
     }
   };
 
@@ -268,6 +270,13 @@ const Statements: React.FC = () => {
   /* --------------------------------- UI ----------------------------------- */
   if (loading) return <SuspenseLoader />;
 
+  const statusOptions = [
+    { label: t("settings:statements.statuses.uploaded"), value: "uploaded" },
+    { label: t("settings:statements.statuses.processing"), value: "processing" },
+    { label: t("settings:statements.statuses.ready"), value: "ready" },
+    { label: t("settings:statements.statuses.failed"), value: "failed" }
+  ];
+
   return (
     <>
       <Navbar />
@@ -282,19 +291,19 @@ const Statements: React.FC = () => {
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  Financeiro
+                  {t("settings:statements.header.settings")}
                 </div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  Extratos bancários
+                  {t("settings:statements.header.title")}
                 </h1>
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <Button
                   onClick={() => fileInputRef.current?.click()}
                   className="!py-1.5"
-                  aria-label="Selecionar arquivos (⌘/Ctrl+U)"
+                  aria-label={t("settings:statements.aria.uploadTrigger")}
                 >
-                  Enviar PDFs
+                  {t("settings:statements.btn.upload")}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -318,20 +327,18 @@ const Statements: React.FC = () => {
               className="bg-white border border-dashed border-gray-300 rounded-lg p-6 text-center"
             >
               <p className="text-[13px] text-gray-700">
-                Arraste e solte PDF(s) aqui, ou{" "}
+                {t("settings:statements.dnd.text")}{" "}
                 <button
                   type="button"
                   className="underline underline-offset-2 hover:no-underline"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  clique para selecionar
+                  {t("settings:statements.dnd.click")}
                 </button>
                 .
               </p>
               <p className="text-[12px] text-gray-500 mt-1">
-                Dica: use <kbd className="px-1 border rounded">Ctrl/⌘</kbd>{" "}
-                + <kbd className="px-1 border rounded">U</kbd> para abrir o
-                seletor.
+                {t("settings:statements.dnd.hint")}
               </p>
             </div>
 
@@ -340,13 +347,13 @@ const Statements: React.FC = () => {
               <div className="mt-4 border border-gray-200 bg-white rounded-lg">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    Fila de envio ({queue.length})
+                    {t("settings:statements.queue.title", { count: queue.length })}
                   </span>
                   <div className="flex gap-2">
                     <Button variant="cancel" onClick={() => setQueue([])}>
-                      Limpar fila
+                      {t("settings:statements.btn.clearQueue")}
                     </Button>
-                    <Button onClick={uploadAll}>Enviar tudo</Button>
+                    <Button onClick={uploadAll}>{t("settings:statements.btn.sendAll")}</Button>
                   </div>
                 </div>
                 <ul className="divide-y divide-gray-200">
@@ -381,7 +388,7 @@ const Statements: React.FC = () => {
 
                       <div className="w-72">
                         <SelectDropdown
-                          label="Conta (opcional)"
+                          label={t("settings:statements.row.accountOptional")}
                           items={bankItems}
                           selected={row.bankAccount ? [row.bankAccount] : []}
                           onChange={(items) =>
@@ -397,7 +404,7 @@ const Statements: React.FC = () => {
                           getItemLabel={(i) => i.label}
                           singleSelect
                           hideCheckboxes
-                          buttonLabel="Vincular a uma conta"
+                          buttonLabel={t("settings:statements.row.accountButton")}
                         />
                       </div>
 
@@ -407,13 +414,13 @@ const Statements: React.FC = () => {
                           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                           onClick={() => uploadOne(row)}
                         >
-                          Enviar
+                          {t("settings:statements.btn.send")}
                         </Button>
                         <Button
                           variant="cancel"
                           onClick={() => removeFromQueue(row.id)}
                         >
-                          Remover
+                          {t("settings:statements.btn.remove")}
                         </Button>
                       </div>
                     </li>
@@ -429,22 +436,17 @@ const Statements: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <Input
                   id="statements-q"
-                  label="Buscar por nome do arquivo"
+                  label={t("settings:statements.filters.searchLabel")}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="ex.: itau_outubro.pdf"
+                  placeholder={t("settings:statements.filters.placeholder")}
                 />
                 <SelectDropdown
-                  label="Status"
-                  items={[
-                    { label: "Uploaded", value: "uploaded" },
-                    { label: "Processando", value: "processing" },
-                    { label: "Pronto", value: "ready" },
-                    { label: "Falhou", value: "failed" },
-                  ]}
+                  label={t("settings:statements.filters.status")}
+                  items={statusOptions}
                   selected={
                     statusFilter
-                      ? [{ label: statusFilter, value: statusFilter }]
+                      ? [{ label: statusOptions.find(s => s.value === statusFilter)?.label ?? "", value: statusFilter }]
                       : []
                   }
                   onChange={(items) => setStatusFilter(toStatus(items?.[0]?.value))}
@@ -452,10 +454,10 @@ const Statements: React.FC = () => {
                   getItemLabel={(i) => i.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Selecione o status"
+                  buttonLabel={t("settings:statements.filters.statusPick")}
                 />
                 <SelectDropdown
-                  label="Conta"
+                  label={t("settings:statements.filters.bank")}
                   items={bankItems}
                   selected={
                     bankFilter ? bankItems.filter((i) => i.value === bankFilter) : []
@@ -465,11 +467,11 @@ const Statements: React.FC = () => {
                   getItemLabel={(i) => i.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Filtrar por conta"
+                  buttonLabel={t("settings:statements.filters.bankPick")}
                 />
                 <div className="flex items-end gap-2">
                   <Button onClick={refreshStatements} className="!w-full">
-                    Aplicar filtros
+                    {t("settings:statements.btn.applyFilters")}
                   </Button>
                   <Button
                     variant="cancel"
@@ -480,7 +482,7 @@ const Statements: React.FC = () => {
                       refreshStatements();
                     }}
                   >
-                    Limpar
+                    {t("settings:statements.btn.clearFilters")}
                   </Button>
                 </div>
               </div>
@@ -492,13 +494,13 @@ const Statements: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                  Extratos enviados ({statements.length})
+                  {t("settings:statements.list.title", { count: statements.length })}
                 </span>
               </div>
 
               {statements.length === 0 ? (
                 <p className="p-4 text-center text-sm text-gray-500">
-                  Nenhum extrato encontrado.
+                  {t("settings:statements.list.empty")}
                 </p>
               ) : (
                 <ul className="divide-y divide-gray-200">
@@ -517,7 +519,7 @@ const Statements: React.FC = () => {
 
                       {/* Bank */}
                       <div className="col-span-4">
-                        <p className="text-[12px] text-gray-600">Conta</p>
+                        <p className="text-[12px] text-gray-600">{t("settings:statements.filters.bank")}</p>
                         <p className="text-[13px] text-gray-900">
                           {s.bank_account_label ?? "—"}
                         </p>
@@ -526,35 +528,35 @@ const Statements: React.FC = () => {
                       {/* Actions */}
                       <div className="col-span-2 flex items-center gap-2 justify-end">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${statusChip[s.status]}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}
                         >
-                          {s.status}
+                          {t(`settings:statements.meta.chip.${s.status}`)}
                         </span>
 
                         <Button
                           variant="outline"
                           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                           onClick={() => api.downloadStatement(s.id)}
-                          title="Baixar PDF"
+                          title={t("settings:statements.actions.download")}
                         >
-                          Baixar
+                          {t("settings:statements.actions.download")}
                         </Button>
 
                         <Button
                           variant="common"
                           onClick={() => triggerAnalysis(s.id)}
                           disabled={s.status === "processing"}
-                          title="Solicitar análise com IA"
+                          title={t("settings:statements.actions.analyze")}
                         >
-                          Analisar
+                          {t("settings:statements.actions.analyze")}
                         </Button>
 
                         <Button
                           variant="cancel"
                           onClick={() => requestDelete(s.id)}
-                          title="Excluir"
+                          title={t("settings:statements.actions.delete")}
                         >
-                          Excluir
+                          {t("settings:statements.actions.delete")}
                         </Button>
                       </div>
                     </li>
@@ -568,9 +570,9 @@ const Statements: React.FC = () => {
         {/* Confirm delete */}
         <ConfirmToast
           open={confirmOpen}
-          text="Excluir este extrato? Esta ação não poderá ser desfeita."
-          confirmLabel="Excluir"
-          cancelLabel="Cancelar"
+          text={t("settings:statements.confirm.deleteText")}
+          confirmLabel={t("settings:statements.confirm.confirmLabel")}
+          cancelLabel={t("settings:statements.confirm.cancelLabel")}
           variant="danger"
           onCancel={() => {
             if (confirmBusy) return;
@@ -580,7 +582,7 @@ const Statements: React.FC = () => {
             if (confirmBusy) return;
             setConfirmBusy(true);
             doDelete().catch(() => {
-              setSnack("Falha ao excluir extrato.");
+              setSnack(t("settings:statements.toast.deleteFail"));
               setConfirmBusy(false);
               setConfirmOpen(false);
             });

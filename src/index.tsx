@@ -1,18 +1,17 @@
+// src/index.tsx
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import { Provider } from 'react-redux';
 import { store } from '@/redux';
 import { BrowserRouter } from 'react-router-dom';
+import "@/lib/i18n";
+import i18n from '@/lib/i18n';
 import './index.css';
 
-// Detect browser language
-const browserLang = navigator.language || navigator.languages[0];
-
-// Set 'en' for English or 'pt-BR' for Brazilian Portuguese
-const lang = browserLang.startsWith('pt') ? 'pt-BR' : 'en';
-
-// Update the lang attribute in HTML
-document.documentElement.lang = lang;
+document.documentElement.lang = i18n.language;
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng || 'en';
+});
 
 const rootElement = document.getElementById('root');
 if (rootElement) {

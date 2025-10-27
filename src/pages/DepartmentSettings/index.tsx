@@ -6,6 +6,7 @@
 /* -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import Navbar from "@/components/Navbar";
 import SidebarSettings from "@/components/Sidebar/SidebarSettings";
@@ -23,6 +24,7 @@ import Checkbox from "src/components/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
+import type { TFunction } from "i18next";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -42,19 +44,22 @@ const Row = ({
   onEdit,
   onDelete,
   canEdit,
+  t,
 }: {
   dept: Department;
   onEdit: (d: Department) => void;
   onDelete: (d: Department) => void;
   canEdit: boolean;
+  t: TFunction;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        {dept.code ? `Code: ${dept.code}` : "—"} {dept.is_active === false ? "• Inactive" : ""}
+        {dept.code ? `${t("settings:departments.tags.code")}: ${dept.code}` : "—"}
+        {dept.is_active === false ? ` • ${t("settings:departments.tags.inactive")}` : ""}
       </p>
       <p className="text-[13px] font-medium text-gray-900 truncate">
-        {dept.name || "(no name)"}
+        {dept.name || t("settings:departments.tags.noName")}
       </p>
     </div>
     {canEdit && (
@@ -64,10 +69,10 @@ const Row = ({
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(dept)}
         >
-          Editar
+          {t("settings:departments.buttons.edit")}
         </Button>
         <Button variant="common" onClick={() => onDelete(dept)}>
-          Delete
+          {t("settings:departments.buttons.delete")}
         </Button>
       </div>
     )}
@@ -83,9 +88,14 @@ const emptyForm = {
 type FormState = typeof emptyForm;
 
 const DepartmentSettings: React.FC = () => {
+  const { t, i18n } = useTranslation(["settings"]); // page uses settings:departments.*
+
   useEffect(() => {
-    document.title = "Department Settings";
-  }, []);
+    document.title = t("settings:departments.title");
+  }, [t]);
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
@@ -141,24 +151,17 @@ const DepartmentSettings: React.FC = () => {
   const matchesQuery = useCallback((d: Department, q: string) => {
     if (!q) return true;
     const s = q.toLowerCase();
-    return (
-      (d.code || "").toLowerCase().includes(s) ||
-      (d.name || "").toLowerCase().includes(s)
-    );
+    return (d.code || "").toLowerCase().includes(s) || (d.name || "").toLowerCase().includes(s);
   }, []);
 
   useEffect(() => {
-    // mantém só os recém-criados que combinam com a busca aplicada
     setAdded((prev) => prev.filter((d) => matchesQuery(d, appliedQuery)));
-    // se preferir, pode limpar deletes ao trocar a busca:
-    // setDeletedIds(new Set());
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added.filter((d) => matchesQuery(d, appliedQuery));
     const addedIds = new Set(addedFiltered.map((d) => d.id));
     const base = pager.items.filter((d) => !deletedIds.has(d.id) && !addedIds.has(d.id));
-    // Mostra primeiro os recém-adicionados, depois os do servidor
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
@@ -207,10 +210,8 @@ const DepartmentSettings: React.FC = () => {
     };
     try {
       if (mode === "create") {
-        // request<T> => ApiSuccess<T>
         const { data: created } = await api.addDepartment(payload);
-        // UI imediata
-        setAdded((prev) => [created as Department, ...prev]);
+        setAdded((prev) => [created as Department, ...prev]); // optimistic overlay
       } else if (editingDept) {
         await api.editDepartment(editingDept.id, payload);
       }
@@ -218,14 +219,13 @@ const DepartmentSettings: React.FC = () => {
       closeModal();
     } catch (err) {
       setSnackBarMessage(
-        err instanceof Error ? err.message : "Failed to save department."
+        err instanceof Error ? err.message : t("settings:departments.errors.saveFailed")
       );
     }
   };
 
   const deleteDepartment = async (dept: Department) => {
     try {
-      // UI imediata
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.add(dept.id);
@@ -234,20 +234,17 @@ const DepartmentSettings: React.FC = () => {
 
       await api.deleteDepartment(dept.id);
 
-      // Revalida servidor
       await pager.refresh();
 
-      // Se estava em "added", remove para evitar fantasma
       setAdded((prev) => prev.filter((d) => d.id !== dept.id));
     } catch (err) {
-      // rollback overlay
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.delete(dept.id);
         return next;
       });
       setSnackBarMessage(
-        err instanceof Error ? err.message : "Failed to delete department."
+        err instanceof Error ? err.message : t("settings:departments.errors.deleteFailed")
       );
     }
   };
@@ -283,8 +280,12 @@ const DepartmentSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Settings</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Departments</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:departments.card.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:departments.card.departments")}
+                </h1>
               </div>
             </div>
           </header>
@@ -295,7 +296,7 @@ const DepartmentSettings: React.FC = () => {
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    Department list
+                    {t("settings:departments.list.title")}
                   </span>
 
                   {/* Search area: only triggers on button click */}
@@ -307,16 +308,16 @@ const DepartmentSettings: React.FC = () => {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") e.preventDefault();
                       }}
-                      placeholder="Search by name or code…"
-                      aria-label="Search departments"
+                      placeholder={t("settings:departments.buttons.searchPlaceholder")}
+                      aria-label={t("settings:departments.buttons.runSearchAria")}
                     />
-                    <Button onClick={onSearch} variant="outline" aria-label="Run search">
-                      Buscar
+                    <Button onClick={onSearch} variant="outline" aria-label={t("settings:departments.buttons.runSearchAria")}>
+                      {t("settings:departments.buttons.search")}
                     </Button>
 
                     {isOwner && (
                       <Button onClick={openCreateModal} className="!py-1.5">
-                        Adicionar departamento
+                        {t("settings:departments.buttons.add")}
                       </Button>
                     )}
                   </div>
@@ -326,10 +327,12 @@ const DepartmentSettings: React.FC = () => {
               {/* --------- LIST AREA with ARROW-ONLY pagination footer --------- */}
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">Failed to load</p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">
+                    {t("settings:departments.errors.loadFailed")}
+                  </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
                   <Button variant="outline" size="sm" onClick={pager.refresh}>
-                    Try again
+                    {t("settings:departments.buttons.tryAgain")}
                   </Button>
                 </div>
               ) : (
@@ -337,7 +340,7 @@ const DepartmentSettings: React.FC = () => {
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
                       <p className="p-4 text-center text-sm text-gray-500">
-                        No departments found on this page.
+                        {t("settings:departments.alerts.noData")}
                       </p>
                     ) : (
                       visibleItems.map((d) => (
@@ -347,6 +350,7 @@ const DepartmentSettings: React.FC = () => {
                           canEdit={!!isOwner}
                           onEdit={openEditModal}
                           onDelete={deleteDepartment}
+                          t={t}
                         />
                       ))
                     )}
@@ -358,9 +362,10 @@ const DepartmentSettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev}
                     disabledNext={!pager.canNext}
-                    label={`Page ${pager.index + 1} of ${
-                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
-                    }`}
+                    label={t("settings:departments.pager.label", {
+                      page: pager.index + 1,
+                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
+                    })}
                   />
                 </>
               )}
@@ -379,12 +384,14 @@ const DepartmentSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Add department" : "Edit department"}
+                  {mode === "create"
+                    ? t("settings:departments.modal.addTitle")
+                    : t("settings:departments.modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Close"
+                  aria-label={t("settings:departments.buttons.cancel")}
                 >
                   &times;
                 </button>
@@ -394,32 +401,29 @@ const DepartmentSettings: React.FC = () => {
                 {/* 3 columns on desktop */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Input
-                    label="Name"
+                    label={t("settings:departments.modal.name")}
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
                   />
                   <Input
-                    label="Code"
+                    label={t("settings:departments.modal.code")}
                     name="code"
                     value={formData.code}
                     onChange={handleChange}
                   />
                   <label className="flex items-center gap-2 text-sm pt-5">
-                    <Checkbox
-                      checked={formData.is_active}
-                      onChange={handleActive}
-                    />
-                    Active department
+                    <Checkbox checked={formData.is_active} onChange={handleActive} />
+                    {t("settings:departments.modal.active")}
                   </label>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancel
+                    {t("settings:departments.buttons.cancel")}
                   </Button>
-                  <Button type="submit">Save</Button>
+                  <Button type="submit">{t("settings:departments.buttons.save")}</Button>
                 </div>
               </form>
             </div>

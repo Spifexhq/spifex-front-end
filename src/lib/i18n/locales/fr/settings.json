@@ -1,0 +1,808 @@
+{
+  "userMenu": {
+    "aria": {
+      "menu": "Menu des actions utilisateur"
+    },
+    "items": {
+      "personal": "Paramètres personnels",
+      "company": "Paramètres de l'entreprise",
+      "notifications": "Notifications",
+      "help": "Aide",
+      "signout": "Se déconnecter"
+    },
+    "alt": {
+      "personal": "Paramètres personnels",
+      "company": "Paramètres de l'entreprise",
+      "notifications": "Notifications",
+      "help": "Aide",
+      "signout": "Quitter"
+    }
+  },
+
+  "sidebar": {
+    "aria": {
+      "nav": "Barre latérale de navigation des paramètres"
+    },
+    "sections": {
+      "organization": "Organisation",
+      "banking": "Banque",
+      "management": "Gestion",
+      "accounting": "Comptabilité et structure"
+    },
+    "items": {
+      "personal": "Paramètres personnels",
+      "notifications": "Notifications",
+      "security": "Sécurité et confidentialité",
+      "company-settings": "Paramètres de l'entreprise",
+      "employees": "Employés",
+      "groups": "Groupes",
+      "subscription-management": "Abonnement",
+      "banks": "Banques",
+      "bank-statements": "Relevés",
+      "expenses": "Dépenses",
+      "projects": "Projets",
+      "inventory": "Inventaire",
+      "entities": "Entités",
+      "ledger-accounts": "Comptes comptables",
+      "departments": "Départements"
+    }
+  },
+
+  "personal": {
+    "title": "Paramètres personnels",
+    "header": {
+      "settings": "Paramètres",
+      "personal": "Personnel"
+    },
+    "section": {
+      "company": "Entreprise",
+      "personalData": "Données personnelles",
+      "timezone": "Fuseau horaire",
+      "security": "Sécurité"
+    },
+    "security": {
+      "subtitle": "Gérer le mot de passe, les sessions et les appareils connectés."
+    },
+    "label": {
+      "current": "Actuel"
+    },
+    "btn": {
+      "update": "Mettre à jour",
+      "manageSecurity": "Gérer la sécurité",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "updateName": "Mettre à jour le nom",
+      "updateEmail": "Mettre à jour l'email",
+      "updatePhone": "Mettre à jour le téléphone",
+      "updateJobTitle": "Mettre à jour le poste",
+      "updateDepartment": "Mettre à jour le département",
+      "updateCountry": "Mettre à jour le pays"
+    },
+    "btnLabel": {
+      "tz": "Sélectionner le fuseau horaire"
+    },
+    "field": {
+      "companyName": "Nom de l'entreprise",
+      "fullName": "Nom complet",
+      "primaryEmail": "Email principal",
+      "phone": "Téléphone",
+      "jobTitle": "Poste",
+      "department": "Département",
+      "country": "Pays"
+    },
+    "modal": {
+      "title": "Modifier les informations",
+      "close": "Fermer",
+      "useDeviceTz": "Utiliser le fuseau horaire de l'appareil",
+      "tzLabel": "Fuseau horaire"
+    },
+    "toast": {
+      "loadError": "Échec du chargement des données personnelles.",
+      "updateError": "Échec de la mise à jour des données personnelles."
+    }
+  },
+
+  "company": {
+    "title": "Paramètres de l'entreprise",
+    "header": {
+      "settings": "Paramètres",
+      "organization": "Organisation"
+    },
+    "section": {
+      "orgInfo": "Informations sur l'organisation"
+    },
+    "field": {
+      "name": "Nom",
+      "orgNameInput": "Nom de l'organisation",
+      "timezone": "Fuseau horaire",
+      "address1": "Adresse ligne 1",
+      "address2": "Adresse ligne 2",
+      "city": "Ville",
+      "country": "Pays",
+      "postalCode": "Code postal"
+    },
+    "btn": {
+      "update": "Mettre à jour",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "updateName": "Mettre à jour le nom",
+      "updateTimezone": "Mettre à jour le fuseau horaire",
+      "updateCity": "Mettre à jour la ville",
+      "updateCountry": "Mettre à jour le pays",
+      "updatePostalCode": "Mettre à jour le code postal"
+    },
+    "btnLabel": {
+      "tz": "Sélectionner le fuseau horaire"
+    },
+    "modal": {
+      "editName": "Modifier le nom",
+      "editTimezone": "Modifier le fuseau horaire",
+      "editAddress": "Modifier l'adresse",
+      "useDeviceTz": "Utiliser le fuseau horaire de l'appareil",
+      "tzLabel": "Fuseau horaire",
+      "close": "Fermer"
+    },
+    "toast": {
+      "orgLoadError": "Échec du chargement des données de l'organisation.",
+      "orgUpdateError": "Échec de la mise à jour de l'organisation."
+    }
+  },
+
+  "securityAndPrivacy": {
+    "title": "Sécurité et confidentialité",
+    "header": {
+      "settings": "Paramètres",
+      "title": "Sécurité et confidentialité"
+    },
+    "section": {
+      "access": "Accès et identifiants"
+    },
+    "field": {
+      "password": "Mot de passe",
+      "lastChange": "Dernière modification :",
+      "never": "jamais",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe"
+    },
+    "btn": {
+      "changePassword": "Changer le mot de passe",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "modal": {
+      "title": "Changer le mot de passe",
+      "close": "Fermer"
+    },
+    "toast": {
+      "success": "Mot de passe modifié avec succès.",
+      "successSnippet": "Mot de passe modifié avec succès",
+      "changeError": "Échec du changement de mot de passe.",
+      "unexpected": "Erreur inattendue.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "samePassword": "Le nouveau mot de passe ne peut pas être identique à l'actuel.",
+      "weakPassword": "Le nouveau mot de passe ne satisfait pas aux exigences minimales."
+    }
+  },
+
+  "employee": {
+    "title": "Employés",
+    "header": {
+      "settings": "Paramètres",
+      "employees": "Employés"
+    },
+    "section": {
+      "list": "Liste des employés"
+    },
+    "field": {
+      "name": "Nom",
+      "email": "Email",
+      "tempPassword": "Mot de passe temporaire",
+      "confirmPassword": "Confirmer le mot de passe",
+      "groups": "Groupes"
+    },
+    "btn": {
+      "addEmployee": "Ajouter un employé",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "btnLabel": {
+      "groups": "Sélectionner des groupes"
+    },
+    "modal": {
+      "createTitle": "Ajouter un employé",
+      "editTitle": "Modifier un employé",
+      "close": "Fermer"
+    },
+    "empty": "Aucun employé trouvé.",
+    "confirm": {
+      "delete": "Supprimer l'employé « {{name}} » ?"
+    },
+    "toast": {
+      "fetchError": "Échec du chargement des données.",
+      "loadEmployeeError": "Échec du chargement des données de l'employé.",
+      "saveError": "Échec de l'enregistrement de l'employé.",
+      "deleteError": "Échec de la suppression de l'employé.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "weakPassword": "Le mot de passe ne satisfait pas aux exigences minimales."
+    }
+  },
+
+  "groups": {
+    "title": "Groupes",
+    "header": {
+      "settings": "Paramètres",
+      "title": "Groupes et autorisations"
+    },
+    "left": {
+      "groups": "Groupes",
+      "searchPlaceholder": "Rechercher un groupe...",
+      "newPlaceholder": "Nouveau groupe...",
+      "create": "Créer",
+      "meta": "{{perms}} autorisations · {{members}} membres",
+      "empty": "Aucun groupe trouvé."
+    },
+    "right": {
+      "selectPrompt": "Sélectionnez un groupe pour gérer les autorisations.",
+      "nameLabel": "Nom",
+      "rename": "Renommer",
+      "delete": "Supprimer",
+      "closePanel": "Fermer le panneau des autorisations",
+      "searchPerms": "Rechercher des autorisations...",
+      "undo": "Annuler",
+      "savePerms": "Enregistrer les autorisations",
+      "category": {
+        "navigation": "Navigation",
+        "sidebar": "Barre latérale",
+        "page_components": "Composants de page",
+        "entries": "Entrées (Cashflow)",
+        "users": "Utilisateurs",
+        "banks": "Banques",
+        "employees": "Employés",
+        "groups": "Groupes",
+        "general_ledger": "Grand livre",
+        "departments": "Départements",
+        "projects": "Projets",
+        "inventory": "Inventaire",
+        "entities": "Entités",
+        "other": "Autre"
+      },
+      "selectAll": "Tout sélectionner",
+      "clear": "Effacer",
+      "noItems": "Aucun élément"
+    },
+    "confirm": {
+      "deleteText": "Supprimer le groupe « {{name}} » ?",
+      "confirmLabel": "Supprimer",
+      "cancelLabel": "Annuler",
+      "fail": "Échec de la confirmation."
+    },
+    "toast": {
+      "successSnippet": "succès",
+      "loadAllError": "Échec du chargement des groupes/autorisations.",
+      "detailError": "Échec du chargement des détails du groupe.",
+      "createNameRequired": "Fournissez un nom pour le nouveau groupe.",
+      "createError": "Échec de la création du groupe.",
+      "renameEmpty": "Le nom du groupe ne peut pas être vide.",
+      "renameError": "Échec du renommage du groupe.",
+      "deleteSuccess": "Groupe supprimé avec succès.",
+      "deleteError": "Échec de la suppression du groupe.",
+      "saveSuccess": "Autorisations enregistrées avec succès.",
+      "saveError": "Échec de l'enregistrement des autorisations."
+    }
+  },
+
+  "subscription": {
+    "title": "Gestion de l'abonnement",
+    "header": {
+      "settings": "Paramètres",
+      "title": "Gestion de l'abonnement"
+    },
+    "section": {
+      "withPlan": "Abonnement actuel et options",
+      "noPlan": "Choisir un abonnement"
+    },
+    "plan": {
+      "basic": "Forfait Basique - R$50,00/mois",
+      "premium": "Forfait Premium - R$150,00/mois"
+    },
+    "current": {
+      "youAreOn": "Vous êtes actuellement abonné à :",
+      "unknown": "—"
+    },
+    "btn": {
+      "current": "Actuel",
+      "select": "Sélectionner",
+      "subscribe": "S'abonner",
+      "manage": "Gérer l'abonnement",
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
+    "modal": {
+      "title": "Confirmer la modification",
+      "text": "Êtes-vous sûr de vouloir changer d'abonnement ?",
+      "close": "Fermer"
+    }
+  },
+
+  "bank": {
+    "title": "Banques",
+    "header": {
+      "settings": "Paramètres",
+      "title": "Banques"
+    },
+    "section": {
+      "list": "Comptes bancaires"
+    },
+    "empty": "Aucun compte bancaire pour l'instant.",
+    "btn": {
+      "addBank": "Ajouter une banque",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "selectAccountType": "Sélectionner le type de compte"
+    },
+    "field": {
+      "institution": "Établissement bancaire",
+      "accountType": "Type de compte",
+      "branch": "Agence",
+      "accountNumber": "Compte",
+      "iban": "IBAN",
+      "initialBalance": "Solde initial",
+      "isActive": "Compte actif"
+    },
+    "accountType": {
+      "checking": "Courant",
+      "savings": "Épargne",
+      "investment": "Investissement",
+      "cash": "Espèces"
+    },
+    "modal": {
+      "createTitle": "Ajouter une banque",
+      "editTitle": "Modifier la banque",
+      "close": "Fermer"
+    },
+    "confirm": {
+      "delete": "Supprimer le compte « {{name}} » ?",
+      "confirmLabel": "Supprimer",
+      "cancelLabel": "Annuler"
+    },
+    "toast": {
+      "fetchError": "Échec du chargement des banques.",
+      "saveError": "Échec de l'enregistrement de la banque.",
+      "deleteError": "Échec de la suppression de la banque.",
+      "confirmFail": "Échec de la confirmation."
+    }
+  },
+
+  "statements": {
+    "title": "Relevés bancaires",
+    "header": {
+      "settings": "Finance",
+      "title": "Relevés bancaires"
+    },
+    "btn": {
+      "upload": "Téléverser des PDF",
+      "send": "Envoyer",
+      "remove": "Retirer",
+      "sendAll": "Tout envoyer",
+      "clearQueue": "Vider la file",
+      "applyFilters": "Appliquer les filtres",
+      "clearFilters": "Effacer"
+    },
+    "dnd": {
+      "text": "Glissez-déposez des PDF ici, ou",
+      "click": "cliquez pour sélectionner",
+      "hint": "Astuce : utilisez Ctrl/⌘ + U pour ouvrir le sélecteur."
+    },
+    "queue": {
+      "title": "File d'envoi ({{count}})"
+    },
+    "filters": {
+      "searchLabel": "Rechercher par nom de fichier",
+      "placeholder": "ex. : itau_octobre.pdf",
+      "status": "Statut",
+      "bank": "Compte",
+      "statusPick": "Sélectionner un statut",
+      "bankPick": "Filtrer par compte"
+    },
+    "statuses": {
+      "uploaded": "Téléversé",
+      "processing": "En traitement",
+      "ready": "Prêt",
+      "failed": "Échec"
+    },
+    "list": {
+      "title": "Relevés téléversés ({{count}})",
+      "empty": "Aucun relevé trouvé."
+    },
+    "row": {
+      "accountOptional": "Compte (optionnel)",
+      "accountButton": "Lier à un compte"
+    },
+    "actions": {
+      "download": "Télécharger",
+      "analyze": "Analyser",
+      "delete": "Supprimer"
+    },
+    "confirm": {
+      "deleteText": "Supprimer ce relevé ? Cette action est irréversible.",
+      "confirmLabel": "Supprimer",
+      "cancelLabel": "Annuler"
+    },
+    "toast": {
+      "banksFetchError": "Échec du chargement des comptes bancaires.",
+      "listFetchError": "Échec du chargement des relevés.",
+      "nonPdfIgnored": "Fichier ignoré (pas un PDF) : {{name}}",
+      "uploadFail": "Échec du téléversement du relevé.",
+      "analysisStarted": "Analyse démarrée. Le statut sera mis à jour sous peu.",
+      "analysisFail": "Impossible de démarrer l'analyse.",
+      "deleteFail": "Échec de la suppression du relevé."
+    },
+    "aria": {
+      "uploadTrigger": "Sélectionner des fichiers (⌘/Ctrl+U)"
+    },
+    "meta": {
+      "chip": {
+        "uploaded": "téléversé",
+        "processing": "traitement",
+        "ready": "prêt",
+        "failed": "échec"
+      }
+    }
+  },
+
+  "project": {
+    "title": "Projets",
+    "header": {
+      "settings": "Paramètres",
+      "projects": "Projets"
+    },
+    "section": {
+      "list": "Liste des projets"
+    },
+    "search": {
+      "placeholder": "Rechercher par nom ou code…",
+      "aria": "Rechercher des projets",
+      "button": "Rechercher"
+    },
+    "row": {
+      "codePrefix": "CODE :",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "untitled": "(sans titre)"
+    },
+    "btn": {
+      "addProject": "Ajouter un projet",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "retry": "Réessayer"
+    },
+    "btnLabel": {
+      "type": "Sélectionner un type"
+    },
+    "field": {
+      "name": "Nom du projet",
+      "code": "Code",
+      "type": "Type de projet",
+      "description": "Description",
+      "isActive": "Projet actif"
+    },
+    "modal": {
+      "createTitle": "Ajouter un projet",
+      "editTitle": "Modifier le projet",
+      "close": "Fermer"
+    },
+    "pagination": {
+      "label": "Page {{index}} sur {{total}}"
+    },
+    "empty": "Aucun projet trouvé.",
+    "errors": {
+      "loadFailedTitle": "Échec du chargement",
+      "saveError": "Échec de l'enregistrement du projet.",
+      "deleteError": "Échec de la suppression du projet."
+    }
+  },
+
+  "inventory": {
+    "title": "Inventaire",
+    "header": {
+      "settings": "Paramètres",
+      "inventory": "Inventaire"
+    },
+    "section": {
+      "list": "Articles d'inventaire"
+    },
+    "search": {
+      "placeholder": "Rechercher par nom ou SKU…",
+      "aria": "Rechercher des articles",
+      "button": "Rechercher"
+    },
+    "row": {
+      "skuPrefix": "SKU :",
+      "qtyPrefix": "Qté :",
+      "untitled": "(sans titre)"
+    },
+    "btn": {
+      "addItem": "Ajouter un article",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "retry": "Réessayer"
+    },
+    "field": {
+      "sku": "SKU",
+      "name": "Nom",
+      "description": "Description",
+      "uom": "Unité (UoM)",
+      "uomPlaceholder": "ex. : u, boîte, kg, l…",
+      "qty": "Quantité en stock",
+      "isActive": "Article actif"
+    },
+    "modal": {
+      "createTitle": "Ajouter un article",
+      "editTitle": "Modifier l'article",
+      "close": "Fermer"
+    },
+    "pagination": {
+      "label": "Page {{index}} sur {{total}}"
+    },
+    "empty": "Aucun article trouvé.",
+    "errors": {
+      "loadFailedTitle": "Échec du chargement",
+      "saveError": "Échec de l'enregistrement de l'article.",
+      "deleteError": "Échec de la suppression de l'article."
+    }
+  },
+
+  "entity": {
+    "title": "Entités",
+    "header": {
+      "settings": "Paramètres",
+      "entities": "Entités"
+    },
+    "section": {
+      "list": "Liste des entités"
+    },
+    "search": {
+      "placeholder": "Rechercher par nom ou alias…",
+      "aria": "Rechercher des entités",
+      "button": "Rechercher"
+    },
+    "types": {
+      "client": "Client",
+      "supplier": "Fournisseur",
+      "employee": "Employé"
+    },
+    "row": {
+      "inactive": "• Inactive",
+      "untitled": "(sans titre)"
+    },
+    "btn": {
+      "add": "Ajouter une entité",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "retry": "Réessayer",
+      "confirmDelete": "Supprimer"
+    },
+    "field": {
+      "full_name": "Nom complet",
+      "alias_name": "Nom commercial / alias",
+      "entity_type": "Type d'entité",
+      "is_active": "Entité active",
+      "ssn_tax_id": "SSN (CPF)",
+      "ein_tax_id": "EIN (CNPJ)",
+      "email": "Email",
+      "phone": "Téléphone",
+      "street": "Rue",
+      "street_number": "Numéro",
+      "city": "Ville",
+      "state": "État",
+      "postal_code": "Code postal",
+      "country": "Pays",
+      "bank_name": "Banque",
+      "bank_branch": "Agence",
+      "checking_account": "Compte courant",
+      "account_holder_tax_id": "Titulaire (CPF/CNPJ)",
+      "account_holder_name": "Nom du titulaire"
+    },
+    "modal": {
+      "createTitle": "Ajouter une entité",
+      "editTitle": "Modifier l'entité",
+      "close": "Fermer"
+    },
+    "pagination": {
+      "label": "Page {{index}} sur {{total}}"
+    },
+    "empty": "Aucune entité trouvée.",
+    "confirm": {
+      "deleteTitle": "Supprimer l'entité « {{name}} » ?"
+    },
+    "errors": {
+      "loadFailedTitle": "Échec du chargement",
+      "saveError": "Échec de l'enregistrement de l'entité.",
+      "deleteError": "Échec de la suppression de l'entité.",
+      "confirmFailed": "Échec de la confirmation."
+    }
+  },
+
+  "ledgerAccounts": {
+    "title": "Comptes comptables",
+    "header": {
+      "section": "Paramètres",
+      "title": "Comptes comptables"
+    },
+    "buttons": {
+      "add": "Ajouter un compte",
+      "options": "Options",
+      "downloadPdf": "Télécharger les comptes comptables (PDF)",
+      "downloadPdfDisabled": "Aucun compte disponible",
+      "resetAll": "Réinitialiser les comptes comptables",
+      "deletingAll": "Suppression…",
+      "expandAll": "Tout développer",
+      "collapseAll": "Tout réduire",
+      "viewList": "Voir en liste",
+      "viewAccordion": "Voir en accordéon",
+      "clear": "Effacer",
+      "search": "Rechercher",
+      "filterCategory": "Filtrer par catégorie",
+      "selectCategory": "Sélectionner une catégorie",
+      "selectSubcategory": "Sélectionner une sous-catégorie",
+      "newSubcategory": "Nouvelle sous-catégorie",
+      "toggleNewSub": "+",
+      "toggleNewSubCancel": "Annuler",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "filters": {
+      "placeholder": "Rechercher par compte, code, catégorie ou sous-catégorie...",
+      "category": "Catégorie"
+    },
+    "list": {
+      "all": "Tous les comptes",
+      "empty": "Aucun compte trouvé.",
+      "groupEmpty": "Aucun compte trouvé."
+    },
+    "tags": {
+      "code": "Code",
+      "credit": "Crédit",
+      "debit": "Débit",
+      "inactive": "Inactif",
+      "noName": "(sans nom)",
+      "noGroup": "(Sans catégorie)",
+      "noSubgroup": "(Sans sous-groupe)"
+    },
+    "modal": {
+      "createTitle": "Ajouter un compte",
+      "editTitle": "Modifier le compte",
+      "name": "Compte comptable",
+      "code": "Code (optionnel)",
+      "codePlaceholder": "ex. : 3-0001",
+      "subcategory": "Sous-catégorie",
+      "subcategoryNew": "Nouvelle sous-catégorie",
+      "active": "Compte actif",
+      "defaultTxLabel": "Type de transaction par défaut :",
+      "defaultTxHint": "Sélectionnez une catégorie pour définir le type de transaction par défaut."
+    },
+    "confirm": {
+      "deleteOne": "Supprimer le compte « {{name}} » ?",
+      "deleteAll": "Êtes-vous sûr de vouloir supprimer TOUS les comptes comptables ? Cette action est irréversible."
+    },
+    "toast": {
+      "saved": "Compte enregistré avec succès.",
+      "saveError": "Échec de l'enregistrement du compte.",
+      "deleteError": "Échec de la suppression du compte.",
+      "deleteAllError": "Échec de la suppression de tous les comptes.",
+      "pdfOk": "PDF généré.",
+      "pdfError": "Erreur inattendue lors de la génération du PDF.",
+      "confirmFailed": "Échec de la confirmation."
+    },
+    "pdf": {
+      "company": "Spifex",
+      "title": "Plan de comptes comptables"
+    }
+  },
+
+  "ledgerAccountsGate": {
+    "title": "Configurons vos comptes du grand livre",
+    "subtitle": "Choisissez comment créer votre plan de comptes. Vous pourrez le modifier ou l’étendre plus tard.",
+    "modes": {
+      "csv": {
+        "title": "Import via CSV",
+        "choose": "Sélectionner",
+        "downloadTemplate": "Télécharger le modèle .csv",
+        "uploadLabel": "Téléverser le fichier .csv",
+        "hintHeaderRow": "Le fichier doit contenir une ligne d’en-tête",
+        "hintColumns": "Colonnes prises en charge : GRUPO, SUBGRUPO, CONTA (nous acceptons aussi group, subgroup, account)."
+      },
+      "manual": {
+        "title": "Saisir manuellement",
+        "choose": "Sélectionner",
+        "instructions": "Utilisez le format GROUPE;SOUS-GROUPE;COMPTE — une ligne par compte. La virgule est également acceptée.",
+        "placeholder": "Exemples :\nRecettes d’exploitation;Ventes;Ventes de produits\nDépenses d’exploitation;Administratives;Salaires et charges"
+      },
+      "standard": {
+        "title": "Utiliser un plan standard",
+        "choose": "Sélectionner",
+        "personal": "Plan de comptes personnel",
+        "business": "Plan de comptes d’entreprise"
+      }
+    },
+    "buttons": {
+      "clear": "Effacer la sélection",
+      "finish": "Terminer"
+    },
+    "snackbar": {
+      "selectCsv": "Veuillez sélectionner un fichier CSV.",
+      "emptyCsv": "CSV vide ou invalide.",
+      "manualRequired": "Renseignez le champ en utilisant GROUPE;SOUS-GROUPE;COMPTE.",
+      "standardRequired": "Choisissez un plan standard (Personnel ou Entreprise).",
+      "chooseMode": "Choisissez une option (CSV, Manuel ou Plan standard).",
+      "saveError": "Erreur lors de la création des comptes comptables."
+    },
+    "misc": {
+      "fileNameTemplate": "spifex-standard-general-ledger-accounts.csv",
+      "groupMappingNote": "Les catégories sont envoyées comme nombres (1..4) à l’API."
+    }
+  },
+
+  "departments": {
+    "title": "Départements",
+    "header": {
+      "section": "Paramètres",
+      "title": "Départements"
+    },
+    "list": {
+      "title": "Liste des départements",
+      "emptyPage": "Aucun département trouvé sur cette page."
+    },
+    "buttons": {
+      "search": "Rechercher",
+      "searchPlaceholder": "Rechercher par nom ou code…",
+      "runSearchAria": "Lancer la recherche",
+      "add": "Ajouter un département",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "tryAgain": "Réessayer",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "tags": {
+      "code": "Code",
+      "inactive": "Inactif",
+      "noName": "(sans nom)"
+    },
+    "card": {
+      "settings": "Paramètres",
+      "departments": "Départements"
+    },
+    "pager": {
+      "label": "Page {{page}} sur {{total}}"
+    },
+    "modal": {
+      "addTitle": "Ajouter un département",
+      "editTitle": "Modifier le département",
+      "name": "Nom",
+      "code": "Code",
+      "active": "Département actif"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement",
+      "saveFailed": "Échec de l'enregistrement du département.",
+      "deleteFailed": "Échec de la suppression du département."
+    },
+    "alerts": {
+      "noData": "Aucun département trouvé sur cette page."
+    }
+  }
+}

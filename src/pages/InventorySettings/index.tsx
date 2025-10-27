@@ -1,8 +1,9 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/InventorySettings.tsx                                     */
-/*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
-/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/InventorySettings.tsx
+ * Pagination: cursor + arrow-only, click-to-search via "Buscar"
+ * Dinâmica: overlay local p/ add/delete + refresh do pager
+ * i18n: group "inventory" inside the "settings" namespace
+ * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -21,6 +22,7 @@ import Checkbox from "src/components/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
+import { useTranslation } from "react-i18next";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -45,30 +47,32 @@ function sortBySkuThenName(a: InventoryItem, b: InventoryItem) {
   return (a.name || "").localeCompare(b.name || "", "pt-BR");
 }
 
-/* Linha */
+/* Row */
 const Row = ({
   item,
   onEdit,
   onDelete,
   canEdit,
+  t,
 }: {
   item: InventoryItem;
   onEdit: (i: InventoryItem) => void;
   onDelete: (i: InventoryItem) => void;
   canEdit: boolean;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        SKU: {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
+        {t("settings:inventory.row.skuPrefix")} {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
       </p>
       <p className="text-[13px] font-medium text-gray-900 truncate">
-        {item.name || "(sem nome)"} {item.description ? `— ${item.description}` : ""}
+        {item.name || t("settings:inventory.row.untitled")} {item.description ? `— ${item.description}` : ""}
       </p>
     </div>
     <div className="flex items-center gap-3 shrink-0">
       <span className="text-[12px] text-gray-700">
-        Qtd: {item.quantity_on_hand ?? "0"}
+        {t("settings:inventory.row.qtyPrefix")} {item.quantity_on_hand ?? "0"}
       </span>
       {canEdit && (
         <>
@@ -77,10 +81,10 @@ const Row = ({
             className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
             onClick={() => onEdit(item)}
           >
-            Editar
+            {t("settings:inventory.btn.edit")}
           </Button>
           <Button variant="common" onClick={() => onDelete(item)}>
-            Excluir
+            {t("settings:inventory.btn.delete")}
           </Button>
         </>
       )}
@@ -89,9 +93,9 @@ const Row = ({
 );
 
 const InventorySettings: React.FC = () => {
-  useEffect(() => {
-    document.title = "Inventário";
-  }, []);
+  const { t, i18n } = useTranslation(["settings"]);
+  useEffect(() => { document.title = t("settings:inventory.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
@@ -150,17 +154,13 @@ const InventorySettings: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // mantém só os recém-criados que combinam com a busca aplicada
     setAdded((prev) => prev.filter((i) => matchesQuery(i, appliedQuery)));
-    // se preferir, pode limpar deletes ao trocar a busca:
-    // setDeletedIds(new Set());
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added.filter((i) => matchesQuery(i, appliedQuery));
     const addedIds = new Set(addedFiltered.map((i) => i.id));
     const base = pager.items.filter((i) => !deletedIds.has(i.id) && !addedIds.has(i.id));
-    // Mostra primeiro os recém-adicionados, depois os do servidor
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
@@ -204,9 +204,7 @@ const InventorySettings: React.FC = () => {
     e.preventDefault();
     try {
       if (mode === "create") {
-        // request<T> retorna ApiSuccess<T>
         const { data: created } = await api.addInventoryItem(formData);
-        // UI imediata
         setAdded((prev) => [created, ...prev]);
       } else if (editingItem) {
         await api.editInventoryItem(editingItem.id, formData);
@@ -214,13 +212,14 @@ const InventorySettings: React.FC = () => {
       await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar item.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : t("settings:inventory.errors.saveError")
+      );
     }
   };
 
   const deleteItem = async (item: InventoryItem) => {
     try {
-      // UI imediata
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.add(item.id);
@@ -228,20 +227,17 @@ const InventorySettings: React.FC = () => {
       });
 
       await api.deleteInventoryItem(item.id);
-
-      // Revalida servidor
       await pager.refresh();
-
-      // Se o item também estava na lista "added", remove
       setAdded((prev) => prev.filter((i) => i.id !== item.id));
     } catch (err) {
-      // rollback overlay
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
         return next;
       });
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir item.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : t("settings:inventory.errors.deleteError")
+      );
     }
   };
 
@@ -274,8 +270,12 @@ const InventorySettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Inventário</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:inventory.header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:inventory.header.inventory")}
+                </h1>
               </div>
             </div>
           </header>
@@ -285,7 +285,9 @@ const InventorySettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Itens do inventário</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:inventory.section.list")}
+                  </span>
 
                   {/* Busca (clique para aplicar) */}
                   <div className="flex items-center gap-2">
@@ -294,12 +296,16 @@ const InventorySettings: React.FC = () => {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder="Buscar por nome ou SKU…"
-                      aria-label="Buscar itens"
+                      placeholder={t("settings:inventory.search.placeholder")}
+                      aria-label={t("settings:inventory.search.aria")}
                     />
-                    <Button onClick={onSearch} variant="outline">Buscar</Button>
+                    <Button onClick={onSearch} variant="outline">
+                      {t("settings:inventory.search.button")}
+                    </Button>
                     {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">Adicionar item</Button>
+                      <Button onClick={openCreateModal} className="!py-1.5">
+                        {t("settings:inventory.btn.addItem")}
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -307,15 +313,21 @@ const InventorySettings: React.FC = () => {
 
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">
+                    {t("settings:inventory.errors.loadFailedTitle")}
+                  </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>Tentar novamente</Button>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                    {t("settings:inventory.btn.retry")}
+                  </Button>
                 </div>
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">Nenhum item encontrado.</p>
+                      <p className="p-4 text-center text-sm text-gray-500">
+                        {t("settings:inventory.empty")}
+                      </p>
                     ) : (
                       visibleItems.map((i) => (
                         <Row
@@ -324,6 +336,7 @@ const InventorySettings: React.FC = () => {
                           canEdit={!!isOwner}
                           onEdit={openEditModal}
                           onDelete={deleteItem}
+                          t={t}
                         />
                       ))
                     )}
@@ -334,9 +347,10 @@ const InventorySettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev}
                     disabledNext={!pager.canNext}
-                    label={`Página ${pager.index + 1} de ${
-                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
-                    }`}
+                    label={t("settings:inventory.pagination.label", {
+                      index: pager.index + 1,
+                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
+                    })}
                   />
                 </>
               )}
@@ -351,29 +365,33 @@ const InventorySettings: React.FC = () => {
                  role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar item" : "Editar item"}
+                  {mode === "create"
+                    ? t("settings:inventory.modal.createTitle")
+                    : t("settings:inventory.modal.editTitle")}
                 </h3>
                 <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                        onClick={closeModal} aria-label="Fechar">
+                        onClick={closeModal} aria-label={t("settings:inventory.modal.close")}>
                   &times;
                 </button>
               </header>
 
               <form className="space-y-3" onSubmit={submitItem}>
-                <Input label="SKU" name="sku" value={formData.sku} onChange={handleChange} required />
-                <Input label="Nome" name="name" value={formData.name} onChange={handleChange} required />
-                <Input label="Descrição" name="description" value={formData.description} onChange={handleChange} />
-                <Input label="Unidade (UoM)" name="uom" value={formData.uom} onChange={handleChange} placeholder="ex.: un, cx, kg, l…" />
-                <Input label="Quantidade em estoque" name="quantity_on_hand" type="number" step="1" min="0"
+                <Input label={t("settings:inventory.field.sku")} name="sku" value={formData.sku} onChange={handleChange} required />
+                <Input label={t("settings:inventory.field.name")} name="name" value={formData.name} onChange={handleChange} required />
+                <Input label={t("settings:inventory.field.description")} name="description" value={formData.description} onChange={handleChange} />
+                <Input label={t("settings:inventory.field.uom")} name="uom" value={formData.uom} onChange={handleChange} placeholder={t("settings:inventory.field.uomPlaceholder")} />
+                <Input label={t("settings:inventory.field.qty")} name="quantity_on_hand" type="number" step="1" min="0"
                        value={formData.quantity_on_hand} onChange={handleChange} />
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={formData.is_active} onChange={handleActive} />
-                  Item ativo
+                  {t("settings:inventory.field.isActive")}
                 </label>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>Cancelar</Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button variant="cancel" type="button" onClick={closeModal}>
+                    {t("settings:inventory.btn.cancel")}
+                  </Button>
+                  <Button type="submit">{t("settings:inventory.btn.save")}</Button>
                 </div>
               </form>
             </div>

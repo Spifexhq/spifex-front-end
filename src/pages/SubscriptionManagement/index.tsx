@@ -1,21 +1,28 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useRequireLogin } from '@/hooks/useRequireLogin';
+/* --------------------------------------------------------------------------
+ * File: src/pages/SubscriptionManagement.tsx
+ * Style: Navbar fixa + SidebarSettings, light borders, compact labels
+ * Notes: i18n group "subscription" inside the "settings" namespace
+ * -------------------------------------------------------------------------- */
 
-import { useAuth } from '@/api';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import React, { useEffect, useState, useCallback } from "react";
+import { useRequireLogin } from "@/hooks/useRequireLogin";
 
-import Navbar from '@/components/Navbar';
-import SidebarSettings from '@/components/Sidebar/SidebarSettings';
-import { InlineLoader, SuspenseLoader } from '@/components/Loaders';
-import PaymentButton from '@/components/SubscriptionButtons/PaymentButton';
-import ManageSubscriptionLink from '@/components/SubscriptionButtons/ManageSubscriptionLink';
-import Button from '@/components/Button';
+import { useAuth } from "@/api";
+import { useAuthContext } from "@/contexts/useAuthContext";
+
+import Navbar from "@/components/Navbar";
+import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import { InlineLoader, SuspenseLoader } from "@/components/Loaders";
+import PaymentButton from "@/components/SubscriptionButtons/PaymentButton";
+import ManageSubscriptionLink from "@/components/SubscriptionButtons/ManageSubscriptionLink";
+import Button from "@/components/Button";
+import { useTranslation } from "react-i18next";
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials(name?: string) {
-  if (!name) return 'GP'; // Gestão de Plano
-  const p = name.split(' ').filter(Boolean);
-  return ((p[0]?.[0] || '') + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+  if (!name) return "GP"; // Gestão de Plano
+  const p = name.split(" ").filter(Boolean);
+  return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 }
 
 const RowPlan = ({
@@ -34,9 +41,15 @@ const RowPlan = ({
 );
 
 const SubscriptionManagement: React.FC = () => {
+  const { t, i18n } = useTranslation(["settings"]);
+
   useEffect(() => {
-    document.title = 'Gestão de Plano';
-  }, []);
+    document.title = t("settings:subscription.title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   const isLogged = useRequireLogin();
   const { handleInitUser } = useAuth();
@@ -44,47 +57,50 @@ const SubscriptionManagement: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [selectedPlanId, setSelectedPlanId] = useState("");
 
+  // Labels come from i18n; price IDs from env
   const availablePlans =
-    import.meta.env.VITE_ENVIRONMENT === 'development'
+    import.meta.env.VITE_ENVIRONMENT === "development"
       ? [
-          { priceId: 'price_1Q01ZhJP9mPoGRyfBocieoN0', label: 'Plano Básico - R$50,00/mês' },
-          { priceId: 'price_1Q0BQ0JP9mPoGRyfvnYKUjCy', label: 'Plano Premium - R$150,00/mês' },
+          { priceId: "price_1Q01ZhJP9mPoGRyfBocieoN0", label: t("settings:subscription.plan.basic") },
+          { priceId: "price_1Q0BQ0JP9mPoGRyfvnYKUjCy", label: t("settings:subscription.plan.premium") },
         ]
       : [
-          { priceId: 'price_1Q00r4JP9mPoGRyfZjHpSZul', label: 'Plano Básico - R$50,00/mês' },
-          { priceId: 'price_1Q6OSrJP9mPoGRyfjaNSlrhX', label: 'Plano Premium - R$150,00/mês' },
+          { priceId: "price_1Q00r4JP9mPoGRyfZjHpSZul", label: t("settings:subscription.plan.basic") },
+          { priceId: "price_1Q6OSrJP9mPoGRyfjaNSlrhX", label: t("settings:subscription.plan.premium") },
         ];
 
-  const currentPlanLabel = availablePlans.find(p => p.priceId === activePlanId)?.label ?? null;
+  const currentPlanLabel =
+    availablePlans.find((p) => p.priceId === activePlanId)?.label ??
+    t("settings:subscription.current.unknown");
 
   useEffect(() => {
     const init = async () => {
       await handleInitUser();
       setLoading(false);
     };
-    init();
+    void init();
   }, [handleInitUser]);
 
   // Modal UX: Esc fecha (se não estiver processando) e trava o scroll do body
   const closeModal = useCallback(() => {
     if (isProcessing) return;
-    setSelectedPlanId('');
+    setSelectedPlanId("");
   }, [isProcessing]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === "Escape") closeModal();
     };
-    if (selectedPlanId) window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    if (selectedPlanId) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [selectedPlanId, closeModal]);
 
   useEffect(() => {
-    document.body.style.overflow = selectedPlanId ? 'hidden' : '';
+    document.body.style.overflow = selectedPlanId ? "hidden" : "";
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [selectedPlanId]);
 
@@ -106,8 +122,12 @@ const SubscriptionManagement: React.FC = () => {
                 {getInitials(user?.name)}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Gestão de plano</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:subscription.header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:subscription.header.title")}
+                </h1>
               </div>
             </div>
           </header>
@@ -117,7 +137,9 @@ const SubscriptionManagement: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                  {isSubscribed ? 'Plano atual e opções' : 'Escolha um plano'}
+                  {isSubscribed
+                    ? t("settings:subscription.section.withPlan")
+                    : t("settings:subscription.section.noPlan")}
                 </span>
               </div>
 
@@ -128,14 +150,14 @@ const SubscriptionManagement: React.FC = () => {
                     <RowPlan
                       label={
                         <>
-                          Você está atualmente inscrito em:&nbsp;
-                          <span className="font-semibold">{currentPlanLabel ?? '—'}</span>
+                          {t("settings:subscription.current.youAreOn")}&nbsp;
+                          <span className="font-semibold">{currentPlanLabel}</span>
                         </>
                       }
                     />
 
                     {/* Linhas de planos para trocar */}
-                    {availablePlans.map(plan => (
+                    {availablePlans.map((plan) => (
                       <RowPlan
                         key={plan.priceId}
                         label={plan.label}
@@ -146,24 +168,31 @@ const SubscriptionManagement: React.FC = () => {
                             disabled={plan.priceId === activePlanId}
                             onClick={() => setSelectedPlanId(plan.priceId)}
                           >
-                            {plan.priceId === activePlanId ? 'Atual' : 'Selecionar'}
+                            {plan.priceId === activePlanId
+                              ? t("settings:subscription.btn.current")
+                              : t("settings:subscription.btn.select")}
                           </Button>
                         }
                       />
                     ))}
 
-                    {/* Ações de gestão */}
+                    {/* Ações de gestão (o botão interno já trata rótulos/fluxo) */}
                     <div className="px-4 py-3">
                       <ManageSubscriptionLink />
                     </div>
                   </>
                 ) : (
                   <>
-                    {availablePlans.map(plan => (
+                    {availablePlans.map((plan) => (
                       <RowPlan
                         key={plan.priceId}
                         label={plan.label}
-                        action={<PaymentButton priceId={plan.priceId} label="Assinar" />}
+                        action={
+                          <PaymentButton
+                            priceId={plan.priceId}
+                            label={t("settings:subscription.btn.subscribe")}
+                          />
+                        }
                       />
                     ))}
                   </>
@@ -189,18 +218,20 @@ const SubscriptionManagement: React.FC = () => {
               ) : (
                 <>
                   <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                    <h3 className="text-[14px] font-semibold text-gray-800">Confirmar alteração</h3>
+                    <h3 className="text-[14px] font-semibold text-gray-800">
+                      {t("settings:subscription.modal.title")}
+                    </h3>
                     <button
                       className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                       onClick={closeModal}
-                      aria-label="Fechar"
+                      aria-label={t("settings:subscription.modal.close")}
                     >
                       &times;
                     </button>
                   </header>
 
                   <p className="text-[13px] text-gray-700 mb-4">
-                    Tem certeza de que deseja alterar para este plano?
+                    {t("settings:subscription.modal.text")}
                   </p>
                   <div className="flex justify-end gap-2">
                     <Button
@@ -209,11 +240,11 @@ const SubscriptionManagement: React.FC = () => {
                       onClick={closeModal}
                       disabled={isProcessing}
                     >
-                      Cancelar
+                      {t("settings:subscription.btn.cancel")}
                     </Button>
                     <PaymentButton
                       priceId={selectedPlanId}
-                      label="Confirmar"
+                      label={t("settings:subscription.btn.confirm")}
                       onProcessingChange={setIsProcessing}
                     />
                   </div>

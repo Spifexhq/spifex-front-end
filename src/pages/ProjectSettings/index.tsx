@@ -1,8 +1,9 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/ProjectSettings.tsx                                       */
-/*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
-/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/ProjectSettings.tsx
+ * Pagination: cursor + arrow-only, click-to-search via "Buscar"
+ * Dinâmica: overlay local p/ add/delete + refresh do pager
+ * i18n: group "project" inside the "settings" namespace
+ * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -22,6 +23,8 @@ import Checkbox from "src/components/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 /* ------------------------- Tipos / constantes ----------------------------- */
 const PROJECT_TYPES = [
@@ -72,11 +75,13 @@ const Row = ({
   onEdit,
   onDelete,
   canEdit,
+  t,
 }: {
   project: Project;
   onEdit: (p: Project) => void;
   onDelete: (p: Project) => void;
   canEdit: boolean;
+  t: TFunction;
 }) => {
   const typeLabel = isProjectType(project.type)
     ? TYPE_OPTIONS.find((t) => t.value === project.type)?.label ?? "—"
@@ -86,14 +91,17 @@ const Row = ({
     <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
       <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-wide text-gray-600">
-          CÓD: {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
+          {t("settings:project.row.codePrefix")} {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
         </p>
         <p className="text-[13px] font-medium text-gray-900 truncate">
-          {project.name || "(sem nome)"} {project.description ? `— ${project.description}` : ""}
+          {project.name || t("settings:project.row.untitled")}
+          {project.description ? ` — ${project.description}` : ""}
         </p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        <span className="text-[12px] text-gray-700">{project.is_active ? "Ativo" : "Inativo"}</span>
+        <span className="text-[12px] text-gray-700">
+          {project.is_active ? t("settings:project.row.active") : t("settings:project.row.inactive")}
+        </span>
         {canEdit && (
           <>
             <Button
@@ -101,10 +109,10 @@ const Row = ({
               className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
               onClick={() => onEdit(project)}
             >
-              Editar
+              {t("settings:project.btn.edit")}
             </Button>
             <Button variant="common" onClick={() => onDelete(project)}>
-              Excluir
+              {t("settings:project.btn.delete")}
             </Button>
           </>
         )}
@@ -114,9 +122,9 @@ const Row = ({
 };
 
 const ProjectSettings: React.FC = () => {
-  useEffect(() => {
-    document.title = "Projetos";
-  }, []);
+  const { t, i18n } = useTranslation(["settings"]);
+  useEffect(() => { document.title = t("settings:project.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
@@ -178,15 +186,12 @@ const ProjectSettings: React.FC = () => {
   // sincroniza overlay ao trocar a busca
   useEffect(() => {
     setAdded((prev) => prev.filter((p) => matchesQuery(p, appliedQuery)));
-    // deletedIds pode ficar (não atrapalha); se quiser zerar, descomente:
-    // setDeletedIds(new Set());
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added.filter((p) => matchesQuery(p, appliedQuery));
     const addedIds = new Set(addedFiltered.map((p) => p.id));
     const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIds.has(p.id));
-    // Mostra primeiro os recém-adicionados, depois o que veio do servidor
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
@@ -249,7 +254,9 @@ const ProjectSettings: React.FC = () => {
       await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar projeto.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : t("settings:project.errors.saveError")
+      );
     }
   };
 
@@ -261,18 +268,17 @@ const ProjectSettings: React.FC = () => {
         return next;
       });
       await api.deleteProject(project.id);
-      // Revalida com o servidor
       await pager.refresh();
-      // Se o item também estava na lista "added", remove para evitar “fantasma”
       setAdded((prev) => prev.filter((p) => p.id !== project.id));
     } catch (err) {
-      // Reverte o overlay de deleção se falhar
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.delete(project.id);
         return next;
       });
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir projeto.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : t("settings:project.errors.deleteError")
+      );
     }
   };
 
@@ -307,8 +313,12 @@ const ProjectSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Projetos</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:project.header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:project.header.projects")}
+                </h1>
               </div>
             </div>
           </header>
@@ -318,7 +328,9 @@ const ProjectSettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de projetos</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:project.section.list")}
+                  </span>
 
                   {/* Busca (clique para aplicar) */}
                   <div className="flex items-center gap-2">
@@ -327,15 +339,15 @@ const ProjectSettings: React.FC = () => {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder="Buscar por nome ou código…"
-                      aria-label="Buscar projetos"
+                      placeholder={t("settings:project.search.placeholder")}
+                      aria-label={t("settings:project.search.aria")}
                     />
                     <Button onClick={onSearch} variant="outline">
-                      Buscar
+                      {t("settings:project.search.button")}
                     </Button>
                     {isOwner && (
                       <Button onClick={openCreateModal} className="!py-1.5">
-                        Adicionar projeto
+                        {t("settings:project.btn.addProject")}
                       </Button>
                     )}
                   </div>
@@ -344,17 +356,21 @@ const ProjectSettings: React.FC = () => {
 
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">
+                    {t("settings:project.errors.loadFailedTitle")}
+                  </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
                   <Button variant="outline" size="sm" onClick={pager.refresh}>
-                    Tentar novamente
+                    {t("settings:project.btn.retry")}
                   </Button>
                 </div>
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">Nenhum projeto encontrado.</p>
+                      <p className="p-4 text-center text-sm text-gray-500">
+                        {t("settings:project.empty")}
+                      </p>
                     ) : (
                       visibleItems.map((p) => (
                         <Row
@@ -363,6 +379,7 @@ const ProjectSettings: React.FC = () => {
                           canEdit={!!isOwner}
                           onEdit={openEditModal}
                           onDelete={deleteProject}
+                          t={t}
                         />
                       ))
                     )}
@@ -373,9 +390,10 @@ const ProjectSettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev}
                     disabledNext={!pager.canNext}
-                    label={`Página ${pager.index + 1} de ${
-                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
-                    }`}
+                    label={t("settings:project.pagination.label", {
+                      index: pager.index + 1,
+                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
+                    })}
                   />
                 </>
               )}
@@ -393,25 +411,38 @@ const ProjectSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar projeto" : "Editar projeto"}
+                  {mode === "create"
+                    ? t("settings:project.modal.createTitle")
+                    : t("settings:project.modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Fechar"
+                  aria-label={t("settings:project.modal.close")}
                 >
                   &times;
                 </button>
               </header>
 
               <form className="space-y-3" onSubmit={submitProject}>
-                <Input label="Nome do projeto" name="name" value={formData.name} onChange={handleChange} required />
-                <Input label="Código" name="code" value={formData.code} onChange={handleChange} />
+                <Input
+                  label={t("settings:project.field.name")}
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+                <Input
+                  label={t("settings:project.field.code")}
+                  name="code"
+                  value={formData.code}
+                  onChange={handleChange}
+                />
 
                 <SelectDropdown<TypeOption>
-                  label="Tipo de projeto"
+                  label={t("settings:project.field.type")}
                   items={TYPE_OPTIONS}
-                  selected={TYPE_OPTIONS.filter((t) => t.value === formData.type)}
+                  selected={TYPE_OPTIONS.filter((tO) => tO.value === formData.type)}
                   onChange={(items) => {
                     if (items[0]) setFormData((p) => ({ ...p, type: items[0].value }));
                   }}
@@ -419,21 +450,26 @@ const ProjectSettings: React.FC = () => {
                   getItemLabel={(i) => i.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Selecione o tipo"
+                  buttonLabel={t("settings:project.btnLabel.type")}
                   customStyles={{ maxHeight: "240px" }}
                 />
 
-                <Input label="Descrição" name="description" value={formData.description} onChange={handleChange} />
+                <Input
+                  label={t("settings:project.field.description")}
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={formData.is_active} onChange={handleActiveChange} />
-                  Projeto ativo
+                  {t("settings:project.field.isActive")}
                 </label>
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
+                    {t("settings:project.btn.cancel")}
                   </Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit">{t("settings:project.btn.save")}</Button>
                 </div>
               </form>
             </div>

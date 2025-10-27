@@ -1,8 +1,9 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/EntitySettings.tsx                                        */
-/*  Pagination: cursor + arrow-only, click-to-search via "Buscar"             */
-/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/EntitySettings.tsx
+ * Pagination: cursor + arrow-only, click-to-search via "Buscar"
+ * Dinâmica: overlay local p/ add/delete + refresh do pager
+ * i18n: group "entity" inside the "settings" namespace
+ * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import Navbar from "@/components/Navbar";
@@ -23,18 +24,19 @@ import Checkbox from "src/components/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
+import { useTranslation } from "react-i18next";
 
-/* tipos de entidade (adicione mais se necessário) */
-const ENTITY_TYPES = [
-  { label: "Cliente", value: "client" },
-  { label: "Fornecedor", value: "supplier" },
-  { label: "Funcionário", value: "employee" },
-];
+/* tipos de entidade: somente valores; labels vêm do i18n */
+const ENTITY_TYPE_VALUES = ["client", "supplier", "employee"] as const;
+type EntityTypeValue = typeof ENTITY_TYPE_VALUES[number];
+
+const ENTITY_TYPE_ITEMS: { value: EntityTypeValue }[] =
+  ENTITY_TYPE_VALUES.map((v) => ({ value: v }));
 
 const emptyForm = {
   full_name: "",
   alias_name: "",
-  entity_type: "client",
+  entity_type: "client" as EntityTypeValue,
   is_active: true,
 
   ssn_tax_id: "",
@@ -67,48 +69,54 @@ function sortByName(a: Entity, b: Entity) {
   return an.localeCompare(bn, "pt-BR");
 }
 
+/* Linha */
 const Row = ({
   entity,
   onEdit,
   onDelete,
   canEdit,
+  t,
 }: {
   entity: Entity;
   onEdit: (e: Entity) => void;
   onDelete: (e: Entity) => void;
   canEdit: boolean;
-}) => (
-  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
-    <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        {ENTITY_TYPES.find((t) => t.value === entity.entity_type)?.label ?? "—"}
-        {entity.is_active === false ? " • Inativa" : ""}
-      </p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">
-        {entity.full_name || entity.alias_name || "(sem nome)"}
-      </p>
-    </div>
-    {canEdit && (
-      <div className="flex gap-2 shrink-0">
-        <Button
-          variant="outline"
-          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-          onClick={() => onEdit(entity)}
-        >
-          Editar
-        </Button>
-        <Button variant="common" onClick={() => onDelete(entity)}>
-          Excluir
-        </Button>
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) => {
+  const typeKey = `settings:entity.types.${entity.entity_type || "client"}`;
+  const typeLabel = t(typeKey);
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-wide text-gray-600">
+          {typeLabel} {entity.is_active === false ? ` ${t("settings:entity.row.inactive")}` : ""}
+        </p>
+        <p className="text-[13px] font-medium text-gray-900 truncate">
+          {entity.full_name || entity.alias_name || t("settings:entity.row.untitled")}
+        </p>
       </div>
-    )}
-  </div>
-);
+      {canEdit && (
+        <div className="flex gap-2 shrink-0">
+          <Button
+            variant="outline"
+            className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+            onClick={() => onEdit(entity)}
+          >
+            {t("settings:entity.btn.edit")}
+          </Button>
+          <Button variant="common" onClick={() => onDelete(entity)}>
+            {t("settings:entity.btn.delete")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const EntitySettings: React.FC = () => {
-  useEffect(() => {
-    document.title = "Entidades";
-  }, []);
+  const { t, i18n } = useTranslation(["settings"]);
+  useEffect(() => { document.title = t("settings:entity.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
@@ -175,7 +183,7 @@ const EntitySettings: React.FC = () => {
     setFormData({
       full_name: entity.full_name ?? "",
       alias_name: entity.alias_name ?? "",
-      entity_type: entity.entity_type ?? "client",
+      entity_type: (entity.entity_type as EntityTypeValue) ?? "client",
       is_active: entity.is_active ?? true,
 
       ssn_tax_id: entity.ssn_tax_id ?? "",
@@ -222,17 +230,13 @@ const EntitySettings: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // mantém só os recém-criados que combinam com a busca aplicada
     setAdded((prev) => prev.filter((e) => matchesQuery(e, appliedQuery)));
-    // se preferir, pode limpar deletes ao trocar a busca:
-    // setDeletedIds(new Set());
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added.filter((e) => matchesQuery(e, appliedQuery));
     const addedIds = new Set(addedFiltered.map((e) => e.id));
     const base = pager.items.filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id));
-    // Mostra primeiro os recém-adicionados, depois os do servidor
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
@@ -253,9 +257,7 @@ const EntitySettings: React.FC = () => {
 
     try {
       if (mode === "create") {
-        // request<T> => ApiSuccess<T>
         const { data: created } = await api.addEntity(payload);
-        // UI imediata
         setAdded((prev) => [created, ...prev]);
       } else if (editingEntity) {
         await api.editEntity(editingEntity.id, payload);
@@ -263,17 +265,18 @@ const EntitySettings: React.FC = () => {
       await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar entidade.");
+      setSnackBarMessage(
+        err instanceof Error ? err.message : t("settings:entity.errors.saveError")
+      );
     }
   };
 
-  /* ---------- ConfirmToast wrapper para exclusão (substitui window.confirm) ---------- */
+  /* ---------- ConfirmToast wrapper ---------- */
   const requestDeleteEntity = (entity: Entity) => {
     const name = entity.full_name ?? entity.alias_name ?? "";
-    setConfirmText(`Excluir entidade "${name}"?`);
+    setConfirmText(t("settings:entity.confirm.deleteTitle", { name }));
     setConfirmAction(() => async () => {
       try {
-        // UI imediata (overlay)
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.add(entity.id);
@@ -281,20 +284,17 @@ const EntitySettings: React.FC = () => {
         });
 
         await api.deleteEntity(entity.id);
-
-        // Revalida servidor
         await pager.refresh();
-
-        // Se estava em "added", remove para evitar fantasma
         setAdded((prev) => prev.filter((e) => e.id !== entity.id));
       } catch (err) {
-        // rollback overlay
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(entity.id);
           return next;
         });
-        setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir entidade.");
+        setSnackBarMessage(
+          err instanceof Error ? err.message : t("settings:entity.errors.deleteError")
+        );
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
@@ -332,8 +332,12 @@ const EntitySettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Entidades</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:entity.header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:entity.header.entities")}
+                </h1>
               </div>
             </div>
           </header>
@@ -343,21 +347,27 @@ const EntitySettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">Lista de entidades</span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:entity.section.list")}
+                  </span>
 
-                  {/* Busca (clique no botão para aplicar) */}
+                  {/* Busca */}
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder="Buscar por nome ou apelido…"
-                      aria-label="Buscar entidades"
+                      placeholder={t("settings:entity.search.placeholder")}
+                      aria-label={t("settings:entity.search.aria")}
                     />
-                    <Button onClick={onSearch} variant="outline">Buscar</Button>
+                    <Button onClick={onSearch} variant="outline">
+                      {t("settings:entity.search.button")}
+                    </Button>
                     {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">Adicionar entidade</Button>
+                      <Button onClick={openCreateModal} className="!py-1.5">
+                        {t("settings:entity.btn.add")}
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -365,15 +375,21 @@ const EntitySettings: React.FC = () => {
 
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">Falha ao carregar</p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">
+                    {t("settings:entity.errors.loadFailedTitle")}
+                  </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>Tentar novamente</Button>
+                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                    {t("settings:entity.btn.retry")}
+                  </Button>
                 </div>
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">Nenhuma entidade encontrada.</p>
+                      <p className="p-4 text-center text-sm text-gray-500">
+                        {t("settings:entity.empty")}
+                      </p>
                     ) : (
                       visibleItems.map((e) => (
                         <Row
@@ -382,6 +398,7 @@ const EntitySettings: React.FC = () => {
                           canEdit={!!isOwner}
                           onEdit={openEditModal}
                           onDelete={requestDeleteEntity}
+                          t={t}
                         />
                       ))
                     )}
@@ -392,9 +409,10 @@ const EntitySettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev}
                     disabledNext={!pager.canNext}
-                    label={`Página ${pager.index + 1} de ${
-                      pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`
-                    }`}
+                    label={t("settings:entity.pagination.label", {
+                      index: pager.index + 1,
+                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
+                    })}
                   />
                 </>
               )}
@@ -405,14 +423,20 @@ const EntitySettings: React.FC = () => {
         {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-4xl overflow-y-auto max-h-[90vh]"
-                 role="dialog" aria-modal="true">
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-4xl overflow-y-auto max-h-[90vh]"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar entidade" : "Editar entidade"}
+                  {mode === "create" ? t("settings:entity.modal.createTitle") : t("settings:entity.modal.editTitle")}
                 </h3>
-                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                        onClick={closeModal} aria-label="Fechar">
+                <button
+                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                  onClick={closeModal}
+                  aria-label={t("settings:entity.modal.close")}
+                >
                   &times;
                 </button>
               </header>
@@ -421,59 +445,189 @@ const EntitySettings: React.FC = () => {
                 {/* Identificação e contato */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="lg:col-span-2">
-                    <Input label="Nome completo" name="full_name" value={formData.full_name} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <Input label="Nome fantasia / apelido" name="alias_name" value={formData.alias_name} onChange={handleChange} />
-                  </div>
-                  <div>
-                    <SelectDropdown
-                      label="Tipo de entidade"
-                      items={ENTITY_TYPES}
-                      selected={ENTITY_TYPES.filter((t) => t.value === formData.entity_type)}
-                      onChange={(items) => items[0] && setFormData((p) => ({ ...p, entity_type: items[0].value })) }
-                      getItemKey={(item) => item.value}
-                      getItemLabel={(item) => item.label}
-                      singleSelect
-                      hideCheckboxes
-                      buttonLabel="Selecione o tipo"
+                    <Input
+                      label={t("settings:entity.field.full_name")}
+                      name="full_name"
+                      value={formData.full_name}
+                      onChange={handleChange}
                     />
                   </div>
-                  <div><Input label="CPF (SSN)" name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} /></div>
-                  <div><Input label="CNPJ (EIN)" name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} /></div>
-                  <div><Input label="Email" name="email" value={formData.email} onChange={handleChange} /></div>
-                  <div><Input label="Telefone" name="phone" value={formData.phone} onChange={handleChange} /></div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.alias_name")}
+                      name="alias_name"
+                      value={formData.alias_name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <SelectDropdown<{ value: EntityTypeValue }>
+                      label={t("settings:entity.field.entity_type")}
+                      items={ENTITY_TYPE_ITEMS}
+                      selected={ENTITY_TYPE_ITEMS.filter((tItem) => tItem.value === formData.entity_type)}
+                      onChange={(items) =>
+                        items[0] &&
+                        setFormData((p) => ({
+                          ...p,
+                          entity_type: items[0].value,
+                        }))
+                      }
+                      getItemKey={(item) => item.value}
+                      getItemLabel={(item) => t(`settings:entity.types.${item.value}`)}
+                      singleSelect
+                      hideCheckboxes
+                      buttonLabel={t("settings:entity.field.entity_type")}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.ssn_tax_id")}
+                      name="ssn_tax_id"
+                      value={formData.ssn_tax_id}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.ein_tax_id")}
+                      name="ein_tax_id"
+                      value={formData.ein_tax_id}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.email")}
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.phone")}
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
+                  </div>
                   <label className="col-span-1 flex items-center gap-2 text-sm pt-5">
-                    <Checkbox checked={formData.is_active}
-                              onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))} />
-                    Entidade ativa
+                    <Checkbox
+                      checked={formData.is_active}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          is_active: e.target.checked,
+                        }))
+                      }
+                    />
+                    {t("settings:entity.field.is_active")}
                   </label>
                 </div>
 
                 {/* Endereço */}
-                <h4 className="text-[12px] font-semibold text-gray-800">Endereço</h4>
+                <h4 className="text-[12px] font-semibold text-gray-800">{t("settings:entity.header.entities")}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="lg:col-span-2"><Input label="Rua" name="street" value={formData.street} onChange={handleChange} /></div>
-                  <div><Input label="Número" name="street_number" value={formData.street_number} onChange={handleChange} /></div>
-                  <div><Input label="Cidade" name="city" value={formData.city} onChange={handleChange} /></div>
-                  <div><Input label="Estado" name="state" value={formData.state} onChange={handleChange} /></div>
-                  <div><Input label="CEP" name="postal_code" value={formData.postal_code} onChange={handleChange} /></div>
-                  <div><Input label="País" name="country" value={formData.country} onChange={handleChange} /></div>
+                  <div className="lg:col-span-2">
+                    <Input
+                      label={t("settings:entity.field.street")}
+                      name="street"
+                      value={formData.street}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.street_number")}
+                      name="street_number"
+                      value={formData.street_number}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.city")}
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.state")}
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.postal_code")}
+                      name="postal_code"
+                      value={formData.postal_code}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.country")}
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
 
                 {/* Dados bancários */}
-                <h4 className="text-[12px] font-semibold text-gray-800">Dados bancários</h4>
+                <h4 className="text-[12px] font-semibold text-gray-800">{t("settings:entity.field.bank_name")}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div><Input label="Banco" name="bank_name" value={formData.bank_name} onChange={handleChange} /></div>
-                  <div><Input label="Agência" name="bank_branch" value={formData.bank_branch} onChange={handleChange} /></div>
-                  <div><Input label="Conta corrente" name="checking_account" value={formData.checking_account} onChange={handleChange} /></div>
-                  <div><Input label="Titular (CPF/CNPJ)" name="account_holder_tax_id" value={formData.account_holder_tax_id} onChange={handleChange} /></div>
-                  <div className="lg:col-span-2"><Input label="Nome do titular" name="account_holder_name" value={formData.account_holder_name} onChange={handleChange} /></div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.bank_name")}
+                      name="bank_name"
+                      value={formData.bank_name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.bank_branch")}
+                      name="bank_branch"
+                      value={formData.bank_branch}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.checking_account")}
+                      name="checking_account"
+                      value={formData.checking_account}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label={t("settings:entity.field.account_holder_tax_id")}
+                      name="account_holder_tax_id"
+                      value={formData.account_holder_tax_id}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <Input
+                      label={t("settings:entity.field.account_holder_name")}
+                      name="account_holder_name"
+                      value={formData.account_holder_name}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>Cancelar</Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button variant="cancel" type="button" onClick={closeModal}>
+                    {t("settings:entity.btn.cancel")}
+                  </Button>
+                  <Button type="submit">{t("settings:entity.btn.save")}</Button>
                 </div>
               </form>
             </div>
@@ -485,8 +639,8 @@ const EntitySettings: React.FC = () => {
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel="Excluir"
-        cancelLabel="Cancelar"
+        confirmLabel={t("settings:entity.btn.confirmDelete")}
+        cancelLabel={t("settings:entity.btn.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -495,18 +649,22 @@ const EntitySettings: React.FC = () => {
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
-          confirmAction?.()
-            .catch((err) => {
-              console.error(err);
-              setSnackBarMessage("Falha ao confirmar.");
+          confirmAction
+            ?.()
+            .catch(() => {
+              setSnackBarMessage(t("settings:entity.errors.confirmFailed"));
             })
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
-      <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
-                onClose={() => setSnackBarMessage("")} severity="error">
+      <Snackbar
+        open={!!snackBarMessage}
+        autoHideDuration={6000}
+        onClose={() => setSnackBarMessage("")}
+        severity="error"
+      >
         <Alert severity="error">{snackBarMessage}</Alert>
       </Snackbar>
     </>

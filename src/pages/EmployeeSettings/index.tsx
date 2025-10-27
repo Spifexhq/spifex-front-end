@@ -1,8 +1,8 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/EmployeeSettings.tsx                                      */
-/*  Style: Navbar fixa + SidebarSettings, light borders, compact labels       */
-/*  Notes: no backdrop-close; honors fixed heights; no horizontal overflow    */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/EmployeeSettings.tsx
+ * Style: Navbar fixa + SidebarSettings, light borders, compact labels
+ * Notes: i18n group "employee" inside the "settings" namespace
+ * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
 
@@ -16,11 +16,13 @@ import Alert from "@/components/Alert";
 import { SelectDropdown } from "@/components/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { Employee } from "src/models/auth/domain"; // Employee ok
-import type { GroupListItem } from "src/models/auth/domain/Group"; // ✅ use GroupListItem
-import type { GetGroups } from "src/models/auth/dto/GetGroup";     // for normalization helper
+import { Employee } from "src/models/auth/domain";
+import type { GroupListItem } from "src/models/auth/domain/Group";
+import type { GetGroups } from "src/models/auth/dto/GetGroup";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { validatePassword } from "src/lib";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 /* ---------------------------- Form template ------------------------------ */
 const emptyForm = {
@@ -37,7 +39,6 @@ function getInitials() {
   return "FN";
 }
 
-/* -- Same normalization helpers used in GroupSettings ---------------------- */
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 
@@ -74,11 +75,13 @@ const Row = ({
   onEdit,
   onDelete,
   canEdit,
+  t,
 }: {
   emp: Employee;
   onEdit: (e: Employee) => void;
   onDelete: (e: Employee) => void;
   canEdit: boolean;
+  t: TFunction; // ✅ no-explicit-any fixed
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
@@ -92,10 +95,10 @@ const Row = ({
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(emp)}
         >
-          Editar
+          {t("settings:employee.btn.edit")}
         </Button>
         <Button variant="common" onClick={() => onDelete(emp)}>
-          Excluir
+          {t("settings:employee.btn.delete")}
         </Button>
       </div>
     )}
@@ -103,14 +106,13 @@ const Row = ({
 );
 
 const EmployeeSettings: React.FC = () => {
-  /* ------------------------------ Setup ----------------------------------- */
-  useEffect(() => {
-    document.title = "Funcionários";
-  }, []);
+  const { t, i18n } = useTranslation(["settings"]);
+
+  useEffect(() => { document.title = t("settings:employee.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
-  /* ----------------------------- Estados ---------------------------------- */
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [groups, setGroups] = useState<GroupListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,16 +127,14 @@ const EmployeeSettings: React.FC = () => {
   const fetchData = async () => {
     try {
       const [empRes, groupRes] = await Promise.all([api.getEmployees(), api.getAllGroups()]);
-      // Only list "members" of the company (exclude owner/admin)
-      const onlyMembers = (empRes.data.employees || []).filter((e) => e.role === "member");
-      setEmployees(onlyMembers.sort((a, b) => a.id - b.id));
+      const onlyMembers = (empRes.data.employees || []).filter((e: Employee) => e.role === "member");
+      setEmployees(onlyMembers.sort((a: Employee, b: Employee) => a.id - b.id));
 
-      // ✅ normalize groups regardless of backend format
       const groupList = toGroupArray(groupRes.data as GetGroups);
       setGroups([...groupList].sort((a, b) => a.id - b.id));
     } catch (err) {
       console.error("Erro ao buscar funcionários/grupos", err);
-      setSnackBarMessage("Erro ao buscar dados.");
+      setSnackBarMessage(t("settings:employee.toast.fetchError"));
     } finally {
       setLoading(false);
     }
@@ -142,6 +142,7 @@ const EmployeeSettings: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ------------------------------ Handlers -------------------------------- */
@@ -156,8 +157,8 @@ const EmployeeSettings: React.FC = () => {
     setMode("edit");
     setEditingEmployee(employee);
     try {
-      const res = await api.getEmployee(employee.id); // membershipId
-      const detail = res.data.employee;               // ✅ no 'any'
+      const res = await api.getEmployee(employee.id);
+      const detail = res.data.employee;
       setFormData({
         name: detail.name,
         email: detail.email,
@@ -168,7 +169,7 @@ const EmployeeSettings: React.FC = () => {
       setModalOpen(true);
     } catch (error) {
       console.error(error);
-      setSnackBarMessage("Erro ao carregar dados do funcionário.");
+      setSnackBarMessage(t("settings:employee.toast.loadEmployeeError"));
     }
   };
 
@@ -177,7 +178,6 @@ const EmployeeSettings: React.FC = () => {
     setEditingEmployee(null);
   }, []);
 
-  /* --------------------------- Form helpers ------------------------------- */
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -190,12 +190,12 @@ const EmployeeSettings: React.FC = () => {
 
     if (mode === "create") {
       if (formData.password !== formData.confirmPassword) {
-        setSnackBarMessage("As senhas não coincidem");
+        setSnackBarMessage(t("settings:employee.toast.passwordMismatch"));
         return;
       }
       const { isValid, message } = validatePassword(formData.password);
       if (!isValid) {
-        setSnackBarMessage(message);
+        setSnackBarMessage(message || t("settings:employee.toast.weakPassword"));
         return;
       }
     }
@@ -206,7 +206,7 @@ const EmployeeSettings: React.FC = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password || undefined,
-          group_ids: formData.groups.map((g) => g.id), // ✅ inline groups via IDs
+          group_ids: formData.groups.map((g) => g.id),
         });
       } else if (editingEmployee) {
         await api.editEmployee(editingEmployee.id, {
@@ -218,17 +218,19 @@ const EmployeeSettings: React.FC = () => {
       await fetchData();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao salvar funcionário.");
+      console.error(err); // ✅ use err to avoid no-unused-vars
+      setSnackBarMessage(t("settings:employee.toast.saveError"));
     }
   };
 
   const deleteEmployee = async (emp: Employee) => {
-    if (!window.confirm(`Excluir funcionário "${emp.name}"?`)) return;
+    if (!window.confirm(t("settings:employee.confirm.delete", { name: emp.name }))) return;
     try {
-      await api.deleteEmployee(emp.id); // membershipId
+      await api.deleteEmployee(emp.id);
       await fetchData();
     } catch (err) {
-      setSnackBarMessage(err instanceof Error ? err.message : "Erro ao excluir funcionário.");
+      console.error(err); // ✅ use err to avoid no-unused-vars
+      setSnackBarMessage(t("settings:employee.toast.deleteError"));
     }
   };
 
@@ -254,7 +256,6 @@ const EmployeeSettings: React.FC = () => {
       <Navbar />
       <SidebarSettings activeItem="employees" />
 
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar (lg:ml-64); sem overflow lateral */}
       <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
         <div className="max-w-5xl mx-auto px-6 py-8">
           {/* Header card */}
@@ -264,8 +265,12 @@ const EmployeeSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Configurações</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Funcionários</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:employee.header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:employee.header.employees")}
+                </h1>
               </div>
             </div>
           </header>
@@ -276,9 +281,13 @@ const EmployeeSettings: React.FC = () => {
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    Lista de funcionários
+                    {t("settings:employee.section.list")}
                   </span>
-                  {isOwner && <Button onClick={openCreateModal} className="!py-1.5">Adicionar funcionário</Button>}
+                  {isOwner && (
+                    <Button onClick={openCreateModal} className="!py-1.5">
+                      {t("settings:employee.btn.addEmployee")}
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -290,10 +299,13 @@ const EmployeeSettings: React.FC = () => {
                     canEdit={!!isOwner}
                     onEdit={openEditModal}
                     onDelete={deleteEmployee}
+                    t={t}
                   />
                 ))}
                 {employees.length === 0 && (
-                  <p className="p-4 text-center text-sm text-gray-500">Nenhum funcionário cadastrado.</p>
+                  <p className="p-4 text-center text-sm text-gray-500">
+                    {t("settings:employee.empty")}
+                  </p>
                 )}
               </div>
             </div>
@@ -310,12 +322,14 @@ const EmployeeSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? "Adicionar funcionário" : "Editar funcionário"}
+                  {mode === "create"
+                    ? t("settings:employee.modal.createTitle")
+                    : t("settings:employee.modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label="Fechar"
+                  aria-label={t("settings:employee.modal.close")}
                 >
                   &times;
                 </button>
@@ -323,14 +337,14 @@ const EmployeeSettings: React.FC = () => {
 
               <form className="grid grid-cols-2 gap-4" onSubmit={submitEmployee}>
                 <Input
-                  label="Nome"
+                  label={t("settings:employee.field.name")}
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   required
                 />
                 <Input
-                  label="Email"
+                  label={t("settings:employee.field.email")}
                   name="email"
                   type="email"
                   value={formData.email}
@@ -341,7 +355,7 @@ const EmployeeSettings: React.FC = () => {
                 {mode === "create" && (
                   <>
                     <Input
-                      label="Senha temporária"
+                      label={t("settings:employee.field.tempPassword")}
                       name="password"
                       type="password"
                       value={formData.password}
@@ -349,7 +363,7 @@ const EmployeeSettings: React.FC = () => {
                       required
                     />
                     <Input
-                      label="Confirme a senha"
+                      label={t("settings:employee.field.confirmPassword")}
                       name="confirmPassword"
                       type="password"
                       value={formData.confirmPassword}
@@ -361,13 +375,13 @@ const EmployeeSettings: React.FC = () => {
 
                 <div className="col-span-2">
                   <SelectDropdown<GroupListItem>
-                    label="Grupos"
+                    label={t("settings:employee.field.groups")}
                     items={groups}
                     selected={formData.groups}
                     onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
                     getItemKey={(g) => g.external_id}
                     getItemLabel={(g) => g.name}
-                    buttonLabel="Selecione os grupos"
+                    buttonLabel={t("settings:employee.btnLabel.groups")}
                     hideCheckboxes={false}
                     clearOnClickOutside={false}
                   />
@@ -375,9 +389,9 @@ const EmployeeSettings: React.FC = () => {
 
                 <div className="col-span-2 flex justify-end gap-3 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal}>
-                    Cancelar
+                    {t("settings:employee.btn.cancel")}
                   </Button>
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit">{t("settings:employee.btn.save")}</Button>
                 </div>
               </form>
             </div>
