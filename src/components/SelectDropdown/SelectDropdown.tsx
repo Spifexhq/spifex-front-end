@@ -6,6 +6,15 @@ import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
 import Checkbox from "@/components/Checkbox";
 
+/**
+ * SelectDropdown — Minimal & Fluid
+ * - Compact visual language, no heavy shadows, light borders only.
+ * - Sticky filter + actions, scroll-shadows for context.
+ * - Smooth open/close with transform/opacity, no layout jank.
+ * - Better focus ring, clearer states, no hover flicker.
+ * - Virtualization preserved for large lists.
+ * - Keeps your prop API intact.
+ */
 function SelectDropdown<T>({
   label,
   items,
@@ -13,7 +22,7 @@ function SelectDropdown<T>({
   onChange,
   getItemKey,
   getItemLabel,
-  buttonLabel, // i18n fallback handled below
+  buttonLabel,
   disabled = false,
   singleSelect = false,
   clearOnClickOutside = false,
@@ -35,6 +44,8 @@ function SelectDropdown<T>({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [hasTopShadow, setHasTopShadow] = useState(false);
+  const [hasBottomShadow, setHasBottomShadow] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -165,13 +176,21 @@ function SelectDropdown<T>({
     }
     setActiveIndex(idx);
 
+    // Prefer focusing filter; otherwise the panel to keep roving focus
     if (!hideFilter && searchInputRef.current) {
       searchInputRef.current.focus?.({ preventScroll: true });
     } else {
       panelRef.current?.focus?.({ preventScroll: true });
     }
 
+    // Reset virtual scroll & shadows
     setScrollTop(0);
+    requestAnimationFrame(() => {
+      const p = panelRef.current;
+      if (!p) return;
+      setHasTopShadow(p.scrollTop > 0);
+      setHasBottomShadow(p.scrollHeight - p.clientHeight - p.scrollTop > 1);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -319,20 +338,31 @@ function SelectDropdown<T>({
       return;
     }
 
-    const handled = ["ArrowDown", "ArrowUp", "Home", "End", "Enter"];
+    const handled = ["ArrowDown", "ArrowUp", "Home", "End", "Enter", "PageDown", "PageUp"];
     if (!handled.includes(e.key)) return;
 
     e.preventDefault();
     if (flatItems.length === 0) return;
 
+    const lastIdx = flatItems.length - 1;
+    const page = Math.max(1, Math.floor((panelRef.current?.clientHeight || 240) / (virtualRowHeight || 36)));
+
     if (e.key === "Home") { setActiveFrom(0, "keyboard"); return; }
-    if (e.key === "End") { setActiveFrom(flatItems.length - 1, "keyboard"); return; }
+    if (e.key === "End") { setActiveFrom(lastIdx, "keyboard"); return; }
+    if (e.key === "PageDown") {
+      const next = Math.min((activeIndex ?? -1) + page, lastIdx);
+      setActiveFrom(next < 0 ? 0 : next, "keyboard"); return;
+    }
+    if (e.key === "PageUp") {
+      const prev = Math.max((activeIndex ?? flatItems.length) - page, 0);
+      setActiveFrom(prev, "keyboard"); return;
+    }
     if (e.key === "ArrowDown") {
-      const next = activeIndex == null ? 0 : Math.min(activeIndex + 1, flatItems.length - 1);
+      const next = activeIndex == null ? 0 : Math.min(activeIndex + 1, lastIdx);
       setActiveFrom(next, "keyboard"); return;
     }
     if (e.key === "ArrowUp") {
-      const prev = activeIndex == null ? flatItems.length - 1 : Math.max(activeIndex - 1, 0);
+      const prev = activeIndex == null ? lastIdx : Math.max(activeIndex - 1, 0);
       setActiveFrom(prev, "keyboard"); return;
     }
     if (e.key === "Enter" && activeIndex != null) handleCheckboxChange(flatItems[activeIndex]);
@@ -367,9 +397,12 @@ function SelectDropdown<T>({
         onClick={() => handleCheckboxChange(item)}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
-        className={`flex items-center text-[10px] p-2.5 font-normal transition duration-300 ease-in-out gap-1 select-none cursor-pointer
-          ${hideCheckboxes && isChecked ? "bg-blue-100 text-blue-900 font-semibold" : ""}
-          ${isActive ? "bg-orange-100 bg-opacity-30" : "bg-white hover:bg-orange-100 hover:bg-opacity-20"}`}
+        className={[
+          "flex items-center gap-2 px-3 py-2.5 text-xs cursor-pointer select-none transition-colors",
+          "focus:outline-none",
+          isActive ? "bg-gray-100" : "hover:bg-gray-50",
+          hideCheckboxes && isChecked ? "bg-gray-100 font-medium" : "",
+        ].join(" ")}
         role="option"
         aria-selected={isChecked}
         tabIndex={-1}
@@ -384,7 +417,7 @@ function SelectDropdown<T>({
             size="small"
           />
         )}
-        <span className={`${!hideCheckboxes ? "pl-2" : ""} select-none`}>{label}</span>
+        <span className="truncate">{label}</span>
       </div>
     );
   };
@@ -394,7 +427,7 @@ function SelectDropdown<T>({
       ? buttonLabel || (effectiveSingleSelect ? t("button.single") : t("button.multi"))
       : effectiveSingleSelect
       ? getItemLabel(selected[0])
-      : selected.map((it) => getItemLabel(it)).join(", ");
+      : `${t("count.selected", { count: selected.length })}`;
 
   // Virtualization only for flat lists
   const hasGroup = !!groupBy;
@@ -403,23 +436,36 @@ function SelectDropdown<T>({
 
   const onPanelScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (shouldVirtualize) setScrollTop(e.currentTarget.scrollTop);
+
+    // Scroll-shadows toggling
+    const p = e.currentTarget;
+    setHasTopShadow(p.scrollTop > 0);
+    setHasBottomShadow(p.scrollHeight - p.clientHeight - p.scrollTop > 1);
   };
 
-  const panelStyle = customStyles;
+  const panelStyle = {
+    ...customStyles,
+    // subtle scroll-shadows via mask to keep it minimal
+    WebkitMaskImage: hasTopShadow || hasBottomShadow
+      ? `linear-gradient(to bottom, rgba(0,0,0,${hasTopShadow ? 0 : 1}) 0, rgba(0,0,0,1) 12px, rgba(0,0,0,1) calc(100% - 12px), rgba(0,0,0,${hasBottomShadow ? 0 : 1}) 100%)`
+      : undefined,
+    maskImage: hasTopShadow || hasBottomShadow
+      ? `linear-gradient(to bottom, rgba(0,0,0,${hasTopShadow ? 0 : 1}) 0, rgba(0,0,0,1) 12px, rgba(0,0,0,1) calc(100% - 12px), rgba(0,0,0,${hasBottomShadow ? 0 : 1}) 100%)`
+      : undefined,
+  } as React.CSSProperties;
+
+  const hasSelection = selected.length > 0;
 
   return (
-    <div className="flex flex-col w-full gap-[4px]">
+    <div className="flex flex-col w-full gap-1.5">
       {label && (
-        <label className="text-[10px] py-[5px] font-bold select-none text-gray-700" htmlFor={id}>
+        <label className="text-[10.5px] font-semibold text-gray-700 select-none" htmlFor={id}>
           {label}
         </label>
       )}
 
-      <div
-        ref={dropdownRef}
-        className="relative w-full select-none"
-        data-select-open={isOpen ? "true" : undefined}
-      >
+      <div ref={dropdownRef} className="relative w-full select-none" data-select-open={isOpen ? "true" : undefined}>
+        {/* Trigger */}
         <button
           ref={buttonRef}
           onClick={toggleDropdown}
@@ -432,26 +478,55 @@ function SelectDropdown<T>({
           aria-expanded={isOpen}
           aria-controls={panelId}
           aria-label={t("aria.trigger")}
-          className={`flex justify-between items-center py-3 px-4 w-full h-[42px] text-xs rounded-[5px] transition-all duration-200 ease-in-out outline-none
-            ${
-              disabled
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : `${isOpen ? "bg-gray-50 border border-gray-400"
-                            : "bg-white border border-gray-300 hover:bg-gray-50"} focus-visible:bg-gray-100 focus-visible:border-gray-400`
-            }`}
+          className={[
+            "group flex items-center justify-between w-full h-10 rounded-md border text-xs px-3",
+            "transition-colors outline-none",
+            disabled
+              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+              : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300",
+          ].join(" ")}
         >
-          <span className="truncate overflow-hidden whitespace-nowrap max-w-[90%] text-left text-gray-400">
+          <span
+            className={[
+              "truncate text-left",
+              hasSelection ? "text-gray-800" : "text-gray-400",
+            ].join(" ")}
+          >
             {selectedLabel}
           </span>
-          <svg
-            className={`w-4 h-4 ml-3 transition-transform duration-200 ease-in-out ${isOpen ? "rotate-0" : "rotate-180"}`}
-            aria-hidden="true" viewBox="0 0 24 24" fill="none"
-          >
-            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-          </svg>
+
+          <span className="ml-2 flex items-center gap-2">
+            {!effectiveSingleSelect && selected.length > 0 && (
+              <span
+                className="min-w-[1.5rem] h-5 px-1.5 inline-flex items-center justify-center text-[10px] rounded-full bg-gray-100 text-gray-700"
+                aria-hidden="true"
+              >
+                {selected.length}
+              </span>
+            )}
+            <svg
+              className={[
+                "w-4 h-4 transition-transform duration-200 ease-out",
+                isOpen ? "rotate-180" : "rotate-0",
+              ].join(" ")}
+              aria-hidden="true" viewBox="0 0 24 24" fill="none"
+            >
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </span>
         </button>
 
-        {isOpen && (
+        {/* Panel */}
+        <div
+          className={[
+            "absolute left-0 right-0 origin-top rounded-md border border-gray-200 bg-white z-[60]",
+            "transition-all duration-150 ease-out",
+            isOpen
+              ? "opacity-100 translate-y-1 pointer-events-auto"
+              : "opacity-0 -translate-y-1 pointer-events-none",
+          ].join(" ")}
+          style={{ maxWidth: 360 }}
+        >
           <div
             id={panelId}
             role="listbox"
@@ -459,54 +534,77 @@ function SelectDropdown<T>({
             aria-label={t("aria.listbox")}
             aria-multiselectable={!effectiveSingleSelect || undefined}
             aria-activedescendant={
-              activeIndex != null && flatItems.length > 0 ? `${id}-opt-${activeIndex}` : undefined
+              isOpen && activeIndex != null && flatItems.length > 0 ? `${id}-opt-${activeIndex}` : undefined
             }
             ref={panelRef}
-            tabIndex={-1}
+            tabIndex={isOpen ? 0 : -1}
             onKeyDown={handlePanelKeyDown}
             onScroll={onPanelScroll}
-            className="absolute bg-white max-w-[300px] shadow-lg border border-gray-300 border-t-0 overflow-y-auto rounded-lg w-full z-[9999] outline-none"
+            className={[
+              // Panel body box (scroll region)
+              "max-h-[44vh] overflow-y-auto outline-none",
+            ].join(" ")}
             style={panelStyle}
           >
+            {/* Sticky controls */}
             {!effectiveSingleSelect && !hideCheckboxes && (
-              <div className="flex flex-row p-2.5 pb-0 text-center select-none">
-                <button
-                  type="button"
-                  onClick={selectAll}
-                  className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
-                  tabIndex={-1}
-                  aria-label={t("actions.selectAll")}
-                >
-                  {t("actions.selectAll")}
-                </button>
-                <button
-                  type="button"
-                  onClick={deselectAll}
-                  className="bg-white border border-gray-300 m-0.5 p-1 w-full transition-all duration-200 font-semibold text-[11px] rounded hover:bg-blue-100"
-                  tabIndex={-1}
-                  aria-label={t("actions.clearAll")}
-                >
-                  {t("actions.clearAll")}
-                </button>
+              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 border-b border-gray-200">
+                <div className="flex gap-1 p-2">
+                  <button
+                    type="button"
+                    onClick={selectAll}
+                    className="h-7 px-2 rounded border border-gray-200 text-[11px] font-medium hover:bg-gray-50"
+                    tabIndex={-1}
+                    aria-label={t("actions.selectAll")}
+                  >
+                    {t("actions.selectAll")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={deselectAll}
+                    className="h-7 px-2 rounded border border-gray-200 text-[11px] font-medium hover:bg-gray-50"
+                    tabIndex={-1}
+                    aria-label={t("actions.clearAll")}
+                  >
+                    {t("actions.clearAll")}
+                  </button>
+                </div>
               </div>
             )}
 
             {!hideFilter && (
-              <input
-                type="text"
-                placeholder={t("filter.placeholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                ref={searchInputRef}
-                className="border-b border-gray-300 w-full p-1 pl-5 box-border text-[12px]"
-                onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
-                aria-label={t("filter.aria")}
-              />
+              <div className="sticky top-[var(--sticky-offset,0px)] z-10 bg-white border-b border-gray-200 px-2 py-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={t("filter.placeholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    ref={searchInputRef}
+                    className="w-full h-8 pl-7 pr-2 rounded border border-gray-200 text-[12px] outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
+                    onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                    aria-label={t("filter.aria")}
+                  />
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                    fill="none"
+                  >
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                  </svg>
+                </div>
+              </div>
             )}
 
-            {/* List */}
-            <div className="flex flex-col py-2.5">
-              {shouldVirtualize ? (
+            {/* Empty / List */}
+            <div className="py-1">
+              {flatItems.length === 0 ? (
+                <div className="px-3 py-8 text-center text-[12px] text-gray-500">
+                  {searchTerm ? t("empty.search") : t("empty.default")}
+                </div>
+              ) : shouldVirtualize ? (
                 (() => {
                   const panelH = panelRef.current?.clientHeight || 320;
                   const rowH = virtualRowHeight || 36;
@@ -533,7 +631,11 @@ function SelectDropdown<T>({
                 Object.entries(groupedItems).map(([groupName, groupItems]) => (
                   <div key={groupName}>
                     <div
-                      className={`font-bold px-2.5 text-xs mt-2 mb-1 ${!effectiveSingleSelect ? "cursor-pointer" : ""}`}
+                      className={[
+                        "px-3 py-2 text-[11px] text-gray-600",
+                        !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : "",
+                        "font-semibold",
+                      ].join(" ")}
                       onClick={() => handleGroupToggle(groupItems)}
                     >
                       {groupName}
@@ -549,7 +651,7 @@ function SelectDropdown<T>({
               )}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

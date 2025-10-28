@@ -1,6 +1,26 @@
 {
-  "button": { "single": "Select", "multi": "Select items" },
-  "actions": { "selectAll": "Select all", "clearAll": "Clear all" },
-  "filter": { "placeholder": "Filter", "aria": "Filter options" },
-  "aria": { "trigger": "Open dropdown", "listbox": "Options list" }
+  "aria": {
+    "trigger": "Open selection",
+    "listbox": "Options"
+  },
+  "actions": {
+    "selectAll": "Select all",
+    "clearAll": "Clear all"
+  },
+  "filter": {
+    "placeholder": "Search…",
+    "aria": "Filter options"
+  },
+  "button": {
+    "single": "Select an option",
+    "multi": "Select…"
+  },
+  "empty": {
+    "default": "No items",
+    "search": "No matches"
+  },
+  "count": {
+    "selected_one": "1 selected",
+    "selected_other": "{{count}} selected"
+  }
 }

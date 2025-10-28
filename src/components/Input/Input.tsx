@@ -3,6 +3,7 @@ import {
   useState,
   forwardRef,
   KeyboardEvent as ReactKeyboardEvent,
+  useMemo,
 } from "react";
 import classNames from "classnames";
 import type { InputProps } from "./Input.types";
@@ -31,43 +32,75 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const isPassword = showTogglePassword && type === "password";
     const inputType = isPassword ? (isPasswordVisible ? "text" : "password") : type;
 
+    // Clear button is shown only when it makes sense and won't break controlled usage
+    const valueStr =
+      typeof (rest).value === "string"
+        ? ((rest).value as string)
+        : (typeof (rest).defaultValue === "string"
+            ? ((rest).defaultValue as string)
+            : "");
+    const canClear =
+      !isPassword &&
+      !isLoading &&
+      !rest.disabled &&
+      typeof (rest).onChange === "function" &&
+      valueStr.length > 0 &&
+      (type === "text" || type === "search" || type === "email" || type === "tel" || type === "url");
+
+    const rightPadClass = useMemo(() => {
+      // reserve room for trailing controls
+      if (isPassword && canClear) return "pr-16";
+      if (isPassword || canClear || isLoading) return "pr-10";
+      return "pr-3.5";
+    }, [isPassword, canClear, isLoading]);
+
     const baseInput =
-      "w-full text-xs text-gray-800 px-4 py-3 rounded-[5px] outline-none " +
-      "transition-all duration-200 ease-in-out placeholder-gray-400 " +
-      "border focus:border-gray-400 " +
-      "hover:bg-gray-50 focus:bg-gray-50 " +
-      "disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed";
+      "w-full text-xs text-gray-900 rounded-md outline-none transition-colors duration-150 " +
+      "placeholder:text-gray-400 border bg-white " +
+      "hover:bg-gray-50 focus:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300 " +
+      "disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed " +
+      "px-3 py-2.5";
 
     const variantClasses: Record<Variant, string> = {
-      default: "bg-white border-gray-300",
-      outlined: "bg-white border-2 border-indigo-600",
-      filled: "bg-gray-100 border border-transparent",
+      default: "border-gray-300",
+      outlined: "border-2 border-gray-300 focus-visible:ring-0", // keep minimal; outlined but no loud ring
+      filled: "bg-gray-50 border border-transparent focus:border-gray-300",
     };
 
-    const errorClasses =
-      errorMessage ? "border-red-500 focus:border-red-500" : undefined;
+    const errorClasses = errorMessage
+      ? "border-red-500 focus:border-red-500 focus-visible:ring-red-200"
+      : undefined;
 
     const inputClasses = classNames(
       baseInput,
+      rightPadClass,
       variantClasses[variant as Variant] ?? variantClasses.default,
-      errorClasses,
-      { "pr-10": isPassword }
+      errorClasses
     );
 
-    const togglePasswordVisibility = () =>
-      setIsPasswordVisible((v) => !v);
+    const togglePasswordVisibility = () => setIsPasswordVisible((v) => !v);
 
-    // Evita submit ao pressionar Enter dentro de formulário se necessário
+    // Prevent accidental form submit when requested
     const handleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && rest.formNoValidate) e.preventDefault();
+      if (e.key === "Enter" && (rest).formNoValidate) e.preventDefault();
+    };
+
+    const errorId = errorMessage ? `${id}-err` : undefined;
+
+    const onClear = () => {
+      const onChange = (rest).onChange as React.ChangeEventHandler<HTMLInputElement>;
+      if (onChange) {
+        const target = { value: "" };
+        onChange({ target } as React.ChangeEvent<HTMLInputElement>);
+      }
     };
 
     return (
-      <div className="flex flex-col gap-1" style={style}>
+      <div className="flex flex-col gap-1.5" style={style}>
         {label ? (
           <label
             htmlFor={id}
-            className="text-[10px] py-[5px] font-bold select-none text-gray-700"
+            className="text-[10.5px] font-semibold text-gray-700 select-none"
           >
             {label}
           </label>
@@ -80,31 +113,63 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             type={inputType}
             className={inputClasses}
             aria-invalid={!!errorMessage}
+            aria-describedby={errorId}
             disabled={isLoading || rest.disabled}
             onKeyDown={handleKeyDown}
             {...rest}
           />
 
-          {isPassword && (
-            <button
-              type="button"
-              onClick={togglePasswordVisibility}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0 text-indigo-600 disabled:opacity-50"
-              disabled={isLoading}
-              tabIndex={-1}
-              aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
-            >
-              {isPasswordVisible ? (
-                <img src={notVisible} alt="not-visible" width={20} />
-              ) : (
-                <img src={visible} alt="visible" width={20} />
-              )}
-            </button>
-          )}
+          {/* Trailing controls (right side): spinner, clear, password toggle */}
+          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center gap-1">
+            {isLoading && (
+              <svg
+                className="h-4 w-4 animate-spin text-gray-400"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.25" />
+                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" fill="none" />
+              </svg>
+            )}
+
+            {canClear && (
+              <button
+                type="button"
+                onClick={onClear}
+                className="pointer-events-auto p-1 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+                aria-label="Limpar"
+                tabIndex={0}
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+
+            {isPassword && (
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="pointer-events-auto p-1 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+                disabled={isLoading}
+                aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+                aria-pressed={isPasswordVisible}
+                tabIndex={0}
+              >
+                {isPasswordVisible ? (
+                  <img src={notVisible} alt="" width={18} height={18} />
+                ) : (
+                  <img src={visible} alt="" width={18} height={18} />
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {errorMessage ? (
-          <span className="text-red-500 text-xs">{errorMessage}</span>
+          <span id={errorId} className="text-red-600 text-[11px] leading-tight">
+            {errorMessage}
+          </span>
         ) : null}
       </div>
     );

@@ -1,6 +1,26 @@
 {
-  "button": { "single": "Sélectionner", "multi": "Sélectionner des éléments" },
-  "actions": { "selectAll": "Tout sélectionner", "clearAll": "Tout effacer" },
-  "filter": { "placeholder": "Filtrer", "aria": "Filtrer les options" },
-  "aria": { "trigger": "Ouvrir la liste", "listbox": "Liste d’options" }
+  "aria": {
+    "trigger": "Ouvrir la sélection",
+    "listbox": "Options"
+  },
+  "actions": {
+    "selectAll": "Tout sélectionner",
+    "clearAll": "Tout effacer"
+  },
+  "filter": {
+    "placeholder": "Rechercher…",
+    "aria": "Filtrer les options"
+  },
+  "button": {
+    "single": "Sélectionner une option",
+    "multi": "Sélectionner…"
+  },
+  "empty": {
+    "default": "Aucun élément",
+    "search": "Aucun résultat"
+  },
+  "count": {
+    "selected_one": "1 sélectionné",
+    "selected_other": "{{count}} sélectionnés"
+  }
 }
