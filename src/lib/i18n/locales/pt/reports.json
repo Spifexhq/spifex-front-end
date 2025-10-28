@@ -1,0 +1,67 @@
+{
+  "pageTitle": "Relatórios",
+  "title": "Relatórios de Fluxo de Caixa",
+  "buttons": {
+    "refresh": "Atualizar"
+  },
+  "loading": "Carregando dados do relatório…",
+  "errors": {
+    "fetch": "Erro ao buscar dados do relatório."
+  },
+  "kpis": {
+    "consolidatedBalance": "Saldo consolidado",
+    "bankSum": "Somatório de contas bancárias",
+    "inPeriod": "Entradas (período)",
+    "outPeriod": "Saídas (período)",
+    "netPeriod": "Resultado (período)",
+    "mom": "M/M",
+    "mtdIn": "MTD: Entradas",
+    "mtdOut": "MTD: Saídas",
+    "mtdNet": "MTD: Resultado",
+    "currentMonth": "Mês atual",
+    "in": "Entradas",
+    "out": "Saídas",
+    "settlementRate": "Taxa de liquidação",
+    "loadedUniverse": "No universo carregado"
+  },
+  "alerts": {
+    "overdueTitle": "Vencidos (não liquidados)",
+    "toReceive": "A Receber",
+    "toPay": "A Pagar",
+    "next7": "Próximos 7 dias",
+    "next30": "Próximos 30 dias"
+  },
+  "runway": {
+    "avgOutflow": "Média mensal de saídas",
+    "estimated": "Runway estimada",
+    "months": "{{value}} mês(es)"
+  },
+  "charts": {
+    "cumulativeTitle": "Saldo acumulado (por competência)",
+    "barsTitle": "Entradas x Saídas (mensal)",
+    "pieTitle": "Distribuição de despesas por categoria",
+    "inflow": "Entradas",
+    "outflow": "Saídas",
+    "net": "Resultado"
+  },
+  "tables": {
+    "overdueTitle": "Top 10 lançamentos em atraso",
+    "date": "Data",
+    "description": "Descrição",
+    "type": "Tipo",
+    "amount": "Valor",
+    "noOverdue": "Nenhum lançamento em atraso",
+    "payLabel": "Pagar",
+    "receiveLabel": "Receber"
+  },
+  "insights": {
+    "title": "Insights",
+    "runwayLow": "Runway estimada abaixo de 3 meses. Considere reduzir saídas ou reforçar caixa.",
+    "runwayHigh": "Runway confortável (≥ 6 meses). Avalie antecipar investimentos com critério.",
+    "mtdNegative": "Resultado do mês negativo. Revise a pizza de despesas para atacar maiores categorias.",
+    "mtdPositive": "Resultado do mês positivo. Monitore recebimentos previstos para manter o ritmo.",
+    "overduePressure": "Pagamentos vencidos > recebimentos vencidos — risco de pressão de caixa no curtíssimo prazo.",
+    "overdueReceivables": "Há recebimentos vencidos relevantes. Foque a cobrança nos top 10 atrasos.",
+    "mom": "Variação M/M do resultado do mês: {{value}}."
+  }
+}

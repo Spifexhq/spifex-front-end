@@ -4,7 +4,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
-import Checkbox from "@/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
 
 /**
  * SelectDropdown — Minimal & Fluid
@@ -519,10 +519,10 @@ function SelectDropdown<T>({
         {/* Panel */}
         <div
           className={[
-            "absolute left-0 right-0 origin-top rounded-md border border-gray-200 bg-white z-[60]",
+            "absolute left-0 right-0 top-full origin-top rounded-md border border-gray-200 bg-white z-[60]",
             "transition-all duration-150 ease-out",
             isOpen
-              ? "opacity-100 translate-y-1 pointer-events-auto"
+              ? "opacity-100 translate-y-0 pointer-events-auto"
               : "opacity-0 -translate-y-1 pointer-events-none",
           ].join(" ")}
           style={{ maxWidth: 360 }}

@@ -13,7 +13,7 @@ import { EntryFilters, SettledEntry } from "src/models/entries/domain";
 import { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { getCursorFromUrl } from "src/lib/list";
-import Checkbox from "@/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
 
 /* ------------------------------ Helpers ----------------------------------- */
 

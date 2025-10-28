@@ -1,13 +1,13 @@
 import { useEffect, useCallback, useState, useRef } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { Sidebar } from "src/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
 import CashFlowTable, { CashFlowTableHandle } from "src/components/Table/CashFlowTable";
-import FilterBar from "src/components/Filter/FilterBar";
+import FilterBar from "src/components/FilterBar";
 import { Entry, EntryFilters } from "src/models/entries";
 import { ModalType } from "@/components/Modal/Modal.types";
-import Navbar from "src/components/Navbar";
+import Navbar from "src/components/layout/Navbar";
 import { api } from "src/api/requests";
-import KpiRow from "src/components/KPI/KpiRow";
+import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
 
@@ -74,7 +74,7 @@ const CashFlow = () => {
 
           {filters && (
             <>
-              <KpiRow
+              <KpiCards
                 selectedBankIds={filters.bank_id}
                 filters={filters}
                 context="cashflow"

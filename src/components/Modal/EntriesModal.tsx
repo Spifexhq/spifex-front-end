@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 
-import Button from "../Button";
-import Input from "../Input";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import Button from "src/components/ui/Button";
+import Input from "src/components/ui/Input";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { fetchAllCursor } from "src/lib/list";
 
 import {

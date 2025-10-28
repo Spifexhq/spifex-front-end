@@ -6,25 +6,29 @@
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import { SelectDropdown } from "@/components/SelectDropdown";
-import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import ConfirmToast from "src/components/ui/ConfirmToast";
 
 import { api } from "src/api/requests";
 import type { Entity } from "src/models/enterprise_structure/domain/Entity";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import { useTranslation } from "react-i18next";
+
+/* Snackbar type */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* tipos de entidade: somente valores; labels vêm do i18n */
 const ENTITY_TYPE_VALUES = ["client", "supplier", "employee"] as const;
@@ -125,7 +129,9 @@ const EntitySettings: React.FC = () => {
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
-  const [snackBarMessage, setSnackBarMessage] = useState<string>("");
+
+  /* Snackbar */
+  const [snack, setSnack] = useState<Snack>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<Entity[]>([]);
@@ -264,10 +270,16 @@ const EntitySettings: React.FC = () => {
       }
       await pager.refresh();
       closeModal();
+      setSnack({
+        message: t("settings:entity.toast.saveOk", "Entidade salva com sucesso."),
+        severity: "success",
+      });
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:entity.errors.saveError")
-      );
+      setSnack({
+        message:
+          err instanceof Error ? err.message : t("settings:entity.errors.saveError"),
+        severity: "error",
+      });
     }
   };
 
@@ -286,15 +298,21 @@ const EntitySettings: React.FC = () => {
         await api.deleteEntity(entity.id);
         await pager.refresh();
         setAdded((prev) => prev.filter((e) => e.id !== entity.id));
+        setSnack({
+          message: t("settings:entity.toast.deleteOk", "Entidade removida."),
+          severity: "info",
+        });
       } catch (err) {
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(entity.id);
           return next;
         });
-        setSnackBarMessage(
-          err instanceof Error ? err.message : t("settings:entity.errors.deleteError")
-        );
+        setSnack({
+          message:
+            err instanceof Error ? err.message : t("settings:entity.errors.deleteError"),
+          severity: "error",
+        });
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
@@ -652,21 +670,24 @@ const EntitySettings: React.FC = () => {
           confirmAction
             ?.()
             .catch(() => {
-              setSnackBarMessage(t("settings:entity.errors.confirmFailed"));
+              setSnack({ message: t("settings:entity.errors.confirmFailed"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
+      {/* Snackbar (no Alert) */}
       <Snackbar
-        open={!!snackBarMessage}
+        open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

@@ -5,15 +5,14 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import Checkbox from "@/components/Checkbox";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import Checkbox from "src/components/ui/Checkbox";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -22,6 +21,10 @@ import { formatTimezoneLabel, TIMEZONES } from "src/lib";
 import { useTranslation } from "react-i18next";
 
 type EditableUserField = "none" | "name" | "timezone" | "address";
+
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials(name?: string) {
@@ -52,8 +55,12 @@ const Row = ({
 const CompanySettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings", "common"]);
 
-  useEffect(() => { document.title = t("settings:company.title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("settings:company.title");
+  }, [t]);
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
@@ -62,7 +69,8 @@ const CompanySettings: React.FC = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditableUserField | null>(null);
-  const [snackBarMessage, setSnackBarMessage] = useState("");
+
+  const [snack, setSnack] = useState<Snack>(null);
 
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [useDeviceTz, setUseDeviceTz] = useState(true);
@@ -100,8 +108,8 @@ const CompanySettings: React.FC = () => {
         setSelectedTimezone(tzObj ? [tzObj] : []);
         setUseDeviceTz((data.timezone ?? "UTC") === deviceTz);
       } catch (err) {
-        console.error("Erro ao buscar dados da organização", err);
-        setSnackBarMessage(t("settings:company.toast.orgLoadError"));
+        console.error("settings:company.toast.orgLoadError", err);
+        setSnack({ message: t("settings:company.toast.orgLoadError"), severity: "error" });
       } finally {
         setLoading(false);
       }
@@ -156,7 +164,7 @@ const CompanySettings: React.FC = () => {
   const submitPartial = async (partialData: Partial<typeof formData>) => {
     try {
       if (!orgProfile) {
-        setSnackBarMessage(t("settings:company.toast.orgUpdateError"));
+        setSnack({ message: t("settings:company.toast.orgUpdateError"), severity: "error" });
         return;
       }
 
@@ -172,13 +180,14 @@ const CompanySettings: React.FC = () => {
       };
 
       const res = await api.editOrganization(requestBody);
-      if (!res.data) throw new Error(("settings:company.toast.orgUpdateError"));
+      if (!res.data) throw new Error("settings:company.toast.orgUpdateError");
 
       const updated = await api.getOrganization();
       setOrgProfile(updated.data);
       closeModal();
+      setSnack({ message: t("settings:company.toast.orgUpdateOk"), severity: "success" });
     } catch {
-      setSnackBarMessage(t("settings:company.toast.orgUpdateError"));
+      setSnack({ message: t("settings:company.toast.orgUpdateError"), severity: "error" });
     }
   };
 
@@ -495,13 +504,15 @@ const CompanySettings: React.FC = () => {
 
       {/* ----------------------------- Snackbar ----------------------------- */}
       <Snackbar
-        open={!!snackBarMessage}
+        open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

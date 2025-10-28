@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Navbar from "@/components/Navbar";
+import Navbar from "src/components/layout/Navbar";
 import { SuspenseLoader } from "@/components/Loaders";
-import Button from "@/components/Button";
-import Input from "@/components/Input";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
+import Button from "src/components/ui/Button";
+import Input from "src/components/ui/Input";
+import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
 import type { AddGLAccountRequest, GetLedgerAccountsResponse } from "src/models/enterprise_structure/dto";
@@ -14,6 +13,11 @@ import Papa from "papaparse";
 import personalAccounts from "src/data/personalAccounts.json";
 import businessAccounts from "src/data/businessAccounts.json";
 import { useTranslation } from "react-i18next";
+
+/* --- Snackbar type (new) --- */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* --- types & helpers (unchanged) --- */
 type CsvRow = { GRUPO?: string; SUBGRUPO?: string; CONTA?: string; group?: string; subgroup?: string; account?: string; };
@@ -53,7 +57,7 @@ const LedgerAccountsGate: React.FC = () => {
   const [textBlock, setTextBlock] = useState("");
   const [stdChoice, setStdChoice] = useState<"personal" | "business" | null>(null);
   const [busy, setBusy] = useState(false);
-  const [snack, setSnack] = useState("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const csvTemplate = useMemo(() => {
     const rows = [
@@ -135,7 +139,10 @@ const LedgerAccountsGate: React.FC = () => {
       setBusy(true);
 
       if (mode === "csv") {
-        if (!csvFile) { setSnack(t("settings:ledgerAccountsGate.snackbar.selectCsv")); return; }
+        if (!csvFile) {
+          setSnack({ message: t("settings:ledgerAccountsGate.snackbar.selectCsv"), severity: "warning" });
+          return;
+        }
         await new Promise<void>((resolve, reject) => {
           Papa.parse<CsvRow>(csvFile, {
             header: true,
@@ -151,7 +158,10 @@ const LedgerAccountsGate: React.FC = () => {
                     return { name: account, category: toCategoryValue(group), subcategory: subgroup || undefined, is_active: true };
                   });
 
-                if (mapped.length === 0) { setSnack(t("settings:ledgerAccountsGate.snackbar.emptyCsv")); return reject(new Error("EMPTY_CSV")); }
+                if (mapped.length === 0) {
+                  setSnack({ message: t("settings:ledgerAccountsGate.snackbar.emptyCsv"), severity: "warning" });
+                  return reject(new Error("EMPTY_CSV"));
+                }
                 await addMany(mapped);
                 resolve();
               } catch (err) { reject(err instanceof Error ? err : new Error("CSV_IMPORT_FAIL")); }
@@ -159,12 +169,20 @@ const LedgerAccountsGate: React.FC = () => {
             error: (err) => reject(err),
           });
         });
+        setSnack({ message: t("settings:ledgerAccountsGate.snackbar.csvSuccess"), severity: "success" });
       } else if (mode === "manual") {
         const items = parseManual(textBlock);
-        if (items.length === 0) { setSnack(t("settings:ledgerAccountsGate.snackbar.manualRequired")); return; }
+        if (items.length === 0) {
+          setSnack({ message: t("settings:ledgerAccountsGate.snackbar.manualRequired"), severity: "warning" });
+          return;
+        }
         await addMany(items);
+        setSnack({ message: t("settings:ledgerAccountsGate.snackbar.manualSuccess"), severity: "success" });
       } else if (mode === "standard") {
-        if (!stdChoice) { setSnack(t("settings:ledgerAccountsGate.snackbar.standardRequired")); return; }
+        if (!stdChoice) {
+          setSnack({ message: t("settings:ledgerAccountsGate.snackbar.standardRequired"), severity: "warning" });
+          return;
+        }
         const src = (stdChoice === "personal" ? personalAccounts : businessAccounts) as StandardRow[];
         const mapped: AddGLAccountRequest[] = src.map((e) => ({
           name: e.account,
@@ -173,15 +191,16 @@ const LedgerAccountsGate: React.FC = () => {
           is_active: true,
         }));
         await addMany(mapped);
+        setSnack({ message: t("settings:ledgerAccountsGate.snackbar.standardSuccess"), severity: "success" });
       } else {
-        setSnack(t("settings:ledgerAccountsGate.snackbar.chooseMode"));
+        setSnack({ message: t("settings:ledgerAccountsGate.snackbar.chooseMode"), severity: "info" });
         return;
       }
 
       navigate("/settings/ledger-accounts", { replace: true });
     } catch (e) {
       const msg = (e as { message?: string })?.message || t("settings:ledgerAccountsGate.snackbar.saveError");
-      setSnack(msg);
+      setSnack({ message: msg, severity: "error" });
     } finally {
       setBusy(false);
     }
@@ -282,9 +301,17 @@ const LedgerAccountsGate: React.FC = () => {
         </section>
       </main>
 
-      <Snackbar open={!!snack} autoHideDuration={6000} onClose={() => setSnack("")}>
-        <Alert severity="error">{snack}</Alert>
-      </Snackbar>
+      {/* Snackbar (sem Alert) */}
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={5000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "@/components/Button";
+import Button from "src/components/ui/Button";
 
 type Props = {
   onPrev: () => void | Promise<void>;

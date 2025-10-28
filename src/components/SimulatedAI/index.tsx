@@ -11,7 +11,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import Input from "../Input";
+import Input from "../ui/Input";
 
 /* -----------------------------------------------------------------------------
  * SimulatedAI — i18n-powered FAQs (namespace: "simulatedAI")

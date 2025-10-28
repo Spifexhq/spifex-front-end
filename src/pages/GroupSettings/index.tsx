@@ -7,15 +7,14 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
-import Checkbox from "src/components/Checkbox";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import ConfirmToast from "src/components/ui/ConfirmToast";
+import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -24,6 +23,11 @@ import type { Permission } from "src/models/auth/domain/Permission";
 import type { GroupDetail, GroupListItem } from "src/models/auth/domain/Group";
 import type { AddGroupRequest, GetGroups } from "src/models/auth/dto/GetGroup";
 import { useTranslation } from "react-i18next";
+
+/* Snackbar type */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* ------------------------------ Type guards -------------------------------- */
 
@@ -153,7 +157,7 @@ const GroupSettings: React.FC = () => {
   const { isOwner } = useAuthContext();
 
   const [loading, setLoading] = useState(true);
-  const [snackBarMessage, setSnackBarMessage] = useState<string>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   // Data
   const [groups, setGroups] = useState<GroupListItem[]>([]);
@@ -196,7 +200,7 @@ const GroupSettings: React.FC = () => {
       setAllPermissions(cleaned);
     } catch (e) {
       console.error(e);
-      setSnackBarMessage(t("settings:groups.toast.loadAllError"));
+      setSnack({ message: t("settings:groups.toast.loadAllError"), severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -228,7 +232,7 @@ const GroupSettings: React.FC = () => {
         setSelectedCodes(activeCodes);
       } catch (e) {
         console.error(e);
-        setSnackBarMessage(t("settings:groups.toast.detailError"));
+        setSnack({ message: t("settings:groups.toast.detailError"), severity: "error" });
       }
     };
     void load();
@@ -302,7 +306,7 @@ const GroupSettings: React.FC = () => {
   const handleCreateGroup = async () => {
     const name = newGroupName.trim();
     if (!name) {
-      setSnackBarMessage(t("settings:groups.toast.createNameRequired"));
+      setSnack({ message: t("settings:groups.toast.createNameRequired"), severity: "warning" });
       return;
     }
     try {
@@ -312,9 +316,10 @@ const GroupSettings: React.FC = () => {
       setNewGroupName("");
       await fetchAll();
       setSelectedGroupId(created.external_id);
+      setSnack({ message: t("settings:groups.toast.createSuccess"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnackBarMessage(t("settings:groups.toast.createError"));
+      setSnack({ message: t("settings:groups.toast.createError"), severity: "error" });
     }
   };
 
@@ -322,15 +327,16 @@ const GroupSettings: React.FC = () => {
     if (!selectedGroupDetail) return;
     const name = (selectedGroupDetail.name || "").trim();
     if (!name) {
-      setSnackBarMessage(t("settings:groups.toast.renameEmpty"));
+      setSnack({ message: t("settings:groups.toast.renameEmpty"), severity: "warning" });
       return;
     }
     try {
       await api.editGroup(selectedGroupDetail.external_id, { name });
       await fetchAll();
+      setSnack({ message: t("settings:groups.toast.renameSuccess"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnackBarMessage(t("settings:groups.toast.renameError"));
+      setSnack({ message: t("settings:groups.toast.renameError"), severity: "error" });
     }
   };
 
@@ -343,10 +349,10 @@ const GroupSettings: React.FC = () => {
         await api.deleteGroup(selectedGroupDetail.external_id);
         await fetchAll();
         setSelectedGroupId(null);
-        setSnackBarMessage(t("settings:groups.toast.deleteSuccess"));
+        setSnack({ message: t("settings:groups.toast.deleteSuccess"), severity: "info" });
       } catch (e) {
         console.error(e);
-        setSnackBarMessage(t("settings:groups.toast.deleteError"));
+        setSnack({ message: t("settings:groups.toast.deleteError"), severity: "error" });
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
@@ -362,10 +368,10 @@ const GroupSettings: React.FC = () => {
       await fetchAll();
       const detail = (await api.getGroup(selectedGroupDetail.external_id)).data as GroupDetail;
       setSelectedGroupDetail(detail);
-      setSnackBarMessage(t("settings:groups.toast.saveSuccess"));
+      setSnack({ message: t("settings:groups.toast.saveSuccess"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnackBarMessage(t("settings:groups.toast.saveError"));
+      setSnack({ message: t("settings:groups.toast.saveError"), severity: "error" });
     }
   };
 
@@ -622,23 +628,24 @@ const GroupSettings: React.FC = () => {
           confirmAction?.()
             .catch((err) => {
               console.error(err);
-              setSnackBarMessage(t("settings:groups.confirm.fail"));
+              setSnack({ message: t("settings:groups.confirm.fail"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
+      {/* Snackbar (no Alert) */}
       <Snackbar
-        open={!!snackBarMessage}
+        open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={4000}
-        onClose={() => setSnackBarMessage("")}
-        severity={snackBarMessage.toLowerCase().includes(t("settings:groups.toast.successSnippet")) ? "success" : "error"}
-      >
-        <Alert severity={snackBarMessage.toLowerCase().includes(t("settings:groups.toast.successSnippet")) ? "success" : "error"}>
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

@@ -1,25 +1,24 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/LedgerAccountSettings.tsx                                 */
-/*  Refactor: GLAccount (id string) + paginação                               */
-/*           Campos: name, code?, category(1..4), subcategory, default_tx,    */
-/*           is_active                                                        */
-/*           - Backend recebe APENAS números (1..4)                           */
-/*           - Front exibe labels em PT                                       */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/LedgerAccountSettings.tsx
+ * Refactor: GLAccount (id string) + paginação
+ *           Campos: name, code?, category(1..4), subcategory, default_tx,
+ *           is_active
+ *           - Backend recebe APENAS números (1..4)
+ *           - Front exibe labels em PT
+ * -------------------------------------------------------------------------- */
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
-import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
+import ConfirmToast from "src/components/ui/ConfirmToast";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -32,7 +31,12 @@ import type {
   AddGLAccountRequest,
   EditGLAccountRequest,
 } from "src/models/enterprise_structure/dto";
-import Checkbox from "src/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
+
+/* ----------------------------- Snackbar type ------------------------------ */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* ----------------------------- Const & Types ----------------------------- */
 
@@ -158,7 +162,7 @@ const LedgerAccountSettings: React.FC = () => {
 
   const [accounts, setAccounts] = useState<GLAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   // Modal & form
   const [modalOpen, setModalOpen] = useState(false);
@@ -196,10 +200,13 @@ const LedgerAccountSettings: React.FC = () => {
         companyName: t("settings:ledgerAccounts.pdf.company"),
         title: t("settings:ledgerAccounts.pdf.title"),
       });
-      setSnackBarMessage(result.message || t("settings:ledgerAccounts.toast.pdfOk"));
+      setSnack({
+        message: result.message || t("settings:ledgerAccounts.toast.pdfOk"),
+        severity: "success",
+      });
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
-      setSnackBarMessage(t("settings:ledgerAccounts.toast.pdfError"));
+      setSnack({ message: t("settings:ledgerAccounts.toast.pdfError"), severity: "error" });
     } finally {
       setMenuOpen(false);
     }
@@ -374,19 +381,20 @@ const LedgerAccountSettings: React.FC = () => {
       if (mode === "create") {
         const payload: AddGLAccountRequest = basePayload;
         await api.addLedgerAccount(payload);
+        setSnack({ message: t("settings:ledgerAccounts.toast.saved"), severity: "success" });
       } else if (editing) {
         const glaId = getGlaId(editing);
         const payload: EditGLAccountRequest = basePayload;
         await api.editLedgerAccount(glaId, payload);
+        setSnack({ message: t("settings:ledgerAccounts.toast.saved"), severity: "success" });
       }
 
       const refreshed = await fetchAllAccounts();
       setAccounts(refreshed);
       closeModal();
-      setSnackBarMessage(t("settings:ledgerAccounts.toast.saved"));
     } catch (err) {
       console.error(err);
-      setSnackBarMessage(t("settings:ledgerAccounts.toast.saveError"));
+      setSnack({ message: t("settings:ledgerAccounts.toast.saveError"), severity: "error" });
     }
   };
 
@@ -399,8 +407,9 @@ const LedgerAccountSettings: React.FC = () => {
         await api.deleteLedgerAccount(glaId);
         const refreshed = await fetchAllAccounts();
         setAccounts(refreshed);
+        setSnack({ message: t("settings:ledgerAccounts.toast.deleteSuccess", { defaultValue: "Conta excluída." }), severity: "info" });
       } catch {
-        setSnackBarMessage(t("settings:ledgerAccounts.toast.deleteError"));
+        setSnack({ message: t("settings:ledgerAccounts.toast.deleteError"), severity: "error" });
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
@@ -417,9 +426,10 @@ const LedgerAccountSettings: React.FC = () => {
       try {
         setDeletingAll(true);
         await api.deleteAllLedgerAccounts();
+        setSnack({ message: t("settings:ledgerAccounts.toast.deleteAllSuccess", { defaultValue: "Plano de contas resetado." }), severity: "info" });
         navigate("/settings/register/ledger-accounts", { replace: true });
       } catch {
-        setSnackBarMessage(t("settings:ledgerAccounts.toast.deleteAllError"));
+        setSnack({ message: t("settings:ledgerAccounts.toast.deleteAllError"), severity: "error" });
       } finally {
         setDeletingAll(false);
         setMenuOpen(false);
@@ -923,24 +933,24 @@ const LedgerAccountSettings: React.FC = () => {
           setConfirmBusy(true);
           confirmAction?.()
             .catch(() => {
-              setSnackBarMessage(t("settings:ledgerAccounts.toast.confirmFailed"));
+              setSnack({ message: t("settings:ledgerAccounts.toast.confirmFailed"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
-      <Snackbar open={!!snackBarMessage} autoHideDuration={6000} onClose={() => setSnackBarMessage("")}>
-        <Alert
-          severity={
-            typeof snackBarMessage === "string" && /sucesso|gerado|conclu|success|generated/i.test(snackBarMessage)
-              ? "success"
-              : "error"
-          }
-        >
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
+      {/* Snackbar (sem Alert) */}
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={5000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

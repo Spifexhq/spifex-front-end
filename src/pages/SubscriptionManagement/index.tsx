@@ -10,12 +10,12 @@ import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuth } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { InlineLoader, SuspenseLoader } from "@/components/Loaders";
 import PaymentButton from "@/components/SubscriptionButtons/PaymentButton";
 import ManageSubscriptionLink from "@/components/SubscriptionButtons/ManageSubscriptionLink";
-import Button from "@/components/Button";
+import Button from "src/components/ui/Button";
 import { useTranslation } from "react-i18next";
 
 /* --------------------------------- Helpers -------------------------------- */

@@ -1,0 +1,67 @@
+{
+  "pageTitle": "Reports",
+  "title": "Cash Flow Reports",
+  "buttons": {
+    "refresh": "Refresh"
+  },
+  "loading": "Loading report data…",
+  "errors": {
+    "fetch": "Failed to fetch report data."
+  },
+  "kpis": {
+    "consolidatedBalance": "Consolidated balance",
+    "bankSum": "Sum of bank accounts",
+    "inPeriod": "Inflow (period)",
+    "outPeriod": "Outflow (period)",
+    "netPeriod": "Net (period)",
+    "mom": "M/M",
+    "mtdIn": "MTD: Inflow",
+    "mtdOut": "MTD: Outflow",
+    "mtdNet": "MTD: Net",
+    "currentMonth": "Current month",
+    "in": "Inflow",
+    "out": "Outflow",
+    "settlementRate": "Settlement rate",
+    "loadedUniverse": "Within loaded universe"
+  },
+  "alerts": {
+    "overdueTitle": "Overdue (unsettled)",
+    "toReceive": "Receivables",
+    "toPay": "Payables",
+    "next7": "Next 7 days",
+    "next30": "Next 30 days"
+  },
+  "runway": {
+    "avgOutflow": "Average monthly outflow",
+    "estimated": "Estimated runway",
+    "months": "{{value}} month(s)"
+  },
+  "charts": {
+    "cumulativeTitle": "Cumulative balance (accrual)",
+    "barsTitle": "Inflow vs Outflow (monthly)",
+    "pieTitle": "Expense distribution by category",
+    "inflow": "Inflow",
+    "outflow": "Outflow",
+    "net": "Net"
+  },
+  "tables": {
+    "overdueTitle": "Top 10 overdue entries",
+    "date": "Date",
+    "description": "Description",
+    "type": "Type",
+    "amount": "Amount",
+    "noOverdue": "No overdue entries",
+    "payLabel": "Pay",
+    "receiveLabel": "Receive"
+  },
+  "insights": {
+    "title": "Insights",
+    "runwayLow": "Estimated runway below 3 months. Consider reducing outflows or reinforcing cash.",
+    "runwayHigh": "Comfortable runway (≥ 6 months). You may consider carefully advancing investments.",
+    "mtdNegative": "Negative result this month. Review the expense mix to attack the largest categories.",
+    "mtdPositive": "Positive result this month. Track expected receivables to keep the pace.",
+    "overduePressure": "Overdue payables exceed receivables — short-term cash pressure risk.",
+    "overdueReceivables": "Relevant overdue receivables. Focus collections on top 10 delays.",
+    "mom": "Month-over-month change of the month result: {{value}}."
+  }
+}

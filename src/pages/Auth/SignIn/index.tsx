@@ -2,9 +2,9 @@ import { useEffect, useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import { useAuth } from "@/api";
-import Snackbar from "@/components/Snackbar";
-import Button from "@/components/Button";
-import Input from "@/components/Input";
+import Snackbar from "src/components/ui/Snackbar";
+import Button from "src/components/ui/Button";
+import Input from "src/components/ui/Input";
 
 import signInBackground from "@/assets/Images/background/signin-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";

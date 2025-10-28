@@ -1,0 +1,67 @@
+{
+  "pageTitle": "Berichte",
+  "title": "Cashflow-Berichte",
+  "buttons": {
+    "refresh": "Aktualisieren"
+  },
+  "loading": "Berichtsdaten werden geladen…",
+  "errors": {
+    "fetch": "Berichtsdaten konnten nicht geladen werden."
+  },
+  "kpis": {
+    "consolidatedBalance": "Konsolidierter Bestand",
+    "bankSum": "Summe der Bankkonten",
+    "inPeriod": "Zuflüsse (Zeitraum)",
+    "outPeriod": "Abflüsse (Zeitraum)",
+    "netPeriod": "Ergebnis (Zeitraum)",
+    "mom": "M/M",
+    "mtdIn": "MTD: Zuflüsse",
+    "mtdOut": "MTD: Abflüsse",
+    "mtdNet": "MTD: Ergebnis",
+    "currentMonth": "Aktueller Monat",
+    "in": "Zuflüsse",
+    "out": "Abflüsse",
+    "settlementRate": "Abschlussquote",
+    "loadedUniverse": "Im geladenen Umfang"
+  },
+  "alerts": {
+    "overdueTitle": "Überfällig (nicht abgeschlossen)",
+    "toReceive": "Forderungen",
+    "toPay": "Verbindlichkeiten",
+    "next7": "Nächste 7 Tage",
+    "next30": "Nächste 30 Tage"
+  },
+  "runway": {
+    "avgOutflow": "Durchschn. monatlicher Abfluss",
+    "estimated": "Geschätzte Runway",
+    "months": "{{value}} Monat(e)"
+  },
+  "charts": {
+    "cumulativeTitle": "Kumuliertes Guthaben (Periodenabgrenzung)",
+    "barsTitle": "Zufluss vs. Abfluss (monatlich)",
+    "pieTitle": "Ausgabenverteilung nach Kategorie",
+    "inflow": "Zuflüsse",
+    "outflow": "Abflüsse",
+    "net": "Ergebnis"
+  },
+  "tables": {
+    "overdueTitle": "Top 10 überfällige Buchungen",
+    "date": "Datum",
+    "description": "Beschreibung",
+    "type": "Typ",
+    "amount": "Betrag",
+    "noOverdue": "Keine überfälligen Buchungen",
+    "payLabel": "Zahlen",
+    "receiveLabel": "Erhalten"
+  },
+  "insights": {
+    "title": "Insights",
+    "runwayLow": "Geschätzte Runway unter 3 Monaten. Abflüsse reduzieren oder Liquidität stärken.",
+    "runwayHigh": "Komfortable Runway (≥ 6 Monate). Investitionen ggf. bedacht vorziehen.",
+    "mtdNegative": "Monatsergebnis negativ. Größte Ausgabenkategorien priorisiert prüfen.",
+    "mtdPositive": "Monatsergebnis positiv. Erwartete Zuflüsse im Blick behalten.",
+    "overduePressure": "Überfällige Verbindlichkeiten > Forderungen — kurzfristiges Liquiditätsrisiko.",
+    "overdueReceivables": "Relevante überfällige Forderungen. Fokus auf Top-10-Inkasso.",
+    "mom": "Monatsveränderung (M/M) des Monatsergebnisses: {{value}}."
+  }
+}

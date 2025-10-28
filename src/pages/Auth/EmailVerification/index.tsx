@@ -4,7 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { VerifyEmailResponse, VerifyNewEmailResponse } from '@/models/auth/dto/EmailVerification';
 import { ApiResponse } from '@/models/Api';
 import { api } from "src/api/requests";
-import Button from '@/components/Button';
+import Button from 'src/components/ui/Button';
 import { isApiError } from 'src/lib/api/apiError';
 import { InlineLoader } from '@/components/Loaders';
 

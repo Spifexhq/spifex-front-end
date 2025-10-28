@@ -1,14 +1,14 @@
 // src/pages/Settled/index.tsx
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { Sidebar } from "src/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
 import { ModalType } from "@/components/Modal/Modal.types";
-import Navbar from "src/components/Navbar";
+import Navbar from "src/components/layout/Navbar";
 import { api } from "src/api/requests";
-import FilterBar from "src/components/Filter/FilterBar";
-import KpiRow from "src/components/KPI/KpiRow";
+import FilterBar from "src/components/FilterBar";
+import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar, { MinimalEntry } from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
 
@@ -82,7 +82,7 @@ const Settled = () => {
           {/* Render KPI/Table only when filters are ready */}
           {filters && (
             <>
-              <KpiRow
+              <KpiCards
                 context="settled"
                 filters={filters}
                 selectedBankIds={filters.bank_id}

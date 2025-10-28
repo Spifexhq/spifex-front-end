@@ -29,7 +29,7 @@ type BanksData = {
   error: string | null;
 };
 
-interface KpiRowProps {
+interface KpiCardsProps {
   items?: KpiItem[];
   selectedBankIds?: (string | number)[];
   filters?: EntryFilters;
@@ -60,7 +60,7 @@ function getInitials(name: string) {
 /* Component                                                                   */
 /* -------------------------------------------------------------------------- */
 
-const KpiRow: React.FC<KpiRowProps> = ({
+const KpiCards: React.FC<KpiCardsProps> = ({
   selectedBankIds,
   filters,
   context = "cashflow",
@@ -68,7 +68,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
   banksRefreshKey,
   banksData,
 }) => {
-  const { t } = useTranslation(["kpiRow"]);
+  const { t } = useTranslation(["kpiCards"]);
   const { banks, loading: banksLoading } = banksData;
 
   const orgExternalId = useSelector(
@@ -162,9 +162,9 @@ const KpiRow: React.FC<KpiRowProps> = ({
   const cashflowKpis: KpiItem[] = useMemo(() => {
     if (!cf)
       return [
-        { key: "mtdNet", label: t("kpiRow:cashflow.labels.mtdNet"), value: "—", hint: t("kpiRow:loading") },
-        { key: "overdueNet", label: t("kpiRow:cashflow.labels.overdueNet"), value: "—", hint: t("kpiRow:loading") },
-        { key: "next7Net", label: t("kpiRow:cashflow.labels.next7Net"), value: "—", hint: t("kpiRow:loading") },
+        { key: "mtdNet", label: t("kpiCards:cashflow.labels.mtdNet"), value: "—", hint: t("kpiCards:loading") },
+        { key: "overdueNet", label: t("kpiCards:cashflow.labels.overdueNet"), value: "—", hint: t("kpiCards:loading") },
+        { key: "next7Net", label: t("kpiCards:cashflow.labels.next7Net"), value: "—", hint: t("kpiCards:loading") },
       ];
 
     const mom = cf.mom_change;
@@ -183,14 +183,14 @@ const KpiRow: React.FC<KpiRowProps> = ({
     return [
       {
         key: "mtdNet",
-        label: t("kpiRow:cashflow.labels.mtdNet"),
+        label: t("kpiCards:cashflow.labels.mtdNet"),
         value: `${cf.mtd.net_minor >= 0 ? "+" : ""}${currencyFromMinor(cf.mtd.net_minor)}`,
-        hint: t("kpiRow:cashflow.hints.mtd", {
+        hint: t("kpiCards:cashflow.hints.mtd", {
           inAmt: currencyFromMinor(cf.mtd.in_minor),
           outAmt: currencyFromMinor(cf.mtd.out_minor),
         }),
         delta: {
-          value: t("kpiRow:delta.mom", {
+          value: t("kpiCards:delta.mom", {
             value: `${cf.mtd.net_minor >= 0 ? "+" : ""}${momLabel}`,
           }),
           positive: momPositive,
@@ -198,18 +198,18 @@ const KpiRow: React.FC<KpiRowProps> = ({
       },
       {
         key: "overdueNet",
-        label: t("kpiRow:cashflow.labels.overdueNet"),
+        label: t("kpiCards:cashflow.labels.overdueNet"),
         value: `${cf.overdue.net_minor >= 0 ? "+" : ""}${currencyFromMinor(cf.overdue.net_minor)}`,
-        hint: t("kpiRow:cashflow.hints.overdue", {
+        hint: t("kpiCards:cashflow.hints.overdue", {
           recAmt: currencyFromMinor(cf.overdue.rec_minor),
           payAmt: currencyFromMinor(cf.overdue.pay_minor),
         }),
       },
       {
         key: "next7Net",
-        label: t("kpiRow:cashflow.labels.next7Net"),
+        label: t("kpiCards:cashflow.labels.next7Net"),
         value: `${currencyFromMinor(cf.next7.net_minor)}`,
-        hint: t("kpiRow:cashflow.hints.next7", {
+        hint: t("kpiCards:cashflow.hints.next7", {
           recAmt: currencyFromMinor(cf.next7.rec_minor),
           payAmt: currencyFromMinor(cf.next7.pay_minor),
         }),
@@ -220,9 +220,9 @@ const KpiRow: React.FC<KpiRowProps> = ({
   const settledKpis: KpiItem[] = useMemo(() => {
     if (!st)
       return [
-        { key: "mtdSettledNet", label: t("kpiRow:settled.labels.mtdSettledNet"), value: "—", hint: t("kpiRow:loading") },
-        { key: "prevSettledNet", label: t("kpiRow:settled.labels.prevSettledNet"), value: "—", hint: t("kpiRow:loading") },
-        { key: "last7Settled", label: t("kpiRow:settled.labels.last7Settled"), value: "—", hint: t("kpiRow:loading") },
+        { key: "mtdSettledNet", label: t("kpiCards:settled.labels.mtdSettledNet"), value: "—", hint: t("kpiCards:loading") },
+        { key: "prevSettledNet", label: t("kpiCards:settled.labels.prevSettledNet"), value: "—", hint: t("kpiCards:loading") },
+        { key: "last7Settled", label: t("kpiCards:settled.labels.last7Settled"), value: "—", hint: t("kpiCards:loading") },
       ];
 
     const mom = st.mom_change;
@@ -238,14 +238,14 @@ const KpiRow: React.FC<KpiRowProps> = ({
     return [
       {
         key: "mtdSettledNet",
-        label: t("kpiRow:settled.labels.mtdSettledNet"),
+        label: t("kpiCards:settled.labels.mtdSettledNet"),
         value: `${st.mtd.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.mtd.net_minor)}`,
-        hint: t("kpiRow:settled.hints.mtd", {
+        hint: t("kpiCards:settled.hints.mtd", {
           recAmt: currencyFromMinor(st.mtd.in_minor),
           payAmt: currencyFromMinor(st.mtd.out_minor),
         }),
         delta: {
-          value: t("kpiRow:delta.mom", {
+          value: t("kpiCards:delta.mom", {
             value: `${st.mtd.net_minor >= 0 ? "+" : ""}${momLabel}`,
           }),
           positive: momPositive,
@@ -253,18 +253,18 @@ const KpiRow: React.FC<KpiRowProps> = ({
       },
       {
         key: "prevSettledNet",
-        label: t("kpiRow:settled.labels.prevSettledNet"),
+        label: t("kpiCards:settled.labels.prevSettledNet"),
         value: `${st.prev.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.prev.net_minor)}`,
-        hint: t("kpiRow:settled.hints.prev", {
+        hint: t("kpiCards:settled.hints.prev", {
           recAmt: currencyFromMinor(st.prev.in_minor),
           payAmt: currencyFromMinor(st.prev.out_minor),
         }),
       },
       {
         key: "last7Settled",
-        label: t("kpiRow:settled.labels.last7Settled"),
+        label: t("kpiCards:settled.labels.last7Settled"),
         value: `${st.last7.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.last7.net_minor)}`,
-        hint: t("kpiRow:settled.hints.last7", {
+        hint: t("kpiCards:settled.hints.last7", {
           recAmt: currencyFromMinor(st.last7.in_minor),
           payAmt: currencyFromMinor(st.last7.out_minor),
         }),
@@ -322,10 +322,10 @@ const KpiRow: React.FC<KpiRowProps> = ({
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[11px] uppercase tracking-wide text-gray-600">
-                    {t("kpiRow:panel.consolidatedBalance")}
+                    {t("kpiCards:panel.consolidatedBalance")}
                   </span>
                   <span className="text-[11px] text-gray-500">
-                    {t("kpiRow:panel.accountsCount", { count: filteredBanks.length || 0 })}
+                    {t("kpiCards:panel.accountsCount", { count: filteredBanks.length || 0 })}
                   </span>
                 </div>
                 <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">{totalFmt}</div>
@@ -357,13 +357,13 @@ const KpiRow: React.FC<KpiRowProps> = ({
                   {/* Sticky header */}
                   <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
                     <div className="text-[12px] text-gray-700">
-                      {t("kpiRow:panel.header")}{" "}
+                      {t("kpiCards:panel.header")}{" "}
                       <button
                         type="button"
                         onClick={goToBanks}
                         className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
-                        aria-label={t("kpiRow:aria.goToBanks")}
-                        title={t("kpiRow:aria.openBanks")}
+                        aria-label={t("kpiCards:aria.goToBanks")}
+                        title={t("kpiCards:aria.openBanks")}
                       >
                         {totalFmt}
                       </button>
@@ -372,7 +372,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
                       className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
                       onClick={() => setExpanded(false)}
                     >
-                      {t("kpiRow:actions.close")}
+                      {t("kpiCards:actions.close")}
                     </button>
                   </div>
                   {/* Scroll area */}
@@ -410,7 +410,7 @@ const KpiRow: React.FC<KpiRowProps> = ({
                 {loading ? "—" : kpi.value}
               </div>
               {kpi.hint && (
-                <div className="mt-0.5 text-[11px] text-gray-500">{loading ? t("kpiRow:loading") : kpi.hint}</div>
+                <div className="mt-0.5 text-[11px] text-gray-500">{loading ? t("kpiCards:loading") : kpi.hint}</div>
               )}
             </motion.div>
           ))}
@@ -420,4 +420,4 @@ const KpiRow: React.FC<KpiRowProps> = ({
   );
 };
 
-export default KpiRow;
+export default KpiCards;

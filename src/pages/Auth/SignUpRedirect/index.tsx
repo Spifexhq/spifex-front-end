@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Button from '@/components/Button';
+import Button from 'src/components/ui/Button';
 
 interface SignUpRedirectState {
   email?: string;

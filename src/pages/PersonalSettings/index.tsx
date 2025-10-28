@@ -8,15 +8,14 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import Checkbox from "@/components/Checkbox";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import Checkbox from "src/components/ui/Checkbox";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { SuspenseLoader } from "@/components/Loaders";
 
 import { api } from "src/api/requests";
@@ -25,6 +24,11 @@ import { PersonalSettings as PersonalSettingsModel, Organization } from "src/mod
 import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+/* ----------------------------- Snackbar type ----------------------------- */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* ----------------------------- Helpers/Types ----------------------------- */
 type EditableUserField =
@@ -77,7 +81,8 @@ const PersonalSettings: React.FC = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditableUserField | null>(null);
-  const [snackBarMessage, setSnackBarMessage] = useState("");
+
+  const [snack, setSnack] = useState<Snack>(null);
 
   // Timezone (apenas no modal)
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -112,7 +117,7 @@ const PersonalSettings: React.FC = () => {
         }
       } catch (err) {
         console.error("Erro ao buscar dados pessoais", err);
-        setSnackBarMessage(t("settings:personal.toast.loadError"));
+        setSnack({ message: t("settings:personal.toast.loadError"), severity: "error" });
       } finally {
         setLoading(false);
       }
@@ -154,9 +159,10 @@ const PersonalSettings: React.FC = () => {
       const { data } = await api.editPersonalSettings(payload);
       setProfile(data);
       closeModal();
+      setSnack({ message: t("settings:personal.toast.updateOk"), severity: "success" });
     } catch (err) {
       console.error(t("settings:personal.toast.updateError"), err);
-      setSnackBarMessage(t("settings:personal.toast.updateError"));
+      setSnack({ message: t("settings:personal.toast.updateError"), severity: "error" });
     }
   };
 
@@ -455,9 +461,17 @@ const PersonalSettings: React.FC = () => {
         )}
       </main>
 
-      <Snackbar open={!!snackBarMessage} autoHideDuration={6000} onClose={() => setSnackBarMessage("")}>
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+      {/* Typed Snackbar (no Alert) */}
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={5000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

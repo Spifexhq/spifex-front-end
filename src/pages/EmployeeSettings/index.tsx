@@ -6,14 +6,13 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 
 import { api } from "src/api/requests";
 import { Employee } from "src/models/auth/domain";
@@ -23,6 +22,11 @@ import { useAuthContext } from "@/contexts/useAuthContext";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+
+/* ---------------------------- Snackbar type ------------------------------ */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* ---------------------------- Form template ------------------------------ */
 const emptyForm = {
@@ -81,7 +85,7 @@ const Row = ({
   onEdit: (e: Employee) => void;
   onDelete: (e: Employee) => void;
   canEdit: boolean;
-  t: TFunction; // ✅ no-explicit-any fixed
+  t: TFunction; // ✅ typed
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
@@ -121,7 +125,9 @@ const EmployeeSettings: React.FC = () => {
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
-  const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
+
+  /* Snackbar */
+  const [snack, setSnack] = useState<Snack>(null);
 
   /* ----------------------------- API calls -------------------------------- */
   const fetchData = async () => {
@@ -134,7 +140,7 @@ const EmployeeSettings: React.FC = () => {
       setGroups([...groupList].sort((a, b) => a.id - b.id));
     } catch (err) {
       console.error("Erro ao buscar funcionários/grupos", err);
-      setSnackBarMessage(t("settings:employee.toast.fetchError"));
+      setSnack({ message: t("settings:employee.toast.fetchError"), severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -169,7 +175,7 @@ const EmployeeSettings: React.FC = () => {
       setModalOpen(true);
     } catch (error) {
       console.error(error);
-      setSnackBarMessage(t("settings:employee.toast.loadEmployeeError"));
+      setSnack({ message: t("settings:employee.toast.loadEmployeeError"), severity: "error" });
     }
   };
 
@@ -190,12 +196,12 @@ const EmployeeSettings: React.FC = () => {
 
     if (mode === "create") {
       if (formData.password !== formData.confirmPassword) {
-        setSnackBarMessage(t("settings:employee.toast.passwordMismatch"));
+        setSnack({ message: t("settings:employee.toast.passwordMismatch"), severity: "warning" });
         return;
       }
       const { isValid, message } = validatePassword(formData.password);
       if (!isValid) {
-        setSnackBarMessage(message || t("settings:employee.toast.weakPassword"));
+        setSnack({ message: message || t("settings:employee.toast.weakPassword"), severity: "warning" });
         return;
       }
     }
@@ -217,9 +223,13 @@ const EmployeeSettings: React.FC = () => {
       }
       await fetchData();
       closeModal();
+      setSnack({
+        message: t("settings:employee.toast.saveOk", "Colaborador salvo com sucesso."),
+        severity: "success",
+      });
     } catch (err) {
-      console.error(err); // ✅ use err to avoid no-unused-vars
-      setSnackBarMessage(t("settings:employee.toast.saveError"));
+      console.error(err);
+      setSnack({ message: t("settings:employee.toast.saveError"), severity: "error" });
     }
   };
 
@@ -228,9 +238,13 @@ const EmployeeSettings: React.FC = () => {
     try {
       await api.deleteEmployee(emp.id);
       await fetchData();
+      setSnack({
+        message: t("settings:employee.toast.deleteOk", "Colaborador removido."),
+        severity: "info",
+      });
     } catch (err) {
-      console.error(err); // ✅ use err to avoid no-unused-vars
-      setSnackBarMessage(t("settings:employee.toast.deleteError"));
+      console.error(err);
+      setSnack({ message: t("settings:employee.toast.deleteError"), severity: "error" });
     }
   };
 
@@ -401,13 +415,15 @@ const EmployeeSettings: React.FC = () => {
 
       {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar
-        open={!!snackBarMessage}
+        open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

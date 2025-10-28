@@ -9,13 +9,12 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -23,7 +22,12 @@ import { User } from "src/models/auth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
 
-/* --------------------------------- Helpers -------------------------------- */
+/* ------------------------------- Types ----------------------------------- */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
+
+/* -------------------------------- Helpers -------------------------------- */
 function getInitials(name?: string) {
   if (!name) return "SC";
   const p = name.split(" ").filter(Boolean);
@@ -50,7 +54,6 @@ const Row = ({
 
 /* -------------------------------------------------------------------------- */
 const SecurityAndPrivacy = () => {
-  // ✅ Use the "settings" namespace; "securityAndPrivacy" is a group inside it
   const { t, i18n } = useTranslation(["settings"]);
 
   // Title + <html lang="...">
@@ -82,7 +85,7 @@ const SecurityAndPrivacy = () => {
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const [pwData, setPwData] = useState({
     current_password: "",
@@ -104,32 +107,36 @@ const SecurityAndPrivacy = () => {
     const { current_password, new_password, confirm } = pwData;
 
     if (new_password !== confirm) {
-      setSnackBarMessage(t("settings:securityAndPrivacy.toast.passwordMismatch"));
+      setSnack({ message: t("settings:securityAndPrivacy.toast.passwordMismatch"), severity: "error" });
       return;
     }
     if (current_password === new_password) {
-      setSnackBarMessage(t("settings:securityAndPrivacy.toast.samePassword"));
+      setSnack({ message: t("settings:securityAndPrivacy.toast.samePassword"), severity: "error" });
       return;
     }
     const validation = validatePassword(new_password);
     if (!validation.isValid) {
-      setSnackBarMessage(validation.message || t("settings:securityAndPrivacy.toast.weakPassword"));
+      setSnack({
+        message: validation.message || t("settings:securityAndPrivacy.toast.weakPassword"),
+        severity: "error",
+      });
       return;
     }
 
     try {
       await api.changePassword({ current_password, new_password });
       closeModal();
-      setSnackBarMessage(t("settings:securityAndPrivacy.toast.success"));
+      setSnack({ message: t("settings:securityAndPrivacy.toast.success"), severity: "success" });
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setSnackBarMessage(
-          err.response?.data?.message ?? t("settings:securityAndPrivacy.toast.changeError")
-        );
+        setSnack({
+          message: err.response?.data?.message ?? t("settings:securityAndPrivacy.toast.changeError"),
+          severity: "error",
+        });
       } else if (err instanceof Error) {
-        setSnackBarMessage(err.message);
+        setSnack({ message: err.message, severity: "error" });
       } else {
-        setSnackBarMessage(t("settings:securityAndPrivacy.toast.unexpected"));
+        setSnack({ message: t("settings:securityAndPrivacy.toast.unexpected"), severity: "error" });
       }
     }
   };
@@ -184,8 +191,6 @@ const SecurityAndPrivacy = () => {
                   </h1>
                 </div>
               </div>
-
-              {/* (No LanguageSwitcher here, per request) */}
             </div>
           </header>
 
@@ -259,6 +264,7 @@ const SecurityAndPrivacy = () => {
                   value={pwData.current_password}
                   onChange={handleChange}
                   showTogglePassword
+                  autoComplete="current-password"
                   required
                 />
                 <Input
@@ -268,6 +274,7 @@ const SecurityAndPrivacy = () => {
                   value={pwData.new_password}
                   onChange={handleChange}
                   showTogglePassword
+                  autoComplete="new-password"
                   required
                 />
                 <Input
@@ -277,6 +284,7 @@ const SecurityAndPrivacy = () => {
                   value={pwData.confirm}
                   onChange={handleChange}
                   showTogglePassword
+                  autoComplete="new-password"
                   required
                 />
 
@@ -294,21 +302,15 @@ const SecurityAndPrivacy = () => {
 
       {/* ----------------------- Snackbar ----------------------- */}
       <Snackbar
-        open={!!snackBarMessage}
+        open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={5000}
-        onClose={() => setSnackBarMessage("")}
-      >
-        <Alert
-          severity={
-            typeof snackBarMessage === "string" &&
-            snackBarMessage.includes(t("settings:securityAndPrivacy.toast.successSnippet"))
-              ? "success"
-              : "error"
-          }
-        >
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

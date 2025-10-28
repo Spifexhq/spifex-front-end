@@ -9,8 +9,8 @@ import React, {
   forwardRef,
 } from "react";
 import { useTranslation } from "react-i18next";
-import Button from "@/components/Button";
-import Checkbox from "@/components/Checkbox";
+import Button from "src/components/ui/Button";
+import Checkbox from "src/components/ui/Checkbox";
 import { api } from "src/api/requests";
 import { getCursorFromUrl } from "src/lib/list";
 

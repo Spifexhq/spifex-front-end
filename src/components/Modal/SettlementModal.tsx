@@ -3,9 +3,9 @@ import React, { useEffect, useState, useMemo, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next";
 
 // Components
-import Button from "@/components/Button";
-import Checkbox from "@/components/Checkbox";
-import Input from "@/components/Input";
+import Button from "src/components/ui/Button";
+import Checkbox from "src/components/ui/Checkbox";
+import Input from "src/components/ui/Input";
 import { InlineLoader } from "@/components/Loaders";
 
 // Utils

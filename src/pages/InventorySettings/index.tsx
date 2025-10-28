@@ -6,23 +6,27 @@
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
 import type { InventoryItem } from "src/models/enterprise_structure/domain/InventoryItem";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import { useTranslation } from "react-i18next";
+
+/* Snackbar type */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -104,7 +108,7 @@ const InventorySettings: React.FC = () => {
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
-  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<InventoryItem[]>([]);
@@ -206,15 +210,18 @@ const InventorySettings: React.FC = () => {
       if (mode === "create") {
         const { data: created } = await api.addInventoryItem(formData);
         setAdded((prev) => [created, ...prev]);
+        setSnack({ message: t("settings:inventory.toast.createSuccess", { defaultValue: "Item criado." }), severity: "success" });
       } else if (editingItem) {
         await api.editInventoryItem(editingItem.id, formData);
+        setSnack({ message: t("settings:inventory.toast.updateSuccess", { defaultValue: "Item atualizado." }), severity: "success" });
       }
       await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:inventory.errors.saveError")
-      );
+      setSnack({
+        message: err instanceof Error ? err.message : t("settings:inventory.errors.saveError"),
+        severity: "error",
+      });
     }
   };
 
@@ -229,15 +236,17 @@ const InventorySettings: React.FC = () => {
       await api.deleteInventoryItem(item.id);
       await pager.refresh();
       setAdded((prev) => prev.filter((i) => i.id !== item.id));
+      setSnack({ message: t("settings:inventory.toast.deleteSuccess", { defaultValue: "Item excluído." }), severity: "info" });
     } catch (err) {
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
         return next;
       });
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:inventory.errors.deleteError")
-      );
+      setSnack({
+        message: err instanceof Error ? err.message : t("settings:inventory.errors.deleteError"),
+        severity: "error",
+      });
     }
   };
 
@@ -399,10 +408,17 @@ const InventorySettings: React.FC = () => {
         )}
       </main>
 
-      <Snackbar open={!!snackBarMessage} autoHideDuration={6000}
-                onClose={() => setSnackBarMessage("")} severity="error">
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+      {/* Snackbar (no Alert) */}
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={6000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

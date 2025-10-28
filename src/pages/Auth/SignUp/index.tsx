@@ -1,18 +1,22 @@
+// src/pages/SignUp/index.tsx
 import { useEffect, useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "src/api/requests";
-import { isApiError, validatePassword, useAutoCountry } from 'src/lib';
+import { isApiError, validatePassword, useAutoCountry } from "src/lib";
 
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import Button from "@/components/Button";
-import Input from "@/components/Input";
+import Snackbar from "src/components/ui/Snackbar";
+import Button from "src/components/ui/Button";
+import Input from "src/components/ui/Input";
 
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
 
 import "./styles.css";
+
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 // -----------------------------------------------------------------------------
 // Component
@@ -22,7 +26,7 @@ const SignUp = () => {
   useEffect(() => {
     document.title = "Sign Up | Spifex";
   }, []);
-  
+
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -33,7 +37,7 @@ const SignUp = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackBarMessage, setSnackBarMessage] = useState<string | JSX.Element>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const { country: autoCountry } = useAutoCountry({ timeoutMs: 2500 });
@@ -52,18 +56,18 @@ const SignUp = () => {
     e.preventDefault();
 
     if (isFormIncomplete) {
-      setSnackBarMessage("Preencha todos os campos");
+      setSnack({ message: "Preencha todos os campos.", severity: "warning" });
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setSnackBarMessage("As senhas não coincidem");
+      setSnack({ message: "As senhas não coincidem.", severity: "warning" });
       return;
     }
 
     const { isValid, message } = validatePassword(form.password);
     if (!isValid) {
-      setSnackBarMessage(message);
+      setSnack({ message, severity: "warning" });
       return;
     }
 
@@ -74,19 +78,24 @@ const SignUp = () => {
         name: form.name,
         email: form.email,
         password: form.password,
-        timezone: timezone,
-        country: (autoCountry || "").toUpperCase(), // <- fora do form, como timezone
+        timezone,
+        country: (autoCountry || "").toUpperCase(),
       });
 
       if (isApiError(res)) {
         const fallback =
           res.error.message ??
-          (typeof res.error.detail === "string" ? res.error.detail : "Não foi possível concluir o cadastro.");
-        setSnackBarMessage(fallback);
+          (typeof res.error.detail === "string"
+            ? res.error.detail
+            : "Não foi possível concluir o cadastro.");
+        setSnack({ message: fallback, severity: "error" });
         return;
       }
 
-      setSnackBarMessage("Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.");
+      setSnack({
+        message: "Cadastro realizado com sucesso! Verifique seu email para ativar sua conta.",
+        severity: "success",
+      });
 
       setForm({ name: "", email: "", password: "", confirmPassword: "" });
 
@@ -94,21 +103,18 @@ const SignUp = () => {
         state: { email: form.email },
       });
     } catch {
-      setSnackBarMessage("Ocorreu um erro ao tentar registrar. Tente novamente mais tarde.");
+      setSnack({
+        message: "Ocorreu um erro ao tentar registrar. Tente novamente mais tarde.",
+        severity: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Render
-  // -----------------------------------------------------------------------------
-
-  // ⬇️ unificamos severidade para o Snackbar e o Alert (coerência visual)
-  const snackSeverity =
-    typeof snackBarMessage === "string" && snackBarMessage.includes("sucesso")
-      ? "success"
-      : "error";
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="sign-up">
@@ -206,18 +212,18 @@ const SignUp = () => {
           </div>
         </div>
 
-        {/* Snackbar */}
+        {/* Snackbar only (no Alert) */}
         <Snackbar
           className="sign-up__snackbar"
-          open={snackBarMessage !== ""}
+          open={!!snack}
           autoHideDuration={6000}
-          onClose={() => setSnackBarMessage("")}
-          severity={snackSeverity}
-        >
-          <Alert className="sign-up__alert" severity={snackSeverity}>
-            {snackBarMessage}
-          </Alert>
-        </Snackbar>
+          onClose={() => setSnack(null)}
+          severity={snack?.severity}
+          message={snack?.message}
+          anchor={{ vertical: "bottom", horizontal: "center" }}
+          pauseOnHover
+          showCloseButton
+        />
       </div>
     </div>
   );

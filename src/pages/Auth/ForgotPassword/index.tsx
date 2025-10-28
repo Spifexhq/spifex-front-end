@@ -1,9 +1,9 @@
 import { useEffect, useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/api/requests";
-import Snackbar from "@/components/Snackbar";
-import Button from "@/components/Button";
-import Input from "@/components/Input";
+import Snackbar from "src/components/ui/Snackbar";
+import Button from "src/components/ui/Button";
+import Input from "src/components/ui/Input";
 
 type Snack = { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null;
 

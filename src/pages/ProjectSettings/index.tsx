@@ -6,25 +6,29 @@
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 
 import { api } from "src/api/requests";
 import type { Project } from "src/models/enterprise_structure/domain/Project";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+
+/* ----------------------------- Snackbar type ----------------------------- */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* ------------------------- Tipos / constantes ----------------------------- */
 const PROJECT_TYPES = [
@@ -133,7 +137,7 @@ const ProjectSettings: React.FC = () => {
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
-  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<Project[]>([]);
@@ -253,10 +257,12 @@ const ProjectSettings: React.FC = () => {
       }
       await pager.refresh();
       closeModal();
+      setSnack({ message: t("settings:project.toast.saved"), severity: "success" });
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:project.errors.saveError")
-      );
+      setSnack({
+        message: err instanceof Error ? err.message : t("settings:project.errors.saveError"),
+        severity: "error",
+      });
     }
   };
 
@@ -270,15 +276,17 @@ const ProjectSettings: React.FC = () => {
       await api.deleteProject(project.id);
       await pager.refresh();
       setAdded((prev) => prev.filter((p) => p.id !== project.id));
+      setSnack({ message: t("settings:project.toast.deleted"), severity: "success" });
     } catch (err) {
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.delete(project.id);
         return next;
       });
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:project.errors.deleteError")
-      );
+      setSnack({
+        message: err instanceof Error ? err.message : t("settings:project.errors.deleteError"),
+        severity: "error",
+      });
     }
   };
 
@@ -424,7 +432,13 @@ const ProjectSettings: React.FC = () => {
                 </button>
               </header>
 
-              <form className="space-y-3" onSubmit={submitProject}>
+              <form
+                className="space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void submitProject(e);
+                }}
+              >
                 <Input
                   label={t("settings:project.field.name")}
                   name="name"
@@ -477,14 +491,17 @@ const ProjectSettings: React.FC = () => {
         )}
       </main>
 
+      {/* Typed Snackbar (single source of truth) */}
       <Snackbar
-        open={!!snackBarMessage}
-        autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={5000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

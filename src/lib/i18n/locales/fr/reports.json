@@ -1,0 +1,67 @@
+{
+  "pageTitle": "Rapports",
+  "title": "Rapports de trésorerie",
+  "buttons": {
+    "refresh": "Actualiser"
+  },
+  "loading": "Chargement des données du rapport…",
+  "errors": {
+    "fetch": "Échec du chargement des données du rapport."
+  },
+  "kpis": {
+    "consolidatedBalance": "Solde consolidé",
+    "bankSum": "Somme des comptes bancaires",
+    "inPeriod": "Entrées (période)",
+    "outPeriod": "Sorties (période)",
+    "netPeriod": "Résultat (période)",
+    "mom": "M/M",
+    "mtdIn": "MTD : Entrées",
+    "mtdOut": "MTD : Sorties",
+    "mtdNet": "MTD : Résultat",
+    "currentMonth": "Mois en cours",
+    "in": "Entrées",
+    "out": "Sorties",
+    "settlementRate": "Taux de liquidation",
+    "loadedUniverse": "Sur l’ensemble chargé"
+  },
+  "alerts": {
+    "overdueTitle": "Échus (non liquidés)",
+    "toReceive": "À recevoir",
+    "toPay": "À payer",
+    "next7": "7 prochains jours",
+    "next30": "30 prochains jours"
+  },
+  "runway": {
+    "avgOutflow": "Sortie moyenne mensuelle",
+    "estimated": "Runway estimée",
+    "months": "{{value}} mois"
+  },
+  "charts": {
+    "cumulativeTitle": "Solde cumulatif (en engagement)",
+    "barsTitle": "Entrées vs Sorties (mensuel)",
+    "pieTitle": "Répartition des dépenses par catégorie",
+    "inflow": "Entrées",
+    "outflow": "Sorties",
+    "net": "Résultat"
+  },
+  "tables": {
+    "overdueTitle": "Top 10 des écritures en retard",
+    "date": "Date",
+    "description": "Description",
+    "type": "Type",
+    "amount": "Montant",
+    "noOverdue": "Aucune écriture en retard",
+    "payLabel": "À payer",
+    "receiveLabel": "À recevoir"
+  },
+  "insights": {
+    "title": "Insights",
+    "runwayLow": "Runway estimée inférieure à 3 mois. Envisagez de réduire les sorties ou de renforcer la trésorerie.",
+    "runwayHigh": "Runway confortable (≥ 6 mois). Vous pouvez envisager d’anticiper des investissements avec prudence.",
+    "mtdNegative": "Résultat du mois négatif. Analysez les dépenses pour cibler les plus importantes.",
+    "mtdPositive": "Résultat du mois positif. Suivez les encaissements attendus pour maintenir le rythme.",
+    "overduePressure": "Les dettes échues dépassent les créances — risque de tension de trésorerie à court terme.",
+    "overdueReceivables": "Créances échues significatives. Priorisez le recouvrement sur le top 10.",
+    "mom": "Variation M/M du résultat du mois : {{value}}."
+  }
+}

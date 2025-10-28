@@ -18,15 +18,30 @@ import {
   Cell,
 } from "recharts";
 
-import Navbar from "@/components/Navbar";
-import { Sidebar } from "@/components/Sidebar";
-import Button from "@/components/Button";
+import Navbar from "src/components/layout/Navbar";
+import { Sidebar } from "src/components/layout/Sidebar";
+import Button from "src/components/ui/Button";
 import { InlineLoader } from "@/components/Loaders";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
 import type { RootState } from "@/redux/rootReducer";
 import type { ReportsSummary } from "@/models/entries/domain";
+import { useTranslation } from "react-i18next";
+
+type TipDatum = {
+  value?: number | string;
+  name?: string;
+  color?: string;
+};
+
+type MinimalTipProps = {
+  active?: boolean;
+  payload?: TipDatum[];
+  label?: string | number;
+  title?: string;
+  locale: string;
+};
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                     */
@@ -35,25 +50,60 @@ import type { ReportsSummary } from "@/models/entries/domain";
 const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
 const endDate   = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
 
-const currencyBRL = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const BRL = (v: number, locale = "pt-BR") =>
+  v.toLocaleString(locale, { style: "currency", currency: "BRL" });
 
-const pct = (v: number) =>
-  `${(v * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+const asPct = (v: number, locale = "pt-BR") =>
+  `${(v * 100).toLocaleString(locale, { maximumFractionDigits: 1 })}%`;
 
-const POS_BAR = "#1E3A8A";
-const NEG_BAR = "#991B1B";
+/** Color tokens (subtle, consistent, AA-contrast on white) */
+const C_POS = "#0B5FFF";     // positive bars/lines
+const C_NEG = "#D92D20";     // negative bars
+const C_NET = "#0E9384";     // net line
+const C_ACC = "#111827";     // accents (text/axes)
+const C_GRID = "rgba(17,24,39,0.12)"; // light grid
 
-/* -------------------------------------------------------------------------- */
-/* Component                                                                   */
-/* -------------------------------------------------------------------------- */
+/* Custom tooltip (minimal) */
+const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, title, locale }) => {
+  if (!active || payload.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        background: "#FFFFFF",
+        border: "1px solid #E5E7EB",
+        padding: "6px 8px",
+        borderRadius: 6,
+        fontSize: 12,
+        color: "#111827",
+      }}
+      aria-live="polite"
+    >
+      {title ? <div style={{ fontWeight: 600, marginBottom: 2 }}>{title}</div> : null}
+      {label !== undefined ? <div style={{ color: "#6B7280", marginBottom: 4 }}>{label}</div> : null}
+      {payload.map((p, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ width: 10, height: 10, background: p.color || "#9CA3AF", borderRadius: 2 }} />
+          <span style={{ color: "#374151" }}>{p.name ?? ""}:</span>
+          <span className="tabular-nums">
+            {typeof p.value === "number" ? BRL(p.value, locale) : String(p.value ?? "")}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
 const ReportsPage: React.FC = () => {
-  useEffect(() => {
-    document.title = "Relatórios";
-  }, []);
+  const { t, i18n } = useTranslation(["reports"]);
+  const locale = i18n.language === "pt" ? "pt-BR" : i18n.language; // keep BRL formatting in PT
 
-  // Mesmo padrão do KpiRow para pegar orgExternalId com fallback
+  useEffect(() => {
+    document.title = t("pageTitle");
+  }, [t]);
+
+  // orgExternalId (same logic used elsewhere)
   const orgExternalId = useSelector((s: RootState) =>
     s.auth.orgExternalId ??
     s.auth.organization?.organization?.external_id ??
@@ -65,32 +115,32 @@ const ReportsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Saldo consolidado (para runway)
+  // Consolidated balance (for runway)
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
 
   const params = useMemo(
-    () => ({
-      date_from: startDate,
-      date_to: endDate,
-    }),
+    () => ({ date_from: startDate, date_to: endDate }),
     []
   );
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!orgExternalId) return;
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await api.getReportsSummary(orgExternalId, params);
-        setData(res.data);
-      } catch (e) {
-        console.error(e);
-        setError("Erro ao buscar dados do relatório.");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [orgExternalId, params]);
+    try {
+      setError(null);
+      setLoading(true);
+      const res = await api.getReportsSummary(orgExternalId, params);
+      setData(res.data);
+    } catch (e) {
+      console.error(e);
+      setError(t("errors.fetch"));
+    } finally {
+      setLoading(false);
+    }
+  }, [orgExternalId, params, t]);
+
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
   /* ------------------------------ Derived data ----------------------------- */
 
@@ -149,33 +199,33 @@ const ReportsPage: React.FC = () => {
     const lines: string[] = [];
 
     if (Number.isFinite(runwayMonths) && runwayMonths < 3) {
-      lines.push("Runway estimada abaixo de 3 meses. Considere reduzir saídas ou reforçar caixa.");
+      lines.push(t("insights.runwayLow"));
     } else if (Number.isFinite(runwayMonths) && runwayMonths >= 6) {
-      lines.push("Runway confortável (≥ 6 meses). Avalie antecipar investimentos com critério.");
+      lines.push(t("insights.runwayHigh"));
     }
 
     if (mtdNetMinor < 0) {
-      lines.push("Resultado do mês negativo. Revise a pizza de despesas para atacar maiores categorias.");
+      lines.push(t("insights.mtdNegative"));
     } else if (mtdNetMinor > 0) {
-      lines.push("Resultado do mês positivo. Monitore recebimentos previstos para manter o ritmo.");
+      lines.push(t("insights.mtdPositive"));
     }
 
     if (overduePayMinor > overdueRecMinor) {
-      lines.push("Pagamentos vencidos > recebimentos vencidos — risco de pressão de caixa no curtíssimo prazo.");
+      lines.push(t("insights.overduePressure"));
     } else if (overdueRecMinor > 0) {
-      lines.push("Há recebimentos vencidos relevantes. Foque a cobrança nos top 10 atrasos.");
+      lines.push(t("insights.overdueReceivables"));
     }
 
     if (Number.isFinite(momChange) && momChange !== 0) {
-      lines.push(`Variação M/M do resultado do mês: ${(momChange >= 0 ? "+" : "")}${pct(momChange)}.`);
+      const sign = momChange >= 0 ? "+" : "";
+      lines.push(t("insights.mom", { value: `${sign}${asPct(momChange, locale)}` }));
     }
 
     return lines;
-  }, [runwayMonths, mtdNetMinor, overduePayMinor, overdueRecMinor, momChange]);
+  }, [runwayMonths, mtdNetMinor, overduePayMinor, overdueRecMinor, momChange, t, locale]);
 
   const toggleSidebar = useCallback(() => setIsSidebarOpen(p => !p), []);
-
-  const cardCls = "border border-gray-300 rounded-md bg-white px-3 py-2 shadow-none";
+  const cardCls = "border border-gray-300 rounded-md bg-white px-3 py-2";
 
   /* ------------------------------------------------------------------------ */
   /* Render                                                                    */
@@ -192,13 +242,14 @@ const ReportsPage: React.FC = () => {
         mode="default"
       />
 
+      {/* respect navbar height (64px). We use mt-16 = 64px. */}
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        <div className="mt-[80px] w/full px-6 md:px-10 py-6 space-y-6">
+        <div className="mt-16 w-full px-6 md:px-10 py-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Relatórios de Fluxo de Caixa</h1>
+            <h1 className="text-xl md:text-2xl font-semibold">{t("title")}</h1>
             <div className="flex gap-2">
-              <Button variant="common" onClick={() => window.location.reload()}>
-                Atualizar
+              <Button variant="common" onClick={fetchData}>
+                {t("buttons.refresh")}
               </Button>
             </div>
           </div>
@@ -206,7 +257,7 @@ const ReportsPage: React.FC = () => {
           {(loading || loadingBanks) && (
             <div className="flex items-center gap-3 text-sm">
               <InlineLoader color="orange" className="w-8 h-8" />
-              <span className="text-gray-600">Carregando dados do relatório…</span>
+              <span className="text-gray-600">{t("loading")}</span>
             </div>
           )}
 
@@ -217,17 +268,17 @@ const ReportsPage: React.FC = () => {
               {/* KPI Cards */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Saldo consolidado</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.consolidatedBalance")}</p>
                   <p className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-                    {currencyBRL(totalConsolidatedBalance ?? 0)}
+                    {BRL(totalConsolidatedBalance ?? 0, locale)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">Somatório de contas bancárias</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.bankSum")}</p>
                 </div>
 
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Entradas (período)</p>
-                  <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">
-                    {currencyBRL(totalsInMinor / 100)}
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.inPeriod")}</p>
+                  <p className="mt-1 text-lg font-semibold" style={{ color: C_POS }}>
+                    {BRL(totalsInMinor / 100, locale)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -235,9 +286,9 @@ const ReportsPage: React.FC = () => {
                 </div>
 
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Saídas (período)</p>
-                  <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">
-                    -{currencyBRL(totalsOutAbsMinor / 100)}
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.outPeriod")}</p>
+                  <p className="mt-1 text-lg font-semibold" style={{ color: C_NEG }}>
+                    -{BRL(totalsOutAbsMinor / 100, locale)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -246,7 +297,7 @@ const ReportsPage: React.FC = () => {
 
                 <div className={cardCls}>
                   <div className="flex items-start justify-between">
-                    <p className="text-[11px] uppercase tracking-wide text-gray-600">Resultado (período)</p>
+                    <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.netPeriod")}</p>
                     <span
                       className={`text-[11px] ${
                         Number.isFinite(momChange)
@@ -256,12 +307,17 @@ const ReportsPage: React.FC = () => {
                           : "text-gray-500"
                       }`}
                     >
-                      M/M {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + pct(momChange) : "—"}
+                      {t("kpis.mom")}{" "}
+                      {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + asPct(momChange, locale) : "—"}
                     </span>
                   </div>
-                  <p className={`mt-1 text-lg font-semibold tabular-nums ${totalsNetMinor >= 0 ? "text-blue-900" : "text-red-700"}`}>
+                  <p
+                    className={`mt-1 text-lg font-semibold tabular-nums ${
+                      totalsNetMinor >= 0 ? "text-gray-900" : "text-red-700"
+                    }`}
+                  >
                     {totalsNetMinor >= 0 ? "+" : ""}
-                    {currencyBRL(totalsNetMinor / 100)}
+                    {BRL(totalsNetMinor / 100, locale)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -272,95 +328,100 @@ const ReportsPage: React.FC = () => {
               {/* KPIs Operacionais */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Entradas</p>
-                  <p className="mt-1 text-lg font-semibold text-green-700 tabular-nums">
-                    {currencyBRL(mtdInMinor / 100)}
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdIn")}</p>
+                  <p className="mt-1 text-lg font-semibold" style={{ color: C_POS }}>
+                    {BRL(mtdInMinor / 100, locale)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">Mês atual</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.currentMonth")}</p>
                 </div>
 
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Saídas</p>
-                  <p className="mt-1 text-lg font-semibold text-red-700 tabular-nums">
-                    -{currencyBRL(mtdOutMinor / 100)}
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdOut")}</p>
+                  <p className="mt-1 text-lg font-semibold" style={{ color: C_NEG }}>
+                    -{BRL(mtdOutMinor / 100, locale)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">Mês atual</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.currentMonth")}</p>
                 </div>
 
                 <div className={cardCls}>
                   <div className="flex items-start justify-between">
-                    <p className="text-[11px] uppercase tracking-wide text-gray-600">MTD: Resultado</p>
+                    <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdNet")}</p>
                     <span className="text-[11px] text-gray-500">
-                      M/M {Number.isFinite(momChange) ? (mtdNetMinor >= 0 ? "+" : "") + pct(Math.abs(momChange)) : "—"}
+                      {t("kpis.mom")}{" "}
+                      {Number.isFinite(momChange) ? (mtdNetMinor >= 0 ? "+" : "") + asPct(Math.abs(momChange), locale) : "—"}
                     </span>
                   </div>
-                  <p className={`mt-1 text-lg font-semibold tabular-nums ${mtdNetMinor >= 0 ? "text-blue-900" : "text-red-700"}`}>
+                  <p
+                    className={`mt-1 text-lg font-semibold tabular-nums ${
+                      mtdNetMinor >= 0 ? "text-gray-900" : "text-red-700"
+                    }`}
+                  >
                     {mtdNetMinor >= 0 ? "+" : ""}
-                    {currencyBRL(mtdNetMinor / 100)}
+                    {BRL(mtdNetMinor / 100, locale)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
-                    Entradas {currencyBRL(mtdInMinor / 100)} • Saídas -{currencyBRL(mtdOutMinor / 100)}
+                    {t("kpis.in")} {BRL(mtdInMinor / 100, locale)} • {t("kpis.out")} -{BRL(mtdOutMinor / 100, locale)}
                   </p>
                 </div>
 
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">Taxa de liquidação</p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums">{pct(settlementRate)}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">No universo carregado</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.settlementRate")}</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">{asPct(settlementRate, locale)}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.loadedUniverse")}</p>
                 </div>
               </section>
 
               {/* Alertas de Curto Prazo */}
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Vencidos (não liquidados)</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("alerts.overdueTitle")}</p>
                   <div className="flex items-end gap-6">
                     <div>
-                      <p className="text-[12px] text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900 tabular-nums">
-                        {currencyBRL(overdueRecMinor / 100)}
+                      <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">
+                        {BRL(overdueRecMinor / 100, locale)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[12px] text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700 tabular-nums">
-                        {currencyBRL(overduePayMinor / 100)}
+                      <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
+                      <p className="text-lg font-semibold" style={{ color: C_NEG }}>
+                        {BRL(overduePayMinor / 100, locale)}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Próximos 7 dias</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("alerts.next7")}</p>
                   <div className="flex items-end gap-6">
                     <div>
-                      <p className="text-[12px] text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900 tabular-nums">
-                        {currencyBRL(next7RecMinor / 100)}
+                      <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">
+                        {BRL(next7RecMinor / 100, locale)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[12px] text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700 tabular-nums">
-                        {currencyBRL(next7PayMinor / 100)}
+                      <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
+                      <p className="text-lg font-semibold" style={{ color: C_NEG }}>
+                        {BRL(next7PayMinor / 100, locale)}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Próximos 30 dias</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("alerts.next30")}</p>
                   <div className="flex items-end gap-6">
                     <div>
-                      <p className="text-[12px] text-gray-600">A Receber</p>
-                      <p className="text-lg font-semibold text-blue-900 tabular-nums">
-                        {currencyBRL(next30RecMinor / 100)}
+                      <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">
+                        {BRL(next30RecMinor / 100, locale)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[12px] text-gray-600">A Pagar</p>
-                      <p className="text-lg font-semibold text-red-700 tabular-nums">
-                        {currencyBRL(next30PayMinor / 100)}
+                      <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
+                      <p className="text-lg font-semibold" style={{ color: C_NEG }}>
+                        {BRL(next30PayMinor / 100, locale)}
                       </p>
                     </div>
                   </div>
@@ -370,25 +431,27 @@ const ReportsPage: React.FC = () => {
               {/* Runway + Acumulado */}
               <section className="grid grid-cols-1 xl:grid-cols-3 gap-3">
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">Média mensal de saídas</p>
-                  <p className="text-lg font-semibold text-red-700 tabular-nums">-{currencyBRL(avgMonthlyOutflowAbs)}</p>
-                  <p className="mt-2 text-[11px] text-gray-600">Runway estimada</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("runway.avgOutflow")}</p>
+                  <p className="text-lg font-semibold" style={{ color: C_NEG }}>
+                    -{BRL(avgMonthlyOutflowAbs, locale)}
+                  </p>
+                  <p className="mt-2 text-[11px] text-gray-600">{t("runway.estimated")}</p>
                   <p className="text-lg font-semibold tabular-nums">
-                    {Number.isFinite(runwayMonths) ? `${runwayMonths.toFixed(1)} mês(es)` : "—"}
+                    {Number.isFinite(runwayMonths) ? t("runway.months", { value: runwayMonths.toFixed(1) }) : "—"}
                   </p>
                 </div>
 
                 <div className="xl:col-span-2 border border-gray-300 rounded-md bg-white px-3 py-2">
-                  <p className="text-[12px] font-medium mb-3">Saldo acumulado (por competência)</p>
+                  <p className="text-[12px] font-medium mb-3">{t("charts.cumulativeTitle")}</p>
                   <div className="w-full h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={monthlyCumulative}>
-                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                        <XAxis dataKey="month" tick={{ fill: "#374151", fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={C_GRID} />
+                        <XAxis dataKey="month" tick={{ fill: C_ACC, fontSize: 12 }} />
                         <YAxis
-                          tick={{ fill: "#374151", fontSize: 12 }}
+                          tick={{ fill: C_ACC, fontSize: 12 }}
                           tickFormatter={(v: number) =>
-                            v.toLocaleString("pt-BR", {
+                            v.toLocaleString(locale, {
                               style: "currency",
                               currency: "BRL",
                               minimumFractionDigits: 0,
@@ -396,15 +459,17 @@ const ReportsPage: React.FC = () => {
                           }
                         />
                         <Tooltip
-                          formatter={(value: number) => currencyBRL(value)}
-                          labelFormatter={(label: string, payload) =>
-                            payload?.[0]?.payload?.key
-                              ? dayjs(payload[0].payload.key).format("MMMM/YYYY")
-                              : label
-                          }
-                          contentStyle={{ backgroundColor: "#F9FAFB", border: "1px solid #D1D5DB", color: "#111827" }}
+                          content={({ active, payload, label }) => (
+                            <MinimalTip
+                              active={active}
+                              payload={payload}
+                              label={label}
+                              title={t("charts.cumulativeTitle")}
+                              locale={locale}
+                            />
+                          )}
                         />
-                        <Line type="monotone" dataKey="cumulative" dot={false} stroke="#1E3A8A" strokeWidth={2} />
+                        <Line type="monotone" dataKey="cumulative" dot={false} stroke={C_POS} strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -414,7 +479,7 @@ const ReportsPage: React.FC = () => {
               {/* Barras Entradas x Saídas x Resultado */}
               <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[12px] font-medium">Entradas x Saídas (mensal)</p>
+                  <p className="text-[12px] font-medium">{t("charts.barsTitle")}</p>
                   <span className="text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
                   </span>
@@ -422,12 +487,12 @@ const ReportsPage: React.FC = () => {
                 <div className="w-full h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyBars}>
-                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                      <XAxis dataKey="month" tick={{ fill: "#374151", fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={C_GRID} />
+                      <XAxis dataKey="month" tick={{ fill: C_ACC, fontSize: 12 }} />
                       <YAxis
-                        tick={{ fill: "#374151", fontSize: 12 }}
+                        tick={{ fill: C_ACC, fontSize: 12 }}
                         tickFormatter={(v: number) =>
-                          v.toLocaleString("pt-BR", {
+                          v.toLocaleString(locale, {
                             style: "currency",
                             currency: "BRL",
                             minimumFractionDigits: 0,
@@ -435,17 +500,15 @@ const ReportsPage: React.FC = () => {
                         }
                       />
                       <Tooltip
-                        formatter={(value: number, name: string) => [
-                          currencyBRL(value),
-                          name === "inflow" ? "Entradas" : name === "outflow" ? "Saídas" : "Resultado",
-                        ]}
-                        contentStyle={{ backgroundColor: "#F9FAFB", border: "1px solid #D1D5DB", color: "#111827" }}
-                        cursor={{ fill: "#E5E7EB", opacity: 0.6 }}
+                        content={({ active, payload, label }) => (
+                          <MinimalTip active={active} payload={payload} label={label} title={t("charts.barsTitle")} locale={locale} />
+                        )}
+                        cursor={{ fill: "#F3F4F6", opacity: 0.6 }}
                       />
                       <Legend />
-                      <Bar dataKey="inflow" name="Entradas" radius={[4, 4, 0, 0]} fill={POS_BAR} />
-                      <Bar dataKey="outflow" name="Saídas" radius={[4, 4, 0, 0]} fill={NEG_BAR} />
-                      <Line type="monotone" dataKey="net" name="Resultado" stroke="#0F766E" strokeWidth={2} dot={false} />
+                      <Bar dataKey="inflow" name={t("charts.inflow")} radius={[4, 4, 0, 0]} fill={C_POS} />
+                      <Bar dataKey="outflow" name={t("charts.outflow")} radius={[4, 4, 0, 0]} fill={C_NEG} />
+                      <Line type="monotone" dataKey="net" name={t("charts.net")} stroke={C_NET} strokeWidth={2} dot={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -454,13 +517,14 @@ const ReportsPage: React.FC = () => {
               {/* Pizza + Tabela Atrasos */}
               <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <div className="border border-gray-300 rounded-md bg-white px-3 py-2">
-                  <p className="text-[12px] font-medium mb-3">Distribuição de despesas por categoria</p>
+                  <p className="text-[12px] font-medium mb-3">{t("charts.pieTitle")}</p>
                   <div className="w-full h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Tooltip
-                          formatter={(value: number) => currencyBRL(value)}
-                          contentStyle={{ backgroundColor: "#F9FAFB", border: "1px solid #D1D5DB", color: "#111827" }}
+                          content={({ active, payload, label }) => (
+                            <MinimalTip active={active} payload={payload} label={label} title={t("charts.pieTitle")} locale={locale} />
+                          )}
                         />
                         <Legend />
                         <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100}>
@@ -474,22 +538,22 @@ const ReportsPage: React.FC = () => {
                 </div>
 
                 <div className="border border-gray-300 rounded-md bg-white px-3 py-2 overflow-hidden">
-                  <p className="text-[12px] font-medium mb-3">Top 10 lançamentos em atraso</p>
+                  <p className="text-[12px] font-medium mb-3">{t("tables.overdueTitle")}</p>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                       <thead className="bg-gray-50 text-gray-600">
                         <tr>
-                          <th className="text-left px-3 py-2">Data</th>
-                          <th className="text-left px-3 py-2">Descrição</th>
-                          <th className="text-center px-3 py-2">Tipo</th>
-                          <th className="text-right px-3 py-2">Valor</th>
+                          <th className="text-left px-3 py-2">{t("tables.date")}</th>
+                          <th className="text-left px-3 py-2">{t("tables.description")}</th>
+                          <th className="text-center px-3 py-2">{t("tables.type")}</th>
+                          <th className="text-right px-3 py-2">{t("tables.amount")}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {overdueItems.length === 0 && (
                           <tr>
                             <td colSpan={4} className="px-3 py-6 text-center text-gray-500">
-                              Nenhum lançamento em atraso
+                              {t("tables.noOverdue")}
                             </td>
                           </tr>
                         )}
@@ -500,13 +564,17 @@ const ReportsPage: React.FC = () => {
                             <td className="px-3 py-2 text-center">
                               <span
                                 className={`px-2 py-0.5 rounded-full text-xs ${
-                                  it.type === "Pagar" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+                                  it.type === t("tables.payLabel")
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-blue-100 text-blue-700"
                                 }`}
                               >
                                 {it.type}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-right tabular-nums">{currencyBRL(it.amount)}</td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {BRL(it.amount, locale)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -518,10 +586,10 @@ const ReportsPage: React.FC = () => {
               {/* Insights */}
               {insights.length > 0 && (
                 <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
-                  <p className="text-[12px] font-medium mb-2">Insights</p>
+                  <p className="text-[12px] font-medium mb-2">{t("insights.title")}</p>
                   <ul className="list-disc pl-5 text-[13px] text-gray-700 space-y-1">
-                    {insights.map((t, i) => (
-                      <li key={i}>{t}</li>
+                    {insights.map((txt, i) => (
+                      <li key={i}>{txt}</li>
                     ))}
                   </ul>
                 </section>

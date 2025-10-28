@@ -14,15 +14,14 @@ import React, {
   useState,
 } from "react";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
-import { SelectDropdown } from "@/components/SelectDropdown";
-import ConfirmToast from "@/components/ConfirmToast/ConfirmToast";
-import Input from "@/components/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import ConfirmToast from "src/components/ui/ConfirmToast";
+import Input from "src/components/ui/Input";
 
 import { api } from "@/api/requests";
 import type { BankAccount } from "src/models/enterprise_structure/domain";
@@ -50,6 +49,10 @@ type UploadRow = {
   progress: number; // 0..100
   error?: string;
 };
+
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* ------------------------------ Utilities --------------------------------- */
 const formatBytes = (n: number) => {
@@ -80,7 +83,7 @@ const Statements: React.FC = () => {
   useEffect(() => { document.title = t("settings:statements.title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
-  const [snack, setSnack] = useState<string>("");
+  const [snack, setSnack] = useState<Snack>(null);
   const [loading, setLoading] = useState(true);
 
   // banks for selector
@@ -115,7 +118,7 @@ const Statements: React.FC = () => {
       const { data } = await api.getAllBanks();
       setBanks(data?.results ?? []);
     } catch {
-      setSnack(t("settings:statements.toast.banksFetchError"));
+      setSnack({ message: t("settings:statements.toast.banksFetchError"), severity: "error" });
     }
   }, [t]);
 
@@ -128,7 +131,7 @@ const Statements: React.FC = () => {
       });
       setStatements(data?.results ?? []);
     } catch {
-      setSnack(t("settings:statements.toast.listFetchError"));
+      setSnack({ message: t("settings:statements.toast.listFetchError"), severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -144,7 +147,7 @@ const Statements: React.FC = () => {
     const rows: UploadRow[] = [];
     Array.from(files).forEach((file) => {
       if (!isPDF(file)) {
-        setSnack(t("settings:statements.toast.nonPdfIgnored", { name: file.name }));
+        setSnack({ message: t("settings:statements.toast.nonPdfIgnored", { name: file.name }), severity: "warning" });
         return;
       }
       const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random()
@@ -194,6 +197,7 @@ const Statements: React.FC = () => {
       // optimistic remove from queue and refresh list
       removeFromQueue(row.id);
       await refreshStatements();
+      setSnack({ message: t("settings:statements.toast.uploadOk"), severity: "success" });
     } catch (err: unknown) {
       let msg = t("settings:statements.toast.uploadFail");
       if (err && typeof err === "object") {
@@ -206,6 +210,7 @@ const Statements: React.FC = () => {
       setQueue((prev) =>
         prev.map((r) => (r.id === row.id ? { ...r, error: msg } : r))
       );
+      setSnack({ message: msg, severity: "error" });
     }
   };
 
@@ -229,8 +234,9 @@ const Statements: React.FC = () => {
     try {
       await api.deleteStatement(id);
       await refreshStatements();
+      setSnack({ message: t("settings:statements.toast.deleteOk"), severity: "success" });
     } catch {
-      setSnack(t("settings:statements.toast.deleteFail"));
+      setSnack({ message: t("settings:statements.toast.deleteFail"), severity: "error" });
     } finally {
       setConfirmBusy(false);
       setConfirmOpen(false);
@@ -241,10 +247,10 @@ const Statements: React.FC = () => {
   const triggerAnalysis = async (id: string) => {
     try {
       await api.triggerStatementAnalysis(id);
-      setSnack(t("settings:statements.toast.analysisStarted"));
+      setSnack({ message: t("settings:statements.toast.analysisStarted"), severity: "info" });
       await refreshStatements();
     } catch {
-      setSnack(t("settings:statements.toast.analysisFail"));
+      setSnack({ message: t("settings:statements.toast.analysisFail"), severity: "error" });
     }
   };
 
@@ -582,7 +588,7 @@ const Statements: React.FC = () => {
             if (confirmBusy) return;
             setConfirmBusy(true);
             doDelete().catch(() => {
-              setSnack(t("settings:statements.toast.deleteFail"));
+              setSnack({ message: t("settings:statements.toast.deleteFail"), severity: "error" });
               setConfirmBusy(false);
               setConfirmOpen(false);
             });
@@ -591,15 +597,17 @@ const Statements: React.FC = () => {
         />
       </main>
 
-      {/* Snackbar */}
+      {/* Typed Snackbar (no Alert child) */}
       <Snackbar
         open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={5000}
-        onClose={() => setSnack("")}
-        severity="info"
-      >
-        <Alert severity="info">{snack}</Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity ?? "info"}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

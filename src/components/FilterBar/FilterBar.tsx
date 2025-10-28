@@ -17,7 +17,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
-import { SelectDropdown } from "@/components/SelectDropdown";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import type { EntryFilters } from "src/models/entries/domain";
 import {
@@ -26,8 +26,8 @@ import {
   Visualization,
 } from "src/models/entries/domain";
 import { api } from "src/api/requests";
-import Button from "../Button";
-import Checkbox from "../Checkbox";
+import Button from "src/components/ui/Button";
+import Checkbox from "src/components/ui/Checkbox";
 import { formatCurrency } from "src/lib/currency";
 import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
 

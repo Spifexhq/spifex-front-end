@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import Button from 'src/components/Button';
+import Button from 'src/components/ui/Button';
 import { api } from 'src/api/requests';
 
 interface PaymentButtonProps {

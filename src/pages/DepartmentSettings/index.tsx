@@ -8,23 +8,27 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import Navbar from "@/components/Navbar";
-import SidebarSettings from "@/components/Sidebar/SidebarSettings";
+import Navbar from "src/components/layout/Navbar";
+import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { SuspenseLoader } from "@/components/Loaders";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
-import Snackbar from "@/components/Snackbar";
-import Alert from "@/components/Alert";
+import Input from "src/components/ui/Input";
+import Button from "src/components/ui/Button";
+import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
 import type { Department } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/Checkbox";
+import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import type { TFunction } from "i18next";
+
+/* ------------------------------ Snackbar type ----------------------------- */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -105,7 +109,8 @@ const DepartmentSettings: React.FC = () => {
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
 
-  const [snackBarMessage, setSnackBarMessage] = useState<string>("");
+  /* Snackbar */
+  const [snack, setSnack] = useState<Snack>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<Department[]>([]);
@@ -217,10 +222,18 @@ const DepartmentSettings: React.FC = () => {
       }
       await pager.refresh();
       closeModal();
+      setSnack({
+        message: t("settings:departments.toast.saveOk", "Departamento salvo com sucesso."),
+        severity: "success",
+      });
     } catch (err) {
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:departments.errors.saveFailed")
-      );
+      setSnack({
+        message:
+          err instanceof Error
+            ? err.message
+            : t("settings:departments.errors.saveFailed", "Não foi possível salvar."),
+        severity: "error",
+      });
     }
   };
 
@@ -233,19 +246,25 @@ const DepartmentSettings: React.FC = () => {
       });
 
       await api.deleteDepartment(dept.id);
-
       await pager.refresh();
-
       setAdded((prev) => prev.filter((d) => d.id !== dept.id));
+      setSnack({
+        message: t("settings:departments.toast.deleteOk", "Departamento excluído."),
+        severity: "info",
+      });
     } catch (err) {
       setDeletedIds((prev) => {
         const next = new Set(prev);
         next.delete(dept.id);
         return next;
       });
-      setSnackBarMessage(
-        err instanceof Error ? err.message : t("settings:departments.errors.deleteFailed")
-      );
+      setSnack({
+        message:
+          err instanceof Error
+            ? err.message
+            : t("settings:departments.errors.deleteFailed", "Não foi possível excluir."),
+        severity: "error",
+      });
     }
   };
 
@@ -311,7 +330,11 @@ const DepartmentSettings: React.FC = () => {
                       placeholder={t("settings:departments.buttons.searchPlaceholder")}
                       aria-label={t("settings:departments.buttons.runSearchAria")}
                     />
-                    <Button onClick={onSearch} variant="outline" aria-label={t("settings:departments.buttons.runSearchAria")}>
+                    <Button
+                      onClick={onSearch}
+                      variant="outline"
+                      aria-label={t("settings:departments.buttons.runSearchAria")}
+                    >
                       {t("settings:departments.buttons.search")}
                     </Button>
 
@@ -433,13 +456,15 @@ const DepartmentSettings: React.FC = () => {
 
       {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar
-        open={!!snackBarMessage}
+        open={!!snack}
+        onClose={() => setSnack(null)}
         autoHideDuration={6000}
-        onClose={() => setSnackBarMessage("")}
-        severity="error"
-      >
-        <Alert severity="error">{snackBarMessage}</Alert>
-      </Snackbar>
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </>
   );
 };

@@ -34,10 +34,10 @@ import enFilterBar from "./locales/en/filterBar.json";
 import frFilterBar from "./locales/fr/filterBar.json";
 import deFilterBar from "./locales/de/filterBar.json";
 
-import ptKpiRow from "./locales/pt/kpiRow.json";
-import enKpiRow from "./locales/en/kpiRow.json";
-import frKpiRow from "./locales/fr/kpiRow.json";
-import deKpiRow from "./locales/de/kpiRow.json";
+import ptKpiCards from "./locales/pt/kpiCards.json";
+import enKpiCards from "./locales/en/kpiCards.json";
+import frKpiCards from "./locales/fr/kpiCards.json";
+import deKpiCards from "./locales/de/kpiCards.json";
 
 import ptEntriesModal from "./locales/pt/entriesModal.json";
 import enEntriesModal from "./locales/en/entriesModal.json";
@@ -79,6 +79,11 @@ import enSettledTable from "./locales/en/settledTable.json";
 import frSettledTable from "./locales/fr/settledTable.json";
 import deSettledTable from "./locales/de/settledTable.json";
 
+import ptReportsPage from "./locales/pt/reports.json";
+import enReportsPage from "./locales/en/reports.json";
+import frReportsPage from "./locales/fr/reports.json";
+import deReportsPage from "./locales/de/reports.json";
+
 import ptSimAI from "./locales/pt/simulatedAI.json";
 import enSimAI from "./locales/en/simulatedAI.json";
 import frSimAI from "./locales/fr/simulatedAI.json";
@@ -93,7 +98,7 @@ const resources: Resource = {
     sidebar: ptSidebar,
     settings: ptSettings,
     filterBar: ptFilterBar,
-    kpiRow: ptKpiRow,
+    kpiCards: ptKpiCards,
     entriesModal: ptEntriesModal,
     transferenceModal: ptTransf,
     settlementModal: ptSettlementModal,
@@ -102,6 +107,7 @@ const resources: Resource = {
     banksTable: ptBanksTable,
     cashFlowTable: ptCashFlowTable,
     settledTable: ptSettledTable,
+    reports: ptReportsPage,
     simulatedAI: ptSimAI,
   },
   en: {
@@ -110,7 +116,7 @@ const resources: Resource = {
     sidebar: enSidebar,
     settings: enSettings,
     filterBar: enFilterBar,
-    kpiRow: enKpiRow,
+    kpiCards: enKpiCards,
     entriesModal: enEntriesModal,
     transferenceModal: enTransf,
     settlementModal: enSettlementModal,
@@ -119,6 +125,7 @@ const resources: Resource = {
     banksTable: enBanksTable,
     cashFlowTable: enCashFlowTable,
     settledTable: enSettledTable,
+    reports: enReportsPage,
     simulatedAI: enSimAI,
   },
   fr: {
@@ -127,7 +134,7 @@ const resources: Resource = {
     sidebar: frSidebar,
     settings: frSettings,
     filterBar: frFilterBar,
-    kpiRow: frKpiRow,
+    kpiCards: frKpiCards,
     entriesModal: frEntriesModal,
     transferenceModal: frTransf,
     settlementModal: frSettlementModal,
@@ -136,6 +143,7 @@ const resources: Resource = {
     banksTable: frBanksTable,
     cashFlowTable: frCashFlowTable,
     settledTable: frSettledTable,
+    reports: frReportsPage,
     simulatedAI: frSimAI,
   },
   de: {
@@ -144,7 +152,7 @@ const resources: Resource = {
     sidebar: deSidebar,
     settings: deSettings,
     filterBar: deFilterBar,
-    kpiRow: deKpiRow,
+    kpiCards: deKpiCards,
     entriesModal: deEntriesModal,
     transferenceModal: deTransf,
     settlementModal: deSettlementModal,
@@ -153,6 +161,7 @@ const resources: Resource = {
     banksTable: deBanksTable,
     cashFlowTable: deCashFlowTable,
     settledTable: deSettledTable,
+    reports: deReportsPage,
     simulatedAI: deSimAI,
   },
 };
@@ -171,13 +180,15 @@ i18n
       "settings",
       "sidebar",
       "filterBar",
-      "kpiRow",
+      "kpiCards",
       "entriesModal",
       "transferenceModal",
       "selectDropdown",
       "banksTable",
       "cashFlowTable",
       "settledTable",
+      "reports",
+      "simulatedAI",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

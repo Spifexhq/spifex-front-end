@@ -4,39 +4,46 @@ import type { SnackbarProps } from "./Snackbar.types";
 
 const cls = (...p: Array<string | false | null | undefined>) => p.filter(Boolean).join(" ");
 
+/* ---------------------------- Severity styles ---------------------------- */
+
 const severityStyles = (severity: SnackbarProps["severity"]) => {
+  // These are just the TINT layers that color the glass;
+  // the actual "glass" base is applied on the card container.
   switch (severity) {
     case "success":
       return {
-        bg: "bg-[color:var(--accentSuccess)]/10",
-        border: "border-[color:var(--accentSuccess)]/30",
+        tintBg: "bg-[color:var(--accentSuccess)]/10",
+        tintBorder: "border-[color:var(--accentSuccess)]/30",
         ring: "ring-[color:var(--accentSuccess)]/20",
-        text: "text-gray-900",
+        text: "text-neutral-900 dark:text-neutral-100",
       };
     case "error":
       return {
-        bg: "bg-[color:var(--accentDanger)]/10",
-        border: "border-[color:var(--accentDanger)]/30",
+        tintBg: "bg-[color:var(--accentDanger)]/10",
+        tintBorder: "border-[color:var(--accentDanger)]/30",
         ring: "ring-[color:var(--accentDanger)]/20",
-        text: "text-gray-900",
+        text: "text-neutral-900 dark:text-neutral-100",
       };
     case "warning":
       return {
-        bg: "bg-[color:var(--accentWarning)]/10",
-        border: "border-[color:var(--accentWarning)]/30",
+        tintBg: "bg-[color:var(--accentWarning)]/10",
+        tintBorder: "border-[color:var(--accentWarning)]/30",
         ring: "ring-[color:var(--accentWarning)]/20",
-        text: "text-gray-900",
+        text: "text-neutral-900 dark:text-neutral-100",
       };
     case "info":
     default:
       return {
-        bg: "bg-white",
-        border: "border-gray-200",
+        // neutral subtle tint for info
+        tintBg: "bg-white/10 dark:bg-white/5",
+        tintBorder: "border-white/30 dark:border-white/10",
         ring: "ring-[color:var(--accentInfo)]/15",
-        text: "text-gray-900",
+        text: "text-neutral-900 dark:text-neutral-100",
       };
   }
 };
+
+/* --------------------------- Anchor/transition --------------------------- */
 
 const anchorToClasses = (anchor: NonNullable<SnackbarProps["anchor"]>) => {
   const v = anchor.vertical === "top" ? "top-4" : "bottom-4";
@@ -49,6 +56,8 @@ const anchorToClasses = (anchor: NonNullable<SnackbarProps["anchor"]>) => {
   const enterDir = anchor.vertical === "top" ? "-translate-y-2" : "translate-y-2";
   return { container: cls("fixed z-[9999]", v, h), enterDir };
 };
+
+/* -------------------------------- Component ------------------------------ */
 
 const Snackbar: React.FC<SnackbarProps> = ({
   open,
@@ -68,6 +77,10 @@ const Snackbar: React.FC<SnackbarProps> = ({
   const [mounted, setMounted] = useState(open);
   const [show, setShow] = useState(open);
   const [clickClosing, setClickClosing] = useState(false);
+
+  // ←–– Congela o conteúdo exibido até o card desmontar
+  const isCustom = !!children;
+  const [frozenContent, setFrozenContent] = useState<React.ReactNode>(isCustom ? children : message);
 
   const timerRef = useRef<number | null>(null);
   const endTimeRef = useRef<number | null>(null);
@@ -112,6 +125,8 @@ const Snackbar: React.FC<SnackbarProps> = ({
   useEffect(() => {
     if (open) {
       setMounted(true);
+      // Atualiza o conteúdo CONGELADO somente quando abre
+      setFrozenContent(isCustom ? children : message);
       const t = window.setTimeout(() => setShow(true), 10);
       return () => window.clearTimeout(t);
     } else {
@@ -123,7 +138,7 @@ const Snackbar: React.FC<SnackbarProps> = ({
       }, dur);
       return () => window.clearTimeout(t);
     }
-  }, [open, transitionDuration, clickClosing]);
+  }, [open, transitionDuration, clickClosing, isCustom, children, message]);
 
   useEffect(() => {
     if (open && autoHideDuration) {
@@ -142,7 +157,24 @@ const Snackbar: React.FC<SnackbarProps> = ({
   const ariaLive = severity === "error" ? "assertive" : "polite";
   const cardTransitionDuration = clickClosing ? clickFadeMs : transitionDuration;
 
-  const isCustom = !!children;
+  /* ------------------------------ Glass classes ------------------------------ 
+     - Uses backdrop blur with a subtle gradient to get a frosted panel.
+     - Keeps your severity tint as a translucent overlay so success/error/warn/info
+       are still readable but elegant.
+  -----------------------------------------------------------------------------*/
+  const glassBase = cls(
+    // blur (fallback + supports variant)
+    "backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-xl",
+    "backdrop-saturate-150",
+    // gentle gradient so it feels like real glass
+    "bg-gradient-to-br from-white/60 to-white/30 dark:from-neutral-900/40 dark:to-neutral-800/30",
+    // translucent border gives that 'pane edge'
+    "border border-white/40 dark:border-white/10",
+    // light ambient ring + shadow
+    "ring-1 ring-black/5 shadow-lg",
+    // rounded & layout
+    "rounded-lg"
+  );
 
   return createPortal(
     <div className={cls(container, "px-4 py-2", "pointer-events-none")}>
@@ -157,13 +189,9 @@ const Snackbar: React.FC<SnackbarProps> = ({
         aria-atomic="true"
       >
         {isCustom ? (
-          // ── CUSTOM CONTENT: sem card do Snackbar (zero bg/border/shadow) ─────────
+          // ── CUSTOM CONTENT: sem card do Snackbar (zero bg/border/shadow) ──
           <div
-            className={cls(
-              "pointer-events-auto mx-auto",
-              maxWidthClassName,
-              className // aplica somente utilitários do chamador
-            )}
+            className={cls("pointer-events-auto mx-auto", maxWidthClassName, className)}
             onMouseEnter={pauseTimer}
             onMouseLeave={resumeTimer}
             onClick={() => {
@@ -175,18 +203,18 @@ const Snackbar: React.FC<SnackbarProps> = ({
             }}
             style={{ transitionDuration: `${cardTransitionDuration}ms` }}
           >
-            {children}
+            {frozenContent}
           </div>
         ) : (
-          // ── MESSAGE SIMPLES: 1 ÚNICO CARD estilizado pelo Snackbar ───────────────
+          // ── MESSAGE SIMPLES: 1 ÚNICO CARD com efeito glass ───────────────
           <div
             className={cls(
-              "pointer-events-auto",
-              "mx-auto rounded-lg border shadow-lg ring-1",
-              sev.bg,
-              sev.border,
-              sev.ring,
-              sev.text,
+              "pointer-events-auto mx-auto",
+              glassBase,                 // ← glass
+              sev.tintBg,                // ← severity tint overlay
+              sev.tintBorder,            // ← severity border tint
+              sev.ring,                  // ← severity ring tint
+              sev.text,                  // ← text color (light/dark)
               "flex items-start",
               maxWidthClassName,
               className
@@ -203,8 +231,9 @@ const Snackbar: React.FC<SnackbarProps> = ({
             }}
           >
             <div className="py-3 px-3 grow">
-              <div className="text-sm leading-relaxed">{message}</div>
+              <div className="text-sm leading-relaxed">{frozenContent}</div>
             </div>
+
             {showCloseButton && (
               <button
                 type="button"
@@ -215,8 +244,9 @@ const Snackbar: React.FC<SnackbarProps> = ({
                   window.setTimeout(() => onClose(), cardTransitionDuration);
                 }}
                 className={cls(
-                  "ml-auto p-2 text-gray-500 hover:text-gray-700",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accentPrimary)]"
+                  "ml-auto p-2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-300 dark:hover:text-white",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accentPrimary)]/70",
+                  "transition-colors"
                 )}
                 aria-label="Fechar notificação"
               >
