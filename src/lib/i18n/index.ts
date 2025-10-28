@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 // import Backend from "i18next-http-backend"; // opção para carregar via HTTP
 
-export const LANGS = ['pt-BR', 'pt', 'en', 'fr', 'de'] as const;
+export const LANGS = ['pt', 'en', 'fr', 'de'] as const;
 export type AppLang = typeof LANGS[number];
 
 /* ===================== Imports de JSON (sem require) ===================== */
