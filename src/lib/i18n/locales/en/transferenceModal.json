@@ -1,0 +1,39 @@
+{
+  "aria": { "dialog": "Bank transference modal" },
+  "header": { "kind": "Transference", "title": "Between accounts/banks" },
+  "fields": {
+    "date": "Date",
+    "amount": "Amount",
+    "note": "Note (optional)",
+    "bankOut": "Source bank",
+    "bankIn": "Destination bank"
+  },
+  "placeholders": {
+    "amount": "0.00",
+    "note": "e.g., wire, reason, etc.",
+    "selectBank": "Select a bank"
+  },
+  "actions": {
+    "close": "Close",
+    "swap": "Swap banks",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…"
+  },
+  "labels": {
+    "agency": "Branch",
+    "account": "Account",
+    "from": "from",
+    "to": "to"
+  },
+  "warnings": {
+    "sameBank": "Source and destination banks cannot be the same."
+  },
+  "hints": {
+    "fillToSave": "Enter an amount, select the banks and the date.",
+    "shortcuts": "Shortcuts: Esc (close), Ctrl/⌘+S (save)"
+  },
+  "errors": {
+    "save": "Error saving transference."
+  }
+}

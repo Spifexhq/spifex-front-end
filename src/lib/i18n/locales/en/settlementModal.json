@@ -1,0 +1,49 @@
+{
+  "aria": { "dialog": "Entries settlement" },
+  "header": {
+    "kind": "Settlement",
+    "title": { "one": "1 entry selected", "many": "{{n}} entries selected" }
+  },
+  "actions": {
+    "close": "Close",
+    "bulkDate": "Apply date",
+    "applyDateAll": "Apply date to all",
+    "markAllPartial": "Mark all as partial",
+    "clearAllPartial": "Clear partials",
+    "cancel": "Cancel",
+    "settle": "Settle"
+  },
+  "banks": {
+    "aria": "Select bank",
+    "title": "Banks",
+    "count": "({{n}})",
+    "balance": "Balance:",
+    "agency": "Branch",
+    "account": "Account",
+    "none": "No banks available"
+  },
+  "entries": {
+    "aria": "Entries",
+    "title": "Entries",
+    "count": "({{n}})"
+  },
+  "table": {
+    "due": "Due date",
+    "desc": "Description",
+    "amount": "Amount",
+    "partialQ": "Partial?",
+    "partialAmount": "Partial amount",
+    "none": "No entries selected",
+    "partialInvalid": "Invalid partial amount (0 or greater than entry amount)."
+  },
+  "footer": {
+    "original": "Original:",
+    "toSettle": "To settle:",
+    "bankLabel": "Bank:",
+    "selectBank": "Select a bank",
+    "shortcuts": "Shortcuts: Esc (close), Ctrl/⌘+Enter (save)"
+  },
+  "errors": {
+    "bulk": "Error settling entries."
+  }
+}

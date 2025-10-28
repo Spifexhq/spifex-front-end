@@ -1,0 +1,39 @@
+{
+  "aria": { "dialog": "Fenêtre de virement bancaire" },
+  "header": { "kind": "Virement", "title": "Entre comptes/banques" },
+  "fields": {
+    "date": "Date",
+    "amount": "Montant",
+    "note": "Note (optionnel)",
+    "bankOut": "Banque d’origine",
+    "bankIn": "Banque de destination"
+  },
+  "placeholders": {
+    "amount": "0,00",
+    "note": "ex. virement, motif, etc.",
+    "selectBank": "Sélectionnez une banque"
+  },
+  "actions": {
+    "close": "Fermer",
+    "swap": "Échanger les banques",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…"
+  },
+  "labels": {
+    "agency": "Agence",
+    "account": "Compte",
+    "from": "de",
+    "to": "vers"
+  },
+  "warnings": {
+    "sameBank": "Les banques d’origine et de destination ne peuvent pas être identiques."
+  },
+  "hints": {
+    "fillToSave": "Saisissez un montant, choisissez les banques et la date.",
+    "shortcuts": "Raccourcis : Échap (fermer), Ctrl/⌘+S (enregistrer)"
+  },
+  "errors": {
+    "save": "Erreur lors de l’enregistrement du virement."
+  }
+}

@@ -1,6 +1,7 @@
 // src/components/Modal/TransferenceModal.tsx
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 import { api } from "src/api/requests";
 import Input from "@/components/Input";
@@ -32,6 +33,8 @@ const initialForm: FormState = {
 };
 
 const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, onSave }) => {
+  const { t } = useTranslation("transferenceModal");
+
   const [formData, setFormData] = useState<FormState>(initialForm);
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,16 +128,22 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     b ? `${b.institution} • ${b.account_number}` : "";
 
   // label mais completo apenas no rodapé
-  const footerLabelFor = (b?: BankAccount) =>
-    b ? `${b.institution} • Agência ${b.branch} • Conta ${b.account_number}` : "";
+  const footerLabelFor = useCallback(
+    (b?: BankAccount) =>
+      b
+        ? `${b.institution} • ${t("labels.agency")} ${b.branch} • ${t("labels.account")} ${b.account_number}`
+        : "",
+    [t]
+  );
 
   const bankOutLabel = useMemo(
     () => footerLabelFor(banks.find((b) => b.id === formData.source_bank)),
-    [banks, formData.source_bank]
+    [banks, formData.source_bank, footerLabelFor]
   );
+
   const bankInLabel = useMemo(
     () => footerLabelFor(banks.find((b) => b.id === formData.dest_bank)),
-    [banks, formData.dest_bank]
+    [banks, formData.dest_bank, footerLabelFor]
   );
 
   const isValid =
@@ -144,7 +153,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     !!formData.dest_bank &&
     formData.source_bank !== formData.dest_bank;
 
-  // submit (sem uso de `any`)
+  // submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid || isSubmitting) return;
@@ -152,21 +161,20 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
 
     try {
       const payload = {
-        amount: (amountCents / 100).toFixed(2), // string decimal "3000.00"
-        date: formData.date,                    // ISO "YYYY-MM-DD"
+        amount: (amountCents / 100).toFixed(2), // "3000.00"
+        date: formData.date,                    // "YYYY-MM-DD"
         description: formData.description || "",
-        source_bank: formData.source_bank,      // external_id aceito pelo backend
-        dest_bank: formData.dest_bank,          // external_id aceito pelo backend
+        source_bank: formData.source_bank,
+        dest_bank: formData.dest_bank,
       };
 
-      // O wrapper `request` lança em erro, não precisamos inspecionar `any`
       await api.addTransference(payload);
 
       resetForm();
       onSave();
     } catch (err) {
       console.error("Erro ao salvar transferência:", err);
-      alert("Erro ao salvar transferência.");
+      window.alert(t("errors.save"));
     } finally {
       setIsSubmitting(false);
     }
@@ -179,6 +187,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={t("aria.dialog")}
         className="bg-white border border-gray-200 rounded-lg shadow-xl w-[720px] max-w-[95vw] h-[450px] max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
@@ -189,14 +198,15 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 TR
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Transferência</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">Entre contas/bancos</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
               </div>
             </div>
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={handleClose}
-              aria-label="Fechar"
+              aria-label={t("actions.close")}
+              title={t("actions.close")}
             >
               &times;
             </button>
@@ -207,36 +217,43 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         <form id="transferenceForm" onSubmit={handleSubmit} className="relative z-10 px-5 py-4 overflow-visible flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Data / Valor / Observação */}
-            <Input label="Data" name="date" type="date" value={formData.date} onChange={handleChange} />
-
             <Input
-              ref={amountRef}
-              label="Valor"
-              name="amount"
-              type="text"
-              placeholder="0,00"
-              value={formatCurrency(formData.amount)}
-              onKeyDown={(e) => handleAmountKeyDown(e, formData.amount, setFormData, true)}
+              label={t("fields.date")}
+              name="date"
+              type="date"
+              value={formData.date}
+              onChange={handleChange}
             />
 
             <Input
-              label="Observação (opcional)"
+              ref={amountRef}
+              label={t("fields.amount")}
+              name="amount"
+              type="text"
+              placeholder={t("placeholders.amount")}
+              value={formatCurrency(formData.amount)}
+              onKeyDown={(e) => handleAmountKeyDown(e, formData.amount, setFormData, true)}
+              aria-label={t("fields.amount")}
+            />
+
+            <Input
+              label={t("fields.note")}
               name="description"
-              placeholder="Ex.: TED, motivo, etc."
+              placeholder={t("placeholders.note")}
               value={formData.description}
               onChange={handleChange}
             />
 
             {/* Banco de saída / trocar / Banco de entrada */}
             <SelectDropdown<BankAccount>
-              label="Banco de saída"
+              label={t("fields.bankOut")}
               items={bankOutOptions}
               selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
               onChange={(sel) => handleBankChange("source_bank", sel)}
               getItemKey={(b) => b.id}
               getItemLabel={optionLabelFor}
               singleSelect
-              buttonLabel="Selecione o banco"
+              buttonLabel={t("placeholders.selectBank")}
               customStyles={{ maxHeight: "180px" }}
             />
 
@@ -247,27 +264,28 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                 onClick={swapBanks}
                 disabled={!formData.source_bank && !formData.dest_bank}
-                title="Trocar bancos"
+                title={t("actions.swap")}
+                aria-label={t("actions.swap")}
               >
                 ⇄
               </Button>
             </div>
 
             <SelectDropdown<BankAccount>
-              label="Banco de entrada"
+              label={t("fields.bankIn")}
               items={bankInOptions}
               selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}
               onChange={(sel) => handleBankChange("dest_bank", sel)}
               getItemKey={(b) => b.id}
               getItemLabel={optionLabelFor}
               singleSelect
-              buttonLabel="Selecione o banco"
+              buttonLabel={t("placeholders.selectBank")}
               customStyles={{ maxHeight: "180px" }}
             />
 
             {formData.source_bank && formData.dest_bank && formData.source_bank === formData.dest_bank && (
               <p className="md:col-span-3 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                Os bancos de saída e entrada não podem ser o mesmo.
+                {t("warnings.sameBank")}
               </p>
             )}
           </div>
@@ -282,23 +300,23 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 {bankOutLabel || bankInLabel ? (
                   <>
                     {" "}
-                    — {bankOutLabel ? <>de <b>{bankOutLabel}</b></> : null}
-                    {bankInLabel ? <> para <b>{bankInLabel}</b></> : null}
+                    — {bankOutLabel ? <>{t("labels.from")} <b>{bankOutLabel}</b></> : null}
+                    {bankInLabel ? <> {t("labels.to")} <b>{bankInLabel}</b></> : null}
                   </>
                 ) : null}
               </>
             ) : (
-              <>Informe um valor, selecione os bancos e a data.</>
+              <>{t("hints.fillToSave")}</>
             )}
-            <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/⌘+S (salvar)</span>
+            <span className="ml-3 text-gray-400">{t("hints.shortcuts")}</span>
           </div>
 
           <div className="flex gap-2">
             <Button variant="cancel" type="button" onClick={handleClose}>
-              Cancelar
+              {t("actions.cancel")}
             </Button>
             <Button type="submit" form="transferenceForm" disabled={!isValid || isSubmitting}>
-              {isSubmitting ? "Salvando…" : "Salvar"}
+              {isSubmitting ? t("actions.saving") : t("actions.save")}
             </Button>
           </div>
         </footer>

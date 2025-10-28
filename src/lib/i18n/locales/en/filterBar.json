@@ -1,0 +1,80 @@
+{
+  "search": { "placeholder": "Search or filter... (Ctrl/⌘+K)" },
+  "buttons": {
+    "config": "Settings",
+    "saveView": "Save view",
+    "views": "Views",
+    "apply": "Apply",
+    "clear": "Clear filters",
+    "remove": "Remove"
+  },
+  "menu": {
+    "addFilter": "Add filter +",
+    "date": "Period",
+    "bank": "Bank",
+    "accounts": "Ledger account",
+    "observation": "Observation",
+    "txType": "Type (Income/Expense)",
+    "amount": "Amount (min/max)"
+  },
+  "chips": {
+    "date": "Dates",
+    "bank": "Bank",
+    "accounts": "Ledger account",
+    "type": "Type",
+    "credit": "Income",
+    "debit": "Expense",
+    "value": "Amount",
+    "observation": "Observation"
+  },
+  "editors": {
+    "date": {
+      "start": "Start",
+      "end": "End",
+      "shortcuts": "Shortcuts",
+      "today": "Today",
+      "thisWeek": "This week",
+      "thisMonth": "Current month",
+      "thisQuarter": "Quarter",
+      "thisYear": "Year"
+    },
+    "banks": { "label": "Banks", "button": "Select banks" },
+    "accounts": { "label": "Ledger accounts", "button": "Select accounts" },
+    "observation": { "placeholder": "Type an observation..." },
+    "txType": { "credit": "Income", "debit": "Expense" },
+    "amount": {
+      "min": "Minimum",
+      "max": "Maximum",
+      "currencySuffix": "(R$)",
+      "placeholder": "R$ 0.00"
+    }
+  },
+  "viewsMenu": { "empty": "No saved views" },
+  "configModal": {
+    "title": "Saved views",
+    "close": "Close",
+    "empty": "No saved views.",
+    "defaultTag": "Default",
+    "saveName": "Save name",
+    "cancel": "Cancel",
+    "rename": "Rename",
+    "apply": "Apply",
+    "delete": "Delete",
+    "footerClose": "Close"
+  },
+  "saveModal": {
+    "title": "Save view",
+    "close": "Close",
+    "name": "Name",
+    "namePlaceholder": "E.g., 'Current month payments by project'",
+    "setDefault": "Set as default",
+    "modeTitle": "Mode",
+    "create": "Create new view",
+    "overwrite": "Overwrite existing",
+    "chooseView": "Choose a view",
+    "choosePlaceholder": "— select —",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "aria": { "removeFilter": "remove filter" }
+}

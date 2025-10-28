@@ -1,0 +1,16 @@
+{
+  "aria": {
+    "mainNav": "Hauptnavigation",
+    "drawerNav": "Seitenmenü"
+  },
+  "actions": {
+    "open": "Menü öffnen",
+    "close": "Schließen",
+    "menu": "Menü"
+  },
+  "links": {
+    "cashflow": "Cashflow",
+    "settled": "Abgerechnet",
+    "reports": "Berichte"
+  }
+}

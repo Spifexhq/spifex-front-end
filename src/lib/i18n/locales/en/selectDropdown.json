@@ -1,0 +1,6 @@
+{
+  "button": { "single": "Select", "multi": "Select items" },
+  "actions": { "selectAll": "Select all", "clearAll": "Clear all" },
+  "filter": { "placeholder": "Filter", "aria": "Filter options" },
+  "aria": { "trigger": "Open dropdown", "listbox": "Options list" }
+}

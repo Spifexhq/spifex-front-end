@@ -1,0 +1,36 @@
+{
+  "aria": {
+    "section": "Fluxo de caixa",
+    "loadingEntries": "Carregando lançamentos",
+    "loadingMore": "Carregando mais resultados",
+    "selectAll": "Selecionar tudo",
+    "selectRow": "Selecionar linha"
+  },
+  "labels": {
+    "entries": "Lançamentos",
+    "selectedCount": "{{count}} selecionado",
+    "selectedCount_plural": "{{count}} selecionados",
+    "due": "Venc",
+    "loadingMore": "Carregando mais...",
+    "installmentXofY": "Parcela {{x}} / {{y}}"
+  },
+  "columns": {
+    "amount": "Valor",
+    "balance": "Saldo"
+  },
+  "actions": {
+    "edit": "Editar",
+    "retry": "Tentar novamente"
+  },
+  "empty": {
+    "title": "Nenhum lançamento encontrado",
+    "subtitle": "Tente ajustar os filtros para ver os dados"
+  },
+  "errors": {
+    "title": "Erro ao carregar dados",
+    "fetch": "Erro ao buscar dados."
+  },
+  "months": {
+    "short": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+  }
+}

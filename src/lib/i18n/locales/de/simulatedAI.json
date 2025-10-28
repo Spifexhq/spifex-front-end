@@ -1,0 +1,55 @@
+{
+  "title": "Assistent fragen",
+  "shortcuts": { "hint": "Enter: fragen · Esc: schließen · Strg/⌘ + K: suchen" },
+  "aria": { "backdrop": "Dialog schließen" },
+  "status": { "typing": "Tippen…", "done": "Fertig", "waiting": "Warte auf eine Frage" },
+  "empty": { "pickOnRight": "Wähle oder suche rechts eine Frage, um die Antwort zu sehen." },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Fortsetzen",
+    "skip": "Tippen überspringen",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "clear": "Leeren",
+    "close": "Schließen"
+  },
+  "tts": { "on": "Stimme: an", "off": "Stimme: aus", "tooltip": "Nach Abschluss laut vorlesen" },
+  "speed": { "label": "Geschwindigkeit", "aria": "Tippgeschwindigkeit" },
+  "recent": { "title": "Zuletzt" },
+  "search": { "label": "Frage suchen", "placeholder": "Zum Filtern tippen…", "aria": "Suchfeld für Fragen", "empty": "Keine Fragen gefunden." },
+  "selection": { "has": "Ausgewählte Frage:", "none": "Keine Frage ausgewählt" },
+  "footer": { "ready": "Antwort bereit zum Kopieren oder Senden.", "pickQuestion": "Wähle eine Frage, um die Antwort zu sehen." },
+
+  "faqs": [
+    {
+      "id": "estoque-melhoria",
+      "question": "Wie kann die Software die Bestandskontrolle meines Unternehmens verbessern?",
+      "answer": "Unsere Software automatisiert die Bestandsverwaltung, reduziert menschliche Fehler und sorgt für einen klaren Überblick über Ihre Lagerbestände.",
+      "tags": ["bestand", "inventar", "automatisierung"]
+    },
+    {
+      "id": "entradas-saidas-beneficios",
+      "question": "Welche Vorteile bietet die Verwaltung von Warenein- und -ausgang?",
+      "answer": "Mit der automatisierten Ein-/Ausgangsverwaltung verfolgen Sie Warenflüsse in Echtzeit, optimieren die Nachfüllung und senken Betriebskosten.",
+      "tags": ["wareneingang", "warenausgang", "tracking", "kosten"]
+    },
+    {
+      "id": "eficiencia-operacional",
+      "question": "Wie hilft die Software, die operative Effizienz zu steigern?",
+      "answer": "Sie zentralisiert Abläufe und ermöglicht eine agilere, integrierte Prozesssteuerung – das führt zu höherer Effizienz.",
+      "tags": ["effizienz", "prozesse", "integration"]
+    },
+    {
+      "id": "decisoes-estrategicas",
+      "question": "Wie unterstützt die Software strategische Entscheidungen?",
+      "answer": "Durch detaillierte Berichte und Datenanalysen liefert sie wertvolle Insights für strategische Entscheidungen und bessere Performance.",
+      "tags": ["berichte", "analysen", "strategie"]
+    },
+    {
+      "id": "fluxo-trabalho",
+      "question": "Wie kann die Software den Workflow meines Teams optimieren?",
+      "answer": "Durch die Automatisierung repetitiver Aufgaben und die Integration von Abteilungen kann sich das Team auf strategischere Tätigkeiten konzentrieren.",
+      "tags": ["workflow", "automatisierung", "produktivität"]
+    }
+  ]
+}

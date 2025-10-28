@@ -1,0 +1,37 @@
+{
+  "aria": {
+    "section": "Settled entries",
+    "loadingEntries": "Loading settled",
+    "loadingMore": "Loading more results",
+    "selectAll": "Select all",
+    "selectRow": "Select row"
+  },
+  "labels": {
+    "settled": "Settled",
+    "selectedCount": "{{count}} selected",
+    "selectedCount_plural": "{{count}} selected",
+    "settlement": "Settl:",
+    "loadingMore": "Loading more...",
+    "installmentXofY": "Installment {{x}} / {{y}}",
+    "partialIndex": "Partial: {{n}}",
+    "bank": "Bank"
+  },
+  "columns": {
+    "amount": "Amount",
+    "balance": "Balance"
+  },
+  "actions": {
+    "retry": "Retry"
+  },
+  "empty": {
+    "title": "No settled entries found",
+    "subtitle": "Try adjusting the filters to see data"
+  },
+  "errors": {
+    "title": "Error loading data",
+    "fetch": "Failed to fetch data."
+  },
+  "months": {
+    "short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "aria": {
+      "nav": "Barra lateral de ações rápidas do fluxo de caixa",
+      "toggleOpen": "Abrir sidebar",
+      "toggleClose": "Fechar sidebar"
+    },
+    "items": {
+      "credit": "Recebimentos",
+      "debit": "Pagamentos",
+      "transfer": "Transferências"
+    }
+  }
+}

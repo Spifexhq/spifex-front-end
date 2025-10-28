@@ -1,0 +1,6 @@
+{
+  "button": { "single": "Sélectionner", "multi": "Sélectionner des éléments" },
+  "actions": { "selectAll": "Tout sélectionner", "clearAll": "Tout effacer" },
+  "filter": { "placeholder": "Filtrer", "aria": "Filtrer les options" },
+  "aria": { "trigger": "Ouvrir la liste", "listbox": "Liste d’options" }
+}

@@ -1,0 +1,49 @@
+{
+  "aria": { "dialog": "Règlement des écritures" },
+  "header": {
+    "kind": "Règlement",
+    "title": { "one": "1 écriture sélectionnée", "many": "{{n}} écritures sélectionnées" }
+  },
+  "actions": {
+    "close": "Fermer",
+    "bulkDate": "Appliquer la date",
+    "applyDateAll": "Appliquer la date à tous",
+    "markAllPartial": "Marquer tout en partiel",
+    "clearAllPartial": "Effacer les partiels",
+    "cancel": "Annuler",
+    "settle": "Régler"
+  },
+  "banks": {
+    "aria": "Sélectionner une banque",
+    "title": "Banques",
+    "count": "({{n}})",
+    "balance": "Solde :",
+    "agency": "Agence",
+    "account": "Compte",
+    "none": "Aucune banque disponible"
+  },
+  "entries": {
+    "aria": "Écritures",
+    "title": "Écritures",
+    "count": "({{n}})"
+  },
+  "table": {
+    "due": "Échéance",
+    "desc": "Description",
+    "amount": "Montant",
+    "partialQ": "Partiel ?",
+    "partialAmount": "Montant partiel",
+    "none": "Aucune écriture sélectionnée",
+    "partialInvalid": "Montant partiel invalide (0 ou supérieur au montant de l’écriture)."
+  },
+  "footer": {
+    "original": "Original :",
+    "toSettle": "À régler :",
+    "bankLabel": "Banque :",
+    "selectBank": "Sélectionnez une banque",
+    "shortcuts": "Raccourcis : Échap (fermer), Ctrl/⌘+Entrée (enregistrer)"
+  },
+  "errors": {
+    "bulk": "Erreur lors du règlement des écritures."
+  }
+}

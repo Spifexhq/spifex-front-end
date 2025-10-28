@@ -1,0 +1,31 @@
+{
+  "aria": {
+    "bar": "Auswahl-Aktionsleiste"
+  },
+  "actions": {
+    "minimize": "Minimieren",
+    "expand": "Erweitern",
+    "cancel": "Abbrechen",
+    "cancelSelection": "Auswahl aufheben (Esc)",
+    "delete": "Löschen",
+    "deleteSelected": "Auswahl löschen",
+    "liquidate": "Ausgleichen",
+    "liquidateSelected": "Auswahl ausgleichen",
+    "return": "Rückgängig"
+  },
+  "labels": {
+    "selected": "{{count}} ausgewählt",
+    "selected_plural": "{{count}} ausgewählt",
+    "selectedShort": "ausgewählt",
+    "selectedShort_plural": "ausgewählt",
+    "credits": "Gutschriften",
+    "debits": "Belastungen",
+    "sumCredits": "Σ Gutschriften",
+    "sumDebits": "Σ Belastungen",
+    "net": "Nettosaldo:",
+    "dueShort": "Fällig:"
+  },
+  "hints": {
+    "escToCancel": "Tipp: Drücke"
+  }
+}

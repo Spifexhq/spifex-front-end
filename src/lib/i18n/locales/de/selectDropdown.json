@@ -1,0 +1,6 @@
+{
+  "button": { "single": "Auswählen", "multi": "Elemente auswählen" },
+  "actions": { "selectAll": "Alle auswählen", "clearAll": "Alle entfernen" },
+  "filter": { "placeholder": "Filtern", "aria": "Optionen filtern" },
+  "aria": { "trigger": "Dropdown öffnen", "listbox": "Optionenliste" }
+}

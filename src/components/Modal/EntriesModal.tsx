@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 import Button from "../Button";
 import Input from "../Input";
@@ -87,29 +88,28 @@ const initialFormData: FormData = {
   },
 };
 
-// Novos valores compatíveis com IntervalMonths (0|1|2|3|6|12)
-const periodOptions: PeriodOption[] = [
-  { id: 0, label: "Semanal", value: 0 },
-  { id: 1, label: "Mensal", value: 1 },
-  { id: 2, label: "Bimestral", value: 2 },
-  { id: 3, label: "Trimestral", value: 3 },
-  { id: 6, label: "Semestral", value: 6 },
-  { id: 12, label: "Anual", value: 12 },
+const periodOptionsBase: PeriodOption[] = [
+  { id: 0, label: "entriesModal:period.weekly", value: 0 },
+  { id: 1, label: "entriesModal:period.monthly", value: 1 },
+  { id: 2, label: "entriesModal:period.bimonthly", value: 2 },
+  { id: 3, label: "entriesModal:period.quarterly", value: 3 },
+  { id: 6, label: "entriesModal:period.semiannual", value: 6 },
+  { id: 12, label: "entriesModal:period.annual", value: 12 },
 ];
 
-const ENTITY_TYPE_OPTIONS = [
-  { id: 1, label: "Cliente", value: "client" },
-  { id: 2, label: "Fornecedor", value: "supplier" },
-  { id: 3, label: "Funcionário", value: "employee" },
+const ENTITY_TYPE_OPTIONS_BASE = [
+  { id: 1, label: "entriesModal:entities.types.client", value: "client" },
+  { id: 2, label: "entriesModal:entities.types.supplier", value: "supplier" },
+  { id: 3, label: "entriesModal:entities.types.employee", value: "employee" },
 ];
 
 // 🔹 Lista de abas (constante estável no módulo para satisfazer exhaustive-deps)
-const TAB_LIST: { id: Tab; label: string }[] = [
-  { id: "details", label: "Detalhes" },
-  { id: "costCenters", label: "Centro de Custos" },
-  { id: "inventory", label: "Inventário" },
-  { id: "entities", label: "Envolvidos" },
-  { id: "recurrence", label: "Recorrência" },
+const TAB_LIST_BASE: { id: Tab; label: string }[] = [
+  { id: "details", label: "entriesModal:tabs.details" },
+  { id: "costCenters", label: "entriesModal:tabs.costCenters" },
+  { id: "inventory", label: "entriesModal:tabs.inventory" },
+  { id: "entities", label: "entriesModal:tabs.entities" },
+  { id: "recurrence", label: "entriesModal:tabs.recurrence" },
 ];
 
 // KEEP=0, POSTPONE=1, ANTICIPATE=-1 (no backend)
@@ -125,7 +125,7 @@ const normalizeAmountStr = (v: unknown): string => {
   if (typeof v === "string") {
     const n = Number(v);
     if (!Number.isNaN(n)) return n.toFixed(2);
-    return v; // fallback, caso já venha "3000.00"
+    return v;
   }
   return "";
 };
@@ -155,12 +155,28 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   onSave,
   initialEntry,
 }) => {
+  const { t } = useTranslation(["entriesModal"]);
+
+  const periodOptions = useMemo(
+    () => periodOptionsBase.map((p) => ({ ...p, label: t(p.label) })),
+    [t]
+  );
+
+  const ENTITY_TYPE_OPTIONS = useMemo(
+    () => ENTITY_TYPE_OPTIONS_BASE.map((o) => ({ ...o, label: t(o.label) })),
+    [t]
+  );
+
+  const TAB_LIST = useMemo(
+    () => TAB_LIST_BASE.map((tab) => ({ ...tab, label: t(tab.label) })),
+    [t]
+  );
+
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const descriptionRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
 
-  // 🔸 IDs/Refs para focar com precisão (SelectDropdown será focado pelo botão)
   const IDS = {
     ledgerWrap: "ledger-select-wrap",
     installmentsInput: "installments-input",
@@ -173,7 +189,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
-  // Novo: overlay de aviso/validação
   const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
 
   // fontes
@@ -224,7 +239,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     [formData.details.amount]
   );
 
-  // Soma de % para badge
   const percentageSum = useMemo(() => {
     const nums = formData.costCenters.department_percentage
       .map((p) => parseFloat(String(p).replace(",", ".")))
@@ -232,6 +246,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     const total = nums.reduce((acc, n) => acc + n, 0);
     return Math.round(total * 100) / 100;
   }, [formData.costCenters.department_percentage]);
+
+  const toLocalISODate = (d: Date) => {
+    const off = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10); // YYYY-MM-DD
+  };
 
   /* ---------------- Flag de dados preenchidos (ignora dueDate) --------------- */
   const hasMeaningfulData = useMemo(() => {
@@ -263,8 +283,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   }, [formData, amountCents]);
 
   /* ---------------------------- VALIDATIONS ---------------------------- */
-
-  // Foca um input/botão dentro de um wrapper ID
   const focusFirstInteractive = (wrapId?: string) => {
     if (!wrapId) return;
     if (wrapId === "amount-input") {
@@ -281,29 +299,26 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   type ValidationResult = { ok: boolean; tab?: Tab; focusId?: string; title?: string; message?: string };
 
   const validateAll = (): ValidationResult => {
-    // 1) Amount: obrigatório e > 0
     if (amountCents <= 0) {
       return {
         ok: false,
         tab: "details",
         focusId: "amount-input",
-        title: "Valor inválido",
-        message: "O campo Valor é obrigatório e deve ser maior que 0.",
+        title: t("entriesModal:errors.amount.title"),
+        message: t("entriesModal:errors.amount.message"),
       };
     }
 
-    // 2) Conta contábil: obrigatória
     if (!formData.details.accountingAccount) {
       return {
         ok: false,
         tab: "details",
         focusId: IDS.ledgerWrap,
-        title: "Conta contábil obrigatória",
-        message: "Selecione uma conta contábil antes de salvar.",
+        title: t("entriesModal:errors.gl.title"),
+        message: t("entriesModal:errors.gl.message"),
       };
     }
 
-    // 3) Recorrência: se 'Sim', installments > 0 (inteiro)
     if (formData.recurrence.recurrence === 1 && !isRecurrenceLocked) {
       const n = Number(formData.recurrence.installments);
       if (!formData.recurrence.installments || !Number.isFinite(n) || n <= 0 || !Number.isInteger(n)) {
@@ -311,13 +326,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           ok: false,
           tab: "recurrence",
           focusId: IDS.installmentsInput,
-          title: "Parcelas inválidas",
-          message: "Informe um número de parcelas inteiro e maior que 0 ou desative a recorrência.",
+          title: t("entriesModal:errors.installments.title"),
+          message: t("entriesModal:errors.installments.message"),
         };
       }
     }
 
-    // 4) Inventário: se produto escolhido, quantidade > 0
     if (formData.inventory.product) {
       const q = Number(formData.inventory.quantity);
       if (!formData.inventory.quantity || !Number.isFinite(q) || q <= 0) {
@@ -325,24 +339,22 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           ok: false,
           tab: "inventory",
           focusId: IDS.inventoryQty,
-          title: "Quantidade inválida",
-          message: "Informe uma quantidade maior que 0 para o produto selecionado.",
+          title: t("entriesModal:errors.quantity.title"),
+          message: t("entriesModal:errors.quantity.message"),
         };
       }
     }
 
-    // 5) Entidades: se tipo escolhido, entidade obrigatória
     if (formData.entities.entityType && !formData.entities.entity) {
       return {
         ok: false,
         tab: "entities",
         focusId: IDS.entityWrap,
-        title: "Selecione a entidade",
-        message: "Escolha uma entidade correspondente ao tipo selecionado ou remova o tipo.",
+        title: t("entriesModal:errors.entity.title"),
+        message: t("entriesModal:errors.entity.message"),
       };
     }
 
-    // 6) Centros de custo: se departamentos escolhidos, cada % > 0 e não vazio
     if (formData.costCenters.departments.length > 0) {
       const percs = formData.costCenters.department_percentage;
       for (let i = 0; i < percs.length; i++) {
@@ -353,19 +365,18 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             ok: false,
             tab: "costCenters",
             focusId: `${IDS.deptPercPrefix}${i}`,
-            title: "Percentual inválido",
-            message: "Todos os departamentos devem ter percentuais maiores que 0.",
+            title: t("entriesModal:errors.departmentPercent.title"),
+            message: t("entriesModal:errors.departmentPercent.message"),
           };
         }
       }
-      // Mantém sua regra existente de total = 100%
       if (Math.abs(percentageSum - 100) > 0.001) {
         return {
           ok: false,
           tab: "costCenters",
           focusId: `${IDS.deptPercPrefix}0`,
-          title: "Distribuição incorreta",
-          message: "A soma dos percentuais dos departamentos deve ser exatamente 100%.",
+          title: t("entriesModal:errors.departmentSum.title"),
+          message: t("entriesModal:errors.departmentSum.message"),
         };
       }
     }
@@ -377,17 +388,19 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 🔒 Bloqueio defensivo contra manipulação do front-end
     const v = validateAll();
     if (!v.ok) {
       setActiveTab(v.tab || "details");
-      setWarning({ title: v.title || "Campos inválidos", message: v.message || "Corrija os campos destacados para continuar.", focusId: v.focusId });
+      setWarning({
+        title: v.title || t("entriesModal:errors.generic.title"),
+        message: v.message || t("entriesModal:errors.generic.message"),
+        focusId: v.focusId,
+      });
       return;
     }
 
     setIsSubmitting(true);
 
-    // Helpers
     const cleanAmountNow = cleanCurrency(formData.details.amount);
     const makeDepartments = () =>
       formData.costCenters.departments.length
@@ -415,7 +428,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       let res;
 
       if (!initialEntry) {
-        // ---------- CREATE (POST): payload completo ----------
         const isRecurring = formData.recurrence.recurrence === 1;
         const installmentCount = isRecurring
           ? Number(formData.recurrence.installments || 1)
@@ -427,7 +439,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           observation: formData.details.observation || "",
           notes: formData.details.notes || "",
           amount: cleanAmountNow,
-          tx_type: type, // "credit" | "debit" (apenas no POST)
+          tx_type: type,
 
           ...(isRecurring && installmentCount > 1
             ? {
@@ -439,7 +451,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               }
             : {}),
 
-          gl_account: formData.details.accountingAccount, // obrigatório
+          gl_account: formData.details.accountingAccount,
           document_type: formData.details.documentType || "",
           ...(formData.costCenters.projects
             ? { project: formData.costCenters.projects }
@@ -452,48 +464,31 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
         res = await api.addEntry(payload);
       } else {
-        // ---------- EDIT (PATCH): somente o que mudou ----------
         const ie = initialEntry as EntryDiffable;
         const changes: Partial<EditEntryRequest> = {};
 
-        if (formData.details.dueDate !== ie.due_date) {
-          changes.due_date = formData.details.dueDate;
-        }
-        if ((formData.details.description || "") !== (ie.description || "")) {
-          changes.description = formData.details.description || "";
-        }
-        if ((formData.details.observation || "") !== (ie.observation || "")) {
-          changes.observation = formData.details.observation || "";
-        }
-        if ((formData.details.notes || "") !== (ie.notes || "")) {
-          changes.notes = formData.details.notes || "";
-        }
+        if (formData.details.dueDate !== ie.due_date) changes.due_date = formData.details.dueDate;
+        if ((formData.details.description || "") !== (ie.description || "")) changes.description = formData.details.description || "";
+        if ((formData.details.observation || "") !== (ie.observation || "")) changes.observation = formData.details.observation || "";
+        if ((formData.details.notes || "") !== (ie.notes || "")) changes.notes = formData.details.notes || "";
 
         const initialAmountStr = normalizeAmountStr(ie.amount);
-        if (cleanAmountNow !== initialAmountStr) {
-          changes.amount = cleanAmountNow;
-        }
+        if (cleanAmountNow !== initialAmountStr) changes.amount = cleanAmountNow;
 
         const initialGl = ie.gl_account || "";
         if (formData.details.accountingAccount && formData.details.accountingAccount !== initialGl) {
           changes.gl_account = formData.details.accountingAccount;
         }
 
-        if (formData.details.documentType) {
-          changes.document_type = formData.details.documentType;
-        }
+        if (formData.details.documentType) changes.document_type = formData.details.documentType;
 
         const initialProject = ie.project || "";
         const newProject = formData.costCenters.projects || "";
-        if (newProject !== initialProject) {
-          changes.project = newProject || null;
-        }
+        if (newProject !== initialProject) changes.project = newProject || null;
 
         const initialEntity = ie.entity || "";
         const newEntity = formData.entities.entity || "";
-        if (newEntity !== initialEntity) {
-          changes.entity = newEntity || null;
-        }
+        if (newEntity !== initialEntity) changes.entity = newEntity || null;
 
         const deps = makeDepartments();
         if (deps) changes.departments = deps;
@@ -528,8 +523,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         const apiError = res as ApiError;
         console.error("Erro API:", apiError?.error?.message, apiError?.error?.details);
         setWarning({
-          title: "Erro ao salvar",
-          message: apiError?.error?.message || "Não foi possível salvar o lançamento.",
+          title: t("entriesModal:saveError.title"),
+          message: apiError?.error?.message || t("entriesModal:saveError.generic"),
         });
         return;
       }
@@ -541,8 +536,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const message =
         axios.isAxiosError(err) && err.response?.data?.error?.message
           ? err.response.data.error.message
-          : "Erro inesperado ao salvar lançamento.";
-      setWarning({ title: "Erro ao salvar", message });
+          : t("entriesModal:saveError.unexpected");
+      setWarning({ title: t("entriesModal:saveError.title"), message });
     } finally {
       setIsSubmitting(false);
     }
@@ -602,7 +597,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     if (!initialEntry) {
       setFormData((prev) => ({
         ...prev,
-        details: { ...prev.details, dueDate: new Date().toISOString().slice(0, 10) },
+        details: { ...prev.details, dueDate: toLocalISODate(new Date()) },
       }));
     }
     setTimeout(() => amountRef.current?.focus(), 50);
@@ -718,7 +713,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         },
       }));
     }
-  }, [isOpen, initialEntry, ledgerAccounts, projects, entities, departments]);
+  }, [isOpen, initialEntry, ledgerAccounts, projects, entities, departments, ENTITY_TYPE_OPTIONS]);
 
   /* ------------------------------ Handlers ------------------------------ */
   const handleLedgerAccountChange = (updated: GLAccount[]) => {
@@ -770,7 +765,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
   };
 
-  // 🔹 Navegação por abas
   const goTabRelative = useCallback(
     (delta: number) => {
       const idx = TAB_LIST.findIndex((t) => t.id === activeTab);
@@ -778,7 +772,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       const nextIdx = (idx + delta + TAB_LIST.length) % TAB_LIST.length;
       setActiveTab(TAB_LIST[nextIdx].id);
     },
-    [activeTab]
+    [activeTab, TAB_LIST]
   );
 
   /* ---------------------- Fechamento com confirmação interna ----------------- */
@@ -815,14 +809,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         return;
       }
 
-      // Save: keep Ctrl/⌘ + S
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
         return;
       }
 
-      // ✅ Tabs: require Ctrl + Alt + ArrowLeft/Right (Ctrl alone does nothing special)
       if (e.ctrlKey && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         if (warning || showCloseConfirm) return;
         const dropdownOpen = document.querySelector('[data-select-open="true"]');
@@ -865,7 +857,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     </nav>
   );
 
-  // Estados de validação mínimos para desabilitar o botão de salvar
   const isAmountValid = amountCents > 0;
   const isLedgerValid = !!formData.details.accountingAccount;
   const isRecurrenceValid =
@@ -899,7 +890,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Input
-              label="Vencimento"
+              label={t("entriesModal:details.dueDate")}
               type="date"
               value={formData.details.dueDate}
               onChange={(e) =>
@@ -908,10 +899,10 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             />
             <Input
               id="amount-input"
-              label="Valor"
+              label={t("entriesModal:details.amount")}
               type="text"
               ref={amountRef}
-              placeholder="0,00"
+              placeholder={t("entriesModal:details.amountPlaceholder")}
               value={formatCurrency(formData.details.amount)}
               onChange={(e) =>
                 setFormData((p) => ({ ...p, details: { ...p.details, amount: e.target.value } }))
@@ -920,16 +911,16 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             />
             <div id={IDS.ledgerWrap}>
               <SelectDropdown<GLAccount>
-                label="Conta contábil"
+                label={t("entriesModal:details.glAccount")}
                 items={ledgerAccounts}
                 selected={selectedLedgerAccounts}
                 onChange={handleLedgerAccountChange}
                 getItemKey={(i) => i.id}
                 getItemLabel={(i) => (i.code ? `${i.code} — ${i.name}` : i.name)}
-                buttonLabel="Selecione a conta"
+                buttonLabel={t("entriesModal:details.glAccountBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
-                groupBy={(i) => i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || "Outros"}
+                groupBy={(i) => (i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || t("entriesModal:misc.others"))}
                 virtualize
                 virtualRowHeight={32}
                 virtualThreshold={300}
@@ -938,10 +929,10 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
             <div className="md:col-span-3">
               <Input
-                label="Descrição"
+                label={t("entriesModal:details.description")}
                 ref={descriptionRef}
                 type="text"
-                placeholder="Descreva o lançamento"
+                placeholder={t("entriesModal:details.descriptionPlaceholder")}
                 value={formData.details.description}
                 onChange={(e) =>
                   setFormData((p) => ({
@@ -953,22 +944,22 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             </div>
 
             <SelectDropdown<DocTypeItem>
-              label="Tipo de documento"
+              label={t("entriesModal:details.docType")}
               items={documentTypes}
               selected={selectedDocumentTypes}
               onChange={handleDocumentTypeChange}
               getItemKey={(i) => i.id}
               getItemLabel={(i) => i.label}
-              buttonLabel="Selecione o tipo"
+              buttonLabel={t("entriesModal:details.docTypeBtn")}
               singleSelect
               customStyles={{ maxHeight: "180px" }}
             />
 
             <div className="md:col-span-2">
               <Input
-                label="Observação"
+                label={t("entriesModal:details.observation")}
                 type="text"
-                placeholder="(opcional)"
+                placeholder={t("entriesModal:details.optional")}
                 value={formData.details.observation}
                 onChange={(e) =>
                   setFormData((p) => ({
@@ -982,8 +973,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
             <div className="md:col-span-3">
               <Input
-                label="Notas"
-                placeholder="Notas internas (não aparecem em documentos)"
+                label={t("entriesModal:details.notes")}
+                placeholder={t("entriesModal:details.notesPlaceholder")}
                 value={formData.details.notes}
                 onChange={(e) =>
                   setFormData((p) => ({ ...p, details: { ...p.details, notes: e.target.value } }))
@@ -998,14 +989,14 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <SelectDropdown<Department>
-                label="Departamentos"
+                label={t("entriesModal:costCenters.departments")}
                 items={departments}
                 selected={selectedDepartments}
                 onChange={handleDepartmentChange}
                 getItemKey={(d) => d.id}
-                getItemLabel={(d) => d.name || "Departamento sem nome"}
+                getItemLabel={(d) => d.name || t("entriesModal:costCenters.unnamedDepartment")}
                 clearOnClickOutside={false}
-                buttonLabel="Selecione departamentos"
+                buttonLabel={t("entriesModal:costCenters.departmentsBtn")}
                 customStyles={{ maxHeight: "240px" }}
                 virtualize
                 virtualRowHeight={32}
@@ -1014,7 +1005,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
               <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-gray-700">Distribuição (%)</span>
+                  <span className="text-[12px] text-gray-700">{t("entriesModal:costCenters.distribution")}</span>
                   <span
                     className={`text-[11px] px-2 py-[2px] rounded-full border ${
                       Math.abs(percentageSum - 100) <= 0.001 && selectedDepartments.length > 0
@@ -1022,7 +1013,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                         : "border-amber-200 bg-amber-50 text-amber-700"
                     }`}
                   >
-                    Total: {percentageSum || 0}%
+                    {t("entriesModal:costCenters.total", { value: percentageSum || 0 })}
                   </span>
                 </div>
                 <div className="mt-2 max-h-[180px] overflow-y-auto pr-1">
@@ -1030,7 +1021,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                     <div key={dept.id} className="mb-3">
                       <Input
                         id={`${IDS.deptPercPrefix}${index}`}
-                        label={`% - ${dept.name || `Departamento ${dept.id}`}`}
+                        label={`${t("entriesModal:costCenters.percent")} - ${dept.name || `${t("entriesModal:costCenters.department")} ${dept.id}`}`}
                         type="number"
                         name={`department_percentage_${dept.id}`}
                         value={formData.costCenters.department_percentage[index] || ""}
@@ -1039,7 +1030,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                     </div>
                   ))}
                   {selectedDepartments.length === 0 && (
-                    <p className="text-[12px] text-gray-500">Nenhum departamento selecionado.</p>
+                    <p className="text-[12px] text-gray-500">{t("entriesModal:costCenters.noneSelected")}</p>
                   )}
                 </div>
               </div>
@@ -1047,13 +1038,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
             <div>
               <SelectDropdown<Project>
-                label="Projetos"
+                label={t("entriesModal:costCenters.projects")}
                 items={projects}
                 selected={selectedProject}
                 onChange={handleProjectChange}
                 getItemKey={(p) => p.id}
-                getItemLabel={(p) => p.name || p.code || `Projeto ${p.id}`}
-                buttonLabel="Selecione um projeto"
+                getItemLabel={(p) => p.name || p.code || `${t("entriesModal:costCenters.project")} ${p.id}`}
+                buttonLabel={t("entriesModal:costCenters.projectsBtn")}
                 clearOnClickOutside={false}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
@@ -1069,13 +1060,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SelectDropdown<InventoryItem>
-              label="Produto"
+              label={t("entriesModal:inventory.product")}
               items={inventoryItems}
               selected={selectedInventoryItem}
               onChange={handleInventoryChange}
               getItemKey={(i) => i.id}
               getItemLabel={(i) => (i.sku ? `${i.sku} — ${i.name}` : i.name)}
-              buttonLabel="Selecione um produto"
+              buttonLabel={t("entriesModal:inventory.productBtn")}
               clearOnClickOutside={false}
               singleSelect
               customStyles={{ maxHeight: "180px" }}
@@ -1086,7 +1077,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             {selectedInventoryItem.length > 0 && (
               <Input
                 id={IDS.inventoryQty}
-                label="Quantidade"
+                label={t("entriesModal:inventory.quantity")}
                 type="number"
                 placeholder="0"
                 value={formData.inventory.quantity}
@@ -1114,7 +1105,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div id={IDS.entityTypeWrap}>
               <SelectDropdown<{ id: number; label: string; value: string }>
-                label="Tipo de entidade"
+                label={t("entriesModal:entities.type")}
                 items={ENTITY_TYPE_OPTIONS}
                 selected={selectedEntityType}
                 onChange={(v) => {
@@ -1128,7 +1119,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 }}
                 getItemKey={(i) => i.id}
                 getItemLabel={(i) => i.label}
-                buttonLabel="Selecione o tipo"
+                buttonLabel={t("entriesModal:entities.typeBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "160px" }}
                 hideFilter
@@ -1137,13 +1128,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
             <div id={IDS.entityWrap}>
               <SelectDropdown<Entity>
-                label="Entidade"
+                label={t("entriesModal:entities.entity")}
                 items={filteredEntities}
                 selected={selectedEntity}
                 onChange={handleEntityChange}
                 getItemKey={(i) => i.id}
-                getItemLabel={(i) => i.full_name || (i).alias_name || "Entidade sem nome"}
-                buttonLabel="Selecione a entidade"
+                getItemLabel={(i) => i.full_name || (i).alias_name || t("entriesModal:entities.unnamed")}
+                buttonLabel={t("entriesModal:entities.entityBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
                 virtualize
@@ -1159,15 +1150,15 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SelectDropdown<RecurrenceOption>
-              label="Recorrência"
+              label={t("entriesModal:recurrence.title")}
               items={[
-                { id: 1, label: "Sim", value: 1 },
-                { id: 2, label: "Não", value: 0 },
+                { id: 1, label: t("entriesModal:recurrence.yes"), value: 1 },
+                { id: 2, label: t("entriesModal:recurrence.no"), value: 0 },
               ]}
               selected={
                 formData.recurrence.recurrence === 1
-                  ? [{ id: 1, label: "Sim", value: 1 }]
-                  : [{ id: 2, label: "Não", value: 0 }]
+                  ? [{ id: 1, label: t("entriesModal:recurrence.yes"), value: 1 }]
+                  : [{ id: 2, label: t("entriesModal:recurrence.no"), value: 0 }]
               }
               onChange={(v) =>
                 setFormData((p) => ({
@@ -1177,7 +1168,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               }
               getItemKey={(i) => i.id}
               getItemLabel={(i) => i.label}
-              buttonLabel="Selecione"
+              buttonLabel={t("entriesModal:misc.select")}
               singleSelect
               hideFilter
               customStyles={{ maxHeight: "140px" }}
@@ -1188,7 +1179,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               <>
                 <Input
                   id={IDS.installmentsInput}
-                  label="Parcelas"
+                  label={t("entriesModal:recurrence.installments")}
                   type="number"
                   value={formData.recurrence.installments}
                   onChange={(e) =>
@@ -1201,7 +1192,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 />
 
                 <SelectDropdown<PeriodOption>
-                  label="Períodos"
+                  label={t("entriesModal:recurrence.periods")}
                   items={periodOptions}
                   selected={periodOptions.filter((opt) => opt.value === formData.recurrence.periods)}
                   onChange={(v) =>
@@ -1212,7 +1203,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   }
                   getItemKey={(i) => i.id}
                   getItemLabel={(i) => i.label}
-                  buttonLabel="Selecione um período"
+                  buttonLabel={t("entriesModal:recurrence.periodsBtn")}
                   singleSelect
                   customStyles={{ maxHeight: "140px" }}
                   hideFilter
@@ -1220,17 +1211,17 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 />
 
                 <SelectDropdown<{ id: number; label: string; value: string }>
-                  label="Fim de semana"
+                  label={t("entriesModal:recurrence.weekend")}
                   items={[
-                    { id: 1, label: "Postergar", value: "postpone" },
-                    { id: -1, label: "Antecipar", value: "antedate" },
+                    { id: 1, label: t("entriesModal:recurrence.postpone"), value: "postpone" },
+                    { id: -1, label: t("entriesModal:recurrence.antedate"), value: "antedate" },
                   ]}
                   selected={
                     formData.recurrence.weekend
                       ? [
                           formData.recurrence.weekend === "postpone"
-                            ? { id: 1, label: "Postergar", value: "postpone" }
-                            : { id: -1, label: "Antecipar", value: "antedate" },
+                            ? { id: 1, label: t("entriesModal:recurrence.postpone"), value: "postpone" }
+                            : { id: -1, label: t("entriesModal:recurrence.antedate"), value: "antedate" },
                         ]
                       : []
                   }
@@ -1242,7 +1233,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   }
                   getItemKey={(i) => i.id}
                   getItemLabel={(i) => i.label}
-                  buttonLabel="Selecione"
+                  buttonLabel={t("entriesModal:misc.select")}
                   singleSelect
                   customStyles={{ maxHeight: "140px" }}
                   hideFilter
@@ -1273,19 +1264,19 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {type === "credit" ? "RC" : "PG"}
+                {type === "credit" ? t("entriesModal:header.badgeIn") : t("entriesModal:header.badgeOut")}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Lançamento</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("entriesModal:header.entry")}</div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {type === "credit" ? "Recebimentos" : "Pagamentos"}
+                  {type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
                 </h1>
               </div>
             </div>
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={attemptClose}
-              aria-label="Fechar"
+              aria-label={t("entriesModal:aria.close")}
             >
               &times;
             </button>
@@ -1304,22 +1295,22 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             <p className="text-[12px] text-gray-600">
               {amountCents > 0 ? (
                 <>
-                  Valor: <b>{formatCurrency(formData.details.amount)}</b>
+                  {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount)}</b>
                 </>
               ) : (
-                <>Informe um valor para salvar.</>
+                <>{t("entriesModal:footer.enterValue")}</>
               )}
               <span className="ml-3 text-gray-400">
-                Atalhos: Esc (fechar), Ctrl/⌘+S (salvar), Ctrl+Alt+←/→ (abas)
+                {t("entriesModal:footer.shortcuts")}
               </span>
             </p>
 
             <div className="flex gap-2">
               <Button variant="cancel" type="button" onClick={attemptClose}>
-                Cancelar
+                {t("entriesModal:actions.cancel")}
               </Button>
               <Button type="submit" disabled={isSaveDisabled}>
-                {isSubmitting ? "Salvando…" : "Salvar"}
+                {isSubmitting ? t("entriesModal:actions.saving") : t("entriesModal:actions.save")}
               </Button>
             </div>
           </footer>
@@ -1337,10 +1328,10 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
             <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 id="close-confirm-title" className="text-[15px] font-semibold text-gray-900">
-                  Descartar informações preenchidas?
+                  {t("entriesModal:confirmDiscard.title")}
                 </h2>
                 <p id="close-confirm-desc" className="mt-1 text-[12px] text-gray-600">
-                  Você inseriu dados neste lançamento. Se sair agora, as informações serão perdidas.
+                  {t("entriesModal:confirmDiscard.message")}
                 </p>
               </div>
               <div className="px-5 py-4 flex items-center justify-end gap-2">
@@ -1349,14 +1340,14 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowCloseConfirm(false)}
                 >
-                  Cancelar
+                  {t("entriesModal:actions.back")}
                 </Button>
                 <Button
                   variant="danger"
                   className="!bg-red-500 hover:!bg-red-600"
                   onClick={handleClose}
                 >
-                  Descartar
+                  {t("entriesModal:actions.discard")}
                 </Button>
               </div>
             </div>
@@ -1387,11 +1378,10 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                   onClick={() => {
                     const fId = warning.focusId;
                     setWarning(null);
-                    // foca após fechar o overlay
                     setTimeout(() => focusFirstInteractive(fId), 0);
                   }}
                 >
-                  Entendi
+                  {t("entriesModal:actions.ok")}
                 </Button>
               </div>
             </div>

@@ -1,0 +1,14 @@
+{
+  "aria": {
+    "section": "Banks and balances",
+    "loading": "Loading banks",
+    "row": "{{bank}} — Branch {{branch}} • Account {{account}} — Balance {{balance}}"
+  },
+  "labels": {
+    "banks": "Banks",
+    "count": "({{count}})",
+    "total": "Total:",
+    "branchAccount": "Branch {{branch}} • Account {{account}}"
+  },
+  "empty": "No banks available"
+}

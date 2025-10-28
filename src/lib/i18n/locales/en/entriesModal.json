@@ -1,0 +1,141 @@
+{
+    "tabs": {
+      "details": "Details",
+      "costCenters": "Cost Centers",
+      "inventory": "Inventory",
+      "entities": "Parties",
+      "recurrence": "Recurrence"
+    },
+    "header": {
+      "badgeIn": "RC",
+      "badgeOut": "PG",
+      "entry": "Entry",
+      "receipts": "Receipts",
+      "payments": "Payments"
+    },
+    "aria": { "close": "Close" },
+    "details": {
+      "dueDate": "Due date",
+      "amount": "Amount",
+      "amountPlaceholder": "0.00",
+      "glAccount": "G/L account",
+      "glAccountBtn": "Select account",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe the entry",
+      "docType": "Document type",
+      "docTypeBtn": "Select type",
+      "observation": "Note",
+      "optional": "(optional)",
+      "notes": "Internal notes",
+      "notesPlaceholder": "Internal notes (not shown on documents)"
+    },
+    "costCenters": {
+      "departments": "Departments",
+      "departmentsBtn": "Select departments",
+      "distribution": "Distribution (%)",
+      "total": "Total: {{value}}%",
+      "unnamedDepartment": "Unnamed department",
+      "noneSelected": "No department selected.",
+      "projects": "Projects",
+      "projectsBtn": "Select a project",
+      "percent": "%",
+      "project": "Project",
+      "department": "Department"
+    },
+    "inventory": {
+      "product": "Product",
+      "productBtn": "Select a product",
+      "quantity": "Quantity"
+    },
+    "entities": {
+      "type": "Entity type",
+      "typeBtn": "Select type",
+      "entity": "Entity",
+      "entityBtn": "Select entity",
+      "unnamed": "Unnamed entity",
+      "types": {
+        "client": "Client",
+        "supplier": "Supplier",
+        "employee": "Employee"
+      }
+    },
+    "recurrence": {
+      "title": "Recurrence",
+      "yes": "Yes",
+      "no": "No",
+      "installments": "Installments",
+      "periods": "Periods",
+      "periodsBtn": "Select a period",
+      "weekend": "Weekend",
+      "postpone": "Postpone",
+      "antedate": "Bring forward"
+    },
+    "period": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "bimonthly": "Bi-monthly",
+      "quarterly": "Quarterly",
+      "semiannual": "Semiannual",
+      "annual": "Annual"
+    },
+    "misc": {
+      "select": "Select",
+      "others": "Others"
+    },
+    "errors": {
+      "generic": {
+        "title": "Invalid fields",
+        "message": "Please fix highlighted fields to continue."
+      },
+      "amount": {
+        "title": "Invalid amount",
+        "message": "Amount is required and must be greater than 0."
+      },
+      "gl": {
+        "title": "G/L account required",
+        "message": "Select a G/L account before saving."
+      },
+      "installments": {
+        "title": "Invalid installments",
+        "message": "Enter an integer greater than 0 or disable recurrence."
+      },
+      "quantity": {
+        "title": "Invalid quantity",
+        "message": "Enter a quantity greater than 0 for the selected product."
+      },
+      "entity": {
+        "title": "Select an entity",
+        "message": "Choose an entity matching the selected type or remove the type."
+      },
+      "departmentPercent": {
+        "title": "Invalid percentage",
+        "message": "All departments must have percentages greater than 0."
+      },
+      "departmentSum": {
+        "title": "Incorrect distribution",
+        "message": "Department percentages must add up to exactly 100%."
+      }
+    },
+    "confirmDiscard": {
+      "title": "Discard filled-in information?",
+      "message": "You entered data in this entry. Leaving now will lose the information."
+    },
+    "saveError": {
+      "title": "Save error",
+      "generic": "Could not save the entry.",
+      "unexpected": "Unexpected error while saving."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "back": "Back",
+      "discard": "Discard",
+      "ok": "OK"
+    },
+    "footer": {
+      "value": "Amount:",
+      "enterValue": "Enter an amount to save.",
+      "shortcuts": "Shortcuts: Esc (close), Ctrl/⌘+S (save), Ctrl+Alt+←/→ (tabs)"
+    }
+}

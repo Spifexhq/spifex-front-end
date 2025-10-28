@@ -1,0 +1,15 @@
+{
+  "sidebar": {
+    "aria": {
+      "nav": "Barre latérale des actions de trésorerie",
+      "toggleOpen": "Ouvrir la barre latérale",
+      "toggleClose": "Fermer la barre latérale"
+    },
+    "items": {
+      "credit": "Encaissements",
+      "debit": "Paiements",
+      "transfer": "Virements"
+    }
+  }
+}
+

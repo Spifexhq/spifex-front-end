@@ -1,0 +1,16 @@
+{
+  "aria": {
+    "mainNav": "Navegação principal",
+    "drawerNav": "Menu lateral"
+  },
+  "actions": {
+    "open": "Abrir menu",
+    "close": "Fechar",
+    "menu": "Menu"
+  },
+  "links": {
+    "cashflow": "Fluxo de Caixa",
+    "settled": "Realizado",
+    "reports": "Relatórios"
+  }
+}

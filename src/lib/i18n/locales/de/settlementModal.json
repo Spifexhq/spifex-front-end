@@ -1,0 +1,49 @@
+{
+  "aria": { "dialog": "Abrechnung von Buchungen" },
+  "header": {
+    "kind": "Abrechnung",
+    "title": { "one": "1 Buchung ausgewählt", "many": "{{n}} Buchungen ausgewählt" }
+  },
+  "actions": {
+    "close": "Schließen",
+    "bulkDate": "Datum anwenden",
+    "applyDateAll": "Datum für alle anwenden",
+    "markAllPartial": "Alle als teilweise markieren",
+    "clearAllPartial": "Teilbeträge löschen",
+    "cancel": "Abbrechen",
+    "settle": "Abrechnen"
+  },
+  "banks": {
+    "aria": "Bank auswählen",
+    "title": "Banken",
+    "count": "({{n}})",
+    "balance": "Saldo:",
+    "agency": "Filiale",
+    "account": "Konto",
+    "none": "Keine Banken verfügbar"
+  },
+  "entries": {
+    "aria": "Buchungen",
+    "title": "Buchungen",
+    "count": "({{n}})"
+  },
+  "table": {
+    "due": "Fällig am",
+    "desc": "Beschreibung",
+    "amount": "Betrag",
+    "partialQ": "Teilweise?",
+    "partialAmount": "Teilbetrag",
+    "none": "Keine Buchungen ausgewählt",
+    "partialInvalid": "Ungültiger Teilbetrag (0 oder größer als der Buchungsbetrag)."
+  },
+  "footer": {
+    "original": "Original:",
+    "toSettle": "Abzurechnen:",
+    "bankLabel": "Bank:",
+    "selectBank": "Wählen Sie eine Bank",
+    "shortcuts": "Shortcuts: Esc (schließen), Ctrl/⌘+Enter (speichern)"
+  },
+  "errors": {
+    "bulk": "Fehler beim Abrechnen der Buchungen."
+  }
+}

@@ -1,0 +1,42 @@
+{
+    "loading": "Wird geladen…",
+    "panel": {
+        "consolidatedBalance": "Konsolidierter Bestand",
+        "accountsCount": "Konten: {{count}}",
+        "header": "Bankkonten • Konsolidierter Bestand:"
+    },
+    "aria": {
+        "goToBanks": "Zu den Bankeinstellungen",
+        "openBanks": "Banken öffnen"
+    },
+    "actions": {
+        "close": "Schließen"
+    },
+    "delta": {
+        "mom": "M/M {{value}}"
+    },
+    "cashflow": {
+        "labels": {
+        "mtdNet": "MTD: Ergebnis",
+        "overdueNet": "Überfällig (offen)",
+        "next7Net": "Nächste 7 Tage"
+        },
+        "hints": {
+        "mtd": "Eingänge {{inAmt}} • Ausgänge -{{outAmt}}",
+        "overdue": "Einnahmen {{recAmt}} • Ausgaben -{{payAmt}}",
+        "next7": "Einnahmen {{recAmt}} • Ausgaben {{payAmt}}"
+        }
+    },
+    "settled": {
+        "labels": {
+        "mtdSettledNet": "Realisierte Summe (aktueller Monat)",
+        "prevSettledNet": "Vormonat",
+        "last7Settled": "Letzte 7 Tage"
+        },
+        "hints": {
+        "mtd": "Einn. {{recAmt}} • Ausg. -{{payAmt}}",
+        "prev": "Einn. {{recAmt}} • Ausg. -{{payAmt}}",
+        "last7": "Einn. {{recAmt}} • Ausg. -{{payAmt}}"
+        }
+    }
+}

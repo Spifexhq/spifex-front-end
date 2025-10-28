@@ -1,0 +1,37 @@
+{
+  "aria": {
+    "section": "Entradas liquidadas",
+    "loadingEntries": "Carregando realizados",
+    "loadingMore": "Carregando mais resultados",
+    "selectAll": "Selecionar tudo",
+    "selectRow": "Selecionar linha"
+  },
+  "labels": {
+    "settled": "Realizados",
+    "selectedCount": "{{count}} selecionado",
+    "selectedCount_plural": "{{count}} selecionados",
+    "settlement": "Liq:",
+    "loadingMore": "Carregando mais...",
+    "installmentXofY": "Parcela {{x}} / {{y}}",
+    "partialIndex": "Parcial: {{n}}",
+    "bank": "Banco"
+  },
+  "columns": {
+    "amount": "Valor",
+    "balance": "Saldo"
+  },
+  "actions": {
+    "retry": "Tentar novamente"
+  },
+  "empty": {
+    "title": "Nenhum realizado encontrado",
+    "subtitle": "Tente ajustar os filtros para ver os dados"
+  },
+  "errors": {
+    "title": "Erro ao carregar dados",
+    "fetch": "Erro ao buscar dados."
+  },
+  "months": {
+    "short": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+  }
+}

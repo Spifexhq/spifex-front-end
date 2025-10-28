@@ -1,0 +1,141 @@
+{
+    "tabs": {
+      "details": "Détails",
+      "costCenters": "Centres de coûts",
+      "inventory": "Inventaire",
+      "entities": "Parties",
+      "recurrence": "Récurrence"
+    },
+    "header": {
+      "badgeIn": "RC",
+      "badgeOut": "PG",
+      "entry": "Écriture",
+      "receipts": "Recettes",
+      "payments": "Paiements"
+    },
+    "aria": { "close": "Fermer" },
+    "details": {
+      "dueDate": "Date d'échéance",
+      "amount": "Montant",
+      "amountPlaceholder": "0,00",
+      "glAccount": "Compte du grand livre",
+      "glAccountBtn": "Sélectionner un compte",
+      "description": "Description",
+      "descriptionPlaceholder": "Décrire l'écriture",
+      "docType": "Type de document",
+      "docTypeBtn": "Sélectionner un type",
+      "observation": "Note",
+      "optional": "(facultatif)",
+      "notes": "Notes internes",
+      "notesPlaceholder": "Notes internes (non affichées sur les documents)"
+    },
+    "costCenters": {
+      "departments": "Départements",
+      "departmentsBtn": "Sélectionner des départements",
+      "distribution": "Répartition (%)",
+      "total": "Total : {{value}} %",
+      "unnamedDepartment": "Département sans nom",
+      "noneSelected": "Aucun département sélectionné.",
+      "projects": "Projets",
+      "projectsBtn": "Sélectionner un projet",
+      "percent": "%",
+      "project": "Projet",
+      "department": "Département"
+    },
+    "inventory": {
+      "product": "Produit",
+      "productBtn": "Sélectionner un produit",
+      "quantity": "Quantité"
+    },
+    "entities": {
+      "type": "Type d'entité",
+      "typeBtn": "Sélectionner un type",
+      "entity": "Entité",
+      "entityBtn": "Sélectionner une entité",
+      "unnamed": "Entité sans nom",
+      "types": {
+        "client": "Client",
+        "supplier": "Fournisseur",
+        "employee": "Employé"
+      }
+    },
+    "recurrence": {
+      "title": "Récurrence",
+      "yes": "Oui",
+      "no": "Non",
+      "installments": "Échéances",
+      "periods": "Périodes",
+      "periodsBtn": "Sélectionner une période",
+      "weekend": "Week-end",
+      "postpone": "Reporter",
+      "antedate": "Anticiper"
+    },
+    "period": {
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "bimonthly": "Bimensuel",
+      "quarterly": "Trimestriel",
+      "semiannual": "Semestriel",
+      "annual": "Annuel"
+    },
+    "misc": {
+      "select": "Sélectionner",
+      "others": "Autres"
+    },
+    "errors": {
+      "generic": {
+        "title": "Champs invalides",
+        "message": "Veuillez corriger les champs surlignés pour continuer."
+      },
+      "amount": {
+        "title": "Montant invalide",
+        "message": "Le montant est requis et doit être supérieur à 0."
+      },
+      "gl": {
+        "title": "Compte du grand livre requis",
+        "message": "Sélectionnez un compte du grand livre avant d'enregistrer."
+      },
+      "installments": {
+        "title": "Échéances invalides",
+        "message": "Entrez un nombre entier supérieur à 0 ou désactivez la récurrence."
+      },
+      "quantity": {
+        "title": "Quantité invalide",
+        "message": "Entrez une quantité supérieure à 0 pour le produit sélectionné."
+      },
+      "entity": {
+        "title": "Sélectionner une entité",
+        "message": "Choisissez une entité correspondant au type sélectionné ou supprimez le type."
+      },
+      "departmentPercent": {
+        "title": "Pourcentage invalide",
+        "message": "Tous les départements doivent avoir des pourcentages supérieurs à 0."
+      },
+      "departmentSum": {
+        "title": "Répartition incorrecte",
+        "message": "Les pourcentages des départements doivent totaliser exactement 100 %."
+      }
+    },
+    "confirmDiscard": {
+      "title": "Abandonner les informations saisies ?",
+      "message": "Vous avez saisi des données dans cette écriture. Quitter maintenant entraînera la perte des informations."
+    },
+    "saveError": {
+      "title": "Erreur d'enregistrement",
+      "generic": "Impossible d'enregistrer l'écriture.",
+      "unexpected": "Erreur inattendue lors de l'enregistrement."
+    },
+    "actions": {
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "back": "Retour",
+      "discard": "Abandonner",
+      "ok": "OK"
+    },
+    "footer": {
+      "value": "Montant :",
+      "enterValue": "Entrez un montant pour enregistrer.",
+      "shortcuts": "Raccourcis : Échap (fermer), Ctrl/⌘+S (enregistrer), Ctrl+Alt+←/→ (onglets)"
+    }
+}

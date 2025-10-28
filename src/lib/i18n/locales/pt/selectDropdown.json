@@ -1,0 +1,6 @@
+{
+  "button": { "single": "Selecionar", "multi": "Selecionar itens" },
+  "actions": { "selectAll": "Marcar tudo", "clearAll": "Desmarcar tudo" },
+  "filter": { "placeholder": "Filtrar", "aria": "Filtrar opções" },
+  "aria": { "trigger": "Abrir lista", "listbox": "Lista de opções" }
+}

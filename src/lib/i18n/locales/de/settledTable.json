@@ -1,0 +1,37 @@
+{
+  "aria": {
+    "section": "Ausgeführte Buchungen",
+    "loadingEntries": "Ausgeführte Buchungen werden geladen",
+    "loadingMore": "Weitere Ergebnisse werden geladen",
+    "selectAll": "Alle auswählen",
+    "selectRow": "Zeile auswählen"
+  },
+  "labels": {
+    "settled": "Ausgeführt",
+    "selectedCount": "{{count}} ausgewählt",
+    "selectedCount_plural": "{{count}} ausgewählt",
+    "settlement": "Wert:",
+    "loadingMore": "Wird geladen...",
+    "installmentXofY": "Rate {{x}} / {{y}}",
+    "partialIndex": "Teilzahlung: {{n}}",
+    "bank": "Bank"
+  },
+  "columns": {
+    "amount": "Betrag",
+    "balance": "Kontostand"
+  },
+  "actions": {
+    "retry": "Erneut versuchen"
+  },
+  "empty": {
+    "title": "Keine ausgeführten Buchungen gefunden",
+    "subtitle": "Passen Sie die Filter an, um Daten zu sehen"
+  },
+  "errors": {
+    "title": "Fehler beim Laden",
+    "fetch": "Daten konnten nicht geladen werden."
+  },
+  "months": {
+    "short": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+  }
+}

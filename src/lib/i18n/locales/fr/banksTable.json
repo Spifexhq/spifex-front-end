@@ -1,0 +1,14 @@
+{
+  "aria": {
+    "section": "Banques et soldes",
+    "loading": "Chargement des banques",
+    "row": "{{bank}} — Agence {{branch}} • Compte {{account}} — Solde {{balance}}"
+  },
+  "labels": {
+    "banks": "Banques",
+    "count": "({{count}})",
+    "total": "Total :",
+    "branchAccount": "Agence {{branch}} • Compte {{account}}"
+  },
+  "empty": "Aucune banque disponible"
+}

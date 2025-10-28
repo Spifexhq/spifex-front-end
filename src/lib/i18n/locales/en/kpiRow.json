@@ -1,0 +1,42 @@
+{
+    "loading": "Loading...",
+    "panel": {
+        "consolidatedBalance": "Consolidated balance",
+        "accountsCount": "accounts: {{count}}",
+        "header": "Bank accounts • Consolidated balance:"
+    },
+    "aria": {
+        "goToBanks": "Go to bank settings",
+        "openBanks": "Open Banks"
+    },
+    "actions": {
+        "close": "Close"
+    },
+    "delta": {
+        "mom": "M/M {{value}}"
+    },
+    "cashflow": {
+        "labels": {
+        "mtdNet": "MTD: Result",
+        "overdueNet": "Overdue (unsettled)",
+        "next7Net": "Next 7 days"
+        },
+        "hints": {
+        "mtd": "In {{inAmt}} • Out -{{outAmt}}",
+        "overdue": "Receipts {{recAmt}} • Payments -{{payAmt}}",
+        "next7": "Receipts {{recAmt}} • Payments {{payAmt}}"
+        }
+    },
+    "settled": {
+        "labels": {
+        "mtdSettledNet": "Realized (current month)",
+        "prevSettledNet": "Previous month",
+        "last7Settled": "Last 7 days"
+        },
+        "hints": {
+        "mtd": "Rec. {{recAmt}} • Pay. -{{payAmt}}",
+        "prev": "Rec. {{recAmt}} • Pay. -{{payAmt}}",
+        "last7": "Rec. {{recAmt}} • Pay. -{{payAmt}}"
+        }
+    }
+}

@@ -7,6 +7,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "src/api/requests";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
 import { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto";
@@ -29,17 +30,11 @@ const formatCurrency = (amount: number): string =>
   amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("pt-BR");
+  new Date(iso).toLocaleDateString();
 
 const getMonthYear = (iso: string): string => {
   const d = new Date(iso);
   return `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-};
-
-const formatMonthYearSummary = (isoDateStr: string): string => {
-  const dt = new Date(isoDateStr);
-  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  return `${months[dt.getMonth()]}, ${dt.getFullYear()}`;
 };
 
 const isCredit = (t: string | null | undefined) =>
@@ -50,7 +45,7 @@ const txValue = (e: SettledEntry) => {
   return isCredit(e.tx_type) ? n : -n;
 };
 
-/** lê o running do servidor; prefere *_minor (centavos → reais) */
+/** prefers *_minor (cents → major) */
 const getServerRunning = (e: SettledEntry): number | null => {
   if (typeof e.running_balance_minor === "number") {
     return e.running_balance_minor / 100;
@@ -81,31 +76,39 @@ const TableHeader: React.FC<{
   selectedCount: number;
   totalCount: number;
   onSelectAll: () => void;
-}> = ({ selectedCount, totalCount, onSelectAll }) => (
-  <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
-    <div className="flex items-center gap-3">
-      <Checkbox
-        checked={totalCount > 0 && selectedCount === totalCount}
-        onChange={onSelectAll}
-        size="sm"
-      />
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-wide text-gray-600">Realizados</span>
-        <span className="text-[10px] text-gray-500">({totalCount})</span>
-        {selectedCount > 0 && (
-          <span className="text-[10px] text-blue-600 font-medium">
-            {selectedCount} selecionado{selectedCount > 1 ? "s" : ""}
+}> = ({ selectedCount, totalCount, onSelectAll }) => {
+  const { t } = useTranslation("settledTable");
+  return (
+    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
+      <div className="flex items-center gap-3">
+        <Checkbox
+          checked={totalCount > 0 && selectedCount === totalCount}
+          onChange={onSelectAll}
+          size="sm"
+          aria-label={t("aria.selectAll")}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-gray-600">
+            {t("labels.settled")}
           </span>
-        )}
+          <span className="text-[10px] text-gray-500">({totalCount})</span>
+          {selectedCount > 0 && (
+            <span className="text-[10px] text-blue-600 font-medium">
+              {t("labels.selectedCount", {
+                count: selectedCount,
+              })}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
+        <div className="w-[150px] text-center">{t("columns.amount")}</div>
+        <div className="w-[150px] text-center">{t("columns.balance")}</div>
+        <div className="w-[32px]" />
       </div>
     </div>
-    <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
-      <div className="w-[150px] text-center">Valor</div>
-      <div className="w-[150px] text-center">Saldo</div>
-      <div className="w-[32px]" />
-    </div>
-  </div>
-);
+  );
+};
 
 const EntryRow: React.FC<{
   entry: SettledEntry;
@@ -113,6 +116,7 @@ const EntryRow: React.FC<{
   isSelected: boolean;
   onSelect: (idNum: number, ev: React.MouseEvent) => void;
 }> = ({ entry, runningBalance, isSelected, onSelect }) => {
+  const { t } = useTranslation("settledTable");
   const value = txValue(entry);
   const positive = value >= 0;
   const idNum = hash32(entry.external_id);
@@ -120,7 +124,12 @@ const EntryRow: React.FC<{
   return (
     <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <Checkbox checked={isSelected} onClick={(e) => onSelect(idNum, e)} size="sm" />
+        <Checkbox
+          checked={isSelected}
+          onClick={(e) => onSelect(idNum, e)}
+          size="sm"
+          aria-label={t("aria.selectRow")}
+        />
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -129,17 +138,24 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                Liq: {formatDate(entry.value_date)}
+                {t("labels.settlement")} {formatDate(entry.value_date)}
                 {(entry.installment_index || entry.installment_count) && (
                   <span className="ml-2">
-                    Parcela {entry.installment_index ?? "-"} / {entry.installment_count ?? "-"}
+                    {t("labels.installmentXofY", {
+                      x: entry.installment_index ?? "-",
+                      y: entry.installment_count ?? "-",
+                    })}
                   </span>
                 )}
                 {entry.partial_index != null && (
-                  <span className="ml-2">Parcial: {entry.partial_index}</span>
+                  <span className="ml-2">
+                    {t("labels.partialIndex", { n: entry.partial_index })}
+                  </span>
                 )}
                 {entry.bank?.institution && (
-                  <span className="ml-2">Banco: {entry.bank.institution}</span>
+                  <span className="ml-2">
+                    {t("labels.bank")}: {entry.bank.institution}
+                  </span>
                 )}
               </div>
             </div>
@@ -173,15 +189,23 @@ const SummaryRow: React.FC<{
   monthlySum: number;
   runningBalance: number;
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
+  const { t } = useTranslation("settledTable");
   const [m, y] = displayMonth.split("/");
   const monthDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+
+  const months = t("months.short", { returnObjects: true }) as string[] | undefined;
+  const label = (() => {
+    const idx = monthDate.getMonth();
+    const name = months && months[idx] ? months[idx] : monthDate.toLocaleString(undefined, { month: "short" });
+    return `${name}, ${monthDate.getFullYear()}`;
+  })();
 
   return (
     <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
       <div className="flex items-center gap-2">
         <div className="h-1.5 w-1.5 bg-gray-500 rounded-full" />
         <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">
-          {formatMonthYearSummary(monthDate.toISOString())}
+          {label}
         </span>
       </div>
 
@@ -206,24 +230,27 @@ const SummaryRow: React.FC<{
   );
 };
 
-const EmptyState: React.FC = () => (
-  <div className="flex flex-col items-center justify-center py-8 px-4">
-    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
-      </svg>
+const EmptyState: React.FC = () => {
+  const { t } = useTranslation("settledTable");
+  return (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-[13px] font-medium text-gray-800 mb-1">{t("empty.title")}</p>
+        <p className="text-[11px] text-gray-500">{t("empty.subtitle")}</p>
+      </div>
     </div>
-    <div className="text-center">
-      <p className="text-[13px] font-medium text-gray-800 mb-1">Nenhum realizado encontrado</p>
-      <p className="text-[11px] text-gray-500">Tente ajustar os filtros para ver os dados</p>
-    </div>
-  </div>
-);
+  );
+};
 
 /* ------------------------------ Skeletons --------------------------------- */
 
@@ -279,40 +306,48 @@ const SkeletonSummaryRow: React.FC = () => (
 const TableSkeleton: React.FC<{ rows?: number; showSummariesEvery?: number }> = ({
   rows = 10,
   showSummariesEvery = 4,
-}) => (
-  <div
-    className="divide-y divide-gray-200"
-    role="progressbar"
-    aria-label="Carregando realizados"
-    aria-busy="true"
-  >
-    {Array.from({ length: rows }).map((_, i) => (
-      <React.Fragment key={i}>
-        <SkeletonEntryRow />
-        {(i + 1) % showSummariesEvery === 0 && <SkeletonSummaryRow />}
-      </React.Fragment>
-    ))}
-  </div>
-);
+}) => {
+  const { t } = useTranslation("settledTable");
+  return (
+    <div
+      className="divide-y divide-gray-200"
+      role="progressbar"
+      aria-label={t("aria.loadingEntries")}
+      aria-busy="true"
+    >
+      {Array.from({ length: rows }).map((_, i) => (
+        <React.Fragment key={i}>
+          <SkeletonEntryRow />
+          {(i + 1) % showSummariesEvery === 0 && <SkeletonSummaryRow />}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+};
 
 /* ------------------------------ Bottom Loader ------------------------------ */
 
-const BottomLoader: React.FC = () => (
-  <div
-    className="flex items-center justify-center gap-2 py-3 border-t border-gray-300 bg-white"
-    role="status"
-    aria-live="polite"
-    aria-label="Carregando mais resultados"
-  >
-    <span className="inline-block h-4 w-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-    <span className="text-[11px] text-gray-500">Carregando mais...</span>
-  </div>
-);
+const BottomLoader: React.FC = () => {
+  const { t } = useTranslation("settledTable");
+  return (
+    <div
+      className="flex items-center justify-center gap-2 py-3 border-t border-gray-300 bg-white"
+      role="status"
+      aria-live="polite"
+      aria-label={t("aria.loadingMore")}
+    >
+      <span className="inline-block h-4 w-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+      <span className="text-[11px] text-gray-500">{t("labels.loadingMore")}</span>
+    </div>
+  );
+};
 
 /* ------------------------------- Main + Virtualização --------------------- */
 
 const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
   ({ filters, onSelectionChange }, ref) => {
+    const { t } = useTranslation("settledTable");
+
     const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -324,7 +359,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     const fetchingRef = useRef(false);
     const scrollerRef = useRef<HTMLDivElement>(null);
 
-    // valores “atuais” para funções estáveis
     const latest = useRef<{ filters?: EntryFilters; nextCursor: string | null; isFetching: boolean }>({
       filters,
       nextCursor,
@@ -337,22 +371,21 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     const buildPayload = useCallback((reset: boolean): GetSettledEntryRequest => {
       const f = latest.current.filters;
 
-      // combine text
       const qCombined =
         (f?.description ? String(f.description).trim() : "") +
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      // ✅ bancos em CSV (0..n)
       const bank =
         Array.isArray(f?.bank_id) && f!.bank_id!.length
           ? f!.bank_id!.map(String).join(",")
           : undefined;
 
-      // first GL (mesmo comportamento da tabela de abertos)
-      const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
+      const gl =
+        Array.isArray(f?.gla_id) && f!.gla_id!.length
+          ? f!.gla_id!.map(String).join(",")
+          : undefined;
 
-      // "credit"/"debit" -> 1 / -1
       const tx_type =
         f?.tx_type === "credit" ? 1 :
         f?.tx_type === "debit"  ? -1 :
@@ -366,14 +399,12 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         bank,
         q,
 
-        // campos diretos
         description: f?.description || undefined,
         observation: f?.observation || undefined,
 
         gl,
         tx_type,
 
-        // valores em MINOR units (FilterBar converte)
         amount_min: f?.amount_min,
         amount_max: f?.amount_max,
 
@@ -413,7 +444,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
                 ]
           );
 
-          // cursor
           const nextUrl = (data as GetSettledEntry).next;
           const cursor = getCursorFromUrl(nextUrl) ?? null;
           setNextCursor(cursor);
@@ -421,7 +451,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           setHasMore(Boolean(cursor));
           setError(null);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Erro ao buscar dados.");
+          setError(err instanceof Error ? err.message : t("errors.fetch"));
         } finally {
           setLoading(false);
           setLoadingMore(false);
@@ -430,10 +460,9 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
           fetchingRef.current = false;
         }
       },
-      [buildPayload]
+      [buildPayload, t]
     );
 
-    // carregar / recarregar quando filtros mudarem
     useEffect(() => {
       setNextCursor(null);
       latest.current.nextCursor = null;
@@ -453,7 +482,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       filters?.amount_max,
     ]);
 
-    // seleção (agora sobre o array completo devolvido pelo servidor)
     const {
       selectedIds: selectedNumIds,
       handleSelectRow,
@@ -477,7 +505,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
       onSelectionChange?.(extIds, rows);
     }, [selectedNumIds, numIdToEntry, onSelectionChange]);
 
-    // linhas (somários por mês usando o running do servidor)
     const rows = useMemo<TableRow[]>(() => {
       if (!entries.length) return [];
 
@@ -490,7 +517,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         const val = txValue(e);
 
         if (currentMonth && currentMonth !== monthKey) {
-          // running = saldo da última linha do mês anterior
           const lastRow = out[out.length - 1];
           const lastRunning =
             lastRow?.type === "entry" ? lastRow.runningBalance : 0;
@@ -531,8 +557,8 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
     }, [entries]);
 
     /* ------------------------------ Virtualização -------------------------- */
-    const ENTRY_ROW_H = 42;   // h-10.5 ≈ 42px
-    const SUMMARY_ROW_H = 40; // px
+    const ENTRY_ROW_H = 42;
+    const SUMMARY_ROW_H = 40;
     const OVERSCAN = 8;
 
     const [scrollTop, setScrollTop] = useState(0);
@@ -594,13 +620,13 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
               </svg>
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-red-800 mb-1">Erro ao carregar dados</p>
+              <p className="text-[13px] font-medium text-red-800 mb-1">{t("errors.title")}</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
               <button
                 onClick={() => void fetchEntries(true)}
                 className="text-[11px] font-semibold border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50"
               >
-                Tentar novamente
+                {t("actions.retry")}
               </button>
             </div>
           </div>
@@ -610,10 +636,9 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
 
     return (
       <section
-        aria-label="Entradas liquidadas"
+        aria-label={t("aria.section")}
         className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
       >
-        {/* Header sempre visível */}
         <TableHeader
           selectedCount={selectedNumIds.length}
           totalCount={entries.length}
@@ -623,7 +648,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
         <div
           ref={scrollerRef}
           onScroll={(e) => {
-            setScrollTop(e.currentTarget.scrollTop); // virtualização
+            setScrollTop(e.currentTarget.scrollTop);
             if (!isFetching && hasMore) {
               const el = e.currentTarget;
               const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 150;

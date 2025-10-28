@@ -1,0 +1,141 @@
+{
+    "tabs": {
+      "details": "Detalhes",
+      "costCenters": "Centro de Custos",
+      "inventory": "Inventário",
+      "entities": "Envolvidos",
+      "recurrence": "Recorrência"
+    },
+    "header": {
+      "badgeIn": "RC",
+      "badgeOut": "PG",
+      "entry": "Lançamento",
+      "receipts": "Recebimentos",
+      "payments": "Pagamentos"
+    },
+    "aria": { "close": "Fechar" },
+    "details": {
+      "dueDate": "Vencimento",
+      "amount": "Valor",
+      "amountPlaceholder": "0,00",
+      "glAccount": "Conta contábil",
+      "glAccountBtn": "Selecione a conta",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descreva o lançamento",
+      "docType": "Tipo de documento",
+      "docTypeBtn": "Selecione o tipo",
+      "observation": "Observação",
+      "optional": "(opcional)",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas internas (não aparecem em documentos)"
+    },
+    "costCenters": {
+      "departments": "Departamentos",
+      "departmentsBtn": "Selecione departamentos",
+      "distribution": "Distribuição (%)",
+      "total": "Total: {{value}}%",
+      "unnamedDepartment": "Departamento sem nome",
+      "noneSelected": "Nenhum departamento selecionado.",
+      "projects": "Projetos",
+      "projectsBtn": "Selecione um projeto",
+      "percent": "%", 
+      "project": "Projeto",
+      "department": "Departamento"
+    },
+    "inventory": {
+      "product": "Produto",
+      "productBtn": "Selecione um produto",
+      "quantity": "Quantidade"
+    },
+    "entities": {
+      "type": "Tipo de entidade",
+      "typeBtn": "Selecione o tipo",
+      "entity": "Entidade",
+      "entityBtn": "Selecione a entidade",
+      "unnamed": "Entidade sem nome",
+      "types": {
+        "client": "Cliente",
+        "supplier": "Fornecedor",
+        "employee": "Funcionário"
+      }
+    },
+    "recurrence": {
+      "title": "Recorrência",
+      "yes": "Sim",
+      "no": "Não",
+      "installments": "Parcelas",
+      "periods": "Períodos",
+      "periodsBtn": "Selecione um período",
+      "weekend": "Fim de semana",
+      "postpone": "Postergar",
+      "antedate": "Antecipar"
+    },
+    "period": {
+      "weekly": "Semanal",
+      "monthly": "Mensal",
+      "bimonthly": "Bimestral",
+      "quarterly": "Trimestral",
+      "semiannual": "Semestral",
+      "annual": "Anual"
+    },
+    "misc": {
+      "select": "Selecione",
+      "others": "Outros"
+    },
+    "errors": {
+      "generic": {
+        "title": "Campos inválidos",
+        "message": "Corrija os campos destacados para continuar."
+      },
+      "amount": {
+        "title": "Valor inválido",
+        "message": "O campo Valor é obrigatório e deve ser maior que 0."
+      },
+      "gl": {
+        "title": "Conta contábil obrigatória",
+        "message": "Selecione uma conta contábil antes de salvar."
+      },
+      "installments": {
+        "title": "Parcelas inválidas",
+        "message": "Informe um número de parcelas inteiro e maior que 0 ou desative a recorrência."
+      },
+      "quantity": {
+        "title": "Quantidade inválida",
+        "message": "Informe uma quantidade maior que 0 para o produto selecionado."
+      },
+      "entity": {
+        "title": "Selecione a entidade",
+        "message": "Escolha uma entidade correspondente ao tipo selecionado ou remova o tipo."
+      },
+      "departmentPercent": {
+        "title": "Percentual inválido",
+        "message": "Todos os departamentos devem ter percentuais maiores que 0."
+      },
+      "departmentSum": {
+        "title": "Distribuição incorreta",
+        "message": "A soma dos percentuais dos departamentos deve ser exatamente 100%."
+      }
+    },
+    "confirmDiscard": {
+      "title": "Descartar informações preenchidas?",
+      "message": "Você inseriu dados neste lançamento. Se sair agora, as informações serão perdidas."
+    },
+    "saveError": {
+      "title": "Erro ao salvar",
+      "generic": "Não foi possível salvar o lançamento.",
+      "unexpected": "Erro inesperado ao salvar lançamento."
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "save": "Salvar",
+      "saving": "Salvando…",
+      "back": "Cancelar",
+      "discard": "Descartar",
+      "ok": "Entendi"
+    },
+    "footer": {
+      "value": "Valor:",
+      "enterValue": "Informe um valor para salvar.",
+      "shortcuts": "Atalhos: Esc (fechar), Ctrl/⌘+S (salvar), Ctrl+Alt+←/→ (abas)"
+    }
+}

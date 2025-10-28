@@ -1,0 +1,31 @@
+{
+  "aria": {
+    "bar": "Selection actions bar"
+  },
+  "actions": {
+    "minimize": "Minimize",
+    "expand": "Expand",
+    "cancel": "Cancel",
+    "cancelSelection": "Cancel selection (Esc)",
+    "delete": "Delete",
+    "deleteSelected": "Delete selected",
+    "liquidate": "Settle",
+    "liquidateSelected": "Settle selected",
+    "return": "Revert"
+  },
+  "labels": {
+    "selected": "{{count}} selected",
+    "selected_plural": "{{count}} selected",
+    "selectedShort": "selected",
+    "selectedShort_plural": "selected",
+    "credits": "Credits",
+    "debits": "Debits",
+    "sumCredits": "Σ Credits",
+    "sumDebits": "Σ Debits",
+    "net": "Net balance:",
+    "dueShort": "Due:"
+  },
+  "hints": {
+    "escToCancel": "Tip: press"
+  }
+}

@@ -7,6 +7,7 @@
  *   - Quick ranges in date popover: Hoje / Esta semana / Mês atual / Trimestre / Ano
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 import { SelectDropdown } from "@/components/SelectDropdown";
@@ -63,11 +64,12 @@ function startOfYearISO(d = new Date()) {
 }
 
 /* ---- Chip amount helper ---- */
-function amountChipLabel(minDigits?: string, maxDigits?: string) {
+function amountChipLabel(minDigits?: string, maxDigits?: string, t?: (k: string) => string) {
   const parts: string[] = [];
   if (minDigits) parts.push(`≥ ${formatCurrency(minDigits)}`);
   if (maxDigits) parts.push(`≤ ${formatCurrency(maxDigits)}`);
-  return `Valor ${parts.join(" ")}`.trim();
+  const prefix = t ? t("filterBar:chips.value") : "Valor";
+  return `${prefix} ${parts.join(" ")}`.trim();
 }
 const centsDigitsToInt = (s: string | undefined) =>
   Number(String(s ?? "").replace(/\D/g, "")) || 0;
@@ -81,6 +83,8 @@ interface FilterBarProps {
 
 /* -------------------------------- Component -------------------------------- */
 const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, contextSettlement }) => {
+  const { t } = useTranslation(["filterBar"]);
+
   const { banks: rawBanks } = useBanks(undefined, 0, bankActive);
   const banks = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
 
@@ -145,25 +149,33 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const cmdOrCtrl = e.metaKey || e.ctrlKey;
+
       if (cmdOrCtrl && e.key.toLowerCase() === "k") {
         e.preventDefault();
         searchInputRef.current?.focus();
         return;
       }
-      if (cmdOrCtrl && e.key === "Enter") {
+
+      if (cmdOrCtrl && (e.key === "Enter" || e.code === "Enter")) {
         e.preventDefault();
         applyFilters();
         return;
       }
-      if (e.key === "Escape") {
+
+      if (e.key === "Escape" || e.code === "Escape") {
+        if (saveModalOpen) setSaveModalOpen(false);
+        if (configModalOpen) setConfigModalOpen(false);
+
         setOpenEditor(null);
         setViewsMenuOpen(false);
         setMenuOpen(false);
       }
     }
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [applyFilters]);
+    // include modal states so the handler "sees" their latest values
+  }, [applyFilters, saveModalOpen, configModalOpen]);
 
   /* Load GL Accounts (cursor API) */
   useEffect(() => {
@@ -197,7 +209,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
     } catch (err) {
       console.error("Failed to load saved views", err);
     } finally {
-      setViewsLoaded(true);           // <-- tell boot logic we can decide now
+      setViewsLoaded(true);
     }
   };
 
@@ -316,125 +328,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
     !!filters.amount_min ||
     !!filters.amount_max;
 
-  /* ------------------------------ Save Visualization (Modal) ------------------------------ */
-
-  function resetSaveModalState() {
-    setSaveName("");
-    setSaveDefault(false);
-    setSaveMode("create");
-    setOverwriteId(null);
-  }
-  const openSaveModal = () => {
-    resetSaveModalState();
-    setSaveModalOpen(true);
-  };
-  const closeSaveModal = () => {
-    setSaveModalOpen(false);
-    setTimeout(() => resetSaveModalState(), 0);
-  };
-
-  // Close modals with ESC (keep original behavior)
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        if (saveModalOpen) setSaveModalOpen(false);
-        if (configModalOpen) setConfigModalOpen(false);
-      }
-    }
-    if (saveModalOpen || configModalOpen) {
-      window.addEventListener("keydown", onKey);
-      return () => window.removeEventListener("keydown", onKey);
-    }
-  }, [saveModalOpen, configModalOpen]);
-
-  const handleSaveVisualization = async () => {
-    const name = saveName.trim();
-    if (!name) return;
-
-    const payload = {
-      name,
-      is_default: saveDefault,
-      settlement_status: !!filters.settlement_status,
-      filters,
-    };
-
-    try {
-      if (saveMode === "overwrite" && overwriteId) {
-        await api.editEntryView(overwriteId, payload);
-      } else {
-        const sameName = views.find(
-          (v) => v.name.toLowerCase() === name.toLowerCase() && v.settlement_status === !!filters.settlement_status
-        );
-        if (sameName) await api.editEntryView(sameName.id, payload);
-        else await api.addEntryView(payload);
-      }
-      await refreshViews();
-    } catch (err) {
-      console.error("Failed to save visualization", err);
-    } finally {
-      closeSaveModal();
-    }
-  };
-
-  function applyVisualization(v: Visualization) {
-    const next = { ...(v.filters as LocalFilters), settlement_status: !!v.settlement_status };
-    setFilters(next);
-    // For non-default views, we keep "Aplicar" manual on purpose.
-  }
-
-  /* ---------- Manage views inside config modal ---------- */
-  const toggleDefaultView = async (view: Visualization) => {
-    try {
-      if (view.is_default) {
-        // Unset current default (allow zero defaults)
-        await api.editEntryView(view.id, { is_default: false });
-      } else {
-        // Set this as default…
-        await api.editEntryView(view.id, { is_default: true });
-        // …and unset any other default in the same scope (safety)
-        const others = scopedViews.filter((v) => v.id !== view.id && v.is_default);
-        if (others.length) {
-          await Promise.all(others.map((o) => api.editEntryView(o.id, { is_default: false })));
-        }
-        bootstrappedRef.current = false;
-      }
-      await refreshViews();
-    } catch (err) {
-      console.error("Failed to toggle default view", err);
-    }
-  };
-
-  const deleteView = async (viewId: string) => {
-    try {
-      await api.deleteEntryView(viewId);
-      setViews((prev) => prev.filter((v) => v.id !== viewId));
-    } catch (err) {
-      console.error("Failed to delete view", err);
-    }
-  };
-
-  const startRenaming = (v: Visualization) => {
-    setRenamingId(v.id);
-    setRenamingName(v.name);
-  };
-  const cancelRenaming = () => {
-    setRenamingId(null);
-    setRenamingName("");
-  };
-  const saveRenaming = async () => {
-    const id = renamingId;
-    const name = renamingName.trim();
-    if (!id || !name) return;
-    try {
-      await api.editEntryView(id, { name });
-      await refreshViews();
-    } catch (err) {
-      console.error("Failed to rename view", err);
-    } finally {
-      cancelRenaming();
-    }
-  };
-
   /* ---------------------------------- Render -------------------------------- */
   return (
     <div className="w-full">
@@ -444,7 +337,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           {(filters.start_date || filters.end_date) && (
             <Chip
               icon="calendar"
-              label={`Datas  ${filters.start_date || "yyyy-mm-dd"} - ${filters.end_date || "yyyy-mm-dd"}`}
+              label={`${t("filterBar:chips.date")}  ${filters.start_date || "yyyy-mm-dd"} - ${filters.end_date || "yyyy-mm-dd"}`}
               onClick={() => toggleEditor("date")}
               onRemove={() => removeChip("date")}
             />
@@ -452,9 +345,10 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           {(filters.bank_id?.length ?? 0) > 0 && (
             <Chip
               icon="bank"
-              label={`Banco  ${selectedBanks.slice(0, 2).map((b) => b.institution).join(", ")}${
-                selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""
-              }`}
+              label={`${t("filterBar:chips.bank")}  ${selectedBanks
+                .slice(0, 2)
+                .map((b) => b.institution)
+                .join(", ")}${selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""}`}
               onClick={() => toggleEditor("banks")}
               onRemove={() => removeChip("banks")}
             />
@@ -462,9 +356,10 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           {(filters.gla_id?.length ?? 0) > 0 && (
             <Chip
               icon="accounts"
-              label={`Conta contábil  ${selectedAccounts.slice(0, 2).map((a) => a.name).join(", ")}${
-                selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""
-              }`}
+              label={`${t("filterBar:chips.accounts")}  ${selectedAccounts
+                .slice(0, 2)
+                .map((a) => a.name)
+                .join(", ")}${selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""}`}
               onClick={() => toggleEditor("accounts")}
               onRemove={() => removeChip("accounts")}
             />
@@ -472,7 +367,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           {!!filters.tx_type && (
             <Chip
               icon="note"
-              label={`Tipo ${filters.tx_type === "credit" ? "Receita" : "Despesa"}`}
+              label={`${t("filterBar:chips.type")} ${filters.tx_type === "credit" ? t("filterBar:chips.credit") : t("filterBar:chips.debit")}`}
               onClick={() => toggleEditor("tx_type")}
               onRemove={() => removeChip("tx_type")}
             />
@@ -480,7 +375,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           {(filters.amount_min || filters.amount_max) && (
             <Chip
               icon="note"
-              label={amountChipLabel(filters.amount_min, filters.amount_max)}
+              label={amountChipLabel(filters.amount_min, filters.amount_max, t)}
               onClick={() => toggleEditor("amount")}
               onRemove={() => removeChip("amount")}
             />
@@ -488,7 +383,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           {!!filters.observation && (
             <Chip
               icon="note"
-              label={`Observação  ${filters.observation}`}
+              label={`${t("filterBar:chips.observation")}  ${filters.observation}`}
               onClick={() => toggleEditor("observation")}
               onRemove={() => removeChip("observation")}
             />
@@ -497,7 +392,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <input
             ref={searchInputRef}
             className="flex-[1_1_30%] min-w-[160px] h-6 bg-transparent outline-none text-xs placeholder-gray-400"
-            placeholder="Buscar ou filtrar… (Ctrl/⌘+K)"
+            placeholder={t("filterBar:search.placeholder")}
             value={filters.description || ""}
             onChange={(e) => setFilters((f) => ({ ...f, description: e.target.value }))}
             onKeyDown={(e) => {
@@ -511,7 +406,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <Button
             variant="outline"
             size="sm"
-            aria-label="Configurações"
+            aria-label={t("filterBar:buttons.config")}
             onClick={() => setConfigModalOpen(true)}
             className="text-sm bg-white hover:bg-gray-50"
           >
@@ -525,9 +420,15 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             variant="outline"
             size="sm"
             className="font-semibold bg-white hover:bg-gray-50"
-            onClick={openSaveModal}
+            onClick={() => {
+              setSaveName("");
+              setSaveDefault(false);
+              setSaveMode("create");
+              setOverwriteId(null);
+              setSaveModalOpen(true);
+            }}
           >
-            Salvar visualização
+            {t("filterBar:buttons.saveView")}
           </Button>
         </div>
 
@@ -541,7 +442,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             aria-haspopup="menu"
             aria-expanded={viewsMenuOpen}
           >
-            Visualizações
+            {t("filterBar:buttons.views")}
           </Button>
           {viewsMenuOpen && (
             <div
@@ -554,12 +455,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                   label={`${v.name}${v.is_default ? " ⭐" : ""}`}
                   onClick={() => {
                     setViewsMenuOpen(false);
-                    applyVisualization(v);
+                    const next = { ...(v.filters as LocalFilters), settlement_status: !!v.settlement_status };
+                    setFilters(next);
                   }}
                 />
               ))}
               {scopedViews.length === 0 && (
-                <div className="text-xs text-gray-500 px-2 py-1">Nenhuma visualização salva</div>
+                <div className="text-xs text-gray-500 px-2 py-1">{t("filterBar:viewsMenu.empty")}</div>
               )}
             </div>
           )}
@@ -576,18 +478,18 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             className={`font-semibold bg-white hover:bg-gray-50 ${menuOpen ? "!bg-white !border-gray-400" : ""}`}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            Adicionar filtro +
+            {t("filterBar:menu.addFilter")}
           </Button>
 
           {menuOpen && (
             <div className="absolute left-0 top-full z-[99999] w-72 rounded-md border border-gray-300 bg-white p-2 shadow-lg">
-              <MenuItem label="Período" onClick={() => (setOpenEditor("date"), setMenuOpen(false))} />
-              <MenuItem label="Banco" onClick={() => (setOpenEditor("banks"), setMenuOpen(false))} />
-              <MenuItem label="Conta contábil" onClick={() => (setOpenEditor("accounts"), setMenuOpen(false))} />
-              <MenuItem label="Observação" onClick={() => (setOpenEditor("observation"), setMenuOpen(false))} />
+              <MenuItem label={t("filterBar:menu.date")} onClick={() => (setOpenEditor("date"), setMenuOpen(false))} />
+              <MenuItem label={t("filterBar:menu.bank")} onClick={() => (setOpenEditor("banks"), setMenuOpen(false))} />
+              <MenuItem label={t("filterBar:menu.accounts")} onClick={() => (setOpenEditor("accounts"), setMenuOpen(false))} />
+              <MenuItem label={t("filterBar:menu.observation")} onClick={() => (setOpenEditor("observation"), setMenuOpen(false))} />
               <div className="my-1 border-t border-gray-200" />
-              <MenuItem label="Tipo (Receita/Despesa)" onClick={() => (setOpenEditor("tx_type"), setMenuOpen(false))} />
-              <MenuItem label="Valor (mín/máx)" onClick={() => (setOpenEditor("amount"), setMenuOpen(false))} />
+              <MenuItem label={t("filterBar:menu.txType")} onClick={() => (setOpenEditor("tx_type"), setMenuOpen(false))} />
+              <MenuItem label={t("filterBar:menu.amount")} onClick={() => (setOpenEditor("amount"), setMenuOpen(false))} />
             </div>
           )}
         </div>
@@ -595,7 +497,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         {/* Apply */}
         <div className="ml-auto sm:ml-0">
           <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={applyFilters}>
-            Aplicar
+            {t("filterBar:buttons.apply")}
           </Button>
         </div>
 
@@ -604,7 +506,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           className={`text-xs font-semibold text-red-600 ${hasActive ? "" : "opacity-40 cursor-not-allowed"}`}
           onClick={() => hasActive && clearAll()}
         >
-          Limpar filtros
+          {t("filterBar:buttons.clear")}
         </button>
 
       </div>
@@ -615,7 +517,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[360px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-gray-600 space-y-1 block">
-                <span className="block">Início</span>
+                <span className="block">{t("filterBar:editors.date.start")}</span>
                 <input
                   type="date"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
@@ -624,7 +526,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                 />
               </label>
               <label className="text-xs text-gray-600 space-y-1 block">
-                <span className="block">Fim</span>
+                <span className="block">{t("filterBar:editors.date.end")}</span>
                 <input
                   type="date"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
@@ -636,32 +538,32 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
 
             {/* Quick date-range helpers */}
             <div className="mt-2">
-              <div className="text-[11px] text-gray-500 mb-1">Atalhos</div>
+              <div className="text-[11px] text-gray-500 mb-1">{t("filterBar:editors.date.shortcuts")}</div>
               <div className="flex items-center gap-2 flex-wrap">
                 <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: todayISO(), end_date: todayISO() }))}>
-                  Hoje
+                  {t("filterBar:editors.date.today")}
                 </QuickButton>
                 <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfWeekISO(), end_date: todayISO() }))}>
-                  Esta semana
+                  {t("filterBar:editors.date.thisWeek")}
                 </QuickButton>
                 <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfMonthISO(), end_date: todayISO() }))}>
-                  Mês atual
+                  {t("filterBar:editors.date.thisMonth")}
                 </QuickButton>
                 <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfQuarterISO(), end_date: todayISO() }))}>
-                  Trimestre
+                  {t("filterBar:editors.date.thisQuarter")}
                 </QuickButton>
                 <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfYearISO(), end_date: todayISO() }))}>
-                  Ano
+                  {t("filterBar:editors.date.thisYear")}
                 </QuickButton>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>
-                Remover
+                {t("filterBar:buttons.remove")}
               </Button>
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
-                Aplicar
+                {t("filterBar:buttons.apply")}
               </Button>
             </div>
           </Popover>
@@ -670,18 +572,18 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         {openEditor === "banks" && (
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <SelectDropdown<BankAccount>
-              label="Bancos"
+              label={t("filterBar:editors.banks.label")}
               items={banks}
               selected={selectedBanks}
               onChange={(list) => setFilters((f) => ({ ...f, bank_id: list.map((x) => String(x.id)) }))}
               getItemKey={(item) => item.id}
               getItemLabel={(item) => item.institution}
-              buttonLabel="Selecionar bancos"
+              buttonLabel={t("filterBar:editors.banks.button")}
               customStyles={{ maxHeight: "240px" }}
             />
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("banks")}>
-                Remover
+                {t("filterBar:buttons.remove")}
               </Button>
               <Button
                 variant="outline"
@@ -689,7 +591,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                 className="font-semibold bg-white hover:bg-gray-50"
                 onClick={() => (setOpenEditor(null), applyFilters())}
               >
-                Aplicar
+                {t("filterBar:buttons.apply")}
               </Button>
             </div>
           </Popover>
@@ -698,19 +600,19 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         {openEditor === "accounts" && (
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <SelectDropdown<GLAccountLike>
-              label="Contas contábeis"
+              label={t("filterBar:editors.accounts.label")}
               items={ledgerAccounts}
               selected={selectedAccounts}
               onChange={(list) => setFilters((f) => ({ ...f, gla_id: list.map((x) => getGlaId(x)) }))}
               getItemKey={(item) => getGlaId(item)}
               getItemLabel={(item) => item.name}
-              buttonLabel="Selecionar contas"
+              buttonLabel={t("filterBar:editors.accounts.button")}
               customStyles={{ maxHeight: "240px" }}
               groupBy={(item) => item.subcategory || ""}
             />
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("accounts")}>
-                Remover
+                {t("filterBar:buttons.remove")}
               </Button>
               <Button
                 variant="outline"
@@ -718,7 +620,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                 className="font-semibold bg-white hover:bg-gray-50"
                 onClick={() => (setOpenEditor(null), applyFilters())}
               >
-                Aplicar
+                {t("filterBar:buttons.apply")}
               </Button>
             </div>
           </Popover>
@@ -728,14 +630,14 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <input
               type="text"
-              placeholder="Digite uma observação…"
+              placeholder={t("filterBar:editors.observation.placeholder")}
               className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
               value={filters.observation || ""}
               onChange={(e) => setFilters((f) => ({ ...f, observation: e.target.value }))}
             />
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("observation")}>
-                Remover
+                {t("filterBar:buttons.remove")}
               </Button>
               <Button
                 variant="outline"
@@ -743,7 +645,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                 className="font-semibold bg-white hover:bg-gray-50"
                 onClick={() => (setOpenEditor(null), applyFilters())}
               >
-                Aplicar
+                {t("filterBar:buttons.apply")}
               </Button>
             </div>
           </Popover>
@@ -753,18 +655,18 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "credit" }))}>
-                Receita
+                {t("filterBar:editors.txType.credit")}
               </Button>
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "debit" }))}>
-                Despesa
+                {t("filterBar:editors.txType.debit")}
               </Button>
             </div>
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("tx_type")}>
-                Remover
+                {t("filterBar:buttons.remove")}
               </Button>
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
-                Aplicar
+                {t("filterBar:buttons.apply")}
               </Button>
             </div>
           </Popover>
@@ -774,12 +676,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-gray-600 space-y-1 block">
-                <span className="block">Mínimo (R$)</span>
+                <span className="block">{t("filterBar:editors.amount.min")} {t("filterBar:editors.amount.currencySuffix")}</span>
                 <input
                   type="text"
                   inputMode="numeric"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  placeholder="R$ 0,00"
+                  placeholder={t("filterBar:editors.amount.placeholder")}
                   value={filters.amount_min ? formatCurrency(filters.amount_min) : ""}
                   onChange={(e) =>
                     setFilters((f) => ({ ...f, amount_min: e.target.value }))
@@ -795,12 +697,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
               </label>
 
               <label className="text-xs text-gray-600 space-y-1 block">
-                <span className="block">Máximo (R$)</span>
+                <span className="block">{t("filterBar:editors.amount.max")} {t("filterBar:editors.amount.currencySuffix")}</span>
                 <input
                   type="text"
                   inputMode="numeric"
                   className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  placeholder="R$ 0,00"
+                  placeholder={t("filterBar:editors.amount.placeholder")}
                   value={filters.amount_max ? formatCurrency(filters.amount_max) : ""}
                   onChange={(e) =>
                     setFilters((f) => ({ ...f, amount_max: e.target.value }))
@@ -818,10 +720,10 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
 
             <div className="flex justify-end gap-2 mt-3">
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>
-                Remover
+                {t("filterBar:buttons.remove")}
               </Button>
               <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
-                Aplicar
+                {t("filterBar:buttons.apply")}
               </Button>
             </div>
           </Popover>
@@ -833,11 +735,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-              <h3 className="text-[14px] font-semibold text-gray-800">Visualizações salvas</h3>
+              <h3 className="text-[14px] font-semibold text-gray-800">{t("filterBar:configModal.title")}</h3>
               <button
                 className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                 onClick={() => setConfigModalOpen(false)}
-                aria-label="Fechar"
+                aria-label={t("filterBar:configModal.close")}
               >
                 &times;
               </button>
@@ -846,7 +748,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
             <div>
               <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
                 {scopedViews.length === 0 && (
-                  <div className="px-3 py-2 text-xs text-gray-500">Nenhuma visualização salva.</div>
+                  <div className="px-3 py-2 text-xs text-gray-500">{t("filterBar:configModal.empty")}</div>
                 )}
                 {scopedViews.map((v) => {
                   const isRenaming = renamingId === v.id;
@@ -857,7 +759,25 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                         <Checkbox
                           checked={!!v.is_default}
                           size="small"
-                          onChange={() => toggleDefaultView(v)}
+                          onChange={() => {
+                            // mantém a lógica existente
+                            (async () => {
+                              try {
+                                if (v.is_default) {
+                                  await api.editEntryView(v.id, { is_default: false });
+                                } else {
+                                  await api.editEntryView(v.id, { is_default: true });
+                                  const others = scopedViews.filter((o) => o.id !== v.id && o.is_default);
+                                  if (others.length) {
+                                    await Promise.all(others.map((o) => api.editEntryView(o.id, { is_default: false })));
+                                  }
+                                }
+                                await refreshViews();
+                              } catch (err) {
+                                console.error("Failed to toggle default view", err);
+                              }
+                            })();
+                          }}
                         />
                         {isRenaming ? (
                           <input
@@ -868,39 +788,83 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                         ) : (
                           <span className="text-sm text-gray-800">{v.name}</span>
                         )}
-                        {v.is_default ? <span className="text-[11px] text-amber-600">Padrão</span> : null}
+                        {v.is_default ? <span className="text-[11px] text-amber-600">{t("filterBar:configModal.defaultTag")}</span> : null}
                       </label>
 
                       <div className="ml-auto flex items-center gap-2">
                         {isRenaming ? (
                           <>
-                            <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={saveRenaming}>
-                              Salvar nome
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white hover:bg-gray-50"
+                              onClick={async () => {
+                                const id = renamingId;
+                                const name = renamingName.trim();
+                                if (!id || !name) return;
+                                try {
+                                  await api.editEntryView(id, { name });
+                                  await refreshViews();
+                                } catch (err) {
+                                  console.error("Failed to rename view", err);
+                                } finally {
+                                  setRenamingId(null);
+                                  setRenamingName("");
+                                }
+                              }}
+                            >
+                              {t("filterBar:configModal.saveName")}
                             </Button>
-                            <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={cancelRenaming}>
-                              Cancelar
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white hover:bg-gray-50"
+                              onClick={() => {
+                                setRenamingId(null);
+                                setRenamingName("");
+                              }}
+                            >
+                              {t("filterBar:configModal.cancel")}
                             </Button>
                           </>
                         ) : (
-                          <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => startRenaming(v)}>
-                            Renomear
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-white hover:bg-gray-50"
+                            onClick={() => {
+                              setRenamingId(v.id);
+                              setRenamingName(v.name);
+                            }}
+                          >
+                            {t("filterBar:configModal.rename")}
                           </Button>
                         )}
                         <Button
                           variant="outline"
                           size="sm"
                           className="bg-white hover:bg-gray-50"
-                          onClick={() => applyVisualization(v)}
+                          onClick={() => {
+                            const next = { ...(v.filters as LocalFilters), settlement_status: !!v.settlement_status };
+                            setFilters(next);
+                          }}
                         >
-                          Aplicar
+                          {t("filterBar:configModal.apply")}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           className="!text-red-600 !border-red-200 hover:!bg-red-50"
-                          onClick={() => deleteView(v.id)}
+                          onClick={async () => {
+                            try {
+                              await api.deleteEntryView(v.id);
+                              setViews((prev) => prev.filter((x) => x.id !== v.id));
+                            } catch (err) {
+                              console.error("Failed to delete view", err);
+                            }
+                          }}
                         >
-                          Excluir
+                          {t("filterBar:configModal.delete")}
                         </Button>
                       </div>
                     </div>
@@ -910,7 +874,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
 
               <div className="flex justify-end mt-3">
                 <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setConfigModalOpen(false)}>
-                  Fechar
+                  {t("filterBar:configModal.footerClose")}
                 </Button>
               </div>
             </div>
@@ -923,11 +887,11 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-              <h3 className="text-[14px] font-semibold text-gray-800">Salvar visualização</h3>
+              <h3 className="text-[14px] font-semibold text-gray-800">{t("filterBar:saveModal.title")}</h3>
               <button
                 className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                 onClick={() => setSaveModalOpen(false)}
-                aria-label="Fechar"
+                aria-label={t("filterBar:saveModal.close")}
               >
                 &times;
               </button>
@@ -935,22 +899,22 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
 
             <div className="space-y-4 text-xs text-gray-700">
               <label className="block space-y-1">
-                <span>Nome</span>
+                <span>{t("filterBar:saveModal.name")}</span>
                 <input
                   className="w-full border border-gray-300 rounded px-2 py-1"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="Ex.: 'Pagamentos mês atual por projeto'"
+                  placeholder={t("filterBar:saveModal.namePlaceholder")}
                 />
               </label>
 
               <label className="inline-flex items-center gap-2">
                 <Checkbox checked={saveDefault} size="small" onChange={(e) => setSaveDefault(e.target.checked)} />
-                <span>Definir como padrão</span>
+                <span>{t("filterBar:saveModal.setDefault")}</span>
               </label>
 
               <div className="space-y-2">
-                <div className="font-semibold">Modo</div>
+                <div className="font-semibold">{t("filterBar:saveModal.modeTitle")}</div>
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -958,7 +922,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                     checked={saveMode === "create"}
                     onChange={() => setSaveMode("create")}
                   />
-                  <span>Criar nova visualização</span>
+                  <span>{t("filterBar:saveModal.create")}</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -967,18 +931,18 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
                     checked={saveMode === "overwrite"}
                     onChange={() => setSaveMode("overwrite")}
                   />
-                  <span>Sobrescrever existente</span>
+                  <span>{t("filterBar:saveModal.overwrite")}</span>
                 </label>
 
                 {saveMode === "overwrite" && (
                   <label className="block space-y-1 mt-2">
-                    <span>Escolha a visualização</span>
+                    <span>{t("filterBar:saveModal.chooseView")}</span>
                     <select
                       className="w-full border border-gray-300 rounded px-2 py-1"
                       value={overwriteId ?? ""}
                       onChange={(e) => setOverwriteId(e.target.value || null)}
                     >
-                      <option value="">— selecione —</option>
+                      <option value="">{t("filterBar:saveModal.choosePlaceholder")}</option>
                       {scopedViews.map((v) => (
                         <option key={v.id} value={v.id}>
                           {v.name} {v.is_default ? "⭐" : ""}
@@ -990,17 +954,60 @@ const FilterBar: React.FC<FilterBarProps> = ({ onApply, initial, bankActive, con
               </div>
 
               <div className="flex justify-end gap-2 pt-1">
-                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={closeSaveModal}>
-                  Cancelar
+                <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => {
+                  setSaveModalOpen(false);
+                  setTimeout(() => {
+                    setSaveName("");
+                    setSaveDefault(false);
+                    setSaveMode("create");
+                    setOverwriteId(null);
+                  }, 0);
+                }}>
+                  {t("filterBar:saveModal.cancel")}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   className="bg-white hover:bg-gray-50"
-                  onClick={handleSaveVisualization}
+                  onClick={async () => {
+                    const name = saveName.trim();
+                    if (!name) return;
+
+                    const payload = {
+                      name,
+                      is_default: saveDefault,
+                      settlement_status: !!filters.settlement_status,
+                      filters,
+                    };
+
+                    try {
+                      if (saveMode === "overwrite" && overwriteId) {
+                        await api.editEntryView(overwriteId, payload);
+                      } else {
+                        const sameName = views.find(
+                          (v) =>
+                            v.name.toLowerCase() === name.toLowerCase() &&
+                            v.settlement_status === !!filters.settlement_status
+                        );
+                        if (sameName) await api.editEntryView(sameName.id, payload);
+                        else await api.addEntryView(payload);
+                      }
+                      await refreshViews();
+                    } catch (err) {
+                      console.error("Failed to save visualization", err);
+                    } finally {
+                      setSaveModalOpen(false);
+                      setTimeout(() => {
+                        setSaveName("");
+                        setSaveDefault(false);
+                        setSaveMode("create");
+                        setOverwriteId(null);
+                      }, 0);
+                    }
+                  }}
                   disabled={!saveName.trim() || (saveMode === "overwrite" && !overwriteId)}
                 >
-                  Salvar
+                  {t("filterBar:saveModal.save")}
                 </Button>
               </div>
             </div>
@@ -1026,6 +1033,7 @@ const Chip: React.FC<{
   onClick(): void;
   onRemove(): void;
 }> = ({ icon, label, onClick, onRemove }) => {
+  const { t } = useTranslation(["filterBar"]);
   const Icon = () => {
     if (icon === "calendar") return <span className="text-[12px]" aria-hidden>📅</span>;
     if (icon === "bank") return <span className="text-[12px]" aria-hidden>🏦</span>;
@@ -1043,7 +1051,7 @@ const Chip: React.FC<{
       <Icon />
       <span className="truncate max-w-[220px]">{label}</span>
       <button
-        aria-label="remover filtro"
+        aria-label={t("filterBar:aria.removeFilter")}
         className="ml-1 rounded px-1 text-gray-500 hover:bg-gray-200"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => {

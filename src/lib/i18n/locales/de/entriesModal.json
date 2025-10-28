@@ -1,0 +1,141 @@
+{
+    "tabs": {
+      "details": "Details",
+      "costCenters": "Kostenstellen",
+      "inventory": "Inventar",
+      "entities": "Parteien",
+      "recurrence": "Wiederholung"
+    },
+    "header": {
+      "badgeIn": "RC",
+      "badgeOut": "PG",
+      "entry": "Buchung",
+      "receipts": "Einnahmen",
+      "payments": "Zahlungen"
+    },
+    "aria": { "close": "Schließen" },
+    "details": {
+      "dueDate": "Fälligkeitsdatum",
+      "amount": "Betrag",
+      "amountPlaceholder": "0,00",
+      "glAccount": "Hauptbuchkonto",
+      "glAccountBtn": "Konto auswählen",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Buchung beschreiben",
+      "docType": "Dokumenttyp",
+      "docTypeBtn": "Typ auswählen",
+      "observation": "Notiz",
+      "optional": "(optional)",
+      "notes": "Interne Notizen",
+      "notesPlaceholder": "Interne Notizen (nicht auf Dokumenten angezeigt)"
+    },
+    "costCenters": {
+      "departments": "Abteilungen",
+      "departmentsBtn": "Abteilungen auswählen",
+      "distribution": "Verteilung (%)",
+      "total": "Gesamt: {{value}} %",
+      "unnamedDepartment": "Unbenannte Abteilung",
+      "noneSelected": "Keine Abteilung ausgewählt.",
+      "projects": "Projekte",
+      "projectsBtn": "Projekt auswählen",
+      "percent": "%",
+      "project": "Projekt",
+      "department": "Abteilung"
+    },
+    "inventory": {
+      "product": "Produkt",
+      "productBtn": "Produkt auswählen",
+      "quantity": "Menge"
+    },
+    "entities": {
+      "type": "Entitätstyp",
+      "typeBtn": "Typ auswählen",
+      "entity": "Entität",
+      "entityBtn": "Entität auswählen",
+      "unnamed": "Unbenannte Entität",
+      "types": {
+        "client": "Kunde",
+        "supplier": "Lieferant",
+        "employee": "Mitarbeiter"
+      }
+    },
+    "recurrence": {
+      "title": "Wiederholung",
+      "yes": "Ja",
+      "no": "Nein",
+      "installments": "Raten",
+      "periods": "Perioden",
+      "periodsBtn": "Periode auswählen",
+      "weekend": "Wochenende",
+      "postpone": "Verschieben",
+      "antedate": "Vorziehen"
+    },
+    "period": {
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "bimonthly": "Zweimonatlich",
+      "quarterly": "Vierteljährlich",
+      "semiannual": "Halbjährlich",
+      "annual": "Jährlich"
+    },
+    "misc": {
+      "select": "Auswählen",
+      "others": "Andere"
+    },
+    "errors": {
+      "generic": {
+        "title": "Ungültige Felder",
+        "message": "Bitte korrigieren Sie die hervorgehobenen Felder, um fortzufahren."
+      },
+      "amount": {
+        "title": "Ungültiger Betrag",
+        "message": "Der Betrag ist erforderlich und muss größer als 0 sein."
+      },
+      "gl": {
+        "title": "Hauptbuchkonto erforderlich",
+        "message": "Wählen Sie ein Hauptbuchkonto aus, bevor Sie speichern."
+      },
+      "installments": {
+        "title": "Ungültige Raten",
+        "message": "Geben Sie eine ganze Zahl größer als 0 ein oder deaktivieren Sie die Wiederholung."
+      },
+      "quantity": {
+        "title": "Ungültige Menge",
+        "message": "Geben Sie eine Menge größer als 0 für das ausgewählte Produkt ein."
+      },
+      "entity": {
+        "title": "Entität auswählen",
+        "message": "Wählen Sie eine Entität aus, die dem ausgewählten Typ entspricht, oder entfernen Sie den Typ."
+      },
+      "departmentPercent": {
+        "title": "Ungültiger Prozentsatz",
+        "message": "Alle Abteilungen müssen Prozentsätze größer als 0 haben."
+      },
+      "departmentSum": {
+        "title": "Falsche Verteilung",
+        "message": "Die Prozentsätze der Abteilungen müssen genau 100 % ergeben."
+      }
+    },
+    "confirmDiscard": {
+      "title": "Eingegebene Informationen verwerfen?",
+      "message": "Sie haben Daten in dieser Buchung eingegeben. Das Verlassen führt zum Verlust der Informationen."
+    },
+    "saveError": {
+      "title": "Speicherfehler",
+      "generic": "Die Buchung konnte nicht gespeichert werden.",
+      "unexpected": "Unerwarteter Fehler beim Speichern."
+    },
+    "actions": {
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "saving": "Speichern…",
+      "back": "Zurück",
+      "discard": "Verwerfen",
+      "ok": "OK"
+    },
+    "footer": {
+      "value": "Betrag:",
+      "enterValue": "Geben Sie einen Betrag ein, um zu speichern.",
+      "shortcuts": "Tastenkombinationen: Esc (schließen), Strg/⌘+S (speichern), Strg+Alt+←/→ (Registerkarten)"
+    }
+}

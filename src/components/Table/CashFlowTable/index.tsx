@@ -8,17 +8,14 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import { api } from "src/api/requests";
 import { getCursorFromUrl } from "src/lib/list";
 
 import type { EntryFilters, Entry } from "src/models/entries/domain";
-import type {
-  GetEntryRequest,
-  GetEntryResponse,
-} from "src/models/entries/dto/GetEntry";
-
+import type { GetEntryRequest, GetEntryResponse } from "src/models/entries/dto/GetEntry";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 
 /* -------------------------------------------------------------------------- */
@@ -39,15 +36,11 @@ const getInstallments = (e: Entry) => ({
 });
 
 /**
- * Reads the backend-provided running balance.
  * Prefer *_minor if present (convert minor->major). Fallback to decimal string.
- * NOTE: assumes 2 decimal places (BRL). If you support multi-currency with different
- * exponents, adapt this conversion.
+ * NOTE: assumes 2 decimals.
  */
 const getServerRunning = (e: Entry): number | null => {
-  if (typeof e.running_balance_minor === "number") {
-    return e.running_balance_minor / 100; // minor -> major
-  }
+  if (typeof e.running_balance_minor === "number") return e.running_balance_minor / 100;
   if (typeof e.running_balance === "string" && e.running_balance.length) {
     const n = Number(e.running_balance);
     return Number.isFinite(n) ? n : null;
@@ -65,7 +58,7 @@ interface TableRow {
   entry?: Entry;
   monthlySum?: number;
   runningBalance?: number;
-  displayMonth?: string;
+  displayMonth?: string; // "MM/YYYY"
 }
 
 export type CashFlowTableHandle = {
@@ -80,14 +73,14 @@ interface CashFlowTableProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Utils                                                                      */
+/* i18n-aware utils                                                           */
 /* -------------------------------------------------------------------------- */
 
-const formatCurrency = (amount: number): string =>
-  amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatCurrency = (amount: number, locale = "pt-BR", currency = "BRL"): string =>
+  new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 
-const formatDate = (dateStr: string): string =>
-  new Date(dateStr).toLocaleDateString("pt-BR");
+const formatDate = (dateStr: string, locale = "pt-BR"): string =>
+  new Intl.DateTimeFormat(locale).format(new Date(dateStr));
 
 const getMonthYear = (dateStr: string): string => {
   const d = new Date(dateStr);
@@ -96,23 +89,13 @@ const getMonthYear = (dateStr: string): string => {
   return `${month}/${year}`;
 };
 
-const formatMonthYearSummary = (isoDate: string): string => {
+const formatMonthYearSummary = (
+  isoDate: string,
+  monthsShort: string[]
+): string => {
   const d = new Date(isoDate);
-  const months = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-  ];
-  return `${months[d.getMonth()]}, ${d.getFullYear()}`;
+  const m = d.getMonth();
+  return `${monthsShort[m]}, ${d.getFullYear()}`;
 };
 
 /** + for credits, - for debits (major units) */
@@ -129,33 +112,37 @@ const TableHeader: React.FC<{
   selectedCount: number;
   totalCount: number;
   onSelectAll: () => void;
-}> = ({ selectedCount, totalCount, onSelectAll }) => (
-  <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
-    <div className="flex items-center gap-3">
-      <Checkbox
-        checked={totalCount > 0 && selectedCount === totalCount}
-        onChange={onSelectAll}
-        size="sm"
-      />
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-wide text-gray-600">
-          Lançamentos
-        </span>
-        <span className="text-[10px] text-gray-500">({totalCount})</span>
-        {selectedCount > 0 && (
-          <span className="text-[10px] text-blue-600 font-medium">
-            {selectedCount} selecionado{selectedCount > 1 ? "s" : ""}
+}> = ({ selectedCount, totalCount, onSelectAll }) => {
+  const { t } = useTranslation("cashFlowTable");
+  return (
+    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
+      <div className="flex items-center gap-3">
+        <Checkbox
+          checked={totalCount > 0 && selectedCount === totalCount}
+          onChange={onSelectAll}
+          size="sm"
+          aria-label={t("aria.selectAll")}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-gray-600">
+            {t("labels.entries")}
           </span>
-        )}
+          <span className="text-[10px] text-gray-500">({totalCount})</span>
+          {selectedCount > 0 && (
+            <span className="text-[10px] text-blue-600 font-medium">
+              {t("labels.selectedCount", { count: selectedCount })}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
+        <div className="w-[150px] text-center">{t("columns.amount")}</div>
+        <div className="w-[150px] text-center">{t("columns.balance")}</div>
+        <div className="w-[32px]" />
       </div>
     </div>
-    <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
-      <div className="w-[150px] text-center">Valor</div>
-      <div className="w-[150px] text-center">Saldo</div>
-      <div className="w-[32px]" />
-    </div>
-  </div>
-);
+  );
+};
 
 const EntryRow: React.FC<{
   entry: Entry;
@@ -164,6 +151,7 @@ const EntryRow: React.FC<{
   onSelect: (id: string, event: React.MouseEvent) => void;
   onEdit: (entry: Entry) => void;
 }> = ({ entry, runningBalance, isSelected, onSelect, onEdit }) => {
+  const { t, i18n } = useTranslation("cashFlowTable");
   const transactionValue = getTransactionValue(entry);
   const isPositive = transactionValue >= 0;
   const installments = getInstallments(entry);
@@ -175,6 +163,7 @@ const EntryRow: React.FC<{
           checked={isSelected}
           onClick={(e) => onSelect(entry.id, e)}
           size="sm"
+          aria-label={t("aria.selectRow")}
         />
 
         <div className="flex flex-col min-w-0 flex-1">
@@ -185,11 +174,13 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                Venc: {formatDate(getDueDate(entry))}
+                {t("labels.due")}: {formatDate(getDueDate(entry), i18n.language)}
                 {(installments.index || installments.count) && (
                   <span className="ml-2">
-                    Parcela {installments.index ?? "-"} /{" "}
-                    {installments.count ?? "-"}
+                    {t("labels.installmentXofY", {
+                      x: installments.index ?? "-",
+                      y: installments.count ?? "-",
+                    })}
                   </span>
                 )}
               </div>
@@ -202,13 +193,13 @@ const EntryRow: React.FC<{
                     isPositive ? "text-green-900" : "text-red-900"
                   }`}
                 >
-                  {formatCurrency(transactionValue)}
+                  {formatCurrency(transactionValue, i18n.language)}
                 </div>
               </div>
 
               <div className="w-[150px] text-center">
                 <div className="text-[13px] leading-none font-semibold tabular-nums text-gray-900">
-                  {formatCurrency(runningBalance)}
+                  {formatCurrency(runningBalance, i18n.language)}
                 </div>
               </div>
 
@@ -218,8 +209,8 @@ const EntryRow: React.FC<{
                   size="sm"
                   className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 !h-8 !w-8 !p-0 grid place-items-center rounded-md"
                   onClick={() => onEdit(entry)}
-                  aria-label="Editar entrada"
-                  title="Editar"
+                  aria-label={t("actions.edit")}
+                  title={t("actions.edit")}
                 >
                   <svg
                     className="w-4 h-4 text-gray-300 group-hover:text-gray-500"
@@ -250,9 +241,14 @@ const SummaryRow: React.FC<{
   monthlySum: number;
   runningBalance: number;
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
+  const { t, i18n } = useTranslation("cashFlowTable");
+  const monthsShort =
+    (t("months.short", { returnObjects: true }) as string[]) ??
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
   const [m, y] = displayMonth.split("/");
   const iso = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1).toISOString();
-  const label = formatMonthYearSummary(iso);
+  const label = formatMonthYearSummary(iso, monthsShort);
 
   return (
     <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
@@ -270,13 +266,13 @@ const SummaryRow: React.FC<{
               monthlySum >= 0 ? "text-green-900" : "text-red-900"
             }`}
           >
-            {formatCurrency(monthlySum)}
+            {formatCurrency(monthlySum, i18n.language)}
           </div>
         </div>
 
         <div className="w-[150px] text-center">
           <div className="text-[11px] font-semibold tabular-nums text-gray-900">
-            {formatCurrency(runningBalance)}
+            {formatCurrency(runningBalance, i18n.language)}
           </div>
         </div>
 
@@ -286,33 +282,28 @@ const SummaryRow: React.FC<{
   );
 };
 
-const EmptyState: React.FC = () => (
-  <div className="flex flex-col items-center justify-center py-8 px-4">
-    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-      <svg
-        className="w-6 h-6 text-gray-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
-      </svg>
+const EmptyState: React.FC = () => {
+  const { t } = useTranslation("cashFlowTable");
+  return (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-[13px] font-medium text-gray-800 mb-1">
+          {t("empty.title")}
+        </p>
+        <p className="text-[11px] text-gray-500">
+          {t("empty.subtitle")}
+        </p>
+      </div>
     </div>
-    <div className="text-center">
-      <p className="text-[13px] font-medium text-gray-800 mb-1">
-        Nenhum lançamento encontrado
-      </p>
-      <p className="text-[11px] text-gray-500">
-        Tente ajustar os filtros para ver os dados
-      </p>
-    </div>
-  </div>
-);
+  );
+};
 
 /* ------------------------------ Skeletons --------------------------------- */
 
@@ -365,37 +356,44 @@ const SkeletonSummaryRow: React.FC = () => (
   </div>
 );
 
-const TableSkeleton: React.FC<{ rows?: number; showSummariesEvery?: number }> =
-  ({ rows = 10, showSummariesEvery = 4 }) =>
-    (
-      <div
-        className="divide-y divide-gray-200"
-        role="progressbar"
-        aria-label="Carregando lançamentos"
-        aria-busy="true"
-      >
-        {Array.from({ length: rows }).map((_, i) => (
-          <React.Fragment key={i}>
-            <SkeletonEntryRow />
-            {(i + 1) % showSummariesEvery === 0 && <SkeletonSummaryRow />}
-          </React.Fragment>
-        ))}
-      </div>
-    );
+const TableSkeleton: React.FC<{ rows?: number; showSummariesEvery?: number }> = ({
+  rows = 10,
+  showSummariesEvery = 4,
+}) => {
+  const { t } = useTranslation("cashFlowTable");
+  return (
+    <div
+      className="divide-y divide-gray-200"
+      role="progressbar"
+      aria-label={t("aria.loadingEntries")}
+      aria-busy="true"
+    >
+      {Array.from({ length: rows }).map((_, i) => (
+        <React.Fragment key={i}>
+          <SkeletonEntryRow />
+          {(i + 1) % showSummariesEvery === 0 && <SkeletonSummaryRow />}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+};
 
 /* ------------------------------ Bottom Loader ------------------------------ */
 
-const BottomLoader: React.FC = () => (
-  <div
-    className="flex items-center justify-center gap-2 py-3 border-t border-gray-300 bg-white"
-    role="status"
-    aria-live="polite"
-    aria-label="Carregando mais resultados"
-  >
-    <span className="inline-block h-4 w-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
-    <span className="text-[11px] text-gray-500">Carregando mais...</span>
-  </div>
-);
+const BottomLoader: React.FC = () => {
+  const { t } = useTranslation("cashFlowTable");
+  return (
+    <div
+      className="flex items-center justify-center gap-2 py-3 border-t border-gray-300 bg-white"
+      role="status"
+      aria-live="polite"
+      aria-label={t("aria.loadingMore")}
+    >
+      <span className="inline-block h-4 w-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+      <span className="text-[11px] text-gray-500">{t("labels.loadingMore")}</span>
+    </div>
+  );
+};
 
 /* -------------------------------------------------------------------------- */
 /* Main + Virtualização                                                       */
@@ -403,6 +401,8 @@ const BottomLoader: React.FC = () => (
 
 const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
   ({ filters, onEdit, onSelectionChange }, ref) => {
+    const { t } = useTranslation("cashFlowTable");
+
     // Data
     const [entries, setEntries] = useState<Entry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -413,19 +413,11 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
     // Selection
-    const {
-      selectedIds,
-      handleSelectRow,
-      handleSelectAll,
-      clearSelection,
-    } = useShiftSelect<Entry, string>(entries, getId);
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } =
+      useShiftSelect<Entry, string>(entries, getId);
 
     // Latest for fetch
-    const latest = useRef<{
-      filters: EntryFilters | undefined;
-      nextCursor: string | null;
-      isFetching: boolean;
-    }>({
+    const latest = useRef<{ filters: EntryFilters | undefined; nextCursor: string | null; isFetching: boolean; }>({
       filters,
       nextCursor,
       isFetching,
@@ -450,9 +442,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
       const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
       const tx_type =
-        f?.tx_type === "credit" ? 1 :
-        f?.tx_type === "debit"  ? -1 :
-        undefined;
+        f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
 
       const bank =
         Array.isArray(f?.bank_id) && f!.bank_id!.length
@@ -462,98 +452,74 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       const base: GetEntryRequest = {
         page_size: 100,
         date_from: f?.start_date || undefined,
-        date_to:   f?.end_date   || undefined,
-
+        date_to: f?.end_date || undefined,
         description: f?.description || undefined,
         observation: f?.observation || undefined,
         q,
-
         gl,
         tx_type,
-
         amount_min: f?.amount_min,
         amount_max: f?.amount_max,
-
         bank,
       };
 
-      if (!reset && latest.current.nextCursor) {
-        base.cursor = latest.current.nextCursor;
-      }
+      if (!reset && latest.current.nextCursor) base.cursor = latest.current.nextCursor;
       return base;
     }, []);
 
-    const fetchEntries = useCallback(
-      async (reset = false) => {
-        if (latest.current.isFetching) return;
+    const fetchEntries = useCallback(async (reset = false) => {
+      if (latest.current.isFetching) return;
 
-        const payload = buildPayload(reset);
-        setIsFetching(true);
-        if (reset) setLoading(true);
-        else setLoadingMore(true);
+      const payload = buildPayload(reset);
+      setIsFetching(true);
+      if (reset) setLoading(true);
+      else setLoadingMore(true);
 
-        try {
-          const { data } = await api.getEntries(payload);
-          const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
+      try {
+        const { data } = await api.getEntries(payload);
+        const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
 
-          setEntries((prev) => {
-            // quando reset: começamos limpos; quando não: partimos do estado atual
-            const map = new Map<string, Entry>(reset ? [] : prev.map((e) => [getId(e), e]));
+        setEntries((prev) => {
+          const map = new Map<string, Entry>(reset ? [] : prev.map((e) => [getId(e), e]));
+          for (const e of incoming) map.set(getId(e), e);
+          const merged = Array.from(map.values());
 
-            // para cada item novo que chegou do servidor, substitui o existente
-            for (const e of incoming) {
-              map.set(getId(e), e);
-            }
+          if (reset) {
+            merged.sort((a, b) => {
+              const ad = new Date(getDueDate(a)).getTime();
+              const bd = new Date(getDueDate(b)).getTime();
+              if (ad !== bd) return ad - bd;
+              return getId(a).localeCompare(getId(b));
+            });
+          }
+          return merged;
+        });
 
-            const merged = Array.from(map.values());
+        setNextCursor(getCursorFromUrl((data as GetEntryResponse).next) ?? null);
+        setHasMore(Boolean((data as GetEntryResponse).next));
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("errors.fetch"));
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setIsFetching(false);
+      }
+    }, [buildPayload, t]);
 
-            if (reset) {
-              merged.sort((a, b) => {
-                const ad = new Date(getDueDate(a)).getTime();
-                const bd = new Date(getDueDate(b)).getTime();
-                if (ad !== bd) return ad - bd;
-                return getId(a).localeCompare(getId(b));
-              });
-            }
-            return merged;
-          });
-
-          setNextCursor(getCursorFromUrl((data as GetEntryResponse).next) ?? null);
-          setHasMore(Boolean((data as GetEntryResponse).next));
-          setError(null);
-        } catch (err) {
-          setError(
-            err instanceof Error ? err.message : "Erro ao buscar dados."
-          );
-        } finally {
-          setLoading(false);
-          setLoadingMore(false);
-          setIsFetching(false);
-        }
+    useImperativeHandle(ref, () => ({
+      clearSelection,
+      refresh: () => {
+        clearSelection();
+        scrollerRef.current?.scrollTo?.({ top: 0 });
+        setEntries([]);
+        setNextCursor(null);
+        setHasMore(true);
+        setError(null);
+        setLoading(true);
+        fetchEntries(true);
       },
-      [buildPayload]
-    );
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        clearSelection,
-        refresh: () => {
-          // opcional: limpar seleção e voltar pro topo
-          clearSelection();
-          scrollerRef.current?.scrollTo?.({ top: 0 });
-
-          // resetar paginação E refazer a 1ª página
-          setEntries([]);        // opcional, para evitar flicker de dados antigos
-          setNextCursor(null);
-          setHasMore(true);
-          setError(null);
-          setLoading(true);
-          fetchEntries(true);
-        },
-      }),
-      [clearSelection, fetchEntries]
-    );
+    }), [clearSelection, fetchEntries]);
 
     useEffect(() => {
       setNextCursor(null);
@@ -566,10 +532,8 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const handleInnerScroll = useCallback(() => {
       const el = scrollerRef.current;
       if (!el || isFetching || !hasMore) return;
-
       const threshold = 150;
-      const nearBottom =
-        el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
       if (nearBottom) fetchEntries();
     }, [isFetching, hasMore, fetchEntries]);
 
@@ -585,21 +549,17 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     /* ------------------------- Build rows + summaries ---------------------- */
     const tableRows = useMemo((): TableRow[] => {
       if (!entries.length) return [];
-
       let currentMonth = "";
       let monthlySum = 0;
       const rows: TableRow[] = [];
 
       entries.forEach((entry, index) => {
-        const txValue = getTransactionValue(entry); // major units
+        const txValue = getTransactionValue(entry);
         const entryMonth = getMonthYear(getDueDate(entry));
 
-        // Month change → flush summary for previous month
         if (currentMonth && currentMonth !== entryMonth) {
           const lastRow = rows[rows.length - 1];
-          const lastRunning =
-            lastRow?.type === "entry" ? lastRow.runningBalance ?? 0 : 0;
-
+          const lastRunning = lastRow?.type === "entry" ? lastRow.runningBalance ?? 0 : 0;
           rows.push({
             id: `summary-${currentMonth}-${index}`,
             type: "summary",
@@ -610,13 +570,9 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           monthlySum = 0;
         }
 
-        if (!currentMonth || currentMonth !== entryMonth) {
-          currentMonth = entryMonth;
-        }
-
+        if (!currentMonth || currentMonth !== entryMonth) currentMonth = entryMonth;
         monthlySum += txValue;
 
-        // ✅ Use backend running balance per row (pagination-safe)
         const serverRunning = getServerRunning(entry);
         const runningBalance = serverRunning ?? 0;
 
@@ -627,7 +583,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           runningBalance,
         });
 
-        // Close last month at the very end
         if (index === entries.length - 1) {
           rows.push({
             id: `summary-${currentMonth}-final`,
@@ -675,8 +630,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
     const findStartIndex = useCallback(
       (st: number) => {
-        let lo = 0,
-          hi = rowOffsets.length - 1;
+        let lo = 0, hi = rowOffsets.length - 1;
         while (lo < hi) {
           const mid = Math.floor((lo + hi) / 2);
           if (rowOffsets[mid] <= st) lo = mid + 1;
@@ -687,10 +641,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       [rowOffsets]
     );
 
-    const startIndex = useMemo(
-      () => findStartIndex(scrollTop),
-      [scrollTop, findStartIndex]
-    );
+    const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
 
     const endIndex = useMemo(() => {
       const limit = scrollTop + (viewportH || 0);
@@ -705,23 +656,15 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         <div className="border border-gray-300 rounded-md bg-white overflow-hidden">
           <div className="flex flex-col items-center justify-center py-8 px-4">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             </div>
             <div className="text-center">
               <p className="text-[13px] font-medium text-red-800 mb-1">
-                Erro ao carregar dados
+                {t("errors.title")}
               </p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
               <Button
@@ -730,7 +673,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                 className="text-[11px] font-semibold"
                 onClick={() => fetchEntries(true)}
               >
-                Tentar novamente
+                {t("actions.retry")}
               </Button>
             </div>
           </div>
@@ -740,10 +683,9 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
     return (
       <section
-        aria-label="Fluxo de caixa"
+        aria-label={t("aria.section")}
         className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
       >
-        {/* Header sempre visível para layout estável */}
         <TableHeader
           selectedCount={selectedIds.length}
           totalCount={entries.length}
@@ -759,16 +701,12 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           className="flex-1 min-h-0 overflow-y-auto relative"
         >
           {loading && !entries.length ? (
-            <TableSkeleton
-              rows={Math.max(10, Math.ceil((viewportH || 400) / 42))}
-            />
+            <TableSkeleton rows={Math.max(10, Math.ceil((viewportH || 400) / 42))} />
           ) : tableRows.length === 0 ? (
             <EmptyState />
           ) : (
             <div className="divide-y divide-gray-200 relative">
-              {/* Track total */}
               <div style={{ height: totalHeight, position: "relative" }}>
-                {/* Window */}
                 <div
                   style={{
                     position: "absolute",
@@ -809,7 +747,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           )}
         </div>
 
-        {/* Footer loader fora da tabela/scroll */}
         {loadingMore && <BottomLoader />}
       </section>
     );

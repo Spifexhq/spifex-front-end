@@ -1,0 +1,80 @@
+{
+  "search": { "placeholder": "Buscar ou filtrar… (Ctrl/⌘+K)" },
+  "buttons": {
+    "config": "Configurações",
+    "saveView": "Salvar visualização",
+    "views": "Visualizações",
+    "apply": "Aplicar",
+    "clear": "Limpar filtros",
+    "remove": "Remover"
+  },
+  "menu": {
+    "addFilter": "Adicionar filtro +",
+    "date": "Período",
+    "bank": "Banco",
+    "accounts": "Conta contábil",
+    "observation": "Observação",
+    "txType": "Tipo (Receita/Despesa)",
+    "amount": "Valor (mín/máx)"
+  },
+  "chips": {
+    "date": "Datas",
+    "bank": "Banco",
+    "accounts": "Conta contábil",
+    "type": "Tipo",
+    "credit": "Receita",
+    "debit": "Despesa",
+    "value": "Valor",
+    "observation": "Observação"
+  },
+  "editors": {
+    "date": {
+      "start": "Início",
+      "end": "Fim",
+      "shortcuts": "Atalhos",
+      "today": "Hoje",
+      "thisWeek": "Esta semana",
+      "thisMonth": "Mês atual",
+      "thisQuarter": "Trimestre",
+      "thisYear": "Ano"
+    },
+    "banks": { "label": "Bancos", "button": "Selecionar bancos" },
+    "accounts": { "label": "Contas contábeis", "button": "Selecionar contas" },
+    "observation": { "placeholder": "Digite uma observação…" },
+    "txType": { "credit": "Receita", "debit": "Despesa" },
+    "amount": {
+      "min": "Mínimo",
+      "max": "Máximo",
+      "currencySuffix": "(R$)",
+      "placeholder": "R$ 0,00"
+    }
+  },
+  "viewsMenu": { "empty": "Nenhuma visualização salva" },
+  "configModal": {
+    "title": "Visualizações salvas",
+    "close": "Fechar",
+    "empty": "Nenhuma visualização salva.",
+    "defaultTag": "Padrão",
+    "saveName": "Salvar nome",
+    "cancel": "Cancelar",
+    "rename": "Renomear",
+    "apply": "Aplicar",
+    "delete": "Excluir",
+    "footerClose": "Fechar"
+  },
+  "saveModal": {
+    "title": "Salvar visualização",
+    "close": "Fechar",
+    "name": "Nome",
+    "namePlaceholder": "Ex.: 'Pagamentos mês atual por projeto'",
+    "setDefault": "Definir como padrão",
+    "modeTitle": "Modo",
+    "create": "Criar nova visualização",
+    "overwrite": "Sobrescrever existente",
+    "chooseView": "Escolha a visualização",
+    "choosePlaceholder": "— selecione —",
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
+  "aria": { "removeFilter": "remover filtro" }
+}

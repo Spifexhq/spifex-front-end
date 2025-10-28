@@ -1,0 +1,55 @@
+{
+  "title": "Ask the Assistant",
+  "shortcuts": { "hint": "Enter: ask · Esc: close · Ctrl/⌘ + K: search" },
+  "aria": { "backdrop": "Close dialog" },
+  "status": { "typing": "Typing…", "done": "Done", "waiting": "Waiting for a question" },
+  "empty": { "pickOnRight": "Pick or search a question on the right to see the answer." },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "skip": "Skip typing",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "clear": "Clear",
+    "close": "Close"
+  },
+  "tts": { "on": "Voice: on", "off": "Voice: off", "tooltip": "Speak out loud when finished" },
+  "speed": { "label": "Speed", "aria": "Typing speed" },
+  "recent": { "title": "Recent" },
+  "search": { "label": "Search question", "placeholder": "Type to filter…", "aria": "Search field for questions", "empty": "No questions found." },
+  "selection": { "has": "Selected question:", "none": "No question selected" },
+  "footer": { "ready": "Answer ready to copy or send.", "pickQuestion": "Select a question to see the answer." },
+
+  "faqs": [
+    {
+      "id": "estoque-melhoria",
+      "question": "How can the software improve my company’s inventory control?",
+      "answer": "Our software automates inventory control, reducing human error and ensuring you always have a clear view of your stock.",
+      "tags": ["inventory", "stock", "automation"]
+    },
+    {
+      "id": "entradas-saidas-beneficios",
+      "question": "What are the benefits for managing product inbound and outbound?",
+      "answer": "With automated in/out management, you can track product flow in real time, optimizing replenishment and reducing operating costs.",
+      "tags": ["inbound", "outbound", "tracking", "costs"]
+    },
+    {
+      "id": "eficiencia-operacional",
+      "question": "How can the software help increase operational efficiency?",
+      "answer": "The software centralizes operations, enabling a more agile and integrated management of your company’s processes, resulting in greater efficiency.",
+      "tags": ["efficiency", "processes", "integration"]
+    },
+    {
+      "id": "decisoes-estrategicas",
+      "question": "How does the software support strategic decision-making?",
+      "answer": "Through detailed reports and data analysis, it provides valuable insights to support strategic decisions and enhance your company’s performance.",
+      "tags": ["reports", "analytics", "strategy"]
+    },
+    {
+      "id": "fluxo-trabalho",
+      "question": "How can the software optimize my team’s workflow?",
+      "answer": "By automating repetitive tasks and integrating departments, it frees your team to focus on more strategic, productive activities.",
+      "tags": ["workflow", "automation", "productivity"]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "title": "Demandez à l’assistant",
+  "shortcuts": { "hint": "Entrée : demander · Échap : fermer · Ctrl/⌘ + K : rechercher" },
+  "aria": { "backdrop": "Fermer la boîte de dialogue" },
+  "status": { "typing": "Saisie…", "done": "Terminé", "waiting": "En attente d’une question" },
+  "empty": { "pickOnRight": "Choisissez ou recherchez une question à droite pour voir la réponse." },
+  "actions": {
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "skip": "Ignorer la saisie",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "clear": "Effacer",
+    "close": "Fermer"
+  },
+  "tts": { "on": "Voix : activée", "off": "Voix : désactivée", "tooltip": "Lire à voix haute une fois terminé" },
+  "speed": { "label": "Vitesse", "aria": "Vitesse de saisie" },
+  "recent": { "title": "Récents" },
+  "search": { "label": "Rechercher une question", "placeholder": "Tapez pour filtrer…", "aria": "Champ de recherche des questions", "empty": "Aucune question trouvée." },
+  "selection": { "has": "Question sélectionnée :", "none": "Aucune question sélectionnée" },
+  "footer": { "ready": "Réponse prête à copier ou à envoyer.", "pickQuestion": "Sélectionnez une question pour voir la réponse." },
+
+  "faqs": [
+    {
+      "id": "estoque-melhoria",
+      "question": "Comment le logiciel peut-il améliorer la gestion des stocks de mon entreprise ?",
+      "answer": "Notre logiciel automatise le contrôle des stocks, réduit les erreurs humaines et vous garantit une vision claire de votre inventaire.",
+      "tags": ["stocks", "inventaire", "automatisation"]
+    },
+    {
+      "id": "entradas-saidas-beneficios",
+      "question": "Quels sont les avantages pour la gestion des entrées et sorties de produits ?",
+      "answer": "Avec une gestion automatisée des entrées/sorties, vous suivez les flux en temps réel, optimisez le réassort et réduisez les coûts opérationnels.",
+      "tags": ["entrées", "sorties", "traçabilité", "coûts"]
+    },
+    {
+      "id": "eficiencia-operacional",
+      "question": "Comment le logiciel peut-il accroître l’efficacité opérationnelle ?",
+      "answer": "Il centralise les opérations, permettant une gestion plus agile et intégrée des processus de votre entreprise, pour plus d’efficacité.",
+      "tags": ["efficacité", "processus", "intégration"]
+    },
+    {
+      "id": "decisoes-estrategicas",
+      "question": "De quelle manière le logiciel aide-t-il à la prise de décisions stratégiques ?",
+      "answer": "Grâce à des rapports détaillés et à l’analyse de données, il fournit des insights précieux pour appuyer les décisions stratégiques et améliorer la performance.",
+      "tags": ["rapports", "analyses", "stratégie"]
+    },
+    {
+      "id": "fluxo-trabalho",
+      "question": "Comment le logiciel peut-il optimiser le flux de travail de mon équipe ?",
+      "answer": "En automatisant les tâches répétitives et en intégrant les services, il libère l’équipe pour des activités plus stratégiques et productives.",
+      "tags": ["workflow", "automatisation", "productivité"]
+    }
+  ]
+}

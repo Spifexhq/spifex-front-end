@@ -1,0 +1,14 @@
+{
+  "aria": {
+    "section": "Bancos e saldos",
+    "loading": "Carregando bancos",
+    "row": "{{bank}} — Agência {{branch}} • Conta {{account}} — Saldo {{balance}}"
+  },
+  "labels": {
+    "banks": "Bancos",
+    "count": "({{count}})",
+    "total": "Total:",
+    "branchAccount": "Agência {{branch}} • Conta {{account}}"
+  },
+  "empty": "Nenhum banco disponível"
+}

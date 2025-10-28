@@ -1,0 +1,36 @@
+{
+  "aria": {
+    "section": "Trésorerie",
+    "loadingEntries": "Chargement des écritures",
+    "loadingMore": "Chargement d'autres résultats",
+    "selectAll": "Tout sélectionner",
+    "selectRow": "Sélectionner la ligne"
+  },
+  "labels": {
+    "entries": "Écritures",
+    "selectedCount": "{{count}} sélectionné",
+    "selectedCount_plural": "{{count}} sélectionnés",
+    "due": "Échéance",
+    "loadingMore": "Chargement...",
+    "installmentXofY": "Versement {{x}} / {{y}}"
+  },
+  "columns": {
+    "amount": "Montant",
+    "balance": "Solde"
+  },
+  "actions": {
+    "edit": "Modifier",
+    "retry": "Réessayer"
+  },
+  "empty": {
+    "title": "Aucune écriture trouvée",
+    "subtitle": "Essayez d'ajuster les filtres pour afficher des données"
+  },
+  "errors": {
+    "title": "Erreur de chargement",
+    "fetch": "Échec du chargement des données."
+  },
+  "months": {
+    "short": ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+  }
+}

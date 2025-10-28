@@ -1,0 +1,42 @@
+{
+    "loading": "Chargement…",
+    "panel": {
+        "consolidatedBalance": "Solde consolidé",
+        "accountsCount": "comptes : {{count}}",
+        "header": "Comptes bancaires • Solde consolidé :"
+    },
+    "aria": {
+        "goToBanks": "Aller aux paramètres des banques",
+        "openBanks": "Ouvrir Banques"
+    },
+    "actions": {
+        "close": "Fermer"
+    },
+    "delta": {
+        "mom": "M/M {{value}}"
+    },
+    "cashflow": {
+        "labels": {
+        "mtdNet": "MTD : Résultat",
+        "overdueNet": "En retard (non soldé)",
+        "next7Net": "7 prochains jours"
+        },
+        "hints": {
+        "mtd": "Entrées {{inAmt}} • Sorties -{{outAmt}}",
+        "overdue": "Encaissements {{recAmt}} • Paiements -{{payAmt}}",
+        "next7": "Encaissements {{recAmt}} • Paiements {{payAmt}}"
+        }
+    },
+    "settled": {
+        "labels": {
+        "mtdSettledNet": "Réalisé (mois en cours)",
+        "prevSettledNet": "Mois précédent",
+        "last7Settled": "7 derniers jours"
+        },
+        "hints": {
+        "mtd": "Enc. {{recAmt}} • Pai. -{{payAmt}}",
+        "prev": "Enc. {{recAmt}} • Pai. -{{payAmt}}",
+        "last7": "Enc. {{recAmt}} • Pai. -{{payAmt}}"
+        }
+    }
+}

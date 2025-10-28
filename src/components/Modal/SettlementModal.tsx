@@ -1,5 +1,6 @@
 // src/components/Modal/SettlementModal.tsx
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 // Components
 import Button from "@/components/Button";
@@ -8,10 +9,7 @@ import Input from "@/components/Input";
 import { InlineLoader } from "@/components/Loaders";
 
 // Utils
-import {
-  handleUtilitaryAmountKeyDown,
-  formatCurrency,
-} from "src/lib";
+import { handleUtilitaryAmountKeyDown, formatCurrency } from "src/lib";
 
 // API and models
 import { api } from "src/api/requests";
@@ -58,6 +56,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   onSave,
   banksData,
 }) => {
+  const { t } = useTranslation("settlementModal");
+
   const { banks, loading: loadingBanks, error } = banksData;
 
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null); // não auto-seleciona
@@ -138,7 +138,6 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       }));
       setEntriesState(mapped);
       setBulkDate(today);
-      // não escolher banco automaticamente
     }
 
     window.addEventListener("keydown", handleKey);
@@ -202,11 +201,10 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
         const errs = (res).errors as Array<{ id?: string; entry_id?: string; error: string }>;
         setEntriesState((prev) =>
           prev.map((r) => {
-            const hit = errs.find((e) => e.entry_id === r.id || e.id === r.id);
-            return hit ? { ...r, /* podemos exibir embaixo se quiser */ } : r;
+            const hit = errs.find((ee) => ee.entry_id === r.id || ee.id === r.id);
+            return hit ? { ...r } : r;
           })
         );
-        // opcional: mostrar toast/alert com resumo dos erros
         console.error("Erros no bulk settle:", errs);
         return;
       }
@@ -215,19 +213,25 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Erro ao liquidar lançamentos.");
+      window.alert(t("errors.bulk"));
     }
   };
 
   /* --------------------------------- UI ------------------------------------ */
   if (!isOpen) return null;
 
+  const selectedCount = selectedEntries.length;
+  const headerTitle =
+    selectedCount === 1
+      ? t("header.title.one")
+      : t("header.title.many", { n: selectedCount });
+
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
-      {/* container — largura fixa 1500px + max-w para telas menores */}
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={t("aria.dialog")}
         className="bg-white border border-gray-200 rounded-lg shadow-xl
                    w-[1500px] max-w-[96vw]
                    h-[640px] max-h-[92vh] overflow-hidden flex flex-col"
@@ -240,17 +244,17 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                 LQ
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Liquidação</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {selectedEntries.length} lançamento{selectedEntries.length > 1 ? "s" : ""} selecionado
-                  {selectedEntries.length > 1 ? "s" : ""}
+                  {headerTitle}
                 </h1>
               </div>
             </div>
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={onClose}
-              aria-label="Fechar"
+              aria-label={t("actions.close")}
+              title={t("actions.close")}
             >
               &times;
             </button>
@@ -265,17 +269,17 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
         >
           {/* ----------------- Banks Pane (35%) ----------------- */}
           <section
-            aria-label="Selecionar banco"
+            aria-label={t("banks.aria")}
             className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
           >
             <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-wide text-gray-600">Bancos</span>
-                <span className="text-[10px] text-gray-500">({banks.length})</span>
+                <span className="text-[10px] uppercase tracking-wide text-gray-600">{t("banks.title")}</span>
+                <span className="text-[10px] text-gray-500">{t("banks.count", { n: banks.length })}</span>
               </div>
               {selectedBankId && (
                 <span className="text-[11px] text-gray-600">
-                  Saldo:&nbsp;
+                  {t("banks.balance")}&nbsp;
                   <b className="text-gray-900">
                     {formatBRL(
                       Number(banks.find((b) => b.id === selectedBankId)?.consolidated_balance ?? "0")
@@ -293,7 +297,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               ) : error ? (
                 <div className="py-4 text-center text-xs text-red-600">{error}</div>
               ) : banks.length === 0 ? (
-                <div className="py-4 text-center text-xs text-gray-600">Nenhum banco disponível</div>
+                <div className="py-4 text-center text-xs text-gray-600">{t("banks.none")}</div>
               ) : (
                 banks
                   .slice()
@@ -324,7 +328,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                               {b.institution}
                             </span>
                             <span className="text-[10px] text-gray-500 truncate leading-tight">
-                              Agência {b.branch} • Conta {b.account_number}
+                              {t("banks.agency")} {b.branch} • {t("banks.account")} {b.account_number}
                             </span>
                           </div>
                         </div>
@@ -340,15 +344,15 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
           {/* ----------------- Entries Pane (65%) ----------------- */}
           <section
-            aria-label="Lançamentos"
+            aria-label={t("entries.aria")}
             className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
           >
             {/* header + ferramentas */}
             <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wide text-gray-600">Lançamentos</span>
-                  <span className="text-[10px] text-gray-500">({entriesState.length})</span>
+                  <span className="text-[10px] uppercase tracking-wide text-gray-600">{t("entries.title")}</span>
+                  <span className="text-[10px] text-gray-500">{t("entries.count", { n: entriesState.length })}</span>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap min-w-0">
@@ -357,6 +361,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                     value={bulkDate}
                     onChange={(e) => setBulkDate(e.target.value)}
                     className="border border-gray-300 rounded px-2 py-1 text-xs w-[120px]"
+                    aria-label={t("actions.bulkDate")}
                   />
                   <Button
                     type="button"
@@ -365,7 +370,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                     onClick={applyDateToAll}
                     disabled={!bulkDate}
                   >
-                    Aplicar data a todos
+                    {t("actions.applyDateAll")}
                   </Button>
 
                   <div className="hidden md:block w-px h-5 bg-gray-300 mx-1" />
@@ -376,7 +381,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                     className="!h-8 !px-2 text-[12px]"
                     onClick={markAllPartial}
                   >
-                    Marcar todos como parcial
+                    {t("actions.markAllPartial")}
                   </Button>
                   <Button
                     type="button"
@@ -384,7 +389,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                     className="!h-8 !px-2 text-[12px]"
                     onClick={clearAllPartial}
                   >
-                    Limpar parciais
+                    {t("actions.clearAllPartial")}
                   </Button>
                 </div>
               </div>
@@ -393,15 +398,15 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             {/* tabela com scroll interno; última coluna mais larga */}
             <div className="flex-1 min-h-0 overflow-y-auto">
               <div className="grid grid-cols-[140px_1fr_120px_80px_180px] items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-10">
-                <div className="text-center">Vencimento</div>
-                <div>Descrição</div>
-                <div className="text-center">Valor</div>
-                <div className="text-center">Parcial?</div>
-                <div className="text-center">Valor parcial</div>
+                <div className="text-center">{t("table.due")}</div>
+                <div>{t("table.desc")}</div>
+                <div className="text-center">{t("table.amount")}</div>
+                <div className="text-center">{t("table.partialQ")}</div>
+                <div className="text-center">{t("table.partialAmount")}</div>
               </div>
 
               {entriesState.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-gray-600">Nenhum lançamento selecionado</div>
+                <div className="px-4 py-6 text-center text-xs text-gray-600">{t("table.none")}</div>
               ) : (
                 entriesState.map((e) => {
                   const invalid = rowHasError(e);
@@ -417,6 +422,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                           value={e.due_date}
                           onChange={(ev) => updateEntryDate(e.id, ev.target.value)}
                           className="border border-gray-300 rounded px-2 py-1 text-xs w-[120px]"
+                          aria-label={t("table.due")}
                         />
                       </div>
 
@@ -446,6 +452,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                             className={`border border-gray-300 rounded px-2 py-1 text-xs w-[180px] text-right ${
                               invalid ? "!border-red-400 bg-red-50" : ""
                             }`}
+                            aria-invalid={invalid || undefined}
+                            aria-label={t("table.partialAmount")}
                           />
                         ) : (
                           <span className="text-gray-400">—</span>
@@ -455,7 +463,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                       {invalid && (
                         <div className="col-span-5 -mt-1">
                           <p className="px-3 pt-3 text-[11px] text-red-700">
-                            Valor parcial inválido (0 ou maior que o valor do lançamento).
+                            {t("table.partialInvalid")}
                           </p>
                         </div>
                       )}
@@ -471,33 +479,33 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
         <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
           <div className="text-[12px] text-gray-600">
             <span className="mr-3">
-              Original:&nbsp;
+              {t("footer.original")}&nbsp;
               <b className="text-gray-900 tabular-nums">
                 {formatBRL(totalOriginalCentsSigned / 100)}
               </b>
             </span>
             <span className="mr-3">
-              A liquidar:&nbsp;
+              {t("footer.toSettle")}&nbsp;
               <b className="text-gray-900 tabular-nums">
                 {formatBRL(totalToSettleCentsSigned / 100)}
               </b>
             </span>
             {chosenBank ? (
               <span className="text-gray-600">
-                Banco:&nbsp;
+                {t("footer.bankLabel")}&nbsp;
                 <b className="text-gray-900">
-                  {chosenBank.institution} • Ag. {chosenBank.branch} • Conta {chosenBank.account_number}
+                  {chosenBank.institution} • {t("banks.agency")} {chosenBank.branch} • {t("banks.account")} {chosenBank.account_number}
                 </b>
               </span>
             ) : (
-              <span className="text-gray-500">Selecione um banco</span>
+              <span className="text-gray-500">{t("footer.selectBank")}</span>
             )}
-            <span className="ml-3 text-gray-400">Atalhos: Esc (fechar), Ctrl/⌘+Enter (salvar)</span>
+            <span className="ml-3 text-gray-400">{t("footer.shortcuts")}</span>
           </div>
 
           <div className="flex gap-2">
             <Button variant="cancel" type="button" onClick={onClose}>
-              Cancelar
+              {t("actions.cancel")}
             </Button>
             <Button
               type="submit"
@@ -505,7 +513,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               disabled={isSubmitDisabled}
               onClick={() => formRef.current?.requestSubmit()}
             >
-              Liquidar
+              {t("actions.settle")}
             </Button>
           </div>
         </footer>

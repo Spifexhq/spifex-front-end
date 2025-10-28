@@ -1,4 +1,6 @@
+// src/components/SelectionActionsBar.tsx
 import React, { useMemo, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "@/components/Button";
 
 /* ------------------------------ Types ------------------------------ */
@@ -36,7 +38,6 @@ function parseAmount(a: string | number | null | undefined): number {
   if (typeof a === "number") return Number.isFinite(a) ? a : 0;
   const trimmed = a.trim();
   if (!trimmed) return 0;
-  // Keep digits, dot, minus. Back-end uses dot-decimal; keep it simple.
   const normalized = trimmed.replace(/[^\d.-]/g, "");
   const n = parseFloat(normalized);
   return Number.isFinite(n) ? n : 0;
@@ -45,7 +46,6 @@ function parseAmount(a: string | number | null | undefined): number {
 /** Normalizes transaction type to "credit" | "debit" */
 function normalizeTxType(e: MinimalEntry): "credit" | "debit" {
   const raw = String(e.transaction_type ?? e.tx_type ?? "").toLowerCase();
-  // Fallback: anything not "credit" treated as "debit"
   return raw === "credit" ? "credit" : "debit";
 }
 
@@ -98,42 +98,42 @@ const SelectionActionsBar: React.FC<Props> = ({
   onCancel,
   isProcessing = false,
 }) => {
+  const { t } = useTranslation("selectionActionsBar");
   const [collapsed, setCollapsed] = useState(false);
 
-  const { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue } =
-    useMemo(() => {
-      const count = selectedIds.length;
+  const { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue } = useMemo(() => {
+    const count = selectedIds.length;
 
-      let sumCredits = 0;
-      let sumDebits = 0;
-      let credits = 0;
-      let debits = 0;
+    let sumCredits = 0;
+    let sumDebits = 0;
+    let credits = 0;
+    let debits = 0;
 
-      const dates: Date[] = [];
+    const dates: Date[] = [];
 
-      for (const e of selectedEntries) {
-        const amt = parseAmount(e.amount);
-        if (normalizeTxType(e) === "credit") {
-          credits += 1;
-          sumCredits += amt;
-        } else {
-          debits += 1;
-          sumDebits += amt;
-        }
-
-        const rawDate = pickDate(e, context);
-        if (rawDate) {
-          const d = new Date(rawDate);
-          if (!isNaN(d.getTime())) dates.push(d);
-        }
+    for (const e of selectedEntries) {
+      const amt = parseAmount(e.amount);
+      if (normalizeTxType(e) === "credit") {
+        credits += 1;
+        sumCredits += amt;
+      } else {
+        debits += 1;
+        sumDebits += amt;
       }
 
-      const net = sumCredits - sumDebits;
-      const minDue = dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))) : null;
-      const maxDue = dates.length ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+      const rawDate = pickDate(e, context);
+      if (rawDate) {
+        const d = new Date(rawDate);
+        if (!isNaN(d.getTime())) dates.push(d);
+      }
+    }
 
-      return { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue };
-    }, [selectedIds, selectedEntries, context]);
+    const net = sumCredits - sumDebits;
+    const minDue = dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))) : null;
+    const maxDue = dates.length ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+
+    return { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue };
+  }, [selectedIds, selectedEntries, context]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -154,12 +154,17 @@ const SelectionActionsBar: React.FC<Props> = ({
           onClick={() => setCollapsed(false)}
           aria-expanded="false"
           className="pointer-events-auto flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 shadow-lg backdrop-blur px-3 py-2 hover:bg-white transition"
-          title="Expandir"
+          title={t("actions.expand")}
+          aria-label={t("actions.expand")}
         >
           <span className="text-[12px] text-gray-700">
-            {count} selecionado{count > 1 ? "s" : ""}
+            {t("labels.selected", { count })}
           </span>
-          <span className={`text-[12px] ${net >= 0 ? "text-emerald-700" : "text-rose-700"} font-medium`}>
+          <span
+            className={`text-[12px] ${net >= 0 ? "text-emerald-700" : "text-rose-700"} font-medium`}
+            aria-label={t("labels.net")}
+            title={t("labels.net")}
+          >
             {fmtBRL(net)}
           </span>
           <svg viewBox="0 0 20 20" className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" aria-hidden>
@@ -181,13 +186,14 @@ const SelectionActionsBar: React.FC<Props> = ({
         "
         role="region"
         aria-live="polite"
+        aria-label={t("aria.bar")}
       >
         {/* Minimize */}
         <button
           type="button"
           onClick={() => setCollapsed(true)}
-          aria-label="Minimizar"
-          title="Minimizar"
+          aria-label={t("actions.minimize")}
+          title={t("actions.minimize")}
           className="absolute -top-2 -right-2 h-7 w-7 grid place-items-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 shadow"
         >
           <IconMinimize className="w-3.5 h-3.5" />
@@ -197,33 +203,35 @@ const SelectionActionsBar: React.FC<Props> = ({
           {/* Info */}
           <div>
             <div className="text-[13px] text-gray-800">
-              <b>{count}</b> selecionado{count > 1 ? "s" : ""}
+              <b>{count}</b> {t("labels.selectedShort", { count })}
             </div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-600">
               <div>
-                Créditos: <b className="text-emerald-700">{credits}</b>
+                {t("labels.credits")}: <b className="text-emerald-700">{credits}</b>
               </div>
               <div>
-                Débitos: <b className="text-rose-700">{debits}</b>
+                {t("labels.debits")}: <b className="text-rose-700">{debits}</b>
               </div>
               <div>
-                Σ Créditos: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b>
+                {t("labels.sumCredits")}: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b>
               </div>
               <div>
-                Σ Débitos: <b className="text-rose-700">{fmtBRL(sumDebits)}</b>
+                {t("labels.sumDebits")}: <b className="text-rose-700">{fmtBRL(sumDebits)}</b>
               </div>
               <div className="col-span-2">
-                Saldo líquido:{" "}
+                {t("labels.net")}{" "}
                 <b className={net >= 0 ? "text-emerald-700" : "text-rose-700"}>{fmtBRL(net)}</b>
               </div>
               {minDue && maxDue && (
                 <div className="col-span-2">
-                  Venc.: <b>{minDue.toLocaleDateString()} – {maxDue.toLocaleDateString()}</b>
+                  {t("labels.dueShort")}{" "}
+                  <b>{minDue.toLocaleDateString()} – {maxDue.toLocaleDateString()}</b>
                 </div>
               )}
             </div>
             <div className="mt-2 text-[10.5px] text-gray-500">
-              Dica: pressione <kbd className="px-1 py-0.5 border rounded">Esc</kbd> para cancelar a seleção.
+              {t("hints.escToCancel")}{" "}
+              <kbd className="px-1 py-0.5 border rounded">Esc</kbd>
             </div>
           </div>
 
@@ -236,10 +244,11 @@ const SelectionActionsBar: React.FC<Props> = ({
                   onClick={onReturn}
                   disabled={isProcessing}
                   className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title="Retornar"
+                  title={t("actions.return")}
+                  aria-label={t("actions.return")}
                 >
                   <IconReturn className="w-4 h-4" />
-                  <span>Retornar</span>
+                  <span>{t("actions.return")}</span>
                 </Button>
 
                 <Button
@@ -247,10 +256,11 @@ const SelectionActionsBar: React.FC<Props> = ({
                   className="!border-gray-300 !text-gray-700 hover:!bg-gray-50 !px-3 !py-2 flex items-center justify-center gap-2"
                   onClick={onCancel}
                   disabled={isProcessing}
-                  title="Cancelar seleção (Esc)"
+                  title={t("actions.cancelSelection")}
+                  aria-label={t("actions.cancelSelection")}
                 >
                   <IconCancel className="w-4 h-4" />
-                  <span>Cancelar</span>
+                  <span>{t("actions.cancel")}</span>
                 </Button>
               </>
             ) : (
@@ -260,10 +270,11 @@ const SelectionActionsBar: React.FC<Props> = ({
                   onClick={onLiquidate}
                   disabled={isProcessing}
                   className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title="Liquidar selecionados"
+                  title={t("actions.liquidateSelected")}
+                  aria-label={t("actions.liquidateSelected")}
                 >
                   <IconLiquidate className="w-4 h-4" />
-                  <span>Liquidar</span>
+                  <span>{t("actions.liquidate")}</span>
                 </Button>
 
                 <Button
@@ -271,10 +282,11 @@ const SelectionActionsBar: React.FC<Props> = ({
                   onClick={onDelete}
                   disabled={isProcessing}
                   className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title="Excluir selecionados"
+                  title={t("actions.deleteSelected")}
+                  aria-label={t("actions.deleteSelected")}
                 >
                   <IconDelete className="w-4 h-4" />
-                  <span>Excluir</span>
+                  <span>{t("actions.delete")}</span>
                 </Button>
 
                 <Button
@@ -282,10 +294,11 @@ const SelectionActionsBar: React.FC<Props> = ({
                   className="!border-gray-300 !text-gray-700 hover:!bg-gray-50 !px-3 !py-2 flex items-center justify-center gap-2"
                   onClick={onCancel}
                   disabled={isProcessing}
-                  title="Cancelar seleção (Esc)"
+                  title={t("actions.cancelSelection")}
+                  aria-label={t("actions.cancelSelection")}
                 >
                   <IconCancel className="w-4 h-4" />
-                  <span>Cancelar</span>
+                  <span>{t("actions.cancel")}</span>
                 </Button>
               </>
             )}

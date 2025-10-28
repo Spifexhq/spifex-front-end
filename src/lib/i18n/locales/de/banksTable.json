@@ -1,0 +1,14 @@
+{
+  "aria": {
+    "section": "Banken und Salden",
+    "loading": "Banken werden geladen",
+    "row": "{{bank}} — Filiale {{branch}} • Konto {{account}} — Saldo {{balance}}"
+  },
+  "labels": {
+    "banks": "Banken",
+    "count": "({{count}})",
+    "total": "Summe:",
+    "branchAccount": "Filiale {{branch}} • Konto {{account}}"
+  },
+  "empty": "Keine Banken verfügbar"
+}

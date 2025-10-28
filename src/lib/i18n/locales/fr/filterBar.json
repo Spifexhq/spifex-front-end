@@ -1,0 +1,80 @@
+{
+  "search": { "placeholder": "Rechercher ou filtrer... (Ctrl/⌘+K)" },
+  "buttons": {
+    "config": "Paramètres",
+    "saveView": "Enregistrer la vue",
+    "views": "Vues",
+    "apply": "Appliquer",
+    "clear": "Effacer les filtres",
+    "remove": "Supprimer"
+  },
+  "menu": {
+    "addFilter": "Ajouter un filtre +",
+    "date": "Période",
+    "bank": "Banque",
+    "accounts": "Compte du grand livre",
+    "observation": "Observation",
+    "txType": "Type (Revenu/Dépense)",
+    "amount": "Montant (min/max)"
+  },
+  "chips": {
+    "date": "Dates",
+    "bank": "Banque",
+    "accounts": "Compte du grand livre",
+    "type": "Type",
+    "credit": "Revenu",
+    "debit": "Dépense",
+    "value": "Montant",
+    "observation": "Observation"
+  },
+  "editors": {
+    "date": {
+      "start": "Début",
+      "end": "Fin",
+      "shortcuts": "Raccourcis",
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "thisMonth": "Mois en cours",
+      "thisQuarter": "Trimestre",
+      "thisYear": "Année"
+    },
+    "banks": { "label": "Banques", "button": "Sélectionner les banques" },
+    "accounts": { "label": "Comptes du grand livre", "button": "Sélectionner les comptes" },
+    "observation": { "placeholder": "Saisir une observation..." },
+    "txType": { "credit": "Revenu", "debit": "Dépense" },
+    "amount": {
+      "min": "Minimum",
+      "max": "Maximum",
+      "currencySuffix": "(R$)",
+      "placeholder": "R$ 0,00"
+    }
+  },
+  "viewsMenu": { "empty": "Aucune vue enregistrée" },
+  "configModal": {
+    "title": "Vues enregistrées",
+    "close": "Fermer",
+    "empty": "Aucune vue enregistrée.",
+    "defaultTag": "Par défaut",
+    "saveName": "Enregistrer le nom",
+    "cancel": "Annuler",
+    "rename": "Renommer",
+    "apply": "Appliquer",
+    "delete": "Supprimer",
+    "footerClose": "Fermer"
+  },
+  "saveModal": {
+    "title": "Enregistrer la vue",
+    "close": "Fermer",
+    "name": "Nom",
+    "namePlaceholder": "Par ex., 'Paiements du mois en cours par projet'",
+    "setDefault": "Définir par défaut",
+    "modeTitle": "Mode",
+    "create": "Créer une nouvelle vue",
+    "overwrite": "Écraser l'existante",
+    "chooseView": "Choisir une vue",
+    "choosePlaceholder": "— sélectionner —",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "aria": { "removeFilter": "supprimer le filtre" }
+}

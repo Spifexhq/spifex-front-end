@@ -1,0 +1,39 @@
+{
+  "aria": { "dialog": "Überweisungsmodal" },
+  "header": { "kind": "Überweisung", "title": "Zwischen Konten/Banken" },
+  "fields": {
+    "date": "Datum",
+    "amount": "Betrag",
+    "note": "Notiz (optional)",
+    "bankOut": "Quellbank",
+    "bankIn": "Zielbank"
+  },
+  "placeholders": {
+    "amount": "0,00",
+    "note": "z. B. Überweisung, Grund, usw.",
+    "selectBank": "Bank auswählen"
+  },
+  "actions": {
+    "close": "Schließen",
+    "swap": "Banken tauschen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichern…"
+  },
+  "labels": {
+    "agency": "Filiale",
+    "account": "Konto",
+    "from": "von",
+    "to": "zu"
+  },
+  "warnings": {
+    "sameBank": "Quell- und Zielbank dürfen nicht identisch sein."
+  },
+  "hints": {
+    "fillToSave": "Betrag eingeben, Banken und Datum auswählen.",
+    "shortcuts": "Kurzbefehle: Esc (schließen), Ctrl/⌘+S (speichern)"
+  },
+  "errors": {
+    "save": "Fehler beim Speichern der Überweisung."
+  }
+}

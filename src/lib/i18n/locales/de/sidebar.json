@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "aria": {
+      "nav": "Seitenleiste für Kassen-Schnellaktionen",
+      "toggleOpen": "Seitenleiste öffnen",
+      "toggleClose": "Seitenleiste schließen"
+    },
+    "items": {
+      "credit": "Eingänge",
+      "debit": "Ausgänge",
+      "transfer": "Überweisungen"
+    }
+  }
+}

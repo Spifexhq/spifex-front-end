@@ -10,43 +10,52 @@ import {
   HelpCircle,
   CheckCircle2,
 } from "lucide-react";
-import qaData from "@/data/simulatedAI.qa.json"; // precisa de resolveJsonModule no tsconfig
+import { useTranslation } from "react-i18next";
 import Input from "../Input";
 
 /* -----------------------------------------------------------------------------
- * SimulatedAI — Refatorado para consumir JSON (src/data/simulatedAI.qa.json)
- * -----------------------------------------------------------------------------
- * - Lê perguntas/respostas do JSON (campo `faqs`)
- * - Mantém: typewriter com pausar/retomar/pular, TTS opcional, cópia, busca,
- *   chips de recentes (máx. 2), acessível, atalhos (Esc fecha, Ctrl/⌘+K foca busca)
- * - Paleta via CSS variables (ex.: --accentPrimary) com Tailwind arbitrary values
- * - ESLint-friendly (callbacks estáveis, efeitos bem declarados, sem catch vazio)
+ * SimulatedAI — i18n-powered FAQs (namespace: "simulatedAI")
+ * - Reads FAQs from i18n: t("faqs", { returnObjects: true })
+ * - Supports override via `qaList` prop
+ * - Keeps: typewriter with pause/resume/skip, TTS, copy, search, recents
+ * - A11y + shortcuts (Esc close, Ctrl/⌘+K focus search)
  * --------------------------------------------------------------------------- */
 
 export interface SimulatedAIProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
-  /** Opcional: sobrescrever a lista do JSON */
+  /** Optional: overrides the i18n FAQs list */
   qaList?: Array<{ id: string; question: string; answer: string; tags?: string[] }>;
 }
 
 const cls = (...parts: Array<string | false | null | undefined>) =>
   parts.filter(Boolean).join(" ");
 
+const ttsLangFrom = (lang?: string) => {
+  const l = (lang || "").toLowerCase();
+  if (l.startsWith("pt")) return "pt-BR";
+  if (l.startsWith("en")) return "en-US";
+  if (l.startsWith("fr")) return "fr-FR";
+  if (l.startsWith("de")) return "de-DE";
+  return "en-US";
+};
+
 const SimulatedAI: React.FC<SimulatedAIProps> = ({
   isOpen,
   onClose,
-  title = "Pergunte ao Assistente",
+  title,
   qaList,
 }) => {
+  const { t, i18n } = useTranslation("simulatedAI");
+
   /* -------------------------------- State -------------------------------- */
   const [search, setSearch] = useState("");
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   const [response, setResponse] = useState<string>("");
   const [typedResponse, setTypedResponse] = useState<string>("");
   const [isTyping, setIsTyping] = useState(false);
-  const [speedMs, setSpeedMs] = useState(20); // menor = mais rápido
+  const [speedMs, setSpeedMs] = useState(20);
   const [recentQs, setRecentQs] = useState<string[]>([]);
   const [speakOn, setSpeakOn] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -57,15 +66,15 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  /* --------------------------- Dados (do JSON) --------------------------- */
+  /* --------------------------- Data (from i18n) --------------------------- */
   type FAQ = { id: string; question: string; answer: string; tags?: string[] };
 
+  // Prefer prop override; fallback to i18n JSON (namespace: simulatedAI, key: faqs)
+  const i18nFaqs = t("faqs", { returnObjects: true }) as unknown as FAQ[] | undefined;
   const faqs: FAQ[] = useMemo(() => {
     if (qaList?.length) return qaList;
-    // fallback para o JSON importado
-    const raw = (qaData as { faqs?: FAQ[] } | undefined)?.faqs ?? [];
-    return Array.isArray(raw) ? raw : [];
-  }, [qaList]);
+    return Array.isArray(i18nFaqs) ? i18nFaqs : [];
+  }, [qaList, i18nFaqs]);
 
   const qaPairs = useMemo(
     () => faqs.map(({ question, answer }) => [question, answer] as const),
@@ -95,22 +104,23 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
     try {
       window.speechSynthesis?.cancel();
     } catch {
-      // ambiente pode não suportar TTS
-      void 0;
+      // ignore TTS absence
     }
   }, []);
 
-  const speakText = useCallback((text: string) => {
-    try {
-      if (!("speechSynthesis" in window)) return;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "pt-BR";
-      window.speechSynthesis.speak(utter);
-    } catch {
-      // erro não-crítico
-      void 0;
-    }
-  }, []);
+  const speakText = useCallback(
+    (text: string) => {
+      try {
+        if (!("speechSynthesis" in window)) return;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = ttsLangFrom(i18n.language);
+        window.speechSynthesis.speak(utter);
+      } catch {
+        // non-critical
+      }
+    },
+    [i18n.language]
+  );
 
   const startTyping = useCallback(
     (text: string) => {
@@ -168,7 +178,6 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
     };
   }, [clearTicker, stopSpeaking]);
 
-  // Reaplicar intervalo se mudar a velocidade durante a digitação
   useEffect(() => {
     if (isTyping && response) {
       clearTicker();
@@ -194,7 +203,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
       indexRef.current = 0;
       setRecentQs((prev) => {
         const arr = [q, ...prev.filter((p) => p !== q)];
-        return arr.slice(0, 2); // manter no máximo 2
+        return arr.slice(0, 2);
       });
       startTyping(ans);
     },
@@ -207,8 +216,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch {
-      // clipboard pode estar bloqueado
-      void 0;
+      // clipboard may be blocked
     }
   }, [typedResponse, response]);
 
@@ -223,7 +231,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
     onClose();
   }, [clearTicker, stopSpeaking, onClose]);
 
-  /* -------------------------- Focus + Atalhos --------------------------- */
+  /* -------------------------- Focus + Shortcuts -------------------------- */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -243,7 +251,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
       if (e.key === "Enter" && document.activeElement === searchInputRef.current) {
         if (filteredQuestions[0]) handlePickQuestion(filteredQuestions[0]);
       }
-      // Focus trap
+      // focus trap
       if (e.key === "Tab") {
         const root = dialogRef.current;
         if (!root) return;
@@ -276,11 +284,17 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
 
   if (!isOpen) return null;
 
+  const heading = title ?? t("title");
+
   /* --------------------------------- UI --------------------------------- */
   return (
     <div className="fixed inset-0 z-[1000]">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={handleClose} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+        onClick={handleClose}
+        aria-label={t("aria.backdrop")}
+      />
 
       {/* Dialog */}
       <div
@@ -301,21 +315,20 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                 )}
                 style={{ borderColor: "var(--accentPrimary)", background: "var(--color3)" }}
               >
-                <HelpCircle className="h-5 w-5" />
+                <HelpCircle className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
                 <h2 id="sim-ai-title" className="text-[12px] font-semibold text-gray-900">
-                  {title}
+                  {heading}
                 </h2>
-                <p className="text-[12px] text-gray-500">
-                  Enter: perguntar · Esc: fechar · Ctrl/⌘ + K: buscar
-                </p>
+                <p className="text-[12px] text-gray-500">{t("shortcuts.hint")}</p>
               </div>
             </div>
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={handleClose}
-              aria-label="Fechar"
+              aria-label={t("actions.close")}
+              title={t("actions.close") || ""}
             >
               &times;
             </button>
@@ -327,16 +340,19 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
             <section className="order-2 md:order-1">
               {/* Progress */}
               <div className="mb-3">
-                <div className="h-1 w-full rounded bg-gray-100 overflow-hidden">
+                <div className="h-1 w-full rounded bg-gray-100 overflow-hidden" aria-hidden="true">
                   <div
                     className="h-full transition-all bg-[color:var(--accentPrimary)]"
                     style={{ width: `${progress}%` }}
-                    aria-hidden="true"
                   />
                 </div>
                 <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
                   <span>
-                    {isTyping ? "Digitando…" : typedResponse ? "Concluído" : "Aguardando pergunta"}
+                    {isTyping
+                      ? t("status.typing")
+                      : typedResponse
+                      ? t("status.done")
+                      : t("status.waiting")}
                   </span>
                   <span>{progress}%</span>
                 </div>
@@ -357,7 +373,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                   </p>
                 ) : (
                   <p className="text-[12px] text-gray-500">
-                    Selecione ou busque uma pergunta à direita para ver a resposta.
+                    {t("empty.pickOnRight")}
                   </p>
                 )}
               </div>
@@ -369,7 +385,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                   className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-[12px] hover:bg-gray-50"
                 >
                   {isTyping ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  {isTyping ? "Pausar" : "Retomar"}
+                  {isTyping ? t("actions.pause") : t("actions.resume")}
                 </button>
                 <button
                   onClick={skipToEnd}
@@ -380,7 +396,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                   )}
                 >
                   <FastForward className="h-4 w-4" />
-                  Pular digitação
+                  {t("actions.skip")}
                 </button>
                 <button
                   onClick={handleCopy}
@@ -393,11 +409,11 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                 >
                   {copied ? (
                     <>
-                      <CheckCircle2 className="h-4 w-4 text-[color:var(--accentSuccess)]" /> Copiado!
+                      <CheckCircle2 className="h-4 w-4 text-[color:var(--accentSuccess)]" /> {t("actions.copied")}
                     </>
                   ) : (
                     <>
-                      <Copy className="h-4 w-4" /> Copiar
+                      <Copy className="h-4 w-4" /> {t("actions.copy")}
                     </>
                   )}
                 </button>
@@ -409,13 +425,13 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                       ? "border-[color:var(--accentPrimary)] text-[color:var(--accentPrimary)] bg-[color:var(--accentCancel)]"
                       : "border-gray-200"
                   )}
-                  title="Ler em voz alta quando concluir"
+                  title={t("tts.tooltip") || ""}
                 >
                   {speakOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                  {speakOn ? "Voz: ligado" : "Voz: desligado"}
+                  {speakOn ? t("tts.on") : t("tts.off")}
                 </button>
                 <div className="ml-auto flex items-center gap-2 text-[12px] text-gray-600">
-                  <span>Velocidade</span>
+                  <span>{t("speed.label")}</span>
                   <input
                     type="range"
                     min={5}
@@ -424,14 +440,14 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                     value={speedMs}
                     onChange={(e) => setSpeedMs(Number(e.target.value))}
                     className="accent-[color:var(--accentPrimary)]"
-                    aria-label="Velocidade da digitação"
+                    aria-label={t("speed.aria") || ""}
                   />
                 </div>
               </div>
 
               {recentQs.length > 0 && (
                 <div className="mt-3">
-                  <div className="text-[12px] text-gray-600 mb-1">Recentes</div>
+                  <div className="text-[12px] text-gray-600 mb-1">{t("recent.title")}</div>
                   <div className="flex flex-wrap gap-2">
                     {recentQs.map((q) => (
                       <button
@@ -451,13 +467,14 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
             {/* Questions / Search panel */}
             <aside className="order-1 md:order-2">
               <div className="mb-2">
-                <label className="text-[12px] text-gray-600">Buscar pergunta</label>
+                <label className="text-[12px] text-gray-600">{t("search.label")}</label>
                 <div className="mt-1 relative">
                   <Input
                     ref={searchInputRef}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Digite para filtrar…"
+                    placeholder={t("search.placeholder") || ""}
+                    aria-label={t("search.aria") || ""}
                   />
                 </div>
               </div>
@@ -477,13 +494,13 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                     </button>
                   ))
                 ) : (
-                  <div className="p-3 text-[12px] text-gray-500">Nenhuma pergunta encontrada.</div>
+                  <div className="p-3 text-[12px] text-gray-500">{t("search.empty")}</div>
                 )}
               </div>
 
               <div className="mt-4 flex items-center justify-between">
                 <div className="mr-4 text-[12px] text-gray-500">
-                  {selectedQuestion ? "Pergunta selecionada:" : "Nenhuma pergunta selecionada"}
+                  {selectedQuestion ? t("selection.has") : t("selection.none")}
                   {selectedQuestion && (
                     <span className="block text-gray-700 mt-0.5 line-clamp-2">
                       {selectedQuestion}
@@ -501,7 +518,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                   }}
                   className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-[12px] hover:bg-gray-50 border-gray-200"
                 >
-                  <RotateCcw className="h-4 w-4" /> Limpar
+                  <RotateCcw className="h-4 w-4" /> {t("actions.clear")}
                 </button>
               </div>
             </aside>
@@ -513,10 +530,10 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
               {typedResponse ? (
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-[color:var(--accentSuccess)]" />
-                  Resposta pronta para copiar ou enviar.
+                  {t("footer.ready")}
                 </span>
               ) : (
-                <span>Selecione uma pergunta para ver a resposta.</span>
+                <span>{t("footer.pickQuestion")}</span>
               )}
             </div>
             <button
@@ -526,7 +543,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                 "bg-[color:var(--accentPrimary)] hover:bg-[color:var(--accentPrimaryHover)] ring-[color:var(--accentPrimary)]"
               )}
             >
-              Fechar
+              {t("actions.close")}
             </button>
           </div>
         </div>

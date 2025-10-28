@@ -1,0 +1,36 @@
+{
+  "aria": {
+    "section": "Cash flow",
+    "loadingEntries": "Loading entries",
+    "loadingMore": "Loading more results",
+    "selectAll": "Select all",
+    "selectRow": "Select row"
+  },
+  "labels": {
+    "entries": "Entries",
+    "selectedCount": "{{count}} selected",
+    "selectedCount_plural": "{{count}} selected",
+    "due": "Due",
+    "loadingMore": "Loading more...",
+    "installmentXofY": "Installment {{x}} / {{y}}"
+  },
+  "columns": {
+    "amount": "Amount",
+    "balance": "Balance"
+  },
+  "actions": {
+    "edit": "Edit",
+    "retry": "Retry"
+  },
+  "empty": {
+    "title": "No entries found",
+    "subtitle": "Try adjusting the filters to see data"
+  },
+  "errors": {
+    "title": "Error loading data",
+    "fetch": "Failed to fetch data."
+  },
+  "months": {
+    "short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  }
+}

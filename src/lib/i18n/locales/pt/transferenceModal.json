@@ -1,0 +1,39 @@
+{
+  "aria": { "dialog": "Modal de transferência bancária" },
+  "header": { "kind": "Transferência", "title": "Entre contas/bancos" },
+  "fields": {
+    "date": "Data",
+    "amount": "Valor",
+    "note": "Observação (opcional)",
+    "bankOut": "Banco de saída",
+    "bankIn": "Banco de entrada"
+  },
+  "placeholders": {
+    "amount": "0,00",
+    "note": "Ex.: TED, motivo, etc.",
+    "selectBank": "Selecione o banco"
+  },
+  "actions": {
+    "close": "Fechar",
+    "swap": "Trocar bancos",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando…"
+  },
+  "labels": {
+    "agency": "Agência",
+    "account": "Conta",
+    "from": "de",
+    "to": "para"
+  },
+  "warnings": {
+    "sameBank": "Os bancos de saída e entrada não podem ser o mesmo."
+  },
+  "hints": {
+    "fillToSave": "Informe um valor, selecione os bancos e a data.",
+    "shortcuts": "Atalhos: Esc (fechar), Ctrl/⌘+S (salvar)"
+  },
+  "errors": {
+    "save": "Erro ao salvar transferência."
+  }
+}

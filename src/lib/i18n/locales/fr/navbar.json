@@ -1,0 +1,16 @@
+{
+  "aria": {
+    "mainNav": "Navigation principale",
+    "drawerNav": "Menu latéral"
+  },
+  "actions": {
+    "open": "Ouvrir le menu",
+    "close": "Fermer",
+    "menu": "Menu"
+  },
+  "links": {
+    "cashflow": "Flux de trésorerie",
+    "settled": "Réglé",
+    "reports": "Rapports"
+  }
+}

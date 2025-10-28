@@ -1,0 +1,80 @@
+{
+  "search": { "placeholder": "Suchen oder filtern... (Ctrl/⌘+K)" },
+  "buttons": {
+    "config": "Einstellungen",
+    "saveView": "Ansicht speichern",
+    "views": "Ansichten",
+    "apply": "Anwenden",
+    "clear": "Filter löschen",
+    "remove": "Entfernen"
+  },
+  "menu": {
+    "addFilter": "Filter hinzufügen +",
+    "date": "Zeitraum",
+    "bank": "Bank",
+    "accounts": "Hauptbuchkonto",
+    "observation": "Bemerkung",
+    "txType": "Typ (Einnahme/Ausgabe)",
+    "amount": "Betrag (min/max)"
+  },
+  "chips": {
+    "date": "Daten",
+    "bank": "Bank",
+    "accounts": "Hauptbuchkonto",
+    "type": "Typ",
+    "credit": "Einnahme",
+    "debit": "Ausgabe",
+    "value": "Betrag",
+    "observation": "Bemerkung"
+  },
+  "editors": {
+    "date": {
+      "start": "Start",
+      "end": "Ende",
+      "shortcuts": "Verknüpfungen",
+      "today": "Heute",
+      "thisWeek": "Diese Woche",
+      "thisMonth": "Aktueller Monat",
+      "thisQuarter": "Quartal",
+      "thisYear": "Jahr"
+    },
+    "banks": { "label": "Banken", "button": "Banken auswählen" },
+    "accounts": { "label": "Hauptbuchkonten", "button": "Konten auswählen" },
+    "observation": { "placeholder": "Bemerkung eingeben..." },
+    "txType": { "credit": "Einnahme", "debit": "Ausgabe" },
+    "amount": {
+      "min": "Minimum",
+      "max": "Maximum",
+      "currencySuffix": "(R$)",
+      "placeholder": "R$ 0,00"
+    }
+  },
+  "viewsMenu": { "empty": "Keine gespeicherten Ansichten" },
+  "configModal": {
+    "title": "Gespeicherte Ansichten",
+    "close": "Schließen",
+    "empty": "Keine gespeicherten Ansichten.",
+    "defaultTag": "Standard",
+    "saveName": "Namen speichern",
+    "cancel": "Abbrechen",
+    "rename": "Umbenennen",
+    "apply": "Anwenden",
+    "delete": "Löschen",
+    "footerClose": "Schließen"
+  },
+  "saveModal": {
+    "title": "Ansicht speichern",
+    "close": "Schließen",
+    "name": "Name",
+    "namePlaceholder": "Z.B. 'Zahlungen des aktuellen Monats nach Projekt'",
+    "setDefault": "Als Standard festlegen",
+    "modeTitle": "Modus",
+    "create": "Neue Ansicht erstellen",
+    "overwrite": "Vorhandene überschreiben",
+    "chooseView": "Ansicht auswählen",
+    "choosePlaceholder": "— auswählen —",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "aria": { "removeFilter": "Filter entfernen" }
+}

@@ -1,0 +1,15 @@
+{
+  "sidebar": {
+    "aria": {
+      "nav": "Cashflow quick actions sidebar",
+      "toggleOpen": "Open sidebar",
+      "toggleClose": "Close sidebar"
+    },
+    "items": {
+      "credit": "Receipts",
+      "debit": "Payments",
+      "transfer": "Transfers"
+    }
+  }
+}
+

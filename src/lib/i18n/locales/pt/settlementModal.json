@@ -1,0 +1,49 @@
+{
+  "aria": { "dialog": "Liquidação de lançamentos" },
+  "header": {
+    "kind": "Liquidação",
+    "title": { "one": "1 lançamento selecionado", "many": "{{n}} lançamentos selecionados" }
+  },
+  "actions": {
+    "close": "Fechar",
+    "bulkDate": "Aplicar data",
+    "applyDateAll": "Aplicar data a todos",
+    "markAllPartial": "Marcar todos como parcial",
+    "clearAllPartial": "Limpar parciais",
+    "cancel": "Cancelar",
+    "settle": "Liquidar"
+  },
+  "banks": {
+    "aria": "Selecionar banco",
+    "title": "Bancos",
+    "count": "({{n}})",
+    "balance": "Saldo:",
+    "agency": "Agência",
+    "account": "Conta",
+    "none": "Nenhum banco disponível"
+  },
+  "entries": {
+    "aria": "Lançamentos",
+    "title": "Lançamentos",
+    "count": "({{n}})"
+  },
+  "table": {
+    "due": "Vencimento",
+    "desc": "Descrição",
+    "amount": "Valor",
+    "partialQ": "Parcial?",
+    "partialAmount": "Valor parcial",
+    "none": "Nenhum lançamento selecionado",
+    "partialInvalid": "Valor parcial inválido (0 ou maior que o valor do lançamento)."
+  },
+  "footer": {
+    "original": "Original:",
+    "toSettle": "A liquidar:",
+    "bankLabel": "Banco:",
+    "selectBank": "Selecione um banco",
+    "shortcuts": "Atalhos: Esc (fechar), Ctrl/⌘+Enter (salvar)"
+  },
+  "errors": {
+    "bulk": "Erro ao liquidar lançamentos."
+  }
+}

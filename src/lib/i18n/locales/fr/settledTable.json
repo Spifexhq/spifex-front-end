@@ -1,0 +1,37 @@
+{
+  "aria": {
+    "section": "Écritures liquidées",
+    "loadingEntries": "Chargement des écritures liquidées",
+    "loadingMore": "Chargement d'autres résultats",
+    "selectAll": "Tout sélectionner",
+    "selectRow": "Sélectionner la ligne"
+  },
+  "labels": {
+    "settled": "Liquidés",
+    "selectedCount": "{{count}} sélectionné",
+    "selectedCount_plural": "{{count}} sélectionnés",
+    "settlement": "Liq. :",
+    "loadingMore": "Chargement...",
+    "installmentXofY": "Versement {{x}} / {{y}}",
+    "partialIndex": "Partiel : {{n}}",
+    "bank": "Banque"
+  },
+  "columns": {
+    "amount": "Montant",
+    "balance": "Solde"
+  },
+  "actions": {
+    "retry": "Réessayer"
+  },
+  "empty": {
+    "title": "Aucune écriture liquidée trouvée",
+    "subtitle": "Essayez d'ajuster les filtres pour afficher des données"
+  },
+  "errors": {
+    "title": "Erreur de chargement",
+    "fetch": "Échec du chargement des données."
+  },
+  "months": {
+    "short": ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+  }
+}

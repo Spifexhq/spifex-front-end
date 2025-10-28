@@ -1,4 +1,30 @@
 {
+  "title": "Pergunte ao Assistente",
+  "shortcuts": { "hint": "Enter: perguntar · Esc: fechar · Ctrl/⌘ + K: buscar" },
+  "aria": { "backdrop": "Fechar diálogo" },
+  "status": { "typing": "Digitando…", "done": "Concluído", "waiting": "Aguardando pergunta" },
+  "empty": { "pickOnRight": "Selecione ou busque uma pergunta à direita para ver a resposta." },
+  "actions": {
+    "pause": "Pausar",
+    "resume": "Retomar",
+    "skip": "Pular digitação",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "clear": "Limpar",
+    "close": "Fechar"
+  },
+  "tts": { "on": "Voz: ligado", "off": "Voz: desligado", "tooltip": "Ler em voz alta quando concluir" },
+  "speed": { "label": "Velocidade", "aria": "Velocidade da digitação" },
+  "recent": { "title": "Recentes" },
+  "search": {
+    "label": "Buscar pergunta",
+    "placeholder": "Digite para filtrar…",
+    "aria": "Campo de busca por pergunta",
+    "empty": "Nenhuma pergunta encontrada."
+  },
+  "selection": { "has": "Pergunta selecionada:", "none": "Nenhuma pergunta selecionada" },
+  "footer": { "ready": "Resposta pronta para copiar ou enviar.", "pickQuestion": "Selecione uma pergunta para ver a resposta." },
+
   "faqs": [
     {
       "id": "estoque-melhoria",
