@@ -1,4 +1,4 @@
-import { request, http } from '@/lib/http'
+import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import {
   GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,

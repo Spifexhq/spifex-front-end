@@ -90,3 +90,7 @@ button[class*="inline-flex"]:focus-visible {
 @layer utilities {
   .standard-border { border: var(--standardBorder); }
 }
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
