@@ -32,23 +32,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const isPassword = showTogglePassword && type === "password";
     const inputType = isPassword ? (isPasswordVisible ? "text" : "password") : type;
 
-    // Clear button is shown only when it makes sense and won't break controlled usage
     const valueStr =
-      typeof (rest).value === "string"
-        ? ((rest).value as string)
-        : (typeof (rest).defaultValue === "string"
-            ? ((rest).defaultValue as string)
-            : "");
+      typeof rest.value === "string"
+        ? (rest.value as string)
+        : typeof rest.defaultValue === "string"
+        ? (rest.defaultValue as string)
+        : "";
     const canClear =
       !isPassword &&
       !isLoading &&
       !rest.disabled &&
-      typeof (rest).onChange === "function" &&
+      typeof rest.onChange === "function" &&
       valueStr.length > 0 &&
-      (type === "text" || type === "search" || type === "email" || type === "tel" || type === "url");
+      (type === "text" ||
+        type === "search" ||
+        type === "email" ||
+        type === "tel" ||
+        type === "url");
 
     const rightPadClass = useMemo(() => {
-      // reserve room for trailing controls
       if (isPassword && canClear) return "pr-16";
       if (isPassword || canClear || isLoading) return "pr-10";
       return "pr-3.5";
@@ -63,24 +65,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const variantClasses: Record<Variant, string> = {
       default: "border-gray-300",
-      outlined: "border-2 border-gray-300 focus-visible:ring-0", // keep minimal; outlined but no loud ring
+      outlined: "border-2 border-gray-300 focus-visible:ring-0",
       filled: "bg-gray-50 border border-transparent focus:border-gray-300",
     };
-
-    const errorClasses = errorMessage
-      ? "border-red-500 focus:border-red-500 focus-visible:ring-red-200"
-      : undefined;
 
     const inputClasses = classNames(
       baseInput,
       rightPadClass,
       variantClasses[variant as Variant] ?? variantClasses.default,
-      errorClasses
+      errorMessage && "border-red-500 focus:border-red-500 focus-visible:ring-red-200"
     );
 
     const togglePasswordVisibility = () => setIsPasswordVisible((v) => !v);
 
-    // Prevent accidental form submit when requested
     const handleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && (rest).formNoValidate) e.preventDefault();
     };
@@ -88,20 +85,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const errorId = errorMessage ? `${id}-err` : undefined;
 
     const onClear = () => {
-      const onChange = (rest).onChange as React.ChangeEventHandler<HTMLInputElement>;
+      const onChange = rest.onChange as React.ChangeEventHandler<HTMLInputElement> | undefined;
       if (onChange) {
-        const target = { value: "" };
-        onChange({ target } as React.ChangeEvent<HTMLInputElement>);
+        // IMPORTANT: include name so parent’s handleChange({ target: { name, value } }) works
+        const name = (rest).name ?? "";
+        const synthetic = {
+          target: { name, value: "" },
+          currentTarget: { name, value: "" },
+        } as React.ChangeEvent<HTMLInputElement>;
+        onChange(synthetic);
       }
     };
 
     return (
       <div className="flex flex-col gap-1.5" style={style}>
         {label ? (
-          <label
-            htmlFor={id}
-            className="text-[10.5px] font-semibold text-gray-700 select-none"
-          >
+          <label htmlFor={id} className="text-[10.5px] font-semibold text-gray-700 select-none">
             {label}
           </label>
         ) : null}
@@ -119,14 +118,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...rest}
           />
 
-          {/* Trailing controls (right side): spinner, clear, password toggle */}
+          {/* Trailing controls */}
           <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center gap-1">
             {isLoading && (
-              <svg
-                className="h-4 w-4 animate-spin text-gray-400"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
+              <svg className="h-4 w-4 animate-spin text-gray-400" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.25" />
                 <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" fill="none" />
               </svg>

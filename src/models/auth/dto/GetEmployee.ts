@@ -1,3 +1,4 @@
+// src/models/auth/dto/GetEmployee
 import { Employee, Role } from "../domain";
 
 export interface GetEmployeesResponse {
@@ -13,6 +14,7 @@ export type AddEmployeeRequest = {
   email: string;
   password?: string;
   role?: Exclude<Role, "owner">;
+  group_external_ids?: string[];
   group_ids?: number[];
   group_slugs?: string[];
 };

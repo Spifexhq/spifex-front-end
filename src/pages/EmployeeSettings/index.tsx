@@ -210,13 +210,13 @@ const EmployeeSettings: React.FC = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password || undefined,
-          group_ids: formData.groups.map((g) => g.id),
+          group_external_ids: formData.groups.map((g) => g.external_id),
         });
       } else if (editingEmployee) {
         await api.editEmployee(editingEmployee.id, {
           name: formData.name,
           email: formData.email,
-          group_ids: formData.groups.map((g) => g.id),
+          group_external_ids: formData.groups.map((g) => g.external_id),
         });
       }
       await fetchData();
@@ -369,6 +369,7 @@ const EmployeeSettings: React.FC = () => {
                       type="password"
                       value={formData.password}
                       onChange={handleChange}
+                      showTogglePassword
                       required
                     />
                     <Input
@@ -377,6 +378,7 @@ const EmployeeSettings: React.FC = () => {
                       type="password"
                       value={formData.confirmPassword}
                       onChange={handleChange}
+                      showTogglePassword
                       required
                     />
                   </>

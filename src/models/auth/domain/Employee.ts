@@ -1,3 +1,4 @@
+// src/models/auth/domain/Employee
 import { GroupListItem as Group } from "./Group";
 
 export type Role = "owner" | "admin" | "member";
