@@ -11,17 +11,15 @@ import {
   Legend,
   BarChart,
   Bar,
-  LineChart,
   Line,
   PieChart,
   Pie,
   Cell,
 } from "recharts";
 
-import Navbar from "src/components/layout/Navbar";
-import { Sidebar } from "src/components/layout/Sidebar";
 import Button from "src/components/ui/Button";
 import { InlineLoader } from "@/components/Loaders";
+import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
@@ -56,12 +54,11 @@ const BRL = (v: number, locale = "pt-BR") =>
 const asPct = (v: number, locale = "pt-BR") =>
   `${(v * 100).toLocaleString(locale, { maximumFractionDigits: 1 })}%`;
 
-/** Color tokens (subtle, consistent, AA-contrast on white) */
-const C_POS = "#0B5FFF";     // positive bars/lines
-const C_NEG = "#D92D20";     // negative bars
-const C_NET = "#0E9384";     // net line
-const C_ACC = "#111827";     // accents (text/axes)
-const C_GRID = "rgba(17,24,39,0.12)"; // light grid
+const C_POS = "#0B5FFF";
+const C_NEG = "#D92D20";
+const C_NET = "#0E9384";
+const C_ACC = "#111827";
+const C_GRID = "rgba(17,24,39,0.12)";
 
 /* Custom tooltip (minimal) */
 const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, title, locale }) => {
@@ -97,25 +94,22 @@ const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, ti
 
 const ReportsPage: React.FC = () => {
   const { t, i18n } = useTranslation(["reports"]);
-  const locale = i18n.language === "pt" ? "pt-BR" : i18n.language; // keep BRL formatting in PT
+  const locale = i18n.language === "pt" ? "pt-BR" : i18n.language;
 
   useEffect(() => {
     document.title = t("pageTitle");
   }, [t]);
 
-  // orgExternalId (same logic used elsewhere)
   const orgExternalId = useSelector((s: RootState) =>
     s.auth.orgExternalId ??
     s.auth.organization?.organization?.external_id ??
     s.auth.organization?.external_id
   ) as string | undefined;
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [data, setData] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Consolidated balance (for runway)
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
 
   const params = useMemo(
@@ -224,7 +218,6 @@ const ReportsPage: React.FC = () => {
     return lines;
   }, [runwayMonths, mtdNetMinor, overduePayMinor, overdueRecMinor, momChange, t, locale]);
 
-  const toggleSidebar = useCallback(() => setIsSidebarOpen(p => !p), []);
   const cardCls = "border border-gray-300 rounded-md bg-white px-3 py-2";
 
   /* ------------------------------------------------------------------------ */
@@ -233,18 +226,8 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-white text-gray-900">
-      <Navbar />
-      <Sidebar
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-        handleOpenModal={() => {}}
-        handleOpenTransferenceModal={() => {}}
-        mode="default"
-      />
-
-      {/* respect navbar height (64px). We use mt-16 = 64px. */}
-      <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        <div className="mt-16 w-full px-6 md:px-10 py-6 space-y-6">
+      <main className={"flex-1 transition-all duration-300"}>
+        <div className="mt-[15px] w-full px-6 md:px-10 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-semibold">{t("title")}</h1>
             <div className="flex gap-2">
@@ -442,37 +425,13 @@ const ReportsPage: React.FC = () => {
                 </div>
 
                 <div className="xl:col-span-2 border border-gray-300 rounded-md bg-white px-3 py-2">
-                  <p className="text-[12px] font-medium mb-3">{t("charts.cumulativeTitle")}</p>
-                  <div className="w-full h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={monthlyCumulative}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={C_GRID} />
-                        <XAxis dataKey="month" tick={{ fill: C_ACC, fontSize: 12 }} />
-                        <YAxis
-                          tick={{ fill: C_ACC, fontSize: 12 }}
-                          tickFormatter={(v: number) =>
-                            v.toLocaleString(locale, {
-                              style: "currency",
-                              currency: "BRL",
-                              minimumFractionDigits: 0,
-                            })
-                          }
-                        />
-                        <Tooltip
-                          content={({ active, payload, label }) => (
-                            <MinimalTip
-                              active={active}
-                              payload={payload}
-                              label={label}
-                              title={t("charts.cumulativeTitle")}
-                              locale={locale}
-                            />
-                          )}
-                        />
-                        <Line type="monotone" dataKey="cumulative" dot={false} stroke={C_POS} strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <CumulativeAreaChart
+                    data={monthlyCumulative}
+                    title={t("charts.cumulativeTitle")}
+                    locale={locale}
+                    currency="BRL"
+                    height={256}
+                  />
                 </div>
               </section>
 

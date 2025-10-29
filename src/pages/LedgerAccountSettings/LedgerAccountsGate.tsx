@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Navbar from "src/components/layout/Navbar";
 import { SuspenseLoader } from "@/components/Loaders";
 import Button from "src/components/ui/Button";
 import Input from "src/components/ui/Input";
@@ -208,97 +207,98 @@ const LedgerAccountsGate: React.FC = () => {
 
   return (
     <>
-      <Navbar />
-      <main className="min-h-screen bg-gray-50 px-8 py-20 text-gray-900">
-        <section className="max-w-3xl mx-auto p-8 border rounded-lg bg-white space-y-6">
-          <h1 className="text-xl font-semibold">{t("settings:ledgerAccountsGate.title")}</h1>
-          <p className="text-sm text-gray-600">{t("settings:ledgerAccountsGate.subtitle")}</p>
+      <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
+        <div className="max-w-5xl mx-auto">
+          <section className="max-w-3xl mx-auto p-8 border rounded-lg bg-white space-y-6">
+            <h1 className="text-xl font-semibold">{t("settings:ledgerAccountsGate.title")}</h1>
+            <p className="text-sm text-gray-600">{t("settings:ledgerAccountsGate.subtitle")}</p>
 
-          {/* CSV */}
-          <div className="border rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="font-medium">{t("settings:ledgerAccountsGate.modes.csv.title")}</h2>
-              <label className="text-sm flex items-center gap-2">
-                <input type="radio" name="mode" checked={mode === "csv"} onChange={() => setMode("csv")} />
-                {t("settings:ledgerAccountsGate.modes.csv.choose")}
-              </label>
-            </div>
-            {mode === "csv" && (
-              <div className="space-y-3">
-                <Button variant="outline" onClick={downloadTemplate}>
-                  {t("settings:ledgerAccountsGate.modes.csv.downloadTemplate")}
-                </Button>
-                <Input type="file" label={t("settings:ledgerAccountsGate.modes.csv.uploadLabel")} onChange={handleUploadCSV} accept=".csv,text/csv" />
-                <p className="text-[12px] text-gray-500">
-                  {t("settings:ledgerAccountsGate.modes.csv.hintHeaderRow")} · {t("settings:ledgerAccountsGate.modes.csv.hintColumns")}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Manual */}
-          <div className="border rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="font-medium">{t("settings:ledgerAccountsGate.modes.manual.title")}</h2>
-              <label className="text-sm flex items-center gap-2">
-                <input type="radio" name="mode" checked={mode === "manual"} onChange={() => setMode("manual")} />
-                {t("settings:ledgerAccountsGate.modes.manual.choose")}
-              </label>
-            </div>
-            {mode === "manual" && (
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500">{t("settings:ledgerAccountsGate.modes.manual.instructions")}</p>
-                <textarea
-                  className="w-full border rounded p-2 resize-y min-h-[140px]"
-                  placeholder={t("settings:ledgerAccountsGate.modes.manual.placeholder")}
-                  value={textBlock}
-                  onChange={(e) => setTextBlock(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Standard */}
-          <div className="border rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="font-medium">{t("settings:ledgerAccountsGate.modes.standard.title")}</h2>
-              <label className="text-sm flex items-center gap-2">
-                <input type="radio" name="mode" checked={mode === "standard"} onChange={() => setMode("standard")} />
-                {t("settings:ledgerAccountsGate.modes.standard.choose")}
-              </label>
-            </div>
-            {mode === "standard" && (
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="radio" name="std" checked={stdChoice === "personal"} onChange={() => setStdChoice("personal")} />
-                  {t("settings:ledgerAccountsGate.modes.standard.personal")}
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="radio" name="std" checked={stdChoice === "business"} onChange={() => setStdChoice("business")} />
-                  {t("settings:ledgerAccountsGate.modes.standard.business")}
+            {/* CSV */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-medium">{t("settings:ledgerAccountsGate.modes.csv.title")}</h2>
+                <label className="text-sm flex items-center gap-2">
+                  <input type="radio" name="mode" checked={mode === "csv"} onChange={() => setMode("csv")} />
+                  {t("settings:ledgerAccountsGate.modes.csv.choose")}
                 </label>
               </div>
-            )}
-          </div>
+              {mode === "csv" && (
+                <div className="space-y-3">
+                  <Button variant="outline" onClick={downloadTemplate}>
+                    {t("settings:ledgerAccountsGate.modes.csv.downloadTemplate")}
+                  </Button>
+                  <Input type="file" label={t("settings:ledgerAccountsGate.modes.csv.uploadLabel")} onChange={handleUploadCSV} accept=".csv,text/csv" />
+                  <p className="text-[12px] text-gray-500">
+                    {t("settings:ledgerAccountsGate.modes.csv.hintHeaderRow")} · {t("settings:ledgerAccountsGate.modes.csv.hintColumns")}
+                  </p>
+                </div>
+              )}
+            </div>
 
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setMode(null);
-                setCsvFile(null);
-                setTextBlock("");
-                setStdChoice(null);
-              }}
-              disabled={busy}
-            >
-              {t("settings:ledgerAccountsGate.buttons.clear")}
-            </Button>
-            <Button onClick={submit} disabled={busy}>
-              {t("settings:ledgerAccountsGate.buttons.finish")}
-            </Button>
-          </div>
-        </section>
+            {/* Manual */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-medium">{t("settings:ledgerAccountsGate.modes.manual.title")}</h2>
+                <label className="text-sm flex items-center gap-2">
+                  <input type="radio" name="mode" checked={mode === "manual"} onChange={() => setMode("manual")} />
+                  {t("settings:ledgerAccountsGate.modes.manual.choose")}
+                </label>
+              </div>
+              {mode === "manual" && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">{t("settings:ledgerAccountsGate.modes.manual.instructions")}</p>
+                  <textarea
+                    className="w-full border rounded p-2 resize-y min-h-[140px]"
+                    placeholder={t("settings:ledgerAccountsGate.modes.manual.placeholder")}
+                    value={textBlock}
+                    onChange={(e) => setTextBlock(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Standard */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-medium">{t("settings:ledgerAccountsGate.modes.standard.title")}</h2>
+                <label className="text-sm flex items-center gap-2">
+                  <input type="radio" name="mode" checked={mode === "standard"} onChange={() => setMode("standard")} />
+                  {t("settings:ledgerAccountsGate.modes.standard.choose")}
+                </label>
+              </div>
+              {mode === "standard" && (
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="radio" name="std" checked={stdChoice === "personal"} onChange={() => setStdChoice("personal")} />
+                    {t("settings:ledgerAccountsGate.modes.standard.personal")}
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="radio" name="std" checked={stdChoice === "business"} onChange={() => setStdChoice("business")} />
+                    {t("settings:ledgerAccountsGate.modes.standard.business")}
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMode(null);
+                  setCsvFile(null);
+                  setTextBlock("");
+                  setStdChoice(null);
+                }}
+                disabled={busy}
+              >
+                {t("settings:ledgerAccountsGate.buttons.clear")}
+              </Button>
+              <Button onClick={submit} disabled={busy}>
+                {t("settings:ledgerAccountsGate.buttons.finish")}
+              </Button>
+            </div>
+          </section>
+        </div>
       </main>
 
       {/* Snackbar (sem Alert) */}

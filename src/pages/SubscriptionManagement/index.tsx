@@ -10,8 +10,6 @@ import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuth } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import Navbar from "src/components/layout/Navbar";
-import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
 import { InlineLoader, SuspenseLoader } from "@/components/Loaders";
 import PaymentButton from "@/components/SubscriptionButtons/PaymentButton";
 import ManageSubscriptionLink from "@/components/SubscriptionButtons/ManageSubscriptionLink";
@@ -108,13 +106,8 @@ const SubscriptionManagement: React.FC = () => {
 
   return (
     <>
-      {/* Navbar fixa + SidebarSettings */}
-      <Navbar />
-      <SidebarSettings userName={user?.name} activeItem="subscription-management" />
-
-      {/* Conteúdo: abaixo da Navbar (pt-16) e ao lado da sidebar; sem overflow lateral */}
-      <main className="min-h-screen bg-gray-50 text-gray-900 pt-16 lg:ml-64 overflow-x-clip">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+      <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
+        <div className="max-w-5xl mx-auto">
           {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">

@@ -5,7 +5,6 @@ import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import { EntryFilters, SettledEntry } from "src/models/entries/domain";
 import { ModalType } from "@/components/Modal/Modal.types";
-import Navbar from "src/components/layout/Navbar";
 import { api } from "src/api/requests";
 import FilterBar from "src/components/FilterBar";
 import KpiCards from "src/components/KpiCards";
@@ -20,7 +19,6 @@ const Settled = () => {
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
 
-  // 👇 gate until FilterBar decides (default view or empty)
   const [filters, setFilters] = useState<EntryFilters | null>(null);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -43,7 +41,7 @@ const Settled = () => {
 
   const handleApplyFilters = useCallback(
     ({ filters: newFilters }: { filters: EntryFilters }) => {
-      setFilters(newFilters);          // first time this becomes non-null → first and only initial fetch
+      setFilters(newFilters);
       setTableKey((k) => k + 1);
       setBanksKey((k) => k + 1);
       setKpiRefresh((k) => k + 1);
@@ -65,7 +63,6 @@ const Settled = () => {
 
   return (
     <div className="flex">
-      <Navbar />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
@@ -75,11 +72,10 @@ const Settled = () => {
       />
 
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          {/* FilterBar decides defaults and calls onApply once */}
+        <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+          
           <FilterBar onApply={handleApplyFilters} contextSettlement={true} />
 
-          {/* Render KPI/Table only when filters are ready */}
           {filters && (
             <>
               <KpiCards

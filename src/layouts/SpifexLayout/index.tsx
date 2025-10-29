@@ -1,48 +1,31 @@
-import { useState, useEffect, FC, ReactNode, Suspense } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+// src/layouts/SpifexLayout.tsx
+import { useState, useEffect, FC } from 'react';
+import { Outlet } from 'react-router-dom';
 
 import { useAuth } from '@/api';
 import { AuthMiddleware } from '@/middlewares';
 import { SuspenseLoader } from '@/components/Loaders';
+import Navbar from 'src/components/layout/Navbar';
 
-interface SpifexLayoutProps {
-  children?: ReactNode;
-}
-
-export const SpifexLayout: FC<SpifexLayoutProps> = () => {
+export const SpifexLayout: FC = () => {
   const { handleInitUser } = useAuth();
-  const location = useLocation();
-
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [pageKey, setPageKey] = useState(location.pathname); // controla transição
 
   useEffect(() => {
-    const authenticateUser = async () => {
-      await handleInitUser();
-      setLoadingAuth(false);
-    };
-    authenticateUser();
+    let mounted = true;
+    (async () => {
+      try { await handleInitUser(); } finally { if (mounted) setLoadingAuth(false); }
+    })();
+    return () => { mounted = false; };
   }, [handleInitUser]);
 
-  // Ativa a tela branca com loader ao mudar de rota
-  useEffect(() => {
-    setPageKey(location.pathname); // força novo suspense render
-  }, [location.pathname]);
-
-  if (loadingAuth) {
-    return <SuspenseLoader noLoadNp />;
-  }
+  if (loadingAuth) return <SuspenseLoader noLoadNp />;
 
   return (
     <AuthMiddleware>
-      <div className="flex flex-col h-full w-full">
-        <div className="relative z-5 flex-1">
-          <Suspense fallback={<SuspenseLoader />}>
-            <div key={pageKey}>
-              <Outlet />
-            </div>
-          </Suspense>
-        </div>
+      <Navbar />
+      <div className="min-h-screen pt-16 bg-gray-50 text-gray-900">
+        <Outlet />
       </div>
     </AuthMiddleware>
   );

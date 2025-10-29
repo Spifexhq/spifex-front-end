@@ -5,7 +5,6 @@ import CashFlowTable, { CashFlowTableHandle } from "src/components/Table/CashFlo
 import FilterBar from "src/components/FilterBar";
 import { Entry, EntryFilters } from "src/models/entries";
 import { ModalType } from "@/components/Modal/Modal.types";
-import Navbar from "src/components/layout/Navbar";
 import { api } from "src/api/requests";
 import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
@@ -40,7 +39,6 @@ const CashFlow = () => {
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
   const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.tx_type as ModalType); setIsModalOpen(true); };
 
-  // Accept the payload shape from FilterBar, set filters, and refresh views
   const handleApplyFilters = useCallback(
     ({ filters: newFilters }: { filters: EntryFilters; }) => {
       setFilters(newFilters);
@@ -58,7 +56,6 @@ const CashFlow = () => {
 
   return (
     <div className="flex">
-      <Navbar />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
@@ -68,7 +65,7 @@ const CashFlow = () => {
       />
 
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        <div className="mt-[80px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+        <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
 
           <FilterBar onApply={handleApplyFilters} bankActive={true} contextSettlement={false} />
 

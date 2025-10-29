@@ -8,7 +8,6 @@ export interface SidebarSettingsProps {
   userName?: string;
   activeItem?: string;
   onSelect?: (id: string) => void;
-  /** Height of the top navbar in px (defaults to 64) */
   topOffsetPx?: number;
 }
 
@@ -56,7 +55,7 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
   userName = "User",
   activeItem,
   onSelect,
-  topOffsetPx = 64, // navbar height
+  topOffsetPx = 64,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthHook();
@@ -142,7 +141,6 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
 
   useEffect(() => {
     setFocusIdx(activeIdx >= 0 ? activeIdx : 0);
-    // Scroll the active item into view on mount/route change
     const btn = btnRefs.current[activeIdx];
     btn?.scrollIntoView({ block: "nearest" });
   }, [activeIdx]);
@@ -168,7 +166,6 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
   useEffect(() => {
     const el = btnRefs.current[focusIdx];
     el?.focus({ preventScroll: true });
-    // keep visible without layout jump
     el?.scrollIntoView({ block: "nearest" });
   }, [focusIdx]);
 
@@ -186,7 +183,7 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
       aria-label={t("sidebar.aria.nav")}
       className="fixed left-0 z-40 w-64 border-r border-gray-200 bg-white"
       style={{
-        top: topOffsetPx, // respect 64px navbar
+        top: topOffsetPx,
         height: `calc(100vh - ${topOffsetPx}px)`,
       }}
     >
@@ -195,7 +192,6 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
         ref={listRef}
         className="h-full overflow-y-auto py-2 outline-none"
         style={maskStyle}
-        // enable roving tabindex on wrapper
         tabIndex={0}
         onKeyDown={onKeyDown}
         role="menu"
@@ -238,7 +234,6 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
                           active
                             ? "bg-gray-100 text-gray-900"
                             : "text-gray-600 hover:bg-gray-50",
-                          "focus-visible:ring-2 focus-visible:ring-gray-300",
                         ].join(" ")}
                         data-active={active ? "true" : undefined}
                         title={label}
