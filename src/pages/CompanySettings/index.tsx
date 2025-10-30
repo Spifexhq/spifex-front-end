@@ -1,11 +1,17 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/CompanySettings.tsx
  * Style: light borders; Navbar + SidebarSettings; compact labels
+ * Standards: flags (isInitialLoading, isBackgroundSync, isSubmitting),
+ *            TopProgress + PageSkeleton, background sync badge,
+ *            ESC/scroll lock, robust fetch/update, consistent disabling.
+ * i18n: settings:company.*
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
@@ -14,24 +20,24 @@ import { SelectDropdown } from "src/components/ui/SelectDropdown";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { Organization } from "src/models/auth/domain";
+import type { Organization } from "src/models/auth/domain";
 import { formatTimezoneLabel, TIMEZONES } from "src/lib";
 import { useTranslation } from "react-i18next";
 
+/* ------------------------------ Types ------------------------------------- */
 type EditableUserField = "none" | "name" | "timezone" | "address";
-
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* --------------------------------- Helpers -------------------------------- */
+/* ------------------------------ Helpers ----------------------------------- */
 function getInitials(name?: string) {
   if (!name) return "EM";
   const p = name.split(" ").filter(Boolean);
   return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 }
 
-/* Row sem bordas próprias; o container usa divide-y */
+/* Row (container uses divide-y) */
 const Row = ({
   label,
   value,
@@ -50,24 +56,25 @@ const Row = ({
   </div>
 );
 
+/* In-flight guard (avoid overlapping loads) */
+let INFLIGHT_FETCH = false;
+
 const CompanySettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings", "common"]);
-
-  useEffect(() => {
-    document.title = t("settings:company.title");
-  }, [t]);
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
   const { isOwner } = useAuthContext();
 
-  const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(true);
+  useEffect(() => { document.title = t("settings:company.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
+  /* ------------------------------ Flags ----------------------------------- */
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* ------------------------------ State ----------------------------------- */
+  const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditableUserField | null>(null);
-
   const [snack, setSnack] = useState<Snack>(null);
 
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -84,77 +91,62 @@ const CompanySettings: React.FC = () => {
     postal_code: "",
   });
 
-  /* ------------------------------ Carrega dados --------------------------- */
-  useEffect(() => {
-    (async () => {
-      try {
-        const response = await api.getOrganization();
-        const data = response.data;
+  const setFormFromOrg = useCallback((org: Organization, setTzByDevice = false) => {
+    setFormData({
+      name: org.name,
+      timezone: org.timezone ?? "UTC",
+      line1: org.line1 ?? "",
+      line2: org.line2 ?? "",
+      country: org.country ?? "",
+      city: org.city ?? "",
+      postal_code: org.postal_code ?? "",
+    });
 
-        setOrgProfile(data);
-        setFormData({
-          name: data.name,
-          timezone: data.timezone ?? "UTC",
-          line1: data.line1 ?? "",
-          line2: data.line2 ?? "",
-          country: data.country ?? "",
-          city: data.city ?? "",
-          postal_code: data.postal_code ?? "",
-        });
+    const effectiveTz = setTzByDevice ? deviceTz : (org.timezone ?? "UTC");
+    setUseDeviceTz(effectiveTz === deviceTz);
 
-        const tzObj = TIMEZONES.find((t) => t.value === (data.timezone ?? "UTC"));
-        setSelectedTimezone(tzObj ? [tzObj] : []);
-        setUseDeviceTz((data.timezone ?? "UTC") === deviceTz);
-      } catch (err) {
-        console.error("settings:company.toast.orgLoadError", err);
-        setSnack({ message: t("settings:company.toast.orgLoadError"), severity: "error" });
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [deviceTz, t]);
+    const tzObj = TIMEZONES.find((t) => t.value === effectiveTz);
+    setSelectedTimezone(tzObj ? [tzObj] : []);
+  }, [deviceTz]);
 
-  /* ------------------------------ Handlers ------------------------------- */
-  const openModal = (field?: EditableUserField) => {
-    if (orgProfile) {
-      setFormData({
-        name: orgProfile.name,
-        timezone: orgProfile.timezone ?? "UTC",
-        line1: orgProfile.line1 ?? "",
-        line2: orgProfile.line2 ?? "",
-        country: orgProfile.country ?? "",
-        city: orgProfile.city ?? "",
-        postal_code: orgProfile.postal_code ?? "",
-      });
+  /* ------------------------------ Fetch org -------------------------------- */
+  const fetchOrg = useCallback(async ({ background }: { background?: boolean } = {}) => {
+    if (INFLIGHT_FETCH) return;
+    INFLIGHT_FETCH = true;
+    try {
+      if (background) setIsBackgroundSync(true);
+      else setIsInitialLoading(true);
 
-      setUseDeviceTz((orgProfile.timezone ?? "UTC") === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === (orgProfile.timezone ?? "UTC"));
-      setSelectedTimezone(tzObj ? [tzObj] : []);
+      const response = await api.getOrganization();
+      const data = response.data as Organization;
+      setOrgProfile(data);
+      setFormFromOrg(data);
+    } catch (err) {
+      console.error("settings:company.toast.orgLoadError", err);
+      setSnack({ message: t("settings:company.toast.orgLoadError"), severity: "error" });
+    } finally {
+      if (background) setIsBackgroundSync(false);
+      else setIsInitialLoading(false);
+      INFLIGHT_FETCH = false;
     }
+  }, [setFormFromOrg, t]);
+
+  useEffect(() => {
+    void fetchOrg();
+  }, [fetchOrg]);
+
+  /* ------------------------------ Handlers -------------------------------- */
+  const openModal = (field?: EditableUserField) => {
+    if (orgProfile) setFormFromOrg(orgProfile);
     setEditingField(field ?? null);
     setModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
-    if (orgProfile) {
-      setFormData({
-        name: orgProfile.name,
-        timezone: orgProfile.timezone ?? "UTC",
-        line1: orgProfile.line1 ?? "",
-        line2: orgProfile.line2 ?? "",
-        country: orgProfile.country ?? "",
-        city: orgProfile.city ?? "",
-        postal_code: orgProfile.postal_code ?? "",
-      });
-
-      setUseDeviceTz((orgProfile.timezone ?? "UTC") === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === (orgProfile.timezone ?? "UTC"));
-      setSelectedTimezone(tzObj ? [tzObj] : []);
-    }
-
+    if (orgProfile) setFormFromOrg(orgProfile);
     setEditingField(null);
     setModalOpen(false);
-  }, [orgProfile, deviceTz]);
+  }, [orgProfile, setFormFromOrg]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -165,6 +157,7 @@ const CompanySettings: React.FC = () => {
         setSnack({ message: t("settings:company.toast.orgUpdateError"), severity: "error" });
         return;
       }
+      setIsSubmitting(true);
 
       const requestBody = {
         name: formData.name,
@@ -180,16 +173,20 @@ const CompanySettings: React.FC = () => {
       const res = await api.editOrganization(requestBody);
       if (!res.data) throw new Error("settings:company.toast.orgUpdateError");
 
-      const updated = await api.getOrganization();
-      setOrgProfile(updated.data);
       closeModal();
       setSnack({ message: t("settings:company.toast.orgUpdateOk"), severity: "success" });
-    } catch {
+
+      // background refresh (shows thin TopProgress + badge)
+      void fetchOrg({ background: true });
+    } catch (err) {
+      console.error(err);
       setSnack({ message: t("settings:company.toast.orgUpdateError"), severity: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  /* ------------------------------ Modal UX ------------------------------- */
+  /* ------------------------------ Modal UX -------------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
@@ -198,18 +195,16 @@ const CompanySettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  /* ------------------------------ Modal content -------------------------- */
+  /* ------------------------------ Modal content --------------------------- */
   const renderModalContent = () => {
     switch (editingField) {
       case "name":
         return (
           <form
-            className="space-y-3"
+            className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
             onSubmit={(e) => {
               e.preventDefault();
               submitPartial({ name: formData.name });
@@ -221,12 +216,15 @@ const CompanySettings: React.FC = () => {
               value={formData.name}
               onChange={handleChange}
               required
+              disabled={isSubmitting}
             />
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="cancel" type="button" onClick={closeModal}>
+              <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                 {t("settings:company.btn.cancel")}
               </Button>
-              <Button type="submit">{t("settings:company.btn.save")}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? t("settings:company.btn.saving", "Saving…") : t("settings:company.btn.save")}
+              </Button>
             </div>
           </form>
         );
@@ -234,7 +232,7 @@ const CompanySettings: React.FC = () => {
       case "timezone":
         return (
           <form
-            className="space-y-3"
+            className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
             onSubmit={(e) => {
               e.preventDefault();
               submitPartial({ timezone: formData.timezone });
@@ -258,6 +256,7 @@ const CompanySettings: React.FC = () => {
                 }}
                 size="sm"
                 colorClass="defaultColor"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -278,14 +277,16 @@ const CompanySettings: React.FC = () => {
               clearOnClickOutside={false}
               buttonLabel={t("settings:company.btnLabel.tz")}
               customStyles={{ maxHeight: "250px" }}
-              disabled={useDeviceTz}
+              disabled={useDeviceTz || isSubmitting}
             />
 
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="cancel" type="button" onClick={closeModal}>
+              <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                 {t("settings:company.btn.cancel")}
               </Button>
-              <Button type="submit">{t("settings:company.btn.save")}</Button>
+              <Button type="submit" disabled={isSubmitting || useDeviceTz}>
+                {isSubmitting ? t("settings:company.btn.saving", "Saving…") : t("settings:company.btn.save")}
+              </Button>
             </div>
           </form>
         );
@@ -293,7 +294,7 @@ const CompanySettings: React.FC = () => {
       case "address":
         return (
           <form
-            className="space-y-3"
+            className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
             onSubmit={(e) => {
               e.preventDefault();
               submitPartial({
@@ -305,16 +306,18 @@ const CompanySettings: React.FC = () => {
               });
             }}
           >
-            <Input label={t("settings:company.field.address1")} name="line1" value={formData.line1} onChange={handleChange} />
-            <Input label={t("settings:company.field.address2")} name="line2" value={formData.line2} onChange={handleChange} />
-            <Input label={t("settings:company.field.city")} name="city" value={formData.city} onChange={handleChange} />
-            <Input label={t("settings:company.field.country")} name="country" value={formData.country} onChange={handleChange} />
-            <Input label={t("settings:company.field.postalCode")} name="postal_code" value={formData.postal_code} onChange={handleChange} />
+            <Input label={t("settings:company.field.address1")} name="line1" value={formData.line1} onChange={handleChange} disabled={isSubmitting} />
+            <Input label={t("settings:company.field.address2")} name="line2" value={formData.line2} onChange={handleChange} disabled={isSubmitting} />
+            <Input label={t("settings:company.field.city")} name="city" value={formData.city} onChange={handleChange} disabled={isSubmitting} />
+            <Input label={t("settings:company.field.country")} name="country" value={formData.country} onChange={handleChange} disabled={isSubmitting} />
+            <Input label={t("settings:company.field.postalCode")} name="postal_code" value={formData.postal_code} onChange={handleChange} disabled={isSubmitting} />
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="cancel" type="button" onClick={closeModal}>
+              <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                 {t("settings:company.btn.cancel")}
               </Button>
-              <Button type="submit">{t("settings:company.btn.save")}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? t("settings:company.btn.saving", "Saving…") : t("settings:company.btn.save")}
+              </Button>
             </div>
           </form>
         );
@@ -324,10 +327,32 @@ const CompanySettings: React.FC = () => {
     }
   };
 
-  if (loading) return <SuspenseLoader />;
+  /* ------------------------------ Loading UI ------------------------------ */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("settings:company.badge.syncing", "Syncing…")}
+    </span>
+  ) : null;
+
+  const globalBusy = isSubmitting || isBackgroundSync;
 
   return (
     <>
+      {/* Thin progress bar during background refresh after updates */}
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -336,18 +361,21 @@ const CompanySettings: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials(orgProfile?.name)}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:company.header.settings")}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:company.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:company.header.organization")}
+                  </h1>
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:company.header.organization")}
-                </h1>
+                {headerBadge}
               </div>
             </div>
           </header>
 
-          {/* Card principal */}
+          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
@@ -366,6 +394,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("name")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.updateName")}
                       </Button>
@@ -382,6 +411,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("timezone")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.updateTimezone")}
                       </Button>
@@ -398,6 +428,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.update")}
                       </Button>
@@ -413,6 +444,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.update")}
                       </Button>
@@ -428,6 +460,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.updateCity")}
                       </Button>
@@ -443,6 +476,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.updateCountry")}
                       </Button>
@@ -458,6 +492,7 @@ const CompanySettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
+                        disabled={globalBusy}
                       >
                         {t("settings:company.btn.updatePostalCode")}
                       </Button>
@@ -473,8 +508,9 @@ const CompanySettings: React.FC = () => {
         {modalOpen && editingField !== null && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             <div
-              onClick={(e) => e.stopPropagation()}
               className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
@@ -486,6 +522,7 @@ const CompanySettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:company.modal.close")}
+                  disabled={isSubmitting}
                 >
                   &times;
                 </button>

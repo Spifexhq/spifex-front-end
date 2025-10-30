@@ -1,22 +1,30 @@
-/* -------------------------------------------------------------------------- */
-/*  File: src/pages/DepartmentSettings.tsx                                    */
-/*  Style: Fixed Navbar + SidebarSettings, light borders, compact labels      */
-/*  Notes: org-scoped, string ids (ULID), modal in 3 columns                  */
-/*  Dinâmica: overlay local p/ add/delete + refresh do pager                  */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ * File: src/pages/DepartmentSettings.tsx
+ * Style: Fixed Navbar + SidebarSettings, light borders, compact labels
+ * Notes: org-scoped, string ids (ULID), modal in 3 columns
+ * Dinâmica: overlay local p/ add/delete + refresh do pager
+ * Standards matched with Employee/Entity pages:
+ *  - Flags: isInitialLoading, isBackgroundSync, isSubmitting, deleteTargetId, confirmBusy
+ *  - ConfirmToast for delete
+ *  - INFLIGHT_FETCH guard for pager fetcher
+ *  - TopProgress + PageSkeleton on initial; TopProgress on background sync
+ * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SuspenseLoader } from "@/components/Loaders";
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
+import Checkbox from "src/components/ui/Checkbox";
+import ConfirmToast from "src/components/ui/ConfirmToast";
+
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
 import type { Department } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
@@ -28,11 +36,25 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
+/* ----------------------- In-memory guard for fetches ---------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ------------------------------ Modal skeleton ---------------------------- */
+const ModalSkeleton: React.FC = () => (
+  <div className="space-y-3 py-1">
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="flex justify-end gap-2 pt-1">
+      <div className="h-9 w-24 rounded-md bg-gray-100 animate-pulse" />
+      <div className="h-9 w-28 rounded-md bg-gray-100 animate-pulse" />
+    </div>
+  </div>
+);
+
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
   return "DP";
 }
-
 function sortByCodeThenName(a: Department, b: Department) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
@@ -47,12 +69,14 @@ const Row = ({
   onDelete,
   canEdit,
   t,
+  busy,
 }: {
   dept: Department;
   onEdit: (d: Department) => void;
   onDelete: (d: Department) => void;
   canEdit: boolean;
   t: TFunction;
+  busy?: boolean;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
@@ -70,10 +94,11 @@ const Row = ({
           variant="outline"
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(dept)}
+          disabled={busy}
         >
           {t("settings:departments.buttons.edit")}
         </Button>
-        <Button variant="common" onClick={() => onDelete(dept)}>
+        <Button variant="common" onClick={() => onDelete(dept)} disabled={busy} aria-busy={busy || undefined}>
           {t("settings:departments.buttons.delete")}
         </Button>
       </div>
@@ -82,33 +107,36 @@ const Row = ({
 );
 
 /* -------------------------------------------------------------------------- */
-const emptyForm = {
-  name: "",
-  code: "",
-  is_active: true,
-};
-type FormState = typeof emptyForm;
+
+type FormState = { name: string; code?: string; is_active: boolean };
+const emptyForm: FormState = { name: "", code: "", is_active: true };
 
 const DepartmentSettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]); // page uses settings:departments.*
-
-  useEffect(() => {
-    document.title = t("settings:departments.title");
-  }, [t]);
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
   const { isOwner } = useAuthContext();
+
+  useEffect(() => { document.title = t("settings:departments.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   /* ------------------------------- Modal state ----------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
 
+  /* Standard flags */
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   /* Snackbar */
   const [snack, setSnack] = useState<Snack>(null);
+
+  /* ConfirmToast (same pattern as Entity/Employee) */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<Department[]>([]);
@@ -121,15 +149,21 @@ const DepartmentSettings: React.FC = () => {
   /* --------------------------- Pagination (reusable) ----------------------- */
   const fetchDepartmentsPage = useCallback(
     async (cursor?: string) => {
-      const { data, meta } = await api.getDepartments({
-        page_size: 100,
-        cursor,
-        q: appliedQuery || undefined,
-      });
-      const items = (data.results ?? []).slice().sort(sortByCodeThenName) as Department[];
-      const nextUrl = meta?.pagination?.next ?? data.next ?? null;
-      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
-      return { items, nextCursor };
+      if (INFLIGHT_FETCH) return { items: [] as Department[], nextCursor: undefined as string | undefined };
+      INFLIGHT_FETCH = true;
+      try {
+        const { data, meta } = await api.getDepartments({
+          page_size: 100,
+          cursor,
+          q: appliedQuery || undefined,
+        });
+        const items = (data.results ?? []).slice().sort(sortByCodeThenName) as Department[];
+        const nextUrl = meta?.pagination?.next ?? data.next ?? null;
+        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        return { items, nextCursor };
+      } finally {
+        INFLIGHT_FETCH = false;
+      }
     },
     [appliedQuery]
   );
@@ -143,11 +177,8 @@ const DepartmentSettings: React.FC = () => {
 
   const onSearch = useCallback(() => {
     const trimmed = query.trim();
-    if (trimmed === appliedQuery) {
-      refresh();
-    } else {
-      setAppliedQuery(trimmed);
-    }
+    if (trimmed === appliedQuery) refresh();
+    else setAppliedQuery(trimmed);
   }, [query, appliedQuery, refresh]);
 
   /* ------------------------------ Overlay helpers -------------------------- */
@@ -170,21 +201,41 @@ const DepartmentSettings: React.FC = () => {
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
-    setMode("create");
+    setModalMode("create");
     setEditingDept(null);
     setFormData(emptyForm);
     setModalOpen(true);
   };
 
-  const openEditModal = (dept: Department) => {
-    setMode("edit");
+  const openEditModal = async (dept: Department) => {
+    setModalMode("edit");
     setEditingDept(dept);
-    setFormData({
-      name: dept.name ?? "",
-      code: dept.code ?? "",
-      is_active: dept.is_active ?? true,
-    });
     setModalOpen(true);
+    setIsDetailLoading(true);
+
+    try {
+      const res = await api.getDepartment(dept.id);
+      const detail = res.data as Department;
+
+      setFormData({
+        name: detail.name ?? "",
+        code: detail.code ?? "",
+        is_active: detail.is_active ?? true,
+      });
+    } catch {
+      setFormData({
+        name: dept.name ?? "",
+        code: dept.code ?? "",
+        is_active: dept.is_active ?? true,
+      });
+
+      setSnack({
+        message: "Falha ao carregar detalhes do departamento.",
+        severity: "error",
+      });
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const closeModal = useCallback(() => {
@@ -211,8 +262,10 @@ const DepartmentSettings: React.FC = () => {
       code: formData.code,
       is_active: formData.is_active,
     };
+
+    setIsSubmitting(true);
     try {
-      if (mode === "create") {
+      if (modalMode === "create") {
         const { data: created } = await api.addDepartment(payload);
         setAdded((prev) => [created as Department, ...prev]); // optimistic overlay
       } else if (editingDept) {
@@ -232,38 +285,52 @@ const DepartmentSettings: React.FC = () => {
             : t("settings:departments.errors.saveFailed", "Não foi possível salvar."),
         severity: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const deleteDepartment = async (dept: Department) => {
-    try {
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.add(dept.id);
-        return next;
-      });
+  /* ---------- ConfirmToast delete (same pattern as Entity/Employee) -------- */
+  const requestDeleteDepartment = (dept: Department) => {
+    const name = dept.name ?? "";
+    setConfirmText(t("settings:departments.confirm.deleteTitle", { name }));
+    setConfirmAction(() => async () => {
+      setDeleteTargetId(dept.id);
+      try {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(dept.id);
+          return next;
+        });
 
-      await api.deleteDepartment(dept.id);
-      await pager.refresh();
-      setAdded((prev) => prev.filter((d) => d.id !== dept.id));
-      setSnack({
-        message: t("settings:departments.toast.deleteOk", "Departamento excluído."),
-        severity: "info",
-      });
-    } catch (err) {
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(dept.id);
-        return next;
-      });
-      setSnack({
-        message:
-          err instanceof Error
-            ? err.message
-            : t("settings:departments.errors.deleteFailed", "Não foi possível excluir."),
-        severity: "error",
-      });
-    }
+        await api.deleteDepartment(dept.id);
+        await pager.refresh();
+        setAdded((prev) => prev.filter((d) => d.id !== dept.id));
+
+        setSnack({
+          message: t("settings:departments.toast.deleteOk", "Departamento excluído."),
+          severity: "info",
+        });
+      } catch (err) {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(dept.id);
+          return next;
+        });
+        setSnack({
+          message:
+            err instanceof Error
+              ? err.message
+              : t("settings:departments.errors.deleteFailed", "Não foi possível excluir."),
+          severity: "error",
+        });
+      } finally {
+        setDeleteTargetId(null);
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   /* ------------------------------- UX hooks -------------------------------- */
@@ -275,16 +342,30 @@ const DepartmentSettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
+  /* ------------------------------- Loading UI ------------------------------ */
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
+
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
 
   /* --------------------------------- UI ----------------------------------- */
+  const canEdit = !!isOwner;
+
   return (
     <>
+      {/* thin progress during background page sync */}
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -319,9 +400,7 @@ const DepartmentSettings: React.FC = () => {
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") e.preventDefault();
-                      }}
+                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                       placeholder={t("settings:departments.buttons.searchPlaceholder")}
                       aria-label={t("settings:departments.buttons.runSearchAria")}
                     />
@@ -329,12 +408,13 @@ const DepartmentSettings: React.FC = () => {
                       onClick={onSearch}
                       variant="outline"
                       aria-label={t("settings:departments.buttons.runSearchAria")}
+                      disabled={isBackgroundSync || confirmBusy}
                     >
                       {t("settings:departments.buttons.search")}
                     </Button>
 
-                    {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">
+                    {canEdit && (
+                      <Button onClick={openCreateModal} className="!py-1.5" disabled={isSubmitting || isBackgroundSync || confirmBusy}>
                         {t("settings:departments.buttons.add")}
                       </Button>
                     )}
@@ -349,7 +429,7 @@ const DepartmentSettings: React.FC = () => {
                     {t("settings:departments.errors.loadFailed")}
                   </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={isBackgroundSync}>
                     {t("settings:departments.buttons.tryAgain")}
                   </Button>
                 </div>
@@ -361,16 +441,21 @@ const DepartmentSettings: React.FC = () => {
                         {t("settings:departments.alerts.noData")}
                       </p>
                     ) : (
-                      visibleItems.map((d) => (
-                        <Row
-                          key={d.id}
-                          dept={d}
-                          canEdit={!!isOwner}
-                          onEdit={openEditModal}
-                          onDelete={deleteDepartment}
-                          t={t}
-                        />
-                      ))
+                      visibleItems.map((d) => {
+                        const rowBusy =
+                          isSubmitting || isBackgroundSync || confirmBusy || deleteTargetId === d.id || deletedIds.has(d.id);
+                        return (
+                          <Row
+                            key={d.id}
+                            dept={d}
+                            canEdit={canEdit}
+                            onEdit={openEditModal}
+                            onDelete={requestDeleteDepartment}
+                            t={t}
+                            busy={rowBusy}
+                          />
+                        );
+                      })
                     )}
                   </div>
 
@@ -378,8 +463,8 @@ const DepartmentSettings: React.FC = () => {
                   <PaginationArrows
                     onPrev={pager.prev}
                     onNext={pager.next}
-                    disabledPrev={!pager.canPrev}
-                    disabledNext={!pager.canNext}
+                    disabledPrev={!pager.canPrev || isBackgroundSync}
+                    disabledNext={!pager.canNext || isBackgroundSync}
                     label={t("settings:departments.pager.label", {
                       page: pager.index + 1,
                       total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
@@ -402,7 +487,7 @@ const DepartmentSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create"
+                  {modalMode === "create"
                     ? t("settings:departments.modal.addTitle")
                     : t("settings:departments.modal.editTitle")}
                 </h3>
@@ -410,44 +495,89 @@ const DepartmentSettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:departments.buttons.cancel")}
+                  disabled={isSubmitting || isDetailLoading}
                 >
                   &times;
                 </button>
               </header>
 
-              <form className="space-y-3" onSubmit={submitDepartment}>
-                {/* 3 columns on desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    label={t("settings:departments.modal.name")}
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                  <Input
-                    label={t("settings:departments.modal.code")}
-                    name="code"
-                    value={formData.code}
-                    onChange={handleChange}
-                  />
-                  <label className="flex items-center gap-2 text-sm pt-5">
-                    <Checkbox checked={formData.is_active} onChange={handleActive} />
-                    {t("settings:departments.modal.active")}
-                  </label>
-                </div>
+              {modalMode === "edit" && isDetailLoading ? (
+                <ModalSkeleton />
+              ) : (
+                <form className="space-y-3" onSubmit={submitDepartment}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      label={t("settings:departments.modal.name")}
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      disabled={isSubmitting || isDetailLoading}
+                    />
+                    <Input
+                      label={t("settings:departments.modal.code")}
+                      name="code"
+                      value={formData.code}
+                      onChange={handleChange}
+                      disabled={isSubmitting || isDetailLoading}
+                    />
+                    <label className="flex items-center gap-2 text-sm pt-5">
+                      <Checkbox
+                        checked={formData.is_active}
+                        onChange={handleActive}
+                        disabled={isSubmitting || isDetailLoading}
+                      />
+                      {t("settings:departments.modal.active")}
+                    </label>
+                  </div>
 
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    {t("settings:departments.buttons.cancel")}
-                  </Button>
-                  <Button type="submit">{t("settings:departments.buttons.save")}</Button>
-                </div>
-              </form>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button
+                      variant="cancel"
+                      type="button"
+                      onClick={closeModal}
+                      disabled={isSubmitting || isDetailLoading}
+                    >
+                      {t("settings:departments.buttons.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting || isDetailLoading}>
+                      {isSubmitting
+                        ? t("settings:departments.buttons.saving", "Saving…")
+                        : t("settings:departments.buttons.save")}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
       </main>
+
+      {/* ConfirmToast */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel={t("settings:departments.buttons.confirmDelete", "Excluir")}
+        cancelLabel={t("settings:departments.buttons.cancel", "Cancelar")}
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction()
+            .catch(() => {
+              setSnack({
+                message: t("settings:departments.errors.confirmFailed", "Falha ao confirmar."),
+                severity: "error",
+              });
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
 
       {/* ----------------------------- Snackbar ------------------------------ */}
       <Snackbar

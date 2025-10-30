@@ -1,56 +1,60 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings.tsx
- * Refactor: GLAccount (id string) + paginação
- *           Campos: name, code?, category(1..4), subcategory, default_tx,
- *           is_active
- *           - Backend recebe APENAS números (1..4)
- *           - Front exibe labels em PT
+ * Standards: flags + pager + ConfirmToast (matches Dept/Inventory/Employee)
+ * Domain: GLAccount (id string), fields: name, code?, category(1..4), subcategory, is_active
+ * Backend receives ONLY numbers (1..4); Front shows PT labels
+ * Pagination: cursor + arrow-only (useCursorPager)
+ * Overlay: local add/delete + refresh pager
  * -------------------------------------------------------------------------- */
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
 import ConfirmToast from "src/components/ui/ConfirmToast";
+import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { useTranslation } from "react-i18next";
 
-/** Tipos do domínio/DTO */
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 import type {
   GetLedgerAccountsResponse,
   AddGLAccountRequest,
   EditGLAccountRequest,
 } from "src/models/enterprise_structure/dto";
-import Checkbox from "src/components/ui/Checkbox";
+
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import { useCursorPager } from "@/hooks/useCursorPager";
+import { getCursorFromUrl } from "src/lib/list";
 
 /* ----------------------------- Snackbar type ------------------------------ */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* ----------------------------- Const & Types ----------------------------- */
+/* ----------------------------- Const & Types ------------------------------ */
 
 type TxType = "debit" | "credit";
 
-/** Labels exibidos (UI) — permanecem em PT para manter o mapeamento estável */
+/** Labels PT shown in UI */
 type CategoryLabel =
   | "Receitas Operacionais"
   | "Receitas Não Operacionais"
   | "Despesas Operacionais"
   | "Despesas Não Operacionais";
 
-/** Valores aceitos pelo backend (1..4) */
+/** Backend values (1..4) */
 type CategoryValue = 1 | 2 | 3 | 4;
 
-/** Mapeamentos label <-> value */
 const CATEGORY_LABEL_TO_VALUE: Record<CategoryLabel, CategoryValue> = {
   "Receitas Operacionais": 1,
   "Receitas Não Operacionais": 2,
@@ -70,7 +74,6 @@ const CATEGORY_DEFAULT_TX: Record<CategoryValue, TxType> = {
   4: "debit",
 };
 
-/** Opções para o Select – labels em PT, conforme requisito */
 const GROUP_OPTIONS: { label: CategoryLabel; value: CategoryLabel; inferredTx: TxType }[] = [
   { label: "Receitas Operacionais", value: "Receitas Operacionais", inferredTx: "credit" },
   { label: "Receitas Não Operacionais", value: "Receitas Não Operacionais", inferredTx: "credit" },
@@ -78,7 +81,7 @@ const GROUP_OPTIONS: { label: CategoryLabel; value: CategoryLabel; inferredTx: T
   { label: "Despesas Não Operacionais", value: "Despesas Não Operacionais", inferredTx: "debit" },
 ];
 
-/** Form usa labels (UI), API usa números */
+/** Form uses labels; API uses numbers */
 type FormState = {
   name: string;
   category: CategoryLabel | "";
@@ -95,177 +98,172 @@ const EMPTY_FORM: FormState = {
   is_active: true,
 };
 
+type PaginationMeta = { pagination?: { next?: string | null } };
+
 /* --------------------------------- Helpers -------------------------------- */
-function getInitials() {
-  return "CC";
-}
+function getInitials() { return "CC"; }
+
 const Badge = ({ children }: { children: React.ReactNode }) => (
   <span className="text-[11px] px-2 py-[2px] rounded-full border border-gray-200 bg-gray-50 text-gray-700">
     {children}
   </span>
 );
 
-/** GLAccount “tolerante” para leitura */
+/** GLAccount tolerant for reading */
 type GLX = GLAccount & {
   category?: number | string | null;
   default_tx?: TxType | string | null;
   external_id?: string;
 };
 
-/** Extrai CategoryValue (1..4) de um account */
 function getCategoryValue(acc: GLX): CategoryValue | undefined {
   const c = acc.category;
-  if (typeof c === "number") {
-    if (c === 1 || c === 2 || c === 3 || c === 4) return c as CategoryValue;
-  } else if (typeof c === "string" && c) {
+  if (typeof c === "number" && [1,2,3,4].includes(c)) return c as CategoryValue;
+  if (typeof c === "string" && c) {
     const n = Number(c);
-    if (n === 1 || n === 2 || n === 3 || n === 4) return n as CategoryValue;
+    if ([1,2,3,4].includes(n)) return n as CategoryValue;
   }
   return undefined;
 }
-
-/** Converte para label UI */
 function getCategoryLabel(acc: GLX): CategoryLabel | string {
   const v = getCategoryValue(acc);
   return v ? CATEGORY_VALUE_TO_LABEL[v] : "settings:ledgerAccounts.tags.noGroup";
 }
-
-/** Pega default_tx (se não vier do back, infere pela categoria) */
 function getDefaultTx(acc: GLX): TxType | "" {
   const dt = acc.default_tx;
   if (dt === "credit" || dt === "debit") return dt;
   const v = getCategoryValue(acc);
   return v ? CATEGORY_DEFAULT_TX[v] : "";
 }
-
-/** ID (external_id) */
 function getGlaId(acc: GLAccount): string {
   const a = acc as GLAccount & { id?: string; external_id?: string };
   return a.id ?? a.external_id ?? "";
 }
 
-/* ---------------------------- Main component ----------------------------- */
+/* ----------------------- In-memory guard for fetches ---------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ============================ Component =================================== */
 const LedgerAccountSettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
-
-  useEffect(() => {
-    document.title = t("settings:ledgerAccounts.title");
-  }, [t]);
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
 
-  const [accounts, setAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  useEffect(() => { document.title = t("settings:ledgerAccounts.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+
+  /* ----------------------------- Flags (standard) ------------------------- */
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  /* ----------------------------- Snackbar --------------------------------- */
   const [snack, setSnack] = useState<Snack>(null);
 
-  // Modal & form
+  /* ----------------------------- ConfirmToast ----------------------------- */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+  /* ----------------------------- Modal & form ----------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<GLAccount | null>(null);
   const [formData, setFormData] = useState<FormState>(EMPTY_FORM);
   const [addingNewSubgroup, setAddingNewSubgroup] = useState(false);
 
-  // View mode / filtros
-  const [viewMode, setViewMode] = useState<"accordion" | "list">("accordion");
+  /* ----------------------------- Filters / View --------------------------- */
   const [search, setSearch] = useState("");
   const [filterGroup, setFilterGroup] = useState<CategoryLabel | null>(null);
+  const [viewMode, setViewMode] = useState<"accordion" | "list">("accordion");
 
-  // Menu ⋯
+  /* ----------------------------- Menu ⋯ ----------------------------------- */
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
 
-  // Acordeões abertos
-  const [openAccordions, setOpenAccordions] = useState<Set<CategoryLabel>>(new Set());
-  const toggleAccordion = (groupName: CategoryLabel) => {
-    setOpenAccordions((prev) => {
-      const s = new Set(prev);
-      if (s.has(groupName)) s.delete(groupName);
-      else s.add(groupName);
-      return s;
-    });
-  };
-  const expandAll = (allGroups: CategoryLabel[]) => setOpenAccordions(new Set(allGroups));
-  const collapseAll = () => setOpenAccordions(new Set());
-
-  const handleDownloadPDF = async () => {
-    try {
-      const result = await generateLedgerAccountsPDF({
-        companyName: t("settings:ledgerAccounts.pdf.company"),
-        title: t("settings:ledgerAccounts.pdf.title"),
-      });
-      setSnack({
-        message: result.message || t("settings:ledgerAccounts.toast.pdfOk"),
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      setSnack({ message: t("settings:ledgerAccounts.toast.pdfError"), severity: "error" });
-    } finally {
-      setMenuOpen(false);
-    }
-  };
-
-  /* ---------------- Confirm Toast state ---------------- */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
-
-  /* ------------------------ Load & gate logic ----------------------------- */
-  const fetchAllAccounts = useCallback(async (): Promise<GLAccount[]> => {
-    const all: GLAccount[] = [];
-    let cursor: string | undefined;
-    do {
-      const { data } = (await api.getLedgerAccounts({
-        page_size: 200,
-        cursor,
-      })) as { data: GetLedgerAccountsResponse };
-
-      const page = (data?.results ?? []) as GLAccount[];
-      all.push(...page);
-      cursor = data?.next ?? undefined;
-    } while (cursor);
-
-    return all.sort((a, b) => {
-      const ca = (a.code || "").toString();
-      const cb = (b.code || "").toString();
-      if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
-      return (a.name || "").localeCompare(b.name || "", "pt-BR");
-    });
-  }, []);
-
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const sorted = await fetchAllAccounts();
-      setAccounts(sorted);
-
-      if (sorted.length === 0) {
-        navigate("/settings/register/ledger-accounts", { replace: true });
-        return;
-      }
-    } catch {
-      navigate("/settings/register/ledger-accounts", { replace: true });
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchAllAccounts, navigate]);
-
   useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
-  /* ----------------------- Derived collections ---------------------------- */
+  /* ----------------------------- Overlay (optimistic) --------------------- */
+  const [added, setAdded] = useState<GLAccount[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
+  /* ----------------------------- Pager (cursor) --------------------------- */
+  const [appliedQuery, setAppliedQuery] = useState<{ q: string; group: CategoryLabel | null }>({ q: "", group: null });
+  const qKey = useMemo(() => `${appliedQuery.q}::${appliedQuery.group ?? ""}`, [appliedQuery]);
+
+  const fetchAccountsPage = useCallback(
+    async (cursor?: string) => {
+      if (INFLIGHT_FETCH) return { items: [] as GLAccount[], nextCursor: undefined as string | undefined };
+      INFLIGHT_FETCH = true;
+      try {
+        const { data, meta } = (await api.getLedgerAccounts({
+          page_size: 120,
+          cursor,
+          // if your API supports filters, map them here; otherwise we filter client-side
+          // q: appliedQuery.q || undefined,
+          // category: appliedQuery.group ? CATEGORY_LABEL_TO_VALUE[appliedQuery.group] : undefined,
+        })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
+
+        const items = ((data?.results ?? []) as GLAccount[]).slice().sort((a, b) => {
+          const ca = (a.code || "").toString();
+          const cb = (b.code || "").toString();
+          if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
+          return (a.name || "").localeCompare(b.name || "", "pt-BR");
+        });
+
+        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        return { items, nextCursor };
+      } finally {
+        INFLIGHT_FETCH = false;
+      }
+    },
+    [] // server-side filtering disabled; keep stable
+  );
+
+  const pager = useCursorPager<GLAccount>(fetchAccountsPage, {
+    autoLoadFirst: true,
+    deps: [qKey], // refetch when user applies new query/group (client-side filter still applies below)
+  });
+
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
+
+  /* ----------------------------- Client-side filters ---------------------- */
   const accountsFiltered = useMemo(() => {
+    // base items = (overlay added that pass filter + pager items not deleted and not overlay-duplicated)
+    const addedFiltered = added.filter((a) => {
+      const labelOrKey = getCategoryLabel(a as GLX);
+      const label = (typeof labelOrKey === "string" && labelOrKey.startsWith("settings:"))
+        ? t(labelOrKey) : (labelOrKey as string);
+      const matchGroup = !filterGroup || label === filterGroup;
+      const s = search.trim().toLowerCase();
+      const matchSearch = !s ||
+        (a.name || "").toLowerCase().includes(s) ||
+        (label || "").toLowerCase().includes(s) ||
+        (a.subcategory || "").toLowerCase().includes(s) ||
+        (a.code || "").toLowerCase().includes(s);
+      return matchGroup && matchSearch;
+    });
+
+    const addedIdsSet = new Set(addedFiltered.map((a) => getGlaId(a)));
+    const base = pager.items.filter((a) => !deletedIds.has(getGlaId(a)) && !addedIdsSet.has(getGlaId(a)));
+
+    const merged = [...addedFiltered, ...base];
+
+    // apply client-side filter to pager items
     const s = search.trim().toLowerCase();
-    return accounts.filter((a) => {
+    return merged.filter((a) => {
       const labelOrKey = getCategoryLabel(a as GLX);
       const label =
-        labelOrKey.startsWith("settings:ledgerAccounts")
+        typeof labelOrKey === "string" && labelOrKey.startsWith("settings:")
           ? t(labelOrKey)
           : (labelOrKey as string);
 
@@ -278,31 +276,36 @@ const LedgerAccountSettings: React.FC = () => {
         (a.code || "").toLowerCase().includes(s);
       return byGroup && bySearch;
     });
-  }, [accounts, search, filterGroup, t]);
+  }, [added, pager.items, deletedIds, search, filterGroup, t]);
 
   const groups = useMemo(() => {
     const labels = accountsFiltered
       .map((a) => getCategoryLabel(a as GLX))
-      .map((lab) => (lab.startsWith("settings:ledgerAccounts") ? t(lab) : lab))
-      .filter((l): l is CategoryLabel => !!l && !l.startsWith("settings:ledgerAccounts"));
+      .map((lab) => (typeof lab === "string" && lab.startsWith("settings:") ? t(lab) : lab))
+      .filter((l): l is CategoryLabel => !!l && typeof l === "string" && !l.startsWith("settings:"));
     return Array.from(new Set(labels)) as CategoryLabel[];
   }, [accountsFiltered, t]);
 
-  const subgroupOptions = useMemo(() => {
-    if (!formData.category) return [] as { label: string; value: string }[];
-    const list = accounts
-      .filter((a) => {
-        const lab = getCategoryLabel(a as GLX);
-        const resolved = lab.startsWith("settings:ledgerAccounts") ? t(lab) : lab;
-        return resolved === formData.category;
-      })
-      .map((a) => a.subcategory || "")
-      .filter(Boolean);
-    const unique = Array.from(new Set(list));
-    return unique.map((sg) => ({ label: sg, value: sg }));
-  }, [accounts, formData.category, t]);
+  /* ----------------------------- View helpers ----------------------------- */
+  const [openAccordions, setOpenAccordions] = useState<Set<CategoryLabel>>(new Set());
+  const toggleAccordion = (groupName: CategoryLabel) => {
+    setOpenAccordions((prev) => {
+      const s = new Set(prev);
+      if (s.has(groupName)) s.delete(groupName);
+      else s.add(groupName);
+      return s;
+    });
+  };
+  const expandAll = (all: CategoryLabel[]) => setOpenAccordions(new Set(all));
+  const collapseAll = () => setOpenAccordions(new Set());
 
-  /* ------------------------------ Handlers -------------------------------- */
+  /* ----------------------------- Actions ---------------------------------- */
+  const applySearch = useCallback(() => {
+    setAppliedQuery({ q: search.trim(), group: filterGroup });
+    // If backend filtering is added later, it will refetch via deps; for now client-only.
+    pager.refresh();
+  }, [search, filterGroup, pager]);
+
   const openCreateModal = () => {
     setMode("create");
     setEditing(null);
@@ -316,7 +319,10 @@ const LedgerAccountSettings: React.FC = () => {
     setEditing(acc);
     setAddingNewSubgroup(false);
     const labelOrKey = getCategoryLabel(acc as GLX);
-    const label = labelOrKey.startsWith("settings:ledgerAccounts") ? t(labelOrKey) : (labelOrKey as CategoryLabel | "");
+    const label =
+      typeof labelOrKey === "string" && labelOrKey.startsWith("settings:")
+        ? t(labelOrKey)
+        : (labelOrKey as CategoryLabel | "");
     setFormData({
       name: acc.name || "",
       category: label as CategoryLabel | "",
@@ -331,21 +337,11 @@ const LedgerAccountSettings: React.FC = () => {
     setModalOpen(false);
     setEditing(null);
     setAddingNewSubgroup(false);
+    setFormData(EMPTY_FORM);
   }, []);
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData((p) => ({ ...p, name: value }));
-  };
-
-  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData((p) => ({ ...p, code: value }));
-  };
-
-  const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, is_active: e.target.checked }));
-  };
 
   const handleGroupChange = (items: { label: CategoryLabel; value: CategoryLabel }[]) => {
     const sel = items[0];
@@ -364,51 +360,61 @@ const LedgerAccountSettings: React.FC = () => {
 
   const submitAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       if (!formData.category) throw new Error("required");
       const categoryValue: CategoryValue = CATEGORY_LABEL_TO_VALUE[formData.category as CategoryLabel];
 
       const basePayload = {
-        name: formData.name,
-        category: categoryValue, // envia 1..4
+        name: formData.name.trim(),
+        category: categoryValue, // 1..4
         subcategory: formData.subcategory || undefined,
-        code: formData.code?.trim() ? formData.code : undefined,
+        code: formData.code?.trim() ? formData.code.trim() : undefined,
         is_active: typeof formData.is_active === "boolean" ? formData.is_active : undefined,
       };
 
       if (mode === "create") {
         const payload: AddGLAccountRequest = basePayload;
-        await api.addLedgerAccount(payload);
-        setSnack({ message: t("settings:ledgerAccounts.toast.saved"), severity: "success" });
+        const { data: created } = await api.addLedgerAccount(payload);
+        // optimistic overlay
+        setAdded((prev) => [created as GLAccount, ...prev]);
       } else if (editing) {
         const glaId = getGlaId(editing);
         const payload: EditGLAccountRequest = basePayload;
         await api.editLedgerAccount(glaId, payload);
-        setSnack({ message: t("settings:ledgerAccounts.toast.saved"), severity: "success" });
       }
 
-      const refreshed = await fetchAllAccounts();
-      setAccounts(refreshed);
+      await pager.refresh();
       closeModal();
+      setSnack({ message: t("settings:ledgerAccounts.toast.saved"), severity: "success" });
     } catch (err) {
       console.error(err);
       setSnack({ message: t("settings:ledgerAccounts.toast.saveError"), severity: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  /** Abre o ConfirmToast para EXCLUIR UMA conta */
   const requestDeleteAccount = (acc: GLAccount) => {
     setConfirmText(t("settings:ledgerAccounts.confirm.deleteOne", { name: acc.name ?? "" }));
     setConfirmAction(() => async () => {
+      const id = getGlaId(acc);
+      setDeleteTargetId(id);
       try {
-        const glaId = getGlaId(acc);
-        await api.deleteLedgerAccount(glaId);
-        const refreshed = await fetchAllAccounts();
-        setAccounts(refreshed);
+        setDeletedIds((prev) => new Set(prev).add(id));
+        await api.deleteLedgerAccount(id);
+        await pager.refresh();
+        setAdded((prev) => prev.filter((a) => getGlaId(a) !== id));
         setSnack({ message: t("settings:ledgerAccounts.toast.deleteSuccess", { defaultValue: "Conta excluída." }), severity: "info" });
       } catch {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
         setSnack({ message: t("settings:ledgerAccounts.toast.deleteError"), severity: "error" });
       } finally {
+        setDeleteTargetId(null);
         setConfirmOpen(false);
         setConfirmBusy(false);
       }
@@ -416,7 +422,6 @@ const LedgerAccountSettings: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  /** Abre o ConfirmToast para EXCLUIR TODAS as contas */
   const requestDeleteAll = () => {
     if (deletingAll) return;
     setConfirmText(t("settings:ledgerAccounts.confirm.deleteAll"));
@@ -438,52 +443,90 @@ const LedgerAccountSettings: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  // Fecha menu ⋯ ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
-    };
-    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+  const handleDownloadPDF = async () => {
+    try {
+      const result = await generateLedgerAccountsPDF({
+        companyName: t("settings:ledgerAccounts.pdf.company"),
+        title: t("settings:ledgerAccounts.pdf.title"),
+      });
+      setSnack({ message: result.message || t("settings:ledgerAccounts.toast.pdfOk"), severity: "success" });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      setSnack({ message: t("settings:ledgerAccounts.toast.pdfError"), severity: "error" });
+    } finally {
+      setMenuOpen(false);
+    }
+  };
 
-  // trava scroll do body com modal
+  /* ----------------------------- Subgroup options ------------------------- */
+  const subgroupOptions = useMemo(() => {
+    if (!formData.category) return [] as { label: string; value: string }[];
+    const list = accountsFiltered
+      .filter((a) => {
+        const lab = getCategoryLabel(a as GLX);
+        const resolved = (typeof lab === "string" && lab.startsWith("settings:")) ? t(lab) : lab;
+        return resolved === formData.category;
+      })
+      .map((a) => a.subcategory || "")
+      .filter(Boolean);
+    const unique = Array.from(new Set(list));
+    return unique.map((sg) => ({ label: sg, value: sg }));
+  }, [accountsFiltered, formData.category, t]);
+
+  /* ----------------------------- Body scroll lock ------------------------- */
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  /* ----------------------- View render helpers --------------------------- */
-  const RowAccountList = ({ a }: { a: GLAccount }) => {
-    const labelOrKey = getCategoryLabel(a as GLX);
-    const label = labelOrKey.startsWith("settings:ledgerAccounts") ? t(labelOrKey) : labelOrKey;
-    const tx = getDefaultTx(a as GLX);
+  /* ----------------------------- Loading UI ------------------------------- */
+  if (isInitialLoading) {
     return (
-      <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const canEdit = !!isOwner;
+  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy || deletingAll;
+
+  /* ----------------------------- View utils ------------------------------- */
+  const RowAccountList = ({ a }: { a: GLAccount }) => {
+    const id = getGlaId(a);
+    const labelOrKey = getCategoryLabel(a as GLX);
+    const label = typeof labelOrKey === "string" && labelOrKey.startsWith("settings:")
+      ? t(labelOrKey)
+      : labelOrKey;
+    const tx = getDefaultTx(a as GLX);
+    const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
+
+    return (
+      <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-gray-900 truncate">
             {a.name || t("settings:ledgerAccounts.tags.noName")}
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
             {a.code ? <Badge>{t("settings:ledgerAccounts.tags.code")}: {a.code}</Badge> : null}
-            <Badge>{label}</Badge>
+            <Badge>{label as string}</Badge>
             {a.subcategory ? <Badge>{a.subcategory}</Badge> : null}
             {tx ? <Badge>{tx === "credit" ? t("settings:ledgerAccounts.tags.credit") : t("settings:ledgerAccounts.tags.debit")}</Badge> : null}
             {a.is_active === false ? <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge> : null}
           </div>
         </div>
-        {isOwner && (
+        {canEdit && (
           <div className="flex gap-2 shrink-0">
             <Button
               variant="outline"
               className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
               onClick={() => openEditModal(a)}
+              disabled={rowBusy}
             >
               {t("settings:ledgerAccounts.buttons.edit")}
             </Button>
-            <Button variant="common" onClick={() => requestDeleteAccount(a)}>
+            <Button variant="common" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
               {t("settings:ledgerAccounts.buttons.delete")}
             </Button>
           </div>
@@ -494,8 +537,8 @@ const LedgerAccountSettings: React.FC = () => {
 
   const renderListView = () => {
     const sorted = [...accountsFiltered].sort((a, b) => {
-      const ga = (getCategoryLabel(a as GLX) as string);
-      const gb = (getCategoryLabel(b as GLX) as string);
+      const ga = getCategoryLabel(a as GLX) as string;
+      const gb = getCategoryLabel(b as GLX) as string;
       const gaR = ga.startsWith("settings:ledgerAccounts") ? t(ga) : ga;
       const gbR = gb.startsWith("settings:ledgerAccounts") ? t(gb) : gb;
       const g = (gaR || "").localeCompare(gbR || "");
@@ -514,9 +557,7 @@ const LedgerAccountSettings: React.FC = () => {
           </span>
         </div>
         <div className="divide-y divide-gray-200">
-          {sorted.map((a) => (
-            <RowAccountList key={getGlaId(a)} a={a} />
-          ))}
+          {sorted.map((a) => <RowAccountList key={getGlaId(a)} a={a} />)}
           {sorted.length === 0 && (
             <p className="p-4 text-center text-sm text-gray-500">{t("settings:ledgerAccounts.list.empty")}</p>
           )}
@@ -525,11 +566,12 @@ const LedgerAccountSettings: React.FC = () => {
     );
   };
 
-  /* ----------------------------- Render ---------------------------------- */
-  if (loading) return <SuspenseLoader />;
-
+  /* ----------------------------- Render ----------------------------------- */
   return (
     <>
+      {/* thin progress during background page sync */}
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -549,7 +591,7 @@ const LedgerAccountSettings: React.FC = () => {
 
               {isOwner && (
                 <div className="flex items-center gap-2">
-                  <Button onClick={openCreateModal} className="!py-1.5">
+                  <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                     {t("settings:ledgerAccounts.buttons.add")}
                   </Button>
                   <div className="relative" ref={menuRef}>
@@ -560,6 +602,7 @@ const LedgerAccountSettings: React.FC = () => {
                       aria-expanded={menuOpen}
                       title={t("settings:ledgerAccounts.buttons.options")}
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                      disabled={globalBusy}
                     >
                       ⋯
                     </Button>
@@ -572,9 +615,9 @@ const LedgerAccountSettings: React.FC = () => {
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 border-b border-gray-100 transition-colors"
                           onClick={handleDownloadPDF}
-                          disabled={accounts.length === 0}
+                          disabled={globalBusy || (pager.items.length + added.length === 0)}
                           title={
-                            accounts.length === 0
+                            pager.items.length + added.length === 0
                               ? t("settings:ledgerAccounts.buttons.downloadPdfDisabled")
                               : t("settings:ledgerAccounts.buttons.downloadPdf")
                           }
@@ -585,7 +628,7 @@ const LedgerAccountSettings: React.FC = () => {
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
                           onClick={requestDeleteAll}
-                          disabled={deletingAll || accounts.length === 0}
+                          disabled={globalBusy || (pager.items.length + added.length === 0)}
                           title={deletingAll ? t("settings:ledgerAccounts.buttons.deletingAll") : t("settings:ledgerAccounts.buttons.resetAll")}
                         >
                           {deletingAll ? t("settings:ledgerAccounts.buttons.deletingAll") : t("settings:ledgerAccounts.buttons.resetAll")}
@@ -598,7 +641,7 @@ const LedgerAccountSettings: React.FC = () => {
             </div>
           </header>
 
-          {/* Filtros */}
+          {/* Filters + actions */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white">
               <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
@@ -611,6 +654,7 @@ const LedgerAccountSettings: React.FC = () => {
                         name="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        disabled={globalBusy}
                       />
                     </div>
 
@@ -626,6 +670,7 @@ const LedgerAccountSettings: React.FC = () => {
                       buttonLabel={t("settings:ledgerAccounts.buttons.filterCategory")}
                       clearOnClickOutside={false}
                       customStyles={{ maxHeight: "240px" }}
+                      disabled={globalBusy}
                     />
 
                     {(search || filterGroup) && (
@@ -635,11 +680,23 @@ const LedgerAccountSettings: React.FC = () => {
                         onClick={() => {
                           setSearch("");
                           setFilterGroup(null);
+                          setAppliedQuery({ q: "", group: null });
+                          pager.refresh();
                         }}
+                        disabled={globalBusy}
                       >
                         {t("settings:ledgerAccounts.buttons.clear")}
                       </Button>
                     )}
+
+                    <Button
+                      onClick={applySearch}
+                      variant="outline"
+                      className="self-end"
+                      disabled={globalBusy}
+                    >
+                      {t("settings:ledgerAccounts.buttons.runSearchAria", "Buscar")}
+                    </Button>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -648,6 +705,7 @@ const LedgerAccountSettings: React.FC = () => {
                         variant="outline"
                         className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => (openAccordions.size === groups.length ? collapseAll() : expandAll(groups))}
+                        disabled={globalBusy}
                       >
                         {openAccordions.size === groups.length
                           ? t("settings:ledgerAccounts.buttons.collapseAll")
@@ -659,6 +717,7 @@ const LedgerAccountSettings: React.FC = () => {
                       variant="outline"
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={() => setViewMode((v) => (v === "accordion" ? "list" : "accordion"))}
+                      disabled={globalBusy}
                     >
                       {viewMode === "accordion"
                         ? t("settings:ledgerAccounts.buttons.viewList")
@@ -668,7 +727,7 @@ const LedgerAccountSettings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Conteúdo */}
+              {/* Content */}
               <div className="p-4">
                 {viewMode === "list" ? (
                   renderListView()
@@ -677,7 +736,7 @@ const LedgerAccountSettings: React.FC = () => {
                     {groups.map((g) => {
                       const accInGroup = accountsFiltered.filter((a) => {
                         const lab = getCategoryLabel(a as GLX);
-                        const resolved = lab.startsWith("settings:ledgerAccounts") ? t(lab) : lab;
+                        const resolved = (typeof lab === "string" && lab.startsWith("settings:")) ? t(lab) : lab;
                         return resolved === g;
                       });
                       if (accInGroup.length === 0) return null;
@@ -694,12 +753,7 @@ const LedgerAccountSettings: React.FC = () => {
                             className="w-full flex items-center justify-between cursor-pointer select-none px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
                           >
                             <span className="text-[13px] font-semibold text-gray-900">{g}</span>
-                            <svg
-                              className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              role="none"
-                            >
+                            <svg className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24">
                               <path
                                 fill="currentColor"
                                 fillRule="evenodd"
@@ -717,52 +771,46 @@ const LedgerAccountSettings: React.FC = () => {
                                   <div className="divide-y divide-gray-200">
                                     {accInGroup
                                       .filter((a) => (a.subcategory || t("settings:ledgerAccounts.tags.noSubgroup")) === sg)
-                                      .map((a) => (
-                                        <div
-                                          key={getGlaId(a)}
-                                          className="flex items-center justify-between px-2 py-2 hover:bg-gray-50"
-                                        >
-                                          <div className="min-w-0">
-                                            <p className="text-[13px] font-medium text-gray-900 truncate">
-                                              {a.name || t("settings:ledgerAccounts.tags.noName")}
-                                            </p>
-                                            <div className="mt-1 flex gap-2 flex-wrap">
-                                              {a.code ? (
-                                                <Badge>
-                                                  {t("settings:ledgerAccounts.tags.code")}: {a.code}
-                                                </Badge>
-                                              ) : null}
-                                              {(() => {
-                                                const txx = getDefaultTx(a as GLX);
-                                                return txx ? (
-                                                  <Badge>
-                                                    {txx === "credit"
-                                                      ? t("settings:ledgerAccounts.tags.credit")
-                                                      : t("settings:ledgerAccounts.tags.debit")}
-                                                  </Badge>
-                                                ) : null;
-                                              })()}
-                                              {a.is_active === false ? (
-                                                <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge>
-                                              ) : null}
+                                      .map((a) => {
+                                        const id = getGlaId(a);
+                                        const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
+                                        return (
+                                          <div key={id} className={`flex items-center justify-between px-2 py-2 hover:bg-gray-50 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+                                            <div className="min-w-0">
+                                              <p className="text-[13px] font-medium text-gray-900 truncate">
+                                                {a.name || t("settings:ledgerAccounts.tags.noName")}
+                                              </p>
+                                              <div className="mt-1 flex gap-2 flex-wrap">
+                                                {a.code ? <Badge>{t("settings:ledgerAccounts.tags.code")}: {a.code}</Badge> : null}
+                                                {(() => {
+                                                  const txx = getDefaultTx(a as GLX);
+                                                  return txx ? (
+                                                    <Badge>
+                                                      {txx === "credit" ? t("settings:ledgerAccounts.tags.credit") : t("settings:ledgerAccounts.tags.debit")}
+                                                    </Badge>
+                                                  ) : null;
+                                                })()}
+                                                {a.is_active === false ? <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge> : null}
+                                              </div>
                                             </div>
+                                            {canEdit && (
+                                              <div className="flex gap-2 shrink-0">
+                                                <Button
+                                                  variant="outline"
+                                                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                                                  onClick={() => openEditModal(a)}
+                                                  disabled={rowBusy}
+                                                >
+                                                  {t("settings:ledgerAccounts.buttons.edit")}
+                                                </Button>
+                                                <Button variant="common" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
+                                                  {t("settings:ledgerAccounts.buttons.delete")}
+                                                </Button>
+                                              </div>
+                                            )}
                                           </div>
-                                          {isOwner && (
-                                            <div className="flex gap-2 shrink-0">
-                                              <Button
-                                                variant="outline"
-                                                className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                                                onClick={() => openEditModal(a)}
-                                              >
-                                                {t("settings:ledgerAccounts.buttons.edit")}
-                                              </Button>
-                                              <Button variant="common" onClick={() => requestDeleteAccount(a)}>
-                                                {t("settings:ledgerAccounts.buttons.delete")}
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
+                                        );
+                                      })}
                                   </div>
                                 </div>
                               ))}
@@ -780,6 +828,18 @@ const LedgerAccountSettings: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Arrow-only footer */}
+              <PaginationArrows
+                onPrev={pager.prev}
+                onNext={pager.next}
+                disabledPrev={!pager.canPrev || isBackgroundSync}
+                disabledNext={!pager.canNext || isBackgroundSync}
+                label={t("settings:ledgerAccounts.pager.label", {
+                  page: pager.index + 1,
+                  total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
+                })}
+              />
             </div>
           </section>
         </div>
@@ -800,6 +860,7 @@ const LedgerAccountSettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:ledgerAccounts.buttons.cancel")}
+                  disabled={isSubmitting}
                 >
                   &times;
                 </button>
@@ -810,16 +871,18 @@ const LedgerAccountSettings: React.FC = () => {
                   label={t("settings:ledgerAccounts.modal.name")}
                   name="name"
                   value={formData.name}
-                  onChange={handleNameChange}
+                  onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                   required
+                  disabled={isSubmitting}
                 />
 
                 <Input
                   label={t("settings:ledgerAccounts.modal.code")}
                   name="code"
                   value={formData.code || ""}
-                  onChange={handleCodeChange}
+                  onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value }))}
                   placeholder={t("settings:ledgerAccounts.modal.codePlaceholder")}
+                  disabled={isSubmitting}
                 />
 
                 <SelectDropdown<{ label: CategoryLabel; value: CategoryLabel }>
@@ -832,7 +895,7 @@ const LedgerAccountSettings: React.FC = () => {
                   singleSelect
                   hideCheckboxes
                   buttonLabel={t("settings:ledgerAccounts.buttons.selectCategory")}
-                  disabled={!formData.name}
+                  disabled={isSubmitting || !formData.name}
                 />
 
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
@@ -842,7 +905,7 @@ const LedgerAccountSettings: React.FC = () => {
                       name="subcategory"
                       value={formData.subcategory}
                       onChange={(e) => setFormData((p) => ({ ...p, subcategory: e.target.value }))}
-                      disabled={!formData.category}
+                      disabled={isSubmitting || !formData.category}
                       required
                     />
                   ) : (
@@ -850,9 +913,7 @@ const LedgerAccountSettings: React.FC = () => {
                       label={t("settings:ledgerAccounts.modal.subcategory")}
                       items={subgroupOptions}
                       selected={
-                        formData.subcategory
-                          ? [{ label: formData.subcategory, value: formData.subcategory }]
-                          : []
+                        formData.subcategory ? [{ label: formData.subcategory, value: formData.subcategory }] : []
                       }
                       onChange={handleSubgroupChange}
                       getItemKey={(i) => i.value}
@@ -860,7 +921,7 @@ const LedgerAccountSettings: React.FC = () => {
                       singleSelect
                       hideCheckboxes
                       buttonLabel={t("settings:ledgerAccounts.buttons.selectSubcategory")}
-                      disabled={!formData.category}
+                      disabled={isSubmitting || !formData.category}
                     />
                   )}
 
@@ -871,7 +932,7 @@ const LedgerAccountSettings: React.FC = () => {
                       setAddingNewSubgroup((v) => !v);
                       setFormData((p) => ({ ...p, subcategory: "" }));
                     }}
-                    disabled={!formData.category}
+                    disabled={isSubmitting || !formData.category}
                     className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   >
                     {addingNewSubgroup ? t("settings:ledgerAccounts.buttons.toggleNewSubCancel") : t("settings:ledgerAccounts.buttons.toggleNewSub")}
@@ -879,7 +940,7 @@ const LedgerAccountSettings: React.FC = () => {
                 </div>
 
                 <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={formData.is_active ?? true} onChange={handleActiveChange} />
+                  <Checkbox checked={formData.is_active ?? true} onChange={handleActiveChange} disabled={isSubmitting} />
                   {t("settings:ledgerAccounts.modal.active")}
                 </label>
 
@@ -899,11 +960,11 @@ const LedgerAccountSettings: React.FC = () => {
                 </p>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
+                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                     {t("settings:ledgerAccounts.buttons.cancel")}
                   </Button>
-                  <Button type="submit" disabled={!formData.name || !formData.category || !formData.subcategory}>
-                    {t("settings:ledgerAccounts.buttons.save")}
+                  <Button type="submit" disabled={isSubmitting || !formData.name || !formData.category || !formData.subcategory}>
+                    {isSubmitting ? t("settings:ledgerAccounts.buttons.saving", "Saving…") : t("settings:ledgerAccounts.buttons.save")}
                   </Button>
                 </div>
               </form>
@@ -935,7 +996,7 @@ const LedgerAccountSettings: React.FC = () => {
         busy={confirmBusy}
       />
 
-      {/* Snackbar (sem Alert) */}
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

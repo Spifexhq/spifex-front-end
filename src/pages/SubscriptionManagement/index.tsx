@@ -2,6 +2,11 @@
  * File: src/pages/SubscriptionManagement.tsx
  * Style: Navbar fixa + SidebarSettings, light borders, compact labels
  * Notes: i18n group "subscription" inside the "settings" namespace
+ * Standards:
+ *  - Flags: isInitialLoading, isBackgroundSync (unused here), isProcessing
+ *  - TopProgress + PageSkeleton on initial; TopProgress during processing
+ *  - Header badge when processing
+ *  - Esc to close modal, body scroll lock when modal is open
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -10,7 +15,10 @@ import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuth } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import { InlineLoader, SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+import { InlineLoader } from "@/components/Loaders";
+
 import PaymentButton from "@/components/SubscriptionButtons/PaymentButton";
 import ManageSubscriptionLink from "@/components/SubscriptionButtons/ManageSubscriptionLink";
 import Button from "src/components/ui/Button";
@@ -40,21 +48,15 @@ const RowPlan = ({
 
 const SubscriptionManagement: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
-
-  useEffect(() => {
-    document.title = t("settings:subscription.title");
-  }, [t]);
-
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
   const isLogged = useRequireLogin();
   const { handleInitUser } = useAuth();
   const { isSubscribed, activePlanId, user } = useAuthContext();
 
-  const [loading, setLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
+  /* ------------------------------- Flags ----------------------------------- */
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false); // used for checkout/plan switch flow
+
+  /* ------------------------------- Local ----------------------------------- */
   const [selectedPlanId, setSelectedPlanId] = useState("");
 
   // Labels come from i18n; price IDs from env
@@ -73,15 +75,27 @@ const SubscriptionManagement: React.FC = () => {
     availablePlans.find((p) => p.priceId === activePlanId)?.label ??
     t("settings:subscription.current.unknown");
 
+  /* ------------------------------ Bootstrap -------------------------------- */
+  useEffect(() => {
+    document.title = t("settings:subscription.title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   useEffect(() => {
     const init = async () => {
-      await handleInitUser();
-      setLoading(false);
+      try {
+        await handleInitUser();
+      } finally {
+        setIsInitialLoading(false);
+      }
     };
     void init();
   }, [handleInitUser]);
 
-  // Modal UX: Esc fecha (se não estiver processando) e trava o scroll do body
+  /* ------------------------------- Modal UX -------------------------------- */
   const closeModal = useCallback(() => {
     if (isProcessing) return;
     setSelectedPlanId("");
@@ -102,10 +116,33 @@ const SubscriptionManagement: React.FC = () => {
     };
   }, [selectedPlanId]);
 
-  if (!isLogged || loading) return <SuspenseLoader />;
+  /* ------------------------------- Loading UI ------------------------------ */
+  if (!isLogged) return null;
+
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  /* --------------------------------- UI ----------------------------------- */
+  const headerBadge = isProcessing ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("settings:subscription.badge.processing", "Processing…")}
+    </span>
+  ) : null;
 
   return (
     <>
+      {/* Thin top progress while processing a subscription action */}
+      <TopProgress active={isProcessing} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -114,13 +151,16 @@ const SubscriptionManagement: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials(user?.name)}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:subscription.header.settings")}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:subscription.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:subscription.header.title")}
+                  </h1>
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:subscription.header.title")}
-                </h1>
+                {headerBadge}
               </div>
             </div>
           </header>
@@ -158,7 +198,7 @@ const SubscriptionManagement: React.FC = () => {
                           <Button
                             variant="outline"
                             className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                            disabled={plan.priceId === activePlanId}
+                            disabled={plan.priceId === activePlanId || isProcessing}
                             onClick={() => setSelectedPlanId(plan.priceId)}
                           >
                             {plan.priceId === activePlanId

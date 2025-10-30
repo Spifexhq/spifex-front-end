@@ -727,6 +727,14 @@ export const api = {
       params
     );
   },
+  
+    getEntity: (id: string) => {
+      const orgExternalId = getOrgExternalId();
+      return request<GetEntityResponse>(
+        `crm/${orgExternalId}/crm/entities/${id}/`,
+        "GET"
+      );
+    },
 
   getEntitiesBatch: (ids: string[]) => {
     const orgExternalId = getOrgExternalId();
@@ -734,14 +742,6 @@ export const api = {
       `crm/${orgExternalId}/crm/entities/batch/`,
       "POST",
       { ids }
-    );
-  },
-
-  getEntity: (id: string) => {
-    const orgExternalId = getOrgExternalId();
-    return request<GetEntityResponse>(
-      `crm/${orgExternalId}/crm/entities/${id}/`,
-      "GET"
     );
   },
 

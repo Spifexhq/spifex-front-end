@@ -1,14 +1,19 @@
 /* -----------------------------------------------------------------------------
  * File: src/pages/BankSettings.tsx
- * Style: Navbar fixa + SidebarSettings, light borders, compact labels
- * Notes: no backdrop-close; honors fixed heights; no horizontal overflow
- * Dinâmica: overlay local p/ add/delete + refresh do fetch
- * i18n: group "bank" inside namespace "settings"
+ * Standardized flags + UX (matches Department/Inventory/Employee)
+ * - Flags: isInitialLoading, isBackgroundSync, isSubmitting, deleteTargetId, confirmBusy
+ * - INFLIGHT_FETCH guard for fetchBanks
+ * - TopProgress + PageSkeleton on initial; TopProgress on background submit/refresh
+ * - Overlay local (added/deleted) + refresh after add/edit/delete
+ * - No backdrop-close
+ * - i18n: "settings:bank.*"
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
@@ -17,14 +22,15 @@ import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import ConfirmToast from "src/components/ui/ConfirmToast";
 
 import { api } from "src/api/requests";
-import { BankAccount } from "src/models/enterprise_structure/domain";
+import type { BankAccount } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import { formatCurrency, decimalToCentsDigits } from "src/lib/currency";
+import { formatCurrency } from "src/lib/currency";
 import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
+/* ----------------------------- Constants/Types ---------------------------- */
 const ACCOUNT_TYPE_VALUES = ["checking", "savings", "investment", "cash"] as const;
 type AccountType = (typeof ACCOUNT_TYPE_VALUES)[number];
 
@@ -32,7 +38,7 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/** Converte dígitos de centavos ("123456") -> string decimal "1234.56" para a API */
+/** "123456" -> "1234.56" for API */
 const digitsToDecimalString = (digits: string) => {
   const onlyDigits = String(digits ?? "0").replace(/\D/g, "");
   const num = Number(onlyDigits || "0") / 100;
@@ -44,20 +50,23 @@ function getInitials() {
   return "BK";
 }
 
+/* Row (no borders; parent uses divide-y) */
 const Row = ({
   bank,
   onEdit,
   onDelete,
   canEdit,
   t,
+  busy,
 }: {
   bank: BankAccount;
   onEdit: (b: BankAccount) => void;
   onDelete: (b: BankAccount) => void;
   canEdit: boolean;
   t: TFunction;
+  busy?: boolean;
 }) => (
-  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+  <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">{bank.institution}</p>
       <p className="text-[12px] text-gray-600 truncate">
@@ -70,10 +79,11 @@ const Row = ({
           variant="outline"
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(bank)}
+          disabled={busy}
         >
           {t("settings:bank.btn.edit")}
         </Button>
-        <Button variant="common" onClick={() => onDelete(bank)}>
+        <Button variant="common" onClick={() => onDelete(bank)} disabled={busy} aria-busy={busy || undefined}>
           {t("settings:bank.btn.delete")}
         </Button>
       </div>
@@ -81,26 +91,63 @@ const Row = ({
   </div>
 );
 
+/* -------------------------- In-memory fetch guard ------------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ------------------------------ Modal skeleton ---------------------------- */
+const ModalSkeleton: React.FC = () => (
+  <div className="space-y-3 py-1">
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="flex items-center gap-3 pt-2">
+      <div className="h-5 w-5 rounded bg-gray-100 animate-pulse" />
+      <div className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
+    </div>
+    <div className="flex justify-end gap-2 pt-1">
+      <div className="h-9 w-24 rounded-md bg-gray-100 animate-pulse" />
+      <div className="h-9 w-28 rounded-md bg-gray-100 animate-pulse" />
+    </div>
+  </div>
+);
+
+/* -------------------------------------------------------------------------- */
 const BankSettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
-  useEffect(() => {
-    document.title = t("settings:bank.title");
-  }, [t]);
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
   const { isOwner } = useAuthContext();
 
-  /* --------------------------- Estados principais --------------------------- */
-  const [banks, setBanks] = useState<BankAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  useEffect(() => { document.title = t("settings:bank.title"); }, [t]);
+  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
+  /* ------------------------------ Flags/State ------------------------------ */
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [snack, setSnack] = useState<Snack>(null);
+
+  // Confirm Toast
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+  // Overlay local
+  const [added, setAdded] = useState<BankAccount[]>([]);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
+  // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingBank, setEditingBank] = useState<BankAccount | null>(null);
 
-  // Mantemos "initial_balance" como dígitos de centavos (ex.: "123456")
+  // Keep initial_balance as digits only ("123456")
   const [formData, setFormData] = useState({
     institution: "",
     account_type: "checking" as AccountType,
@@ -112,44 +159,39 @@ const BankSettings: React.FC = () => {
     is_active: true,
   });
 
-  const [snack, setSnack] = useState<Snack>(null);
+  const busyGlobal = isBackgroundSync || isSubmitting || confirmBusy;
 
-  /* --------- Overlay dinâmico: adicionados e ids excluídos (UI imediata) --- */
-  const [added, setAdded] = useState<BankAccount[]>([]);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set<string>());
+  /* ------------------------------- Fetch list ------------------------------ */
+  const fetchBanks = useCallback(async (opts: { background?: boolean } = {}) => {
+    if (INFLIGHT_FETCH) return;
+    INFLIGHT_FETCH = true;
+    if (opts.background) setIsBackgroundSync(true);
+    else setIsInitialLoading(true);
 
-  /* ---------------- Confirm Toast (reusable) ---------------- */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
-
-  /* ------------------------------ Carrega dados ----------------------------- */
-  const fetchBanks = useCallback(async () => {
     try {
-      const { data } = await api.getAllBanks(); // ApiSuccess<Paginated<BankAccount>>
+      const { data } = await api.getAllBanks();
       const list: BankAccount[] = data?.results ?? [];
       const sorted = [...list].sort((a, b) => (a.institution || "").localeCompare(b.institution || ""));
       setBanks(sorted);
     } catch {
       setSnack({ message: t("settings:bank.toast.fetchError"), severity: "error" });
     } finally {
-      setLoading(false);
+      if (opts.background) setIsBackgroundSync(false);
+      else setIsInitialLoading(false);
+      INFLIGHT_FETCH = false;
     }
   }, [t]);
 
-  useEffect(() => {
-    void fetchBanks();
-  }, [fetchBanks]);
+  useEffect(() => { void fetchBanks(); }, [fetchBanks]);
 
-  /* ---------------------------- Lista visível ------------------------------- */
+  /* ---------------------------- Visible (overlay) -------------------------- */
   const visibleBanks = useMemo(() => {
     const addedIds = new Set(added.map((b) => b.id));
     const base = banks.filter((b) => !deletedIds.has(b.id) && !addedIds.has(b.id));
     return [...added, ...base];
   }, [banks, added, deletedIds]);
 
-  /* ------------------------------ Handlers --------------------------------- */
+  /* -------------------------------- Handlers ------------------------------- */
   const openCreateModal = () => {
     setMode("create");
     setEditingBank(null);
@@ -166,20 +208,49 @@ const BankSettings: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEditModal = (bank: BankAccount) => {
+  const openEditModal = async (bank: BankAccount) => {
     setMode("edit");
     setEditingBank(bank);
-    setFormData({
-      institution: bank.institution,
-      account_type: (bank.account_type as AccountType) || "checking",
-      currency: bank.currency || "BRL",
-      branch: bank.branch,
-      account_number: bank.account_number,
-      iban: bank.iban || "",
-      initial_balance: decimalToCentsDigits(bank.initial_balance as unknown as string),
-      is_active: bank.is_active,
-    });
     setModalOpen(true);
+    setIsDetailLoading(true);
+
+    // helper to convert "1234.56" -> "123456" for digits state
+    const toDigits = (val: unknown) => {
+      const asString = String(val ?? "0");
+      const clean = asString.replace(/[^\d.]/g, "");
+      const [ints, cents = ""] = clean.split(".");
+      return `${ints || "0"}${(cents + "00").slice(0, 2)}`.replace(/\D/g, "") || "0";
+    };
+
+    try {
+      const res = await (api).getBank(bank.id);
+      const detail = res.data as BankAccount;
+
+      setFormData({
+        institution: detail.institution || "",
+        account_type: (detail.account_type as AccountType) || "checking",
+        currency: detail.currency || "BRL",
+        branch: detail.branch || "",
+        account_number: detail.account_number || "",
+        iban: detail.iban || "",
+        initial_balance: toDigits(detail.initial_balance),
+        is_active: detail.is_active ?? true,
+      });
+    } catch {
+      setFormData({
+        institution: bank.institution || "",
+        account_type: (bank.account_type as AccountType) || "checking",
+        currency: bank.currency || "BRL",
+        branch: bank.branch || "",
+        account_number: bank.account_number || "",
+        iban: bank.iban || "",
+        initial_balance: toDigits(bank.initial_balance),
+        is_active: bank.is_active ?? true,
+      });
+      setSnack({ message: t("settings:bank.toast.detailError", "Falha ao carregar detalhes."), severity: "error" });
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const closeModal = useCallback(() => {
@@ -194,7 +265,7 @@ const BankSettings: React.FC = () => {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  // Mesma UX antiga: formatamos na render; controlamos os dígitos via onKeyDown helper
+  // Keep digits-only state; render with formatCurrency(digits)
   const handleMoneyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     handleUtilitaryAmountKeyDown(e, formData.initial_balance, (newVal: string) =>
       setFormData((p) => ({ ...p, initial_balance: newVal }))
@@ -205,6 +276,7 @@ const BankSettings: React.FC = () => {
     e.preventDefault();
     const initial_balance = digitsToDecimalString(formData.initial_balance);
 
+    setIsSubmitting(true);
     try {
       if (mode === "create") {
         const { data: created } = await api.addBank({
@@ -241,36 +313,31 @@ const BankSettings: React.FC = () => {
           initial_balance,
           is_active: formData.is_active,
         };
-
         setBanks((prev) => prev.map((b) => (b.id === updatedLocal.id ? updatedLocal : b)));
         setAdded((prev) => prev.map((b) => (b.id === updatedLocal.id ? updatedLocal : b)));
       }
 
-      await fetchBanks();
+      await fetchBanks({ background: true });
       closeModal();
-      // opcional: sucesso
-      // setSnack({ message: t("settings:bank.toast.saveOk"), severity: "success" });
+      setSnack({ message: t("settings:bank.toast.saveOk", "Conta bancária salva."), severity: "success" });
     } catch {
       setSnack({ message: t("settings:bank.toast.saveError"), severity: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  /** Abre o ConfirmToast e executa exclusão com UI otimista */
+  /* ----------------------- Delete with ConfirmToast ------------------------ */
   const requestDeleteBank = (bank: BankAccount) => {
     setConfirmText(t("settings:bank.confirm.delete", { name: bank.institution }));
     setConfirmAction(() => async () => {
+      setDeleteTargetId(bank.id);
       try {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.add(bank.id);
-          return next;
-        });
-
+        setDeletedIds((prev) => new Set(prev).add(bank.id)); // optimistic freeze
         await api.deleteBank(bank.id);
-        await fetchBanks();
+        await fetchBanks({ background: true });
         setAdded((prev) => prev.filter((b) => b.id !== bank.id));
-        // opcional: sucesso
-        // setSnack({ message: t("settings:bank.toast.deleteOk"), severity: "success" });
+        setSnack({ message: t("settings:bank.toast.deleteOk", "Conta excluída."), severity: "info" });
       } catch {
         setDeletedIds((prev) => {
           const next = new Set(prev);
@@ -279,6 +346,7 @@ const BankSettings: React.FC = () => {
         });
         setSnack({ message: t("settings:bank.toast.deleteError"), severity: "error" });
       } finally {
+        setDeleteTargetId(null);
         setConfirmOpen(false);
         setConfirmBusy(false);
       }
@@ -295,12 +363,18 @@ const BankSettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  /* ------------------------------- Loading UI ------------------------------ */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
 
   /* --------------------------------- UI ----------------------------------- */
   const accountTypeOptions = ACCOUNT_TYPE_VALUES.map((value) => ({
@@ -310,6 +384,9 @@ const BankSettings: React.FC = () => {
 
   return (
     <>
+      {/* thin progress during background sync or submit */}
+      <TopProgress active={isBackgroundSync || isSubmitting} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -329,7 +406,7 @@ const BankSettings: React.FC = () => {
             </div>
           </header>
 
-          {/* Card principal */}
+          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
@@ -338,7 +415,7 @@ const BankSettings: React.FC = () => {
                     {t("settings:bank.section.list")}
                   </span>
                   {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
+                    <Button onClick={openCreateModal} className="!py-1.5" disabled={busyGlobal}>
                       {t("settings:bank.btn.addBank")}
                     </Button>
                   )}
@@ -346,28 +423,32 @@ const BankSettings: React.FC = () => {
               </div>
 
               <div className="divide-y divide-gray-200">
-                {visibleBanks.map((b) => (
-                  <Row
-                    key={b.id}
-                    bank={b}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={requestDeleteBank}
-                    t={t}
-                  />
-                ))}
-                {visibleBanks.length === 0 && (
+                {visibleBanks.length === 0 ? (
                   <p className="p-4 text-center text-sm text-gray-500">{t("settings:bank.empty")}</p>
+                ) : (
+                  visibleBanks.map((b) => {
+                    const rowBusy = busyGlobal || deleteTargetId === b.id || deletedIds.has(b.id);
+                    return (
+                      <Row
+                        key={b.id}
+                        bank={b}
+                        canEdit={!!isOwner}
+                        onEdit={openEditModal}
+                        onDelete={requestDeleteBank}
+                        t={t}
+                        busy={rowBusy}
+                      />
+                    );
+                  })
                 )}
               </div>
             </div>
           </section>
         </div>
 
-        {/* ------------------------------ Modal -------------------------------- */}
+        {/* Modal (no backdrop-close) */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            {/* Sem onClick no backdrop → não fecha ao clicar fora */}
             <div
               className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg overflow-y-auto max-h-[90vh]"
               role="dialog"
@@ -381,85 +462,97 @@ const BankSettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:bank.modal.close")}
+                  disabled={busyGlobal}
                 >
                   &times;
                 </button>
               </header>
 
-              <form className="space-y-3" onSubmit={submitBank}>
-                <Input
-                  label={t("settings:bank.field.institution")}
-                  name="institution"
-                  value={formData.institution}
-                  onChange={handleChange}
-                  required
-                />
+              {mode === "edit" && isDetailLoading ? (
+                <ModalSkeleton />
+              ) : (
+                <form
+                  className={`space-y-3 ${busyGlobal ? "opacity-70 pointer-events-none" : ""}`}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void submitBank(e);
+                  }}
+                >
+                  <Input
+                    label={t("settings:bank.field.institution")}
+                    name="institution"
+                    value={formData.institution}
+                    onChange={handleChange}
+                    required
+                  />
 
-                <SelectDropdown<{ value: AccountType; label: string }>
-                  label={t("settings:bank.field.accountType")}
-                  items={accountTypeOptions}
-                  selected={accountTypeOptions.filter((a) => a.value === formData.account_type)}
-                  onChange={(items) =>
-                    items[0] &&
-                    setFormData((p) => ({
-                      ...p,
-                      account_type: items[0].value,
-                    }))
-                  }
-                  getItemKey={(item) => item.value}
-                  getItemLabel={(item) => item.label}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel={t("settings:bank.btn.selectAccountType")}
-                />
-
-                <Input label={t("settings:bank.field.branch")} name="branch" value={formData.branch} onChange={handleChange} />
-                <Input
-                  label={t("settings:bank.field.accountNumber")}
-                  name="account_number"
-                  value={formData.account_number}
-                  onChange={handleChange}
-                />
-                <Input label={t("settings:bank.field.iban")} name="iban" value={formData.iban} onChange={handleChange} />
-
-                <Input
-                  label={t("settings:bank.field.initialBalance")}
-                  name="initial_balance"
-                  type="text"
-                  placeholder="0,00"
-                  value={formatCurrency(formData.initial_balance)}
-                  onChange={(e) => setFormData((p) => ({ ...p, initial_balance: e.target.value }))}
-                  onKeyDown={handleMoneyKeyDown}
-                />
-
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={formData.is_active}
-                    onChange={(e) =>
+                  <SelectDropdown<{ value: AccountType; label: string }>
+                    label={t("settings:bank.field.accountType")}
+                    items={accountTypeOptions}
+                    selected={accountTypeOptions.filter((a) => a.value === formData.account_type)}
+                    onChange={(items) =>
+                      items[0] &&
                       setFormData((p) => ({
                         ...p,
-                        is_active: e.target.checked,
+                        account_type: items[0].value,
                       }))
                     }
-                    size="sm"
-                    colorClass="defaultColor"
+                    getItemKey={(item) => item.value}
+                    getItemLabel={(item) => item.label}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel={t("settings:bank.btn.selectAccountType")}
                   />
-                  <span className="text-[12px] text-gray-700">{t("settings:bank.field.isActive")}</span>
-                </div>
 
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    {t("settings:bank.btn.cancel")}
-                  </Button>
-                  <Button type="submit">{t("settings:bank.btn.save")}</Button>
-                </div>
-              </form>
+                  <Input label={t("settings:bank.field.branch")} name="branch" value={formData.branch} onChange={handleChange} />
+                  <Input
+                    label={t("settings:bank.field.accountNumber")}
+                    name="account_number"
+                    value={formData.account_number}
+                    onChange={handleChange}
+                  />
+                  <Input label={t("settings:bank.field.iban")} name="iban" value={formData.iban} onChange={handleChange} />
+
+                  {/* Money input: internal state is digits; render formatted; block text selection edits via onKeyDown */}
+                  <Input
+                    label={t("settings:bank.field.initialBalance")}
+                    name="initial_balance"
+                    type="text"
+                    placeholder="0,00"
+                    value={formatCurrency(formData.initial_balance)}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "");
+                      setFormData((p) => ({ ...p, initial_balance: digits || "0" }));
+                    }}
+                    onKeyDown={handleMoneyKeyDown}
+                  />
+
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={formData.is_active}
+                      onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
+                      size="sm"
+                      colorClass="defaultColor"
+                    />
+                    <span className="text-[12px] text-gray-700">{t("settings:bank.field.isActive")}</span>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button variant="cancel" type="button" onClick={closeModal} disabled={busyGlobal}>
+                      {t("settings:bank.btn.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={busyGlobal}>
+                      {isSubmitting ? t("settings:bank.btn.saving", "Saving…") : t("settings:bank.btn.save")}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
       </main>
 
-      {/* -------------------------- Confirm Toast ---------------------------- */}
+      {/* Confirm Toast */}
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
@@ -483,7 +576,7 @@ const BankSettings: React.FC = () => {
         busy={confirmBusy}
       />
 
-      {/* ----------------------------- Snackbar ------------------------------ */}
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

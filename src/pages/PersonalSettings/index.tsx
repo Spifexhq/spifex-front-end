@@ -1,9 +1,11 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/PersonalSettings.tsx
- * Navbar fixa + SidebarSettings (sem tabs)
- * Respeita alturas: Navbar (h-16) => pt-16 no conteúdo
- * Borda leve (gray-200), sem overflow horizontal
- * Select de fuso horário somente dentro do modal
+ * Standards aligned with Settings pages:
+ * - Flags: isInitialLoading, isSubmitting
+ * - Loading UI: PageSkeleton on first load; TopProgress for background/submit
+ * - Navbar fixed (page padding pt-16 handled by outer layout)
+ * - Light borders, compact labels; no horizontal overflow
+ * - Timezone select only inside the modal
  * -------------------------------------------------------------------------- */
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -14,7 +16,9 @@ import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import Checkbox from "src/components/ui/Checkbox";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import { SuspenseLoader } from "@/components/Loaders";
+
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -73,13 +77,16 @@ const PersonalSettings: React.FC = () => {
   const { isOwner, organization: orgCtx } = useAuthContext();
   const orgExternalId = orgCtx?.organization?.external_id ?? null;
 
+  /* ------------------------------ Flags ------------------------------ */
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* ------------------------------ State ------------------------------ */
   const [profile, setProfile] = useState<PersonalSettingsModel | null>(null);
   const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditableUserField | null>(null);
-
   const [snack, setSnack] = useState<Snack>(null);
 
   // Timezone (apenas no modal)
@@ -117,7 +124,7 @@ const PersonalSettings: React.FC = () => {
         console.error("Erro ao buscar dados pessoais", err);
         setSnack({ message: t("settings:personal.toast.loadError"), severity: "error" });
       } finally {
-        setLoading(false);
+        setIsInitialLoading(false);
       }
     })();
   }, [deviceTz, orgExternalId, isOwner, t]);
@@ -153,6 +160,7 @@ const PersonalSettings: React.FC = () => {
       ? { [editingField]: (formData)[editingField] }
       : formData;
 
+    setIsSubmitting(true);
     try {
       const { data } = await api.editPersonalSettings(payload);
       setProfile(data);
@@ -161,6 +169,8 @@ const PersonalSettings: React.FC = () => {
     } catch (err) {
       console.error(t("settings:personal.toast.updateError"), err);
       setSnack({ message: t("settings:personal.toast.updateError"), severity: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -180,11 +190,22 @@ const PersonalSettings: React.FC = () => {
     return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  /* -------------------------------- Render ------------------------------- */
-  if (loading) return <SuspenseLoader />;
+  /* ------------------------------ Loading UI ------------------------------ */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
 
+  /* -------------------------------- Render ------------------------------- */
   return (
     <>
+      {/* thin progress during submit (background action) */}
+      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -241,7 +262,12 @@ const PersonalSettings: React.FC = () => {
                     label={t("settings:personal.field.fullName")}
                     value={profile?.name ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("name")}>
+                      <Button
+                        variant="outline"
+                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                        onClick={() => openModal("name")}
+                        disabled={isSubmitting}
+                      >
                         {t("settings:personal.btn.updateName")}
                       </Button>
                     }
@@ -250,7 +276,12 @@ const PersonalSettings: React.FC = () => {
                     label={t("settings:personal.field.primaryEmail")}
                     value={profile?.email ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("email")}>
+                      <Button
+                        variant="outline"
+                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                        onClick={() => openModal("email")}
+                        disabled={isSubmitting}
+                      >
                         {t("settings:personal.btn.updateEmail")}
                       </Button>
                     }
@@ -259,7 +290,12 @@ const PersonalSettings: React.FC = () => {
                     label={t("settings:personal.field.phone")}
                     value={profile?.phone ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("phone")}>
+                      <Button
+                        variant="outline"
+                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                        onClick={() => openModal("phone")}
+                        disabled={isSubmitting}
+                      >
                         {t("settings:personal.btn.updatePhone")}
                       </Button>
                     }
@@ -268,7 +304,12 @@ const PersonalSettings: React.FC = () => {
                     label={t("settings:personal.field.jobTitle")}
                     value={profile?.job_title ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("job_title")}>
+                      <Button
+                        variant="outline"
+                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                        onClick={() => openModal("job_title")}
+                        disabled={isSubmitting}
+                      >
                         {t("settings:personal.btn.updateJobTitle")}
                       </Button>
                     }
@@ -277,7 +318,12 @@ const PersonalSettings: React.FC = () => {
                     label={t("settings:personal.field.department")}
                     value={profile?.department ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("department")}>
+                      <Button
+                        variant="outline"
+                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                        onClick={() => openModal("department")}
+                        disabled={isSubmitting}
+                      >
                         {t("settings:personal.btn.updateDepartment")}
                       </Button>
                     }
@@ -286,7 +332,12 @@ const PersonalSettings: React.FC = () => {
                     label={t("settings:personal.field.country")}
                     value={profile?.country ?? ""}
                     action={
-                      <Button variant="outline" className="!border-gray-200 !text-gray-700 hover:!bg-gray-50" onClick={() => openModal("country")}>
+                      <Button
+                        variant="outline"
+                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                        onClick={() => openModal("country")}
+                        disabled={isSubmitting}
+                      >
                         {t("settings:personal.btn.updateCountry")}
                       </Button>
                     }
@@ -318,6 +369,7 @@ const PersonalSettings: React.FC = () => {
                       variant="outline"
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={() => openModal("timezone")}
+                      disabled={isSubmitting}
                     >
                       {t("settings:personal.btn.update")}
                     </Button>
@@ -341,6 +393,7 @@ const PersonalSettings: React.FC = () => {
                       variant="outline"
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={handleSecurityNavigation}
+                      disabled={isSubmitting}
                     >
                       {t("settings:personal.btn.manageSecurity")}
                     </Button>
@@ -357,6 +410,8 @@ const PersonalSettings: React.FC = () => {
             <div
               onClick={(e) => e.stopPropagation()}
               className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
@@ -366,13 +421,14 @@ const PersonalSettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:personal.modal.close")}
+                  disabled={isSubmitting}
                 >
                   &times;
                 </button>
               </header>
 
               <form
-                className="space-y-3"
+                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSubmit();
@@ -445,10 +501,12 @@ const PersonalSettings: React.FC = () => {
                 )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
+                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                     {t("settings:personal.btn.cancel")}
                   </Button>
-                  <Button type="submit">{t("settings:personal.btn.save")}</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? t("settings:personal.btn.saving", "Saving…") : t("settings:personal.btn.save")}
+                  </Button>
                 </div>
               </form>
             </div>
@@ -456,7 +514,7 @@ const PersonalSettings: React.FC = () => {
         )}
       </main>
 
-      {/* Typed Snackbar (no Alert) */}
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

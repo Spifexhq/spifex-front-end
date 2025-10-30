@@ -1,20 +1,20 @@
 /* -----------------------------------------------------------------------------
  * File: src/pages/Statements.tsx
  * Style: Minimalist / compact; no heavy shadows; light borders.
- * UX: Drag & drop, multi-upload with per-file progress, associate to Bank,
+ * UX: Drag & drop, multi-upload w/ per-file progress, associate to Bank,
  *     auto-refresh list, optimistic rows, keyboard shortcuts.
  * i18n: group "statements" inside namespace "settings"
+ * Standards aligned with Employee/Entity/Department pages:
+ *  - Flags: isInitialLoading, isBackgroundSync, isSubmitting, deleteTargetId, confirmBusy
+ *  - ConfirmToast for delete
+ *  - INFLIGHT_FETCH guard for list fetch
+ *  - TopProgress + PageSkeleton on initial; TopProgress on background sync
  * -------------------------------------------------------------------------- */
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
@@ -75,14 +75,21 @@ const toStatus = (v?: string): "" | StatementStatus =>
     ? (v as StatementStatus)
     : "";
 
+/* ----------------------- In-memory guard for fetches ---------------------- */
+let INFLIGHT_FETCH = false;
+
 /* --------------------------------- Page ----------------------------------- */
 const Statements: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
   useEffect(() => { document.title = t("settings:statements.title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
+  /* ------------------------------ Flags/State ------------------------------ */
   const [snack, setSnack] = useState<Snack>(null);
-  const [loading, setLoading] = useState(true);
+
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // batch uploads trigger this
 
   // banks for selector
   const [banks, setBanks] = useState<BankAccount[]>([]);
@@ -108,7 +115,10 @@ const Statements: React.FC = () => {
   // confirm delete
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmBusy, setConfirmBusy] = useState(false);
-  const deleteIdRef = useRef<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // keyboard
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* ------------------------------ Fetching -------------------------------- */
   const refreshBanks = useCallback(async () => {
@@ -120,23 +130,37 @@ const Statements: React.FC = () => {
     }
   }, [t]);
 
-  const refreshStatements = useCallback(async () => {
-    try {
-      const { data } = await api.getStatements({
-        q: q || undefined,
-        status: statusFilter || undefined,
-        bank: bankFilter || undefined,
-      });
-      setStatements(data?.results ?? []);
-    } catch {
-      setSnack({ message: t("settings:statements.toast.listFetchError"), severity: "error" });
-    } finally {
-      setLoading(false);
-    }
-  }, [q, statusFilter, bankFilter, t]);
+  const refreshStatements = useCallback(
+    async (opts: { background?: boolean } = {}) => {
+      if (INFLIGHT_FETCH) return;
+      INFLIGHT_FETCH = true;
+
+      const setLoading = (v: boolean) => {
+        if (opts.background) setIsBackgroundSync(v);
+        else setIsInitialLoading(v);
+      };
+
+      setLoading(true);
+      try {
+        const { data } = await api.getStatements({
+          q: q || undefined,
+          status: statusFilter || undefined,
+          bank: bankFilter || undefined,
+        });
+        setStatements(data?.results ?? []);
+      } catch {
+        setSnack({ message: t("settings:statements.toast.listFetchError"), severity: "error" });
+      } finally {
+        setLoading(false);
+        setLoading(false); // ensure both flags off on exit path
+        INFLIGHT_FETCH = false;
+      }
+    },
+    [q, statusFilter, bankFilter, t]
+  );
 
   useEffect(() => {
-    setLoading(true);
+    // initial bootstrap
     Promise.all([refreshBanks(), refreshStatements()]).finally(() => {});
   }, [refreshBanks, refreshStatements]);
 
@@ -148,14 +172,10 @@ const Statements: React.FC = () => {
         setSnack({ message: t("settings:statements.toast.nonPdfIgnored", { name: file.name }), severity: "warning" });
         return;
       }
-      const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random()
-        .toString(36)
-        .slice(2, 8)}`;
+      const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random().toString(36).slice(2, 8)}`;
       rows.push({ id, file, progress: 0, bankAccount: null });
     });
-    if (rows.length) {
-      setQueue((prev) => [...rows, ...prev]);
-    }
+    if (rows.length) setQueue((prev) => [...rows, ...prev]);
   };
 
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,77 +188,65 @@ const Statements: React.FC = () => {
     if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
     dndRef.current?.classList.remove("ring-2", "ring-gray-300");
   };
-
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dndRef.current?.classList.add("ring-2", "ring-gray-300");
   };
-  const onDragLeave = () =>
-    dndRef.current?.classList.remove("ring-2", "ring-gray-300");
+  const onDragLeave = () => dndRef.current?.classList.remove("ring-2", "ring-gray-300");
 
-  const removeFromQueue = (id: string) =>
-    setQueue((prev) => prev.filter((r) => r.id !== id));
+  const removeFromQueue = (id: string) => setQueue((prev) => prev.filter((r) => r.id !== id));
 
   const uploadOne = async (row: UploadRow) => {
     try {
       const form = new FormData();
       form.append("file", row.file);
-      if (row.bankAccount?.value)
-        form.append("bank_account_id", row.bankAccount.value);
+      if (row.bankAccount?.value) form.append("bank_account_id", row.bankAccount.value);
 
+      setIsSubmitting(true);
       await api.uploadStatement(form, (p) => {
-        setQueue((prev) =>
-          prev.map((r) => (r.id === row.id ? { ...r, progress: p } : r))
-        );
+        setQueue((prev) => prev.map((r) => (r.id === row.id ? { ...r, progress: p } : r)));
       });
 
-      // optimistic remove from queue and refresh list
+      // optimistic remove from queue and refresh list (background)
       removeFromQueue(row.id);
-      await refreshStatements();
+      await refreshStatements({ background: true });
       setSnack({ message: t("settings:statements.toast.uploadOk"), severity: "success" });
     } catch (err: unknown) {
       let msg = t("settings:statements.toast.uploadFail");
       if (err && typeof err === "object") {
-        const maybe = err as {
-          response?: { data?: { detail?: string } };
-          message?: string;
-        };
+        const maybe = err as { response?: { data?: { detail?: string } }; message?: string };
         msg = maybe.response?.data?.detail ?? maybe.message ?? msg;
       }
-      setQueue((prev) =>
-        prev.map((r) => (r.id === row.id ? { ...r, error: msg } : r))
-      );
+      setQueue((prev) => prev.map((r) => (r.id === row.id ? { ...r, error: msg } : r)));
       setSnack({ message: msg, severity: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const uploadAll = async () => {
-    for (const row of queue) {
-      if (!row.error) {
-        await uploadOne(row);
-      }
-    }
+    // sequential to keep progress bars accurate without race conditions
+    for (const row of queue) if (!row.error) await uploadOne(row);
   };
 
   /* ----------------------------- Actions list ------------------------------ */
   const requestDelete = (id: string) => {
-    deleteIdRef.current = id;
+    setDeleteTargetId(id);
     setConfirmOpen(true);
   };
 
   const doDelete = async () => {
-    const id = deleteIdRef.current;
-    if (!id) return;
+    if (!deleteTargetId) return;
     try {
-      await api.deleteStatement(id);
-      await refreshStatements();
+      await api.deleteStatement(deleteTargetId);
+      await refreshStatements({ background: true });
       setSnack({ message: t("settings:statements.toast.deleteOk"), severity: "success" });
     } catch {
       setSnack({ message: t("settings:statements.toast.deleteFail"), severity: "error" });
     } finally {
       setConfirmBusy(false);
       setConfirmOpen(false);
-      deleteIdRef.current = null;
+      setDeleteTargetId(null);
     }
   };
 
@@ -246,14 +254,13 @@ const Statements: React.FC = () => {
     try {
       await api.triggerStatementAnalysis(id);
       setSnack({ message: t("settings:statements.toast.analysisStarted"), severity: "info" });
-      await refreshStatements();
+      await refreshStatements({ background: true });
     } catch {
       setSnack({ message: t("settings:statements.toast.analysisFail"), severity: "error" });
     }
   };
 
   // Keyboard: ⌘/Ctrl+U focuses hidden file input; ⌘/Ctrl+F focuses search
-  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const isMeta = e.ctrlKey || e.metaKey;
@@ -271,8 +278,24 @@ const Statements: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  /* --------------------------------- UI ----------------------------------- */
-  if (loading) return <SuspenseLoader />;
+  /* ------------------------------ Loading UI ------------------------------- */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("settings:statements.badge.syncing", "Syncing…")}
+    </span>
+  ) : null;
 
   const statusOptions = [
     { label: t("settings:statements.statuses.uploaded"), value: "uploaded" },
@@ -281,8 +304,14 @@ const Statements: React.FC = () => {
     { label: t("settings:statements.statuses.failed"), value: "failed" }
   ];
 
+  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy;
+
+  /* --------------------------------- UI ----------------------------------- */
   return (
     <>
+      {/* thin progress during background sync */}
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -291,19 +320,23 @@ const Statements: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 EX
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:statements.header.settings")}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:statements.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:statements.header.title")}
+                  </h1>
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:statements.header.title")}
-                </h1>
+                {headerBadge}
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <Button
                   onClick={() => fileInputRef.current?.click()}
                   className="!py-1.5"
                   aria-label={t("settings:statements.aria.uploadTrigger")}
+                  disabled={globalBusy}
                 >
                   {t("settings:statements.btn.upload")}
                 </Button>
@@ -327,6 +360,7 @@ const Statements: React.FC = () => {
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               className="bg-white border border-dashed border-gray-300 rounded-lg p-6 text-center"
+              aria-busy={globalBusy || undefined}
             >
               <p className="text-[13px] text-gray-700">
                 {t("settings:statements.dnd.text")}{" "}
@@ -352,17 +386,19 @@ const Statements: React.FC = () => {
                     {t("settings:statements.queue.title", { count: queue.length })}
                   </span>
                   <div className="flex gap-2">
-                    <Button variant="cancel" onClick={() => setQueue([])}>
+                    <Button variant="cancel" onClick={() => setQueue([])} disabled={globalBusy}>
                       {t("settings:statements.btn.clearQueue")}
                     </Button>
-                    <Button onClick={uploadAll}>{t("settings:statements.btn.sendAll")}</Button>
+                    <Button onClick={uploadAll} disabled={globalBusy}>
+                      {t("settings:statements.btn.sendAll")}
+                    </Button>
                   </div>
                 </div>
                 <ul className="divide-y divide-gray-200">
                   {queue.map((row) => (
                     <li
                       key={row.id}
-                      className="px-4 py-3 flex items-center gap-3"
+                      className={`px-4 py-3 flex items-center gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-gray-900 truncate">
@@ -371,7 +407,7 @@ const Statements: React.FC = () => {
                         <p className="text-[12px] text-gray-600">
                           {formatBytes(row.file.size)}
                         </p>
-                        <div className="mt-2 h-2 bg-gray-100 rounded">
+                        <div className="mt-2 h-2 bg-gray-100 rounded" aria-label={t("settings:statements.aria.progress")}>
                           <div
                             className="h-2 bg-gray-300 rounded"
                             style={{ width: `${row.progress}%` }}
@@ -415,12 +451,14 @@ const Statements: React.FC = () => {
                           variant="outline"
                           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                           onClick={() => uploadOne(row)}
+                          disabled={globalBusy}
                         >
                           {t("settings:statements.btn.send")}
                         </Button>
                         <Button
                           variant="cancel"
                           onClick={() => removeFromQueue(row.id)}
+                          disabled={globalBusy}
                         >
                           {t("settings:statements.btn.remove")}
                         </Button>
@@ -442,6 +480,7 @@ const Statements: React.FC = () => {
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={t("settings:statements.filters.placeholder")}
+                  disabled={globalBusy}
                 />
                 <SelectDropdown
                   label={t("settings:statements.filters.status")}
@@ -461,9 +500,7 @@ const Statements: React.FC = () => {
                 <SelectDropdown
                   label={t("settings:statements.filters.bank")}
                   items={bankItems}
-                  selected={
-                    bankFilter ? bankItems.filter((i) => i.value === bankFilter) : []
-                  }
+                  selected={bankFilter ? bankItems.filter((i) => i.value === bankFilter) : []}
                   onChange={(items) => setBankFilter(items?.[0]?.value ?? "")}
                   getItemKey={(i) => i.value}
                   getItemLabel={(i) => i.label}
@@ -472,7 +509,7 @@ const Statements: React.FC = () => {
                   buttonLabel={t("settings:statements.filters.bankPick")}
                 />
                 <div className="flex items-end gap-2">
-                  <Button onClick={refreshStatements} className="!w-full">
+                  <Button onClick={() => refreshStatements({ background: true })} className="!w-full" disabled={globalBusy}>
                     {t("settings:statements.btn.applyFilters")}
                   </Button>
                   <Button
@@ -481,8 +518,9 @@ const Statements: React.FC = () => {
                       setQ("");
                       setStatusFilter("");
                       setBankFilter("");
-                      refreshStatements();
+                      refreshStatements({ background: true });
                     }}
+                    disabled={globalBusy}
                   >
                     {t("settings:statements.btn.clearFilters")}
                   </Button>
@@ -506,63 +544,67 @@ const Statements: React.FC = () => {
                 </p>
               ) : (
                 <ul className="divide-y divide-gray-200">
-                  {statements.map((s) => (
-                    <li key={s.id} className="px-4 py-3 grid grid-cols-12 gap-3">
-                      {/* File info */}
-                      <div className="col-span-6 min-w-0">
-                        <p className="text-[13px] font-medium text-gray-900 truncate">
-                          {s.original_filename}
-                        </p>
-                        <p className="text-[12px] text-gray-600">
-                          {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág ·{" "}
-                          {new Date(s.created_at).toLocaleString()}
-                        </p>
-                      </div>
+                  {statements.map((s) => {
+                    const rowBusy = globalBusy || deleteTargetId === s.id || s.status === "processing";
+                    return (
+                      <li key={s.id} className={`px-4 py-3 grid grid-cols-12 gap-3 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+                        {/* File info */}
+                        <div className="col-span-6 min-w-0">
+                          <p className="text-[13px] font-medium text-gray-900 truncate">
+                            {s.original_filename}
+                          </p>
+                          <p className="text-[12px] text-gray-600">
+                            {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág ·{" "}
+                            {new Date(s.created_at).toLocaleString()}
+                          </p>
+                        </div>
 
-                      {/* Bank */}
-                      <div className="col-span-4">
-                        <p className="text-[12px] text-gray-600">{t("settings:statements.filters.bank")}</p>
-                        <p className="text-[13px] text-gray-900">
-                          {s.bank_account_label ?? "—"}
-                        </p>
-                      </div>
+                        {/* Bank */}
+                        <div className="col-span-4">
+                          <p className="text-[12px] text-gray-600">{t("settings:statements.filters.bank")}</p>
+                          <p className="text-[13px] text-gray-900">
+                            {s.bank_account_label ?? "—"}
+                          </p>
+                        </div>
 
-                      {/* Actions */}
-                      <div className="col-span-2 flex items-center gap-2 justify-end">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}
-                        >
-                          {t(`settings:statements.meta.chip.${s.status}`)}
-                        </span>
+                        {/* Actions */}
+                        <div className="col-span-2 flex items-center gap-2 justify-end">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}
+                          >
+                            {t(`settings:statements.meta.chip.${s.status}`)}
+                          </span>
 
-                        <Button
-                          variant="outline"
-                          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                          onClick={() => api.downloadStatement(s.id)}
-                          title={t("settings:statements.actions.download")}
-                        >
-                          {t("settings:statements.actions.download")}
-                        </Button>
+                          <Button
+                            variant="outline"
+                            className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                            onClick={() => api.downloadStatement(s.id)}
+                            title={t("settings:statements.actions.download")}
+                          >
+                            {t("settings:statements.actions.download")}
+                          </Button>
 
-                        <Button
-                          variant="common"
-                          onClick={() => triggerAnalysis(s.id)}
-                          disabled={s.status === "processing"}
-                          title={t("settings:statements.actions.analyze")}
-                        >
-                          {t("settings:statements.actions.analyze")}
-                        </Button>
+                          <Button
+                            variant="common"
+                            onClick={() => triggerAnalysis(s.id)}
+                            disabled={s.status === "processing" || globalBusy}
+                            title={t("settings:statements.actions.analyze")}
+                          >
+                            {t("settings:statements.actions.analyze")}
+                          </Button>
 
-                        <Button
-                          variant="cancel"
-                          onClick={() => requestDelete(s.id)}
-                          title={t("settings:statements.actions.delete")}
-                        >
-                          {t("settings:statements.actions.delete")}
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
+                          <Button
+                            variant="cancel"
+                            onClick={() => requestDelete(s.id)}
+                            title={t("settings:statements.actions.delete")}
+                            disabled={globalBusy}
+                          >
+                            {t("settings:statements.actions.delete")}
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -579,6 +621,7 @@ const Statements: React.FC = () => {
           onCancel={() => {
             if (confirmBusy) return;
             setConfirmOpen(false);
+            setDeleteTargetId(null);
           }}
           onConfirm={() => {
             if (confirmBusy) return;
@@ -587,6 +630,7 @@ const Statements: React.FC = () => {
               setSnack({ message: t("settings:statements.toast.deleteFail"), severity: "error" });
               setConfirmBusy(false);
               setConfirmOpen(false);
+              setDeleteTargetId(null);
             });
           }}
           busy={confirmBusy}

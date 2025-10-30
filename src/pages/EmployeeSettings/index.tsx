@@ -1,16 +1,28 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/EmployeeSettings.tsx
- * Style: Navbar fixa + SidebarSettings, light borders, compact labels
- * Notes: i18n group "employee" inside the "settings" namespace
+ * Standardized naming & logic (matches EntitySettings)
+ * - Flags: isInitialLoading, isBackgroundSync, isSubmitting, isDetailLoading
+ * - Delete: deleteTargetId (freezes the row), ConfirmToast for confirmation
+ * - Modal: skeleton when loading detail on edit
  * -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  startTransition,
+} from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import ConfirmToast from "src/components/ui/ConfirmToast";
+
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+import Shimmer from "@/components/ui/Loaders/Shimmer";
 
 import { api } from "src/api/requests";
 import { Employee } from "src/models/auth/domain";
@@ -36,15 +48,15 @@ const emptyForm = {
 };
 type FormState = typeof emptyForm;
 
-/* --------------------------------- Helpers -------------------------------- */
-function getInitials() {
-  return "FN";
+/* ---------------------------- In-memory guards --------------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ------------------------------ Helpers (module scope to fix deps) ------- */
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
-
-const isGroupListItem = (v: unknown): v is GroupListItem => {
+function isGroupListItem(v: unknown): v is GroupListItem {
   if (!isRecord(v)) return false;
   const o = v as Record<string, unknown>;
   return (
@@ -56,34 +68,56 @@ const isGroupListItem = (v: unknown): v is GroupListItem => {
     typeof o.permissions_count === "number" &&
     typeof o.members_count === "number"
   );
-};
+}
 
-const isResultsWrapper = (v: unknown): v is { results: unknown[] } =>
-  isRecord(v) && "results" in v && Array.isArray((v as Record<string, unknown>).results);
+function isResultsWrapper(v: unknown): v is { results: unknown[] } {
+  return isRecord(v) && "results" in v && Array.isArray((v as Record<string, unknown>).results);
+}
 
-/** Accepts: GroupListItem[] | {results: GroupListItem[]} */
-const toGroupArray = (payload: GetGroups): GroupListItem[] => {
+function toGroupArray(payload: GetGroups): GroupListItem[] {
   if (Array.isArray(payload) && payload.every(isGroupListItem)) return payload;
   if (isResultsWrapper(payload)) {
     const { results } = payload;
     return results.every(isGroupListItem) ? (results as GroupListItem[]) : [];
   }
   return [];
-};
+}
 
-/* Linha sem bordas próprias; o container usa divide-y */
+/* ------------------------------ Modal skeleton ---------------------------- */
+const ModalSkeleton: React.FC = () => (
+  <div className="py-1 grid grid-cols-2 gap-4">
+    <Shimmer className="h-10 rounded-md" />
+    <Shimmer className="h-10 rounded-md" />
+    <Shimmer className="h-10 rounded-md" />
+    <Shimmer className="h-10 rounded-md" />
+    <div className="col-span-2">
+      <Shimmer className="h-10 rounded-md" />
+    </div>
+    <div className="col-span-2 flex justify-end gap-3 pt-1">
+      <Shimmer className="h-9 w-24 rounded-md" />
+      <Shimmer className="h-9 w-28 rounded-md" />
+    </div>
+  </div>
+);
+
+const getInitials = () => "FN";
+
+/* ----------------------------- UI: Row ----------------------------------- */
+
 const Row = ({
   emp,
   onEdit,
   onDelete,
   canEdit,
   t,
+  busy,
 }: {
   emp: Employee;
   onEdit: (e: Employee) => void;
   onDelete: (e: Employee) => void;
   canEdit: boolean;
-  t: TFunction; // ✅ typed
+  t: TFunction;
+  busy?: boolean;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
     <div className="min-w-0">
@@ -96,10 +130,16 @@ const Row = ({
           variant="outline"
           className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(emp)}
+          disabled={busy}
         >
           {t("settings:employee.btn.edit")}
         </Button>
-        <Button variant="common" onClick={() => onDelete(emp)}>
+        <Button
+          variant="common"
+          onClick={() => onDelete(emp)}
+          disabled={busy}
+          aria-busy={busy || undefined}
+        >
           {t("settings:employee.btn.delete")}
         </Button>
       </div>
@@ -107,62 +147,116 @@ const Row = ({
   </div>
 );
 
+/* ----------------------------- Component --------------------------------- */
+
 const EmployeeSettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
+  const { isOwner } = useAuthContext();
 
   useEffect(() => { document.title = t("settings:employee.title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
-  const { isOwner } = useAuthContext();
-
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [groups, setGroups] = useState<GroupListItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
+  // Standard flags
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isDetailLoading, setIsDetailLoading] = useState<boolean>(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
+  // Modal
   const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
 
-  /* Snackbar */
+  // Toast
   const [snack, setSnack] = useState<Snack>(null);
 
-  /* ----------------------------- API calls -------------------------------- */
-  const fetchData = async () => {
-    try {
-      const [empRes, groupRes] = await Promise.all([api.getEmployees(), api.getAllGroups()]);
-      const onlyMembers = (empRes.data.employees || []).filter((e: Employee) => e.role === "member");
-      setEmployees(onlyMembers.sort((a: Employee, b: Employee) => a.id - b.id));
+  // ConfirmToast (same as EntitySettings)
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-      const groupList = toGroupArray(groupRes.data as GetGroups);
-      setGroups([...groupList].sort((a, b) => a.id - b.id));
-    } catch (err) {
-      console.error("Erro ao buscar funcionários/grupos", err);
-      setSnack({ message: t("settings:employee.toast.fetchError"), severity: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Guards
+  const fetchSeqRef = useRef(0);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  /* ----------------------------- Fetchers --------------------------------- */
+
+  const normalizeAndSet = useCallback((empRes: Employee[], grpRes: GroupListItem[]) => {
+    const onlyMembers = empRes.filter((e) => e.role === "member");
+    const normEmployees = [...onlyMembers].sort((a, b) => a.id - b.id);
+    const normGroups = [...grpRes].sort((a, b) => a.id - b.id);
+
+    startTransition(() => {
+      setEmployees(normEmployees);
+      setGroups(normGroups);
+    });
+  }, []);
+
+  const fetchList = useCallback(
+    async (opts: { background?: boolean } = {}) => {
+      if (INFLIGHT_FETCH) return;
+      INFLIGHT_FETCH = true;
+      const seq = ++fetchSeqRef.current;
+
+      if (opts.background) setIsBackgroundSync(true);
+      else setIsInitialLoading(true);
+
+      try {
+        const [empResp, grpResp] = await Promise.all([api.getEmployees(), api.getAllGroups()]);
+        if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+        normalizeAndSet(empResp.data.employees || [], toGroupArray(grpResp.data as GetGroups));
+      } catch (err: unknown) {
+        if (mountedRef.current) {
+          console.error("Fetch employees/groups failed", err);
+          setSnack({ message: t("settings:employee.toast.fetchError"), severity: "error" });
+        }
+      } finally {
+        if (mountedRef.current) {
+          if (opts.background) setIsBackgroundSync(false);
+          else setIsInitialLoading(false);
+        }
+        INFLIGHT_FETCH = false;
+      }
+    },
+    [normalizeAndSet, t]
+  );
 
   useEffect(() => {
-    fetchData();
+    fetchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ------------------------------ Handlers -------------------------------- */
+
   const openCreateModal = () => {
-    setMode("create");
+    setModalMode("create");
     setEditingEmployee(null);
     setFormData(emptyForm);
     setModalOpen(true);
   };
 
   const openEditModal = async (employee: Employee) => {
-    setMode("edit");
+    setModalMode("edit");
     setEditingEmployee(employee);
+    setFormData(emptyForm);
+    setModalOpen(true);
+    setIsDetailLoading(true);
+
     try {
       const res = await api.getEmployee(employee.id);
       const detail = res.data.employee;
+
       setFormData({
         name: detail.name,
         email: detail.email,
@@ -170,16 +264,20 @@ const EmployeeSettings: React.FC = () => {
         confirmPassword: "",
         groups: (detail.groups as GroupListItem[]) || [],
       });
-      setModalOpen(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       setSnack({ message: t("settings:employee.toast.loadEmployeeError"), severity: "error" });
+      setModalOpen(false);
+      setEditingEmployee(null);
+    } finally {
+      setIsDetailLoading(false);
     }
   };
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingEmployee(null);
+    setFormData(emptyForm);
   }, []);
 
   const handleChange = (
@@ -192,20 +290,24 @@ const EmployeeSettings: React.FC = () => {
   const submitEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (mode === "create") {
+    if (modalMode === "create") {
       if (formData.password !== formData.confirmPassword) {
         setSnack({ message: t("settings:employee.toast.passwordMismatch"), severity: "warning" });
         return;
       }
       const { isValid, message } = validatePassword(formData.password);
       if (!isValid) {
-        setSnack({ message: message || t("settings:employee.toast.weakPassword"), severity: "warning" });
+        setSnack({
+          message: message || t("settings:employee.toast.weakPassword"),
+          severity: "warning",
+        });
         return;
       }
     }
 
+    setIsSubmitting(true);
     try {
-      if (mode === "create") {
+      if (modalMode === "create") {
         await api.addEmployee({
           name: formData.name,
           email: formData.email,
@@ -219,52 +321,82 @@ const EmployeeSettings: React.FC = () => {
           group_external_ids: formData.groups.map((g) => g.external_id),
         });
       }
-      await fetchData();
+
+      await fetchList();
       closeModal();
       setSnack({
         message: t("settings:employee.toast.saveOk", "Colaborador salvo com sucesso."),
         severity: "success",
       });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       setSnack({ message: t("settings:employee.toast.saveError"), severity: "error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const deleteEmployee = async (emp: Employee) => {
-    if (!window.confirm(t("settings:employee.confirm.delete", { name: emp.name }))) return;
-    try {
-      await api.deleteEmployee(emp.id);
-      await fetchData();
-      setSnack({
-        message: t("settings:employee.toast.deleteOk", "Colaborador removido."),
-        severity: "info",
-      });
-    } catch (err) {
-      console.error(err);
-      setSnack({ message: t("settings:employee.toast.deleteError"), severity: "error" });
-    }
+  /* ---------- ConfirmToast delete (same as EntitySettings) ----------------- */
+  const requestDeleteEmployee = (emp: Employee) => {
+    setConfirmText(t("settings:employee.confirm.delete", { name: emp.name }));
+    setConfirmAction(() => async () => {
+      setDeleteTargetId(emp.id);
+      try {
+        await api.deleteEmployee(emp.id);
+        await fetchList({ background: true });
+        setSnack({
+          message: t("settings:employee.toast.deleteOk", "Colaborador removido."),
+          severity: "info",
+        });
+      } catch (err: unknown) {
+        console.error(err);
+        setSnack({ message: t("settings:employee.toast.deleteError"), severity: "error" });
+      } finally {
+        setDeleteTargetId(null);
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   /* ------------------------------ Esc / Scroll ---------------------------- */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
+    const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [modalOpen, closeModal]);
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  /* ------------------------------ Render ---------------------------------- */
 
-  /* ------------------------------ UI -------------------------------------- */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const canEdit = !!isOwner;
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("settings:employee.badge.syncing", "Syncing…")}
+    </span>
+  ) : null;
+
   return (
     <>
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -273,18 +405,21 @@ const EmployeeSettings: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials()}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:employee.header.settings")}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:employee.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:employee.header.employees")}
+                  </h1>
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:employee.header.employees")}
-                </h1>
+                {headerBadge}
               </div>
             </div>
           </header>
 
-          {/* Card principal */}
+          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
@@ -292,8 +427,12 @@ const EmployeeSettings: React.FC = () => {
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
                     {t("settings:employee.section.list")}
                   </span>
-                  {isOwner && (
-                    <Button onClick={openCreateModal} className="!py-1.5">
+                  {canEdit && (
+                    <Button
+                      onClick={openCreateModal}
+                      className="!py-1.5"
+                      disabled={isSubmitting || isBackgroundSync || confirmBusy}
+                    >
                       {t("settings:employee.btn.addEmployee")}
                     </Button>
                   )}
@@ -301,17 +440,28 @@ const EmployeeSettings: React.FC = () => {
               </div>
 
               <div className="divide-y divide-gray-200">
-                {employees.map((e) => (
-                  <Row
-                    key={e.id}
-                    emp={e}
-                    canEdit={!!isOwner}
-                    onEdit={openEditModal}
-                    onDelete={deleteEmployee}
-                    t={t}
-                  />
-                ))}
-                {employees.length === 0 && (
+                {employees.map((e) => {
+                  const rowBusy =
+                    isSubmitting ||
+                    isDetailLoading ||
+                    isBackgroundSync ||
+                    confirmBusy ||
+                    deleteTargetId === e.id;
+
+                  return (
+                    <Row
+                      key={e.id}
+                      emp={e}
+                      canEdit={canEdit}
+                      onEdit={openEditModal}
+                      onDelete={requestDeleteEmployee}
+                      t={t}
+                      busy={rowBusy}
+                    />
+                  );
+                })}
+
+                {employees.length === 0 && !isBackgroundSync && (
                   <p className="p-4 text-center text-sm text-gray-500">
                     {t("settings:employee.empty")}
                   </p>
@@ -321,7 +471,7 @@ const EmployeeSettings: React.FC = () => {
           </section>
         </div>
 
-        {/* ------------------------------ Modal -------------------------------- */}
+        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             <div
@@ -331,7 +481,7 @@ const EmployeeSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create"
+                  {modalMode === "create"
                     ? t("settings:employee.modal.createTitle")
                     : t("settings:employee.modal.editTitle")}
                 </h3>
@@ -339,78 +489,121 @@ const EmployeeSettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:employee.modal.close")}
+                  disabled={isSubmitting || isDetailLoading}
                 >
                   &times;
                 </button>
               </header>
 
-              <form className="grid grid-cols-2 gap-4" onSubmit={submitEmployee}>
-                <Input
-                  label={t("settings:employee.field.name")}
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  label={t("settings:employee.field.email")}
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-
-                {mode === "create" && (
-                  <>
-                    <Input
-                      label={t("settings:employee.field.tempPassword")}
-                      name="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      showTogglePassword
-                      required
-                    />
-                    <Input
-                      label={t("settings:employee.field.confirmPassword")}
-                      name="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      showTogglePassword
-                      required
-                    />
-                  </>
-                )}
-
-                <div className="col-span-2">
-                  <SelectDropdown<GroupListItem>
-                    label={t("settings:employee.field.groups")}
-                    items={groups}
-                    selected={formData.groups}
-                    onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
-                    getItemKey={(g) => g.external_id}
-                    getItemLabel={(g) => g.name}
-                    buttonLabel={t("settings:employee.btnLabel.groups")}
-                    hideCheckboxes={false}
-                    clearOnClickOutside={false}
+              {modalMode === "edit" && isDetailLoading ? (
+                <ModalSkeleton />
+              ) : (
+                <form className="grid grid-cols-2 gap-4" onSubmit={submitEmployee}>
+                  <Input
+                    label={t("settings:employee.field.name")}
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting || isDetailLoading}
                   />
-                </div>
+                  <Input
+                    label={t("settings:employee.field.email")}
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting || isDetailLoading}
+                  />
 
-                <div className="col-span-2 flex justify-end gap-3 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    {t("settings:employee.btn.cancel")}
-                  </Button>
-                  <Button type="submit">{t("settings:employee.btn.save")}</Button>
-                </div>
-              </form>
+                  {modalMode === "create" && (
+                    <>
+                      <Input
+                        label={t("settings:employee.field.tempPassword")}
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        showTogglePassword
+                        required
+                        disabled={isSubmitting}
+                      />
+                      <Input
+                        label={t("settings:employee.field.confirmPassword")}
+                        name="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        showTogglePassword
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </>
+                  )}
+
+                  <div className="col-span-2">
+                    <div className={(isSubmitting || isDetailLoading) ? "pointer-events-none opacity-70" : ""}>
+                      <SelectDropdown<GroupListItem>
+                        label={t("settings:employee.field.groups")}
+                        items={groups}
+                        selected={formData.groups}
+                        onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
+                        getItemKey={(g) => g.external_id}
+                        getItemLabel={(g) => g.name}
+                        buttonLabel={t("settings:employee.btnLabel.groups")}
+                        hideCheckboxes={false}
+                        clearOnClickOutside={false}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-span-2 flex justify-end gap-3 pt-1">
+                    <Button
+                      variant="cancel"
+                      type="button"
+                      onClick={closeModal}
+                      disabled={isSubmitting || isDetailLoading}
+                    >
+                      {t("settings:employee.btn.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting || isDetailLoading}>
+                      {isSubmitting
+                        ? t("settings:employee.btn.saving", "Saving…")
+                        : t("settings:employee.btn.save")}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
       </main>
 
-      {/* ----------------------------- Snackbar ------------------------------ */}
+      {/* ConfirmToast */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel={t("settings:employee.btn.confirmDelete", "Excluir")}
+        cancelLabel={t("settings:employee.btn.cancel", "Cancelar")}
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction()
+            .catch(() => {
+              setSnack({ message: t("settings:employee.errors.confirmFailed", "Falha ao confirmar."), severity: "error" });
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
+
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

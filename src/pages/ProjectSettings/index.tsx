@@ -1,21 +1,26 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/ProjectSettings.tsx
+ * Standardized flags + UX (matches Employee/Entity/Groups/Department/Inventory)
  * Pagination: cursor + arrow-only, click-to-search via "Buscar"
- * Dinâmica: overlay local p/ add/delete + refresh do pager
+ * Dinâmica: overlay local p/ add/delete + refresh do pager (ConfirmToast on delete)
+ * Guard: INFLIGHT_FETCH for pager fetcher
  * i18n: group "project" inside the "settings" namespace
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
+import ConfirmToast from "src/components/ui/ConfirmToast";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
 import type { Project } from "src/models/enterprise_structure/domain/Project";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
@@ -27,6 +32,27 @@ import type { TFunction } from "i18next";
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
+
+/* ----------------------- In-memory guard for fetches ---------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ------------------------------ Modal skeleton ---------------------------- */
+const ModalSkeleton: React.FC = () => (
+  <div className="space-y-3 py-1">
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="flex items-center gap-2 pt-2">
+      <div className="h-5 w-5 rounded bg-gray-100 animate-pulse" />
+      <div className="h-3 w-24 rounded bg-gray-100 animate-pulse" />
+    </div>
+    <div className="flex justify-end gap-2 pt-1">
+      <div className="h-9 w-24 rounded-md bg-gray-100 animate-pulse" />
+      <div className="h-9 w-28 rounded-md bg-gray-100 animate-pulse" />
+    </div>
+  </div>
+);
 
 /* ------------------------- Tipos / constantes ----------------------------- */
 const PROJECT_TYPES = [
@@ -43,7 +69,6 @@ const PROJECT_TYPES = [
 
 type ProjectType = (typeof PROJECT_TYPES)[number]["value"];
 type TypeOption = { label: string; value: ProjectType };
-
 const TYPE_OPTIONS: TypeOption[] = PROJECT_TYPES as unknown as TypeOption[];
 
 function isProjectType(v: unknown): v is ProjectType {
@@ -63,7 +88,7 @@ const emptyForm = {
 };
 type FormState = typeof emptyForm;
 
-/* (opcional) sort estável, igual ao que você já usava */
+/* sort estável por código, depois nome */
 function sortByCodeThenName(a: Project, b: Project) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
@@ -78,19 +103,21 @@ const Row = ({
   onDelete,
   canEdit,
   t,
+  busy,
 }: {
   project: Project;
   onEdit: (p: Project) => void;
   onDelete: (p: Project) => void;
   canEdit: boolean;
   t: TFunction;
+  busy?: boolean;
 }) => {
   const typeLabel = isProjectType(project.type)
-    ? TYPE_OPTIONS.find((t) => t.value === project.type)?.label ?? "—"
+    ? TYPE_OPTIONS.find((tt) => tt.value === project.type)?.label ?? "—"
     : (project.type as string | undefined) ?? "—";
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+    <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
       <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-wide text-gray-600">
           {t("settings:project.row.codePrefix")} {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
@@ -110,10 +137,11 @@ const Row = ({
               variant="outline"
               className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
               onClick={() => onEdit(project)}
+              disabled={busy}
             >
               {t("settings:project.btn.edit")}
             </Button>
-            <Button variant="common" onClick={() => onDelete(project)}>
+            <Button variant="common" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
               {t("settings:project.btn.delete")}
             </Button>
           </>
@@ -125,10 +153,15 @@ const Row = ({
 
 const ProjectSettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
+  const { isOwner } = useAuthContext();
+
   useEffect(() => { document.title = t("settings:project.title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
-  const { isOwner } = useAuthContext();
+  /* ----------------------------- Flags ------------------------------------ */
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   /* ----------------------------- Estados ---------------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
@@ -136,6 +169,12 @@ const ProjectSettings: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snack, setSnack] = useState<Snack>(null);
+
+  /* Confirm Toast */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<Project[]>([]);
@@ -148,15 +187,21 @@ const ProjectSettings: React.FC = () => {
   /* ----------------------------- Paginação por cursor ---------------------- */
   const fetchProjectsPage = useCallback(
     async (cursor?: string) => {
-      const { data, meta } = await api.getProjects({
-        page_size: 100,
-        cursor,
-        q: appliedQuery || undefined,
-      });
-      const items = ((data?.results ?? []) as Project[]).slice().sort(sortByCodeThenName);
-      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
-      return { items, nextCursor };
+      if (INFLIGHT_FETCH) return { items: [] as Project[], nextCursor: undefined as string | undefined };
+      INFLIGHT_FETCH = true;
+      try {
+        const { data, meta } = await api.getProjects({
+          page_size: 100,
+          cursor,
+          q: appliedQuery || undefined,
+        });
+        const items = ((data?.results ?? []) as Project[]).slice().sort(sortByCodeThenName);
+        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        return { items, nextCursor };
+      } finally {
+        INFLIGHT_FETCH = false;
+      }
     },
     [appliedQuery]
   );
@@ -166,8 +211,10 @@ const ProjectSettings: React.FC = () => {
     deps: [appliedQuery],
   });
 
-  const { refresh } = pager;
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
 
+  const { refresh } = pager;
   const onSearch = useCallback(() => {
     const trimmed = query.trim();
     if (trimmed === appliedQuery) refresh();
@@ -192,8 +239,8 @@ const ProjectSettings: React.FC = () => {
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added.filter((p) => matchesQuery(p, appliedQuery));
-    const addedIds = new Set(addedFiltered.map((p) => p.id));
-    const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIds.has(p.id));
+    const addedIdsSet = new Set(addedFiltered.map((p) => p.id));
+    const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIdsSet.has(p.id));
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
@@ -205,22 +252,44 @@ const ProjectSettings: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEditModal = (project: Project) => {
+  const openEditModal = async (project: Project) => {
     setMode("edit");
     setEditingProject(project);
-    setFormData({
-      name: project.name || "",
-      code: project.code || "",
-      type: isProjectType(project.type) ? project.type : "internal",
-      description: project.description || "",
-      is_active: project.is_active ?? true,
-    });
     setModalOpen(true);
+    setIsDetailLoading(true);
+
+    try {
+      const res = await (api).getProject(project.id);
+      const detail = res.data as Project;
+
+      setFormData({
+        name: detail.name || "",
+        code: detail.code || "",
+        type: isProjectType(detail.type) ? detail.type : "internal",
+        description: detail.description || "",
+        is_active: detail.is_active ?? true,
+      });
+    } catch {
+      setFormData({
+        name: project.name || "",
+        code: project.code || "",
+        type: isProjectType(project.type) ? project.type : "internal",
+        description: project.description || "",
+        is_active: project.is_active ?? true,
+      });
+      setSnack({
+        message: t("settings:project.errors.loadDetailFailed", "Falha ao carregar detalhes."),
+        severity: "error",
+      });
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingProject(null);
+    setFormData(emptyForm);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -234,6 +303,7 @@ const ProjectSettings: React.FC = () => {
 
   const submitProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       if (mode === "create") {
         const { data: created } = await api.addProject({
@@ -243,7 +313,8 @@ const ProjectSettings: React.FC = () => {
           description: formData.description || "",
           is_active: formData.is_active,
         });
-        setAdded((prev) => [created, ...prev]);
+        setAdded((prev) => [created, ...prev]); // overlay local
+        setSnack({ message: t("settings:project.toast.saved"), severity: "success" });
       } else if (editingProject) {
         await api.editProject(editingProject.id, {
           name: formData.name,
@@ -252,40 +323,55 @@ const ProjectSettings: React.FC = () => {
           description: formData.description,
           is_active: formData.is_active,
         });
+        setSnack({ message: t("settings:project.toast.saved"), severity: "success" });
       }
       await pager.refresh();
       closeModal();
-      setSnack({ message: t("settings:project.toast.saved"), severity: "success" });
     } catch (err) {
       setSnack({
         message: err instanceof Error ? err.message : t("settings:project.errors.saveError"),
         severity: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const deleteProject = async (project: Project) => {
-    try {
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.add(project.id);
-        return next;
-      });
-      await api.deleteProject(project.id);
-      await pager.refresh();
-      setAdded((prev) => prev.filter((p) => p.id !== project.id));
-      setSnack({ message: t("settings:project.toast.deleted"), severity: "success" });
-    } catch (err) {
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(project.id);
-        return next;
-      });
-      setSnack({
-        message: err instanceof Error ? err.message : t("settings:project.errors.deleteError"),
-        severity: "error",
-      });
-    }
+  /* ---------- ConfirmToast delete (same pattern as Department/Inventory) --- */
+  const requestDeleteProject = (project: Project) => {
+    const name = project.name ?? project.code ?? "";
+    setConfirmText(t("settings:project.confirm.deleteTitle", { name }));
+    setConfirmAction(() => async () => {
+      setDeleteTargetId(project.id);
+      try {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(project.id);
+          return next;
+        });
+
+        await api.deleteProject(project.id);
+        await pager.refresh();
+        setAdded((prev) => prev.filter((p) => p.id !== project.id));
+
+        setSnack({ message: t("settings:project.toast.deleted"), severity: "info" });
+      } catch (err) {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(project.id);
+          return next;
+        });
+        setSnack({
+          message: err instanceof Error ? err.message : t("settings:project.errors.deleteError"),
+          severity: "error",
+        });
+      } finally {
+        setDeleteTargetId(null);
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   /* ------------------------------ Esc key / scroll lock -------------------- */
@@ -297,16 +383,37 @@ const ProjectSettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
+  /* ------------------------------ Loading states --------------------------- */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("settings:project.badge.syncing", "Syncing…")}
+    </span>
+  ) : null;
+
+  const canEdit = !!isOwner;
+  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy;
 
   /* -------------------------------- UI ------------------------------------ */
   return (
     <>
+      {/* progress fino durante sync da paginação */}
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -315,13 +422,16 @@ const ProjectSettings: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials()}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:project.header.settings")}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:project.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:project.header.projects")}
+                  </h1>
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:project.header.projects")}
-                </h1>
+                {headerBadge}
               </div>
             </div>
           </header>
@@ -344,12 +454,13 @@ const ProjectSettings: React.FC = () => {
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                       placeholder={t("settings:project.search.placeholder")}
                       aria-label={t("settings:project.search.aria")}
+                      disabled={globalBusy}
                     />
-                    <Button onClick={onSearch} variant="outline">
+                    <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
                       {t("settings:project.search.button")}
                     </Button>
-                    {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">
+                    {canEdit && (
+                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("settings:project.btn.addProject")}
                       </Button>
                     )}
@@ -363,7 +474,7 @@ const ProjectSettings: React.FC = () => {
                     {t("settings:project.errors.loadFailedTitle")}
                   </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
                     {t("settings:project.btn.retry")}
                   </Button>
                 </div>
@@ -375,24 +486,29 @@ const ProjectSettings: React.FC = () => {
                         {t("settings:project.empty")}
                       </p>
                     ) : (
-                      visibleItems.map((p) => (
-                        <Row
-                          key={p.id}
-                          project={p}
-                          canEdit={!!isOwner}
-                          onEdit={openEditModal}
-                          onDelete={deleteProject}
-                          t={t}
-                        />
-                      ))
+                      visibleItems.map((p) => {
+                        const rowBusy =
+                          globalBusy || deleteTargetId === p.id || deletedIds.has(p.id);
+                        return (
+                          <Row
+                            key={p.id}
+                            project={p}
+                            canEdit={canEdit}
+                            onEdit={openEditModal}
+                            onDelete={requestDeleteProject}
+                            t={t}
+                            busy={rowBusy}
+                          />
+                        );
+                      })
                     )}
                   </div>
 
                   <PaginationArrows
                     onPrev={pager.prev}
                     onNext={pager.next}
-                    disabledPrev={!pager.canPrev}
-                    disabledNext={!pager.canNext}
+                    disabledPrev={!pager.canPrev || isBackgroundSync}
+                    disabledNext={!pager.canNext || isBackgroundSync}
                     label={t("settings:project.pagination.label", {
                       index: pager.index + 1,
                       total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
@@ -422,69 +538,97 @@ const ProjectSettings: React.FC = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:project.modal.close")}
+                  disabled={isSubmitting}
                 >
                   &times;
                 </button>
               </header>
 
-              <form
-                className="space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void submitProject(e);
-                }}
-              >
-                <Input
-                  label={t("settings:project.field.name")}
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  label={t("settings:project.field.code")}
-                  name="code"
-                  value={formData.code}
-                  onChange={handleChange}
-                />
+              {mode === "edit" && isDetailLoading ? (
+                <ModalSkeleton />
+              ) : (
+                <form className="space-y-3" onSubmit={submitProject}>
+                  <Input
+                    label={t("settings:project.field.name")}
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                  />
+                  <Input
+                    label={t("settings:project.field.code")}
+                    name="code"
+                    value={formData.code}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                  />
 
-                <SelectDropdown<TypeOption>
-                  label={t("settings:project.field.type")}
-                  items={TYPE_OPTIONS}
-                  selected={TYPE_OPTIONS.filter((tO) => tO.value === formData.type)}
-                  onChange={(items) => {
-                    if (items[0]) setFormData((p) => ({ ...p, type: items[0].value }));
-                  }}
-                  getItemKey={(i) => i.value}
-                  getItemLabel={(i) => i.label}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel={t("settings:project.btnLabel.type")}
-                  customStyles={{ maxHeight: "240px" }}
-                />
+                  <SelectDropdown<TypeOption>
+                    label={t("settings:project.field.type")}
+                    items={TYPE_OPTIONS}
+                    selected={TYPE_OPTIONS.filter((opt) => opt.value === formData.type)}
+                    onChange={(items) => {
+                      if (items[0]) setFormData((p) => ({ ...p, type: items[0].value }));
+                    }}
+                    getItemKey={(i) => i.value}
+                    getItemLabel={(i) => i.label}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel={t("settings:project.btnLabel.type")}
+                    customStyles={{ maxHeight: "240px" }}
+                  />
 
-                <Input
-                  label={t("settings:project.field.description")}
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={formData.is_active} onChange={handleActiveChange} />
-                  {t("settings:project.field.isActive")}
-                </label>
+                  <Input
+                    label={t("settings:project.field.description")}
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                  />
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={formData.is_active} onChange={handleActiveChange} disabled={isSubmitting} />
+                    {t("settings:project.field.isActive")}
+                  </label>
 
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    {t("settings:project.btn.cancel")}
-                  </Button>
-                  <Button type="submit">{t("settings:project.btn.save")}</Button>
-                </div>
-              </form>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                      {t("settings:project.btn.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? t("settings:project.btn.saving", "Saving…") : t("settings:project.btn.save")}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
       </main>
+
+      {/* Confirm Toast */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel={t("settings:project.confirm.confirmLabel", "Excluir")}
+        cancelLabel={t("settings:project.confirm.cancelLabel", "Cancelar")}
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction
+            ?.()
+            .catch(() => {
+              setSnack({ message: t("settings:project.errors.confirmFailed"), severity: "error" });
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
 
       {/* Typed Snackbar (single source of truth) */}
       <Snackbar

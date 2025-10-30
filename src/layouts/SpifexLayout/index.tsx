@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 
 import { useAuth } from '@/api';
 import { AuthMiddleware } from '@/middlewares';
-import { SuspenseLoader } from '@/components/Loaders';
+import TopProgress from 'src/components/ui/Loaders/TopProgress';
 import Navbar from 'src/components/layout/Navbar';
 
 export const SpifexLayout: FC = () => {
@@ -19,7 +19,7 @@ export const SpifexLayout: FC = () => {
     return () => { mounted = false; };
   }, [handleInitUser]);
 
-  if (loadingAuth) return <SuspenseLoader noLoadNp />;
+  if (loadingAuth) return <TopProgress active={true} variant='center' />;
 
   return (
     <AuthMiddleware>

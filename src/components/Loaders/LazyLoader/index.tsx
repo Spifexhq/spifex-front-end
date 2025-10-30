@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { SuspenseLoader } from "@/components/Loaders";
+import TopProgress from "src/components/ui/Loaders/TopProgress";
 
 const Loader = (Component: React.ComponentType) => (props: object) => (
-    <Suspense fallback={<SuspenseLoader />}>
+    <Suspense fallback={<TopProgress active={true} />}>
         <Component {...props} />
     </Suspense>
 );

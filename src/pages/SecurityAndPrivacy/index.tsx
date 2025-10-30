@@ -1,22 +1,27 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/SecurityAndPrivacy.tsx
- * Style: Navbar fixa + SidebarSettings, light borders, compact labels
- * Notes: i18n group "securityAndPrivacy" inside the "settings" namespace
+ * Standardized flags + UX (matches Employee/Entity/Department/Inventory)
+ * - Flags: isInitialLoading, isSubmitting
+ * - Initial: TopProgress + PageSkeleton
+ * - Background: TopProgress while submitting (change password)
+ * - i18n: group "securityAndPrivacy" inside "settings"
  * -------------------------------------------------------------------------- */
 
 import axios from "axios";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import { User } from "src/models/auth";
+import type { User } from "src/models/auth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
 
@@ -36,12 +41,14 @@ const Row = ({
   label,
   value,
   action,
+  disabled,
 }: {
   label: string;
   value: React.ReactNode;
   action?: React.ReactNode;
+  disabled?: boolean;
 }) => (
-  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+  <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${disabled ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
       <p className="text-[13px] font-medium text-gray-900 truncate">{value}</p>
@@ -51,14 +58,15 @@ const Row = ({
 );
 
 /* -------------------------------------------------------------------------- */
-const SecurityAndPrivacy = () => {
+const SecurityAndPrivacy: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
+  const { user: authUser } = useAuthContext();
 
-  // Title + <html lang="...">
+  /* ----------------------------- Title + lang ------------------------------ */
   useEffect(() => { document.title = t("settings:securityAndPrivacy.title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
-  // date-fns locale + pattern by language
+  /* ----------------------------- date-fns locale --------------------------- */
   const dateLocale = useMemo(() => {
     const base = (i18n.language || "en").split("-")[0];
     switch (base) {
@@ -77,10 +85,11 @@ const SecurityAndPrivacy = () => {
     return "MMM d, yyyy";
   }, [i18n.language]);
 
-  const { user: authUser } = useAuthContext();
+  /* ------------------------------ Flags/State ------------------------------ */
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
@@ -91,17 +100,34 @@ const SecurityAndPrivacy = () => {
     confirm: "",
   });
 
-  /* ------------------------ Handlers ------------------------- */
-  const openModal = () => setModalOpen(true);
+  /* ------------------------------ Bootstrap -------------------------------- */
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await api.getUser();
+        if (!mounted) return;
+        setUser(resp.data.user as User);
+      } finally {
+        if (mounted) setIsInitialLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  /* ------------------------------- Handlers -------------------------------- */
+  const openModal = useCallback(() => setModalOpen(true), []);
   const closeModal = useCallback(() => {
     setPwData({ current_password: "", new_password: "", confirm: "" });
     setModalOpen(false);
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setPwData((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPwData((p) => ({ ...p, [name]: value }));
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     const { current_password, new_password, confirm } = pwData;
 
     if (new_password !== confirm) {
@@ -121,14 +147,21 @@ const SecurityAndPrivacy = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       await api.changePassword({ current_password, new_password });
       closeModal();
       setSnack({ message: t("settings:securityAndPrivacy.toast.success"), severity: "success" });
+
+      // Optionally refresh last_password_change from backend:
+      try {
+        const resp = await api.getUser();
+        setUser(resp.data.user as User);
+      } catch { /* silent */ }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setSnack({
-          message: err.response?.data?.message ?? t("settings:securityAndPrivacy.toast.changeError"),
+          message: (err.response?.data)?.message ?? t("settings:securityAndPrivacy.toast.changeError"),
           severity: "error",
         });
       } else if (err instanceof Error) {
@@ -136,22 +169,12 @@ const SecurityAndPrivacy = () => {
       } else {
         setSnack({ message: t("settings:securityAndPrivacy.toast.unexpected"), severity: "error" });
       }
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [pwData, t, closeModal]);
 
-  /* ------------------------ Load user ------------------------ */
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await api.getUser();
-        setUser(resp.data.user);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  /* ------------------------ UX hooks ------------------------ */
+  /* ------------------------------- UX hooks -------------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
@@ -163,11 +186,22 @@ const SecurityAndPrivacy = () => {
     return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (loading) return <SuspenseLoader />;
+  /* ----------------------------- Loading UI -------------------------------- */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={5} />
+      </>
+    );
+  }
 
-  /* --------------------------- UI --------------------------- */
+  /* ---------------------------------- UI ---------------------------------- */
   return (
     <>
+      {/* thin progress during password submission */}
+      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -189,7 +223,7 @@ const SecurityAndPrivacy = () => {
             </div>
           </header>
 
-          {/* Card principal */}
+          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
@@ -214,17 +248,19 @@ const SecurityAndPrivacy = () => {
                       variant="outline"
                       className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={openModal}
+                      disabled={isSubmitting}
                     >
                       {t("settings:securityAndPrivacy.btn.changePassword")}
                     </Button>
                   }
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
           </section>
         </div>
 
-        {/* ---------------------- Modal ---------------------- */}
+        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             <div
@@ -240,16 +276,17 @@ const SecurityAndPrivacy = () => {
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:securityAndPrivacy.modal.close")}
+                  disabled={isSubmitting}
                 >
                   &times;
                 </button>
               </header>
 
               <form
-                className="space-y-3"
+                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleSubmit();
+                  void handleSubmit();
                 }}
               >
                 <Input
@@ -284,10 +321,12 @@ const SecurityAndPrivacy = () => {
                 />
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
+                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                     {t("settings:securityAndPrivacy.btn.cancel")}
                   </Button>
-                  <Button type="submit">{t("settings:securityAndPrivacy.btn.save")}</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? t("settings:securityAndPrivacy.btn.saving", "Saving…") : t("settings:securityAndPrivacy.btn.save")}
+                  </Button>
                 </div>
               </form>
             </div>
@@ -295,7 +334,7 @@ const SecurityAndPrivacy = () => {
         )}
       </main>
 
-      {/* ----------------------- Snackbar ----------------------- */}
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

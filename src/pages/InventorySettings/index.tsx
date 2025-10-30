@@ -1,20 +1,26 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/InventorySettings.tsx
+ * Standardized flags + UX (matches Employee/Entity/Groups/Department)
  * Pagination: cursor + arrow-only, click-to-search via "Buscar"
- * Dinâmica: overlay local p/ add/delete + refresh do pager
+ * Dinâmica: overlay local p/ add/delete + refresh do pager (ConfirmToast on delete)
+ * Flags: isInitialLoading, isBackgroundSync, isSubmitting, deleteTargetId, confirmBusy
+ * Guard: INFLIGHT_FETCH for pager fetcher
  * i18n: group "inventory" inside the "settings" namespace
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
+import ConfirmToast from "src/components/ui/ConfirmToast";
+import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
 import type { InventoryItem } from "src/models/enterprise_structure/domain/InventoryItem";
 import { useAuthContext } from "@/contexts/useAuthContext";
-import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
@@ -25,6 +31,24 @@ import { useTranslation } from "react-i18next";
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
+
+/* ------------------------------ INFLIGHT guard ---------------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ------------------------------ Modal skeleton ---------------------------- */
+const ModalSkeleton: React.FC = () => (
+  <div className="space-y-3 py-1">
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-6 w-24 rounded-md bg-gray-100 animate-pulse" />
+    <div className="flex justify-end gap-2 pt-1">
+      <div className="h-9 w-24 rounded-md bg-gray-100 animate-pulse" />
+      <div className="h-9 w-28 rounded-md bg-gray-100 animate-pulse" />
+    </div>
+  </div>
+);
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -56,14 +80,16 @@ const Row = ({
   onDelete,
   canEdit,
   t,
+  busy,
 }: {
   item: InventoryItem;
   onEdit: (i: InventoryItem) => void;
   onDelete: (i: InventoryItem) => void;
   canEdit: boolean;
   t: (key: string, options?: Record<string, unknown>) => string;
+  busy?: boolean;
 }) => (
-  <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+  <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
         {t("settings:inventory.row.skuPrefix")} {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
@@ -82,10 +108,11 @@ const Row = ({
             variant="outline"
             className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
             onClick={() => onEdit(item)}
+            disabled={busy}
           >
             {t("settings:inventory.btn.edit")}
           </Button>
-          <Button variant="common" onClick={() => onDelete(item)}>
+          <Button variant="common" onClick={() => onDelete(item)} disabled={busy} aria-busy={busy || undefined}>
             {t("settings:inventory.btn.delete")}
           </Button>
         </>
@@ -96,10 +123,15 @@ const Row = ({
 
 const InventorySettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
+  const { isOwner } = useAuthContext();
+
   useEffect(() => { document.title = t("settings:inventory.title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
-  const { isOwner } = useAuthContext();
+  /* ----------------------------- Flags ------------------------------------ */
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   /* ----------------------------- Estados ---------------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
@@ -107,6 +139,12 @@ const InventorySettings: React.FC = () => {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snack, setSnack] = useState<Snack>(null);
+
+  /* Confirm Toast */
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
   /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
   const [added, setAdded] = useState<InventoryItem[]>([]);
@@ -119,15 +157,21 @@ const InventorySettings: React.FC = () => {
   /* ----------------------------- Paginação por cursor ---------------------- */
   const fetchItemsPage = useCallback(
     async (cursor?: string) => {
-      const { data, meta } = await api.getInventoryItems({
-        page_size: 100,
-        cursor,
-        q: appliedQuery || undefined,
-      });
-      const items = ((data?.results ?? []) as InventoryItem[]).slice().sort(sortBySkuThenName);
-      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
-      return { items, nextCursor };
+      if (INFLIGHT_FETCH) return { items: [] as InventoryItem[], nextCursor: undefined as string | undefined };
+      INFLIGHT_FETCH = true;
+      try {
+        const { data, meta } = await api.getInventoryItems({
+          page_size: 100,
+          cursor,
+          q: appliedQuery || undefined,
+        });
+        const items = ((data?.results ?? []) as InventoryItem[]).slice().sort(sortBySkuThenName);
+        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        return { items, nextCursor };
+      } finally {
+        INFLIGHT_FETCH = false;
+      }
     },
     [appliedQuery]
   );
@@ -136,6 +180,9 @@ const InventorySettings: React.FC = () => {
     autoLoadFirst: true,
     deps: [appliedQuery],
   });
+
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
 
   const { refresh } = pager;
   const onSearch = useCallback(() => {
@@ -174,23 +221,48 @@ const InventorySettings: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEditModal = (item: InventoryItem) => {
+  const openEditModal = async (item: InventoryItem) => {
     setMode("edit");
     setEditingItem(item);
-    setFormData({
-      sku: item.sku ?? "",
-      name: item.name ?? "",
-      description: item.description ?? "",
-      uom: item.uom ?? "",
-      quantity_on_hand: item.quantity_on_hand ?? "0",
-      is_active: item.is_active ?? true,
-    });
     setModalOpen(true);
+    setIsDetailLoading(true);
+
+    try {
+      // Detail fetch (EntitySettings pattern). Adjust the accessor if your API returns { item }.
+      const res = await api.getInventoryItem(item.id);
+      const detail = res.data as InventoryItem;
+
+      setFormData({
+        sku: detail.sku ?? "",
+        name: detail.name ?? "",
+        description: detail.description ?? "",
+        uom: detail.uom ?? "",
+        quantity_on_hand: (detail.quantity_on_hand) ?? "0",
+        is_active: detail.is_active ?? true,
+      });
+    } catch {
+      // Fallback from list row data
+      setFormData({
+        sku: item.sku ?? "",
+        name: item.name ?? "",
+        description: item.description ?? "",
+        uom: item.uom ?? "",
+        quantity_on_hand: (item.quantity_on_hand) ?? "0",
+        is_active: item.is_active ?? true,
+      });
+      setSnack({
+        message: t("settings:inventory.errors.loadDetailFailed", "Falha ao carregar detalhes."),
+        severity: "error",
+      });
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingItem(null);
+    setFormData(emptyForm);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -204,14 +276,21 @@ const InventorySettings: React.FC = () => {
 
   const submitItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       if (mode === "create") {
         const { data: created } = await api.addInventoryItem(formData);
-        setAdded((prev) => [created, ...prev]);
-        setSnack({ message: t("settings:inventory.toast.createSuccess", { defaultValue: "Item criado." }), severity: "success" });
+        setAdded((prev) => [created, ...prev]); // overlay local
+        setSnack({
+          message: t("settings:inventory.toast.createSuccess", { defaultValue: "Item criado." }),
+          severity: "success",
+        });
       } else if (editingItem) {
         await api.editInventoryItem(editingItem.id, formData);
-        setSnack({ message: t("settings:inventory.toast.updateSuccess", { defaultValue: "Item atualizado." }), severity: "success" });
+        setSnack({
+          message: t("settings:inventory.toast.updateSuccess", { defaultValue: "Item atualizado." }),
+          severity: "success",
+        });
       }
       await pager.refresh();
       closeModal();
@@ -220,32 +299,49 @@ const InventorySettings: React.FC = () => {
         message: err instanceof Error ? err.message : t("settings:inventory.errors.saveError"),
         severity: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const deleteItem = async (item: InventoryItem) => {
-    try {
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.add(item.id);
-        return next;
-      });
+  /* ---------- ConfirmToast delete (same pattern as Department) ------------- */
+  const requestDeleteItem = (item: InventoryItem) => {
+    const name = item.name ?? item.sku ?? "";
+    setConfirmText(t("settings:inventory.confirm.deleteTitle", { name }));
+    setConfirmAction(() => async () => {
+      setDeleteTargetId(item.id);
+      try {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(item.id);
+          return next;
+        });
 
-      await api.deleteInventoryItem(item.id);
-      await pager.refresh();
-      setAdded((prev) => prev.filter((i) => i.id !== item.id));
-      setSnack({ message: t("settings:inventory.toast.deleteSuccess", { defaultValue: "Item excluído." }), severity: "info" });
-    } catch (err) {
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(item.id);
-        return next;
-      });
-      setSnack({
-        message: err instanceof Error ? err.message : t("settings:inventory.errors.deleteError"),
-        severity: "error",
-      });
-    }
+        await api.deleteInventoryItem(item.id);
+        await pager.refresh();
+        setAdded((prev) => prev.filter((i) => i.id !== item.id));
+
+        setSnack({
+          message: t("settings:inventory.toast.deleteSuccess", { defaultValue: "Item excluído." }),
+          severity: "info",
+        });
+      } catch (err) {
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(item.id);
+          return next;
+        });
+        setSnack({
+          message: err instanceof Error ? err.message : t("settings:inventory.errors.deleteError"),
+          severity: "error",
+        });
+      } finally {
+        setDeleteTargetId(null);
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+    setConfirmOpen(true);
   };
 
   /* ------------------------------ Esc key / scroll lock -------------------- */
@@ -260,11 +356,34 @@ const InventorySettings: React.FC = () => {
     return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
+  /* ------------------------------ Loading states --------------------------- */
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("settings:inventory.badge.syncing", "Syncing…")}
+    </span>
+  ) : null;
+
+  const canEdit = !!isOwner;
+  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy;
 
   /* --------------------------------- UI ----------------------------------- */
   return (
     <>
+      {/* Background sync progress */}
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header card */}
@@ -273,13 +392,16 @@ const InventorySettings: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials()}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:inventory.header.settings")}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("settings:inventory.header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("settings:inventory.header.inventory")}
+                  </h1>
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:inventory.header.inventory")}
-                </h1>
+                {headerBadge}
               </div>
             </div>
           </header>
@@ -302,12 +424,13 @@ const InventorySettings: React.FC = () => {
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                       placeholder={t("settings:inventory.search.placeholder")}
                       aria-label={t("settings:inventory.search.aria")}
+                      disabled={globalBusy}
                     />
-                    <Button onClick={onSearch} variant="outline">
+                    <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
                       {t("settings:inventory.search.button")}
                     </Button>
-                    {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">
+                    {canEdit && (
+                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("settings:inventory.btn.addItem")}
                       </Button>
                     )}
@@ -321,7 +444,7 @@ const InventorySettings: React.FC = () => {
                     {t("settings:inventory.errors.loadFailedTitle")}
                   </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
                     {t("settings:inventory.btn.retry")}
                   </Button>
                 </div>
@@ -333,24 +456,29 @@ const InventorySettings: React.FC = () => {
                         {t("settings:inventory.empty")}
                       </p>
                     ) : (
-                      visibleItems.map((i) => (
-                        <Row
-                          key={i.id}
-                          item={i}
-                          canEdit={!!isOwner}
-                          onEdit={openEditModal}
-                          onDelete={deleteItem}
-                          t={t}
-                        />
-                      ))
+                      visibleItems.map((i) => {
+                        const rowBusy =
+                          globalBusy || deleteTargetId === i.id || deletedIds.has(i.id);
+                        return (
+                          <Row
+                            key={i.id}
+                            item={i}
+                            canEdit={canEdit}
+                            onEdit={openEditModal}
+                            onDelete={requestDeleteItem}
+                            t={t}
+                            busy={rowBusy}
+                          />
+                        );
+                      })
                     )}
                   </div>
 
                   <PaginationArrows
                     onPrev={pager.prev}
                     onNext={pager.next}
-                    disabledPrev={!pager.canPrev}
-                    disabledNext={!pager.canNext}
+                    disabledPrev={!pager.canPrev || globalBusy}
+                    disabledNext={!pager.canNext || globalBusy}
                     label={t("settings:inventory.pagination.label", {
                       index: pager.index + 1,
                       total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
@@ -365,45 +493,82 @@ const InventorySettings: React.FC = () => {
         {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-                 role="dialog" aria-modal="true">
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {mode === "create"
                     ? t("settings:inventory.modal.createTitle")
                     : t("settings:inventory.modal.editTitle")}
                 </h3>
-                <button className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                        onClick={closeModal} aria-label={t("settings:inventory.modal.close")}>
+                <button
+                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+                  onClick={closeModal}
+                  aria-label={t("settings:inventory.modal.close")}
+                  disabled={isSubmitting}
+                >
                   &times;
                 </button>
               </header>
 
-              <form className="space-y-3" onSubmit={submitItem}>
-                <Input label={t("settings:inventory.field.sku")} name="sku" value={formData.sku} onChange={handleChange} required />
-                <Input label={t("settings:inventory.field.name")} name="name" value={formData.name} onChange={handleChange} required />
-                <Input label={t("settings:inventory.field.description")} name="description" value={formData.description} onChange={handleChange} />
-                <Input label={t("settings:inventory.field.uom")} name="uom" value={formData.uom} onChange={handleChange} placeholder={t("settings:inventory.field.uomPlaceholder")} />
-                <Input label={t("settings:inventory.field.qty")} name="quantity_on_hand" type="number" step="1" min="0"
-                       value={formData.quantity_on_hand} onChange={handleChange} />
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={formData.is_active} onChange={handleActive} />
-                  {t("settings:inventory.field.isActive")}
-                </label>
+              {mode === "edit" && isDetailLoading ? (
+                <ModalSkeleton />
+              ) : (
+                <form className="space-y-3" onSubmit={submitItem}>
+                  <Input label={t("settings:inventory.field.sku")} name="sku" value={formData.sku} onChange={handleChange} required disabled={isSubmitting} />
+                  <Input label={t("settings:inventory.field.name")} name="name" value={formData.name} onChange={handleChange} required disabled={isSubmitting} />
+                  <Input label={t("settings:inventory.field.description")} name="description" value={formData.description} onChange={handleChange} disabled={isSubmitting} />
+                  <Input label={t("settings:inventory.field.uom")} name="uom" value={formData.uom} onChange={handleChange} placeholder={t("settings:inventory.field.uomPlaceholder")} disabled={isSubmitting} />
+                  <Input label={t("settings:inventory.field.qty")} name="quantity_on_hand" type="number" step="1" min="0"
+                        value={formData.quantity_on_hand} onChange={handleChange} disabled={isSubmitting} />
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={formData.is_active} onChange={handleActive} disabled={isSubmitting} />
+                    {t("settings:inventory.field.isActive")}
+                  </label>
 
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    {t("settings:inventory.btn.cancel")}
-                  </Button>
-                  <Button type="submit">{t("settings:inventory.btn.save")}</Button>
-                </div>
-              </form>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                      {t("settings:inventory.btn.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? t("settings:inventory.btn.saving", "Saving…") : t("settings:inventory.btn.save")}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
       </main>
 
-      {/* Snackbar (no Alert) */}
+      {/* Confirm Toast */}
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel={t("settings:inventory.btn.confirmDelete")}
+        cancelLabel={t("settings:inventory.btn.cancel")}
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+          setConfirmBusy(true);
+          confirmAction
+            ?.()
+            .catch(() => {
+              setSnack({ message: t("settings:inventory.errors.confirmFailed"), severity: "error" });
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
+
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

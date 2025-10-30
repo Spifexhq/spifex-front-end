@@ -8,9 +8,7 @@ export interface GetDepartmentsResponse {
   count?: number;
 }
 
-export interface GetDepartmentResponse {
-  department: Department;
-}
+export type GetDepartmentResponse = Department
 
 export interface DepartmentPayloadBase {
   name: string;

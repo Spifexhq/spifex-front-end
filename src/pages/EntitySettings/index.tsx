@@ -1,17 +1,22 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/EntitySettings.tsx
  * Pagination: cursor + arrow-only, click-to-search via "Buscar"
- * Dinâmica: overlay local p/ add/delete + refresh do pager
- * i18n: group "entity" inside the "settings" namespace
+ * Overlay local add/delete + refresh; standardized flags & naming
+ * Modal: skeleton while fetching detail on edit (same as EmployeeSettings)
+ * Row freeze: deleteTargetId + isSubmitting/isDetailLoading/isBackgroundSync
  * -------------------------------------------------------------------------- */
+
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import { SuspenseLoader } from "@/components/Loaders";
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import ConfirmToast from "src/components/ui/ConfirmToast";
+
+import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
+import Shimmer from "@/components/ui/Loaders/Shimmer";
 
 import { api } from "src/api/requests";
 import type { Entity } from "src/models/enterprise_structure/domain/Entity";
@@ -23,18 +28,19 @@ import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import { useTranslation } from "react-i18next";
 
-/* Snackbar type */
+/* ---------------------------- Snackbar type ------------------------------ */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* tipos de entidade: somente valores; labels vêm do i18n */
+/* ------------------------- Entity type constants -------------------------- */
 const ENTITY_TYPE_VALUES = ["client", "supplier", "employee"] as const;
-type EntityTypeValue = typeof ENTITY_TYPE_VALUES[number];
+type EntityTypeValue = (typeof ENTITY_TYPE_VALUES)[number];
 
 const ENTITY_TYPE_ITEMS: { value: EntityTypeValue }[] =
   ENTITY_TYPE_VALUES.map((v) => ({ value: v }));
 
+/* ---------------------------- Form template ------------------------------ */
 const emptyForm = {
   full_name: "",
   alias_name: "",
@@ -61,6 +67,59 @@ const emptyForm = {
 };
 type FormState = typeof emptyForm;
 
+/* ---------------------------- In-memory guards --------------------------- */
+let INFLIGHT_FETCH = false;
+
+/* ------------------------------ Modal skeleton ---------------------------- */
+const ModalSkeleton: React.FC = () => (
+  <div className="space-y-5 py-1">
+    {/* Identificação e contato */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Shimmer className="h-10 rounded-md lg:col-span-2" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <div className="flex items-center gap-2 pt-2">
+        <Shimmer className="h-5 w-5 rounded-sm" />
+        <Shimmer className="h-3 w-24 rounded-md" />
+      </div>
+    </div>
+
+    {/* Endereço */}
+    <div className="space-y-3">
+      <Shimmer className="h-3 w-32 rounded-md" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Shimmer className="h-10 rounded-md lg:col-span-2" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+      </div>
+    </div>
+
+    {/* Bancários */}
+    <div className="space-y-3">
+      <Shimmer className="h-3 w-40 rounded-md" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md lg:col-span-2" />
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-2 pt-1">
+      <Shimmer className="h-9 w-24 rounded-md" />
+      <Shimmer className="h-9 w-28 rounded-md" />
+    </div>
+  </div>
+);
+
 function getInitials() {
   return "EN";
 }
@@ -71,19 +130,21 @@ function sortByName(a: Entity, b: Entity) {
   return an.localeCompare(bn, "pt-BR");
 }
 
-/* Linha */
+/* ------------------------------- Row ------------------------------------- */
 const Row = ({
   entity,
   onEdit,
   onDelete,
   canEdit,
   t,
+  busy,
 }: {
   entity: Entity;
   onEdit: (e: Entity) => void;
   onDelete: (e: Entity) => void;
   canEdit: boolean;
   t: (key: string, opts?: Record<string, unknown>) => string;
+  busy?: boolean;
 }) => {
   const typeKey = `settings:entity.types.${entity.entity_type || "client"}`;
   const typeLabel = t(typeKey);
@@ -103,10 +164,11 @@ const Row = ({
             variant="outline"
             className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
             onClick={() => onEdit(entity)}
+            disabled={busy}
           >
             {t("settings:entity.btn.edit")}
           </Button>
-          <Button variant="common" onClick={() => onDelete(entity)}>
+          <Button variant="common" onClick={() => onDelete(entity)} disabled={busy} aria-busy={busy || undefined}>
             {t("settings:entity.btn.delete")}
           </Button>
         </div>
@@ -114,6 +176,8 @@ const Row = ({
     </div>
   );
 };
+
+/* ----------------------------- Component --------------------------------- */
 
 const EntitySettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings"]);
@@ -124,9 +188,14 @@ const EntitySettings: React.FC = () => {
 
   /* ------------------------------- Modal state ----------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
+
+  /* ------------------------------- Flags ----------------------------------- */
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   /* Snackbar */
   const [snack, setSnack] = useState<Snack>(null);
@@ -135,28 +204,34 @@ const EntitySettings: React.FC = () => {
   const [added, setAdded] = useState<Entity[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
-  /* ------------------------------- Filtro (click-to-search) ---------------- */
+  /* Filtro (click-to-search) */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
 
-  /* --------------------------- Confirm Toast state ------------------------- */
+  /* Confirm Toast state */
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-  /* ------------------------------- Página por cursores --------------------- */
+  /* ------------------------------- Página/cursor --------------------------- */
   const fetchEntitiesPage = useCallback(
     async (cursor?: string) => {
-      const { data, meta } = await api.getEntities({
-        page_size: 100,
-        cursor,
-        q: appliedQuery || undefined,
-      });
-      const items = ((data?.results ?? []) as Entity[]).slice().sort(sortByName);
-      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-      const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
-      return { items, nextCursor };
+      if (INFLIGHT_FETCH) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
+      INFLIGHT_FETCH = true;
+      try {
+        const { data, meta } = await api.getEntities({
+          page_size: 100,
+          cursor,
+          q: appliedQuery || undefined,
+        });
+        const items = ((data?.results ?? []) as Entity[]).slice().sort(sortByName);
+        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        return { items, nextCursor };
+      } finally {
+        INFLIGHT_FETCH = false;
+      }
     },
     [appliedQuery]
   );
@@ -167,6 +242,7 @@ const EntitySettings: React.FC = () => {
   });
 
   const { refresh } = pager;
+
   const onSearch = useCallback(() => {
     const trimmed = query.trim();
     if (trimmed === appliedQuery) refresh();
@@ -175,40 +251,75 @@ const EntitySettings: React.FC = () => {
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
-    setMode("create");
+    setModalMode("create");
     setEditingEntity(null);
     setFormData(emptyForm);
     setModalOpen(true);
   };
 
-  const openEditModal = (entity: Entity) => {
-    setMode("edit");
+  const openEditModal = async (entity: Entity) => {
+    setModalMode("edit");
     setEditingEntity(entity);
-    setFormData({
-      full_name: entity.full_name ?? "",
-      alias_name: entity.alias_name ?? "",
-      entity_type: (entity.entity_type as EntityTypeValue) ?? "client",
-      is_active: entity.is_active ?? true,
-
-      ssn_tax_id: entity.ssn_tax_id ?? "",
-      ein_tax_id: entity.ein_tax_id ?? "",
-      email: entity.email ?? "",
-      phone: entity.phone ?? "",
-
-      street: entity.street ?? "",
-      street_number: entity.street_number ?? "",
-      city: entity.city ?? "",
-      state: entity.state ?? "",
-      postal_code: entity.postal_code ?? "",
-      country: entity.country ?? "",
-
-      bank_name: entity.bank_name ?? "",
-      bank_branch: entity.bank_branch ?? "",
-      checking_account: entity.checking_account ?? "",
-      account_holder_tax_id: entity.account_holder_tax_id ?? "",
-      account_holder_name: entity.account_holder_name ?? "",
-    });
     setModalOpen(true);
+    setIsDetailLoading(true);
+
+    try {
+      const res = await api.getEntity(entity.id);
+      const detail = res.data as Entity;
+
+      setFormData({
+        full_name: detail.full_name ?? "",
+        alias_name: detail.alias_name ?? "",
+        entity_type: (detail.entity_type as EntityTypeValue) ?? "client",
+        is_active: detail.is_active ?? true,
+
+        ssn_tax_id: detail.ssn_tax_id ?? "",
+        ein_tax_id: detail.ein_tax_id ?? "",
+        email: detail.email ?? "",
+        phone: detail.phone ?? "",
+
+        street: detail.street ?? "",
+        street_number: detail.street_number ?? "",
+        city: detail.city ?? "",
+        state: detail.state ?? "",
+        postal_code: detail.postal_code ?? "",
+        country: detail.country ?? "",
+
+        bank_name: detail.bank_name ?? "",
+        bank_branch: detail.bank_branch ?? "",
+        checking_account: detail.checking_account ?? "",
+        account_holder_tax_id: detail.account_holder_tax_id ?? "",
+        account_holder_name: detail.account_holder_name ?? "",
+      });
+    } catch {
+      setFormData({
+        full_name: entity.full_name ?? "",
+        alias_name: entity.alias_name ?? "",
+        entity_type: (entity.entity_type as EntityTypeValue) ?? "client",
+        is_active: entity.is_active ?? true,
+
+        ssn_tax_id: entity.ssn_tax_id ?? "",
+        ein_tax_id: entity.ein_tax_id ?? "",
+        email: entity.email ?? "",
+        phone: entity.phone ?? "",
+
+        street: entity.street ?? "",
+        street_number: entity.street_number ?? "",
+        city: entity.city ?? "",
+        state: entity.state ?? "",
+        postal_code: entity.postal_code ?? "",
+        country: entity.country ?? "",
+
+        bank_name: entity.bank_name ?? "",
+        bank_branch: entity.bank_branch ?? "",
+        checking_account: entity.checking_account ?? "",
+        account_holder_tax_id: entity.account_holder_tax_id ?? "",
+        account_holder_name: entity.account_holder_name ?? "",
+      });
+      setSnack({ message: t("settings:entity.errors.loadDetailFailed", "Falha ao carregar detalhes."), severity: "error" });
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const closeModal = useCallback(() => {
@@ -233,8 +344,11 @@ const EntitySettings: React.FC = () => {
     );
   }, []);
 
+  const [, forceTick] = useState(0);
   useEffect(() => {
+    // Keep added list filtered when query applies
     setAdded((prev) => prev.filter((e) => matchesQuery(e, appliedQuery)));
+    forceTick((x) => x + 1);
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
@@ -244,8 +358,10 @@ const EntitySettings: React.FC = () => {
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
+  /* ------------------------------ Submit/Create/Edit ----------------------- */
   const submitEntity = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const payload = {
       ...formData,
       ssn_tax_id: formData.ssn_tax_id.trim() || null,
@@ -259,14 +375,16 @@ const EntitySettings: React.FC = () => {
       account_holder_name: formData.account_holder_name.trim(),
     };
 
+    setIsSubmitting(true);
     try {
-      if (mode === "create") {
+      if (modalMode === "create") {
         const { data: created } = await api.addEntity(payload);
-        setAdded((prev) => [created, ...prev]);
+        setAdded((prev) => [created, ...prev]); // overlay local
       } else if (editingEntity) {
         await api.editEntity(editingEntity.id, payload);
       }
-      await pager.refresh();
+
+      await pager.refresh(); // foreground refresh
       closeModal();
       setSnack({
         message: t("settings:entity.toast.saveOk", "Entidade salva com sucesso."),
@@ -274,19 +392,22 @@ const EntitySettings: React.FC = () => {
       });
     } catch (err) {
       setSnack({
-        message:
-          err instanceof Error ? err.message : t("settings:entity.errors.saveError"),
+        message: err instanceof Error ? err.message : t("settings:entity.errors.saveError"),
         severity: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  /* ---------- ConfirmToast wrapper ---------- */
+  /* ------------------------------ Delete flow ------------------------------ */
   const requestDeleteEntity = (entity: Entity) => {
     const name = entity.full_name ?? entity.alias_name ?? "";
+    setDeleteTargetId(entity.id); // freeze row immediately
     setConfirmText(t("settings:entity.confirm.deleteTitle", { name }));
     setConfirmAction(() => async () => {
       try {
+        // overlay mark as deleted
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.add(entity.id);
@@ -295,25 +416,25 @@ const EntitySettings: React.FC = () => {
 
         await api.deleteEntity(entity.id);
         await pager.refresh();
+
+        // clean up local overlays
         setAdded((prev) => prev.filter((e) => e.id !== entity.id));
-        setSnack({
-          message: t("settings:entity.toast.deleteOk", "Entidade removida."),
-          severity: "info",
-        });
+        setSnack({ message: t("settings:entity.toast.deleteOk", "Entidade removida."), severity: "info" });
       } catch (err) {
+        // rollback overlay
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(entity.id);
           return next;
         });
         setSnack({
-          message:
-            err instanceof Error ? err.message : t("settings:entity.errors.deleteError"),
+          message: err instanceof Error ? err.message : t("settings:entity.errors.deleteError"),
           severity: "error",
         });
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
+        setDeleteTargetId(null); // unfreeze
       }
     });
     setConfirmOpen(true);
@@ -331,11 +452,24 @@ const EntitySettings: React.FC = () => {
     return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  if (pager.loading && pager.items.length === 0) return <SuspenseLoader />;
+  /* ------------------------------- Loading UI ------------------------------ */
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
+
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
 
   /* --------------------------------- UI ----------------------------------- */
   return (
     <>
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -373,12 +507,13 @@ const EntitySettings: React.FC = () => {
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                       placeholder={t("settings:entity.search.placeholder")}
                       aria-label={t("settings:entity.search.aria")}
+                      disabled={isSubmitting || isBackgroundSync}
                     />
-                    <Button onClick={onSearch} variant="outline">
+                    <Button onClick={onSearch} variant="outline" disabled={isBackgroundSync || isSubmitting}>
                       {t("settings:entity.search.button")}
                     </Button>
                     {isOwner && (
-                      <Button onClick={openCreateModal} className="!py-1.5">
+                      <Button onClick={openCreateModal} className="!py-1.5" disabled={isSubmitting || isBackgroundSync}>
                         {t("settings:entity.btn.add")}
                       </Button>
                     )}
@@ -392,7 +527,7 @@ const EntitySettings: React.FC = () => {
                     {t("settings:entity.errors.loadFailedTitle")}
                   </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh}>
+                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={isBackgroundSync || isSubmitting}>
                     {t("settings:entity.btn.retry")}
                   </Button>
                 </div>
@@ -404,24 +539,33 @@ const EntitySettings: React.FC = () => {
                         {t("settings:entity.empty")}
                       </p>
                     ) : (
-                      visibleItems.map((e) => (
-                        <Row
-                          key={e.id}
-                          entity={e}
-                          canEdit={!!isOwner}
-                          onEdit={openEditModal}
-                          onDelete={requestDeleteEntity}
-                          t={t}
-                        />
-                      ))
+                      visibleItems.map((e) => {
+                        const rowBusy =
+                          isSubmitting ||
+                          isDetailLoading ||
+                          isBackgroundSync ||
+                          deleteTargetId === e.id ||
+                          confirmBusy; // keep frozen during confirm action
+                        return (
+                          <Row
+                            key={e.id}
+                            entity={e}
+                            canEdit={!!isOwner}
+                            onEdit={openEditModal}
+                            onDelete={requestDeleteEntity}
+                            t={t}
+                            busy={rowBusy}
+                          />
+                        );
+                      })
                     )}
                   </div>
 
                   <PaginationArrows
                     onPrev={pager.prev}
                     onNext={pager.next}
-                    disabledPrev={!pager.canPrev}
-                    disabledNext={!pager.canNext}
+                    disabledPrev={!pager.canPrev || isBackgroundSync || isSubmitting}
+                    disabledNext={!pager.canNext || isBackgroundSync || isSubmitting}
                     label={t("settings:entity.pagination.label", {
                       index: pager.index + 1,
                       total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
@@ -443,212 +587,237 @@ const EntitySettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? t("settings:entity.modal.createTitle") : t("settings:entity.modal.editTitle")}
+                  {modalMode === "create" ? t("settings:entity.modal.createTitle") : t("settings:entity.modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("settings:entity.modal.close")}
+                  disabled={isSubmitting || isDetailLoading}
                 >
                   &times;
                 </button>
               </header>
 
-              <form className="space-y-5" onSubmit={submitEntity}>
-                {/* Identificação e contato */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="lg:col-span-2">
-                    <Input
-                      label={t("settings:entity.field.full_name")}
-                      name="full_name"
-                      value={formData.full_name}
-                      onChange={handleChange}
-                    />
+              {modalMode === "edit" && isDetailLoading ? (
+                <ModalSkeleton />
+              ) : (
+                <form className="space-y-5" onSubmit={submitEntity}>
+                  {/* Identificação e contato */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="lg:col-span-2">
+                      <Input
+                        label={t("settings:entity.field.full_name")}
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.alias_name")}
+                        name="alias_name"
+                        value={formData.alias_name}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <SelectDropdown<{ value: EntityTypeValue }>
+                        label={t("settings:entity.field.entity_type")}
+                        items={ENTITY_TYPE_ITEMS}
+                        selected={ENTITY_TYPE_ITEMS.filter((tItem) => tItem.value === formData.entity_type)}
+                        onChange={(items) =>
+                          items[0] &&
+                          setFormData((p) => ({
+                            ...p,
+                            entity_type: items[0].value,
+                          }))
+                        }
+                        getItemKey={(item) => item.value}
+                        getItemLabel={(item) => t(`settings:entity.types.${item.value}`)}
+                        singleSelect
+                        hideCheckboxes
+                        buttonLabel={t("settings:entity.field.entity_type")}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.ssn_tax_id")}
+                        name="ssn_tax_id"
+                        value={formData.ssn_tax_id}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.ein_tax_id")}
+                        name="ein_tax_id"
+                        value={formData.ein_tax_id}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.email")}
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.phone")}
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <label className="col-span-1 flex items-center gap-2 text-sm pt-5">
+                      <Checkbox
+                        checked={formData.is_active}
+                        onChange={(e) =>
+                          setFormData((p) => ({
+                            ...p,
+                            is_active: e.target.checked,
+                          }))
+                        }
+                        disabled={isSubmitting}
+                      />
+                      {t("settings:entity.field.is_active")}
+                    </label>
                   </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.alias_name")}
-                      name="alias_name"
-                      value={formData.alias_name}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <SelectDropdown<{ value: EntityTypeValue }>
-                      label={t("settings:entity.field.entity_type")}
-                      items={ENTITY_TYPE_ITEMS}
-                      selected={ENTITY_TYPE_ITEMS.filter((tItem) => tItem.value === formData.entity_type)}
-                      onChange={(items) =>
-                        items[0] &&
-                        setFormData((p) => ({
-                          ...p,
-                          entity_type: items[0].value,
-                        }))
-                      }
-                      getItemKey={(item) => item.value}
-                      getItemLabel={(item) => t(`settings:entity.types.${item.value}`)}
-                      singleSelect
-                      hideCheckboxes
-                      buttonLabel={t("settings:entity.field.entity_type")}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.ssn_tax_id")}
-                      name="ssn_tax_id"
-                      value={formData.ssn_tax_id}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.ein_tax_id")}
-                      name="ein_tax_id"
-                      value={formData.ein_tax_id}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.email")}
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.phone")}
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <label className="col-span-1 flex items-center gap-2 text-sm pt-5">
-                    <Checkbox
-                      checked={formData.is_active}
-                      onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          is_active: e.target.checked,
-                        }))
-                      }
-                    />
-                    {t("settings:entity.field.is_active")}
-                  </label>
-                </div>
 
-                {/* Endereço */}
-                <h4 className="text-[12px] font-semibold text-gray-800">{t("settings:entity.header.entities")}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="lg:col-span-2">
-                    <Input
-                      label={t("settings:entity.field.street")}
-                      name="street"
-                      value={formData.street}
-                      onChange={handleChange}
-                    />
+                  {/* Endereço */}
+                  <h4 className="text-[12px] font-semibold text-gray-800">{t("settings:entity.header.entities")}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="lg:col-span-2">
+                      <Input
+                        label={t("settings:entity.field.street")}
+                        name="street"
+                        value={formData.street}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.street_number")}
+                        name="street_number"
+                        value={formData.street_number}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.city")}
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.state")}
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.postal_code")}
+                        name="postal_code"
+                        value={formData.postal_code}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.country")}
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.street_number")}
-                      name="street_number"
-                      value={formData.street_number}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.city")}
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.state")}
-                      name="state"
-                      value={formData.state}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.postal_code")}
-                      name="postal_code"
-                      value={formData.postal_code}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.country")}
-                      name="country"
-                      value={formData.country}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
 
-                {/* Dados bancários */}
-                <h4 className="text-[12px] font-semibold text-gray-800">{t("settings:entity.field.bank_name")}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.bank_name")}
-                      name="bank_name"
-                      value={formData.bank_name}
-                      onChange={handleChange}
-                    />
+                  {/* Bancários */}
+                  <h4 className="text-[12px] font-semibold text-gray-800">{t("settings:entity.field.bank_name")}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.bank_name")}
+                        name="bank_name"
+                        value={formData.bank_name}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.bank_branch")}
+                        name="bank_branch"
+                        value={formData.bank_branch}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.checking_account")}
+                        name="checking_account"
+                        value={formData.checking_account}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label={t("settings:entity.field.account_holder_tax_id")}
+                        name="account_holder_tax_id"
+                        value={formData.account_holder_tax_id}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="lg:col-span-2">
+                      <Input
+                        label={t("settings:entity.field.account_holder_name")}
+                        name="account_holder_name"
+                        value={formData.account_holder_name}
+                        onChange={handleChange}
+                        disabled={isSubmitting}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.bank_branch")}
-                      name="bank_branch"
-                      value={formData.bank_branch}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.checking_account")}
-                      name="checking_account"
-                      value={formData.checking_account}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label={t("settings:entity.field.account_holder_tax_id")}
-                      name="account_holder_tax_id"
-                      value={formData.account_holder_tax_id}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="lg:col-span-2">
-                    <Input
-                      label={t("settings:entity.field.account_holder_name")}
-                      name="account_holder_name"
-                      value={formData.account_holder_name}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
 
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal}>
-                    {t("settings:entity.btn.cancel")}
-                  </Button>
-                  <Button type="submit">{t("settings:entity.btn.save")}</Button>
-                </div>
-              </form>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                      {t("settings:entity.btn.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? t("settings:entity.btn.saving", "Saving…") : t("settings:entity.btn.save")}
+                    </Button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
       </main>
 
-      {/* Confirm Toast (reutilizável) */}
+      {/* Confirm Toast */}
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
@@ -658,6 +827,7 @@ const EntitySettings: React.FC = () => {
         onCancel={() => {
           if (confirmBusy) return;
           setConfirmOpen(false);
+          setDeleteTargetId(null);
         }}
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;
@@ -672,7 +842,7 @@ const EntitySettings: React.FC = () => {
         busy={confirmBusy}
       />
 
-      {/* Snackbar (no Alert) */}
+      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

@@ -5,6 +5,4 @@ export interface GetBanks {
   banks: BankAccount[];
 }
 
-export interface GetBank {
-  bank: BankAccount;
-}
+export type GetBank = BankAccount;

@@ -5,46 +5,46 @@ import { Navigate } from 'react-router-dom';
 // Layouts
 import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
 
-import Loader from "@/components/Loaders/LazyLoader";
+//import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
 import { PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
 
 // Auth Pages
-const SignUp = Loader(lazy(() => import("@/pages/Auth/SignUp")));
-const SignIn = Loader(lazy(() => import("@/pages/Auth/SignIn")));
-const SignUpRedirect = Loader(lazy(() => import("@/pages/Auth/SignUpRedirect")));
-const EmailVerification = Loader(lazy(() => import("@/pages/Auth/EmailVerification")));
-const ForgotPassword = Loader(lazy(() => import("@/pages/Auth/ForgotPassword")));
-const ResetPassword = Loader(lazy(() => import("@/pages/Auth/ResetPassword")));
+const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
+const SignIn = lazy(() => import("@/pages/Auth/SignIn"));
+const SignUpRedirect = lazy(() => import("@/pages/Auth/SignUpRedirect"));
+const EmailVerification = lazy(() => import("@/pages/Auth/EmailVerification"));
+const ForgotPassword = lazy(() => import("@/pages/Auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
 
 // Main Pages
-const CashFlow = Loader(lazy(() => import("src/pages/CashFlow")));
-const SettledEntries = Loader(lazy(() => import("src/pages/SettledEntries")));
-const Reports = Loader(lazy(() => import("@/pages/Reports")));
+const CashFlow = lazy(() => import("src/pages/CashFlow"));
+const SettledEntries = lazy(() => import("src/pages/SettledEntries"));
+const Reports = lazy(() => import("@/pages/Reports"));
 
 // Settings
-const Personal = Loader(lazy(() => import("src/pages/PersonalSettings")));
-const SubscriptionManagement = Loader(lazy(() => import("@/pages/SubscriptionManagement")));
-const SecurityAndPrivacy = Loader(lazy(() => import("@/pages/SecurityAndPrivacy")));
-const CompanySettings = Loader(lazy(() => import("@/pages/CompanySettings")));
-const DepartmentSettings = Loader(lazy(() => import("@/pages/DepartmentSettings")));
-const BankSettings = Loader(lazy(() => import("@/pages/BankSettings")));
-const EntitySettings = Loader(lazy(() => import("@/pages/EntitySettings")));
-const InventorySettings = Loader(lazy(() => import("@/pages/InventorySettings")));
-const ProjectSettings = Loader(lazy(() => import("@/pages/ProjectSettings")));
-const EmployeeSettings = Loader(lazy(() => import("@/pages/EmployeeSettings")));
-const GroupSettings = Loader(lazy(() => import("@/pages/GroupSettings")));
-const LedgerAccountSettings = Loader(lazy(() => import("@/pages/LedgerAccountSettings")));
-const LedgerAccountsGate = Loader(lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsGate")));
-const Statements = Loader(lazy(() => import("@/pages/Statements")));
+const Personal = lazy(() => import("src/pages/PersonalSettings"));
+const SubscriptionManagement = lazy(() => import("@/pages/SubscriptionManagement"));
+const SecurityAndPrivacy = lazy(() => import("@/pages/SecurityAndPrivacy"));
+const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
+const DepartmentSettings = lazy(() => import("@/pages/DepartmentSettings"));
+const BankSettings = lazy(() => import("@/pages/BankSettings"));
+const EntitySettings = lazy(() => import("@/pages/EntitySettings"));
+const InventorySettings = lazy(() => import("@/pages/InventorySettings"));
+const ProjectSettings = lazy(() => import("@/pages/ProjectSettings"));
+const EmployeeSettings = lazy(() => import("@/pages/EmployeeSettings"));
+const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
+const LedgerAccountSettings = lazy(() => import("@/pages/LedgerAccountSettings"));
+const LedgerAccountsGate = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsGate"));
+const Statements = lazy(() => import("@/pages/Statements"));
 
 // Status Pages
-const PurchaseConfirmation = Loader(lazy(() => import("@/pages/Status/PurchaseConfirmation")));
-const Status404 = Loader(lazy(() => import("@/pages/Status/Status404")));
-const Status500 = Loader(lazy(() => import("@/pages/Status/Status500")));
-const StatusComingSoon = Loader(lazy(() => import("@/pages/Status/ComingSoon")));
-const StatusMaintenance = Loader(lazy(() => import("@/pages/Status/Maintenance")));
+const PurchaseConfirmation = lazy(() => import("@/pages/Status/PurchaseConfirmation"));
+const Status404 = lazy(() => import("@/pages/Status/Status404"));
+const Status500 = lazy(() => import("@/pages/Status/Status500"));
+const StatusComingSoon = lazy(() => import("@/pages/Status/ComingSoon"));
+const StatusMaintenance = lazy(() => import("@/pages/Status/Maintenance"));
 
 const routes: RouteObject[] = [
     {

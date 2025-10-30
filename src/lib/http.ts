@@ -300,7 +300,7 @@ http.interceptors.response.use(
  * ==========================================================================*/
 const inflight = new Map<string, Promise<AxiosResponse>>();
 const responseCache = new Map<string, { t: number; res: AxiosResponse }>();
-const CACHE_TTL_MS = 5000; // 5s: evita repingar /auth/me a cada render/rota
+const CACHE_TTL_MS = 500; // 5s: evita repingar /auth/me a cada render/rota
 
 function keyFrom(cfg: AxiosRequestConfig) {
   const u = (cfg.baseURL || '') + (cfg.url || '');
