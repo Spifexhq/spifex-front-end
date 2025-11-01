@@ -294,6 +294,11 @@ export const api = {
     return request<GetEntryResponse>(`cashflow/${org}/entries/`, "GET", payload);
   },
 
+  getEntriesTable: (payload: GetEntryRequest) => {
+    const org = getOrgExternalId();
+    return request<GetEntryResponse>(`cashflow/${org}/entries/table/`, "GET", payload);
+  },
+
   getEntry: (externalId: string) => {
     const org = getOrgExternalId();
     return request<Entry>(`cashflow/${org}/entries/${externalId}/`, "GET");
@@ -378,6 +383,16 @@ export const api = {
     const params = { include_inactive: true, ...payload };
     return request<GetSettledEntry>(
       `cashflow/${orgExternalId}/settlements/`,
+      "GET",
+      params
+    );
+  },
+
+  getSettledEntriesTable: (payload: GetSettledEntryRequest) => {
+    const orgExternalId = getOrgExternalId();
+    const params = { include_inactive: true, ...payload };
+    return request<GetSettledEntry>(
+      `cashflow/${orgExternalId}/settlements/table/`,
       "GET",
       params
     );

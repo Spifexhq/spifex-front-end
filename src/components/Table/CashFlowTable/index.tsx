@@ -476,7 +476,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       else setLoadingMore(true);
 
       try {
-        const { data } = await api.getEntries(payload);
+        const { data } = await api.getEntriesTable(payload);
         const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
 
         setEntries((prev) => {

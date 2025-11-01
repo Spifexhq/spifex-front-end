@@ -430,7 +430,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(
 
         try {
           const payload = buildPayload(reset);
-          const { data } = await api.getSettledEntries(payload);
+          const { data } = await api.getSettledEntriesTable(payload);
           const incoming: SettledEntry[] = (data as GetSettledEntry).results ?? [];
 
           setEntries((prev) =>

@@ -444,7 +444,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                               )
                             }
                             onChange={() => {}}
-                            className={`border border-gray-300 rounded px-2 py-1 text-xs w-[180px] text-right ${
+                            className={`border border-gray-300 rounded px-2 py-1 text-xs w-[180px] text-left ${
                               invalid ? "!border-red-400 bg-red-50" : ""
                             }`}
                             aria-invalid={invalid || undefined}
