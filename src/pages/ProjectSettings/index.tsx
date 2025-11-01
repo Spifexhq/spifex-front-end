@@ -509,10 +509,6 @@ const ProjectSettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev || isBackgroundSync}
                     disabledNext={!pager.canNext || isBackgroundSync}
-                    label={t("settings:project.pagination.label", {
-                      index: pager.index + 1,
-                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
-                    })}
                   />
                 </>
               )}

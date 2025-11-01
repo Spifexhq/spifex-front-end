@@ -479,10 +479,6 @@ const InventorySettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev || globalBusy}
                     disabledNext={!pager.canNext || globalBusy}
-                    label={t("settings:inventory.pagination.label", {
-                      index: pager.index + 1,
-                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
-                    })}
                   />
                 </>
               )}

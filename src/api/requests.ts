@@ -684,6 +684,20 @@ export const api = {
     );
   },
 
+  getInventoryOptions: (params?: {
+    cursor?: string;
+    page_size?: number;
+    active?: "true" | "false";
+    q?: string;
+  }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetInventoryItemsResponse>(
+      `inventory/${orgExternalId}/inventory/items/options/`,
+      "GET",
+      params
+    );
+  },
+
   getInventoryItemsBatch: (ids: string[]) => {
     const orgExternalId = getOrgExternalId();
     return request<InventoryItem[]>(
@@ -742,14 +756,44 @@ export const api = {
       params
     );
   },
+
+  getEntitiesTable: (params?: {
+    cursor?: string;
+    page_size?: number;
+    active?: "true" | "false";
+    type?: string;
+    q?: string;
+  }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEntitiesResponse>(
+      `crm/${orgExternalId}/crm/entities/table/`,
+      "GET",
+      params
+    );
+  },
+
+  getEntitiesOptions: (params?: {
+    cursor?: string;
+    page_size?: number;
+    active?: "true" | "false";
+    type?: string;
+    q?: string;
+  }) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEntitiesResponse>(
+      `crm/${orgExternalId}/crm/entities/options/`,
+      "GET",
+      params
+    );
+  },
   
-    getEntity: (id: string) => {
-      const orgExternalId = getOrgExternalId();
-      return request<GetEntityResponse>(
-        `crm/${orgExternalId}/crm/entities/${id}/`,
-        "GET"
-      );
-    },
+  getEntity: (id: string) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GetEntityResponse>(
+      `crm/${orgExternalId}/crm/entities/${id}/`,
+      "GET"
+    );
+  },
 
   getEntitiesBatch: (ids: string[]) => {
     const orgExternalId = getOrgExternalId();

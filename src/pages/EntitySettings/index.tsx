@@ -125,8 +125,8 @@ function getInitials() {
 }
 
 function sortByName(a: Entity, b: Entity) {
-  const an = (a.full_name || a.alias_name || "").trim();
-  const bn = (b.full_name || b.alias_name || "").trim();
+  const an = (a.full_name || "").trim();
+  const bn = (b.full_name || "").trim();
   return an.localeCompare(bn, "pt-BR");
 }
 
@@ -155,7 +155,7 @@ const Row = ({
           {typeLabel} {entity.is_active === false ? ` ${t("settings:entity.row.inactive")}` : ""}
         </p>
         <p className="text-[13px] font-medium text-gray-900 truncate">
-          {entity.full_name || entity.alias_name || t("settings:entity.row.untitled")}
+          {entity.full_name || t("settings:entity.row.untitled")}
         </p>
       </div>
       {canEdit && (
@@ -220,7 +220,7 @@ const EntitySettings: React.FC = () => {
       if (INFLIGHT_FETCH) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
       INFLIGHT_FETCH = true;
       try {
-        const { data, meta } = await api.getEntities({
+        const { data, meta } = await api.getEntitiesTable({
           page_size: 100,
           cursor,
           q: appliedQuery || undefined,
@@ -338,10 +338,7 @@ const EntitySettings: React.FC = () => {
   const matchesQuery = useCallback((e: Entity, q: string) => {
     if (!q) return true;
     const s = q.toLowerCase();
-    return (
-      (e.full_name || "").toLowerCase().includes(s) ||
-      (e.alias_name || "").toLowerCase().includes(s)
-    );
+    return (e.full_name || "").toLowerCase().includes(s);
   }, []);
 
   const [, forceTick] = useState(0);
@@ -402,8 +399,8 @@ const EntitySettings: React.FC = () => {
 
   /* ------------------------------ Delete flow ------------------------------ */
   const requestDeleteEntity = (entity: Entity) => {
-    const name = entity.full_name ?? entity.alias_name ?? "";
-    setDeleteTargetId(entity.id); // freeze row immediately
+    const name = entity.full_name ?? "";
+    setDeleteTargetId(entity.id);
     setConfirmText(t("settings:entity.confirm.deleteTitle", { name }));
     setConfirmAction(() => async () => {
       try {
@@ -566,10 +563,6 @@ const EntitySettings: React.FC = () => {
                     onNext={pager.next}
                     disabledPrev={!pager.canPrev || isBackgroundSync || isSubmitting}
                     disabledNext={!pager.canNext || isBackgroundSync || isSubmitting}
-                    label={t("settings:entity.pagination.label", {
-                      index: pager.index + 1,
-                      total: pager.reachedEnd ? pager.knownPages : `${pager.knownPages}+`,
-                    })}
                   />
                 </>
               )}

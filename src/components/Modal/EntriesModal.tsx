@@ -561,12 +561,12 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   );
 
   const fetchAllInventoryItems = useCallback(
-    () => fetchAllCursor<InventoryItem>(api.getInventoryItems, 500),
+    () => fetchAllCursor<InventoryItem>(api.getInventoryOptions, 500),
     []
   );
 
   const fetchAllEntities = useCallback(
-    () => fetchAllCursor<Entity>(api.getEntities, 500),
+    () => fetchAllCursor<Entity>(api.getEntitiesOptions, 500),
     []
   );
 
@@ -1133,7 +1133,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 selected={selectedEntity}
                 onChange={handleEntityChange}
                 getItemKey={(i) => i.id}
-                getItemLabel={(i) => i.full_name || (i).alias_name || t("entriesModal:entities.unnamed")}
+                getItemLabel={(i) => i.full_name || t("entriesModal:entities.unnamed")}
                 buttonLabel={t("entriesModal:entities.entityBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
