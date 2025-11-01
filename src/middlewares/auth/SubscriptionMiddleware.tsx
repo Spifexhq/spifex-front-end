@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
 
-import { SuspenseLoader } from "@/components/Loaders";
+import TopProgress from 'src/components/ui/Loaders/TopProgress';
 
 type Props = {
   children: ReactNode;
@@ -32,7 +32,7 @@ export const SubscriptionMiddleware = ({ children, redirectTo }: Props) => {
   }, [handleInitUser]);
 
   if (isLoading) {
-    return <SuspenseLoader />;
+    return <TopProgress active={true} variant='center' />;
   }
 
   if ((!isSubscribed || !activePlanId) && !isSuperUser) {

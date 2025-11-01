@@ -43,7 +43,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ priceId, label, onClickCa
 
   return (
     <Button
-      loaderColor="#FFFFFF"
       onClick={handlePayment}
       disabled={isProcessing}
       isLoading={isProcessing}

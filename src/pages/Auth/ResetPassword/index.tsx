@@ -69,7 +69,7 @@ const ResetPassword = () => {
           showTogglePassword
           disabled={isLoading}
         />
-        <Button type="submit" variant="primary" loaderColor="#FFFFFF" isLoading={isLoading} disabled={isLoading}>
+        <Button type="submit" variant="primary" isLoading={isLoading} disabled={isLoading}>
           Salvar nova senha
         </Button>
       </form>

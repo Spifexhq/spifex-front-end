@@ -99,7 +99,6 @@ const SignIn = () => {
                   variant="primary"
                   type="submit"
                   onClick={handleSubmit}
-                  loaderColor="#FFFFFF"
                   isLoading={isLoading}
                   disabled={isFormIncomplete || isLoading}
                   style={{ height: "50px", width: "100%" }}

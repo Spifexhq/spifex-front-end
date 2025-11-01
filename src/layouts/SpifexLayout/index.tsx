@@ -24,7 +24,7 @@ export const SpifexLayout: FC = () => {
   return (
     <AuthMiddleware>
       <Navbar />
-      <div className="min-h-screen pt-16 bg-gray-50 text-gray-900">
+      <div className="min-h-screen pt-16 bg-white text-gray-900">
         <Outlet />
       </div>
     </AuthMiddleware>

@@ -192,7 +192,6 @@ const SignUp = () => {
                   variant="primary"
                   onClick={handleSubmit}
                   type="submit"
-                  loaderColor="#FFFFFF"
                   isLoading={isLoading}
                   disabled={isFormIncomplete || isLoading}
                   style={{ height: "50px", width: "100%" }}

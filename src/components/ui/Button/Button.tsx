@@ -1,5 +1,4 @@
 import * as React from "react";
-import { InlineLoader } from "@/components/Loaders";
 import { ButtonProps, ButtonSize, ButtonVariant } from "./Button.types";
 
 // Helper simples sem dependências externas
@@ -99,8 +98,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth = false,
       className,
       disabled,
-      children,
-      loaderColor,
       type = "button",
       ...rest
     },
@@ -118,7 +115,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={isLoading || undefined}
         {...rest}
       >
-        {isLoading ? <InlineLoader color={loaderColor} /> : children}
       </button>
     );
   }

@@ -4,7 +4,7 @@
  * -------------------------------------------------------------------------- */
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { InlineLoader } from "@/components/Loaders";
+import Spinner from "src/components/ui/Loaders/Spinner";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
 
 interface BanksTableProps {
@@ -33,7 +33,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
   if (loading) {
     return (
       <div className="flex justify-center py-3" role="status" aria-live="polite" aria-label={t("aria.loading")}>
-        <InlineLoader color="orange" />
+        <Spinner />
       </div>
     );
   }

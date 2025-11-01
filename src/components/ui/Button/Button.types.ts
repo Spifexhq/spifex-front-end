@@ -35,6 +35,5 @@ export interface ButtonProps
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
-  loaderColor?: string;
   fullWidth?: boolean;
 }

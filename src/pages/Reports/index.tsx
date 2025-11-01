@@ -18,7 +18,7 @@ import {
 } from "recharts";
 
 import Button from "src/components/ui/Button";
-import { InlineLoader } from "@/components/Loaders";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
 
 import { api } from "@/api/requests";
@@ -227,6 +227,7 @@ const ReportsPage: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-white text-gray-900">
       <main className={"flex-1 transition-all duration-300"}>
+        <TopProgress active={loading || loadingBanks} variant="top" topOffset={64} />
         <div className="mt-[15px] w-full px-6 md:px-10 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-semibold">{t("title")}</h1>
@@ -236,13 +237,6 @@ const ReportsPage: React.FC = () => {
               </Button>
             </div>
           </div>
-
-          {(loading || loadingBanks) && (
-            <div className="flex items-center gap-3 text-sm">
-              <InlineLoader color="orange" className="w-8 h-8" />
-              <span className="text-gray-600">{t("loading")}</span>
-            </div>
-          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 

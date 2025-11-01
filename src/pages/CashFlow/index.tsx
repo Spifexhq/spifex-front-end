@@ -9,6 +9,7 @@ import { api } from "src/api/requests";
 import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -56,6 +57,7 @@ const CashFlow = () => {
 
   return (
     <div className="flex">
+      <TopProgress active={banksLoading} variant="top" topOffset={64} />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}

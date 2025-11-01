@@ -52,7 +52,7 @@ const ForgotPassword = () => {
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
         />
-        <Button type="submit" variant="primary" loaderColor="#FFFFFF" isLoading={isLoading} disabled={!email || isLoading}>
+        <Button type="submit" variant="primary" isLoading={isLoading} disabled={!email || isLoading}>
           Enviar link
         </Button>
       </form>

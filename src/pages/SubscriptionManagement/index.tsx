@@ -17,7 +17,6 @@ import { useAuthContext } from "@/contexts/useAuthContext";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import { InlineLoader } from "@/components/Loaders";
 
 import PaymentButton from "@/components/SubscriptionButtons/PaymentButton";
 import ManageSubscriptionLink from "@/components/SubscriptionButtons/ManageSubscriptionLink";
@@ -246,7 +245,7 @@ const SubscriptionManagement: React.FC = () => {
             >
               {isProcessing ? (
                 <div className="flex items-center justify-center h-32">
-                  <InlineLoader />
+                  <TopProgress active={true} variant='center' />
                 </div>
               ) : (
                 <>

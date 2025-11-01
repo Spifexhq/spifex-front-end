@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { useAuth, apiRequest } from "@/api";
 import Snackbar from "src/components/ui/Snackbar";
-import { InlineLoader } from "@/components/Loaders";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import logo from "@/assets/Icons/Logo/logo-black.svg";
 import bgImage from "@/assets/Images/background/purchase-success.svg";
@@ -86,7 +86,7 @@ const PurchaseConfirmation: React.FC = () => {
   if (isFetching) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <InlineLoader />
+        <TopProgress active={true} variant='center' />
       </div>
     );
   }
@@ -165,7 +165,7 @@ const PurchaseConfirmation: React.FC = () => {
                 className="w-full h-12"
                 aria-label="Voltar para gerenciamento de assinatura"
               >
-                {isLoading ? <InlineLoader /> : "Voltar"}
+                {isLoading ? <TopProgress active={true} variant='center' /> : "Voltar"}
               </Button>
             </div>
           </div>

@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import Button from "src/components/ui/Button";
 import Checkbox from "src/components/ui/Checkbox";
 import Input from "src/components/ui/Input";
-import { InlineLoader } from "@/components/Loaders";
 
 // Utils
 import { handleUtilitaryAmountKeyDown, formatCurrency } from "src/lib";
@@ -290,11 +289,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 bg-white">
-              {loadingBanks ? (
-                <div className="py-4 grid place-items-center">
-                  <InlineLoader color="orange" />
-                </div>
-              ) : error ? (
+              {loadingBanks ? null : error ? (
                 <div className="py-4 text-center text-xs text-red-600">{error}</div>
               ) : banks.length === 0 ? (
                 <div className="py-4 text-center text-xs text-gray-600">{t("banks.none")}</div>

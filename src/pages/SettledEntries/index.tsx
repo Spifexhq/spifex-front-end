@@ -10,6 +10,7 @@ import FilterBar from "src/components/FilterBar";
 import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar, { MinimalEntry } from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const Settled = () => {
   useEffect(() => { document.title = "Realizado"; }, []);
@@ -63,6 +64,7 @@ const Settled = () => {
 
   return (
     <div className="flex">
+      <TopProgress active={banksLoading} variant="top" topOffset={64} />
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}

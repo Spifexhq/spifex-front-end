@@ -6,7 +6,7 @@ import { ApiResponse } from '@/models/Api';
 import { api } from "src/api/requests";
 import Button from 'src/components/ui/Button';
 import { isApiError } from 'src/lib/api/apiError';
-import { InlineLoader } from '@/components/Loaders';
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const EmailVerification = () => {
   const { uidb64, token } = useParams<{ uidb64?: string; token?: string }>();
@@ -63,7 +63,7 @@ const EmailVerification = () => {
       <div className="max-w-md w-full">
         {isVerifying ? (
           <div className="flex justify-center items-center h-60">
-            <InlineLoader />
+            <TopProgress active={true} variant='center' />
           </div>
         ) : (
           <div className="bg-white shadow-md rounded-md p-6 text-center">
