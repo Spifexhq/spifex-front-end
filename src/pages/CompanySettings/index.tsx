@@ -223,7 +223,7 @@ const CompanySettings: React.FC = () => {
                 {t("settings:company.btn.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t("settings:company.btn.saving", "Saving…") : t("settings:company.btn.save")}
+                {t("settings:company.btn.save")}
               </Button>
             </div>
           </form>
@@ -285,7 +285,7 @@ const CompanySettings: React.FC = () => {
                 {t("settings:company.btn.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting || useDeviceTz}>
-                {isSubmitting ? t("settings:company.btn.saving", "Saving…") : t("settings:company.btn.save")}
+                {t("settings:company.btn.save")}
               </Button>
             </div>
           </form>
@@ -316,7 +316,7 @@ const CompanySettings: React.FC = () => {
                 {t("settings:company.btn.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t("settings:company.btn.saving", "Saving…") : t("settings:company.btn.save")}
+                {t("settings:company.btn.save")}
               </Button>
             </div>
           </form>

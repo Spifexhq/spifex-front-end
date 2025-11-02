@@ -325,7 +325,7 @@ const SecurityAndPrivacy: React.FC = () => {
                     {t("settings:securityAndPrivacy.btn.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? t("settings:securityAndPrivacy.btn.saving", "Saving…") : t("settings:securityAndPrivacy.btn.save")}
+                    {t("settings:securityAndPrivacy.btn.save")}
                   </Button>
                 </div>
               </form>

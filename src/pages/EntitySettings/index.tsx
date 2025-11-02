@@ -316,7 +316,7 @@ const EntitySettings: React.FC = () => {
         account_holder_tax_id: entity.account_holder_tax_id ?? "",
         account_holder_name: entity.account_holder_name ?? "",
       });
-      setSnack({ message: t("settings:entity.errors.loadDetailFailed", "Falha ao carregar detalhes."), severity: "error" });
+      setSnack({ message: t("settings:entity.errors.detailError"), severity: "error" });
     } finally {
       setIsDetailLoading(false);
     }
@@ -384,7 +384,7 @@ const EntitySettings: React.FC = () => {
       await pager.refresh(); // foreground refresh
       closeModal();
       setSnack({
-        message: t("settings:entity.toast.saveOk", "Entidade salva com sucesso."),
+        message: t("settings:entity.toast.saveOk"),
         severity: "success",
       });
     } catch (err) {
@@ -416,7 +416,7 @@ const EntitySettings: React.FC = () => {
 
         // clean up local overlays
         setAdded((prev) => prev.filter((e) => e.id !== entity.id));
-        setSnack({ message: t("settings:entity.toast.deleteOk", "Entidade removida."), severity: "info" });
+        setSnack({ message: t("settings:entity.toast.deleteOk"), severity: "info" });
       } catch (err) {
         // rollback overlay
         setDeletedIds((prev) => {
@@ -542,7 +542,7 @@ const EntitySettings: React.FC = () => {
                           isDetailLoading ||
                           isBackgroundSync ||
                           deleteTargetId === e.id ||
-                          confirmBusy; // keep frozen during confirm action
+                          confirmBusy;
                         return (
                           <Row
                             key={e.id}
@@ -800,7 +800,7 @@ const EntitySettings: React.FC = () => {
                       {t("settings:entity.btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? t("settings:entity.btn.saving", "Saving…") : t("settings:entity.btn.save")}
+                      {t("settings:entity.btn.save")}
                     </Button>
                   </div>
                 </form>

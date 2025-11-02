@@ -174,7 +174,7 @@ const BankSettings: React.FC = () => {
       const sorted = [...list].sort((a, b) => (a.institution || "").localeCompare(b.institution || ""));
       setBanks(sorted);
     } catch {
-      setSnack({ message: t("settings:bank.toast.fetchError"), severity: "error" });
+      setSnack({ message: t("settings:bank.errors.fetchError"), severity: "error" });
     } finally {
       if (opts.background) setIsBackgroundSync(false);
       else setIsInitialLoading(false);
@@ -247,7 +247,7 @@ const BankSettings: React.FC = () => {
         initial_balance: toDigits(bank.initial_balance),
         is_active: bank.is_active ?? true,
       });
-      setSnack({ message: t("settings:bank.toast.detailError", "Falha ao carregar detalhes."), severity: "error" });
+      setSnack({ message: t("settings:bank.errors.detailError"), severity: "error" });
     } finally {
       setIsDetailLoading(false);
     }
@@ -319,9 +319,9 @@ const BankSettings: React.FC = () => {
 
       await fetchBanks({ background: true });
       closeModal();
-      setSnack({ message: t("settings:bank.toast.saveOk", "Conta bancária salva."), severity: "success" });
+      setSnack({ message: t("settings:bank.toast.saveOk"), severity: "success" });
     } catch {
-      setSnack({ message: t("settings:bank.toast.saveError"), severity: "error" });
+      setSnack({ message: t("settings:bank.errors.saveError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -337,14 +337,14 @@ const BankSettings: React.FC = () => {
         await api.deleteBank(bank.id);
         await fetchBanks({ background: true });
         setAdded((prev) => prev.filter((b) => b.id !== bank.id));
-        setSnack({ message: t("settings:bank.toast.deleteOk", "Conta excluída."), severity: "info" });
+        setSnack({ message: t("settings:bank.toast.deleteOk"), severity: "info" });
       } catch {
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(bank.id);
           return next;
         });
-        setSnack({ message: t("settings:bank.toast.deleteError"), severity: "error" });
+        setSnack({ message: t("settings:bank.errors.deleteError"), severity: "error" });
       } finally {
         setDeleteTargetId(null);
         setConfirmOpen(false);
@@ -542,7 +542,7 @@ const BankSettings: React.FC = () => {
                       {t("settings:bank.btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={busyGlobal}>
-                      {isSubmitting ? t("settings:bank.btn.saving", "Saving…") : t("settings:bank.btn.save")}
+                      t("settings:bank.btn.save")
                     </Button>
                   </div>
                 </form>
@@ -569,7 +569,7 @@ const BankSettings: React.FC = () => {
           confirmAction
             ?.()
             .catch(() => {
-              setSnack({ message: t("settings:bank.toast.confirmFail"), severity: "error" });
+              setSnack({ message: t("settings:bank.errors.confirmFailed"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}

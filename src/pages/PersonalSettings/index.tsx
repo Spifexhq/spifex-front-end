@@ -505,7 +505,7 @@ const PersonalSettings: React.FC = () => {
                     {t("settings:personal.btn.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? t("settings:personal.btn.saving", "Saving…") : t("settings:personal.btn.save")}
+                    {t("settings:personal.btn.save")}
                   </Button>
                 </div>
               </form>

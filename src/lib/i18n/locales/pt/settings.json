@@ -201,6 +201,9 @@
       "confirmPassword": "Confirme a senha",
       "groups": "Grupos"
     },
+    "badge": {
+      "syncing": "Sincronizando…"
+    },
     "btn": {
       "addEmployee": "Adicionar funcionário",
       "edit": "Editar",
@@ -220,13 +223,18 @@
     "confirm": {
       "delete": "Excluir funcionário \"{{name}}\"?"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Erro ao buscar dados.",
       "loadEmployeeError": "Erro ao carregar dados do funcionário.",
       "saveError": "Erro ao salvar funcionário.",
       "deleteError": "Erro ao excluir funcionário.",
+      "confirmFailed": "Falha ao confirmar."
+    },
+    "toast": {
       "passwordMismatch": "As senhas não coincidem.",
-      "weakPassword": "A senha não atende aos requisitos mínimos."
+      "weakPassword": "A senha não atende aos requisitos mínimos.",
+      "saveOk": "Colaborador salvo.",
+      "deleteOk": "Colaborador removido."
     }
   },
 
@@ -235,6 +243,9 @@
     "header": {
       "settings": "Configurações",
       "title": "Grupos & Permissões"
+    },
+    "badge": {
+      "syncing": "Sincronizando…"
     },
     "left": {
       "groups": "Grupos",
@@ -370,11 +381,16 @@
       "confirmLabel": "Excluir",
       "cancelLabel": "Cancelar"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Erro ao buscar bancos.",
       "saveError": "Erro ao salvar banco.",
       "deleteError": "Erro ao excluir banco.",
-      "confirmFail": "Falha ao confirmar."
+      "detailError": "Falha ao carregar detalhes.",
+      "confirmFailed": "Falha ao confirmar."
+    },
+    "toast": {
+      "saveOk": "Conta bancária salva.",
+      "deleteOk": "Conta bancária excluída."
     }
   },
 
@@ -383,6 +399,9 @@
     "header": {
       "settings": "Financeiro",
       "title": "Extratos bancários"
+    },
+    "badge": {
+      "syncing": "Sincronizando…"
     },
     "btn": {
       "upload": "Enviar PDFs",
@@ -440,10 +459,13 @@
       "uploadFail": "Falha no upload do extrato.",
       "analysisStarted": "Análise iniciada. O status será atualizado em instantes.",
       "analysisFail": "Não foi possível iniciar a análise.",
-      "deleteFail": "Falha ao excluir extrato."
+      "deleteFail": "Falha ao excluir extrato.",
+      "uploadOk": "Upload concluído.",
+      "deleteOk": "Extrato excluído com sucesso."
     },
     "aria": {
-      "uploadTrigger": "Selecionar arquivos (⌘/Ctrl+U)"
+      "uploadTrigger": "Selecionar arquivos (⌘/Ctrl+U)",
+      "progress": "Progresso do upload"
     },
     "meta": {
       "chip": {
@@ -460,6 +482,9 @@
     "header": {
       "settings": "Configurações",
       "projects": "Projetos"
+    },
+    "badge": {
+      "syncing": "Sincronizando…"
     },
     "section": {
       "list": "Lista de projetos"
@@ -498,6 +523,9 @@
       "editTitle": "Editar projeto",
       "close": "Fechar"
     },
+    "confirm": {
+      "deleteTitle": "Excluir projeto \"{{name}}\"?"
+    },
     "pagination": {
       "label": "Página {{index}} de {{total}}"
     },
@@ -505,7 +533,13 @@
     "errors": {
       "loadFailedTitle": "Falha ao carregar",
       "saveError": "Erro ao salvar projeto.",
-      "deleteError": "Erro ao excluir projeto."
+      "detailError": "Falha ao carregar detalhes.",
+      "deleteError": "Erro ao excluir projeto.",
+      "confirmFailed": "Falha ao confirmar."
+    },
+    "toast": {
+      "saved": "Projeto salvo.",
+      "deleted": "Projeto excluído."
     }
   },
 
@@ -514,6 +548,9 @@
     "header": {
       "settings": "Configurações",
       "inventory": "Inventário"
+    },
+    "badge": {
+      "syncing": "Sincronizando…"
     },
     "section": {
       "list": "Itens do inventário"
@@ -550,6 +587,9 @@
       "editTitle": "Editar item",
       "close": "Fechar"
     },
+    "confirm": {
+      "deleteTitle": "Excluir item \"{{name}}\"?"
+    },
     "pagination": {
       "label": "Página {{index}} de {{total}}"
     },
@@ -557,7 +597,14 @@
     "errors": {
       "loadFailedTitle": "Falha ao carregar",
       "saveError": "Erro ao salvar item.",
-      "deleteError": "Erro ao excluir item."
+      "deleteError": "Erro ao excluir item.",
+      "detailError": "Falha ao carregar detalhes.",
+      "confirmFailed": "Falha ao confirmar."
+    },
+    "toast": {
+      "saveOk": "Item criado.",
+      "updateOk": "Item atualizado.",
+      "deleteOk": "Item excluído."
     }
   },
 
@@ -630,7 +677,12 @@
       "loadFailedTitle": "Falha ao carregar",
       "saveError": "Erro ao salvar entidade.",
       "deleteError": "Erro ao excluir entidade.",
+      "detailError": "Falha ao carregar detalhes.",
       "confirmFailed": "Falha ao confirmar."
+    },
+    "toast": {
+      "saveOk": "Entidade salva.",
+      "deleteOk": "Entidade removida."
     }
   },
 
@@ -777,6 +829,9 @@
       "cancel": "Cancelar",
       "save": "Salvar"
     },
+    "confirm": {
+      "deleteTitle": "Excluir “{{name}}”?"
+    },
     "tags": {
       "code": "Código",
       "inactive": "Inativo",
@@ -797,9 +852,14 @@
       "active": "Departamento ativo"
     },
     "errors": {
-      "loadFailed": "Falha ao carregar",
+      "fetchError": "Falha ao carregar",
       "saveFailed": "Falha ao salvar departamento.",
-      "deleteFailed": "Falha ao excluir departamento."
+      "deleteFailed": "Falha ao excluir departamento.",
+      "confirmFailed": "Falha ao confirmar."
+    },
+    "toast": {
+      "saveOk": "Departamento salvo.",
+      "deleteOk": "Departamento excluído."
     },
     "alerts": {
       "noData": "Nenhum departamento encontrado nesta página."

@@ -152,7 +152,7 @@ const Statements: React.FC = () => {
         setSnack({ message: t("settings:statements.toast.listFetchError"), severity: "error" });
       } finally {
         setLoading(false);
-        setLoading(false); // ensure both flags off on exit path
+        setLoading(false);
         INFLIGHT_FETCH = false;
       }
     },

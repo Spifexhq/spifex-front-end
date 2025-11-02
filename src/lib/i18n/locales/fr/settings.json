@@ -201,6 +201,9 @@
       "confirmPassword": "Confirmer le mot de passe",
       "groups": "Groupes"
     },
+    "badge": {
+      "syncing": "Synchronisation…"
+    },
     "btn": {
       "addEmployee": "Ajouter un employé",
       "edit": "Modifier",
@@ -220,13 +223,18 @@
     "confirm": {
       "delete": "Supprimer l'employé « {{name}} » ?"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Échec du chargement des données.",
       "loadEmployeeError": "Échec du chargement des données de l'employé.",
       "saveError": "Échec de l'enregistrement de l'employé.",
       "deleteError": "Échec de la suppression de l'employé.",
+      "confirmFailed": "Échec de la confirmation."
+    },
+    "toast": {
       "passwordMismatch": "Les mots de passe ne correspondent pas.",
-      "weakPassword": "Le mot de passe ne satisfait pas aux exigences minimales."
+      "weakPassword": "Le mot de passe ne satisfait pas aux exigences minimales.",
+      "saveOk": "Employé enregistré.",
+      "deleteOk": "Employé supprimé."
     }
   },
 
@@ -235,6 +243,9 @@
     "header": {
       "settings": "Paramètres",
       "title": "Groupes et autorisations"
+    },
+    "badge": {
+      "syncing": "Synchronisation…"
     },
     "left": {
       "groups": "Groupes",
@@ -370,11 +381,16 @@
       "confirmLabel": "Supprimer",
       "cancelLabel": "Annuler"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Échec du chargement des banques.",
       "saveError": "Échec de l'enregistrement de la banque.",
       "deleteError": "Échec de la suppression de la banque.",
-      "confirmFail": "Échec de la confirmation."
+      "detailError": "Échec du chargement des détails.",
+      "confirmFailed": "Échec de la confirmation."
+    },
+    "toast": {
+      "saveOk": "Compte bancaire sauvegardé.",
+      "deleteOk": "Compte bancaire supprimé."
     }
   },
 
@@ -383,6 +399,9 @@
     "header": {
       "settings": "Finance",
       "title": "Relevés bancaires"
+    },
+    "badge": {
+      "syncing": "Synchronisation…"
     },
     "btn": {
       "upload": "Téléverser des PDF",
@@ -440,10 +459,13 @@
       "uploadFail": "Échec du téléversement du relevé.",
       "analysisStarted": "Analyse démarrée. Le statut sera mis à jour sous peu.",
       "analysisFail": "Impossible de démarrer l'analyse.",
-      "deleteFail": "Échec de la suppression du relevé."
+      "deleteFail": "Échec de la suppression du relevé.",
+      "uploadOk": "Téléversement terminé.",
+      "deleteOk": "Relevé supprimé avec succès."
     },
     "aria": {
-      "uploadTrigger": "Sélectionner des fichiers (⌘/Ctrl+U)"
+      "uploadTrigger": "Sélectionner des fichiers (⌘/Ctrl+U)",
+      "progress": "Progression du téléversement"
     },
     "meta": {
       "chip": {
@@ -460,6 +482,9 @@
     "header": {
       "settings": "Paramètres",
       "projects": "Projets"
+    },
+    "badge": {
+      "syncing": "Synchronisation…"
     },
     "section": {
       "list": "Liste des projets"
@@ -498,6 +523,9 @@
       "editTitle": "Modifier le projet",
       "close": "Fermer"
     },
+    "confirm": {
+      "deleteTitle": "Supprimer le projet « {{name}} » ?"
+    },
     "pagination": {
       "label": "Page {{index}} sur {{total}}"
     },
@@ -505,7 +533,13 @@
     "errors": {
       "loadFailedTitle": "Échec du chargement",
       "saveError": "Échec de l'enregistrement du projet.",
-      "deleteError": "Échec de la suppression du projet."
+      "detailError": "Échec du chargement des détails.",
+      "deleteError": "Échec de la suppression du projet.",
+      "confirmFailed": "Échec de la confirmation."
+    },
+    "toast": {
+      "saved": "Projet enregistré.",
+      "deleted": "Projet supprimé."
     }
   },
 
@@ -514,6 +548,9 @@
     "header": {
       "settings": "Paramètres",
       "inventory": "Inventaire"
+    },
+    "badge": {
+      "syncing": "Synchronisation…"
     },
     "section": {
       "list": "Articles d'inventaire"
@@ -550,6 +587,9 @@
       "editTitle": "Modifier l'article",
       "close": "Fermer"
     },
+    "confirm": {
+      "deleteTitle": "Supprimer l’article « {{name}} » ?"
+    },
     "pagination": {
       "label": "Page {{index}} sur {{total}}"
     },
@@ -557,7 +597,14 @@
     "errors": {
       "loadFailedTitle": "Échec du chargement",
       "saveError": "Échec de l'enregistrement de l'article.",
-      "deleteError": "Échec de la suppression de l'article."
+      "deleteError": "Échec de la suppression de l'article.",
+      "detailError": "Échec du chargement des détails.",
+      "confirmFailed": "Échec de la confirmation."
+    },
+    "toast": {
+      "saveOk": "Article créé.",
+      "updateOk": "Article mis à jour.",
+      "deleteOk": "Article supprimé."
     }
   },
 
@@ -630,7 +677,12 @@
       "loadFailedTitle": "Échec du chargement",
       "saveError": "Échec de l'enregistrement de l'entité.",
       "deleteError": "Échec de la suppression de l'entité.",
+      "detailError": "Échec du chargement des détails.",
       "confirmFailed": "Échec de la confirmation."
+    },
+    "toast": {
+      "saveOk": "Entité enregistrée.",
+      "deleteOk": "Entité supprimée."
     }
   },
 
@@ -777,6 +829,9 @@
       "cancel": "Annuler",
       "save": "Enregistrer"
     },
+    "confirm": {
+      "deleteTitle": "Supprimer “{{name}}”?"
+    },
     "tags": {
       "code": "Code",
       "inactive": "Inactif",
@@ -797,9 +852,14 @@
       "active": "Département actif"
     },
     "errors": {
-      "loadFailed": "Échec du chargement",
+      "fetchError": "Échec du chargement",
       "saveFailed": "Échec de l'enregistrement du département.",
-      "deleteFailed": "Échec de la suppression du département."
+      "deleteFailed": "Échec de la suppression du département.",
+      "confirmFailed": "Échec de la confirmation."
+    },
+    "toast": {
+      "saveOk": "Département enregistré.",
+      "deleteOk": "Département supprimé."
     },
     "alerts": {
       "noData": "Aucun département trouvé sur cette page."

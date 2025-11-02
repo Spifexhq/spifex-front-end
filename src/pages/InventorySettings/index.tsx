@@ -228,7 +228,6 @@ const InventorySettings: React.FC = () => {
     setIsDetailLoading(true);
 
     try {
-      // Detail fetch (EntitySettings pattern). Adjust the accessor if your API returns { item }.
       const res = await api.getInventoryItem(item.id);
       const detail = res.data as InventoryItem;
 
@@ -251,7 +250,7 @@ const InventorySettings: React.FC = () => {
         is_active: item.is_active ?? true,
       });
       setSnack({
-        message: t("settings:inventory.errors.loadDetailFailed", "Falha ao carregar detalhes."),
+        message: t("settings:inventory.errors.detailError"),
         severity: "error",
       });
     } finally {
@@ -280,15 +279,15 @@ const InventorySettings: React.FC = () => {
     try {
       if (mode === "create") {
         const { data: created } = await api.addInventoryItem(formData);
-        setAdded((prev) => [created, ...prev]); // overlay local
+        setAdded((prev) => [created, ...prev]);
         setSnack({
-          message: t("settings:inventory.toast.createSuccess", { defaultValue: "Item criado." }),
+          message: t("settings:inventory.toast.saveOk"),
           severity: "success",
         });
       } else if (editingItem) {
         await api.editInventoryItem(editingItem.id, formData);
         setSnack({
-          message: t("settings:inventory.toast.updateSuccess", { defaultValue: "Item atualizado." }),
+          message: t("settings:inventory.toast.updateOk"),
           severity: "success",
         });
       }
@@ -322,7 +321,7 @@ const InventorySettings: React.FC = () => {
         setAdded((prev) => prev.filter((i) => i.id !== item.id));
 
         setSnack({
-          message: t("settings:inventory.toast.deleteSuccess", { defaultValue: "Item excluído." }),
+          message: t("settings:inventory.toast.deleteOk"),
           severity: "info",
         });
       } catch (err) {
@@ -371,7 +370,7 @@ const InventorySettings: React.FC = () => {
       aria-live="polite"
       className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
     >
-      {t("settings:inventory.badge.syncing", "Syncing…")}
+      {t("settings:inventory.badge.syncing")}
     </span>
   ) : null;
 
@@ -530,7 +529,7 @@ const InventorySettings: React.FC = () => {
                       {t("settings:inventory.btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? t("settings:inventory.btn.saving", "Saving…") : t("settings:inventory.btn.save")}
+                      {t("settings:inventory.btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -544,7 +543,7 @@ const InventorySettings: React.FC = () => {
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:inventory.btn.confirmDelete")}
+        confirmLabel={t("settings:inventory.btn.delete")}
         cancelLabel={t("settings:inventory.btn.cancel")}
         variant="danger"
         onCancel={() => {

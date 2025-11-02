@@ -960,7 +960,7 @@ const LedgerAccountSettings: React.FC = () => {
                     {t("settings:ledgerAccounts.buttons.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting || !formData.name || !formData.category || !formData.subcategory}>
-                    {isSubmitting ? t("settings:ledgerAccounts.buttons.saving", "Saving…") : t("settings:ledgerAccounts.buttons.save")}
+                    {t("settings:ledgerAccounts.buttons.save")}
                   </Button>
                 </div>
               </form>

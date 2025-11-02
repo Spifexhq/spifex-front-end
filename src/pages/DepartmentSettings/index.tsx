@@ -230,7 +230,7 @@ const DepartmentSettings: React.FC = () => {
       });
 
       setSnack({
-        message: "Falha ao carregar detalhes do departamento.",
+        message: t("settings:departments.errors.fetchError"),
         severity: "error",
       });
     } finally {
@@ -267,14 +267,14 @@ const DepartmentSettings: React.FC = () => {
     try {
       if (modalMode === "create") {
         const { data: created } = await api.addDepartment(payload);
-        setAdded((prev) => [created as Department, ...prev]); // optimistic overlay
+        setAdded((prev) => [created as Department, ...prev]);
       } else if (editingDept) {
         await api.editDepartment(editingDept.id, payload);
       }
       await pager.refresh();
       closeModal();
       setSnack({
-        message: t("settings:departments.toast.saveOk", "Departamento salvo com sucesso."),
+        message: t("settings:departments.toast.saveOk"),
         severity: "success",
       });
     } catch (err) {
@@ -282,7 +282,7 @@ const DepartmentSettings: React.FC = () => {
         message:
           err instanceof Error
             ? err.message
-            : t("settings:departments.errors.saveFailed", "Não foi possível salvar."),
+            : t("settings:departments.errors.saveFailed"),
         severity: "error",
       });
     } finally {
@@ -308,7 +308,7 @@ const DepartmentSettings: React.FC = () => {
         setAdded((prev) => prev.filter((d) => d.id !== dept.id));
 
         setSnack({
-          message: t("settings:departments.toast.deleteOk", "Departamento excluído."),
+          message: t("settings:departments.toast.deleteOk"),
           severity: "info",
         });
       } catch (err) {
@@ -321,7 +321,7 @@ const DepartmentSettings: React.FC = () => {
           message:
             err instanceof Error
               ? err.message
-              : t("settings:departments.errors.deleteFailed", "Não foi possível excluir."),
+              : t("settings:departments.errors.deleteFailed"),
           severity: "error",
         });
       } finally {
@@ -426,7 +426,7 @@ const DepartmentSettings: React.FC = () => {
               {pager.error ? (
                 <div className="p-6 text-center">
                   <p className="text-[13px] font-medium text-red-700 mb-2">
-                    {t("settings:departments.errors.loadFailed")}
+                    {t("settings:departments.errors.fetchError")}
                   </p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
                   <Button variant="outline" size="sm" onClick={pager.refresh} disabled={isBackgroundSync}>
@@ -537,9 +537,7 @@ const DepartmentSettings: React.FC = () => {
                       {t("settings:departments.buttons.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting || isDetailLoading}>
-                      {isSubmitting
-                        ? t("settings:departments.buttons.saving", "Saving…")
-                        : t("settings:departments.buttons.save")}
+                      {t("settings:departments.buttons.save")}
                     </Button>
                   </div>
                 </form>
@@ -553,8 +551,8 @@ const DepartmentSettings: React.FC = () => {
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:departments.buttons.confirmDelete", "Excluir")}
-        cancelLabel={t("settings:departments.buttons.cancel", "Cancelar")}
+        confirmLabel={t("settings:departments.buttons.delete")}
+        cancelLabel={t("settings:departments.buttons.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -566,7 +564,7 @@ const DepartmentSettings: React.FC = () => {
           confirmAction()
             .catch(() => {
               setSnack({
-                message: t("settings:departments.errors.confirmFailed", "Falha ao confirmar."),
+                message: t("settings:departments.errors.confirmFailed"),
                 severity: "error",
               });
             })

@@ -278,7 +278,7 @@ const ProjectSettings: React.FC = () => {
         is_active: project.is_active ?? true,
       });
       setSnack({
-        message: t("settings:project.errors.loadDetailFailed", "Falha ao carregar detalhes."),
+        message: t("settings:project.errors.detailError"),
         severity: "error",
       });
     } finally {
@@ -401,7 +401,7 @@ const ProjectSettings: React.FC = () => {
       aria-live="polite"
       className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
     >
-      {t("settings:project.badge.syncing", "Syncing…")}
+      {t("settings:project.badge.syncing")}
     </span>
   ) : null;
 
@@ -592,7 +592,7 @@ const ProjectSettings: React.FC = () => {
                       {t("settings:project.btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? t("settings:project.btn.saving", "Saving…") : t("settings:project.btn.save")}
+                      {t("settings:project.btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -606,8 +606,8 @@ const ProjectSettings: React.FC = () => {
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:project.confirm.confirmLabel", "Excluir")}
-        cancelLabel={t("settings:project.confirm.cancelLabel", "Cancelar")}
+        confirmLabel={t("settings:project.btn.delete")}
+        cancelLabel={t("settings:project.btn.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;

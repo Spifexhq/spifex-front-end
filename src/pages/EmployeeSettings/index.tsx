@@ -219,7 +219,7 @@ const EmployeeSettings: React.FC = () => {
       } catch (err: unknown) {
         if (mountedRef.current) {
           console.error("Fetch employees/groups failed", err);
-          setSnack({ message: t("settings:employee.toast.fetchError"), severity: "error" });
+          setSnack({ message: t("settings:employee.errors.fetchError"), severity: "error" });
         }
       } finally {
         if (mountedRef.current) {
@@ -266,7 +266,7 @@ const EmployeeSettings: React.FC = () => {
       });
     } catch (error: unknown) {
       console.error(error);
-      setSnack({ message: t("settings:employee.toast.loadEmployeeError"), severity: "error" });
+      setSnack({ message: t("settings:employee.errors.loadEmployeeError"), severity: "error" });
       setModalOpen(false);
       setEditingEmployee(null);
     } finally {
@@ -325,12 +325,12 @@ const EmployeeSettings: React.FC = () => {
       await fetchList();
       closeModal();
       setSnack({
-        message: t("settings:employee.toast.saveOk", "Colaborador salvo com sucesso."),
+        message: t("settings:employee.toast.saveOk"),
         severity: "success",
       });
     } catch (err: unknown) {
       console.error(err);
-      setSnack({ message: t("settings:employee.toast.saveError"), severity: "error" });
+      setSnack({ message: t("settings:employee.errors.saveError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -345,12 +345,12 @@ const EmployeeSettings: React.FC = () => {
         await api.deleteEmployee(emp.id);
         await fetchList({ background: true });
         setSnack({
-          message: t("settings:employee.toast.deleteOk", "Colaborador removido."),
+          message: t("settings:employee.toast.deleteOk"),
           severity: "info",
         });
       } catch (err: unknown) {
         console.error(err);
-        setSnack({ message: t("settings:employee.toast.deleteError"), severity: "error" });
+        setSnack({ message: t("settings:employee.errors.deleteError"), severity: "error" });
       } finally {
         setDeleteTargetId(null);
         setConfirmOpen(false);
@@ -389,7 +389,7 @@ const EmployeeSettings: React.FC = () => {
       aria-live="polite"
       className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
     >
-      {t("settings:employee.badge.syncing", "Syncing…")}
+      {t("settings:employee.badge.syncing")}
     </span>
   ) : null;
 
@@ -568,9 +568,7 @@ const EmployeeSettings: React.FC = () => {
                       {t("settings:employee.btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting || isDetailLoading}>
-                      {isSubmitting
-                        ? t("settings:employee.btn.saving", "Saving…")
-                        : t("settings:employee.btn.save")}
+                      {t("settings:employee.btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -584,8 +582,8 @@ const EmployeeSettings: React.FC = () => {
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:employee.btn.confirmDelete", "Excluir")}
-        cancelLabel={t("settings:employee.btn.cancel", "Cancelar")}
+        confirmLabel={t("settings:employee.btn.delete")}
+        cancelLabel={t("settings:employee.btn.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -596,7 +594,7 @@ const EmployeeSettings: React.FC = () => {
           setConfirmBusy(true);
           confirmAction()
             .catch(() => {
-              setSnack({ message: t("settings:employee.errors.confirmFailed", "Falha ao confirmar."), severity: "error" });
+              setSnack({ message: t("settings:employee.errors.confirmFailed"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}

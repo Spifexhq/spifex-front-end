@@ -201,6 +201,9 @@
       "confirmPassword": "Confirm password",
       "groups": "Groups"
     },
+    "badge": {
+      "syncing": "Syncing…"
+    },
     "btn": {
       "addEmployee": "Add employee",
       "edit": "Edit",
@@ -220,13 +223,18 @@
     "confirm": {
       "delete": "Delete employee \"{{name}}\"?"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Failed to fetch data.",
       "loadEmployeeError": "Failed to load employee data.",
       "saveError": "Failed to save employee.",
       "deleteError": "Failed to delete employee.",
+      "confirmFailed": "Failed to confirm action."
+    },
+    "toast": {
       "passwordMismatch": "Passwords do not match.",
-      "weakPassword": "The password does not meet the minimum requirements."
+      "weakPassword": "The password does not meet the minimum requirements.",
+      "saveOk": "Saved employee.",
+      "deleteOk": "Employee deleted."
     }
   },
 
@@ -235,6 +243,9 @@
     "header": {
       "settings": "Settings",
       "title": "Groups & Permissions"
+    },
+    "badge": {
+      "syncing": "Syncing…"
     },
     "left": {
       "groups": "Groups",
@@ -370,11 +381,16 @@
       "confirmLabel": "Delete",
       "cancelLabel": "Cancel"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Failed to fetch banks.",
       "saveError": "Failed to save bank.",
       "deleteError": "Failed to delete bank.",
-      "confirmFail": "Failed to confirm action."
+      "detailError": "Failed to load details.",
+      "confirmFailed": "Failed to confirm action."
+    },
+    "toast": {
+      "saveOk": "Saved bank account.",
+      "deleteOk": "Bank account deleted."
     }
   },
 
@@ -383,6 +399,9 @@
     "header": {
       "settings": "Finance",
       "title": "Bank statements"
+    },
+    "badge": {
+      "syncing": "Syncing…"
     },
     "btn": {
       "upload": "Upload PDFs",
@@ -440,10 +459,13 @@
       "uploadFail": "Failed to upload statement.",
       "analysisStarted": "Analysis started. Status will update shortly.",
       "analysisFail": "Could not start analysis.",
-      "deleteFail": "Failed to delete statement."
+      "deleteFail": "Failed to delete statement.",
+      "uploadOk": "Upload completed.",
+      "deleteOk": "Statement deleted successfully."
     },
     "aria": {
-      "uploadTrigger": "Select files (⌘/Ctrl+U)"
+      "uploadTrigger": "Select files (⌘/Ctrl+U)",
+      "progress": "Upload progress"
     },
     "meta": {
       "chip": {
@@ -460,6 +482,9 @@
     "header": {
       "settings": "Settings",
       "projects": "Projects"
+    },
+    "badge": {
+      "syncing": "Syncing…"
     },
     "section": {
       "list": "Project list"
@@ -498,6 +523,9 @@
       "editTitle": "Edit project",
       "close": "Close"
     },
+    "confirm": {
+      "deleteTitle": "Delete project \"{{name}}\"?"
+    },
     "pagination": {
       "label": "Page {{index}} of {{total}}"
     },
@@ -505,7 +533,13 @@
     "errors": {
       "loadFailedTitle": "Failed to load",
       "saveError": "Failed to save project.",
-      "deleteError": "Failed to delete project."
+      "detailError": "Failed to load details.",
+      "deleteError": "Failed to delete project.",
+      "confirmFailed": "Failed to confirm."
+    },
+    "toast": {
+      "saved": "Project saved.",
+      "deleted": "Project deleted."
     }
   },
 
@@ -514,6 +548,9 @@
     "header": {
       "settings": "Settings",
       "inventory": "Inventory"
+    },
+    "badge": {
+      "syncing": "Syncing…"
     },
     "section": {
       "list": "Inventory items"
@@ -550,6 +587,9 @@
       "editTitle": "Edit item",
       "close": "Close"
     },
+    "confirm": {
+      "deleteTitle": "Delete item \"{{name}}\"?"
+    },
     "pagination": {
       "label": "Page {{index}} of {{total}}"
     },
@@ -557,7 +597,14 @@
     "errors": {
       "loadFailedTitle": "Failed to load",
       "saveError": "Failed to save item.",
-      "deleteError": "Failed to delete item."
+      "deleteError": "Failed to delete item.",
+      "detailError": "Failed to load details.",
+      "confirmFailed": "Failed to confirm."
+    },
+    "toast": {
+      "saveOk": "Item created.",
+      "updateOk": "Item updated.",
+      "deleteOk": "Item deleted."
     }
   },
 
@@ -630,7 +677,12 @@
       "loadFailedTitle": "Failed to load",
       "saveError": "Failed to save entity.",
       "deleteError": "Failed to delete entity.",
+      "detailError": "Failed to load details.",
       "confirmFailed": "Failed to confirm."
+    },
+    "toast": {
+      "saveOk": "Entity saved.",
+      "deleteOk": "Entity removed."
     }
   },
 
@@ -777,6 +829,9 @@
       "cancel": "Cancel",
       "save": "Save"
     },
+    "confirm": {
+      "deleteTitle": "Delete “{{name}}”?"
+    },
     "tags": {
       "code": "Code",
       "inactive": "Inactive",
@@ -797,9 +852,14 @@
       "active": "Active department"
     },
     "errors": {
-      "loadFailed": "Failed to load",
+      "fetchError": "Failed to load",
       "saveFailed": "Failed to save department.",
-      "deleteFailed": "Failed to delete department."
+      "deleteFailed": "Failed to delete department.",
+      "confirmFailed": "Failed to confirm action."
+    },
+    "toast": {
+      "saveOk": "Saved department.",
+      "deleteOk": "Department deleted."
     },
     "alerts": {
       "noData": "No departments found on this page."

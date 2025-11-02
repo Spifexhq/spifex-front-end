@@ -429,7 +429,7 @@ const GroupSettings: React.FC = () => {
       aria-live="polite"
       className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
     >
-      {t("settings:groups.badge.syncing", "Syncing…")}
+      {t("settings:groups.badge.syncing")}
     </span>
   ) : null;
 

@@ -201,6 +201,9 @@
       "confirmPassword": "Passwort bestätigen",
       "groups": "Gruppen"
     },
+    "badge": {
+      "syncing": "Synchronisierung…"
+    },
     "btn": {
       "addEmployee": "Mitarbeiter hinzufügen",
       "edit": "Bearbeiten",
@@ -220,13 +223,18 @@
     "confirm": {
       "delete": "Mitarbeiter „{{name}}“ löschen?"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Daten konnten nicht geladen werden.",
       "loadEmployeeError": "Mitarbeiterdaten konnten nicht geladen werden.",
       "saveError": "Mitarbeiter konnte nicht gespeichert werden.",
       "deleteError": "Mitarbeiter konnte nicht gelöscht werden.",
+      "confirmFailed": "Aktion konnte nicht bestätigt werden."
+    },
+    "toast": {
       "passwordMismatch": "Passwörter stimmen nicht überein.",
-      "weakPassword": "Das Passwort erfüllt nicht die Mindestanforderungen."
+      "weakPassword": "Das Passwort erfüllt nicht die Mindestanforderungen.",
+      "saveOk": "Mitarbeiter gespeichert.",
+      "deleteOk": "Mitarbeiter gelöscht."
     }
   },
 
@@ -235,6 +243,9 @@
     "header": {
       "settings": "Einstellungen",
       "title": "Gruppen & Berechtigungen"
+    },
+    "badge": {
+      "syncing": "Synchronisierung…"
     },
     "left": {
       "groups": "Gruppen",
@@ -370,11 +381,16 @@
       "confirmLabel": "Löschen",
       "cancelLabel": "Abbrechen"
     },
-    "toast": {
+    "errors": {
       "fetchError": "Banken konnten nicht geladen werden.",
       "saveError": "Bank konnte nicht gespeichert werden.",
       "deleteError": "Bank konnte nicht gelöscht werden.",
-      "confirmFail": "Aktion konnte nicht bestätigt werden."
+      "detailError": "Details konnte nicht geladen werden.",
+      "confirmFailed": "Aktion konnte nicht bestätigt werden."
+    },
+    "toast": {
+      "saveOk": "Gespeichertes Bankkonto.",
+      "deleteOk": "Bankkonto gelöscht."
     }
   },
 
@@ -383,6 +399,9 @@
     "header": {
       "settings": "Finanzen",
       "title": "Bankauszüge"
+    },
+    "badge": {
+      "syncing": "Wird synchronisiert…"
     },
     "btn": {
       "upload": "PDFs hochladen",
@@ -440,10 +459,13 @@
       "uploadFail": "Auszug konnte nicht hochgeladen werden.",
       "analysisStarted": "Analyse gestartet. Der Status wird in Kürze aktualisiert.",
       "analysisFail": "Analyse konnte nicht gestartet werden.",
-      "deleteFail": "Auszug konnte nicht gelöscht werden."
+      "deleteFail": "Auszug konnte nicht gelöscht werden.",
+      "uploadOk": "Upload abgeschlossen.",
+      "deleteOk": "Kontoauszug erfolgreich gelöscht."
     },
     "aria": {
-      "uploadTrigger": "Dateien auswählen (⌘/Strg+U)"
+      "uploadTrigger": "Dateien auswählen (⌘/Strg+U)",
+      "progress": "Upload-Fortschritt"
     },
     "meta": {
       "chip": {
@@ -460,6 +482,9 @@
     "header": {
       "settings": "Einstellungen",
       "projects": "Projekte"
+    },
+    "badge": {
+      "syncing": "Synchronisieren…"
     },
     "section": {
       "list": "Projektliste"
@@ -498,6 +523,9 @@
       "editTitle": "Projekt bearbeiten",
       "close": "Schließen"
     },
+    "confirm": {
+      "deleteTitle": "Projekt „{{name}}“ löschen?"
+    },
     "pagination": {
       "label": "Seite {{index}} von {{total}}"
     },
@@ -505,7 +533,13 @@
     "errors": {
       "loadFailedTitle": "Laden fehlgeschlagen",
       "saveError": "Projekt konnte nicht gespeichert werden.",
-      "deleteError": "Projekt konnte nicht gelöscht werden."
+      "detailError": "Details konnten nicht geladen werden.",
+      "deleteError": "Projekt konnte nicht gelöscht werden.",
+      "confirmFailed": "Bestätigung fehlgeschlagen."
+    },
+    "toast": {
+      "saved": "Projekt gespeichert.",
+      "deleted": "Projekt gelöscht."
     }
   },
 
@@ -514,6 +548,9 @@
     "header": {
       "settings": "Einstellungen",
       "inventory": "Inventar"
+    },
+    "badge": {
+      "syncing": "Synchronisieren…"
     },
     "section": {
       "list": "Inventarartikel"
@@ -550,6 +587,9 @@
       "editTitle": "Artikel bearbeiten",
       "close": "Schließen"
     },
+    "confirm": {
+      "deleteTitle": "Artikel „{{name}}“ löschen?"
+    },
     "pagination": {
       "label": "Seite {{index}} von {{total}}"
     },
@@ -557,7 +597,14 @@
     "errors": {
       "loadFailedTitle": "Laden fehlgeschlagen",
       "saveError": "Artikel konnte nicht gespeichert werden.",
-      "deleteError": "Artikel konnte nicht gelöscht werden."
+      "deleteError": "Artikel konnte nicht gelöscht werden.",
+      "detailError": "Details konnten nicht geladen werden.",
+      "confirmFailed": "Bestätigung fehlgeschlagen."
+    },
+    "toast": {
+      "saveOk": "Artikel erstellt.",
+      "updateOk": "Artikel aktualisiert.",
+      "deleteOk": "Artikel gelöscht."
     }
   },
 
@@ -630,7 +677,12 @@
       "loadFailedTitle": "Laden fehlgeschlagen",
       "saveError": "Entität konnte nicht gespeichert werden.",
       "deleteError": "Entität konnte nicht gelöscht werden.",
+      "detailError": "Details konnten nicht geladen werden.",
       "confirmFailed": "Bestätigung fehlgeschlagen."
+    },
+    "toast": {
+      "saveOk": "Entität gespeichert.",
+      "deleteOk": "Entität entfernt."
     }
   },
 
@@ -777,6 +829,9 @@
       "cancel": "Abbrechen",
       "save": "Speichern"
     },
+    "confirm": {
+      "deleteTitle": "Löschen “{{name}}”?"
+    },
     "tags": {
       "code": "Code",
       "inactive": "Inaktiv",
@@ -797,9 +852,14 @@
       "active": "Aktive Abteilung"
     },
     "errors": {
-      "loadFailed": "Laden fehlgeschlagen",
+      "fetchError": "Laden fehlgeschlagen",
       "saveFailed": "Abteilung konnte nicht gespeichert werden.",
-      "deleteFailed": "Abteilung konnte nicht gelöscht werden."
+      "deleteFailed": "Abteilung konnte nicht gelöscht werden.",
+      "confirmFailed": "Aktion konnte nicht bestätigt werden."
+    },
+    "toast": {
+      "saveOk": "Abteilung gespeichert.",
+      "deleteOk": "Abteilung gelöscht."
     },
     "alerts": {
       "noData": "Auf dieser Seite wurden keine Abteilungen gefunden."
