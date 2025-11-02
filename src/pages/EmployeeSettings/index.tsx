@@ -164,7 +164,7 @@ const EmployeeSettings: React.FC = () => {
   const [isBackgroundSync, setIsBackgroundSync] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isDetailLoading, setIsDetailLoading] = useState<boolean>(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -193,7 +193,13 @@ const EmployeeSettings: React.FC = () => {
 
   const normalizeAndSet = useCallback((empRes: Employee[], grpRes: GroupListItem[]) => {
     const onlyMembers = empRes.filter((e) => e.role === "member");
-    const normEmployees = [...onlyMembers].sort((a, b) => a.id - b.id);
+    // sort by name, then email
+    const normEmployees = [...onlyMembers].sort((a, b) => {
+      const an = (a.name || "").toLowerCase();
+      const bn = (b.name || "").toLowerCase();
+      if (an !== bn) return an.localeCompare(bn);
+      return (a.email || "").toLowerCase().localeCompare((b.email || "").toLowerCase());
+    });
     const normGroups = [...grpRes].sort((a, b) => a.id - b.id);
 
     startTransition(() => {
@@ -254,7 +260,7 @@ const EmployeeSettings: React.FC = () => {
     setIsDetailLoading(true);
 
     try {
-      const res = await api.getEmployee(employee.id);
+      const res = await api.getEmployee(employee.external_id);
       const detail = res.data.employee;
 
       setFormData({
@@ -315,7 +321,7 @@ const EmployeeSettings: React.FC = () => {
           group_external_ids: formData.groups.map((g) => g.external_id),
         });
       } else if (editingEmployee) {
-        await api.editEmployee(editingEmployee.id, {
+        await api.editEmployee(editingEmployee.external_id, {
           name: formData.name,
           email: formData.email,
           group_external_ids: formData.groups.map((g) => g.external_id),
@@ -340,9 +346,9 @@ const EmployeeSettings: React.FC = () => {
   const requestDeleteEmployee = (emp: Employee) => {
     setConfirmText(t("settings:employee.confirm.delete", { name: emp.name }));
     setConfirmAction(() => async () => {
-      setDeleteTargetId(emp.id);
+      setDeleteTargetId(emp.external_id);
       try {
-        await api.deleteEmployee(emp.id);
+        await api.deleteEmployee(emp.external_id);
         await fetchList({ background: true });
         setSnack({
           message: t("settings:employee.toast.deleteOk"),
@@ -446,11 +452,11 @@ const EmployeeSettings: React.FC = () => {
                     isDetailLoading ||
                     isBackgroundSync ||
                     confirmBusy ||
-                    deleteTargetId === e.id;
+                    deleteTargetId === e.external_id;
 
                   return (
                     <Row
-                      key={e.id}
+                      key={e.external_id}
                       emp={e}
                       canEdit={canEdit}
                       onEdit={openEditModal}

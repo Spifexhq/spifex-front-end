@@ -4,7 +4,7 @@ import { GroupListItem as Group } from "./Group";
 export type Role = "owner" | "admin" | "member";
 
 export interface Employee {
-  id: number;      // membership id
+  external_id: string;
   name: string;
   email: string;
   role: Role;

@@ -205,9 +205,9 @@ export const api = {
     return request<GetEmployeesResponse>(`organizations/${orgExternalId}/members/`, "GET");
   },
 
-  getEmployee: (membershipId: number) => {
+  getEmployee: (membershipExternalId: string) => {
     const orgExternalId = getOrgExternalId();
-    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipId}/`, "GET");
+    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipExternalId}/`, "GET");
   },
 
   addEmployee: (payload: AddEmployeeRequest) => {
@@ -215,14 +215,14 @@ export const api = {
     return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/`, "POST", payload);
   },
 
-  editEmployee: (membershipId: number, payload: EditEmployeeRequest) => {
+  editEmployee: (membershipExternalId: string, payload: EditEmployeeRequest) => {
     const orgExternalId = getOrgExternalId();
-    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipId}/`, "PATCH", payload);
+    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipExternalId}/`, "PATCH", payload);
   },
 
-  deleteEmployee: (membershipId: number) => {
+  deleteEmployee: (membershipExternalId: string) => {
     const orgExternalId = getOrgExternalId();
-    return request<void>(`organizations/${orgExternalId}/members/${membershipId}/`, "DELETE");
+    return request<void>(`organizations/${orgExternalId}/members/${membershipExternalId}/`, "DELETE");
   },
   
   /* --- Tasks --- */
