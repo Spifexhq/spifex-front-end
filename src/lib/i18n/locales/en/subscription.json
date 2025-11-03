@@ -1,0 +1,47 @@
+{
+  "title": "Subscription Management",
+  "header": {
+    "settings": "Settings",
+    "title": "Plan & Billing"
+  },
+  "section": {
+    "withPlan": "Your current plan",
+    "noPlan": "No active plan"
+  },
+  "current": {
+    "youAreOn": "You are on",
+    "cancelAt": "cancels on",
+    "renews": "renews on",
+    "noActive": "You don’t have an active plan.",
+    "unknown": "Unknown plan"
+  },
+  "status": {
+    "none": "No plan"
+  },
+  "badge": {
+    "processing": "Processing…"
+  },
+  "plan": {
+    "basic": "Basic",
+    "premium": "Premium"
+  },
+  "btn": {
+    "manage": "Manage subscription",
+    "current": "Current",
+    "switch": "Choose",
+    "subscribe": "Subscribe",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "modal": {
+    "title": "Confirm plan change",
+    "text": "You’ll be redirected to the checkout to confirm this plan.",
+    "close": "Close modal"
+  },
+  "errors": {
+    "noRedirect": "Couldn’t redirect to the payment page.",
+    "checkout": "Payment initialization failed. Please try again later.",
+    "noPortal": "Couldn’t open the customer portal.",
+    "portal": "Portal redirect failed. Please try again later."
+  }
+}

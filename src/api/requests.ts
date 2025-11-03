@@ -4,7 +4,7 @@ import {
   GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,
   GetUserResponse,
   SignInRequest, SignInResponse, SignUpRequest, SignUpResponse,
-  Subscription,
+  GetSubscriptionStatusResponse,
   GetPermission, GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
@@ -81,7 +81,7 @@ export const api = {
   /* --- Subscriptions --- */
   getSubscriptionStatus: () => {
     const orgExternalId = getOrgExternalId();
-    return request<Subscription>(`billing/${orgExternalId}/subscription`, 'GET');
+    return request<GetSubscriptionStatusResponse>(`billing/${orgExternalId}/subscription`, 'GET');
   },
   createCheckoutSession: (price_id: string) => {
     const orgExternalId = getOrgExternalId();

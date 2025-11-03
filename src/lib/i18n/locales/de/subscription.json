@@ -1,0 +1,47 @@
+{
+  "title": "Abonnement verwalten",
+  "header": {
+    "settings": "Einstellungen",
+    "title": "Tarif & Abrechnung"
+  },
+  "section": {
+    "withPlan": "Ihr aktueller Tarif",
+    "noPlan": "Kein aktiver Tarif"
+  },
+  "current": {
+    "youAreOn": "Sie nutzen",
+    "cancelAt": "endet am",
+    "renews": "verlängert sich am",
+    "noActive": "Sie haben kein aktives Abonnement.",
+    "unknown": "Unbekannter Tarif"
+  },
+  "status": {
+    "none": "Kein Tarif"
+  },
+  "badge": {
+    "processing": "Wird verarbeitet…"
+  },
+  "plan": {
+    "basic": "Basic",
+    "premium": "Premium"
+  },
+  "btn": {
+    "manage": "Abo verwalten",
+    "current": "Aktuell",
+    "switch": "Auswählen",
+    "subscribe": "Abonnieren",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen"
+  },
+  "modal": {
+    "title": "Tarifwechsel bestätigen",
+    "text": "Sie werden zum Checkout weitergeleitet, um diesen Tarif zu bestätigen.",
+    "close": "Modal schließen"
+  },
+  "errors": {
+    "noRedirect": "Weiterleitung zur Bezahlseite nicht möglich.",
+    "checkout": "Zahlung konnte nicht initialisiert werden. Bitte später erneut versuchen.",
+    "noPortal": "Kundenportal konnte nicht geöffnet werden.",
+    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte später erneut versuchen."
+  }
+}

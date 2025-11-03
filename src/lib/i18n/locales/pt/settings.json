@@ -305,39 +305,6 @@
     }
   },
 
-  "subscription": {
-    "title": "Gestão de Plano",
-    "header": {
-      "settings": "Configurações",
-      "title": "Gestão de plano"
-    },
-    "section": {
-      "withPlan": "Plano atual e opções",
-      "noPlan": "Escolha um plano"
-    },
-    "plan": {
-      "basic": "Plano Básico - R$50,00/mês",
-      "premium": "Plano Premium - R$150,00/mês"
-    },
-    "current": {
-      "youAreOn": "Você está atualmente inscrito em:",
-      "unknown": "—"
-    },
-    "btn": {
-      "current": "Atual",
-      "select": "Selecionar",
-      "subscribe": "Assinar",
-      "manage": "Gerenciar assinatura",
-      "cancel": "Cancelar",
-      "confirm": "Confirmar"
-    },
-    "modal": {
-      "title": "Confirmar alteração",
-      "text": "Tem certeza de que deseja alterar para este plano?",
-      "close": "Fechar"
-    }
-  },
-
   "bank": {
     "title": "Bancos",
     "header": {

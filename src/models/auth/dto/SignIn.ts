@@ -1,5 +1,5 @@
 import { User, UserOrganizationDetail } from "../domain";
-import { Subscription } from "./Subscription";
+import { Subscription } from "./GetSubscription";
 
 export interface SignInRequest {
   email: string;

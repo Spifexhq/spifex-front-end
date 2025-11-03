@@ -149,7 +149,7 @@ const Row = ({
   const typeKey = `settings:entity.types.${entity.entity_type || "client"}`;
   const typeLabel = t(typeKey);
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+    <div className="flex items-center justify-between px-4 py-2.5">
       <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-wide text-gray-600">
           {typeLabel} {entity.is_active === false ? ` ${t("settings:entity.row.inactive")}` : ""}

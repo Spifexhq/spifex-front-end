@@ -5,5 +5,5 @@ export * from "./GetOrganization";
 export * from "./GetEmployee";
 export * from "./GetPermission";
 export * from "./GetGroup";
-export * from "./Subscription";
+export * from "./GetSubscription";
 export * from "./GetCounter";

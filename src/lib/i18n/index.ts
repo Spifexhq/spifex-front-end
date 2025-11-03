@@ -24,6 +24,11 @@ import enSidebar from "./locales/en/sidebar.json";
 import frSidebar from "./locales/fr/sidebar.json";
 import deSidebar from "./locales/de/sidebar.json";
 
+import ptSubscription from "./locales/pt/subscription.json";
+import enSubscription from "./locales/en/subscription.json";
+import frSubscription from "./locales/fr/subscription.json";
+import deSubscription from "./locales/de/subscription.json";
+
 import ptSettings from "./locales/pt/settings.json";
 import enSettings from "./locales/en/settings.json";
 import frSettings from "./locales/fr/settings.json";
@@ -59,11 +64,6 @@ import enSelect from "./locales/en/selectDropdown.json";
 import frSelect from "./locales/fr/selectDropdown.json";
 import deSelect from "./locales/de/selectDropdown.json";
 
-import ptSelectionActionsBar from "./locales/pt/selectionActionsBar.json";
-import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
-import frSelectionActionsBar from "./locales/fr/selectionActionsBar.json";
-import deSelectionActionsBar from "./locales/de/selectionActionsBar.json";
-
 import ptBanksTable from "./locales/pt/banksTable.json";
 import enBanksTable from "./locales/en/banksTable.json";
 import frBanksTable from "./locales/fr/banksTable.json";
@@ -96,6 +96,7 @@ const resources: Resource = {
     common: ptCommon,
     navbar: ptNavbar,
     sidebar: ptSidebar,
+    subscription: ptSubscription,
     settings: ptSettings,
     filterBar: ptFilterBar,
     kpiCards: ptKpiCards,
@@ -103,7 +104,6 @@ const resources: Resource = {
     transferenceModal: ptTransf,
     settlementModal: ptSettlementModal,
     selectDropdown: ptSelect,
-    selectionActionsBar: ptSelectionActionsBar,
     banksTable: ptBanksTable,
     cashFlowTable: ptCashFlowTable,
     settledTable: ptSettledTable,
@@ -114,6 +114,7 @@ const resources: Resource = {
     common: enCommon,
     navbar: enNavbar,
     sidebar: enSidebar,
+    subscription: enSubscription,
     settings: enSettings,
     filterBar: enFilterBar,
     kpiCards: enKpiCards,
@@ -121,7 +122,6 @@ const resources: Resource = {
     transferenceModal: enTransf,
     settlementModal: enSettlementModal,
     selectDropdown: enSelect,
-    selectionActionsBar: enSelectionActionsBar,
     banksTable: enBanksTable,
     cashFlowTable: enCashFlowTable,
     settledTable: enSettledTable,
@@ -132,6 +132,7 @@ const resources: Resource = {
     common: frCommon,
     navbar: frNavbar,
     sidebar: frSidebar,
+    subscription: frSubscription,
     settings: frSettings,
     filterBar: frFilterBar,
     kpiCards: frKpiCards,
@@ -139,7 +140,6 @@ const resources: Resource = {
     transferenceModal: frTransf,
     settlementModal: frSettlementModal,
     selectDropdown: frSelect,
-    selectionActionsBar: frSelectionActionsBar,
     banksTable: frBanksTable,
     cashFlowTable: frCashFlowTable,
     settledTable: frSettledTable,
@@ -150,6 +150,7 @@ const resources: Resource = {
     common: deCommon,
     navbar: deNavbar,
     sidebar: deSidebar,
+    subscription: deSubscription,
     settings: deSettings,
     filterBar: deFilterBar,
     kpiCards: deKpiCards,
@@ -157,7 +158,6 @@ const resources: Resource = {
     transferenceModal: deTransf,
     settlementModal: deSettlementModal,
     selectDropdown: deSelect,
-    selectionActionsBar: deSelectionActionsBar,
     banksTable: deBanksTable,
     cashFlowTable: deCashFlowTable,
     settledTable: deSettledTable,
@@ -177,8 +177,10 @@ i18n
     resources,
     ns: [
       "common",
-      "settings",
+      "navbar",
       "sidebar",
+      "subscription",
+      "settings",
       "filterBar",
       "kpiCards",
       "entriesModal",

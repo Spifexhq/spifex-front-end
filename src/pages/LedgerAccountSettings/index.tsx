@@ -503,7 +503,7 @@ const LedgerAccountSettings: React.FC = () => {
     const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
 
     return (
-      <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+      <div className={`flex items-center justify-between px-4 py-2.5 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-gray-900 truncate">
             {a.name || t("settings:ledgerAccounts.tags.noName")}
@@ -775,7 +775,7 @@ const LedgerAccountSettings: React.FC = () => {
                                         const id = getGlaId(a);
                                         const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
                                         return (
-                                          <div key={id} className={`flex items-center justify-between px-2 py-2 hover:bg-gray-50 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+                                          <div key={id} className={`flex items-center justify-between px-2 py-2 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
                                             <div className="min-w-0">
                                               <p className="text-[13px] font-medium text-gray-900 truncate">
                                                 {a.name || t("settings:ledgerAccounts.tags.noName")}

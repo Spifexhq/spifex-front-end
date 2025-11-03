@@ -66,7 +66,7 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+  <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">{bank.institution}</p>
       <p className="text-[12px] text-gray-600 truncate">

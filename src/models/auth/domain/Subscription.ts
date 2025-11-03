@@ -1,3 +1,4 @@
+// models/auth/domain/Subscription.ts
 export interface Subscription {
   id: number;
   organization_id: number;

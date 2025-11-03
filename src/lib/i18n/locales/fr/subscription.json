@@ -1,0 +1,47 @@
+{
+  "title": "Gestion de l’abonnement",
+  "header": {
+    "settings": "Paramètres",
+    "title": "Forfait et facturation"
+  },
+  "section": {
+    "withPlan": "Votre forfait actuel",
+    "noPlan": "Aucun forfait actif"
+  },
+  "current": {
+    "youAreOn": "Vous êtes sur",
+    "cancelAt": "se termine le",
+    "renews": "se renouvelle le",
+    "noActive": "Vous n’avez pas d’abonnement actif.",
+    "unknown": "Forfait inconnu"
+  },
+  "status": {
+    "none": "Aucun forfait"
+  },
+  "badge": {
+    "processing": "Traitement…"
+  },
+  "plan": {
+    "basic": "Basique",
+    "premium": "Premium"
+  },
+  "btn": {
+    "manage": "Gérer l’abonnement",
+    "current": "Actuel",
+    "switch": "Choisir",
+    "subscribe": "S’abonner",
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
+  },
+  "modal": {
+    "title": "Confirmer le changement de forfait",
+    "text": "Vous serez redirigé vers le paiement pour confirmer ce forfait.",
+    "close": "Fermer la fenêtre"
+  },
+  "errors": {
+    "noRedirect": "Impossible de rediriger vers la page de paiement.",
+    "checkout": "Échec de l’initialisation du paiement. Veuillez réessayer plus tard.",
+    "noPortal": "Impossible d’ouvrir le portail client.",
+    "portal": "Échec de redirection vers le portail. Veuillez réessayer plus tard."
+  }
+}

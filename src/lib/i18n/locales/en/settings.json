@@ -305,39 +305,6 @@
     }
   },
 
-  "subscription": {
-    "title": "Plan Management",
-    "header": {
-      "settings": "Settings",
-      "title": "Plan management"
-    },
-    "section": {
-      "withPlan": "Current plan & options",
-      "noPlan": "Choose a plan"
-    },
-    "plan": {
-      "basic": "Basic Plan - R$50.00/month",
-      "premium": "Premium Plan - R$150.00/month"
-    },
-    "current": {
-      "youAreOn": "You are currently subscribed to:",
-      "unknown": "—"
-    },
-    "btn": {
-      "current": "Current",
-      "select": "Select",
-      "subscribe": "Subscribe",
-      "manage": "Manage subscription",
-      "cancel": "Cancel",
-      "confirm": "Confirm"
-    },
-    "modal": {
-      "title": "Confirm change",
-      "text": "Are you sure you want to switch to this plan?",
-      "close": "Close"
-    }
-  },
-
   "bank": {
     "title": "Banks",
     "header": {

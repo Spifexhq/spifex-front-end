@@ -305,39 +305,6 @@
     }
   },
 
-  "subscription": {
-    "title": "Gestion de l'abonnement",
-    "header": {
-      "settings": "Paramètres",
-      "title": "Gestion de l'abonnement"
-    },
-    "section": {
-      "withPlan": "Abonnement actuel et options",
-      "noPlan": "Choisir un abonnement"
-    },
-    "plan": {
-      "basic": "Forfait Basique - R$50,00/mois",
-      "premium": "Forfait Premium - R$150,00/mois"
-    },
-    "current": {
-      "youAreOn": "Vous êtes actuellement abonné à :",
-      "unknown": "—"
-    },
-    "btn": {
-      "current": "Actuel",
-      "select": "Sélectionner",
-      "subscribe": "S'abonner",
-      "manage": "Gérer l'abonnement",
-      "cancel": "Annuler",
-      "confirm": "Confirmer"
-    },
-    "modal": {
-      "title": "Confirmer la modification",
-      "text": "Êtes-vous sûr de vouloir changer d'abonnement ?",
-      "close": "Fermer"
-    }
-  },
-
   "bank": {
     "title": "Banques",
     "header": {

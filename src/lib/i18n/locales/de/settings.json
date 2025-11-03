@@ -305,39 +305,6 @@
     }
   },
 
-  "subscription": {
-    "title": "Tarifverwaltung",
-    "header": {
-      "settings": "Einstellungen",
-      "title": "Tarifverwaltung"
-    },
-    "section": {
-      "withPlan": "Aktueller Tarif & Optionen",
-      "noPlan": "Tarif wählen"
-    },
-    "plan": {
-      "basic": "Basis-Tarif – 50,00 R$/Monat",
-      "premium": "Premium-Tarif – 150,00 R$/Monat"
-    },
-    "current": {
-      "youAreOn": "Sie haben derzeit abonniert:",
-      "unknown": "—"
-    },
-    "btn": {
-      "current": "Aktuell",
-      "select": "Auswählen",
-      "subscribe": "Abonnieren",
-      "manage": "Abo verwalten",
-      "cancel": "Abbrechen",
-      "confirm": "Bestätigen"
-    },
-    "modal": {
-      "title": "Änderung bestätigen",
-      "text": "Sind Sie sicher, dass Sie zu diesem Tarif wechseln möchten?",
-      "close": "Schließen"
-    }
-  },
-
   "bank": {
     "title": "Banken",
     "header": {

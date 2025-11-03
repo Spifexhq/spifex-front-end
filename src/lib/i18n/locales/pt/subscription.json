@@ -1,0 +1,47 @@
+{
+  "title": "Gestão da Subscrição",
+  "header": {
+    "settings": "Definições",
+    "title": "Plano e Faturação"
+  },
+  "section": {
+    "withPlan": "O seu plano atual",
+    "noPlan": "Sem plano ativo"
+  },
+  "current": {
+    "youAreOn": "Está no",
+    "cancelAt": "termina em",
+    "renews": "renova em",
+    "noActive": "Não tem uma subscrição ativa.",
+    "unknown": "Plano desconhecido"
+  },
+  "status": {
+    "none": "Sem plano"
+  },
+  "badge": {
+    "processing": "A processar…"
+  },
+  "plan": {
+    "basic": "Básico",
+    "premium": "Premium"
+  },
+  "btn": {
+    "manage": "Gerir subscrição",
+    "current": "Atual",
+    "switch": "Escolher",
+    "subscribe": "Subscrever",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  },
+  "modal": {
+    "title": "Confirmar alteração de plano",
+    "text": "Será redirecionado para o checkout para confirmar este plano.",
+    "close": "Fechar modal"
+  },
+  "errors": {
+    "noRedirect": "Não foi possível redirecionar para a página de pagamento.",
+    "checkout": "Falha ao iniciar o pagamento. Tente novamente mais tarde.",
+    "noPortal": "Não foi possível abrir o portal do cliente.",
+    "portal": "Falha ao redirecionar para o portal. Tente novamente mais tarde."
+  }
+}
