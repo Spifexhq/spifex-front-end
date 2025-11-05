@@ -449,7 +449,6 @@ const Statements: React.FC = () => {
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
-                          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                           onClick={() => uploadOne(row)}
                           disabled={globalBusy}
                         >
@@ -577,7 +576,6 @@ const Statements: React.FC = () => {
 
                           <Button
                             variant="outline"
-                            className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                             onClick={() => api.downloadStatement(s.id)}
                             title={t("settings:statements.actions.download")}
                           >
@@ -585,7 +583,7 @@ const Statements: React.FC = () => {
                           </Button>
 
                           <Button
-                            variant="common"
+                            variant="outline"
                             onClick={() => triggerAnalysis(s.id)}
                             disabled={s.status === "processing" || globalBusy}
                             title={t("settings:statements.actions.analyze")}

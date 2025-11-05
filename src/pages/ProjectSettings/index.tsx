@@ -135,13 +135,12 @@ const Row = ({
           <>
             <Button
               variant="outline"
-              className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
               onClick={() => onEdit(project)}
               disabled={busy}
             >
               {t("settings:project.btn.edit")}
             </Button>
-            <Button variant="common" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
+            <Button variant="outline" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
               {t("settings:project.btn.delete")}
             </Button>
           </>

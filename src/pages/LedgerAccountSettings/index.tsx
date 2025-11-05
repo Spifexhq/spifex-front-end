@@ -520,13 +520,12 @@ const LedgerAccountSettings: React.FC = () => {
           <div className="flex gap-2 shrink-0">
             <Button
               variant="outline"
-              className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
               onClick={() => openEditModal(a)}
               disabled={rowBusy}
             >
               {t("settings:ledgerAccounts.buttons.edit")}
             </Button>
-            <Button variant="common" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
+            <Button variant="outline" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
               {t("settings:ledgerAccounts.buttons.delete")}
             </Button>
           </div>
@@ -601,7 +600,6 @@ const LedgerAccountSettings: React.FC = () => {
                       aria-haspopup="menu"
                       aria-expanded={menuOpen}
                       title={t("settings:ledgerAccounts.buttons.options")}
-                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       disabled={globalBusy}
                     >
                       ⋯
@@ -703,7 +701,6 @@ const LedgerAccountSettings: React.FC = () => {
                     {viewMode === "accordion" && groups.length > 0 && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => (openAccordions.size === groups.length ? collapseAll() : expandAll(groups))}
                         disabled={globalBusy}
                       >
@@ -715,7 +712,6 @@ const LedgerAccountSettings: React.FC = () => {
 
                     <Button
                       variant="outline"
-                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={() => setViewMode((v) => (v === "accordion" ? "list" : "accordion"))}
                       disabled={globalBusy}
                     >
@@ -797,13 +793,12 @@ const LedgerAccountSettings: React.FC = () => {
                                               <div className="flex gap-2 shrink-0">
                                                 <Button
                                                   variant="outline"
-                                                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                                                   onClick={() => openEditModal(a)}
                                                   disabled={rowBusy}
                                                 >
                                                   {t("settings:ledgerAccounts.buttons.edit")}
                                                 </Button>
-                                                <Button variant="common" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
+                                                <Button variant="outline" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
                                                   {t("settings:ledgerAccounts.buttons.delete")}
                                                 </Button>
                                               </div>
@@ -929,7 +924,6 @@ const LedgerAccountSettings: React.FC = () => {
                       setFormData((p) => ({ ...p, subcategory: "" }));
                     }}
                     disabled={isSubmitting || !formData.category}
-                    className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   >
                     {addingNewSubgroup ? t("settings:ledgerAccounts.buttons.toggleNewSubCancel") : t("settings:ledgerAccounts.buttons.toggleNewSub")}
                   </Button>

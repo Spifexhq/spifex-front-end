@@ -77,13 +77,12 @@ const Row = ({
       <div className="flex gap-2 shrink-0">
         <Button
           variant="outline"
-          className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
           onClick={() => onEdit(bank)}
           disabled={busy}
         >
           {t("settings:bank.btn.edit")}
         </Button>
-        <Button variant="common" onClick={() => onDelete(bank)} disabled={busy} aria-busy={busy || undefined}>
+        <Button variant="outline" onClick={() => onDelete(bank)} disabled={busy} aria-busy={busy || undefined}>
           {t("settings:bank.btn.delete")}
         </Button>
       </div>

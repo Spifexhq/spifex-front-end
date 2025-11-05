@@ -556,7 +556,7 @@ const GroupSettings: React.FC = () => {
                             {t("settings:groups.right.rename")}
                           </Button>
                           {!selectedGroupDetail.is_system && (
-                            <Button variant="common" onClick={requestDeleteGroup} disabled={busy} aria-busy={busy || undefined}>
+                            <Button variant="outline" onClick={requestDeleteGroup} disabled={busy} aria-busy={busy || undefined}>
                               {t("settings:groups.right.delete")}
                             </Button>
                           )}

@@ -264,7 +264,6 @@ const PersonalSettings: React.FC = () => {
                     action={
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("name")}
                         disabled={isSubmitting}
                       >
@@ -278,7 +277,6 @@ const PersonalSettings: React.FC = () => {
                     action={
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("email")}
                         disabled={isSubmitting}
                       >
@@ -292,7 +290,6 @@ const PersonalSettings: React.FC = () => {
                     action={
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("phone")}
                         disabled={isSubmitting}
                       >
@@ -306,7 +303,6 @@ const PersonalSettings: React.FC = () => {
                     action={
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("job_title")}
                         disabled={isSubmitting}
                       >
@@ -320,7 +316,6 @@ const PersonalSettings: React.FC = () => {
                     action={
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("department")}
                         disabled={isSubmitting}
                       >
@@ -334,7 +329,6 @@ const PersonalSettings: React.FC = () => {
                     action={
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("country")}
                         disabled={isSubmitting}
                       >
@@ -367,7 +361,6 @@ const PersonalSettings: React.FC = () => {
                     </div>
                     <Button
                       variant="outline"
-                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={() => openModal("timezone")}
                       disabled={isSubmitting}
                     >
@@ -391,7 +384,6 @@ const PersonalSettings: React.FC = () => {
                   <div className="mt-3">
                     <Button
                       variant="outline"
-                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={handleSecurityNavigation}
                       disabled={isSubmitting}
                     >

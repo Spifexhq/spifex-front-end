@@ -106,13 +106,12 @@ const Row = ({
         <>
           <Button
             variant="outline"
-            className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
             onClick={() => onEdit(item)}
             disabled={busy}
           >
             {t("settings:inventory.btn.edit")}
           </Button>
-          <Button variant="common" onClick={() => onDelete(item)} disabled={busy} aria-busy={busy || undefined}>
+          <Button variant="outline" onClick={() => onDelete(item)} disabled={busy} aria-busy={busy || undefined}>
             {t("settings:inventory.btn.delete")}
           </Button>
         </>

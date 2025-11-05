@@ -305,7 +305,6 @@ useEffect(() => {
                     <div className="ml-auto">
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         disabled={isProcessing}
                         onClick={openCustomerPortal}
                       >
@@ -333,7 +332,6 @@ useEffect(() => {
                           ) : (
                             <Button
                               variant="outline"
-                              className="!border-gray-200 !text-gray-700"
                               disabled={!canCheckout || isProcessing}
                               onClick={() => setModalPlanId(plan.priceId)}
                             >
@@ -387,7 +385,6 @@ useEffect(() => {
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="outline"
-                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={closeModal}
                       disabled={isProcessing}
                     >

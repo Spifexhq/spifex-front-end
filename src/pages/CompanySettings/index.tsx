@@ -392,7 +392,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("name")}
                         disabled={globalBusy}
                       >
@@ -409,7 +408,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("timezone")}
                         disabled={globalBusy}
                       >
@@ -426,7 +424,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                         disabled={globalBusy}
                       >
@@ -442,7 +439,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                         disabled={globalBusy}
                       >
@@ -458,7 +454,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                         disabled={globalBusy}
                       >
@@ -474,7 +469,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                         disabled={globalBusy}
                       >
@@ -490,7 +484,6 @@ const CompanySettings: React.FC = () => {
                     isOwner && (
                       <Button
                         variant="outline"
-                        className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                         onClick={() => openModal("address")}
                         disabled={globalBusy}
                       >

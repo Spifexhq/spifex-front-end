@@ -246,7 +246,6 @@ const SecurityAndPrivacy: React.FC = () => {
                   action={
                     <Button
                       variant="outline"
-                      className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
                       onClick={openModal}
                       disabled={isSubmitting}
                     >
