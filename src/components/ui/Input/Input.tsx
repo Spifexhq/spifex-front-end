@@ -131,11 +131,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               <button
                 type="button"
                 onClick={onClear}
+                onMouseDown={(e) => e.preventDefault()}
                 className="pointer-events-auto p-1 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
-                aria-label="Limpar"
-                tabIndex={0}
+                aria-label="Clear"
+                tabIndex={-1}
               >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -145,11 +152,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
+                onMouseDown={(e) => e.preventDefault()}
                 className="pointer-events-auto p-1 rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
                 disabled={isLoading}
-                aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={isPasswordVisible ? "Hide password" : "Show password"}
                 aria-pressed={isPasswordVisible}
-                tabIndex={0}
+                tabIndex={-1}
               >
                 {isPasswordVisible ? (
                   <img src={notVisible} alt="" width={18} height={18} />

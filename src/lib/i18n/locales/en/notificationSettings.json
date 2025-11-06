@@ -1,0 +1,50 @@
+{
+  "title": "Notification settings",
+  "header": {
+    "settings": "Settings",
+    "notifications": "Notifications"
+  },
+  "section": {
+    "email": "Email notifications",
+    "emailHint": "Choose which emails you want to receive."
+  },
+  "btn": {
+    "save": "Save changes"
+  },
+  "toast": {
+    "loadError": "Could not load your notification preferences.",
+    "saveOk": "Notification preferences updated.",
+    "saveError": "Could not update notification preferences."
+  },
+  "category": {
+    "security": {
+      "label": "Security alerts",
+      "description": "Sign-in alerts, password changes and important security events."
+    },
+    "billing": {
+      "label": "Billing & invoices",
+      "description": "Invoices, receipts, failed payment alerts and billing updates."
+    },
+    "product_updates": {
+      "label": "Product updates",
+      "description": "Major changes, new features and roadmap announcements."
+    },
+    "newsletter": {
+      "label": "Newsletter",
+      "description": "Periodic insights, tips and curated content."
+    },
+    "marketing": {
+      "label": "Promotional emails",
+      "description": "Special offers, campaigns and discounts."
+    },
+    "reminders": {
+      "label": "Reminders",
+      "description": "Reminders about tasks, due dates and follow-ups."
+    }
+  },
+  "sidebar": {
+    "title": "How we use email",
+    "description": "We only send the emails you choose here and the messages that are strictly necessary to operate your account, like security alerts.",
+    "note": "You can change these preferences at any time."
+  }
+}

@@ -14,6 +14,36 @@ import enCommon from "./locales/en/common.json";
 import frCommon from "./locales/fr/common.json";
 import deCommon from "./locales/de/common.json";
 
+import ptSignIn from "./locales/pt/signIn.json";
+import enSignIn from "./locales/en/signIn.json";
+import frSignIn from "./locales/fr/signIn.json";
+import deSignIn from "./locales/de/signIn.json";
+
+import ptSignUp from "./locales/pt/signUp.json";
+import enSignUp from "./locales/en/signUp.json";
+import frSignUp from "./locales/fr/signUp.json";
+import deSignUp from "./locales/de/signUp.json";
+
+import ptPasswordValidation from "./locales/pt/passwordValidation.json";
+import enPasswordValidation from "./locales/en/passwordValidation.json";
+import frPasswordValidation from "./locales/fr/passwordValidation.json";
+import dePasswordValidation from "./locales/de/passwordValidation.json";
+
+import ptForgotPassword from "./locales/pt/forgotPassword.json";
+import enForgotPassword from "./locales/en/forgotPassword.json";
+import frForgotPassword from "./locales/fr/forgotPassword.json";
+import deForgotPassword from "./locales/de/forgotPassword.json";
+
+import ptResetPassword from "./locales/pt/resetPassword.json";
+import enResetPassword from "./locales/en/resetPassword.json";
+import frResetPassword from "./locales/fr/resetPassword.json";
+import deResetPassword from "./locales/de/resetPassword.json";
+
+import ptEmailVerification from "./locales/pt/emailVerification.json";
+import enEmailVerification from "./locales/en/emailVerification.json";
+import frEmailVerification from "./locales/fr/emailVerification.json";
+import deEmailVerification from "./locales/de/emailVerification.json";
+
 import ptNavbar from "./locales/pt/navbar.json";
 import enNavbar from "./locales/en/navbar.json";
 import frNavbar from "./locales/fr/navbar.json";
@@ -89,11 +119,22 @@ import enSimAI from "./locales/en/simulatedAI.json";
 import frSimAI from "./locales/fr/simulatedAI.json";
 import deSimAI from "./locales/de/simulatedAI.json";
 
+import ptNotificationSettings from "./locales/pt/notificationSettings.json";
+import enNotificationSettings from "./locales/en/notificationSettings.json";
+import frNotificationSettings from "./locales/fr/notificationSettings.json";
+import deNotificationSettings from "./locales/de/notificationSettings.json";
+
 
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
   pt: {
     common: ptCommon,
+    signIn: ptSignIn,
+    signUp: ptSignUp,
+    passwordValidation: ptPasswordValidation,
+    forgotPassword: ptForgotPassword,
+    resetPassword: ptResetPassword,
+    emailVerification: ptEmailVerification,
     navbar: ptNavbar,
     sidebar: ptSidebar,
     subscription: ptSubscription,
@@ -109,9 +150,16 @@ const resources: Resource = {
     settledTable: ptSettledTable,
     reports: ptReportsPage,
     simulatedAI: ptSimAI,
+    notificationSettings: ptNotificationSettings,
   },
   en: {
     common: enCommon,
+    signIn: enSignIn,
+    signUp: enSignUp,
+    passwordValidation: enPasswordValidation,
+    forgotPassword: enForgotPassword,
+    resetPassword: enResetPassword,
+    emailVerification: enEmailVerification,
     navbar: enNavbar,
     sidebar: enSidebar,
     subscription: enSubscription,
@@ -127,9 +175,16 @@ const resources: Resource = {
     settledTable: enSettledTable,
     reports: enReportsPage,
     simulatedAI: enSimAI,
+    notificationSettings: enNotificationSettings,
   },
   fr: {
     common: frCommon,
+    signIn: frSignIn,
+    signUp: frSignUp,
+    passwordValidation: frPasswordValidation,
+    forgotPassword: frForgotPassword,
+    resetPassword: frResetPassword,
+    emailVerification: frEmailVerification,
     navbar: frNavbar,
     sidebar: frSidebar,
     subscription: frSubscription,
@@ -145,9 +200,16 @@ const resources: Resource = {
     settledTable: frSettledTable,
     reports: frReportsPage,
     simulatedAI: frSimAI,
+    notificationSettings: frNotificationSettings,
   },
   de: {
     common: deCommon,
+    signIn: deSignIn,
+    signUp: deSignUp,
+    passwordValidation: dePasswordValidation,
+    forgotPassword: deForgotPassword,
+    resetPassword: deResetPassword,
+    emailVerification: deEmailVerification,
     navbar: deNavbar,
     sidebar: deSidebar,
     subscription: deSubscription,
@@ -163,7 +225,8 @@ const resources: Resource = {
     settledTable: deSettledTable,
     reports: deReportsPage,
     simulatedAI: deSimAI,
-  },
+    notificationSettings: deNotificationSettings,
+  }
 };
 
 i18n
@@ -177,6 +240,12 @@ i18n
     resources,
     ns: [
       "common",
+      "signIn",
+      "signUp",
+      "passwordValidation",
+      "forgotPassword",
+      "resetPassword",
+      "emailVerification",
       "navbar",
       "sidebar",
       "subscription",
@@ -191,6 +260,7 @@ i18n
       "settledTable",
       "reports",
       "simulatedAI",
+      "notificationSettings",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

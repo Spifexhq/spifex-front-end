@@ -64,7 +64,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
       </Link>
 
       {/* Notifications */}
-      <button
+      <Link
+        to="/settings/notifications"
         onClick={onClose}
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
         role="menuitem"
@@ -72,7 +73,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
       >
         <img alt={t("settings:userMenu.alt.notifications")} src={notificationsIcon} className="w-5 h-5" />
         <span className="ml-2">{t("settings:userMenu.items.notifications")}</span>
-      </button>
+      </Link>
 
       {/* Help */}
       <button

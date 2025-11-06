@@ -27,6 +27,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
   disabled = false,
   size = 'medium',
   colorClass = 'defaultColor',
+  required = false,
 }) => {
   // Determine which size class to apply
   let sizeClass = '';
@@ -62,6 +63,8 @@ const Checkbox: React.FC<CheckboxProps> = ({
             if (onChange) onChange(e);
           }}
           disabled={disabled}
+          required={required}
+          aria-required={required}
           className={inputClasses}
         />
         {/* Check icon */}

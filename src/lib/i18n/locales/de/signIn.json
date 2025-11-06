@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Login | Spifex",
+  "heading": "Melden Sie sich bei Ihrem Spifex-Konto an",
+  "subheading": "Behalten Sie Ihren Cashflow an einem Ort im Blick.",
+  "emailLabel": "E-Mail",
+  "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+  "passwordLabel": "Passwort",
+  "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
+  "rememberDevice": "Dieses Gerät merken",
+  "signInButton": "Anmelden",
+  "noAccount": "Sie haben noch kein Konto?",
+  "signUpCta": "Jetzt erstellen.",
+  "forgotPassword": "Passwort vergessen?",
+  "fillAllFields": "Bitte alle Felder ausfüllen",
+  "unexpectedError": "Unerwarteter Fehler. Bitte versuchen Sie es später erneut.",
+  "copyright": "Copyright © 2025 Spifex."
+}

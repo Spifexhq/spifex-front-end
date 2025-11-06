@@ -1,3 +1,4 @@
+// src/models/auth/dto/SignUp.ts
 import { User, UserOrganizationDetail } from "../domain";
 
 export interface SignUpRequest {
@@ -6,6 +7,16 @@ export interface SignUpRequest {
   password: string;
   timezone: string;
   country: string;
+  language?: "en" | "pt" | "fr" | "de";
+  currency?: "BRL" | "USD" | "EUR";
+  browser_language?: string;
+  browser_languages?: string[];
+  locale?: string;
+  consents?: {
+    privacy_policy: boolean;
+    terms_of_service: boolean;
+    marketing?: boolean;
+  };
 }
 
 export interface SignUpResponseSuccess {

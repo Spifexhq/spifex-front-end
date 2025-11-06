@@ -1,0 +1,10 @@
+{
+  "pageTitle": "Verificação de email | Spifex",
+  "successTitle": "Seu email foi verificado com sucesso!",
+  "errorTitle": "Erro na verificação do email",
+  "invalidParams": "Parâmetros inválidos para verificação.",
+  "genericBackendError": "Erro ao verificar email.",
+  "genericUnexpectedError": "Ocorreu um erro ao verificar seu email.",
+  "successMessage": "Email verificado com sucesso!",
+  "goToLoginButton": "Ir para login"
+}

@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Connexion | Spifex",
+  "heading": "Connectez-vous à votre compte Spifex",
+  "subheading": "Gérez votre trésorerie au même endroit.",
+  "emailLabel": "E-mail",
+  "emailPlaceholder": "Saisissez votre e-mail",
+  "passwordLabel": "Mot de passe",
+  "passwordPlaceholder": "Saisissez votre mot de passe",
+  "rememberDevice": "Se souvenir de cet appareil",
+  "signInButton": "Se connecter",
+  "noAccount": "Vous n'avez pas de compte ?",
+  "signUpCta": "Créez-en un.",
+  "forgotPassword": "Mot de passe oublié ?",
+  "fillAllFields": "Remplissez tous les champs",
+  "unexpectedError": "Erreur inattendue. Veuillez réessayer plus tard.",
+  "copyright": "Copyright © 2025 Spifex."
+}

@@ -1,0 +1,50 @@
+{
+  "title": "Paramètres de notifications",
+  "header": {
+    "settings": "Paramètres",
+    "notifications": "Notifications"
+  },
+  "section": {
+    "email": "Notifications par e-mail",
+    "emailHint": "Choisissez les e-mails que vous souhaitez recevoir."
+  },
+  "btn": {
+    "save": "Enregistrer les modifications"
+  },
+  "toast": {
+    "loadError": "Impossible de charger vos préférences de notification.",
+    "saveOk": "Préférences de notification mises à jour.",
+    "saveError": "Impossible de mettre à jour vos préférences de notification."
+  },
+  "category": {
+    "security": {
+      "label": "Alertes de sécurité",
+      "description": "Alertes de connexion, changements de mot de passe et événements de sécurité importants."
+    },
+    "billing": {
+      "label": "Facturation et paiements",
+      "description": "Factures, reçus, échecs de paiement et mises à jour de facturation."
+    },
+    "product_updates": {
+      "label": "Mises à jour du produit",
+      "description": "Changements majeurs, nouvelles fonctionnalités et annonces produit."
+    },
+    "newsletter": {
+      "label": "Newsletter",
+      "description": "Contenus périodiques, conseils et ressources sélectionnées."
+    },
+    "marketing": {
+      "label": "E-mails promotionnels",
+      "description": "Offres spéciales, campagnes et remises."
+    },
+    "reminders": {
+      "label": "Rappels",
+      "description": "Rappels de tâches, d’échéances et de suivis."
+    }
+  },
+  "sidebar": {
+    "title": "Comment nous utilisons l’e-mail",
+    "description": "Nous envoyons uniquement les e-mails que vous sélectionnez ici et les messages strictement nécessaires au fonctionnement de votre compte, comme les alertes de sécurité.",
+    "note": "Vous pouvez modifier ces préférences à tout moment."
+  }
+}

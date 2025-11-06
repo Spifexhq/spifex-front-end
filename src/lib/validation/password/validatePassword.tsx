@@ -1,4 +1,6 @@
 // src/validation/password/validatePassword.tsx
+import i18n from "@/lib/i18n";
+
 export type PasswordValidationResult = {
   isValid: boolean;
   message: string | JSX.Element;
@@ -12,16 +14,19 @@ export const validatePassword = (password: string): PasswordValidationResult => 
     return { isValid: true, message: "" };
   }
 
+  // Use i18n directly (no hooks here)
+  const t = (key: string) => i18n.t(key, { ns: "passwordValidation" });
+
   return {
     isValid: false,
     message: (
       <div>
-        <p className="font-medium">Certifique-se de que os seguintes requisitos sejam cumpridos:</p>
+        <p className="font-medium">{t("title")}</p>
         <ul className="mt-2 ml-7 list-disc list-inside text-sm text-gray-800">
-          <li>Pelo menos 8 caracteres</li>
-          <li>Pelo menos uma letra maiúscula</li>
-          <li>Pelo menos um número</li>
-          <li>Pelo menos um caractere especial</li>
+          <li>{t("requirementMinLength")}</li>
+          <li>{t("requirementUppercase")}</li>
+          <li>{t("requirementNumber")}</li>
+          <li>{t("requirementSpecial")}</li>
         </ul>
       </div>
     ),

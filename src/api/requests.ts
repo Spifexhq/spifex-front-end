@@ -9,10 +9,16 @@ import {
   GetPermission, GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
 } from '@/models/auth/dto'
-import { User, Organization, Permission, GroupDetail, CounterUsage, IncrementCounterUsage, PersonalSettings } from '@/models/auth/domain'
+import { User, Organization, Permission, GroupDetail,
+  CounterUsage, IncrementCounterUsage, PersonalSettings,
+  NotificationPreference
+} from '@/models/auth/domain'
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
-import { Entry, SettledEntry, Transference, CashflowKpis, SettledKpis, BulkSettleItem, BulkSettleResponse, ReportsSummary } from '@/models/entries/domain'
+import { Entry, SettledEntry, Transference,
+  CashflowKpis, SettledKpis, BulkSettleItem,
+  BulkSettleResponse, ReportsSummary
+} from '@/models/entries/domain'
 import {
   GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
   GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
@@ -26,7 +32,9 @@ import {
   GetEntityResponse, GetEntitiesResponse, AddEntityRequest, EditEntityRequest,
   GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
-import { BankAccount, GLAccount, Department, Project, InventoryItem, Entity } from '@/models/enterprise_structure/domain';
+import { BankAccount, GLAccount, Department,
+  Project, InventoryItem, Entity
+} from '@/models/enterprise_structure/domain';
 import { Paginated } from '@/models/Api';
 import { store } from '@/redux/store';
 
@@ -46,6 +54,9 @@ export const api = {
 
   signUp: (payload: SignUpRequest) =>
     request<SignUpResponse>('auth/signup/', 'POST', payload),
+
+  checkEmailAvailability: (email: string) =>
+    request<{ available: boolean }>("auth/check-email/", "POST", { email }),
 
   verifyEmail: <T>(uidb64: string, token: string) =>
     request<T>(`auth/verify-email/${uidb64}/${token}/`, "GET"),
@@ -100,6 +111,22 @@ export const api = {
       {}
     );
   },
+
+  /* --- Notifications --- */
+  getNotificationPreferences: () =>
+    request<NotificationPreference[]>(
+      "auth/notifications/preferences/",
+      "GET"
+    ),
+
+  updateNotificationPreferences: (
+    payload: { category: string; enabled: boolean }[]
+  ) =>
+    request<NotificationPreference[]>(
+      "auth/notifications/preferences/",
+      "PUT",
+      payload
+    ),
 
   /* --- Counter --- */
   getCounter: (codeName: string) =>

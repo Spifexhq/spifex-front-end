@@ -1,0 +1,56 @@
+{
+  "pageTitle": "Crie sua conta Spifex",
+  "heading": "Crie sua conta",
+  "subheading": "Configure seu workspace em poucos passos.",
+  "backgroundAlt": "Pessoas colaborando em um escritório",
+
+  "nameLabel": "Nome completo",
+  "namePlaceholder": "Digite seu nome completo",
+
+  "emailLabel": "E-mail de trabalho",
+  "emailPlaceholder": "voce@empresa.com",
+
+  "passwordLabel": "Senha",
+  "passwordPlaceholder": "Crie uma senha forte",
+
+  "confirmPasswordLabel": "Confirmar senha",
+  "confirmPasswordPlaceholder": "Repita sua senha",
+
+  "fillAllFields": "Preencha todos os campos obrigatórios.",
+  "passwordsDontMatch": "As senhas não coincidem.",
+  "apiFallbackError": "Não foi possível criar sua conta. Tente novamente.",
+  "signUpSuccess": "Conta criada com sucesso.",
+  "signUpUnexpectedError": "Erro inesperado ao criar sua conta. Tente novamente.",
+  "emailAlreadyInUse": "Este e-mail já está em uso. Tente entrar novamente ou use um e-mail diferente.",
+  "signUpButton": "Criar conta",
+  "continueButton": "Continuar",
+  "backButton": "Voltar",
+
+  "hasAccount": "Já tem uma conta?",
+  "signInCta": "Entrar",
+
+  "languageLabel": "Idioma",
+  "languagePlaceholder": "Selecione um idioma",
+
+  "countryLabel": "País",
+  "countryPlaceholder": "Selecione um país",
+
+  "currencyLabel": "Moeda",
+  "currencyReal": "Real (BRL)",
+  "currencyDollar": "Dólar (USD)",
+  "currencyEuro": "Euro (EUR)",
+
+  "consentIntro": "Para criar sua conta, revise e aceite os termos abaixo:",
+  "privacyConsent": "Li e aceito a Política de Privacidade.",
+  "viewPrivacyPolicy": "Ver",
+  "tosConsent": "Aceito os Termos de Uso.",
+  "viewTos": "Ver",
+  "marketingConsent": "Aceito receber e-mails ocasionais sobre produto e marketing. (Opcional)",
+  "mustAcceptRequiredConsents": "Você precisa aceitar a Política de Privacidade e os Termos de Uso para continuar.",
+
+  "redirectPageTitle": "Confirme seu e-mail",
+  "redirectHeading": "Confira sua caixa de entrada",
+  "redirectDescription": "Enviamos um link de verificação para o seu e-mail. Abra-o para ativar sua conta.",
+  "redirectSentTo": "Enviamos um e-mail para:",
+  "redirectOpenEmailButton": "Abrir caixa de e-mail"
+}

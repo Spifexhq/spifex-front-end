@@ -7,4 +7,5 @@ export interface CheckboxProps {
   disabled?: boolean;
   size?: 'small' | 'sm' | 'medium' | 'large';
   colorClass?: string;
+  required?: boolean;
 }

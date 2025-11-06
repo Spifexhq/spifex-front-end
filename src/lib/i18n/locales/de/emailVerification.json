@@ -1,0 +1,10 @@
+{
+  "pageTitle": "E-Mail-Bestätigung | Spifex",
+  "successTitle": "Ihre E-Mail wurde erfolgreich bestätigt!",
+  "errorTitle": "Fehler bei der E-Mail-Bestätigung",
+  "invalidParams": "Ungültige Parameter für die Bestätigung.",
+  "genericBackendError": "Fehler bei der Bestätigung der E-Mail.",
+  "genericUnexpectedError": "Beim Bestätigen Ihrer E-Mail ist ein Fehler aufgetreten.",
+  "successMessage": "E-Mail erfolgreich bestätigt!",
+  "goToLoginButton": "Zum Login"
+}

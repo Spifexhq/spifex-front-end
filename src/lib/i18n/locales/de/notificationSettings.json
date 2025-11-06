@@ -1,0 +1,50 @@
+{
+  "title": "Benachrichtigungseinstellungen",
+  "header": {
+    "settings": "Einstellungen",
+    "notifications": "Benachrichtigungen"
+  },
+  "section": {
+    "email": "E-Mail-Benachrichtigungen",
+    "emailHint": "Wähle aus, welche E-Mails du erhalten möchtest."
+  },
+  "btn": {
+    "save": "Änderungen speichern"
+  },
+  "toast": {
+    "loadError": "Benachrichtigungseinstellungen konnten nicht geladen werden.",
+    "saveOk": "Benachrichtigungseinstellungen aktualisiert.",
+    "saveError": "Benachrichtigungseinstellungen konnten nicht aktualisiert werden."
+  },
+  "category": {
+    "security": {
+      "label": "Sicherheitswarnungen",
+      "description": "Anmeldebenachrichtigungen, Passwortänderungen und wichtige Sicherheitsereignisse."
+    },
+    "billing": {
+      "label": "Abrechnung & Rechnungen",
+      "description": "Rechnungen, Belege, fehlgeschlagene Zahlungen und Abrechnungs-Updates."
+    },
+    "product_updates": {
+      "label": "Produkt-Updates",
+      "description": "Wichtige Änderungen, neue Funktionen und Produktankündigungen."
+    },
+    "newsletter": {
+      "label": "Newsletter",
+      "description": "Regelmäßige Inhalte, Tipps und ausgewählte Artikel."
+    },
+    "marketing": {
+      "label": "Werbe-E-Mails",
+      "description": "Sonderangebote, Kampagnen und Rabatte."
+    },
+    "reminders": {
+      "label": "Erinnerungen",
+      "description": "Erinnerungen an Aufgaben, Fälligkeiten und Follow-ups."
+    }
+  },
+  "sidebar": {
+    "title": "Wie wir E-Mails verwenden",
+    "description": "Wir senden nur die E-Mails, die du hier auswählst, sowie Nachrichten, die für den Betrieb deines Kontos unbedingt erforderlich sind, z. B. Sicherheitswarnungen.",
+    "note": "Du kannst diese Einstellungen jederzeit ändern."
+  }
+}

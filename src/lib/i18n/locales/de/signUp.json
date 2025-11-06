@@ -1,0 +1,56 @@
+{
+  "pageTitle": "Erstelle dein Spifex-Konto",
+  "heading": "Konto erstellen",
+  "subheading": "Richte deinen Arbeitsbereich in wenigen Schritten ein.",
+  "backgroundAlt": "Menschen, die im Büro zusammenarbeiten",
+
+  "nameLabel": "Vollständiger Name",
+  "namePlaceholder": "Gib deinen vollständigen Namen ein",
+
+  "emailLabel": "Arbeits-E-Mail",
+  "emailPlaceholder": "du@firma.com",
+
+  "passwordLabel": "Passwort",
+  "passwordPlaceholder": "Erstelle ein sicheres Passwort",
+
+  "confirmPasswordLabel": "Passwort bestätigen",
+  "confirmPasswordPlaceholder": "Wiederhole dein Passwort",
+
+  "fillAllFields": "Bitte fülle alle Pflichtfelder aus.",
+  "passwordsDontMatch": "Die Passwörter stimmen nicht überein.",
+  "apiFallbackError": "Dein Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
+  "signUpSuccess": "Konto erfolgreich erstellt.",
+  "signUpUnexpectedError": "Unerwarteter Fehler beim Erstellen deines Kontos. Bitte versuche es erneut.",
+  "emailAlreadyInUse": "Diese E-Mail-Adresse wird bereits verwendet. Versuchen Sie, sich anzumelden oder eine andere E-Mail-Adresse zu verwenden.",
+  "signUpButton": "Konto erstellen",
+  "continueButton": "Weiter",
+  "backButton": "Zurückgehen",
+
+  "hasAccount": "Du hast bereits ein Konto?",
+  "signInCta": "Anmelden",
+
+  "languageLabel": "Sprache",
+  "languagePlaceholder": "Sprache auswählen",
+
+  "countryLabel": "Land",
+  "countryPlaceholder": "Land auswählen",
+
+  "currencyLabel": "Währung",
+  "currencyReal": "Real (BRL)",
+  "currencyDollar": "Dollar (USD)",
+  "currencyEuro": "Euro (EUR)",
+
+  "consentIntro": "Um dein Konto zu erstellen, lies bitte die folgenden Bedingungen und akzeptiere sie:",
+  "privacyConsent": "Ich habe die Datenschutzerklärung gelesen und akzeptiere sie.",
+  "viewPrivacyPolicy": "Ansehen",
+  "tosConsent": "Ich akzeptiere die Nutzungsbedingungen.",
+  "viewTos": "Ansehen",
+  "marketingConsent": "Ich möchte gelegentlich Produkt- und Marketing-E-Mails erhalten. (Optional)",
+  "mustAcceptRequiredConsents": "Du musst die Datenschutzerklärung und die Nutzungsbedingungen akzeptieren, um fortzufahren.",
+
+  "redirectPageTitle": "Bestätige deine E-Mail-Adresse",
+  "redirectHeading": "Prüfe dein Postfach",
+  "redirectDescription": "Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Öffne ihn, um dein Konto zu aktivieren.",
+  "redirectSentTo": "Wir haben eine E-Mail gesendet an:",
+  "redirectOpenEmailButton": "E-Mail-Postfach öffnen"
+}

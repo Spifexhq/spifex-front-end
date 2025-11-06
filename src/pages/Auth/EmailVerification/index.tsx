@@ -1,34 +1,40 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-import { VerifyEmailResponse, VerifyNewEmailResponse } from '@/models/auth/dto/EmailVerification';
-import { ApiResponse } from '@/models/Api';
+import {
+  VerifyEmailResponse,
+  VerifyNewEmailResponse,
+} from "@/models/auth/dto/EmailVerification";
+import { ApiResponse } from "@/models/Api";
 import { api } from "src/api/requests";
-import Button from 'src/components/ui/Button';
-import { isApiError } from 'src/lib/api/apiError';
+import Button from "src/components/ui/Button";
+import { isApiError } from "src/lib/api/apiError";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const EmailVerification = () => {
+  const { t } = useTranslation("emailVerification");
   const { uidb64, token } = useParams<{ uidb64?: string; token?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
 
   const [isVerifying, setIsVerifying] = useState(true);
-  const [verificationMessage, setMsg] = useState('');
+  const [verificationMessage, setMsg] = useState("");
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    document.title = 'Verificação de Email';
+    document.title = t("pageTitle");
 
     const verify = async () => {
       if (!uidb64 || !token) {
-        setMsg('Parâmetros inválidos para verificação.');
+        setMsg(t("invalidParams"));
         setIsVerifying(false);
+        setSuccess(false);
         return;
       }
 
       try {
-        const call = location.pathname.includes('verify-pending-email')
+        const call = location.pathname.includes("verify-pending-email")
           ? api.verifyNewEmail
           : api.verifyEmail;
 
@@ -36,18 +42,17 @@ const EmailVerification = () => {
           await call(uidb64, token);
 
         if (isApiError(res)) {
-          setMsg(res.error.message || 'Erro ao verificar email.');
+          setMsg(res.error.message || t("genericBackendError"));
           setSuccess(false);
         } else {
-          // Mensagem estática, já que o backend não retorna `message`
-          setMsg('Email verificado com sucesso!');
+          setMsg(t("successMessage"));
           setSuccess(true);
         }
       } catch (err) {
         setMsg(
           err instanceof Error
             ? err.message
-            : 'Ocorreu um erro ao verificar seu email.'
+            : t("genericUnexpectedError")
         );
         setSuccess(false);
       } finally {
@@ -56,32 +61,30 @@ const EmailVerification = () => {
     };
 
     verify();
-  }, [uidb64, token, location.pathname]);
+  }, [uidb64, token, location.pathname, t]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
       <div className="max-w-md w-full">
         {isVerifying ? (
           <div className="flex justify-center items-center h-60">
-            <TopProgress active={true} variant='center' />
+            <TopProgress active={true} variant="center" />
           </div>
         ) : (
-          <div className="bg-white shadow-md rounded-md p-6 text-center">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-              {success
-                ? 'Seu email foi verificado com sucesso!'
-                : 'Erro na verificação do email'}
+          <div className="bg-white shadow-sm rounded-2xl p-6 sm:p-8 text-center">
+            <h1 className="text-2xl font-semibold text-slate-900 mb-4">
+              {success ? t("successTitle") : t("errorTitle")}
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm text-slate-500 mb-6">
               {verificationMessage}
             </p>
             {success && (
               <Button
                 variant="primary"
-                onClick={() => navigate('/signin')}
-                className="w-full h-12"
+                onClick={() => navigate("/signin")}
+                className="w-full h-11 rounded-xl text-sm font-medium"
               >
-                Ir para Login
+                {t("goToLoginButton")}
               </Button>
             )}
           </div>

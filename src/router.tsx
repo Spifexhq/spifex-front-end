@@ -13,7 +13,6 @@ import { PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionM
 // Auth Pages
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
 const SignIn = lazy(() => import("@/pages/Auth/SignIn"));
-const SignUpRedirect = lazy(() => import("@/pages/Auth/SignUpRedirect"));
 const EmailVerification = lazy(() => import("@/pages/Auth/EmailVerification"));
 const ForgotPassword = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
@@ -38,6 +37,7 @@ const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
 const LedgerAccountSettings = lazy(() => import("@/pages/LedgerAccountSettings"));
 const LedgerAccountsGate = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsGate"));
 const Statements = lazy(() => import("@/pages/Statements"));
+const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 
 // Status Pages
 const PurchaseConfirmation = lazy(() => import("@/pages/Status/PurchaseConfirmation"));
@@ -69,10 +69,6 @@ const routes: RouteObject[] = [
             {
                 path: 'signin',
                 element: <SignIn />
-            },
-            {
-                path: 'signup/redirect',
-                element: <SignUpRedirect />
             },
             {
                 path: 'verify-email/:uidb64/:token/',
@@ -197,6 +193,10 @@ const routes: RouteObject[] = [
                 {
                 path: 'bank-statements',
                 element: <Statements />
+                },
+                {
+                path: 'notifications',
+                element: <NotificationSettings />
                 },
             ]
             },

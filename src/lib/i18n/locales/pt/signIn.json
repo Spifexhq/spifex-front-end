@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Login | Spifex",
+  "heading": "Entre na sua conta Spifex",
+  "subheading": "Organize seu fluxo de caixa em um só lugar.",
+  "emailLabel": "Email",
+  "emailPlaceholder": "Digite seu email",
+  "passwordLabel": "Senha",
+  "passwordPlaceholder": "Digite sua senha",
+  "rememberDevice": "Lembrar deste dispositivo",
+  "signInButton": "Entrar",
+  "noAccount": "Não possui conta?",
+  "signUpCta": "Clique aqui.",
+  "forgotPassword": "Esqueceu a senha?",
+  "fillAllFields": "Preencha todos os campos",
+  "unexpectedError": "Erro inesperado. Tente novamente mais tarde.",
+  "copyright": "Copyright © 2025 Spifex."
+}

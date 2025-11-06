@@ -1,0 +1,56 @@
+{
+  "pageTitle": "Créez votre compte Spifex",
+  "heading": "Créer un compte",
+  "subheading": "Configurez votre espace de travail en quelques étapes.",
+  "backgroundAlt": "Personnes collaborant dans un bureau",
+
+  "nameLabel": "Nom complet",
+  "namePlaceholder": "Saisissez votre nom complet",
+
+  "emailLabel": "E-mail professionnel",
+  "emailPlaceholder": "vous@entreprise.com",
+
+  "passwordLabel": "Mot de passe",
+  "passwordPlaceholder": "Créez un mot de passe sécurisé",
+
+  "confirmPasswordLabel": "Confirmer le mot de passe",
+  "confirmPasswordPlaceholder": "Répétez votre mot de passe",
+
+  "fillAllFields": "Veuillez remplir tous les champs obligatoires.",
+  "passwordsDontMatch": "Les mots de passe ne correspondent pas.",
+  "apiFallbackError": "Nous n'avons pas pu créer votre compte. Veuillez réessayer.",
+  "signUpSuccess": "Compte créé avec succès.",
+  "signUpUnexpectedError": "Erreur inattendue lors de la création de votre compte. Veuillez réessayer.",
+  "emailAlreadyInUse": "Cette adresse e-mail est déjà utilisée. Veuillez vous connecter ou utiliser une autre adresse e-mail.",
+  "signUpButton": "Créer un compte",
+  "continueButton": "Continuer",
+  "backButton": "Retourner",
+
+  "hasAccount": "Vous avez déjà un compte ?",
+  "signInCta": "Se connecter",
+
+  "languageLabel": "Langue",
+  "languagePlaceholder": "Sélectionnez une langue",
+
+  "countryLabel": "Pays",
+  "countryPlaceholder": "Sélectionnez un pays",
+
+  "currencyLabel": "Devise",
+  "currencyReal": "Real (BRL)",
+  "currencyDollar": "Dollar (USD)",
+  "currencyEuro": "Euro (EUR)",
+
+  "consentIntro": "Pour créer votre compte, veuillez lire et accepter les termes ci-dessous :",
+  "privacyConsent": "J'ai lu et j'accepte la Politique de Confidentialité.",
+  "viewPrivacyPolicy": "Voir",
+  "tosConsent": "J'accepte les Conditions d'Utilisation.",
+  "viewTos": "Voir",
+  "marketingConsent": "J'accepte de recevoir des e-mails occasionnels sur le produit et le marketing. (Optionnel)",
+  "mustAcceptRequiredConsents": "Vous devez accepter la Politique de Confidentialité et les Conditions d'Utilisation pour continuer.",
+
+  "redirectPageTitle": "Confirmez votre e-mail",
+  "redirectHeading": "Vérifiez votre boîte de réception",
+  "redirectDescription": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Ouvrez-le pour activer votre compte.",
+  "redirectSentTo": "Nous avons envoyé un e-mail à :",
+  "redirectOpenEmailButton": "Ouvrir la boîte mail"
+}
