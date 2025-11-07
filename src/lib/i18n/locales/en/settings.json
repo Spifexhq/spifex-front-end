@@ -659,6 +659,12 @@
       "section": "Settings",
       "title": "Ledger accounts"
     },
+    "categories": {
+      "operationalRevenue": "Operating revenue",
+      "nonOperationalRevenue": "Non-operating revenue",
+      "operationalExpense": "Operating expense",
+      "nonOperationalExpense": "Non-operating expense"
+    },
     "buttons": {
       "add": "Add account",
       "options": "Options",
@@ -681,7 +687,8 @@
       "cancel": "Cancel",
       "save": "Save",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "runSearchAria": "Search"
     },
     "filters": {
       "placeholder": "Search by account, code, category or subcategory...",
@@ -720,7 +727,9 @@
     "toast": {
       "saved": "Account saved successfully.",
       "saveError": "Failed to save account.",
+      "deleteSuccess": "Account deleted.",
       "deleteError": "Failed to delete account.",
+      "deleteAllSuccess": "Chart of accounts reset.",
       "deleteAllError": "Failed to delete all accounts.",
       "pdfOk": "PDF generated.",
       "pdfError": "Unexpected error generating PDF.",
@@ -733,8 +742,12 @@
   },
 
   "ledgerAccountsGate": {
+    "pageTitle": "Chart of Accounts",
     "title": "Let’s set up your General Ledger Accounts",
     "subtitle": "Choose how you’d like to create your chart of accounts. You can edit or expand it later.",
+    "header": {
+      "settings": "Settings"
+    },
     "modes": {
       "csv": {
         "title": "Upload via CSV",
@@ -748,7 +761,7 @@
         "title": "Enter manually",
         "choose": "Select",
         "instructions": "Use the format GROUP;SUBGROUP;ACCOUNT — one per line. Comma is also accepted.",
-        "placeholder": "Examples:\nReceitas Operacionais;Vendas;Vendas de Produtos\nDespesas Operacionais;Administrativas;Salários e Encargos"
+        "placeholder": "Examples:\nOperating revenue;Sales;Product sales\nOperating expense;Administrative;Salaries and wages"
       },
       "standard": {
         "title": "Use a Standard Plan",
@@ -759,13 +772,17 @@
     },
     "buttons": {
       "clear": "Clear selection",
-      "finish": "Finish"
+      "finish": "Finish",
+      "finishing": "Importing…"
     },
     "snackbar": {
       "selectCsv": "Please select a CSV file.",
       "emptyCsv": "Empty or invalid CSV.",
+      "csvSuccess": "Accounts imported from CSV.",
       "manualRequired": "Fill the field using GROUP;SUBGROUP;ACCOUNT.",
+      "manualSuccess": "Accounts created from the text.",
       "standardRequired": "Choose a standard plan (Personal or Business).",
+      "standardSuccess": "Standard plan applied to your accounts.",
       "chooseMode": "Pick one option (CSV, Manual, or Standard Plan).",
       "saveError": "Error while creating ledger accounts."
     },

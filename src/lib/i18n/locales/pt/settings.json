@@ -659,6 +659,12 @@
       "section": "Configurações",
       "title": "Contas contábeis"
     },
+    "categories": {
+      "operationalRevenue": "Receitas operacionais",
+      "nonOperationalRevenue": "Receitas não operacionais",
+      "operationalExpense": "Despesas operacionais",
+      "nonOperationalExpense": "Despesas não operacionais"
+    },
     "buttons": {
       "add": "Adicionar conta",
       "options": "Opções",
@@ -681,7 +687,8 @@
       "cancel": "Cancelar",
       "save": "Salvar",
       "edit": "Editar",
-      "delete": "Excluir"
+      "delete": "Excluir",
+      "runSearchAria": "Buscar"
     },
     "filters": {
       "placeholder": "Buscar por conta, código, categoria ou subcategoria...",
@@ -720,7 +727,9 @@
     "toast": {
       "saved": "Conta salva com sucesso.",
       "saveError": "Erro ao salvar conta contábil.",
+      "deleteSuccess": "Conta excluída.",
       "deleteError": "Erro ao excluir conta.",
+      "deleteAllSuccess": "Plano de contas resetado.",
       "deleteAllError": "Erro ao excluir todas as contas.",
       "pdfOk": "PDF gerado.",
       "pdfError": "Erro inesperado ao gerar o PDF.",
@@ -733,8 +742,12 @@
   },
 
   "ledgerAccountsGate": {
+    "pageTitle": "Plano de Contas",
     "title": "Vamos configurar suas Contas Contábeis",
-    "subtitle": "Escolha uma forma de cadastrar seu plano de contas. Você pode alterar/expandir depois.",
+    "subtitle": "Escolha uma forma de cadastrar seu plano de contas. Você pode alterar e expandir depois.",
+    "header": {
+      "settings": "Configurações"
+    },
     "modes": {
       "csv": {
         "title": "Upload via CSV",
@@ -759,13 +772,17 @@
     },
     "buttons": {
       "clear": "Limpar seleção",
-      "finish": "Concluir"
+      "finish": "Concluir",
+      "finishing": "Importando…"
     },
     "snackbar": {
       "selectCsv": "Selecione um arquivo CSV.",
       "emptyCsv": "CSV vazio ou inválido.",
+      "csvSuccess": "Contas importadas a partir do CSV.",
       "manualRequired": "Preencha o campo no formato GRUPO;SUBGRUPO;CONTA.",
+      "manualSuccess": "Contas criadas a partir do texto.",
       "standardRequired": "Selecione um plano padrão (Pessoal ou Empresarial).",
+      "standardSuccess": "Plano padrão aplicado às contas.",
       "chooseMode": "Escolha uma opção (CSV, Manual ou Plano Padrão).",
       "saveError": "Erro ao cadastrar contas contábeis."
     },

@@ -659,6 +659,12 @@
       "section": "Einstellungen",
       "title": "Sachkonten"
     },
+    "categories": {
+      "operationalRevenue": "Betriebserträge",
+      "nonOperationalRevenue": "Nicht betriebliche Erträge",
+      "operationalExpense": "Betriebsaufwendungen",
+      "nonOperationalExpense": "Nicht betriebliche Aufwendungen"
+    },
     "buttons": {
       "add": "Konto hinzufügen",
       "options": "Optionen",
@@ -681,7 +687,8 @@
       "cancel": "Abbrechen",
       "save": "Speichern",
       "edit": "Bearbeiten",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "runSearchAria": "Suchen"
     },
     "filters": {
       "placeholder": "Nach Konto, Code, Kategorie oder Unterkategorie suchen…",
@@ -720,7 +727,9 @@
     "toast": {
       "saved": "Konto erfolgreich gespeichert.",
       "saveError": "Konto konnte nicht gespeichert werden.",
+      "deleteSuccess": "Konto gelöscht.",
       "deleteError": "Konto konnte nicht gelöscht werden.",
+      "deleteAllSuccess": "Kontenplan zurückgesetzt.",
       "deleteAllError": "Alle Konten konnten nicht gelöscht werden.",
       "pdfOk": "PDF erstellt.",
       "pdfError": "Unerwarteter Fehler beim Erstellen des PDFs.",
@@ -733,8 +742,12 @@
   },
 
   "ledgerAccountsGate": {
+    "pageTitle": "Kontenplan",
     "title": "Lassen Sie uns Ihre Hauptbuchkonten einrichten",
     "subtitle": "Wählen Sie, wie Sie Ihren Kontenplan erstellen möchten. Sie können ihn später bearbeiten oder erweitern.",
+    "header": {
+      "settings": "Einstellungen"
+    },
     "modes": {
       "csv": {
         "title": "Per CSV hochladen",
@@ -748,7 +761,7 @@
         "title": "Manuell eingeben",
         "choose": "Auswählen",
         "instructions": "Verwenden Sie das Format GRUPPE;UNTERGRUPPE;KONTO — eine Zeile pro Konto. Komma wird ebenfalls akzeptiert.",
-        "placeholder": "Beispiele:\nReceitas Operacionais;Vendas;Vendas de Produtos\nDespesas Operacionais;Administrativas;Salários e Encargos"
+        "placeholder": "Beispiele:\nBetriebserträge;Verkäufe;Produktverkäufe\nBetriebsaufwendungen;Verwaltung;Gehälter und Löhne"
       },
       "standard": {
         "title": "Standardplan verwenden",
@@ -759,13 +772,17 @@
     },
     "buttons": {
       "clear": "Auswahl löschen",
-      "finish": "Fertigstellen"
+      "finish": "Fertigstellen",
+      "finishing": "Import wird ausgeführt…"
     },
     "snackbar": {
       "selectCsv": "Bitte wählen Sie eine CSV-Datei aus.",
       "emptyCsv": "Leere oder ungültige CSV.",
+      "csvSuccess": "Konten aus CSV importiert.",
       "manualRequired": "Füllen Sie das Feld im Format GRUPPE;UNTERGRUPPE;KONTO aus.",
+      "manualSuccess": "Konten aus dem Text erstellt.",
       "standardRequired": "Wählen Sie einen Standardplan (Privat oder Geschäftlich).",
+      "standardSuccess": "Standardplan auf Ihre Konten angewendet.",
       "chooseMode": "Wählen Sie eine Option (CSV, Manuell oder Standardplan).",
       "saveError": "Fehler beim Erstellen der Sachkonten."
     },

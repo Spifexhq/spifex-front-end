@@ -659,6 +659,12 @@
       "section": "Paramètres",
       "title": "Comptes comptables"
     },
+    "categories": {
+      "operationalRevenue": "Produits d’exploitation",
+      "nonOperationalRevenue": "Produits non opérationnels",
+      "operationalExpense": "Charges d’exploitation",
+      "nonOperationalExpense": "Charges non opérationnelles"
+    },
     "buttons": {
       "add": "Ajouter un compte",
       "options": "Options",
@@ -681,7 +687,8 @@
       "cancel": "Annuler",
       "save": "Enregistrer",
       "edit": "Modifier",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "runSearchAria": "Rechercher"
     },
     "filters": {
       "placeholder": "Rechercher par compte, code, catégorie ou sous-catégorie...",
@@ -720,7 +727,9 @@
     "toast": {
       "saved": "Compte enregistré avec succès.",
       "saveError": "Échec de l'enregistrement du compte.",
+      "deleteSuccess": "Compte supprimé.",
       "deleteError": "Échec de la suppression du compte.",
+      "deleteAllSuccess": "Plan de comptes réinitialisé.",
       "deleteAllError": "Échec de la suppression de tous les comptes.",
       "pdfOk": "PDF généré.",
       "pdfError": "Erreur inattendue lors de la génération du PDF.",
@@ -733,8 +742,12 @@
   },
 
   "ledgerAccountsGate": {
+    "pageTitle": "Plan de comptes",
     "title": "Configurons vos comptes du grand livre",
     "subtitle": "Choisissez comment créer votre plan de comptes. Vous pourrez le modifier ou l’étendre plus tard.",
+    "header": {
+      "settings": "Paramètres"
+    },
     "modes": {
       "csv": {
         "title": "Import via CSV",
@@ -748,7 +761,7 @@
         "title": "Saisir manuellement",
         "choose": "Sélectionner",
         "instructions": "Utilisez le format GROUPE;SOUS-GROUPE;COMPTE — une ligne par compte. La virgule est également acceptée.",
-        "placeholder": "Exemples :\nRecettes d’exploitation;Ventes;Ventes de produits\nDépenses d’exploitation;Administratives;Salaires et charges"
+        "placeholder": "Exemples :\nProduits d’exploitation;Ventes;Ventes de produits\nCharges d’exploitation;Administratives;Salaires et charges"
       },
       "standard": {
         "title": "Utiliser un plan standard",
@@ -759,13 +772,17 @@
     },
     "buttons": {
       "clear": "Effacer la sélection",
-      "finish": "Terminer"
+      "finish": "Terminer",
+      "finishing": "Importation…"
     },
     "snackbar": {
       "selectCsv": "Veuillez sélectionner un fichier CSV.",
       "emptyCsv": "CSV vide ou invalide.",
+      "csvSuccess": "Comptes importés depuis le CSV.",
       "manualRequired": "Renseignez le champ en utilisant GROUPE;SOUS-GROUPE;COMPTE.",
+      "manualSuccess": "Comptes créés à partir du texte.",
       "standardRequired": "Choisissez un plan standard (Personnel ou Entreprise).",
+      "standardSuccess": "Plan standard appliqué à vos comptes.",
       "chooseMode": "Choisissez une option (CSV, Manuel ou Plan standard).",
       "saveError": "Erreur lors de la création des comptes comptables."
     },

@@ -2,7 +2,7 @@
  * File: src/pages/LedgerAccountSettings.tsx
  * Standards: flags + pager + ConfirmToast (matches Dept/Inventory/Employee)
  * Domain: GLAccount (id string), fields: name, code?, category(1..4), subcategory, is_active
- * Backend receives ONLY numbers (1..4); Front shows PT labels
+ * Backend receives ONLY numbers (1..4); front uses localized labels
  * Pagination: cursor + arrow-only (useCursorPager)
  * Overlay: local add/delete + refresh pager
  * -------------------------------------------------------------------------- */
@@ -45,28 +45,40 @@ type Snack =
 
 type TxType = "debit" | "credit";
 
-/** Labels PT shown in UI */
-type CategoryLabel =
-  | "Receitas Operacionais"
-  | "Receitas Não Operacionais"
-  | "Despesas Operacionais"
-  | "Despesas Não Operacionais";
+/**
+ * Internal category keys (stable IDs, used for mapping and i18n).
+ * These are mapped to backend numeric values (1..4).
+ */
+type CategoryKey =
+  | "operationalRevenue"
+  | "nonOperationalRevenue"
+  | "operationalExpense"
+  | "nonOperationalExpense";
 
 /** Backend values (1..4) */
 type CategoryValue = 1 | 2 | 3 | 4;
 
-const CATEGORY_LABEL_TO_VALUE: Record<CategoryLabel, CategoryValue> = {
-  "Receitas Operacionais": 1,
-  "Receitas Não Operacionais": 2,
-  "Despesas Operacionais": 3,
-  "Despesas Não Operacionais": 4,
+const CATEGORY_KEYS: CategoryKey[] = [
+  "operationalRevenue",
+  "nonOperationalRevenue",
+  "operationalExpense",
+  "nonOperationalExpense",
+];
+
+const CATEGORY_KEY_TO_VALUE: Record<CategoryKey, CategoryValue> = {
+  operationalRevenue: 1,
+  nonOperationalRevenue: 2,
+  operationalExpense: 3,
+  nonOperationalExpense: 4,
 };
-const CATEGORY_VALUE_TO_LABEL: Record<CategoryValue, CategoryLabel> = {
-  1: "Receitas Operacionais",
-  2: "Receitas Não Operacionais",
-  3: "Despesas Operacionais",
-  4: "Despesas Não Operacionais",
+
+const CATEGORY_VALUE_TO_KEY: Record<CategoryValue, CategoryKey> = {
+  1: "operationalRevenue",
+  2: "nonOperationalRevenue",
+  3: "operationalExpense",
+  4: "nonOperationalExpense",
 };
+
 const CATEGORY_DEFAULT_TX: Record<CategoryValue, TxType> = {
   1: "credit",
   2: "credit",
@@ -74,17 +86,10 @@ const CATEGORY_DEFAULT_TX: Record<CategoryValue, TxType> = {
   4: "debit",
 };
 
-const GROUP_OPTIONS: { label: CategoryLabel; value: CategoryLabel; inferredTx: TxType }[] = [
-  { label: "Receitas Operacionais", value: "Receitas Operacionais", inferredTx: "credit" },
-  { label: "Receitas Não Operacionais", value: "Receitas Não Operacionais", inferredTx: "credit" },
-  { label: "Despesas Operacionais", value: "Despesas Operacionais", inferredTx: "debit" },
-  { label: "Despesas Não Operacionais", value: "Despesas Não Operacionais", inferredTx: "debit" },
-];
-
-/** Form uses labels; API uses numbers */
+/** Form uses category keys; API uses numbers */
 type FormState = {
   name: string;
-  category: CategoryLabel | "";
+  category: CategoryKey | "";
   subcategory: string;
   code?: string;
   is_active?: boolean;
@@ -101,7 +106,9 @@ const EMPTY_FORM: FormState = {
 type PaginationMeta = { pagination?: { next?: string | null } };
 
 /* --------------------------------- Helpers -------------------------------- */
-function getInitials() { return "CC"; }
+function getInitials() {
+  return "CC";
+}
 
 const Badge = ({ children }: { children: React.ReactNode }) => (
   <span className="text-[11px] px-2 py-[2px] rounded-full border border-gray-200 bg-gray-50 text-gray-700">
@@ -118,23 +125,26 @@ type GLX = GLAccount & {
 
 function getCategoryValue(acc: GLX): CategoryValue | undefined {
   const c = acc.category;
-  if (typeof c === "number" && [1,2,3,4].includes(c)) return c as CategoryValue;
+  if (typeof c === "number" && [1, 2, 3, 4].includes(c)) return c as CategoryValue;
   if (typeof c === "string" && c) {
     const n = Number(c);
-    if ([1,2,3,4].includes(n)) return n as CategoryValue;
+    if ([1, 2, 3, 4].includes(n)) return n as CategoryValue;
   }
   return undefined;
 }
-function getCategoryLabel(acc: GLX): CategoryLabel | string {
+
+function getCategoryKeyFromAccount(acc: GLX): CategoryKey | undefined {
   const v = getCategoryValue(acc);
-  return v ? CATEGORY_VALUE_TO_LABEL[v] : "settings:ledgerAccounts.tags.noGroup";
+  return v ? CATEGORY_VALUE_TO_KEY[v] : undefined;
 }
+
 function getDefaultTx(acc: GLX): TxType | "" {
   const dt = acc.default_tx;
   if (dt === "credit" || dt === "debit") return dt;
   const v = getCategoryValue(acc);
   return v ? CATEGORY_DEFAULT_TX[v] : "";
 }
+
 function getGlaId(acc: GLAccount): string {
   const a = acc as GLAccount & { id?: string; external_id?: string };
   return a.id ?? a.external_id ?? "";
@@ -149,8 +159,13 @@ const LedgerAccountSettings: React.FC = () => {
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
 
-  useEffect(() => { document.title = t("settings:ledgerAccounts.title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("settings:ledgerAccounts.title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   /* ----------------------------- Flags (standard) ------------------------- */
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -174,7 +189,7 @@ const LedgerAccountSettings: React.FC = () => {
 
   /* ----------------------------- Filters / View --------------------------- */
   const [search, setSearch] = useState("");
-  const [filterGroup, setFilterGroup] = useState<CategoryLabel | null>(null);
+  const [filterGroup, setFilterGroup] = useState<CategoryKey | null>(null);
   const [viewMode, setViewMode] = useState<"accordion" | "list">("accordion");
 
   /* ----------------------------- Menu ⋯ ----------------------------------- */
@@ -195,7 +210,10 @@ const LedgerAccountSettings: React.FC = () => {
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   /* ----------------------------- Pager (cursor) --------------------------- */
-  const [appliedQuery, setAppliedQuery] = useState<{ q: string; group: CategoryLabel | null }>({ q: "", group: null });
+  const [appliedQuery, setAppliedQuery] = useState<{ q: string; group: CategoryKey | null }>({
+    q: "",
+    group: null,
+  });
   const qKey = useMemo(() => `${appliedQuery.q}::${appliedQuery.group ?? ""}`, [appliedQuery]);
 
   const fetchAccountsPage = useCallback(
@@ -206,20 +224,20 @@ const LedgerAccountSettings: React.FC = () => {
         const { data, meta } = (await api.getLedgerAccounts({
           page_size: 120,
           cursor,
-          // if your API supports filters, map them here; otherwise we filter client-side
+          // If your API supports filters, map them here; otherwise we filter client-side.
           // q: appliedQuery.q || undefined,
-          // category: appliedQuery.group ? CATEGORY_LABEL_TO_VALUE[appliedQuery.group] : undefined,
+          // category: appliedQuery.group ? CATEGORY_KEY_TO_VALUE[appliedQuery.group] : undefined,
         })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
 
         const items = ((data?.results ?? []) as GLAccount[]).slice().sort((a, b) => {
           const ca = (a.code || "").toString();
           const cb = (b.code || "").toString();
-          if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
-          return (a.name || "").localeCompare(b.name || "", "pt-BR");
+          if (ca && cb && ca !== cb) return ca.localeCompare(cb, undefined, { numeric: true });
+          return (a.name || "").localeCompare(b.name || "", undefined);
         });
 
         const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
         return { items, nextCursor };
       } finally {
         INFLIGHT_FETCH = false;
@@ -230,79 +248,112 @@ const LedgerAccountSettings: React.FC = () => {
 
   const pager = useCursorPager<GLAccount>(fetchAccountsPage, {
     autoLoadFirst: true,
-    deps: [qKey], // refetch when user applies new query/group (client-side filter still applies below)
+    deps: [qKey], // refetch when user applies new query/group (if backend filter is enabled)
   });
 
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
+  useEffect(() => {
+    const isUnfiltered = !appliedQuery.q && appliedQuery.group === null;
+
+    if (
+      !pager.loading &&
+      isUnfiltered &&
+      pager.items.length === 0 &&
+      added.length === 0
+    ) {
+      navigate("/settings/register/ledger-accounts", { replace: true });
+    }
+  }, [
+    pager.loading,
+    pager.items.length,
+    appliedQuery.q,
+    appliedQuery.group,
+    added.length,
+    navigate,
+  ]);
+
+  /* ----------------------------- Category helpers ------------------------- */
+  const resolveCategoryLabel = useCallback(
+    (acc: GLX): string => {
+      const key = getCategoryKeyFromAccount(acc);
+      return key ? t(`settings:ledgerAccounts.categories.${key}`) : t("settings:ledgerAccounts.tags.noGroup");
+    },
+    [t]
+  );
+
+  const groupOptions = useMemo(
+    () =>
+      CATEGORY_KEYS.map((key) => {
+        const value = CATEGORY_KEY_TO_VALUE[key];
+        const inferredTx = CATEGORY_DEFAULT_TX[value];
+        return {
+          key,
+          label: t(`settings:ledgerAccounts.categories.${key}`),
+          inferredTx,
+        };
+      }),
+    [t]
+  );
+
   /* ----------------------------- Client-side filters ---------------------- */
   const accountsFiltered = useMemo(() => {
-    // base items = (overlay added that pass filter + pager items not deleted and not overlay-duplicated)
-    const addedFiltered = added.filter((a) => {
-      const labelOrKey = getCategoryLabel(a as GLX);
-      const label = (typeof labelOrKey === "string" && labelOrKey.startsWith("settings:"))
-        ? t(labelOrKey) : (labelOrKey as string);
-      const matchGroup = !filterGroup || label === filterGroup;
-      const s = search.trim().toLowerCase();
-      const matchSearch = !s ||
-        (a.name || "").toLowerCase().includes(s) ||
-        (label || "").toLowerCase().includes(s) ||
-        (a.subcategory || "").toLowerCase().includes(s) ||
-        (a.code || "").toLowerCase().includes(s);
-      return matchGroup && matchSearch;
-    });
+    const searchNormalized = search.trim().toLowerCase();
+
+    const matchesSearchAndGroup = (a: GLAccount): boolean => {
+      const key = getCategoryKeyFromAccount(a as GLX);
+      const matchesGroup = !filterGroup || key === filterGroup;
+
+      const label = key ? t(`settings:ledgerAccounts.categories.${key}`) : "";
+      const name = (a.name || "").toLowerCase();
+      const sub = (a.subcategory || "").toLowerCase();
+      const code = (a.code || "").toLowerCase();
+      const cat = (label || "").toLowerCase();
+
+      const matchesSearch =
+        !searchNormalized ||
+        name.includes(searchNormalized) ||
+        sub.includes(searchNormalized) ||
+        code.includes(searchNormalized) ||
+        cat.includes(searchNormalized);
+
+      return matchesGroup && matchesSearch;
+    };
+
+    const addedFiltered = added.filter(matchesSearchAndGroup);
 
     const addedIdsSet = new Set(addedFiltered.map((a) => getGlaId(a)));
-    const base = pager.items.filter((a) => !deletedIds.has(getGlaId(a)) && !addedIdsSet.has(getGlaId(a)));
+    const base = pager.items.filter(
+      (a) => !deletedIds.has(getGlaId(a)) && !addedIdsSet.has(getGlaId(a)) && matchesSearchAndGroup(a)
+    );
 
-    const merged = [...addedFiltered, ...base];
-
-    // apply client-side filter to pager items
-    const s = search.trim().toLowerCase();
-    return merged.filter((a) => {
-      const labelOrKey = getCategoryLabel(a as GLX);
-      const label =
-        typeof labelOrKey === "string" && labelOrKey.startsWith("settings:")
-          ? t(labelOrKey)
-          : (labelOrKey as string);
-
-      const byGroup = !filterGroup || label === filterGroup;
-      const bySearch =
-        !s ||
-        (a.name || "").toLowerCase().includes(s) ||
-        (label || "").toLowerCase().includes(s) ||
-        (a.subcategory || "").toLowerCase().includes(s) ||
-        (a.code || "").toLowerCase().includes(s);
-      return byGroup && bySearch;
-    });
+    return [...addedFiltered, ...base];
   }, [added, pager.items, deletedIds, search, filterGroup, t]);
 
   const groups = useMemo(() => {
-    const labels = accountsFiltered
-      .map((a) => getCategoryLabel(a as GLX))
-      .map((lab) => (typeof lab === "string" && lab.startsWith("settings:") ? t(lab) : lab))
-      .filter((l): l is CategoryLabel => !!l && typeof l === "string" && !l.startsWith("settings:"));
-    return Array.from(new Set(labels)) as CategoryLabel[];
-  }, [accountsFiltered, t]);
+    const keys = accountsFiltered
+      .map((a) => getCategoryKeyFromAccount(a as GLX))
+      .filter((k): k is CategoryKey => !!k);
+    return Array.from(new Set(keys));
+  }, [accountsFiltered]);
 
   /* ----------------------------- View helpers ----------------------------- */
-  const [openAccordions, setOpenAccordions] = useState<Set<CategoryLabel>>(new Set());
-  const toggleAccordion = (groupName: CategoryLabel) => {
+  const [openAccordions, setOpenAccordions] = useState<Set<CategoryKey>>(new Set());
+  const toggleAccordion = (groupKey: CategoryKey) => {
     setOpenAccordions((prev) => {
       const s = new Set(prev);
-      if (s.has(groupName)) s.delete(groupName);
-      else s.add(groupName);
+      if (s.has(groupKey)) s.delete(groupKey);
+      else s.add(groupKey);
       return s;
     });
   };
-  const expandAll = (all: CategoryLabel[]) => setOpenAccordions(new Set(all));
+  const expandAll = (all: CategoryKey[]) => setOpenAccordions(new Set(all));
   const collapseAll = () => setOpenAccordions(new Set());
 
   /* ----------------------------- Actions ---------------------------------- */
   const applySearch = useCallback(() => {
     setAppliedQuery({ q: search.trim(), group: filterGroup });
-    // If backend filtering is added later, it will refetch via deps; for now client-only.
     pager.refresh();
   }, [search, filterGroup, pager]);
 
@@ -318,14 +369,12 @@ const LedgerAccountSettings: React.FC = () => {
     setMode("edit");
     setEditing(acc);
     setAddingNewSubgroup(false);
-    const labelOrKey = getCategoryLabel(acc as GLX);
-    const label =
-      typeof labelOrKey === "string" && labelOrKey.startsWith("settings:")
-        ? t(labelOrKey)
-        : (labelOrKey as CategoryLabel | "");
+
+    const key = getCategoryKeyFromAccount(acc as GLX);
+
     setFormData({
       name: acc.name || "",
-      category: label as CategoryLabel | "",
+      category: key ?? "",
       subcategory: acc.subcategory || "",
       code: acc.code || "",
       is_active: acc.is_active ?? true,
@@ -343,7 +392,7 @@ const LedgerAccountSettings: React.FC = () => {
   const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, is_active: e.target.checked }));
 
-  const handleGroupChange = (items: { label: CategoryLabel; value: CategoryLabel }[]) => {
+  const handleGroupChange = (items: { label: string; value: CategoryKey }[]) => {
     const sel = items[0];
     if (!sel) {
       setFormData((p) => ({ ...p, category: "", subcategory: "" }));
@@ -363,7 +412,7 @@ const LedgerAccountSettings: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (!formData.category) throw new Error("required");
-      const categoryValue: CategoryValue = CATEGORY_LABEL_TO_VALUE[formData.category as CategoryLabel];
+      const categoryValue: CategoryValue = CATEGORY_KEY_TO_VALUE[formData.category as CategoryKey];
 
       const basePayload = {
         name: formData.name.trim(),
@@ -386,10 +435,16 @@ const LedgerAccountSettings: React.FC = () => {
 
       await pager.refresh();
       closeModal();
-      setSnack({ message: t("settings:ledgerAccounts.toast.saved"), severity: "success" });
+      setSnack({
+        message: t("settings:ledgerAccounts.toast.saved"),
+        severity: "success",
+      });
     } catch (err) {
       console.error(err);
-      setSnack({ message: t("settings:ledgerAccounts.toast.saveError"), severity: "error" });
+      setSnack({
+        message: t("settings:ledgerAccounts.toast.saveError"),
+        severity: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -405,14 +460,22 @@ const LedgerAccountSettings: React.FC = () => {
         await api.deleteLedgerAccount(id);
         await pager.refresh();
         setAdded((prev) => prev.filter((a) => getGlaId(a) !== id));
-        setSnack({ message: t("settings:ledgerAccounts.toast.deleteSuccess", { defaultValue: "Conta excluída." }), severity: "info" });
+        setSnack({
+          message: t("settings:ledgerAccounts.toast.deleteSuccess", {
+            defaultValue: "Account deleted.",
+          }),
+          severity: "info",
+        });
       } catch {
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(id);
           return next;
         });
-        setSnack({ message: t("settings:ledgerAccounts.toast.deleteError"), severity: "error" });
+        setSnack({
+          message: t("settings:ledgerAccounts.toast.deleteError"),
+          severity: "error",
+        });
       } finally {
         setDeleteTargetId(null);
         setConfirmOpen(false);
@@ -429,10 +492,18 @@ const LedgerAccountSettings: React.FC = () => {
       try {
         setDeletingAll(true);
         await api.deleteAllLedgerAccounts();
-        setSnack({ message: t("settings:ledgerAccounts.toast.deleteAllSuccess", { defaultValue: "Plano de contas resetado." }), severity: "info" });
+        setSnack({
+          message: t("settings:ledgerAccounts.toast.deleteAllSuccess", {
+            defaultValue: "Chart of accounts reset.",
+          }),
+          severity: "info",
+        });
         navigate("/settings/register/ledger-accounts", { replace: true });
       } catch {
-        setSnack({ message: t("settings:ledgerAccounts.toast.deleteAllError"), severity: "error" });
+        setSnack({
+          message: t("settings:ledgerAccounts.toast.deleteAllError"),
+          severity: "error",
+        });
       } finally {
         setDeletingAll(false);
         setMenuOpen(false);
@@ -449,10 +520,16 @@ const LedgerAccountSettings: React.FC = () => {
         companyName: t("settings:ledgerAccounts.pdf.company"),
         title: t("settings:ledgerAccounts.pdf.title"),
       });
-      setSnack({ message: result.message || t("settings:ledgerAccounts.toast.pdfOk"), severity: "success" });
+      setSnack({
+        message: result.message || t("settings:ledgerAccounts.toast.pdfOk"),
+        severity: "success",
+      });
     } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      setSnack({ message: t("settings:ledgerAccounts.toast.pdfError"), severity: "error" });
+      console.error("Error generating ledger accounts PDF:", error);
+      setSnack({
+        message: t("settings:ledgerAccounts.toast.pdfError"),
+        severity: "error",
+      });
     } finally {
       setMenuOpen(false);
     }
@@ -461,22 +538,25 @@ const LedgerAccountSettings: React.FC = () => {
   /* ----------------------------- Subgroup options ------------------------- */
   const subgroupOptions = useMemo(() => {
     if (!formData.category) return [] as { label: string; value: string }[];
+
     const list = accountsFiltered
       .filter((a) => {
-        const lab = getCategoryLabel(a as GLX);
-        const resolved = (typeof lab === "string" && lab.startsWith("settings:")) ? t(lab) : lab;
-        return resolved === formData.category;
+        const key = getCategoryKeyFromAccount(a as GLX);
+        return key === formData.category;
       })
       .map((a) => a.subcategory || "")
       .filter(Boolean);
+
     const unique = Array.from(new Set(list));
     return unique.map((sg) => ({ label: sg, value: sg }));
-  }, [accountsFiltered, formData.category, t]);
+  }, [accountsFiltered, formData.category]);
 
   /* ----------------------------- Body scroll lock ------------------------- */
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [modalOpen]);
 
   /* ----------------------------- Loading UI ------------------------------- */
@@ -495,37 +575,51 @@ const LedgerAccountSettings: React.FC = () => {
   /* ----------------------------- View utils ------------------------------- */
   const RowAccountList = ({ a }: { a: GLAccount }) => {
     const id = getGlaId(a);
-    const labelOrKey = getCategoryLabel(a as GLX);
-    const label = typeof labelOrKey === "string" && labelOrKey.startsWith("settings:")
-      ? t(labelOrKey)
-      : labelOrKey;
+    const label = resolveCategoryLabel(a as GLX);
     const tx = getDefaultTx(a as GLX);
     const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
 
     return (
-      <div className={`flex items-center justify-between px-4 py-2.5 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+      <div
+        className={`flex items-center justify-between px-4 py-2.5 ${
+          rowBusy ? "opacity-70 pointer-events-none" : ""
+        }`}
+      >
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-gray-900 truncate">
             {a.name || t("settings:ledgerAccounts.tags.noName")}
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
-            {a.code ? <Badge>{t("settings:ledgerAccounts.tags.code")}: {a.code}</Badge> : null}
-            <Badge>{label as string}</Badge>
+            {a.code ? (
+              <Badge>
+                {t("settings:ledgerAccounts.tags.code")}: {a.code}
+              </Badge>
+            ) : null}
+            <Badge>{label}</Badge>
             {a.subcategory ? <Badge>{a.subcategory}</Badge> : null}
-            {tx ? <Badge>{tx === "credit" ? t("settings:ledgerAccounts.tags.credit") : t("settings:ledgerAccounts.tags.debit")}</Badge> : null}
-            {a.is_active === false ? <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge> : null}
+            {tx ? (
+              <Badge>
+                {tx === "credit"
+                  ? t("settings:ledgerAccounts.tags.credit")
+                  : t("settings:ledgerAccounts.tags.debit")}
+              </Badge>
+            ) : null}
+            {a.is_active === false ? (
+              <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge>
+            ) : null}
           </div>
         </div>
         {canEdit && (
           <div className="flex gap-2 shrink-0">
-            <Button
-              variant="outline"
-              onClick={() => openEditModal(a)}
-              disabled={rowBusy}
-            >
+            <Button variant="outline" onClick={() => openEditModal(a)} disabled={rowBusy}>
               {t("settings:ledgerAccounts.buttons.edit")}
             </Button>
-            <Button variant="outline" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
+            <Button
+              variant="outline"
+              onClick={() => requestDeleteAccount(a)}
+              disabled={rowBusy}
+              aria-busy={rowBusy || undefined}
+            >
               {t("settings:ledgerAccounts.buttons.delete")}
             </Button>
           </div>
@@ -536,18 +630,23 @@ const LedgerAccountSettings: React.FC = () => {
 
   const renderListView = () => {
     const sorted = [...accountsFiltered].sort((a, b) => {
-      const ga = getCategoryLabel(a as GLX) as string;
-      const gb = getCategoryLabel(b as GLX) as string;
-      const gaR = ga.startsWith("settings:ledgerAccounts") ? t(ga) : ga;
-      const gbR = gb.startsWith("settings:ledgerAccounts") ? t(gb) : gb;
-      const g = (gaR || "").localeCompare(gbR || "");
+      const keyA = getCategoryKeyFromAccount(a as GLX);
+      const keyB = getCategoryKeyFromAccount(b as GLX);
+
+      const labelA = keyA ? t(`settings:ledgerAccounts.categories.${keyA}`) : "";
+      const labelB = keyB ? t(`settings:ledgerAccounts.categories.${keyB}`) : "";
+      const g = (labelA || "").localeCompare(labelB || "");
       if (g !== 0) return g;
+
       const sg = (a.subcategory || "").localeCompare(b.subcategory || "");
       if (sg !== 0) return sg;
-      const ca = (a.code || "").localeCompare(b.code || "", "pt-BR", { numeric: true });
+
+      const ca = (a.code || "").localeCompare(b.code || "", undefined, { numeric: true });
       if (ca !== 0) return ca;
+
       return (a.name || "").localeCompare(b.name || "");
     });
+
     return (
       <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
         <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
@@ -556,9 +655,13 @@ const LedgerAccountSettings: React.FC = () => {
           </span>
         </div>
         <div className="divide-y divide-gray-200">
-          {sorted.map((a) => <RowAccountList key={getGlaId(a)} a={a} />)}
+          {sorted.map((a) => (
+            <RowAccountList key={getGlaId(a)} a={a} />
+          ))}
           {sorted.length === 0 && (
-            <p className="p-4 text-center text-sm text-gray-500">{t("settings:ledgerAccounts.list.empty")}</p>
+            <p className="p-4 text-center text-sm text-gray-500">
+              {t("settings:ledgerAccounts.list.empty")}
+            </p>
           )}
         </div>
       </div>
@@ -613,7 +716,7 @@ const LedgerAccountSettings: React.FC = () => {
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 border-b border-gray-100 transition-colors"
                           onClick={handleDownloadPDF}
-                          disabled={globalBusy || (pager.items.length + added.length === 0)}
+                          disabled={globalBusy || pager.items.length + added.length === 0}
                           title={
                             pager.items.length + added.length === 0
                               ? t("settings:ledgerAccounts.buttons.downloadPdfDisabled")
@@ -626,10 +729,16 @@ const LedgerAccountSettings: React.FC = () => {
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
                           onClick={requestDeleteAll}
-                          disabled={globalBusy || (pager.items.length + added.length === 0)}
-                          title={deletingAll ? t("settings:ledgerAccounts.buttons.deletingAll") : t("settings:ledgerAccounts.buttons.resetAll")}
+                          disabled={globalBusy || pager.items.length + added.length === 0}
+                          title={
+                            deletingAll
+                              ? t("settings:ledgerAccounts.buttons.deletingAll")
+                              : t("settings:ledgerAccounts.buttons.resetAll")
+                          }
                         >
-                          {deletingAll ? t("settings:ledgerAccounts.buttons.deletingAll") : t("settings:ledgerAccounts.buttons.resetAll")}
+                          {deletingAll
+                            ? t("settings:ledgerAccounts.buttons.deletingAll")
+                            : t("settings:ledgerAccounts.buttons.resetAll")}
                         </button>
                       </div>
                     )}
@@ -656,11 +765,20 @@ const LedgerAccountSettings: React.FC = () => {
                       />
                     </div>
 
-                    <SelectDropdown<{ label: CategoryLabel; value: CategoryLabel }>
+                    <SelectDropdown<{ label: string; value: CategoryKey }>
                       label={t("settings:ledgerAccounts.filters.category")}
-                      items={GROUP_OPTIONS.map((g) => ({ label: g.label, value: g.value }))}
-                      selected={filterGroup ? [{ label: filterGroup, value: filterGroup }] : []}
-                      onChange={(items) => setFilterGroup(items[0]?.value ?? null)}
+                      items={groupOptions.map((g) => ({ label: g.label, value: g.key }))}
+                      selected={
+                        filterGroup
+                          ? [
+                              {
+                                label: t(`settings:ledgerAccounts.categories.${filterGroup}`),
+                                value: filterGroup,
+                              },
+                            ]
+                          : []
+                      }
+                      onChange={handleGroupChange}
                       getItemKey={(i) => i.value}
                       getItemLabel={(i) => i.label}
                       singleSelect
@@ -693,7 +811,7 @@ const LedgerAccountSettings: React.FC = () => {
                       className="self-end"
                       disabled={globalBusy}
                     >
-                      {t("settings:ledgerAccounts.buttons.runSearchAria", "Buscar")}
+                      {t("settings:ledgerAccounts.buttons.runSearchAria")}
                     </Button>
                   </div>
 
@@ -701,7 +819,11 @@ const LedgerAccountSettings: React.FC = () => {
                     {viewMode === "accordion" && groups.length > 0 && (
                       <Button
                         variant="outline"
-                        onClick={() => (openAccordions.size === groups.length ? collapseAll() : expandAll(groups))}
+                        onClick={() =>
+                          openAccordions.size === groups.length
+                            ? collapseAll()
+                            : expandAll(groups)
+                        }
                         disabled={globalBusy}
                       >
                         {openAccordions.size === groups.length
@@ -731,14 +853,19 @@ const LedgerAccountSettings: React.FC = () => {
                   <div className="space-y-4">
                     {groups.map((g) => {
                       const accInGroup = accountsFiltered.filter((a) => {
-                        const lab = getCategoryLabel(a as GLX);
-                        const resolved = (typeof lab === "string" && lab.startsWith("settings:")) ? t(lab) : lab;
-                        return resolved === g;
+                        const key = getCategoryKeyFromAccount(a as GLX);
+                        return key === g;
                       });
                       if (accInGroup.length === 0) return null;
 
                       const subsInGroup = Array.from(
-                        new Set(accInGroup.map((a) => a.subcategory || t("settings:ledgerAccounts.tags.noSubgroup")))
+                        new Set(
+                          accInGroup.map(
+                            (a) =>
+                              a.subcategory ||
+                              t("settings:ledgerAccounts.tags.noSubgroup")
+                          )
+                        )
                       );
                       const isOpen = openAccordions.has(g);
 
@@ -748,8 +875,16 @@ const LedgerAccountSettings: React.FC = () => {
                             onClick={() => toggleAccordion(g)}
                             className="w-full flex items-center justify-between cursor-pointer select-none px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
                           >
-                            <span className="text-[13px] font-semibold text-gray-900">{g}</span>
-                            <svg className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24">
+                            <span className="text-[13px] font-semibold text-gray-900">
+                              {t(`settings:ledgerAccounts.categories.${g}`)}
+                            </span>
+                            <svg
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                isOpen ? "rotate-180" : ""
+                              }`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
                               <path
                                 fill="currentColor"
                                 fillRule="evenodd"
@@ -763,43 +898,97 @@ const LedgerAccountSettings: React.FC = () => {
                             <div className="p-4 space-y-4">
                               {subsInGroup.map((sg) => (
                                 <div key={sg}>
-                                  <p className="text-[12px] font-semibold text-gray-800 mb-2">{sg}</p>
+                                  <p className="text-[12px] font-semibold text-gray-800 mb-2">
+                                    {sg}
+                                  </p>
                                   <div className="divide-y divide-gray-200">
                                     {accInGroup
-                                      .filter((a) => (a.subcategory || t("settings:ledgerAccounts.tags.noSubgroup")) === sg)
+                                      .filter(
+                                        (a) =>
+                                          (a.subcategory ||
+                                            t(
+                                              "settings:ledgerAccounts.tags.noSubgroup"
+                                            )) === sg
+                                      )
                                       .map((a) => {
                                         const id = getGlaId(a);
-                                        const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
+                                        const rowBusy =
+                                          globalBusy ||
+                                          deleteTargetId === id ||
+                                          deletedIds.has(id);
+                                        const tx = getDefaultTx(a as GLX);
+
                                         return (
-                                          <div key={id} className={`flex items-center justify-between px-2 py-2 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+                                          <div
+                                            key={id}
+                                            className={`flex items-center justify-between px-2 py-2 ${
+                                              rowBusy
+                                                ? "opacity-70 pointer-events-none"
+                                                : ""
+                                            }`}
+                                          >
                                             <div className="min-w-0">
                                               <p className="text-[13px] font-medium text-gray-900 truncate">
-                                                {a.name || t("settings:ledgerAccounts.tags.noName")}
+                                                {a.name ||
+                                                  t(
+                                                    "settings:ledgerAccounts.tags.noName"
+                                                  )}
                                               </p>
                                               <div className="mt-1 flex gap-2 flex-wrap">
-                                                {a.code ? <Badge>{t("settings:ledgerAccounts.tags.code")}: {a.code}</Badge> : null}
-                                                {(() => {
-                                                  const txx = getDefaultTx(a as GLX);
-                                                  return txx ? (
-                                                    <Badge>
-                                                      {txx === "credit" ? t("settings:ledgerAccounts.tags.credit") : t("settings:ledgerAccounts.tags.debit")}
-                                                    </Badge>
-                                                  ) : null;
-                                                })()}
-                                                {a.is_active === false ? <Badge>{t("settings:ledgerAccounts.tags.inactive")}</Badge> : null}
+                                                {a.code ? (
+                                                  <Badge>
+                                                    {t(
+                                                      "settings:ledgerAccounts.tags.code"
+                                                    )}
+                                                    : {a.code}
+                                                  </Badge>
+                                                ) : null}
+                                                {tx ? (
+                                                  <Badge>
+                                                    {tx === "credit"
+                                                      ? t(
+                                                          "settings:ledgerAccounts.tags.credit"
+                                                        )
+                                                      : t(
+                                                          "settings:ledgerAccounts.tags.debit"
+                                                        )}
+                                                  </Badge>
+                                                ) : null}
+                                                {a.is_active === false ? (
+                                                  <Badge>
+                                                    {t(
+                                                      "settings:ledgerAccounts.tags.inactive"
+                                                    )}
+                                                  </Badge>
+                                                ) : null}
                                               </div>
                                             </div>
                                             {canEdit && (
                                               <div className="flex gap-2 shrink-0">
                                                 <Button
                                                   variant="outline"
-                                                  onClick={() => openEditModal(a)}
+                                                  onClick={() =>
+                                                    openEditModal(a)
+                                                  }
                                                   disabled={rowBusy}
                                                 >
-                                                  {t("settings:ledgerAccounts.buttons.edit")}
+                                                  {t(
+                                                    "settings:ledgerAccounts.buttons.edit"
+                                                  )}
                                                 </Button>
-                                                <Button variant="outline" onClick={() => requestDeleteAccount(a)} disabled={rowBusy} aria-busy={rowBusy || undefined}>
-                                                  {t("settings:ledgerAccounts.buttons.delete")}
+                                                <Button
+                                                  variant="outline"
+                                                  onClick={() =>
+                                                    requestDeleteAccount(a)
+                                                  }
+                                                  disabled={rowBusy}
+                                                  aria-busy={
+                                                    rowBusy || undefined
+                                                  }
+                                                >
+                                                  {t(
+                                                    "settings:ledgerAccounts.buttons.delete"
+                                                  )}
                                                 </Button>
                                               </div>
                                             )}
@@ -845,7 +1034,9 @@ const LedgerAccountSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? t("settings:ledgerAccounts.modal.createTitle") : t("settings:ledgerAccounts.modal.editTitle")}
+                  {mode === "create"
+                    ? t("settings:ledgerAccounts.modal.createTitle")
+                    : t("settings:ledgerAccounts.modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
@@ -862,7 +1053,9 @@ const LedgerAccountSettings: React.FC = () => {
                   label={t("settings:ledgerAccounts.modal.name")}
                   name="name"
                   value={formData.name}
-                  onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, name: e.target.value }))
+                  }
                   required
                   disabled={isSubmitting}
                 />
@@ -871,31 +1064,56 @@ const LedgerAccountSettings: React.FC = () => {
                   label={t("settings:ledgerAccounts.modal.code")}
                   name="code"
                   value={formData.code || ""}
-                  onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, code: e.target.value }))
+                  }
                   placeholder={t("settings:ledgerAccounts.modal.codePlaceholder")}
                   disabled={isSubmitting}
                 />
 
-                <SelectDropdown<{ label: CategoryLabel; value: CategoryLabel }>
+                <SelectDropdown<{ label: string; value: CategoryKey }>
                   label={t("settings:ledgerAccounts.filters.category")}
-                  items={GROUP_OPTIONS.map((g) => ({ label: g.label, value: g.value }))}
-                  selected={formData.category ? [{ label: formData.category, value: formData.category }] : []}
+                  items={groupOptions.map((g) => ({
+                    label: g.label,
+                    value: g.key,
+                  }))}
+                  selected={
+                    formData.category
+                      ? [
+                          {
+                            label: t(
+                              `settings:ledgerAccounts.categories.${formData.category}`
+                            ),
+                            value: formData.category,
+                          },
+                        ]
+                      : []
+                  }
                   onChange={handleGroupChange}
                   getItemKey={(i) => i.value}
                   getItemLabel={(i) => i.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel={t("settings:ledgerAccounts.buttons.selectCategory")}
+                  buttonLabel={t(
+                    "settings:ledgerAccounts.buttons.selectCategory"
+                  )}
                   disabled={isSubmitting || !formData.name}
                 />
 
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
                   {addingNewSubgroup ? (
                     <Input
-                      label={t("settings:ledgerAccounts.modal.subcategoryNew")}
+                      label={t(
+                        "settings:ledgerAccounts.modal.subcategoryNew"
+                      )}
                       name="subcategory"
                       value={formData.subcategory}
-                      onChange={(e) => setFormData((p) => ({ ...p, subcategory: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          subcategory: e.target.value,
+                        }))
+                      }
                       disabled={isSubmitting || !formData.category}
                       required
                     />
@@ -904,14 +1122,23 @@ const LedgerAccountSettings: React.FC = () => {
                       label={t("settings:ledgerAccounts.modal.subcategory")}
                       items={subgroupOptions}
                       selected={
-                        formData.subcategory ? [{ label: formData.subcategory, value: formData.subcategory }] : []
+                        formData.subcategory
+                          ? [
+                              {
+                                label: formData.subcategory,
+                                value: formData.subcategory,
+                              },
+                            ]
+                          : []
                       }
                       onChange={handleSubgroupChange}
                       getItemKey={(i) => i.value}
                       getItemLabel={(i) => i.label}
                       singleSelect
                       hideCheckboxes
-                      buttonLabel={t("settings:ledgerAccounts.buttons.selectSubcategory")}
+                      buttonLabel={t(
+                        "settings:ledgerAccounts.buttons.selectSubcategory"
+                      )}
                       disabled={isSubmitting || !formData.category}
                     />
                   )}
@@ -925,12 +1152,20 @@ const LedgerAccountSettings: React.FC = () => {
                     }}
                     disabled={isSubmitting || !formData.category}
                   >
-                    {addingNewSubgroup ? t("settings:ledgerAccounts.buttons.toggleNewSubCancel") : t("settings:ledgerAccounts.buttons.toggleNewSub")}
+                    {addingNewSubgroup
+                      ? t(
+                          "settings:ledgerAccounts.buttons.toggleNewSubCancel"
+                        )
+                      : t("settings:ledgerAccounts.buttons.toggleNewSub")}
                   </Button>
                 </div>
 
                 <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={formData.is_active ?? true} onChange={handleActiveChange} disabled={isSubmitting} />
+                  <Checkbox
+                    checked={formData.is_active ?? true}
+                    onChange={handleActiveChange}
+                    disabled={isSubmitting}
+                  />
                   {t("settings:ledgerAccounts.modal.active")}
                 </label>
 
@@ -939,7 +1174,9 @@ const LedgerAccountSettings: React.FC = () => {
                     <>
                       {t("settings:ledgerAccounts.modal.defaultTxLabel")}{" "}
                       <b>
-                        {CATEGORY_DEFAULT_TX[CATEGORY_LABEL_TO_VALUE[formData.category as CategoryLabel]] === "credit"
+                        {CATEGORY_DEFAULT_TX[
+                          CATEGORY_KEY_TO_VALUE[formData.category as CategoryKey]
+                        ] === "credit"
                           ? t("settings:ledgerAccounts.tags.credit")
                           : t("settings:ledgerAccounts.tags.debit")}
                       </b>
@@ -950,10 +1187,23 @@ const LedgerAccountSettings: React.FC = () => {
                 </p>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                  <Button
+                    variant="cancel"
+                    type="button"
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
                     {t("settings:ledgerAccounts.buttons.cancel")}
                   </Button>
-                  <Button type="submit" disabled={isSubmitting || !formData.name || !formData.category || !formData.subcategory}>
+                  <Button
+                    type="submit"
+                    disabled={
+                      isSubmitting ||
+                      !formData.name ||
+                      !formData.category ||
+                      !formData.subcategory
+                    }
+                  >
                     {t("settings:ledgerAccounts.buttons.save")}
                   </Button>
                 </div>
@@ -977,9 +1227,13 @@ const LedgerAccountSettings: React.FC = () => {
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
-          confirmAction?.()
+          confirmAction
+            ?.()
             .catch(() => {
-              setSnack({ message: t("settings:ledgerAccounts.toast.confirmFailed"), severity: "error" });
+              setSnack({
+                message: t("settings:ledgerAccounts.toast.confirmFailed"),
+                severity: "error",
+              });
             })
             .finally(() => setConfirmBusy(false));
         }}
