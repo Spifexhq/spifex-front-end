@@ -1,69 +1,332 @@
 [
-    { "group": "Receitas Operacionais", "subgroup": "Vendas de Produtos", "account": "Vendas de Mercadorias" },
-    { "group": "Receitas Operacionais", "subgroup": "Vendas de Produtos", "account": "Vendas de Produtos Acabados" },
-    { "group": "Receitas Operacionais", "subgroup": "Vendas de Produtos", "account": "Vendas de Produtos em Processo" },
-    { "group": "Receitas Operacionais", "subgroup": "Prestação de Serviços", "account": "Serviços Prestados" },
-    { "group": "Receitas Operacionais", "subgroup": "Prestação de Serviços", "account": "Manutenção e Suporte Técnico" },
-    { "group": "Receitas Operacionais", "subgroup": "Prestação de Serviços", "account": "Consultoria e Assessoria" },
-    { "group": "Receitas Operacionais", "subgroup": "Receita de Aluguel", "account": "Aluguel de Imóveis" },
-    { "group": "Receitas Operacionais", "subgroup": "Receita de Aluguel", "account": "Aluguel de Equipamentos" },
-    { "group": "Receitas Operacionais", "subgroup": "Receita Financeira", "account": "Juros Recebidos" },
-    { "group": "Receitas Operacionais", "subgroup": "Receita Financeira", "account": "Receitas de Aplicações Financeiras" },
-    { "group": "Receitas Operacionais", "subgroup": "Receita Financeira", "account": "Variação Cambial Ativa" },
-    { "group": "Receitas Operacionais", "subgroup": "Outras Receitas Operacionais", "account": "Receita de Royalties" },
-    { "group": "Receitas Operacionais", "subgroup": "Outras Receitas Operacionais", "account": "Comissões Recebidas" },
-    { "group": "Receitas Operacionais", "subgroup": "Outras Receitas Operacionais", "account": "Receita de Licenciamento de Tecnologia" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Ganhos de Capital", "account": "Venda de Imobilizado" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Ganhos de Capital", "account": "Ganho na Alienação de Investimentos" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Ganhos de Capital", "account": "Receita de Alienação de Ativos Intangíveis" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Receitas Eventuais", "account": "Indenizações Recebidas" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Receitas Eventuais", "account": "Receita de Subvenções Governamentais" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Receitas Eventuais", "account": "Reversão de Provisões" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Receitas Extraordinárias", "account": "Ganhos em Loterias" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Receitas Extraordinárias", "account": "Ganhos por Acordo Judicial" },
-    { "group": "Receitas Não Operacionais", "subgroup": "Receitas Extraordinárias", "account": "Receita de Restituição de Tributos" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Mercadorias Vendidas", "account": "Compra de Mercadorias" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Mercadorias Vendidas", "account": "Frete sobre Compras" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Mercadorias Vendidas", "account": "Impostos sobre Compras" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Mercadorias Vendidas", "account": "Descontos Comerciais" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Serviços Prestados", "account": "Salários de Mão de Obra Direta" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Serviços Prestados", "account": "Material de Consumo" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Serviços Prestados", "account": "Depreciação de Equipamentos" },
-    { "group": "Despesas Operacionais", "subgroup": "Custo de Serviços Prestados", "account": "Energia e Utilidades" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Salários e Encargos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Aluguel e Condomínio" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Material de Escritório" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Despesas com Telefonia e Internet" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Seguros" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Despesas com Viagens e Deslocamentos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Administrativas", "account": "Despesas com Consultoria e Assessoria" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Comerciais", "account": "Propaganda e Publicidade" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Comerciais", "account": "Comissões sobre Vendas" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Comerciais", "account": "Despesas com Transporte e Entrega" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Comerciais", "account": "Despesas com Eventos e Feiras" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Financeiras", "account": "Juros sobre Empréstimos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Financeiras", "account": "Descontos Concedidos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Financeiras", "account": "Variação Cambial Passiva" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas Financeiras", "account": "Despesas com Operações de Hedge" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Pessoal", "account": "Salários e Encargos Trabalhistas" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Pessoal", "account": "Benefícios (Vale Alimentação, etc.)" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Pessoal", "account": "Provisões para Férias e 13º Salário" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Pessoal", "account": "Treinamentos e Capacitações" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Manutenção", "account": "Manutenção de Equipamentos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Manutenção", "account": "Manutenção Predial" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Manutenção", "account": "Manutenção de Veículos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Depreciação", "account": "Depreciação de Imóveis" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Depreciação", "account": "Depreciação de Equipamentos" },
-    { "group": "Despesas Operacionais", "subgroup": "Despesas com Depreciação", "account": "Amortização de Ativos Intangíveis" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Perdas de Capital", "account": "Perda na Alienação de Investimentos" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Perdas de Capital", "account": "Perda na Venda de Imobilizado" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Perdas de Capital", "account": "Baixa de Ativos Não Recuperáveis" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Eventuais", "account": "Multas e Penalidades" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Eventuais", "account": "Despesas Judiciais" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Eventuais", "account": "Despesas com Reestruturação" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Extraordinárias", "account": "Doações" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Extraordinárias", "account": "Contribuições Não Dedutíveis" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Extraordinárias", "account": "Perdas em Processos Judiciais" },
-    { "group": "Despesas Não Operacionais", "subgroup": "Despesas Extraordinárias", "account": "Perdas por Desastres Naturais" }
-  ]
-  
+  {
+    "category": 1,
+    "subgroup": "Vendas de Produtos",
+    "account": "Vendas de Mercadorias"
+  },
+  {
+    "category": 1,
+    "subgroup": "Vendas de Produtos",
+    "account": "Vendas de Produtos Acabados"
+  },
+  {
+    "category": 1,
+    "subgroup": "Vendas de Produtos",
+    "account": "Vendas de Produtos em Processo"
+  },
+  {
+    "category": 1,
+    "subgroup": "Prestação de Serviços",
+    "account": "Serviços Prestados"
+  },
+  {
+    "category": 1,
+    "subgroup": "Prestação de Serviços",
+    "account": "Manutenção e Suporte Técnico"
+  },
+  {
+    "category": 1,
+    "subgroup": "Prestação de Serviços",
+    "account": "Consultoria e Assessoria"
+  },
+  {
+    "category": 1,
+    "subgroup": "Receita de Aluguel",
+    "account": "Aluguel de Imóveis"
+  },
+  {
+    "category": 1,
+    "subgroup": "Receita de Aluguel",
+    "account": "Aluguel de Equipamentos"
+  },
+  {
+    "category": 1,
+    "subgroup": "Receita Financeira",
+    "account": "Juros Recebidos"
+  },
+  {
+    "category": 1,
+    "subgroup": "Receita Financeira",
+    "account": "Receitas de Aplicações Financeiras"
+  },
+  {
+    "category": 1,
+    "subgroup": "Receita Financeira",
+    "account": "Variação Cambial Ativa"
+  },
+  {
+    "category": 1,
+    "subgroup": "Outras Receitas Operacionais",
+    "account": "Receita de Royalties"
+  },
+  {
+    "category": 1,
+    "subgroup": "Outras Receitas Operacionais",
+    "account": "Comissões Recebidas"
+  },
+  {
+    "category": 1,
+    "subgroup": "Outras Receitas Operacionais",
+    "account": "Receita de Licenciamento de Tecnologia"
+  },
+  {
+    "category": 2,
+    "subgroup": "Ganhos de Capital",
+    "account": "Venda de Imobilizado"
+  },
+  {
+    "category": 2,
+    "subgroup": "Ganhos de Capital",
+    "account": "Ganho na Alienação de Investimentos"
+  },
+  {
+    "category": 2,
+    "subgroup": "Ganhos de Capital",
+    "account": "Receita de Alienação de Ativos Intangíveis"
+  },
+  {
+    "category": 2,
+    "subgroup": "Receitas Eventuais",
+    "account": "Indenizações Recebidas"
+  },
+  {
+    "category": 2,
+    "subgroup": "Receitas Eventuais",
+    "account": "Receita de Subvenções Governamentais"
+  },
+  {
+    "category": 2,
+    "subgroup": "Receitas Eventuais",
+    "account": "Reversão de Provisões"
+  },
+  {
+    "category": 2,
+    "subgroup": "Receitas Extraordinárias",
+    "account": "Ganhos em Loterias"
+  },
+  {
+    "category": 2,
+    "subgroup": "Receitas Extraordinárias",
+    "account": "Ganhos por Acordo Judicial"
+  },
+  {
+    "category": 2,
+    "subgroup": "Receitas Extraordinárias",
+    "account": "Receita de Restituição de Tributos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Mercadorias Vendidas",
+    "account": "Compra de Mercadorias"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Mercadorias Vendidas",
+    "account": "Frete sobre Compras"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Mercadorias Vendidas",
+    "account": "Impostos sobre Compras"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Mercadorias Vendidas",
+    "account": "Descontos Comerciais"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Serviços Prestados",
+    "account": "Salários de Mão de Obra Direta"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Serviços Prestados",
+    "account": "Material de Consumo"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Serviços Prestados",
+    "account": "Depreciação de Equipamentos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Custo de Serviços Prestados",
+    "account": "Energia e Utilidades"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Salários e Encargos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Aluguel e Condomínio"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Material de Escritório"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Despesas com Telefonia e Internet"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Seguros"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Despesas com Viagens e Deslocamentos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Administrativas",
+    "account": "Despesas com Consultoria e Assessoria"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Comerciais",
+    "account": "Propaganda e Publicidade"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Comerciais",
+    "account": "Comissões sobre Vendas"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Comerciais",
+    "account": "Despesas com Transporte e Entrega"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Comerciais",
+    "account": "Despesas com Eventos e Feiras"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Financeiras",
+    "account": "Juros sobre Empréstimos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Financeiras",
+    "account": "Descontos Concedidos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Financeiras",
+    "account": "Variação Cambial Passiva"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas Financeiras",
+    "account": "Despesas com Operações de Hedge"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Pessoal",
+    "account": "Salários e Encargos Trabalhistas"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Pessoal",
+    "account": "Benefícios (Vale Alimentação, etc.)"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Pessoal",
+    "account": "Provisões para Férias e 13º Salário"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Pessoal",
+    "account": "Treinamentos e Capacitações"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Manutenção",
+    "account": "Manutenção de Equipamentos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Manutenção",
+    "account": "Manutenção Predial"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Manutenção",
+    "account": "Manutenção de Veículos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Depreciação",
+    "account": "Depreciação de Imóveis"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Depreciação",
+    "account": "Depreciação de Equipamentos"
+  },
+  {
+    "category": 3,
+    "subgroup": "Despesas com Depreciação",
+    "account": "Amortização de Ativos Intangíveis"
+  },
+  {
+    "category": 4,
+    "subgroup": "Perdas de Capital",
+    "account": "Perda na Alienação de Investimentos"
+  },
+  {
+    "category": 4,
+    "subgroup": "Perdas de Capital",
+    "account": "Perda na Venda de Imobilizado"
+  },
+  {
+    "category": 4,
+    "subgroup": "Perdas de Capital",
+    "account": "Baixa de Ativos Não Recuperáveis"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Eventuais",
+    "account": "Multas e Penalidades"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Eventuais",
+    "account": "Despesas Judiciais"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Eventuais",
+    "account": "Despesas com Reestruturação"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Extraordinárias",
+    "account": "Doações"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Extraordinárias",
+    "account": "Contribuições Não Dedutíveis"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Extraordinárias",
+    "account": "Perdas em Processos Judiciais"
+  },
+  {
+    "category": 4,
+    "subgroup": "Despesas Extraordinárias",
+    "account": "Perdas por Desastres Naturais"
+  }
+]

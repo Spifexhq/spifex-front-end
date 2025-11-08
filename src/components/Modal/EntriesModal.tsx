@@ -916,7 +916,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 selected={selectedLedgerAccounts}
                 onChange={handleLedgerAccountChange}
                 getItemKey={(i) => i.id}
-                getItemLabel={(i) => (i.code ? `${i.code} — ${i.name}` : i.name)}
+                getItemLabel={(i) => (i.code ? `${i.code} — ${i.account}` : i.account)}
                 buttonLabel={t("entriesModal:details.glAccountBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}

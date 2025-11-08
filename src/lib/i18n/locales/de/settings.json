@@ -704,14 +704,14 @@
       "credit": "Haben",
       "debit": "Soll",
       "inactive": "Inaktiv",
-      "noName": "(kein Name)",
+      "noAccount": "(kein Name)",
       "noGroup": "(Keine Kategorie)",
       "noSubgroup": "(Keine Unterkategorie)"
     },
     "modal": {
       "createTitle": "Konto hinzufügen",
       "editTitle": "Konto bearbeiten",
-      "name": "Sachkonto",
+      "account": "Sachkonto",
       "code": "Code (optional)",
       "codePlaceholder": "z. B. 3-0001",
       "subcategory": "Unterkategorie",
@@ -721,7 +721,7 @@
       "defaultTxHint": "Wählen Sie eine Kategorie, um die Standardbuchungsart festzulegen."
     },
     "confirm": {
-      "deleteOne": "Konto „{{name}}“ löschen?",
+      "deleteOne": "Konto „{{account}}“ löschen?",
       "deleteAll": "Möchten Sie WIRKLICH ALLE Sachkonten löschen? Diese Aktion kann nicht rückgängig gemacht werden."
     },
     "toast": {
@@ -819,7 +819,7 @@
     "tags": {
       "code": "Code",
       "inactive": "Inaktiv",
-      "noName": "(kein Name)"
+      "noAccount": "(kein Name)"
     },
     "card": {
       "settings": "Einstellungen",

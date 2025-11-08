@@ -704,14 +704,14 @@
       "credit": "Credit",
       "debit": "Debit",
       "inactive": "Inactive",
-      "noName": "(no name)",
+      "noAccount": "(no name)",
       "noGroup": "(No category)",
       "noSubgroup": "(No subgroup)"
     },
     "modal": {
       "createTitle": "Add account",
       "editTitle": "Edit account",
-      "name": "Ledger account",
+      "account": "Ledger account",
       "code": "Code (optional)",
       "codePlaceholder": "e.g., 3-0001",
       "subcategory": "Subcategory",
@@ -721,7 +721,7 @@
       "defaultTxHint": "Select a category to define the default transaction type."
     },
     "confirm": {
-      "deleteOne": "Delete account \"{{name}}\"?",
+      "deleteOne": "Delete account \"{{account}}\"?",
       "deleteAll": "Are you sure you want to delete ALL ledger accounts? This action cannot be undone."
     },
     "toast": {
@@ -819,7 +819,7 @@
     "tags": {
       "code": "Code",
       "inactive": "Inactive",
-      "noName": "(no name)"
+      "noAccount": "(no name)"
     },
     "card": {
       "settings": "Settings",

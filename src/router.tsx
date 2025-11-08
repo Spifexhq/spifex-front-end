@@ -34,8 +34,7 @@ const InventorySettings = lazy(() => import("@/pages/InventorySettings"));
 const ProjectSettings = lazy(() => import("@/pages/ProjectSettings"));
 const EmployeeSettings = lazy(() => import("@/pages/EmployeeSettings"));
 const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
-const LedgerAccountSettings = lazy(() => import("@/pages/LedgerAccountSettings"));
-const LedgerAccountsGate = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsGate"));
+const LedgerAccountsRouter = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsRouter"));
 const Statements = lazy(() => import("@/pages/Statements"));
 const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 
@@ -184,11 +183,11 @@ const routes: RouteObject[] = [
                 },
                 {
                 path: 'ledger-accounts',
-                element: <LedgerAccountSettings />
+                element: <LedgerAccountsRouter />
                 },
                 {
                 path: 'register/ledger-accounts',
-                element: <LedgerAccountsGate />
+                element: <LedgerAccountsRouter />
                 },
                 {
                 path: 'bank-statements',

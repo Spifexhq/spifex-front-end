@@ -556,6 +556,15 @@ export const api = {
     );
   },
 
+  addLedgerAccountsBulk: (payload: AddGLAccountRequest[]) => {
+    const orgExternalId = getOrgExternalId();
+    return request<GLAccount[]>(
+      `ledger/${orgExternalId}/ledger/accounts/bulk/`,
+      "POST",
+      payload
+    );
+  },
+
   editLedgerAccount: (glaId: string, payload: EditGLAccountRequest) => {
     const orgExternalId = getOrgExternalId();
     return request<GLAccount>(

@@ -1,7 +1,7 @@
 // models/enterprise_structure/domain/GLAccounts
 export interface GLAccount {
   id: string;        // external_id from the API
-  name: string;
+  account: string;
   code?: string;
   category: string;  // human label (API already returns label)
   subcategory?: string;

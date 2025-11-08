@@ -71,11 +71,11 @@ function safeStr(v: unknown): string {
 }
 
 function sortByCodeThenName(a: GLAccount, b: GLAccount) {
-  // Ordena por code (string), depois por name
+  // Ordena por code (string), depois por account
   const ca = safeStr(a.code);
   const cb = safeStr(b.code);
   if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
-  return safeStr(a.name).localeCompare(safeStr(b.name), "pt-BR", { numeric: true });
+  return safeStr(a.account).localeCompare(safeStr(b.account), "pt-BR", { numeric: true });
 }
 
 /* -------------------------- PDF Generator Class --------------------------- */
@@ -238,7 +238,7 @@ export class LedgerAccountPdfGenerator {
     // tabela
     const body: RowInput[] = accounts.map((a) => [
       safeStr(a.code) || "-", // Código
-      safeStr(a.name) || "-", // Conta Contábil
+      safeStr(a.account) || "-", // Conta Contábil
       txLabel((a as unknown as { default_tx?: string }).default_tx), // Tipo padrão
       a.is_active ? "Ativa" : "Inativa",
     ]);

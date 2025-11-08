@@ -19,7 +19,7 @@ export interface GetLedgerAccountsResponse extends CursorLinks {
 }
 
 export type AddGLAccountRequest = {
-  name: string;
+  account: string;
   code?: string;
   category: 1 | 2 | 3 | 4; // número fixo
   subcategory?: string;

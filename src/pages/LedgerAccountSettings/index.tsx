@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings.tsx
  * Standards: flags + pager + ConfirmToast (matches Dept/Inventory/Employee)
- * Domain: GLAccount (id string), fields: name, code?, category(1..4), subcategory, is_active
+ * Domain: GLAccount (id string), fields: account, code?, category(1..4), subcategory, is_active
  * Backend receives ONLY numbers (1..4); front uses localized labels
  * Pagination: cursor + arrow-only (useCursorPager)
  * Overlay: local add/delete + refresh pager
@@ -88,7 +88,7 @@ const CATEGORY_DEFAULT_TX: Record<CategoryValue, TxType> = {
 
 /** Form uses category keys; API uses numbers */
 type FormState = {
-  name: string;
+  account: string;
   category: CategoryKey | "";
   subcategory: string;
   code?: string;
@@ -96,7 +96,7 @@ type FormState = {
 };
 
 const EMPTY_FORM: FormState = {
-  name: "",
+  account: "",
   category: "",
   subcategory: "",
   code: "",
@@ -224,16 +224,13 @@ const LedgerAccountSettings: React.FC = () => {
         const { data, meta } = (await api.getLedgerAccounts({
           page_size: 120,
           cursor,
-          // If your API supports filters, map them here; otherwise we filter client-side.
-          // q: appliedQuery.q || undefined,
-          // category: appliedQuery.group ? CATEGORY_KEY_TO_VALUE[appliedQuery.group] : undefined,
         })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
 
         const items = ((data?.results ?? []) as GLAccount[]).slice().sort((a, b) => {
           const ca = (a.code || "").toString();
           const cb = (b.code || "").toString();
           if (ca && cb && ca !== cb) return ca.localeCompare(cb, undefined, { numeric: true });
-          return (a.name || "").localeCompare(b.name || "", undefined);
+          return (a.account || "").localeCompare(b.account || "", undefined);
         });
 
         const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
@@ -243,36 +240,16 @@ const LedgerAccountSettings: React.FC = () => {
         INFLIGHT_FETCH = false;
       }
     },
-    [] // server-side filtering disabled; keep stable
+    []
   );
 
   const pager = useCursorPager<GLAccount>(fetchAccountsPage, {
     autoLoadFirst: true,
-    deps: [qKey], // refetch when user applies new query/group (if backend filter is enabled)
+    deps: [qKey],
   });
 
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
-
-  useEffect(() => {
-    const isUnfiltered = !appliedQuery.q && appliedQuery.group === null;
-
-    if (
-      !pager.loading &&
-      isUnfiltered &&
-      pager.items.length === 0 &&
-      added.length === 0
-    ) {
-      navigate("/settings/register/ledger-accounts", { replace: true });
-    }
-  }, [
-    pager.loading,
-    pager.items.length,
-    appliedQuery.q,
-    appliedQuery.group,
-    added.length,
-    navigate,
-  ]);
 
   /* ----------------------------- Category helpers ------------------------- */
   const resolveCategoryLabel = useCallback(
@@ -306,14 +283,14 @@ const LedgerAccountSettings: React.FC = () => {
       const matchesGroup = !filterGroup || key === filterGroup;
 
       const label = key ? t(`settings:ledgerAccounts.categories.${key}`) : "";
-      const name = (a.name || "").toLowerCase();
+      const account = (a.account || "").toLowerCase();
       const sub = (a.subcategory || "").toLowerCase();
       const code = (a.code || "").toLowerCase();
       const cat = (label || "").toLowerCase();
 
       const matchesSearch =
         !searchNormalized ||
-        name.includes(searchNormalized) ||
+        account.includes(searchNormalized) ||
         sub.includes(searchNormalized) ||
         code.includes(searchNormalized) ||
         cat.includes(searchNormalized);
@@ -373,7 +350,7 @@ const LedgerAccountSettings: React.FC = () => {
     const key = getCategoryKeyFromAccount(acc as GLX);
 
     setFormData({
-      name: acc.name || "",
+      account: acc.account || "",
       category: key ?? "",
       subcategory: acc.subcategory || "",
       code: acc.code || "",
@@ -392,6 +369,7 @@ const LedgerAccountSettings: React.FC = () => {
   const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, is_active: e.target.checked }));
 
+  // Modal category change
   const handleGroupChange = (items: { label: string; value: CategoryKey }[]) => {
     const sel = items[0];
     if (!sel) {
@@ -400,6 +378,12 @@ const LedgerAccountSettings: React.FC = () => {
     }
     setFormData((p) => ({ ...p, category: sel.value, subcategory: "" }));
     setAddingNewSubgroup(false);
+  };
+
+  // Filter dropdown category change
+  const handleFilterGroupChange = (items: { label: string; value: CategoryKey }[]) => {
+    const sel = items[0];
+    setFilterGroup(sel ? sel.value : null);
   };
 
   const handleSubgroupChange = (items: { label: string; value: string }[]) => {
@@ -415,7 +399,7 @@ const LedgerAccountSettings: React.FC = () => {
       const categoryValue: CategoryValue = CATEGORY_KEY_TO_VALUE[formData.category as CategoryKey];
 
       const basePayload = {
-        name: formData.name.trim(),
+        account: formData.account.trim(),
         category: categoryValue, // 1..4
         subcategory: formData.subcategory || undefined,
         code: formData.code?.trim() ? formData.code.trim() : undefined,
@@ -451,7 +435,7 @@ const LedgerAccountSettings: React.FC = () => {
   };
 
   const requestDeleteAccount = (acc: GLAccount) => {
-    setConfirmText(t("settings:ledgerAccounts.confirm.deleteOne", { name: acc.name ?? "" }));
+    setConfirmText(t("settings:ledgerAccounts.confirm.deleteOne", { account: acc.account ?? "" }));
     setConfirmAction(() => async () => {
       const id = getGlaId(acc);
       setDeleteTargetId(id);
@@ -559,6 +543,24 @@ const LedgerAccountSettings: React.FC = () => {
     };
   }, [modalOpen]);
 
+  /* ----------------------------- ESC closes modal ------------------------- */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!modalOpen) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (!isSubmitting) {
+          closeModal();
+        }
+      }
+    };
+
+    if (modalOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalOpen, isSubmitting, closeModal]);
+
   /* ----------------------------- Loading UI ------------------------------- */
   if (isInitialLoading) {
     return (
@@ -587,7 +589,7 @@ const LedgerAccountSettings: React.FC = () => {
       >
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-gray-900 truncate">
-            {a.name || t("settings:ledgerAccounts.tags.noName")}
+            {a.account || t("settings:ledgerAccounts.tags.noAccount")}
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
             {a.code ? (
@@ -644,7 +646,7 @@ const LedgerAccountSettings: React.FC = () => {
       const ca = (a.code || "").localeCompare(b.code || "", undefined, { numeric: true });
       if (ca !== 0) return ca;
 
-      return (a.name || "").localeCompare(b.name || "");
+      return (a.account || "").localeCompare(b.account || "");
     });
 
     return (
@@ -778,7 +780,7 @@ const LedgerAccountSettings: React.FC = () => {
                             ]
                           : []
                       }
-                      onChange={handleGroupChange}
+                      onChange={handleFilterGroupChange}
                       getItemKey={(i) => i.value}
                       getItemLabel={(i) => i.label}
                       singleSelect
@@ -929,9 +931,9 @@ const LedgerAccountSettings: React.FC = () => {
                                           >
                                             <div className="min-w-0">
                                               <p className="text-[13px] font-medium text-gray-900 truncate">
-                                                {a.name ||
+                                                {a.account ||
                                                   t(
-                                                    "settings:ledgerAccounts.tags.noName"
+                                                    "settings:ledgerAccounts.tags.noAccount"
                                                   )}
                                               </p>
                                               <div className="mt-1 flex gap-2 flex-wrap">
@@ -1028,7 +1030,7 @@ const LedgerAccountSettings: React.FC = () => {
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg max-h-[90vh]"
               role="dialog"
               aria-modal="true"
             >
@@ -1049,27 +1051,29 @@ const LedgerAccountSettings: React.FC = () => {
               </header>
 
               <form className="space-y-3" onSubmit={submitAccount}>
-                <Input
-                  label={t("settings:ledgerAccounts.modal.name")}
-                  name="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, name: e.target.value }))
-                  }
-                  required
-                  disabled={isSubmitting}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Input
+                    label={t("settings:ledgerAccounts.modal.account")}
+                    name="account"
+                    value={formData.account}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, account: e.target.value }))
+                    }
+                    required
+                    disabled={isSubmitting}
+                  />
 
-                <Input
-                  label={t("settings:ledgerAccounts.modal.code")}
-                  name="code"
-                  value={formData.code || ""}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, code: e.target.value }))
-                  }
-                  placeholder={t("settings:ledgerAccounts.modal.codePlaceholder")}
-                  disabled={isSubmitting}
-                />
+                  <Input
+                    label={t("settings:ledgerAccounts.modal.code")}
+                    name="code"
+                    value={formData.code || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, code: e.target.value }))
+                    }
+                    placeholder={t("settings:ledgerAccounts.modal.codePlaceholder")}
+                    disabled={isSubmitting}
+                  />
+                </div>
 
                 <SelectDropdown<{ label: string; value: CategoryKey }>
                   label={t("settings:ledgerAccounts.filters.category")}
@@ -1097,7 +1101,7 @@ const LedgerAccountSettings: React.FC = () => {
                   buttonLabel={t(
                     "settings:ledgerAccounts.buttons.selectCategory"
                   )}
-                  disabled={isSubmitting || !formData.name}
+                  disabled={isSubmitting || !formData.account}
                 />
 
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
@@ -1199,7 +1203,7 @@ const LedgerAccountSettings: React.FC = () => {
                     type="submit"
                     disabled={
                       isSubmitting ||
-                      !formData.name ||
+                      !formData.account ||
                       !formData.category ||
                       !formData.subcategory
                     }

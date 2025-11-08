@@ -376,7 +376,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
               icon="accounts"
               label={`${t("filterBar:chips.accounts")}  ${selectedAccounts
                 .slice(0, 2)
-                .map((a) => a.name)
+                .map((a) => a.account)
                 .join(", ")}${
                 selectedAccounts.length > 2
                   ? ` +${selectedAccounts.length - 2}`
@@ -729,7 +729,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 setFilters((f) => ({ ...f, gla_id: list.map((x) => getGlaId(x)) }))
               }
               getItemKey={(item) => getGlaId(item)}
-              getItemLabel={(item) => item.name}
+              getItemLabel={(item) => item.account}
               buttonLabel={t("filterBar:editors.accounts.button")}
               customStyles={{ maxHeight: "240px" }}
               groupBy={(item) => item.subcategory || ""}

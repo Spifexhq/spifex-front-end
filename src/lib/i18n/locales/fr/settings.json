@@ -704,14 +704,14 @@
       "credit": "Crédit",
       "debit": "Débit",
       "inactive": "Inactif",
-      "noName": "(sans nom)",
+      "noAccount": "(sans nom)",
       "noGroup": "(Sans catégorie)",
       "noSubgroup": "(Sans sous-groupe)"
     },
     "modal": {
       "createTitle": "Ajouter un compte",
       "editTitle": "Modifier le compte",
-      "name": "Compte comptable",
+      "account": "Compte comptable",
       "code": "Code (optionnel)",
       "codePlaceholder": "ex. : 3-0001",
       "subcategory": "Sous-catégorie",
@@ -721,7 +721,7 @@
       "defaultTxHint": "Sélectionnez une catégorie pour définir le type de transaction par défaut."
     },
     "confirm": {
-      "deleteOne": "Supprimer le compte « {{name}} » ?",
+      "deleteOne": "Supprimer le compte « {{account}} » ?",
       "deleteAll": "Êtes-vous sûr de vouloir supprimer TOUS les comptes comptables ? Cette action est irréversible."
     },
     "toast": {
@@ -819,7 +819,7 @@
     "tags": {
       "code": "Code",
       "inactive": "Inactif",
-      "noName": "(sans nom)"
+      "noAccount": "(sans nom)"
     },
     "card": {
       "settings": "Paramètres",

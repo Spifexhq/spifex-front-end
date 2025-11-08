@@ -704,14 +704,14 @@
       "credit": "Crédito",
       "debit": "Débito",
       "inactive": "Inativa",
-      "noName": "(sem nome)",
+      "noAccount": "(sem nome)",
       "noGroup": "(Sem categoria)",
       "noSubgroup": "(Sem subgrupo)"
     },
     "modal": {
       "createTitle": "Adicionar conta",
       "editTitle": "Editar conta",
-      "name": "Conta contábil",
+      "account": "Conta contábil",
       "code": "Código (opcional)",
       "codePlaceholder": "Ex.: 3-0001",
       "subcategory": "Subcategoria",
@@ -721,7 +721,7 @@
       "defaultTxHint": "Selecione uma categoria para definir o tipo de transação padrão."
     },
     "confirm": {
-      "deleteOne": "Excluir conta \"{{name}}\"?",
+      "deleteOne": "Excluir conta \"{{account}}\"?",
       "deleteAll": "Tem certeza que deseja excluir TODAS as contas contábeis? Esta ação não pode ser desfeita."
     },
     "toast": {
@@ -819,7 +819,7 @@
     "tags": {
       "code": "Código",
       "inactive": "Inativo",
-      "noName": "(sem nome)"
+      "noAccount": "(sem nome)"
     },
     "card": {
       "settings": "Configurações",
