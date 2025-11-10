@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent, MouseEvent, ChangeEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import type { ApiErrorBody } from "@/models/Api";
 
 import { useAuth } from "@/api";
 import Snackbar from "src/components/ui/Snackbar";
@@ -60,7 +61,6 @@ const SignIn = () => {
     try {
       await handleSignIn(email, password);
 
-      // Remember or clear email based on checkbox
       if (rememberDevice) {
         localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
       } else {
@@ -69,13 +69,26 @@ const SignIn = () => {
 
       navigate("/cashflow");
     } catch (error) {
-      setSnack({
-        message:
-          error instanceof Error && error.message
-            ? error.message
-            : t("unexpectedError"),
-        severity: "error",
-      });
+      const apiError = error as ApiErrorBody | Error;
+
+      const code =
+        (apiError as ApiErrorBody).code ??
+        undefined;
+      const apiMessage =
+        (apiError as ApiErrorBody).message ??
+        (error instanceof Error ? error.message : undefined);
+
+      if (code === "email_not_registered") {
+        setSnack({
+          message: t("emailNotRegistered"),
+          severity: "warning",
+        });
+      } else {
+        setSnack({
+          message: apiMessage || t("unexpectedError"),
+          severity: "error",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

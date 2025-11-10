@@ -13,5 +13,6 @@
   "forgotPassword": "Esqueceu a senha?",
   "fillAllFields": "Preencha todos os campos",
   "unexpectedError": "Erro inesperado. Tente novamente mais tarde.",
-  "copyright": "Copyright © 2025 Spifex."
+  "copyright": "Copyright © 2025 Spifex.",
+  "emailNotRegistered": "Este endereço de e-mail não está cadastrado. Por favor, verifique ou cadastre-se."
 }

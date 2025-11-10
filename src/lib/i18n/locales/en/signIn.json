@@ -13,5 +13,6 @@
   "forgotPassword": "Forgot your password?",
   "fillAllFields": "Fill in all fields",
   "unexpectedError": "Unexpected error. Please try again later.",
-  "copyright": "Copyright © 2025 Spifex."
+  "copyright": "Copyright © 2025 Spifex.",
+  "emailNotRegistered": "This email address is not registered. Please check it or sign up."
 }
