@@ -6,6 +6,7 @@ import Button from "src/components/ui/Button";
 import Input from "src/components/ui/Input";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { fetchAllCursor } from "src/lib/list";
+import Spinner from "src/components/ui/Loaders/Spinner";
 
 import {
   FormData,
@@ -154,6 +155,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   type,
   onSave,
   initialEntry,
+  isLoadingEntry,
 }) => {
   const { t } = useTranslation(["entriesModal"]);
 
@@ -1288,7 +1290,15 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
         {/* Body */}
         <form id="modalForm" className="flex-1 flex flex-col" onSubmit={handleSubmit}>
-          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">{renderTabContent()}</div>
+          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
+            {isLoadingEntry ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Spinner /> {/* size depends on your Spinner API */}
+              </div>
+            ) : (
+              renderTabContent()
+            )}
+          </div>
 
           {/* Footer */}
           <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">

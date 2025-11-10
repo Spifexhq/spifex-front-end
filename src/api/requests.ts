@@ -547,6 +547,73 @@ export const api = {
     );
   },
 
+  importLedgerAccounts: (formData: FormData) => {
+    const orgExternalId = getOrgExternalId();
+    return request<{
+      created_count: number;
+      accounts: GLAccount[];
+    }>(
+      `ledger/${orgExternalId}/ledger/accounts/import/`,
+      "POST",
+      formData
+    );
+  },
+
+  importStandardLedgerAccounts: (plan: "personal" | "business") => {
+    const orgExternalId = getOrgExternalId();
+    return request<{
+      created_count: number;
+      accounts: GLAccount[];
+    }>(
+      `ledger/${orgExternalId}/ledger/accounts/import-standard/`,
+      "POST",
+      { plan }
+    );
+  },
+
+  downloadLedgerCsvTemplate: async () => {
+    const orgExternalId = getOrgExternalId();
+    const res = await http.get(
+      `ledger/${orgExternalId}/ledger/accounts/template/csv/`,
+      {
+        responseType: "blob",
+        validateStatus: (s: number) => s >= 200 && s < 300,
+      }
+    );
+
+    const blob = res.data as Blob;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template_ledger_accounts.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  // Download XLSX template as a file (no page navigation)
+  downloadLedgerXlsxTemplate: async () => {
+    const orgExternalId = getOrgExternalId();
+    const res = await http.get(
+      `ledger/${orgExternalId}/ledger/accounts/template/xlsx/`,
+      {
+        responseType: "blob",
+        validateStatus: (s: number) => s >= 200 && s < 300,
+      }
+    );
+
+    const blob = res.data as Blob;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template_ledger_accounts.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
   addLedgerAccount: (payload: AddGLAccountRequest) => {
     const orgExternalId = getOrgExternalId();
     return request<GLAccount>(

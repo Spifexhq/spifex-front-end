@@ -40,6 +40,7 @@ export interface FormData {
     onSave: () => void;
     type: ModalType;
     initialEntry?: Entry | null;
+    isLoadingEntry?: boolean;
   }
   
   export type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';

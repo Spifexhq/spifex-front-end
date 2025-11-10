@@ -746,28 +746,34 @@
     "title": "Vamos configurar suas Contas Contábeis",
     "subtitle": "Escolha uma forma de cadastrar seu plano de contas. Você pode alterar e expandir depois.",
     "header": {
-      "settings": "Configurações"
+      "settings": "Configurações",
+      "categoriesInfo": "Categorias: 1 = Receitas operacionais · 2 = Receitas não operacionais · 3 = Despesas operacionais · 4 = Despesas não operacionais."
     },
     "modes": {
       "csv": {
-        "title": "Upload via CSV",
+        "title": "Upload via CSV ou Excel",
         "choose": "Selecionar",
         "downloadTemplate": "Baixar modelo .csv",
-        "uploadLabel": "Enviar arquivo .csv",
-        "hintHeaderRow": "O arquivo deve conter cabeçalhos",
-        "hintColumns": "Colunas aceitas: GRUPO, SUBGRUPO, CONTA (também aceitamos group, subgroup, account)."
+        "downloadXlsxTemplate": "Baixar modelo .xlsx",
+        "uploadLabel": "Enviar arquivo (.csv ou .xlsx)",
+        "hintHeaderRow": "O arquivo deve conter uma linha de cabeçalho",
+        "hintColumns": "Colunas obrigatórias (nesta ordem): CATEGORY, SUBGROUP, ACCOUNT.",
+        "hintCategories": "CATEGORY deve ser 1, 2, 3 ou 4.",
+        "hintXlsxMeta": "Para .xlsx, use o modelo oficial. O arquivo é validado usando uma planilha interna de meta e um ID do modelo."
       },
       "manual": {
         "title": "Inserir manualmente",
         "choose": "Selecionar",
-        "instructions": "Use o formato GRUPO;SUBGRUPO;CONTA — uma conta por linha. Vírgula também é aceita.",
-        "placeholder": "Exemplos:\nReceitas Operacionais;Vendas;Vendas de Produtos\nDespesas Operacionais;Administrativas;Salários e Encargos"
+        "instructions": "Use o formato CATEGORY;SUBGROUP;ACCOUNT — uma conta por linha. CATEGORY deve ser 1, 2, 3 ou 4.",
+        "placeholder": "Exemplos:\n1; Sales; Product sales\n3; Administrative; Salaries and wages\n4; Financial; Bank fees",
+        "hintCategories": "CATEGORY deve ser 1, 2, 3 ou 4."
       },
       "standard": {
         "title": "Usar Plano Padrão",
         "choose": "Selecionar",
         "personal": "Plano de Contas Pessoal",
-        "business": "Plano de Contas Empresarial"
+        "business": "Plano de Contas Empresarial",
+        "hint": "Vamos criar um plano de contas sugerido usando as quatro categorias. Você poderá editar ou excluir as contas depois."
       }
     },
     "buttons": {
@@ -776,18 +782,20 @@
       "finishing": "Importando…"
     },
     "snackbar": {
-      "selectCsv": "Selecione um arquivo CSV.",
-      "emptyCsv": "CSV vazio ou inválido.",
-      "csvSuccess": "Contas importadas a partir do CSV.",
-      "manualRequired": "Preencha o campo no formato GRUPO;SUBGRUPO;CONTA.",
+      "selectCsv": "Selecione um arquivo CSV ou XLSX.",
+      "emptyCsv": "Arquivo vazio ou inválido.",
+      "csvSuccess": "Contas importadas a partir do arquivo.",
+      "manualRequired": "Preencha o campo no formato CATEGORY;SUBGROUP;ACCOUNT.",
       "manualSuccess": "Contas criadas a partir do texto.",
       "standardRequired": "Selecione um plano padrão (Pessoal ou Empresarial).",
+      "standardEmpty": "O plano padrão está vazio.",
       "standardSuccess": "Plano padrão aplicado às contas.",
-      "chooseMode": "Escolha uma opção (CSV, Manual ou Plano Padrão).",
+      "chooseMode": "Escolha uma opção (CSV/Excel, Manual ou Plano Padrão).",
       "saveError": "Erro ao cadastrar contas contábeis."
     },
     "misc": {
-      "fileNameTemplate": "spifex-standard-general-ledger-accounts.csv",
+      "fileNameTemplate": "template_ledger_accounts.csv",
+      "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
       "groupMappingNote": "Categorias são enviadas como números (1..4) para a API."
     }
   },

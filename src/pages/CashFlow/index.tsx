@@ -10,6 +10,7 @@ import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
+import { ApiError } from "@/models/Api";
 
 const CashFlow = () => {
   useEffect(() => { document.title = "Fluxo de Caixa"; }, []);
@@ -22,6 +23,7 @@ const CashFlow = () => {
   const [cashflowKey, setCashflowKey] = useState(0);
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [isEditingEntryLoading, setIsEditingEntryLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
@@ -38,7 +40,35 @@ const CashFlow = () => {
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
-  const handleEditEntry = (entry: Entry) => { setEditingEntry(entry); setModalType(entry.tx_type as ModalType); setIsModalOpen(true); };
+  const handleEditEntry = useCallback(async (entry: Entry) => {
+    setModalType(entry.tx_type as ModalType);
+    setEditingEntry(null);
+    setIsModalOpen(true);
+    setIsEditingEntryLoading(true);
+
+    try {
+      const res = await api.getEntry(entry.id);
+
+      if ("data" in res) {
+        const fullEntry = res.data as Entry;
+        setEditingEntry(fullEntry);
+        setModalType(fullEntry.tx_type as ModalType);
+      } else {
+        const apiError = res as ApiError;
+        console.error("Error fetching entry:", apiError.error);
+        alert(apiError.error?.message ?? "Erro ao carregar detalhes do lançamento.");
+        setIsModalOpen(false);
+        setEditingEntry(null);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar detalhes do lançamento:", err);
+      alert("Erro inesperado ao carregar detalhes do lançamento.");
+      setIsModalOpen(false);
+      setEditingEntry(null);
+    } finally {
+      setIsEditingEntryLoading(false);
+    }
+  }, []);
 
   const handleApplyFilters = useCallback(
     ({ filters: newFilters }: { filters: EntryFilters; }) => {
@@ -128,6 +158,7 @@ const CashFlow = () => {
             }}
             type={modalType}
             initialEntry={editingEntry}
+            isLoadingEntry={isEditingEntryLoading}
             onSave={() => {
               setIsModalOpen(false);
               setEditingEntry(null);

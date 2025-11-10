@@ -746,28 +746,34 @@
     "title": "Lassen Sie uns Ihre Hauptbuchkonten einrichten",
     "subtitle": "Wählen Sie, wie Sie Ihren Kontenplan erstellen möchten. Sie können ihn später bearbeiten oder erweitern.",
     "header": {
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "categoriesInfo": "Kategorien: 1 = Betriebserträge · 2 = Nicht betriebliche Erträge · 3 = Betriebsaufwendungen · 4 = Nicht betriebliche Aufwendungen."
     },
     "modes": {
       "csv": {
-        "title": "Per CSV hochladen",
+        "title": "Per CSV oder Excel hochladen",
         "choose": "Auswählen",
         "downloadTemplate": ".csv-Vorlage herunterladen",
-        "uploadLabel": ".csv-Datei hochladen",
+        "downloadXlsxTemplate": ".xlsx-Vorlage herunterladen",
+        "uploadLabel": "Datei hochladen (.csv oder .xlsx)",
         "hintHeaderRow": "Die Datei muss eine Kopfzeile enthalten",
-        "hintColumns": "Unterstützte Spalten: GRUPO, SUBGRUPO, CONTA (alternativ group, subgroup, account)."
+        "hintColumns": "Erforderliche Spalten (in dieser Reihenfolge): CATEGORY, SUBGROUP, ACCOUNT.",
+        "hintCategories": "CATEGORY muss 1, 2, 3 oder 4 sein.",
+        "hintXlsxMeta": "Für .xlsx verwenden Sie bitte die offizielle Vorlage. Die Datei wird über ein internes Meta-Blatt und eine Template-ID validiert."
       },
       "manual": {
         "title": "Manuell eingeben",
         "choose": "Auswählen",
-        "instructions": "Verwenden Sie das Format GRUPPE;UNTERGRUPPE;KONTO — eine Zeile pro Konto. Komma wird ebenfalls akzeptiert.",
-        "placeholder": "Beispiele:\nBetriebserträge;Verkäufe;Produktverkäufe\nBetriebsaufwendungen;Verwaltung;Gehälter und Löhne"
+        "instructions": "Verwenden Sie das Format CATEGORY;SUBGROUP;ACCOUNT — eine Zeile pro Konto. CATEGORY muss 1, 2, 3 oder 4 sein.",
+        "placeholder": "Beispiele:\n1; Sales; Product sales\n3; Administrative; Salaries and wages\n4; Financial; Bank fees",
+        "hintCategories": "CATEGORY muss 1, 2, 3 oder 4 sein."
       },
       "standard": {
         "title": "Standardplan verwenden",
         "choose": "Auswählen",
         "personal": "Privater Kontenplan",
-        "business": "Geschäftlicher Kontenplan"
+        "business": "Geschäftlicher Kontenplan",
+        "hint": "Wir erstellen einen vorgeschlagenen Kontenplan anhand der vier Kategorien. Sie können die Konten später bearbeiten oder löschen."
       }
     },
     "buttons": {
@@ -776,18 +782,20 @@
       "finishing": "Import wird ausgeführt…"
     },
     "snackbar": {
-      "selectCsv": "Bitte wählen Sie eine CSV-Datei aus.",
-      "emptyCsv": "Leere oder ungültige CSV.",
-      "csvSuccess": "Konten aus CSV importiert.",
-      "manualRequired": "Füllen Sie das Feld im Format GRUPPE;UNTERGRUPPE;KONTO aus.",
+      "selectCsv": "Bitte wählen Sie eine CSV- oder XLSX-Datei aus.",
+      "emptyCsv": "Leere oder ungültige Datei.",
+      "csvSuccess": "Konten aus Datei importiert.",
+      "manualRequired": "Füllen Sie das Feld im Format CATEGORY;SUBGROUP;ACCOUNT aus.",
       "manualSuccess": "Konten aus dem Text erstellt.",
       "standardRequired": "Wählen Sie einen Standardplan (Privat oder Geschäftlich).",
+      "standardEmpty": "Der Standardplan ist leer.",
       "standardSuccess": "Standardplan auf Ihre Konten angewendet.",
-      "chooseMode": "Wählen Sie eine Option (CSV, Manuell oder Standardplan).",
+      "chooseMode": "Wählen Sie eine Option (CSV/Excel, Manuell oder Standardplan).",
       "saveError": "Fehler beim Erstellen der Sachkonten."
     },
     "misc": {
-      "fileNameTemplate": "spifex-standard-general-ledger-accounts.csv",
+      "fileNameTemplate": "template_ledger_accounts.csv",
+      "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
       "groupMappingNote": "Kategorien werden als Zahlen (1..4) an die API gesendet."
     }
   },

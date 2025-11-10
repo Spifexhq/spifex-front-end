@@ -1,22 +1,16 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings/LedgerAccountsGate.tsx
- * Style/UX: Matches Settings pages (header card, compact labels)
- * Logic:
- *  - Modes: CSV / Manual / Standard (personal|business)
- *  - Category must be an explicit code:
- *      1 = Operational Revenue
- *      2 = Non-operational Revenue
- *      3 = Operational Expense
- *      4 = Non-operational Expense
- *  - Subgroup and account labels are free text in ANY language
- *  - No legacy headers (GRUPO/SUBGRUPO/CONTA), no language inference
- *  - Flags: isSubmitting
- *  - Consistent disabled states while busy
- *  - Entry/exit is orchestrated by LedgerAccountsRouter
- * i18n: settings:ledgerAccountsGate.*
+ * Logic (refactored):
+ *  - CSV/XLSX / Manual are sent raw to backend import endpoint.
+ *  - Backend parses:
+ *      - CSV: CATEGORY,SUBGROUP,ACCOUNT (categories 1..4)
+ *      - XLSX: official template check + _ledger_data A1:C10000
+ *      - Manual: "CATEGORY;SUBGROUP;ACCOUNT" per line
+ *  - Standard (personal|business) calls backend to apply JSON templates.
+ *  - Template files (CSV/XLSX) are downloaded from backend endpoints.
  * -------------------------------------------------------------------------- */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "src/components/ui/Button";
@@ -24,10 +18,6 @@ import Input from "src/components/ui/Input";
 import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
-import type { AddGLAccountRequest } from "src/models/enterprise_structure/dto";
-import Papa from "papaparse";
-import personalAccounts from "src/data/personalAccounts.json";
-import businessAccounts from "src/data/businessAccounts.json";
 import { useTranslation } from "react-i18next";
 
 /* --- Snackbar type --- */
@@ -35,62 +25,10 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* --- Types & helpers --- */
-
-/**
- * Category codes:
- *  1 = Operational Revenue
- *  2 = Non-operational Revenue
- *  3 = Operational Expense
- *  4 = Non-operational Expense
- */
-export type CategoryValue = 1 | 2 | 3 | 4;
-
-type CsvRow = {
-  // Main, explicit headers (preferred)
-  CATEGORY?: string | number;
-  GROUP?: string;
-  SUBGROUP?: string;
-  ACCOUNT?: string;
-
-  // Lowercase fallbacks (for user convenience)
-  category?: string | number;
-  group?: string;
-  subgroup?: string;
-  account?: string;
-};
-
 type Mode = "csv" | "manual" | "standard" | null;
-
-/**
- * Expected JSON shape for standard sets
- * (personalAccounts.json / businessAccounts.json).
- */
-type StandardRow = {
-  category: CategoryValue;
-  subgroup: string;
-  account: string;
-};
 
 function getInitials() {
   return "GL";
-}
-
-/**
- * Parse a category code (no inference from words).
- * Accept only:
- *   1, 2, 3, 4  (number or string)
- */
-function parseCategoryCode(raw: unknown): CategoryValue | null {
-  if (raw == null) return null;
-  const str = String(raw).trim();
-  if (!str) return null;
-
-  const num = Number(str);
-  if (num === 1 || num === 2 || num === 3 || num === 4) {
-    return num as CategoryValue;
-  }
-  return null;
 }
 
 const LedgerAccountsGate: React.FC = () => {
@@ -116,78 +54,55 @@ const LedgerAccountsGate: React.FC = () => {
   const [stdChoice, setStdChoice] = useState<"personal" | "business" | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
-  /* --------- CSV template (language-agnostic) --------- */
-  const csvTemplate = useMemo(() => {
-    const rows = [
-      // CATEGORY: 1..4 (required)
-      // GROUP / SUBGROUP / ACCOUNT: free text (any language)
-      ["CATEGORY", "GROUP", "SUBGROUP", "ACCOUNT"],
-      ["1", "Operational Revenue", "Sales", "Product sales"],
-      ["3", "Operational Expense", "Administrative", "Salaries and wages"],
-      ["4", "Non-operational Expense", "Financial", "Bank fees"],
-    ];
-    return rows.map((r) => r.join(",")).join("\n");
-  }, []);
+  /* --------- Template downloads (backend) --------- */
 
-  /* --------- Actions --------- */
-
-  const downloadTemplate = () => {
-    const blob = new Blob([csvTemplate], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download =
-      (t("settings:ledgerAccountsGate.misc.fileNameTemplate") as string) ||
-      "ledger-accounts-template.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+  const downloadCsvTemplate = async () => {
+    try {
+      await api.downloadLedgerCsvTemplate();
+    } catch (e) {
+      const msg =
+        (e as { message?: string })?.message ||
+        (t("settings:ledgerAccountsGate.snackbar.downloadError") as string) ||
+        "Error while downloading CSV template.";
+      setSnack({ message: msg, severity: "error" });
+    }
   };
 
-  // 🔥 Use the new bulk endpoint
-  const addMany = async (items: AddGLAccountRequest[]) => {
-    if (!items.length) return;
-    await api.addLedgerAccountsBulk(items);
+  const downloadXlsxTemplate = async () => {
+    try {
+      await api.downloadLedgerXlsxTemplate();
+    } catch (e) {
+      const msg =
+        (e as { message?: string })?.message ||
+        (t("settings:ledgerAccountsGate.snackbar.downloadError") as string) ||
+        "Error while downloading XLSX template.";
+      setSnack({ message: msg, severity: "error" });
+    }
   };
-
-  /**
-   * Manual text parser.
-   * Expected format (semicolon or comma separated):
-   *
-   *   CATEGORY ; SUBGROUP ; ACCOUNT
-   *
-   * CATEGORY must be 1, 2, 3 or 4.
-   * SUBGROUP and ACCOUNT can be any language.
-   */
-  const parseManual = (text: string): AddGLAccountRequest[] =>
-    text
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((line) => {
-        const parts = line.split(/;|,/).map((p) => p.trim());
-        const [rawCategory, subgroup, account] = parts;
-
-        const category = parseCategoryCode(rawCategory);
-
-        return {
-          account: account ?? "",
-          category: category as CategoryValue,
-          subcategory: subgroup || undefined,
-          is_active: true,
-        };
-      })
-      .filter((p) => p.account && p.category);
 
   const handleUploadCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     setCsvFile(file);
   };
 
+  // Standard mode now calls backend JSON templates
+  const addStandardPlan = async () => {
+    if (!stdChoice) {
+      setSnack({
+        message: t("settings:ledgerAccountsGate.snackbar.standardRequired"),
+        severity: "warning",
+      });
+      return;
+    }
+
+    await api.importStandardLedgerAccounts(stdChoice);
+  };
+
   const submit = async () => {
     try {
       setIsSubmitting(true);
 
-      // ---------------- CSV mode ----------------
+      // CSV/XLSX -> backend import
       if (mode === "csv") {
         if (!csvFile) {
           setSnack({
@@ -197,113 +112,47 @@ const LedgerAccountsGate: React.FC = () => {
           return;
         }
 
-        await new Promise<void>((resolve, reject) => {
-          Papa.parse<CsvRow>(csvFile, {
-            header: true,
-            skipEmptyLines: true,
-            complete: async (result) => {
-              try {
-                const mapped: AddGLAccountRequest[] = (result.data || [])
-                  .map((r) => {
-                    const rawCategory = r.CATEGORY ?? r.category;
-                    const category = parseCategoryCode(rawCategory);
+        const formData = new FormData();
+        formData.append("mode", "csv");
+        formData.append("file", csvFile);
 
-                    const subgroup = (r.SUBGROUP || r.subgroup || "").trim();
-                    const account = (r.ACCOUNT || r.account || "").trim();
-
-                    return {
-                      account,
-                      category: category as CategoryValue,
-                      subcategory: subgroup || undefined,
-                      is_active: true,
-                    };
-                  })
-                  .filter((p) => p.account && p.category);
-
-                if (mapped.length === 0) {
-                  setSnack({
-                    message: t("settings:ledgerAccountsGate.snackbar.emptyCsv"),
-                    severity: "warning",
-                  });
-                  return reject(new Error("EMPTY_CSV"));
-                }
-
-                await addMany(mapped);
-                resolve();
-              } catch (err) {
-                reject(err instanceof Error ? err : new Error("CSV_IMPORT_FAIL"));
-              }
-            },
-            error: (err) => reject(err),
-          });
-        });
+        await api.importLedgerAccounts(formData);
 
         setSnack({
           message: t("settings:ledgerAccountsGate.snackbar.csvSuccess"),
           severity: "success",
         });
       }
-
-      // ---------------- Manual mode ----------------
+      // Manual -> backend import
       else if (mode === "manual") {
-        const items = parseManual(textBlock);
-        if (items.length === 0) {
+        if (!textBlock.trim()) {
           setSnack({
             message: t("settings:ledgerAccountsGate.snackbar.manualRequired"),
             severity: "warning",
           });
           return;
         }
-        await addMany(items);
+
+        const formData = new FormData();
+        formData.append("mode", "manual");
+        formData.append("manual_text", textBlock);
+
+        await api.importLedgerAccounts(formData);
+
         setSnack({
           message: t("settings:ledgerAccountsGate.snackbar.manualSuccess"),
           severity: "success",
         });
       }
-
-      // ---------------- Standard mode ----------------
+      // Standard -> backend JSON templates
       else if (mode === "standard") {
-        if (!stdChoice) {
-          setSnack({
-            message: t("settings:ledgerAccountsGate.snackbar.standardRequired"),
-            severity: "warning",
-          });
-          return;
-        }
-
-        // JSON must include: category, subgroup, account
-        const src = ((stdChoice === "personal"
-          ? personalAccounts
-          : businessAccounts) as unknown) as StandardRow[];
-
-        const mapped: AddGLAccountRequest[] = src
-          .map((e) => {
-            const category = parseCategoryCode(e.category);
-            return {
-              account: e.account,
-              category: category as CategoryValue,
-              subcategory: e.subgroup || undefined,
-              is_active: true,
-            };
-          })
-          .filter((p) => p.account && p.category);
-
-        if (mapped.length === 0) {
-          setSnack({
-            message: t("settings:ledgerAccountsGate.snackbar.standardEmpty"),
-            severity: "warning",
-          });
-          return;
-        }
-
-        await addMany(mapped);
+        await addStandardPlan();
         setSnack({
           message: t("settings:ledgerAccountsGate.snackbar.standardSuccess"),
           severity: "success",
         });
       }
-
-      // ---------------- No mode selected ----------------
+      // No mode
       else {
         setSnack({
           message: t("settings:ledgerAccountsGate.snackbar.chooseMode"),
@@ -312,8 +161,7 @@ const LedgerAccountsGate: React.FC = () => {
         return;
       }
 
-      // After successful import, go to the main listing URL.
-      // LedgerAccountsRouter will then decide what to render.
+      // After import, go to main listing
       navigate("/settings/ledger-accounts", { replace: true });
     } catch (e) {
       const msg =
@@ -330,7 +178,7 @@ const LedgerAccountsGate: React.FC = () => {
     <>
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header card (consistent with Settings pages) */}
+          {/* Header */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -353,14 +201,14 @@ const LedgerAccountsGate: React.FC = () => {
             </div>
           </header>
 
-          {/* Gate content card */}
+          {/* Content */}
           <section className="mt-6">
             <div className="max-w-3xl mx-auto p-6 md:p-8 border border-gray-200 rounded-lg bg-white space-y-6">
               <p className="text-sm text-gray-600">
                 {t("settings:ledgerAccountsGate.subtitle")}
               </p>
 
-              {/* CSV */}
+              {/* CSV / XLSX */}
               <div className="border border-gray-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="font-medium">
@@ -379,31 +227,52 @@ const LedgerAccountsGate: React.FC = () => {
                 </div>
                 {mode === "csv" && (
                   <div className="space-y-3">
-                    <Button
-                      variant="outline"
-                      onClick={downloadTemplate}
-                      disabled={isSubmitting}
-                    >
-                      {t("settings:ledgerAccountsGate.modes.csv.downloadTemplate")}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={downloadCsvTemplate}
+                        disabled={isSubmitting}
+                      >
+                        {t("settings:ledgerAccountsGate.modes.csv.downloadTemplate", {
+                          defaultValue: "Download .csv template",
+                        })}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={downloadXlsxTemplate}
+                        disabled={isSubmitting}
+                      >
+                        {t(
+                          "settings:ledgerAccountsGate.modes.csv.downloadXlsxTemplate",
+                          { defaultValue: "Download .xlsx template" }
+                        )}
+                      </Button>
+                    </div>
                     <Input
                       type="file"
                       label={t("settings:ledgerAccountsGate.modes.csv.uploadLabel")}
                       onChange={handleUploadCSV}
-                      accept=".csv,text/csv"
+                      // CSV or Excel
+                      accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                       disabled={isSubmitting}
                     />
                     <p className="text-[12px] text-gray-500">
                       {t("settings:ledgerAccountsGate.modes.csv.hintHeaderRow")} ·{" "}
                       {t("settings:ledgerAccountsGate.modes.csv.hintColumns", {
                         defaultValue:
-                          "Required columns: CATEGORY (1..4), optional: GROUP, SUBGROUP, ACCOUNT.",
+                          "Required columns (exact order): CATEGORY, SUBGROUP, ACCOUNT.",
                       })}
                     </p>
                     <p className="text-[11px] text-gray-500">
                       {t("settings:ledgerAccountsGate.modes.csv.hintCategories", {
                         defaultValue:
                           "CATEGORY codes: 1 = Operational Revenue · 2 = Non-operational Revenue · 3 = Operational Expense · 4 = Non-operational Expense.",
+                      })}
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      {t("settings:ledgerAccountsGate.modes.csv.hintXlsxMeta", {
+                        defaultValue:
+                          "For .xlsx, use the official template. The file is validated using an internal meta sheet and ID.",
                       })}
                     </p>
                   </div>
@@ -432,7 +301,7 @@ const LedgerAccountsGate: React.FC = () => {
                     <p className="text-sm text-gray-500">
                       {t("settings:ledgerAccountsGate.modes.manual.instructions", {
                         defaultValue:
-                          "One account per line. Format: CATEGORY ; SUBGROUP ; ACCOUNT. CATEGORY must be 1, 2, 3 or 4.",
+                          "One account per line. Format: CATEGORY;SUBGROUP;ACCOUNT. CATEGORY must be 1, 2, 3 or 4.",
                       })}
                     </p>
                     <textarea
@@ -533,7 +402,6 @@ const LedgerAccountsGate: React.FC = () => {
         </div>
       </main>
 
-      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

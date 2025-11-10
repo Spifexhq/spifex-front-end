@@ -746,28 +746,34 @@
     "title": "Configurons vos comptes du grand livre",
     "subtitle": "Choisissez comment créer votre plan de comptes. Vous pourrez le modifier ou l’étendre plus tard.",
     "header": {
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "categoriesInfo": "Catégories : 1 = Produits d’exploitation · 2 = Produits non opérationnels · 3 = Charges d’exploitation · 4 = Charges non opérationnelles."
     },
     "modes": {
       "csv": {
-        "title": "Import via CSV",
+        "title": "Import via CSV ou Excel",
         "choose": "Sélectionner",
         "downloadTemplate": "Télécharger le modèle .csv",
-        "uploadLabel": "Téléverser le fichier .csv",
+        "downloadXlsxTemplate": "Télécharger le modèle .xlsx",
+        "uploadLabel": "Téléverser un fichier (.csv ou .xlsx)",
         "hintHeaderRow": "Le fichier doit contenir une ligne d’en-tête",
-        "hintColumns": "Colonnes prises en charge : GRUPO, SUBGRUPO, CONTA (nous acceptons aussi group, subgroup, account)."
+        "hintColumns": "Colonnes obligatoires (dans cet ordre) : CATEGORY, SUBGROUP, ACCOUNT.",
+        "hintCategories": "CATEGORY doit être 1, 2, 3 ou 4.",
+        "hintXlsxMeta": "Pour les fichiers .xlsx, utilisez le modèle officiel. Le fichier est validé à l’aide d’une feuille meta interne et d’un ID de modèle."
       },
       "manual": {
         "title": "Saisir manuellement",
         "choose": "Sélectionner",
-        "instructions": "Utilisez le format GROUPE;SOUS-GROUPE;COMPTE — une ligne par compte. La virgule est également acceptée.",
-        "placeholder": "Exemples :\nProduits d’exploitation;Ventes;Ventes de produits\nCharges d’exploitation;Administratives;Salaires et charges"
+        "instructions": "Utilisez le format CATEGORY;SUBGROUP;ACCOUNT — une ligne par compte. CATEGORY doit être 1, 2, 3 ou 4.",
+        "placeholder": "Exemples :\n1; Sales; Product sales\n3; Administrative; Salaries and wages\n4; Financial; Bank fees",
+        "hintCategories": "CATEGORY doit être 1, 2, 3 ou 4."
       },
       "standard": {
         "title": "Utiliser un plan standard",
         "choose": "Sélectionner",
         "personal": "Plan de comptes personnel",
-        "business": "Plan de comptes d’entreprise"
+        "business": "Plan de comptes d’entreprise",
+        "hint": "Nous allons créer un plan de comptes suggéré à partir des quatre catégories. Vous pourrez modifier ou supprimer les comptes ensuite."
       }
     },
     "buttons": {
@@ -776,18 +782,20 @@
       "finishing": "Importation…"
     },
     "snackbar": {
-      "selectCsv": "Veuillez sélectionner un fichier CSV.",
-      "emptyCsv": "CSV vide ou invalide.",
-      "csvSuccess": "Comptes importés depuis le CSV.",
-      "manualRequired": "Renseignez le champ en utilisant GROUPE;SOUS-GROUPE;COMPTE.",
+      "selectCsv": "Veuillez sélectionner un fichier CSV ou XLSX.",
+      "emptyCsv": "Fichier vide ou invalide.",
+      "csvSuccess": "Comptes importés depuis le fichier.",
+      "manualRequired": "Renseignez le champ au format CATEGORY;SUBGROUP;ACCOUNT.",
       "manualSuccess": "Comptes créés à partir du texte.",
       "standardRequired": "Choisissez un plan standard (Personnel ou Entreprise).",
+      "standardEmpty": "Le plan standard est vide.",
       "standardSuccess": "Plan standard appliqué à vos comptes.",
-      "chooseMode": "Choisissez une option (CSV, Manuel ou Plan standard).",
+      "chooseMode": "Choisissez une option (CSV/Excel, Manuel ou Plan standard).",
       "saveError": "Erreur lors de la création des comptes comptables."
     },
     "misc": {
-      "fileNameTemplate": "spifex-standard-general-ledger-accounts.csv",
+      "fileNameTemplate": "template_ledger_accounts.csv",
+      "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
       "groupMappingNote": "Les catégories sont envoyées comme nombres (1..4) à l’API."
     }
   },

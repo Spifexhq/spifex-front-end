@@ -746,28 +746,34 @@
     "title": "Let’s set up your General Ledger Accounts",
     "subtitle": "Choose how you’d like to create your chart of accounts. You can edit or expand it later.",
     "header": {
-      "settings": "Settings"
+      "settings": "Settings",
+      "categoriesInfo": "Categories: 1 = Operating revenue · 2 = Non-operating revenue · 3 = Operating expense · 4 = Non-operating expense."
     },
     "modes": {
       "csv": {
-        "title": "Upload via CSV",
+        "title": "Upload via CSV or Excel",
         "choose": "Select",
         "downloadTemplate": "Download .csv template",
-        "uploadLabel": "Upload .csv file",
+        "downloadXlsxTemplate": "Download .xlsx template",
+        "uploadLabel": "Upload file (.csv or .xlsx)",
         "hintHeaderRow": "The file must include a header row",
-        "hintColumns": "Supported columns: GRUPO, SUBGRUPO, CONTA (we also accept group, subgroup, account)."
+        "hintColumns": "Required columns (in this exact order): CATEGORY, SUBGROUP, ACCOUNT.",
+        "hintCategories": "CATEGORY must be 1, 2, 3, or 4.",
+        "hintXlsxMeta": "For .xlsx, use the official template. The file is validated using an internal meta sheet and template ID."
       },
       "manual": {
         "title": "Enter manually",
         "choose": "Select",
-        "instructions": "Use the format GROUP;SUBGROUP;ACCOUNT — one per line. Comma is also accepted.",
-        "placeholder": "Examples:\nOperating revenue;Sales;Product sales\nOperating expense;Administrative;Salaries and wages"
+        "instructions": "Use the format CATEGORY;SUBGROUP;ACCOUNT — one per line. CATEGORY must be 1, 2, 3, or 4.",
+        "placeholder": "Examples:\n1; Sales; Product sales\n3; Administrative; Salaries and wages\n4; Financial; Bank fees",
+        "hintCategories": "CATEGORY must be 1, 2, 3, or 4."
       },
       "standard": {
         "title": "Use a Standard Plan",
         "choose": "Select",
         "personal": "Personal Chart of Accounts",
-        "business": "Business Chart of Accounts"
+        "business": "Business Chart of Accounts",
+        "hint": "We will create a suggested chart of accounts using the four categories. You can edit or delete them later."
       }
     },
     "buttons": {
@@ -776,18 +782,20 @@
       "finishing": "Importing…"
     },
     "snackbar": {
-      "selectCsv": "Please select a CSV file.",
-      "emptyCsv": "Empty or invalid CSV.",
-      "csvSuccess": "Accounts imported from CSV.",
-      "manualRequired": "Fill the field using GROUP;SUBGROUP;ACCOUNT.",
+      "selectCsv": "Please select a CSV or XLSX file.",
+      "emptyCsv": "Empty or invalid file.",
+      "csvSuccess": "Accounts imported from file.",
+      "manualRequired": "Fill the field using CATEGORY;SUBGROUP;ACCOUNT.",
       "manualSuccess": "Accounts created from the text.",
       "standardRequired": "Choose a standard plan (Personal or Business).",
+      "standardEmpty": "The standard plan is empty.",
       "standardSuccess": "Standard plan applied to your accounts.",
-      "chooseMode": "Pick one option (CSV, Manual, or Standard Plan).",
+      "chooseMode": "Pick one option (CSV/Excel, Manual, or Standard Plan).",
       "saveError": "Error while creating ledger accounts."
     },
     "misc": {
-      "fileNameTemplate": "spifex-standard-general-ledger-accounts.csv",
+      "fileNameTemplate": "template_ledger_accounts.csv",
+      "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
       "groupMappingNote": "Categories are sent as numbers (1..4) to the API."
     }
   },

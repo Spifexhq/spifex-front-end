@@ -218,7 +218,9 @@ const LedgerAccountSettings: React.FC = () => {
 
   const fetchAccountsPage = useCallback(
     async (cursor?: string) => {
-      if (INFLIGHT_FETCH) return { items: [] as GLAccount[], nextCursor: undefined as string | undefined };
+      if (INFLIGHT_FETCH) {
+        return { items: [] as GLAccount[], nextCursor: undefined as string | undefined };
+      }
       INFLIGHT_FETCH = true;
       try {
         const { data, meta } = (await api.getLedgerAccounts({
@@ -255,7 +257,9 @@ const LedgerAccountSettings: React.FC = () => {
   const resolveCategoryLabel = useCallback(
     (acc: GLX): string => {
       const key = getCategoryKeyFromAccount(acc);
-      return key ? t(`settings:ledgerAccounts.categories.${key}`) : t("settings:ledgerAccounts.tags.noGroup");
+      return key
+        ? t(`settings:ledgerAccounts.categories.${key}`)
+        : t("settings:ledgerAccounts.tags.noGroup");
     },
     [t]
   );
@@ -435,15 +439,57 @@ const LedgerAccountSettings: React.FC = () => {
   };
 
   const requestDeleteAccount = (acc: GLAccount) => {
-    setConfirmText(t("settings:ledgerAccounts.confirm.deleteOne", { account: acc.account ?? "" }));
+    setConfirmText(
+      t("settings:ledgerAccounts.confirm.deleteOne", { account: acc.account ?? "" })
+    );
+
     setConfirmAction(() => async () => {
       const id = getGlaId(acc);
       setDeleteTargetId(id);
+
       try {
-        setDeletedIds((prev) => new Set(prev).add(id));
+        // optimistic overlay: hide row locally
+        setDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
+
+        // delete in backend
         await api.deleteLedgerAccount(id);
+
+        // check if there are any accounts left on the server
+        let anyLeft = true;
+        try {
+          const { data } = (await api.getLedgerAccounts({
+            page_size: 1,
+          })) as { data: GetLedgerAccountsResponse };
+
+          const list = data?.results ?? [];
+          anyLeft = Array.isArray(list) && list.length > 0;
+        } catch {
+          // if the check fails, assume there *might* be accounts and fall back to refresh
+          anyLeft = true;
+        }
+
+        // if no accounts left → go back to the gate
+        if (!anyLeft) {
+          setAdded([]);
+          setDeletedIds(new Set());
+          setSnack({
+            message: t("settings:ledgerAccounts.toast.deleteSuccess", {
+              defaultValue: "Account deleted.",
+            }),
+            severity: "info",
+          });
+          navigate("/settings/register/ledger-accounts", { replace: true });
+          return;
+        }
+
+        // otherwise just refresh list and clean overlays for this id
         await pager.refresh();
         setAdded((prev) => prev.filter((a) => getGlaId(a) !== id));
+
         setSnack({
           message: t("settings:ledgerAccounts.toast.deleteSuccess", {
             defaultValue: "Account deleted.",
@@ -451,6 +497,7 @@ const LedgerAccountSettings: React.FC = () => {
           severity: "info",
         });
       } catch {
+        // rollback optimistic delete
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(id);
@@ -466,6 +513,7 @@ const LedgerAccountSettings: React.FC = () => {
         setConfirmBusy(false);
       }
     });
+
     setConfirmOpen(true);
   };
 
