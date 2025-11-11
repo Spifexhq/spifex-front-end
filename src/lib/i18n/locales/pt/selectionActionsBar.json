@@ -1,0 +1,31 @@
+{
+  "aria": {
+    "bar": "Barra de ações da seleção"
+  },
+  "actions": {
+    "minimize": "Minimizar",
+    "expand": "Expandir",
+    "cancel": "Cancelar",
+    "cancelSelection": "Cancelar seleção (Esc)",
+    "delete": "Excluir",
+    "deleteSelected": "Excluir selecionados",
+    "liquidate": "Liquidar",
+    "liquidateSelected": "Liquidar selecionados",
+    "return": "Retornar"
+  },
+  "labels": {
+    "selected": "{{count}} selecionado",
+    "selected_plural": "{{count}} selecionados",
+    "selectedShort": "selecionado",
+    "selectedShort_plural": "selecionados",
+    "credits": "Créditos",
+    "debits": "Débitos",
+    "sumCredits": "Σ Créditos",
+    "sumDebits": "Σ Débitos",
+    "net": "Saldo líquido:",
+    "dueShort": "Venc.:"
+  },
+  "hints": {
+    "escToCancel": "Dica: pressione"
+  }
+}

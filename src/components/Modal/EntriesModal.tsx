@@ -1,3 +1,5 @@
+// EntriesModalForm.tsx
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
@@ -55,6 +57,7 @@ type EntryDiffable = {
   installment_count?: number | null;
   interval_months?: number | null;
   weekend_action?: number | null;
+  last_settled_on?: string | null;
 };
 
 /* --------------------------- Estado inicial --------------------------- */
@@ -211,6 +214,22 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   const [selectedEntityType, setSelectedEntityType] = useState<
     { id: number; label: string; value: string }[]
   >([]);
+
+  // 🔒 Has this entry been (at least partially) settled?
+  const lastSettledOnStr = useMemo(() => {
+    if (!initialEntry) return null;
+    const ie = initialEntry as unknown as { last_settled_on?: string | null };
+    return ie.last_settled_on ?? null;
+  }, [initialEntry]);
+
+  const isFinancialLocked = !!lastSettledOnStr;
+
+  const formattedLastSettledOn = useMemo(() => {
+    if (!lastSettledOnStr) return "";
+    const d = new Date(lastSettledOnStr);
+    if (Number.isNaN(d.getTime())) return lastSettledOnStr;
+    return d.toLocaleDateString();
+  }, [lastSettledOnStr]);
 
   const isRecurrenceLocked = useMemo(() => {
     if (!initialEntry) return false;
@@ -475,28 +494,36 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
         if ((formData.details.notes || "") !== (ie.notes || "")) changes.notes = formData.details.notes || "";
 
         const initialAmountStr = normalizeAmountStr(ie.amount);
-        if (cleanAmountNow !== initialAmountStr) changes.amount = cleanAmountNow;
+        if (!isFinancialLocked && cleanAmountNow !== initialAmountStr) {
+          changes.amount = cleanAmountNow;
+        }
 
         const initialGl = ie.gl_account || "";
-        if (formData.details.accountingAccount && formData.details.accountingAccount !== initialGl) {
+        if (!isFinancialLocked && formData.details.accountingAccount && formData.details.accountingAccount !== initialGl) {
           changes.gl_account = formData.details.accountingAccount;
         }
 
-        if (formData.details.documentType) changes.document_type = formData.details.documentType;
+        if (formData.details.documentType) {
+          changes.document_type = formData.details.documentType;
+        }
 
         const initialProject = ie.project || "";
         const newProject = formData.costCenters.projects || "";
-        if (newProject !== initialProject) changes.project = newProject || null;
+        if (!isFinancialLocked && newProject !== initialProject) {
+          changes.project = newProject || null;
+        }
 
         const initialEntity = ie.entity || "";
         const newEntity = formData.entities.entity || "";
-        if (newEntity !== initialEntity) changes.entity = newEntity || null;
+        if (!isFinancialLocked && newEntity !== initialEntity) {
+          changes.entity = newEntity || null;
+        }
 
         const deps = makeDepartments();
-        if (deps) changes.departments = deps;
+        if (!isFinancialLocked && deps) changes.departments = deps;
 
         const items = makeItems();
-        if (items) changes.items = items;
+        if (!isFinancialLocked && items) changes.items = items;
 
         const initialRecCount = ie.installment_count ?? 1;
         if (initialRecCount <= 1) {
@@ -617,9 +644,9 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    const recCount = initialEntry.installment_count ?? 1;
-    const interval = initialEntry.interval_months ?? 1;
-    const weekendNum = initialEntry.weekend_action ?? 0;
+    const recCount = (initialEntry as EntryDiffable).installment_count ?? 1;
+    const interval = (initialEntry as EntryDiffable).interval_months ?? 1;
+    const weekendNum = (initialEntry as EntryDiffable).weekend_action ?? 0;
 
     const rawDeps =
       (initialEntry.departments ?? []) as Array<{
@@ -676,8 +703,8 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
     const entId = initialEntry.entity || "";
     const ent = entities.find((e) => e.id === entId);
     setSelectedEntity(ent ? [ent] : []);
-    if (ent && (ent).entity_type) {
-      const et = (ent).entity_type as string;
+    if (ent && (ent as unknown as { entity_type?: string }).entity_type) {
+      const et = (ent as unknown as { entity_type?: string }).entity_type as string;
       const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === et);
       setSelectedEntityType(opt ? [opt] : []);
     } else {
@@ -719,6 +746,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
   /* ------------------------------ Handlers ------------------------------ */
   const handleLedgerAccountChange = (updated: GLAccount[]) => {
+    if (isFinancialLocked) return;
     setSelectedLedgerAccount(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, details: { ...p.details, accountingAccount: id } }));
@@ -731,6 +759,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   };
 
   const handleDepartmentChange = (updated: Department[]) => {
+    if (isFinancialLocked) return;
     setSelectedDepartments(updated);
     const ids = updated.map((d) => String(d.id));
     const percs = distributePercentages(ids);
@@ -741,6 +770,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   };
 
   const handlePercentageChange = (index: number, value: string) => {
+    if (isFinancialLocked) return;
     const percs = [...formData.costCenters.department_percentage];
     percs[index] = value;
     setFormData((p) => ({
@@ -750,18 +780,21 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   };
 
   const handleProjectChange = (updated: Project[]) => {
+    if (isFinancialLocked) return;
     setSelectedProject(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, costCenters: { ...p.costCenters, projects: id } }));
   };
 
   const handleInventoryChange = (updated: InventoryItem[]) => {
+    if (isFinancialLocked) return;
     setSelectedInventoryItem(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, inventory: { ...p.inventory, product: id } }));
   };
 
   const handleEntityChange = (updated: Entity[]) => {
+    if (isFinancialLocked) return;
     setSelectedEntity(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
@@ -910,6 +943,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 setFormData((p) => ({ ...p, details: { ...p.details, amount: e.target.value } }))
               }
               onKeyDown={(e) => handleAmountKeyDown(e, formData.details.amount, setFormData)}
+              disabled={isFinancialLocked}
             />
             <div id={IDS.ledgerWrap}>
               <SelectDropdown<GLAccount>
@@ -922,10 +956,13 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 buttonLabel={t("entriesModal:details.glAccountBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
-                groupBy={(i) => (i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || t("entriesModal:misc.others"))}
+                groupBy={(i) =>
+                  i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || t("entriesModal:misc.others")
+                }
                 virtualize
                 virtualRowHeight={32}
                 virtualThreshold={300}
+                disabled={isFinancialLocked}
               />
             </div>
 
@@ -1003,6 +1040,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 virtualize
                 virtualRowHeight={32}
                 virtualThreshold={300}
+                disabled={isFinancialLocked}
               />
 
               <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -1028,6 +1066,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                         name={`department_percentage_${dept.id}`}
                         value={formData.costCenters.department_percentage[index] || ""}
                         onChange={(e) => handlePercentageChange(index, e.target.value)}
+                        disabled={isFinancialLocked}
                       />
                     </div>
                   ))}
@@ -1053,6 +1092,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 virtualize
                 virtualRowHeight={32}
                 virtualThreshold={300}
+                disabled={isFinancialLocked}
               />
             </div>
           </div>
@@ -1075,6 +1115,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
               virtualize
               virtualRowHeight={32}
               virtualThreshold={300}
+              disabled={isFinancialLocked}
             />
             {selectedInventoryItem.length > 0 && (
               <Input
@@ -1089,6 +1130,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                     inventory: { ...p.inventory, quantity: e.target.value },
                   }))
                 }
+                disabled={isFinancialLocked}
               />
             )}
           </div>
@@ -1111,6 +1153,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 items={ENTITY_TYPE_OPTIONS}
                 selected={selectedEntityType}
                 onChange={(v) => {
+                  if (isFinancialLocked) return;
                   setSelectedEntityType(v);
                   setFormData((p) => ({
                     ...p,
@@ -1125,6 +1168,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 singleSelect
                 customStyles={{ maxHeight: "160px" }}
                 hideFilter
+                disabled={isFinancialLocked}
               />
             </div>
 
@@ -1142,6 +1186,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 virtualize
                 virtualRowHeight={32}
                 virtualThreshold={300}
+                disabled={isFinancialLocked}
               />
             </div>
           </div>
@@ -1273,6 +1318,11 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
                   {type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
                 </h1>
+                {isFinancialLocked && formattedLastSettledOn && (
+                  <p className="mt-0.5 text-[11px] text-amber-700">
+                    {t("entriesModal:settledInfo", { date: formattedLastSettledOn })}
+                  </p>
+                )}
               </div>
             </div>
             <button
@@ -1293,7 +1343,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
           <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
             {isLoadingEntry ? (
               <div className="w-full h-full flex items-center justify-center">
-                <Spinner /> {/* size depends on your Spinner API */}
+                <Spinner />
               </div>
             ) : (
               renderTabContent()

@@ -30,6 +30,7 @@ import Button from "src/components/ui/Button";
 import Checkbox from "src/components/ui/Checkbox";
 import { formatCurrency } from "src/lib/currency";
 import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
+import Input from "../ui/Input";
 
 /* ------------------------------ Utils ------------------------------ */
 function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
@@ -1097,9 +1098,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
             <div className="space-y-4 text-xs text-gray-700">
               <label className="block space-y-1">
-                <span>{t("filterBar:saveModal.name")}</span>
-                <input
-                  className="w-full border border-gray-300 rounded px-2 py-1"
+                <Input
+                  label={t("filterBar:saveModal.name")}
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   placeholder={t("filterBar:saveModal.namePlaceholder")}

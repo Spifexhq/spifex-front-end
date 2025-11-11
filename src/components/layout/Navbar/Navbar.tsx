@@ -95,7 +95,7 @@ const Navbar: React.FC = () => {
                 </button>
               )}
 
-              <NavLink to="/cashflow" className="text-xl font-bold ml-2" end aria-label="Spifex">
+              <NavLink to="/home" className="text-xl font-bold ml-2" end aria-label="Spifex">
                 Spifex
               </NavLink>
             </div>
@@ -155,7 +155,7 @@ const Navbar: React.FC = () => {
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
                 aria-label={t("actions.menu")}
-                title={t("actions.menu")}
+                // title={t("actions.menu")}
               >
                 {t("actions.menu")}
                 <svg

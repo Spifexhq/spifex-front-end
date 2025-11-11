@@ -1,3 +1,4 @@
+// src/components/ui/SelectDropdown.tsx
 import {
   useState, useRef, useEffect, useId, useMemo,
   KeyboardEvent as ReactKeyboardEvent,
@@ -486,14 +487,18 @@ function SelectDropdown<T>({
               : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300",
           ].join(" ")}
         >
-          <span
-            className={[
-              "truncate text-left",
-              hasSelection ? "text-gray-800" : "text-gray-400",
-            ].join(" ")}
-          >
-            {selectedLabel}
-          </span>
+<span
+  className={[
+    "truncate text-left",
+    disabled
+      ? "text-gray-400"                    // 🔹 force gray-400 when disabled
+      : hasSelection
+      ? "text-gray-800"
+      : "text-gray-400",
+  ].join(" ")}
+>
+  {selectedLabel}
+</span>
 
           <span className="ml-2 flex items-center gap-2">
             {!effectiveSingleSelect && selected.length > 0 && (

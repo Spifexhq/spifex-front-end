@@ -59,6 +59,11 @@ import enSubscription from "./locales/en/subscription.json";
 import frSubscription from "./locales/fr/subscription.json";
 import deSubscription from "./locales/de/subscription.json";
 
+import ptSelectionActionsBar from "./locales/pt/selectionActionsBar.json";
+import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
+import frSelectionActionsBar from "./locales/fr/selectionActionsBar.json";
+import deSelectionActionsBar from "./locales/de/selectionActionsBar.json";
+
 import ptSettings from "./locales/pt/settings.json";
 import enSettings from "./locales/en/settings.json";
 import frSettings from "./locales/fr/settings.json";
@@ -138,6 +143,7 @@ const resources: Resource = {
     navbar: ptNavbar,
     sidebar: ptSidebar,
     subscription: ptSubscription,
+    selectionActionsBar: ptSelectionActionsBar,
     settings: ptSettings,
     filterBar: ptFilterBar,
     kpiCards: ptKpiCards,
@@ -163,6 +169,7 @@ const resources: Resource = {
     navbar: enNavbar,
     sidebar: enSidebar,
     subscription: enSubscription,
+    selectionActionsBar: enSelectionActionsBar,
     settings: enSettings,
     filterBar: enFilterBar,
     kpiCards: enKpiCards,
@@ -188,6 +195,7 @@ const resources: Resource = {
     navbar: frNavbar,
     sidebar: frSidebar,
     subscription: frSubscription,
+    selectionActionsBar: frSelectionActionsBar,
     settings: frSettings,
     filterBar: frFilterBar,
     kpiCards: frKpiCards,
@@ -213,6 +221,7 @@ const resources: Resource = {
     navbar: deNavbar,
     sidebar: deSidebar,
     subscription: deSubscription,
+    selectionActionsBar: deSelectionActionsBar,
     settings: deSettings,
     filterBar: deFilterBar,
     kpiCards: deKpiCards,
@@ -249,6 +258,7 @@ i18n
       "navbar",
       "sidebar",
       "subscription",
+      "selectionActionsBar",
       "settings",
       "filterBar",
       "kpiCards",

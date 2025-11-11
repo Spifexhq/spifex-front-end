@@ -36,6 +36,7 @@ import { BankAccount, GLAccount, Department,
   Project, InventoryItem, Entity
 } from '@/models/enterprise_structure/domain';
 import { Paginated } from '@/models/Api';
+import { DashboardOverview } from '@/models/dashboard/domain';
 import { store } from '@/redux/store';
 
 const getOrgExternalId = (): string => {
@@ -152,6 +153,12 @@ export const api = {
   },
   getSettledKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
     return request<SettledKpis>(`cashflow/${orgExtId}/kpis/settled/`, 'GET', params);
+  },
+
+  /* --- Dashboard --- */
+  getCashflowDashboard: () => {
+    const org = getOrgExternalId();
+    return request<DashboardOverview>(`cashflow/${org}/dashboard/`, "GET");
   },
 
   /* --- Reports --- */

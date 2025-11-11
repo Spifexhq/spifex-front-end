@@ -18,6 +18,7 @@ const ForgotPassword = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
 
 // Main Pages
+const HomeDashboard = lazy(() => import("src/pages/HomeDashboard"));
 const CashFlow = lazy(() => import("src/pages/CashFlow"));
 const SettledEntries = lazy(() => import("src/pages/SettledEntries"));
 const Reports = lazy(() => import("@/pages/Reports"));
@@ -95,6 +96,15 @@ const routes: RouteObject[] = [
         path: '/',
         element: <SpifexLayout />,
         children: [
+            // Dashboard
+            {
+                path: 'home',
+                element: (
+                    <PermissionMiddleware codeName="view_cash_flow_button" redirectTo={'/settled'}>
+                        <HomeDashboard />
+                    </PermissionMiddleware>
+                )
+            },
             // Cash Flow
             {
                 path: 'cashflow',
