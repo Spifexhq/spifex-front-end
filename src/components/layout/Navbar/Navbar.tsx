@@ -151,7 +151,7 @@ const Navbar: React.FC = () => {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={handleUserMenuToggle}
-                className="flex items-center justify-center px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 text-sm font-medium focus:outline-none"
+                className="cursor-pointer flex items-center justify-center px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 text-sm font-medium focus:outline-none"
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
                 aria-label={t("actions.menu")}
