@@ -15,7 +15,8 @@
     "accounts": "Hauptbuchkonto",
     "observation": "Bemerkung",
     "txType": "Typ (Einnahme/Ausgabe)",
-    "amount": "Betrag (min/max)"
+    "amount": "Betrag (min/max)",
+    "aria": "Menü der verfügbaren Filter"
   },
   "chips": {
     "date": "Daten",
@@ -49,7 +50,10 @@
       "placeholder": "R$ 0,00"
     }
   },
-  "viewsMenu": { "empty": "Keine gespeicherten Ansichten" },
+  "viewsMenu": {
+    "empty": "Keine gespeicherten Ansichten",
+    "aria": "Liste der gespeicherten Ansichten"
+  },
   "configModal": {
     "title": "Gespeicherte Ansichten",
     "close": "Schließen",
@@ -60,7 +64,8 @@
     "rename": "Umbenennen",
     "apply": "Anwenden",
     "delete": "Löschen",
-    "footerClose": "Schließen"
+    "footerClose": "Schließen",
+    "loading": "Ansichten werden aktualisiert..."
   },
   "saveModal": {
     "title": "Ansicht speichern",
@@ -74,7 +79,11 @@
     "chooseView": "Ansicht auswählen",
     "choosePlaceholder": "— auswählen —",
     "cancel": "Abbrechen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "loading": "Ansicht wird gespeichert...",
+    "description": "Speichern Sie diese Filterkombination, um sie später wiederzuverwenden.",
+    "defaultShort": "Standard",
+    "overwriteHint": "Die ausgewählte Ansicht wird durch die aktuellen Filter ersetzt."
   },
   "aria": { "removeFilter": "Filter entfernen" }
 }

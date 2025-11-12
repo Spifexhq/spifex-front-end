@@ -15,7 +15,8 @@
     "accounts": "Conta contábil",
     "observation": "Observação",
     "txType": "Tipo (Receita/Despesa)",
-    "amount": "Valor (mín/máx)"
+    "amount": "Valor (mín/máx)",
+    "aria": "Menu de filtros disponíveis"
   },
   "chips": {
     "date": "Datas",
@@ -49,7 +50,10 @@
       "placeholder": "R$ 0,00"
     }
   },
-  "viewsMenu": { "empty": "Nenhuma visualização salva" },
+  "viewsMenu": {
+    "empty": "Nenhuma visualização salva",
+    "aria": "Lista de visualizações salvas"
+  },
   "configModal": {
     "title": "Visualizações salvas",
     "close": "Fechar",
@@ -60,7 +64,8 @@
     "rename": "Renomear",
     "apply": "Aplicar",
     "delete": "Excluir",
-    "footerClose": "Fechar"
+    "footerClose": "Fechar",
+    "loading": "Atualizando visualizações…"
   },
   "saveModal": {
     "title": "Salvar visualização",
@@ -74,7 +79,11 @@
     "chooseView": "Escolha a visualização",
     "choosePlaceholder": "— selecione —",
     "cancel": "Cancelar",
-    "save": "Salvar"
+    "save": "Salvar",
+    "loading": "Salvando visualização…",
+    "description": "Salve esta combinação de filtros para reutilizar depois.",
+    "defaultShort": "padrão",
+    "overwriteHint": "A visualização selecionada será substituída pelos filtros atuais."
   },
   "aria": { "removeFilter": "remover filtro" }
 }

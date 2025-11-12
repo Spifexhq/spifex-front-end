@@ -15,7 +15,8 @@
     "accounts": "Compte du grand livre",
     "observation": "Observation",
     "txType": "Type (Revenu/Dépense)",
-    "amount": "Montant (min/max)"
+    "amount": "Montant (min/max)",
+    "aria": "Menu des filtres disponibles"
   },
   "chips": {
     "date": "Dates",
@@ -49,7 +50,10 @@
       "placeholder": "R$ 0,00"
     }
   },
-  "viewsMenu": { "empty": "Aucune vue enregistrée" },
+  "viewsMenu": {
+    "empty": "Aucune vue enregistrée",
+    "aria": "Liste des vues enregistrées"
+  },
   "configModal": {
     "title": "Vues enregistrées",
     "close": "Fermer",
@@ -60,7 +64,8 @@
     "rename": "Renommer",
     "apply": "Appliquer",
     "delete": "Supprimer",
-    "footerClose": "Fermer"
+    "footerClose": "Fermer",
+    "loading": "Mise à jour des vues..."
   },
   "saveModal": {
     "title": "Enregistrer la vue",
@@ -74,7 +79,11 @@
     "chooseView": "Choisir une vue",
     "choosePlaceholder": "— sélectionner —",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "loading": "Enregistrement de la vue...",
+    "description": "Enregistrez cette combinaison de filtres pour la réutiliser plus tard.",
+    "defaultShort": "par défaut",
+    "overwriteHint": "La vue sélectionnée sera remplacée par les filtres actuels."
   },
   "aria": { "removeFilter": "supprimer le filtre" }
 }

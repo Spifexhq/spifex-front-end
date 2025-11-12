@@ -15,7 +15,8 @@
     "accounts": "Ledger account",
     "observation": "Observation",
     "txType": "Type (Income/Expense)",
-    "amount": "Amount (min/max)"
+    "amount": "Amount (min/max)",
+    "aria": "Available filters menu"
   },
   "chips": {
     "date": "Dates",
@@ -49,7 +50,10 @@
       "placeholder": "R$ 0.00"
     }
   },
-  "viewsMenu": { "empty": "No saved views" },
+  "viewsMenu": {
+    "empty": "No saved views",
+    "aria": "Saved views list"
+  },
   "configModal": {
     "title": "Saved views",
     "close": "Close",
@@ -60,7 +64,8 @@
     "rename": "Rename",
     "apply": "Apply",
     "delete": "Delete",
-    "footerClose": "Close"
+    "footerClose": "Close",
+    "loading": "Updating views..."
   },
   "saveModal": {
     "title": "Save view",
@@ -74,7 +79,11 @@
     "chooseView": "Choose a view",
     "choosePlaceholder": "— select —",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "loading": "Saving view...",
+    "description": "Save this filter combination to reuse it later.",
+    "defaultShort": "default",
+    "overwriteHint": "The selected view will be replaced with the current filters."
   },
   "aria": { "removeFilter": "remove filter" }
 }

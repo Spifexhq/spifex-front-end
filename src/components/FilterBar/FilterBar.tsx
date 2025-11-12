@@ -17,7 +17,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import SelectDropdown from "src/components/ui/SelectDropdown/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import type { EntryFilters } from "src/models/entries/domain";
 import {
@@ -93,6 +93,18 @@ interface FilterBarProps {
   contextSettlement: false | true;
 }
 
+/* Small default icon (SVG star, no plain "⭐" char) */
+const DefaultStarIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    viewBox="0 0 20 20"
+    aria-hidden="true"
+    className={className}
+    fill="currentColor"
+  >
+    <path d="M10 2.5l2.39 4.84 5.34.78-3.86 3.77.91 5.31L10 14.9l-4.78 2.51.91-5.31L2.27 8.12l5.34-.78L10 2.5z" />
+  </svg>
+);
+
 /* -------------------------------- Component -------------------------------- */
 const FilterBar: React.FC<FilterBarProps> = ({
   onApply,
@@ -137,15 +149,20 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
   const [viewsLoaded, setViewsLoaded] = useState(false);
 
-  /* “Salvar visualização” — agora modal */
+  /* “Salvar visualização” — modal */
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveDefault, setSaveDefault] = useState(false);
   const [saveMode, setSaveMode] = useState<"create" | "overwrite">("create");
   const [overwriteId, setOverwriteId] = useState<string | null>(null);
+  const [overwriteView, setOverwriteView] = useState<Visualization | null>(
+    null
+  );
+  const [saveBusy, setSaveBusy] = useState(false);
 
   /* Config modal (somente “Visualizações salvas”) */
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [configBusy, setConfigBusy] = useState(false);
 
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renamingName, setRenamingName] = useState("");
@@ -460,6 +477,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
               setSaveDefault(false);
               setSaveMode("create");
               setOverwriteId(null);
+              setOverwriteView(null);
               setSaveModalOpen(true);
             }}
           >
@@ -488,7 +506,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 (scopedViews.length
                   ? scopedViews.map<MenuEntry>((v) => ({
                       key: v.id,
-                      label: `${v.name}${v.is_default ? " ⭐" : ""}`,
+                      label: (
+                        <span className="flex items-center justify-between w-full">
+                          <span className="truncate">{v.name}</span>
+                          {v.is_default && (
+                            <DefaultStarIcon className="w-3 h-3 text-amber-500 shrink-0 ml-2" />
+                          )}
+                        </span>
+                      ),
                       onAction: () => {
                         setViewsMenuOpen(false);
                         const next = {
@@ -910,21 +935,51 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {/* ---------------------- CONFIG MODAL (only views) --------------------- */}
       {configModalOpen && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-          <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
+            {/* Overlay to freeze content when toggling default */}
+            {configBusy && (
+              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <svg
+                    className="h-4 w-4 animate-spin text-gray-400"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                      opacity="0.25"
+                    />
+                    <path
+                      d="M21 12a9 9 0 0 0-9-9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                  </svg>
+                  <span>{t("filterBar:configModal.loading")}</span>
+                </div>
+              </div>
+            )}
+
             <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
               <h3 className="text-[14px] font-semibold text-gray-800">
                 {t("filterBar:configModal.title")}
               </h3>
               <button
                 className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                onClick={() => setConfigModalOpen(false)}
+                onClick={() => !configBusy && setConfigModalOpen(false)}
                 aria-label={t("filterBar:configModal.close")}
               >
                 &times;
               </button>
             </header>
 
-            <div>
+            <div className={configBusy ? "pointer-events-none opacity-60" : ""}>
               <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
                 {scopedViews.length === 0 && (
                   <div className="px-3 py-2 text-xs text-gray-500">
@@ -939,9 +994,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         <Checkbox
                           checked={!!v.is_default}
                           size="small"
+                          disabled={configBusy}
                           onChange={() => {
                             (async () => {
                               try {
+                                setConfigBusy(true);
                                 if (v.is_default) {
                                   await api.editEntryView(v.id, { is_default: false });
                                 } else {
@@ -960,6 +1017,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
                                 await refreshViews();
                               } catch (err) {
                                 console.error("Failed to toggle default view", err);
+                              } finally {
+                                setConfigBusy(false);
                               }
                             })();
                           }}
@@ -974,8 +1033,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
                           <span className="text-sm text-gray-800">{v.name}</span>
                         )}
                         {v.is_default ? (
-                          <span className="text-[11px] text-amber-600">
-                            {t("filterBar:configModal.defaultTag")}
+                          <span className="inline-flex items-center gap-1 text-[11px] text-amber-600">
+                            <DefaultStarIcon className="w-3 h-3" />
+                            <span>{t("filterBar:configModal.defaultTag")}</span>
                           </span>
                         ) : null}
                       </label>
@@ -986,17 +1046,20 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={configBusy}
                               className="bg-white hover:bg-gray-50"
                               onClick={async () => {
                                 const id = renamingId;
                                 const name = renamingName.trim();
                                 if (!id || !name) return;
                                 try {
+                                  setConfigBusy(true);
                                   await api.editEntryView(id, { name });
                                   await refreshViews();
                                 } catch (err) {
                                   console.error("Failed to rename view", err);
                                 } finally {
+                                  setConfigBusy(false);
                                   setRenamingId(null);
                                   setRenamingName("");
                                 }
@@ -1007,6 +1070,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={configBusy}
                               className="bg-white hover:bg-gray-50"
                               onClick={() => {
                                 setRenamingId(null);
@@ -1020,6 +1084,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                           <Button
                             variant="outline"
                             size="sm"
+                            disabled={configBusy}
                             className="bg-white hover:bg-gray-50"
                             onClick={() => {
                               setRenamingId(v.id);
@@ -1032,6 +1097,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
+                          disabled={configBusy}
                           className="bg-white hover:bg-gray-50"
                           onClick={() => {
                             const next = {
@@ -1046,13 +1112,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
+                          disabled={configBusy}
                           className="!text-red-600 !border-red-200 hover:!bg-red-50"
                           onClick={async () => {
                             try {
+                              setConfigBusy(true);
                               await api.deleteEntryView(v.id);
                               setViews((prev) => prev.filter((x) => x.id !== v.id));
                             } catch (err) {
                               console.error("Failed to delete view", err);
+                            } finally {
+                              setConfigBusy(false);
                             }
                           }}
                         >
@@ -1068,6 +1138,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
+                  disabled={configBusy}
                   className="bg-white hover:bg-gray-50"
                   onClick={() => setConfigModalOpen(false)}
                 >
@@ -1082,144 +1153,203 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {/* --------------------------- SAVE MODAL ---------------------------- */}
       {saveModalOpen && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-          <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md max-h-[90vh] relative">
+            {/* Loading overlay when saving */}
+            {saveBusy && (
+              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <svg
+                    className="h-4 w-4 animate-spin text-gray-400"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                      opacity="0.25"
+                    />
+                    <path
+                      d="M21 12a9 9 0 0 0-9-9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                  </svg>
+                  <span>{t("filterBar:saveModal.loading")}</span>
+                </div>
+              </div>
+            )}
+
             <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
               <h3 className="text-[14px] font-semibold text-gray-800">
                 {t("filterBar:saveModal.title")}
               </h3>
               <button
                 className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                onClick={() => setSaveModalOpen(false)}
+                onClick={() => !saveBusy && setSaveModalOpen(false)}
                 aria-label={t("filterBar:saveModal.close")}
               >
                 &times;
               </button>
             </header>
 
-            <div className="space-y-4 text-xs text-gray-700">
-              <label className="block space-y-1">
-                <Input
-                  label={t("filterBar:saveModal.name")}
-                  value={saveName}
-                  onChange={(e) => setSaveName(e.target.value)}
-                  placeholder={t("filterBar:saveModal.namePlaceholder")}
-                />
-              </label>
+            <div className={saveBusy ? "pointer-events-none opacity-60" : ""}>
+              <div className="space-y-4 text-xs text-gray-700">
+                <p className="text-[12px] text-gray-600">
+                  {t("filterBar:saveModal.description")}
+                </p>
 
-              <label className="inline-flex items-center gap-2">
-                <Checkbox
-                  checked={saveDefault}
-                  size="small"
-                  onChange={(e) => setSaveDefault(e.target.checked)}
-                />
-                <span>{t("filterBar:saveModal.setDefault")}</span>
-              </label>
+                <label className="block space-y-1">
+                  <Input
+                    label={t("filterBar:saveModal.name")}
+                    value={saveName}
+                    onChange={(e) => setSaveName(e.target.value)}
+                    placeholder={t("filterBar:saveModal.namePlaceholder")}
+                  />
+                </label>
 
-              <div className="space-y-2">
-                <div className="font-semibold">
-                  {t("filterBar:saveModal.modeTitle")}
+                <label className="inline-flex items-center gap-2">
+                  <Checkbox
+                    checked={saveDefault}
+                    size="small"
+                    onChange={(e) => setSaveDefault(e.target.checked)}
+                  />
+                  <span>{t("filterBar:saveModal.setDefault")}</span>
+                </label>
+
+                <div className="space-y-2">
+                  <div className="font-semibold text-[12px]">
+                    {t("filterBar:saveModal.modeTitle")}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="save_mode"
+                        checked={saveMode === "create"}
+                        onChange={() => {
+                          setSaveMode("create");
+                          setOverwriteId(null);
+                          setOverwriteView(null);
+                        }}
+                      />
+                      <span>{t("filterBar:saveModal.create")}</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="save_mode"
+                        checked={saveMode === "overwrite"}
+                        onChange={() => setSaveMode("overwrite")}
+                      />
+                      <span>{t("filterBar:saveModal.overwrite")}</span>
+                    </label>
+                  </div>
+
+                  {saveMode === "overwrite" && (
+                    <div className="mt-2 space-y-1">
+                      <SelectDropdown<Visualization>
+                        label={t("filterBar:saveModal.chooseView")}
+                        items={scopedViews}
+                        selected={overwriteView ? [overwriteView] : []}
+                        onChange={(list) => {
+                          const v = list[0] ?? null;
+                          setOverwriteView(v);
+                          setOverwriteId(v ? v.id : null);
+                        }}
+                        getItemKey={(item) => item.id}
+                        getItemLabel={(item) =>
+                          item.is_default
+                            ? `${item.name} (${t("filterBar:saveModal.defaultShort")})`
+                            : item.name
+                        }
+                        buttonLabel={t("filterBar:saveModal.choosePlaceholder")}
+                        singleSelect
+                        hideCheckboxes
+                        customStyles={{ maxHeight: "240px" }}
+                      />
+                      <p className="text-[11px] text-gray-500">
+                        {t("filterBar:saveModal.overwriteHint")}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="save_mode"
-                    checked={saveMode === "create"}
-                    onChange={() => setSaveMode("create")}
-                  />
-                  <span>{t("filterBar:saveModal.create")}</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="save_mode"
-                    checked={saveMode === "overwrite"}
-                    onChange={() => setSaveMode("overwrite")}
-                  />
-                  <span>{t("filterBar:saveModal.overwrite")}</span>
-                </label>
 
-                {saveMode === "overwrite" && (
-                  <label className="block space-y-1 mt-2">
-                    <span>{t("filterBar:saveModal.chooseView")}</span>
-                    <select
-                      className="w-full border border-gray-300 rounded px-2 py-1"
-                      value={overwriteId ?? ""}
-                      onChange={(e) => setOverwriteId(e.target.value || null)}
-                    >
-                      <option value="">
-                        {t("filterBar:saveModal.choosePlaceholder")}
-                      </option>
-                      {scopedViews.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name} {v.is_default ? "⭐" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white hover:bg-gray-50"
-                  onClick={() => {
-                    setSaveModalOpen(false);
-                    setTimeout(() => {
-                      setSaveName("");
-                      setSaveDefault(false);
-                      setSaveMode("create");
-                      setOverwriteId(null);
-                    }, 0);
-                  }}
-                >
-                  {t("filterBar:saveModal.cancel")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white hover:bg-gray-50"
-                  onClick={async () => {
-                    const name = saveName.trim();
-                    if (!name) return;
-
-                    const payload = {
-                      name,
-                      is_default: saveDefault,
-                      settlement_status: !!filters.settlement_status,
-                      filters,
-                    };
-
-                    try {
-                      if (saveMode === "overwrite" && overwriteId) {
-                        await api.editEntryView(overwriteId, payload);
-                      } else {
-                        const sameName = views.find(
-                          (v) =>
-                            v.name.toLowerCase() === name.toLowerCase() &&
-                            v.settlement_status === !!filters.settlement_status
-                        );
-                        if (sameName) await api.editEntryView(sameName.id, payload);
-                        else await api.addEntryView(payload);
-                      }
-                      await refreshViews();
-                    } catch (err) {
-                      console.error("Failed to save visualization", err);
-                    } finally {
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={saveBusy}
+                    className="bg-white hover:bg-gray-50"
+                    onClick={() => {
                       setSaveModalOpen(false);
                       setTimeout(() => {
                         setSaveName("");
                         setSaveDefault(false);
                         setSaveMode("create");
                         setOverwriteId(null);
+                        setOverwriteView(null);
                       }, 0);
+                    }}
+                  >
+                    {t("filterBar:saveModal.cancel")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-white hover:bg-gray-50"
+                    disabled={
+                      saveBusy ||
+                      !saveName.trim() ||
+                      (saveMode === "overwrite" && !overwriteId)
                     }
-                  }}
-                  disabled={!saveName.trim() || (saveMode === "overwrite" && !overwriteId)}
-                >
-                  {t("filterBar:saveModal.save")}
-                </Button>
+                    onClick={async () => {
+                      const name = saveName.trim();
+                      if (!name) return;
+
+                      const payload = {
+                        name,
+                        is_default: saveDefault,
+                        settlement_status: !!filters.settlement_status,
+                        filters,
+                      };
+
+                      try {
+                        setSaveBusy(true);
+                        if (saveMode === "overwrite" && overwriteId) {
+                          await api.editEntryView(overwriteId, payload);
+                        } else {
+                          const sameName = views.find(
+                            (v) =>
+                              v.name.toLowerCase() === name.toLowerCase() &&
+                              v.settlement_status === !!filters.settlement_status
+                          );
+                          if (sameName) await api.editEntryView(sameName.id, payload);
+                          else await api.addEntryView(payload);
+                        }
+                        await refreshViews();
+                      } catch (err) {
+                        console.error("Failed to save visualization", err);
+                      } finally {
+                        setSaveBusy(false);
+                        setSaveModalOpen(false);
+                        setTimeout(() => {
+                          setSaveName("");
+                          setSaveDefault(false);
+                          setSaveMode("create");
+                          setOverwriteId(null);
+                          setOverwriteView(null);
+                        }, 0);
+                      }
+                    }}
+                  >
+                    {t("filterBar:saveModal.save")}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -1319,7 +1449,7 @@ const Popover: React.FC<{
 
 /* ------------------------------- Menu System ------------------------------- */
 
-type MenuActionItem = { key: string; label: string; onAction?: () => void };
+type MenuActionItem = { key: string; label: React.ReactNode; onAction?: () => void };
 type MenuSeparator = { sep: true };
 type MenuEntry = MenuActionItem | MenuSeparator;
 
@@ -1330,7 +1460,7 @@ function isActionItem(x: MenuEntry): x is MenuActionItem {
 const MenuItemBtn = React.forwardRef<
   HTMLButtonElement,
   {
-    label: string;
+    label: React.ReactNode;
     onClick(): void;
     active?: boolean;
     danger?: boolean;
