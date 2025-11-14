@@ -89,7 +89,7 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
         items: [
           { id: "banks", icon: "bank" as IconKey, label: t("sidebar.items.banks") },
           { id: "bank-statements", icon: "card" as IconKey, label: t("sidebar.items.bank-statements") },
-          { id: "expenses", icon: "receipt" as IconKey, label: t("sidebar.items.expenses") },
+          // { id: "expenses", icon: "receipt" as IconKey, label: t("sidebar.items.expenses") },
         ],
       },
       {
