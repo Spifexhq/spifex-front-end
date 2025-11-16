@@ -130,6 +130,8 @@ import frNotificationSettings from "./locales/fr/notificationSettings.json";
 import deNotificationSettings from "./locales/de/notificationSettings.json";
 
 
+
+
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
   pt: {

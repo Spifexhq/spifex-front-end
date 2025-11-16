@@ -27,6 +27,7 @@ const CashFlow = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const tableRef = useRef<CashFlowTableHandle>(null);
 
   const [filters, setFilters] = useState<EntryFilters | null>(null);
@@ -129,20 +130,34 @@ const CashFlow = () => {
               context="cashflow"
               selectedIds={selectedIds}
               selectedEntries={selectedEntries}
+              isProcessing={isDeleting}
               onCancel={() => {
                 tableRef.current?.clearSelection();
               }}
               onLiquidate={() => setIsSettlementModalOpen(true)}
               onDelete={async () => {
+                if (!selectedIds.length) return;
+
+                setIsDeleting(true);
                 try {
-                  await Promise.all(selectedIds.map((id) => api.deleteEntry(id)));
+                  if (selectedIds.length > 1) {
+                    // bulk delete
+                    await api.bulkDeleteEntries(selectedIds as string[]);
+                  } else {
+                    // single delete
+                    await api.deleteEntry(selectedIds[0] as string);
+                  }
+
                   setCashflowKey((prev) => prev + 1);
                   setKpiRefresh((k) => k + 1);
                   setSelectedIds([]);
                   setSelectedEntries([]);
+                  tableRef.current?.clearSelection();
                 } catch (err) {
                   console.error(err);
                   alert("Erro ao deletar lançamentos.");
+                } finally {
+                  setIsDeleting(false);
                 }
               }}
             />

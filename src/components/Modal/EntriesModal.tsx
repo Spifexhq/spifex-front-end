@@ -550,7 +550,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
 
       if (!("data" in res)) {
         const apiError = res as ApiError;
-        console.error("Erro API:", apiError?.error?.message, apiError?.error?.details);
         setWarning({
           title: t("entriesModal:saveError.title"),
           message: apiError?.error?.message || t("entriesModal:saveError.generic"),
@@ -561,7 +560,6 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       handleClose();
       onSave();
     } catch (err) {
-      console.error("Erro ao salvar lançamento:", err);
       const message =
         axios.isAxiosError(err) && err.response?.data?.error?.message
           ? err.response.data.error.message
