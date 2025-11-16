@@ -28,7 +28,7 @@ import { api } from "src/api/requests";
 import { Employee } from "src/models/auth/domain";
 import type { GroupListItem } from "src/models/auth/domain/Group";
 import type { GetGroups } from "src/models/auth/dto/GetGroup";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";

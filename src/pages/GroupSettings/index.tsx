@@ -19,7 +19,7 @@ import ConfirmToast from "src/components/ui/ConfirmToast";
 import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 
 import type { Permission } from "src/models/auth/domain/Permission";
 import type { GroupDetail, GroupListItem } from "src/models/auth/domain/Group";

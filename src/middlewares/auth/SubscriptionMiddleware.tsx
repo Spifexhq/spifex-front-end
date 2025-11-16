@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/api";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 
 import TopProgress from 'src/components/ui/Loaders/TopProgress';
 

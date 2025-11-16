@@ -20,7 +20,7 @@ import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
 import type { Project } from "src/models/enterprise_structure/domain/Project";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";

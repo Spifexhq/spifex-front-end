@@ -56,12 +56,18 @@ export const useAuth = () => {
       dispatch(setUserOrganization(res.data.organization));
 
       if (res.data.subscription) {
-        // Either action works; kept both for compatibility
         dispatch(setSubscription(res.data.subscription));
         dispatch(setSubscriptionStatus(res.data.subscription));
       }
+
+      // 🔹 NEW: hydrate permissions as well (from whatever your API returns)
+      const perms =
+        res.data.permissions ??
+        res.data.organization?.permissions ??
+        [];
+
+      dispatch(setPermissions(perms));
     } catch (err) {
-      // Do not log the user out here; interceptors will handle token refresh.
       console.warn("handleInitUser failed:", err);
     }
   }, [auth.user, dispatch]);

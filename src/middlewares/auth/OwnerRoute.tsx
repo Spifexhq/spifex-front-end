@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useRequireLogin } from '@/hooks/useRequireLogin';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import { useAuthContext } from 'src/hooks/useAuth';
 
 interface OwnerRouteProps { children: ReactElement }
 

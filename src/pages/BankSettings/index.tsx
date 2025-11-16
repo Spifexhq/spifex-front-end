@@ -23,7 +23,7 @@ import ConfirmToast from "src/components/ui/ConfirmToast";
 
 import { api } from "src/api/requests";
 import type { BankAccount } from "src/models/enterprise_structure/domain";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 
 import { formatCurrency } from "src/lib/currency";
 import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";

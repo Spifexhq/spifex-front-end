@@ -22,7 +22,7 @@ import ConfirmToast from "src/components/ui/ConfirmToast";
 import Checkbox from "src/components/ui/Checkbox";
 
 import { api } from "src/api/requests";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";

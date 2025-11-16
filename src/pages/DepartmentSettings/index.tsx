@@ -24,7 +24,7 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
 import type { Department } from "src/models/enterprise_structure/domain";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";

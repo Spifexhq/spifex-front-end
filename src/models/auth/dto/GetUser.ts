@@ -5,4 +5,5 @@ export interface GetUserResponse {
   user: User;
   organization: UserOrganizationDetail;
   subscription: GetSubscriptionStatusResponse | null;
+  permissions: string[];
 }

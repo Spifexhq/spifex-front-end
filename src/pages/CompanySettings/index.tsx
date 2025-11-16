@@ -19,7 +19,7 @@ import Checkbox from "src/components/ui/Checkbox";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 
 import { api } from "src/api/requests";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 import type { Organization } from "src/models/auth/domain";
 import { formatTimezoneLabel, TIMEZONES } from "src/lib";
 import { useTranslation } from "react-i18next";

@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuth } from "@/api";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";

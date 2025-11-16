@@ -21,6 +21,12 @@ interface UserInfo {
 
 const useCombinedUserInfo = (): UserInfo => {
   const auth = useSelector((state: RootState) => state.auth);
+
+  const effectivePermissions =
+    auth.permissions && auth.permissions.length > 0
+      ? auth.permissions
+      : (auth.organization?.permissions ?? []);
+
   return {
     user: auth.user,
     organization: auth.organization,
@@ -31,7 +37,7 @@ const useCombinedUserInfo = (): UserInfo => {
     isStaff: auth.user?.is_staff ?? false,
     isActive: auth.user?.is_active ?? false,
     isEmailVerified: auth.user?.is_email_verified ?? false,
-    permissions: auth.permissions ?? (auth.organization?.permissions ?? []),
+    permissions: effectivePermissions,
   };
 };
 

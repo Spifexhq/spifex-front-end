@@ -21,7 +21,7 @@ import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 import { PersonalSettings as PersonalSettingsModel, Organization } from "src/models/auth";
 import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 import LanguageSwitcher from "@/components/LanguageSwitcher";

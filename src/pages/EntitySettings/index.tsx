@@ -20,7 +20,7 @@ import Shimmer from "@/components/ui/Loaders/Shimmer";
 
 import { api } from "src/api/requests";
 import type { Entity } from "src/models/enterprise_structure/domain/Entity";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 import Checkbox from "src/components/ui/Checkbox";
 
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";

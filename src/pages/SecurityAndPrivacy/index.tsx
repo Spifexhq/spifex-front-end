@@ -20,7 +20,7 @@ import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
-import { useAuthContext } from "@/contexts/useAuthContext";
+import { useAuthContext } from "src/hooks/useAuth";
 import type { User } from "src/models/auth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";

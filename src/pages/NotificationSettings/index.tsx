@@ -22,7 +22,7 @@ import {
   NotificationPreference,
   NotificationCategory,
 } from "src/models/auth/domain/Notifications";
-import { useAuthContext } from "src/contexts";
+import { useAuthContext } from "src/hooks/useAuth";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =
