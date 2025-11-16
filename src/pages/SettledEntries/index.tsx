@@ -27,6 +27,7 @@ const Settled = () => {
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [tableKey, setTableKey] = useState(0);
   const [banksKey, setBanksKey] = useState(0);
+  const [isReturning, setIsReturning] = useState(false);
 
   const tableRef = useRef<SettledEntriesTableHandle>(null);
 
@@ -105,17 +106,33 @@ const Settled = () => {
               context="settled"
               selectedIds={selectedIds}
               selectedEntries={selectedAsMinimal}
+              isProcessing={isReturning}
               onCancel={() => tableRef.current?.clearSelection()}
               onReturn={async () => {
+                if (!selectedIds.length) return;
+
+                setIsReturning(true);
                 try {
-                  await api.bulkDeleteSettledEntries(selectedIds);
+                  if (selectedIds.length > 1) {
+                    // bulk "return" (bulk delete from settlements)
+                    await api.bulkDeleteSettledEntries(selectedIds as string[]);
+                  } else {
+                    // single "return"
+                    await api.deleteSettledEntry(selectedIds[0] as string);
+                  }
+
                   tableRef.current?.clearSelection();
+                  setSelectedIds([]);
+                  setSelectedEntries([]);
+
                   setBanksKey((k) => k + 1);
                   setTableKey((k) => k + 1);
                   setKpiRefresh((k) => k + 1);
                 } catch (err) {
                   console.error(err);
                   alert("Erro ao retornar liquidações.");
+                } finally {
+                  setIsReturning(false);
                 }
               }}
             />
