@@ -3,7 +3,7 @@ import { useState, useEffect, FC } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { useAuth } from '@/api';
-import { AuthMiddleware } from '@/middlewares';
+import { AuthMiddleware, LocaleProfileMiddleware } from '@/middlewares';
 import TopProgress from 'src/components/ui/Loaders/TopProgress';
 import Navbar from 'src/components/layout/Navbar';
 
@@ -14,7 +14,8 @@ export const SpifexLayout: FC = () => {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      try { await handleInitUser(); } finally { if (mounted) setLoadingAuth(false); }
+      try { await handleInitUser(); }
+      finally { if (mounted) setLoadingAuth(false); }
     })();
     return () => { mounted = false; };
   }, [handleInitUser]);
@@ -23,10 +24,12 @@ export const SpifexLayout: FC = () => {
 
   return (
     <AuthMiddleware>
-      <Navbar />
-      <div className="min-h-screen pt-16 bg-white text-gray-900">
-        <Outlet />
-      </div>
+      <LocaleProfileMiddleware>
+        <Navbar />
+        <div className="min-h-screen pt-16 bg-white text-gray-900">
+          <Outlet />
+        </div>
+      </LocaleProfileMiddleware>
     </AuthMiddleware>
   );
 };

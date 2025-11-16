@@ -1,0 +1,19 @@
+{
+  "title": "Personal Settings",
+  "headerSettings": "Settings",
+  "headerPersonal": "Personal",
+  "calloutTitle": "Complete your locale",
+  "calloutBody": "We need your timezone and country to calculate periods and reset windows correctly.",
+  "sectionLocale": "Locale",
+  "fieldTimezone": "Timezone",
+  "fieldCountry": "Country",
+  "modalUseDeviceTz": "Use device timezone",
+  "modalTzLabel": "Select timezone",
+  "btnLabelTz": "Timezone",
+  "btnCancel": "Cancel",
+  "btnSave": "Save",
+  "btnSaveContinue": "Save & Continue",
+  "toastLoadError": "Couldn’t load your settings.",
+  "toastUpdateOk": "Updated successfully.",
+  "toastUpdateError": "Couldn’t update your settings."
+}

@@ -1,0 +1,54 @@
+{
+  "title": "Personal Settings",
+  "header": {
+    "settings": "Settings",
+    "personal": "Personal"
+  },
+  "section": {
+    "company": "Company",
+    "personalData": "Personal data",
+    "timezone": "Timezone",
+    "security": "Security"
+  },
+  "field": {
+    "companyName": "Company name",
+    "fullName": "Full name",
+    "primaryEmail": "Primary email",
+    "phone": "Phone",
+    "jobTitle": "Job title",
+    "department": "Department",
+    "country": "Country"
+  },
+  "label": {
+    "current": "Current"
+  },
+  "btn": {
+    "update": "Update",
+    "updateName": "Update name",
+    "updateEmail": "Update email",
+    "updatePhone": "Update phone",
+    "updateJobTitle": "Update job title",
+    "updateDepartment": "Update department",
+    "updateCountry": "Update country",
+    "manageSecurity": "Manage security",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "btnLabel": {
+    "tz": "Timezone"
+  },
+  "modal": {
+    "title": "Edit information",
+    "close": "Close",
+    "useDeviceTz": "Use device timezone",
+    "tzLabel": "Select timezone"
+  },
+  "security": {
+    "subtitle": "Protect your account with strong passwords and secure sign-in."
+  },
+  "toast": {
+    "loadError": "Couldn’t load your settings.",
+    "updateOk": "Updated successfully.",
+    "updateError": "Couldn’t update your settings."
+  }
+}

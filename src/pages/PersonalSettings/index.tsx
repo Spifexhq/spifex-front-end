@@ -1,15 +1,15 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/PersonalSettings.tsx
- * Standards aligned with Settings pages:
- * - Flags: isInitialLoading, isSubmitting
- * - Loading UI: PageSkeleton on first load; TopProgress for background/submit
- * - Navbar fixed (page padding pt-16 handled by outer layout)
- * - Light borders, compact labels; no horizontal overflow
- * - Timezone select only inside the modal
+ * Standalone settings page (not the /locale-setup flow)
+ * - Uses "PersonalSettings" i18n namespace (separate JSONs per language)
+ * - Country: ISO-3166 alpha-2 values (US/PT/BR...), label shows full country name
+ * - Timezone select only inside modal (unchanged pattern)
+ * - No nulls in local state for country (string/empty string)
  * -------------------------------------------------------------------------- */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
@@ -24,8 +24,9 @@ import { api } from "src/api/requests";
 import { useAuthContext } from "@/contexts/useAuthContext";
 import { PersonalSettings as PersonalSettingsModel, Organization } from "src/models/auth";
 import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
-import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+import { getCountries, CountryOption } from "@/lib/location/countries";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =
@@ -48,6 +49,10 @@ function getInitials(name?: string) {
   return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 }
 
+function pickField<T, K extends keyof T>(obj: T, key: K): Pick<T, K> {
+  return { [key]: obj[key] } as Pick<T, K>;
+}
+
 /* Linha sem bordas próprias; o container usa divide-y */
 const Row = ({
   label,
@@ -68,9 +73,9 @@ const Row = ({
 );
 
 const PersonalSettings: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings", "common"]);
+  const { t, i18n } = useTranslation("personalSettings");
 
-  useEffect(() => { document.title = t("settings:personal.title"); }, [t]);
+  useEffect(() => { document.title = t("title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const navigate = useNavigate();
@@ -94,6 +99,10 @@ const PersonalSettings: React.FC = () => {
   const [useDeviceTz, setUseDeviceTz] = useState(true);
   const [selectedTimezone, setSelectedTimezone] = useState<{ label: string; value: string }[]>([]);
 
+  // Country dataset and selection
+  const COUNTRIES = useMemo<CountryOption[]>(() => getCountries(i18n.language), [i18n.language]);
+  const [selectedCountry, setSelectedCountry] = useState<CountryOption[]>([]);
+
   const [formData, setFormData] = useState<PersonalSettingsModel>({
     name: "",
     email: "",
@@ -101,7 +110,7 @@ const PersonalSettings: React.FC = () => {
     job_title: "",
     department: "",
     timezone: "",
-    country: "",
+    country: "", // ISO-3166 alpha-2 (kept as string/empty)
   });
 
   /* ------------------------------ Load data ------------------------------ */
@@ -110,31 +119,64 @@ const PersonalSettings: React.FC = () => {
       try {
         const { data } = await api.getPersonalSettings();
         setProfile(data);
-        setFormData(data);
 
-        const tzObj = TIMEZONES.find((t) => t.value === data.timezone);
+        // Normalize + hydrate form
+        setFormData({
+          name: data.name ?? "",
+          email: data.email ?? "",
+          phone: data.phone ?? "",
+          job_title: data.job_title ?? "",
+          department: data.department ?? "",
+          timezone: data.timezone ?? "",
+          country: (data.country ?? "").toString().toUpperCase(),
+        });
+
+        // Timezone selection state
+        const tzObj = TIMEZONES.find((t) => t.value === (data.timezone ?? ""));
         setSelectedTimezone(tzObj ? [tzObj] : []);
-        setUseDeviceTz(data.timezone === deviceTz);
+        setUseDeviceTz((data.timezone ?? "") === deviceTz);
 
+        // Organization (owner only)
         if (isOwner && orgExternalId) {
           const res = await api.getOrganization();
           setOrgProfile(res.data);
         }
+
+        // Country selection state
+        const cc = (data.country ?? "").toString().toUpperCase();
+        const found = COUNTRIES.find((c) => c.value === cc);
+        setSelectedCountry(found ? [found] : []);
       } catch {
-        setSnack({ message: t("settings:personal.toast.loadError"), severity: "error" });
+        setSnack({ message: t("toast.loadError"), severity: "error" });
       } finally {
         setIsInitialLoading(false);
       }
     })();
-  }, [deviceTz, orgExternalId, isOwner, t]);
+  }, [deviceTz, orgExternalId, isOwner, t, COUNTRIES]);
 
   /* ------------------------------- Handlers ------------------------------ */
   const openModal = (field?: EditableUserField) => {
     if (profile) {
-      setFormData(profile);
-      setUseDeviceTz(profile.timezone === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === profile.timezone);
+      // Reset editing form to latest profile
+      const cc = (profile.country ?? "").toString().toUpperCase();
+      setFormData({
+        name: profile.name ?? "",
+        email: profile.email ?? "",
+        phone: profile.phone ?? "",
+        job_title: profile.job_title ?? "",
+        department: profile.department ?? "",
+        timezone: profile.timezone ?? "",
+        country: cc,
+      });
+
+      // TZ state
+      setUseDeviceTz((profile.timezone ?? "") === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === (profile.timezone ?? ""));
       setSelectedTimezone(tzObj ? [tzObj] : []);
+
+      // Country state
+      const cObj = COUNTRIES.find((c) => c.value === cc);
+      setSelectedCountry(cObj ? [cObj] : []);
     }
     setEditingField(field ?? null);
     setModalOpen(true);
@@ -142,32 +184,67 @@ const PersonalSettings: React.FC = () => {
 
   const closeModal = useCallback(() => {
     if (profile) {
-      setFormData(profile);
-      setUseDeviceTz(profile.timezone === deviceTz);
-      const tzObj = TIMEZONES.find((t) => t.value === profile.timezone);
+      const cc = (profile.country ?? "").toString().toUpperCase();
+      setFormData({
+        name: profile.name ?? "",
+        email: profile.email ?? "",
+        phone: profile.phone ?? "",
+        job_title: profile.job_title ?? "",
+        department: profile.department ?? "",
+        timezone: profile.timezone ?? "",
+        country: cc,
+      });
+      setUseDeviceTz((profile.timezone ?? "") === deviceTz);
+      const tzObj = TIMEZONES.find((t) => t.value === (profile.timezone ?? ""));
       setSelectedTimezone(tzObj ? [tzObj] : []);
+      const cObj = COUNTRIES.find((c) => c.value === cc);
+      setSelectedCountry(cObj ? [cObj] : []);
     }
     setEditingField(null);
     setModalOpen(false);
-  }, [profile, deviceTz]);
+  }, [profile, deviceTz, COUNTRIES]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value } as PersonalSettingsModel));
 
   const handleSubmit = async () => {
-    const payload = editingField !== null
-      ? { [editingField]: (formData)[editingField] }
-      : formData;
+    let payload: Partial<PersonalSettingsModel>;
+
+    if (editingField !== null) {
+      // Start with exactly the field being edited
+      payload = pickField(formData, editingField);
+
+      // If it’s country, normalize to uppercase alpha-2
+      if (editingField === "country") {
+        payload.country = (formData.country ?? "").toString().toUpperCase();
+      }
+    } else {
+      // Full form update, normalizing country
+      payload = {
+        ...formData,
+        country: (formData.country ?? "").toString().toUpperCase(),
+      };
+    }
 
     setIsSubmitting(true);
     try {
       const { data } = await api.editPersonalSettings(payload);
+
       setProfile(data);
+
+      // Rehydrate selection states
+      const tzObj = TIMEZONES.find((t) => t.value === (data.timezone ?? ""));
+      setSelectedTimezone(tzObj ? [tzObj] : []);
+
+      const cc = (data.country ?? "").toString().toUpperCase();
+      const cObj = COUNTRIES.find((c) => c.value === cc);
+      setSelectedCountry(cObj ? [cObj] : []);
+
       closeModal();
-      setSnack({ message: t("settings:personal.toast.updateOk"), severity: "success" });
+      setSnack({ message: t("toast.updateOk"), severity: "success" });
     } catch (err) {
-      console.error(t("settings:personal.toast.updateError"), err);
-      setSnack({ message: t("settings:personal.toast.updateError"), severity: "error" });
+      console.error(t("toast.updateError"), err);
+      setSnack({ message: t("toast.updateError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -200,6 +277,10 @@ const PersonalSettings: React.FC = () => {
   }
 
   /* -------------------------------- Render ------------------------------- */
+  const countryCode = (profile?.country ?? "").toString().toUpperCase();
+  const countryLabel =
+    countryCode ? (COUNTRIES.find((c) => c.value === countryCode)?.label ?? countryCode) : "";
+
   return (
     <>
       {/* thin progress during submit (background action) */}
@@ -216,10 +297,10 @@ const PersonalSettings: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("settings:personal.header.settings")}
+                    {t("header.settings")}
                   </div>
                   <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("settings:personal.header.personal")}
+                    {t("header.personal")}
                   </h1>
                 </div>
               </div>
@@ -237,14 +318,11 @@ const PersonalSettings: React.FC = () => {
                 <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                     <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                      {t("settings:personal.section.company")}
+                      {t("section.company")}
                     </span>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    <Row
-                      label={t("settings:personal.field.companyName")}
-                      value={orgProfile.name || "—"}
-                    />
+                    <Row label={t("field.companyName")} value={orgProfile.name || "—"} />
                   </div>
                 </div>
               )}
@@ -253,85 +331,61 @@ const PersonalSettings: React.FC = () => {
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:personal.section.personalData")}
+                    {t("section.personalData")}
                   </span>
                 </div>
                 <div className="divide-y divide-gray-200">
                   <Row
-                    label={t("settings:personal.field.fullName")}
+                    label={t("field.fullName")}
                     value={profile?.name ?? ""}
                     action={
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("name")}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:personal.btn.updateName")}
+                      <Button variant="outline" onClick={() => openModal("name")} disabled={isSubmitting}>
+                        {t("btn.updateName")}
                       </Button>
                     }
                   />
                   <Row
-                    label={t("settings:personal.field.primaryEmail")}
+                    label={t("field.primaryEmail")}
                     value={profile?.email ?? ""}
                     action={
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("email")}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:personal.btn.updateEmail")}
+                      <Button variant="outline" onClick={() => openModal("email")} disabled={isSubmitting}>
+                        {t("btn.updateEmail")}
                       </Button>
                     }
                   />
                   <Row
-                    label={t("settings:personal.field.phone")}
+                    label={t("field.phone")}
                     value={profile?.phone ?? ""}
                     action={
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("phone")}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:personal.btn.updatePhone")}
+                      <Button variant="outline" onClick={() => openModal("phone")} disabled={isSubmitting}>
+                        {t("btn.updatePhone")}
                       </Button>
                     }
                   />
                   <Row
-                    label={t("settings:personal.field.jobTitle")}
+                    label={t("field.jobTitle")}
                     value={profile?.job_title ?? ""}
                     action={
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("job_title")}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:personal.btn.updateJobTitle")}
+                      <Button variant="outline" onClick={() => openModal("job_title")} disabled={isSubmitting}>
+                        {t("btn.updateJobTitle")}
                       </Button>
                     }
                   />
                   <Row
-                    label={t("settings:personal.field.department")}
+                    label={t("field.department")}
                     value={profile?.department ?? ""}
                     action={
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("department")}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:personal.btn.updateDepartment")}
+                      <Button variant="outline" onClick={() => openModal("department")} disabled={isSubmitting}>
+                        {t("btn.updateDepartment")}
                       </Button>
                     }
                   />
                   <Row
-                    label={t("settings:personal.field.country")}
-                    value={profile?.country ?? ""}
+                    label={t("field.country")}
+                    value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
                     action={
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("country")}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:personal.btn.updateCountry")}
+                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>
+                        {t("btn.updateCountry")}
                       </Button>
                     }
                   />
@@ -345,25 +399,21 @@ const PersonalSettings: React.FC = () => {
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:personal.section.timezone")}
+                    {t("section.timezone")}
                   </span>
                 </div>
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                        {t("settings:personal.label.current")}
+                        {t("label.current")}
                       </p>
                       <p className="text-[13px] font-medium text-gray-900">
                         {formatTimezoneLabel(profile?.timezone ?? "")}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => openModal("timezone")}
-                      disabled={isSubmitting}
-                    >
-                      {t("settings:personal.btn.update")}
+                    <Button variant="outline" onClick={() => openModal("timezone")} disabled={isSubmitting}>
+                      {t("btn.update")}
                     </Button>
                   </div>
                 </div>
@@ -373,20 +423,14 @@ const PersonalSettings: React.FC = () => {
               <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:personal.section.security")}
+                    {t("section.security")}
                   </span>
                 </div>
                 <div className="px-4 py-3">
-                  <p className="text-[12px] text-gray-700">
-                    {t("settings:personal.security.subtitle")}
-                  </p>
+                  <p className="text-[12px] text-gray-700">{t("security.subtitle")}</p>
                   <div className="mt-3">
-                    <Button
-                      variant="outline"
-                      onClick={handleSecurityNavigation}
-                      disabled={isSubmitting}
-                    >
-                      {t("settings:personal.btn.manageSecurity")}
+                    <Button variant="outline" onClick={handleSecurityNavigation} disabled={isSubmitting}>
+                      {t("btn.manageSecurity")}
                     </Button>
                   </div>
                 </div>
@@ -405,13 +449,11 @@ const PersonalSettings: React.FC = () => {
               aria-modal="true"
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {t("settings:personal.modal.title")}
-                </h3>
+                <h3 className="text-[14px] font-semibold text-gray-800">{t("modal.title")}</h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label={t("settings:personal.modal.close")}
+                  aria-label={t("modal.close")}
                   disabled={isSubmitting}
                 >
                   &times;
@@ -426,30 +468,45 @@ const PersonalSettings: React.FC = () => {
                 }}
               >
                 {(editingField === null || editingField === "name") && (
-                  <Input label={t("settings:personal.field.fullName")} name="name" value={formData.name} onChange={handleChange} required />
+                  <Input label={t("field.fullName")} name="name" value={formData.name ?? ""} onChange={handleChange} required />
                 )}
                 {(editingField === null || editingField === "email") && (
-                  <Input label={t("settings:personal.field.primaryEmail")} name="email" type="email" value={formData.email} onChange={handleChange} required />
+                  <Input label={t("field.primaryEmail")} name="email" type="email" value={formData.email ?? ""} onChange={handleChange} required />
                 )}
                 {(editingField === null || editingField === "phone") && (
-                  <Input label={t("settings:personal.field.phone")} name="phone" type="tel" value={formData.phone ?? ""} onChange={handleChange} />
+                  <Input label={t("field.phone")} name="phone" type="tel" value={formData.phone ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "job_title") && (
-                  <Input label={t("settings:personal.field.jobTitle")} name="job_title" value={formData.job_title ?? ""} onChange={handleChange} />
+                  <Input label={t("field.jobTitle")} name="job_title" value={formData.job_title ?? ""} onChange={handleChange} />
                 )}
                 {(editingField === null || editingField === "department") && (
-                  <Input label={t("settings:personal.field.department")} name="department" value={formData.department ?? ""} onChange={handleChange} />
+                  <Input label={t("field.department")} name="department" value={formData.department ?? ""} onChange={handleChange} />
                 )}
+
                 {(editingField === null || editingField === "country") && (
-                  <Input label={t("settings:personal.field.country")} name="country" value={formData.country ?? ""} onChange={handleChange} />
+                  <SelectDropdown<CountryOption>
+                    label={t("field.country")}
+                    items={COUNTRIES}
+                    selected={selectedCountry}
+                    onChange={(items) => {
+                      const v = (items[0]?.value ?? "").toString().toUpperCase();
+                      setSelectedCountry(items);
+                      setFormData((p) => ({ ...p, country: v }));
+                    }}
+                    getItemKey={(item) => item.value}
+                    getItemLabel={(item) => item.label}
+                    singleSelect
+                    hideCheckboxes
+                    clearOnClickOutside={false}
+                    buttonLabel={t("field.country")}
+                    customStyles={{ maxHeight: "260px" }}
+                  />
                 )}
 
                 {(editingField === null || editingField === "timezone") && (
                   <>
                     <div className="flex items-center justify-between">
-                      <label className="text-[12px] text-gray-700">
-                        {t("settings:personal.modal.useDeviceTz")}
-                      </label>
+                      <label className="text-[12px] text-gray-700">{t("modal.useDeviceTz")}</label>
                       <Checkbox
                         checked={useDeviceTz}
                         onChange={(e) => {
@@ -460,7 +517,7 @@ const PersonalSettings: React.FC = () => {
                             timezone: checked ? deviceTz : p.timezone,
                           }));
                           if (checked) {
-                            const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
+                            const tzObj = TIMEZONES.find((tt) => tt.value === deviceTz);
                             setSelectedTimezone(tzObj ? [tzObj] : []);
                           }
                         }}
@@ -470,7 +527,7 @@ const PersonalSettings: React.FC = () => {
                     </div>
 
                     <SelectDropdown
-                      label={t("settings:personal.modal.tzLabel")}
+                      label={t("modal.tzLabel")}
                       items={TIMEZONES}
                       selected={selectedTimezone}
                       onChange={(tz) => {
@@ -484,7 +541,7 @@ const PersonalSettings: React.FC = () => {
                       singleSelect
                       hideCheckboxes
                       clearOnClickOutside={false}
-                      buttonLabel={t("settings:personal.btnLabel.tz")}
+                      buttonLabel={t("btnLabel.tz")}
                       customStyles={{ maxHeight: "250px" }}
                       disabled={useDeviceTz}
                     />
@@ -493,10 +550,10 @@ const PersonalSettings: React.FC = () => {
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                    {t("settings:personal.btn.cancel")}
+                    {t("btn.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {t("settings:personal.btn.save")}
+                    {t("btn.save")}
                   </Button>
                 </div>
               </form>

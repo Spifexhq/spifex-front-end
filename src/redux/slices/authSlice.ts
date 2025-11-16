@@ -1,13 +1,13 @@
 // src/redux/slices/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { User, UserOrganizationDetail } from '@/models/auth/domain';
-import { Subscription } from '@/models/auth/dto';
+import { GetSubscriptionStatusResponse } from '@/models/auth/dto';
 
 export interface AuthState {
   user: User | null;
   organization: UserOrganizationDetail | null;
   orgExternalId: string | null;
-  subscription: Subscription | null;
+  subscription: GetSubscriptionStatusResponse | null;
   permissions: string[];
 }
 
@@ -47,11 +47,11 @@ const slice = createSlice({
       s.permissions = Array.isArray(a.payload) ? a.payload : [];
       if (s.organization) s.organization.permissions = s.permissions;
     },
-    setSubscription: (s, a: PayloadAction<Subscription | null>) => {
+    setSubscription: (s, a: PayloadAction<GetSubscriptionStatusResponse | null>) => {
       s.subscription = a.payload;
     },
     // Alias para compatibilidade com código que chama setSubscriptionStatus
-    setSubscriptionStatus: (s, a: PayloadAction<Subscription | null>) => {
+    setSubscriptionStatus: (s, a: PayloadAction<GetSubscriptionStatusResponse | null>) => {
       s.subscription = a.payload;
     },
     clearSubscriptionStatus: (s) => {

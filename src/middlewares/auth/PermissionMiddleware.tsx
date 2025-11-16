@@ -1,40 +1,53 @@
-import { ReactNode, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router";
+// src/middlewares/auth/PermissionMiddleware.tsx
+import { ReactNode, useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/api";
 
 type Props = {
   children: ReactNode;
   codeName: string | string[];
-  isPage?: boolean;
-  redirectTo?: string;
+  isPage?: boolean;      // if true, render lock screen instead of redirecting
+  redirectTo?: string;   // fallback path when missing permission
 };
 
 export const PermissionMiddleware = ({ children, codeName, isPage, redirectTo }: Props) => {
   const navigate = useNavigate();
-  const { handlePermissionExists } = useAuth();
+  const location = useLocation();
+  const { handlePermissionExists, user, accessToken } = useAuth();
+
+  // Always compute — hooks must not be conditional
+  const authReady = !!user || !accessToken; // ready if user loaded OR there's no token
 
   const hasPermission = useMemo(() => {
+    if (!authReady) return false; // defer real check until hydrated
     return Array.isArray(codeName)
       ? codeName.some((cn) => handlePermissionExists(cn))
       : handlePermissionExists(codeName);
-  }, [codeName, handlePermissionExists]);
+  }, [authReady, codeName, handlePermissionExists]);
+
+  const didNavigate = useRef(false);
 
   useEffect(() => {
-    if (!hasPermission && !isPage) {
-      navigate(redirectTo ?? "/");
+    if (!authReady) return;                 // don’t act until hydrated
+    if (hasPermission || isPage) return;    // OK or page-mode: no redirect
+    const target = redirectTo ?? "/";
+
+    // avoid redirect loops / same-path redirects
+    if (!didNavigate.current && location.pathname !== target) {
+      didNavigate.current = true;
+      navigate(target, { replace: true });
     }
-  }, [hasPermission, isPage, navigate, redirectTo]);
+  }, [authReady, hasPermission, isPage, navigate, redirectTo, location.pathname]);
+
+  // Render logic
+  if (!authReady) return null;              // safe: after all hooks are declared
 
   if (!hasPermission) {
     if (isPage) {
       return (
         <div className="flex h-full w-full items-center justify-center">
           <div className="flex flex-col items-center justify-center text-center">
-            <img
-              alt="lock"
-              src="src/assets/Images/status/lock.svg"
-              className="my-6 h-52"
-            />
+            <img alt="lock" src="src/assets/Images/status/lock.svg" className="my-6 h-52" />
             <h1 className="text-lg font-semibold">
               Você ainda não tem permissão para acessar essa área!
             </h1>

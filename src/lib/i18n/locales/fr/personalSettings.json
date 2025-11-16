@@ -1,0 +1,54 @@
+{
+  "title": "Paramètres personnels",
+  "header": {
+    "settings": "Paramètres",
+    "personal": "Personnel"
+  },
+  "section": {
+    "company": "Entreprise",
+    "personalData": "Données personnelles",
+    "timezone": "Fuseau horaire",
+    "security": "Sécurité"
+  },
+  "field": {
+    "companyName": "Nom de l’entreprise",
+    "fullName": "Nom complet",
+    "primaryEmail": "E-mail principal",
+    "phone": "Téléphone",
+    "jobTitle": "Intitulé du poste",
+    "department": "Département",
+    "country": "Pays"
+  },
+  "label": {
+    "current": "Actuel"
+  },
+  "btn": {
+    "update": "Mettre à jour",
+    "updateName": "Mettre à jour le nom",
+    "updateEmail": "Mettre à jour l’e-mail",
+    "updatePhone": "Mettre à jour le téléphone",
+    "updateJobTitle": "Mettre à jour le poste",
+    "updateDepartment": "Mettre à jour le département",
+    "updateCountry": "Mettre à jour le pays",
+    "manageSecurity": "Gérer la sécurité",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "btnLabel": {
+    "tz": "Fuseau horaire"
+  },
+  "modal": {
+    "title": "Modifier les informations",
+    "close": "Fermer",
+    "useDeviceTz": "Utiliser le fuseau du dispositif",
+    "tzLabel": "Sélectionner un fuseau horaire"
+  },
+  "security": {
+    "subtitle": "Protégez votre compte avec des mots de passe forts et une connexion sécurisée."
+  },
+  "toast": {
+    "loadError": "Impossible de charger vos paramètres.",
+    "updateOk": "Mise à jour réussie.",
+    "updateError": "Impossible de mettre à jour vos paramètres."
+  }
+}

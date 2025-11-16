@@ -1,5 +1,6 @@
+// models/auth/dto/SignIn.ts
 import { User, UserOrganizationDetail } from "../domain";
-import { Subscription } from "./GetSubscription";
+import { GetSubscriptionStatusResponse } from "./GetSubscription";
 
 export interface SignInRequest {
   email: string;
@@ -9,7 +10,7 @@ export interface SignInRequest {
 export interface SignInResponse {
   user: User;
   organization: UserOrganizationDetail;
-  subscription: Subscription | null;
+  subscription: GetSubscriptionStatusResponse | null;
   permissions: string[];
   refresh: string;
   access: string;

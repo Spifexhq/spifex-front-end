@@ -8,7 +8,7 @@ import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
 //import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
-import { PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
+import { AuthMiddleware, PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
 
 // Auth Pages
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
@@ -22,6 +22,7 @@ const HomeDashboard = lazy(() => import("src/pages/HomeDashboard"));
 const CashFlow = lazy(() => import("src/pages/CashFlow"));
 const SettledEntries = lazy(() => import("src/pages/SettledEntries"));
 const Reports = lazy(() => import("@/pages/Reports"));
+const PersonalLocaleSetup = lazy(() => import("@/pages/PersonalLocaleSetup"));
 
 // Settings
 const Personal = lazy(() => import("src/pages/PersonalSettings"));
@@ -90,7 +91,15 @@ const routes: RouteObject[] = [
             {
                 path: '',
                 element: <Navigate to="/cashflow" replace />
-            }
+            },
+            {
+                path: 'locale-setup',
+                element: (
+                    <AuthMiddleware>
+                    <PersonalLocaleSetup />
+                    </AuthMiddleware>
+                ),
+            },
         ]
     },
     {
@@ -100,11 +109,7 @@ const routes: RouteObject[] = [
             // Dashboard
             {
                 path: 'home',
-                element: (
-                    <PermissionMiddleware codeName="view_cash_flow_button" redirectTo={'/settled'}>
-                        <HomeDashboard />
-                    </PermissionMiddleware>
-                )
+                element: <HomeDashboard />
             },
             // Cash Flow
             {
@@ -141,76 +146,76 @@ const routes: RouteObject[] = [
             element: <SettingsLayout />,
             children: [
                 {
-                index: true,
-                element: <Navigate to="personal" replace />
+                    index: true,
+                    element: <Navigate to="personal" replace />
                 },
                 {
-                path: 'personal',
-                element: <Personal />
+                    path: 'personal',
+                    element: <Personal />
                 },
                 {
-                path: 'company-settings',
-                element: <CompanySettings />
+                    path: 'company-settings',
+                    element: <CompanySettings />
                 },
                 {
-                path: 'subscription-management',
-                element: (
-                    <OwnerRoute>
-                        <SubscriptionManagement />
-                    </OwnerRoute>
-                )
+                    path: 'subscription-management',
+                    element: (
+                        <OwnerRoute>
+                            <SubscriptionManagement />
+                        </OwnerRoute>
+                    )
                 },
                 {
-                path: 'limits',
-                element: <LimitsAndUsage />
+                    path: 'limits',
+                    element: <LimitsAndUsage />
                 },
                 {
-                path: 'security',
-                element: <SecurityAndPrivacy />
+                    path: 'security',
+                    element: <SecurityAndPrivacy />
                 },
                 {
-                path: 'banks',
-                element: <BankSettings />
+                    path: 'banks',
+                    element: <BankSettings />
                 },
                 {
-                path: 'departments',
-                element: <DepartmentSettings />
+                    path: 'departments',
+                    element: <DepartmentSettings />
                 },
                 {
-                path: 'entities',
-                element: <EntitySettings />
+                    path: 'entities',
+                    element: <EntitySettings />
                 },
                 {
-                path: 'inventory',
-                element: <InventorySettings />
+                    path: 'inventory',
+                    element: <InventorySettings />
                 },
                 {
-                path: 'projects',
-                element: <ProjectSettings />
+                    path: 'projects',
+                    element: <ProjectSettings />
                 },
                 {
-                path: 'employees',
-                element: <EmployeeSettings />
+                    path: 'employees',
+                    element: <EmployeeSettings />
                 },
                 {
-                path: 'groups',
-                element: <GroupSettings />
+                    path: 'groups',
+                    element: <GroupSettings />
                 },
                 {
-                path: 'ledger-accounts',
-                element: <LedgerAccountsRouter />
+                    path: 'ledger-accounts',
+                    element: <LedgerAccountsRouter />
                 },
                 {
-                path: 'register/ledger-accounts',
-                element: <LedgerAccountsRouter />
+                    path: 'register/ledger-accounts',
+                    element: <LedgerAccountsRouter />
                 },
                 {
-                path: 'bank-statements',
-                element: <Statements />
+                    path: 'bank-statements',
+                    element: <Statements />
                 },
                 {
-                path: 'notifications',
-                element: <NotificationSettings />
+                    path: 'notifications',
+                    element: <NotificationSettings />
                 },
             ]
             },

@@ -129,6 +129,16 @@ import enNotificationSettings from "./locales/en/notificationSettings.json";
 import frNotificationSettings from "./locales/fr/notificationSettings.json";
 import deNotificationSettings from "./locales/de/notificationSettings.json";
 
+import ptPersonalLocaleSetup from "./locales/pt/personalLocaleSetup.json";
+import enPersonalLocaleSetup from "./locales/en/personalLocaleSetup.json";
+import frPersonalLocaleSetup from "./locales/fr/personalLocaleSetup.json";
+import dePersonalLocaleSetup from "./locales/de/personalLocaleSetup.json";
+
+import ptPersonalSettings from "./locales/pt/personalSettings.json";
+import enPersonalSettings from "./locales/en/personalSettings.json";
+import frPersonalSettings from "./locales/fr/personalSettings.json";
+import dePersonalSettings from "./locales/de/personalSettings.json";
+
 
 
 
@@ -159,6 +169,8 @@ const resources: Resource = {
     reports: ptReportsPage,
     simulatedAI: ptSimAI,
     notificationSettings: ptNotificationSettings,
+    personalLocaleSetup: ptPersonalLocaleSetup,
+    personalSettings: ptPersonalSettings,
   },
   en: {
     common: enCommon,
@@ -185,6 +197,8 @@ const resources: Resource = {
     reports: enReportsPage,
     simulatedAI: enSimAI,
     notificationSettings: enNotificationSettings,
+    personalLocaleSetup: enPersonalLocaleSetup,
+    personalSettings: enPersonalSettings,
   },
   fr: {
     common: frCommon,
@@ -211,6 +225,8 @@ const resources: Resource = {
     reports: frReportsPage,
     simulatedAI: frSimAI,
     notificationSettings: frNotificationSettings,
+    personalLocaleSetup: frPersonalLocaleSetup,
+    personalSettings: frPersonalSettings,
   },
   de: {
     common: deCommon,
@@ -237,6 +253,8 @@ const resources: Resource = {
     reports: deReportsPage,
     simulatedAI: deSimAI,
     notificationSettings: deNotificationSettings,
+    personalLocaleSetup: dePersonalLocaleSetup,
+    personalSettings: dePersonalSettings,
   }
 };
 
@@ -273,6 +291,8 @@ i18n
       "reports",
       "simulatedAI",
       "notificationSettings",
+      "personalLocaleSetup",
+      "personalSettings",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

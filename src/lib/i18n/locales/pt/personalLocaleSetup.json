@@ -1,0 +1,19 @@
+{
+  "title": "Configurações Pessoais",
+  "headerSettings": "Configurações",
+  "headerPersonal": "Pessoal",
+  "calloutTitle": "Complete suas preferências de local",
+  "calloutBody": "Precisamos do seu fuso horário e país para calcular períodos e janelas de reset corretamente.",
+  "sectionLocale": "Local",
+  "fieldTimezone": "Fuso horário",
+  "fieldCountry": "País",
+  "modalUseDeviceTz": "Usar fuso horário do dispositivo",
+  "modalTzLabel": "Selecione o fuso horário",
+  "btnLabelTz": "Fuso horário",
+  "btnCancel": "Cancelar",
+  "btnSave": "Salvar",
+  "btnSaveContinue": "Salvar e continuar",
+  "toastLoadError": "Não foi possível carregar suas configurações.",
+  "toastUpdateOk": "Atualizado com sucesso.",
+  "toastUpdateError": "Não foi possível atualizar suas configurações."
+}

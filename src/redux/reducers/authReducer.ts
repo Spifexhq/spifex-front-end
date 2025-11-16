@@ -1,14 +1,14 @@
 // src/redux/reducers/authReducer.ts
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { User, UserOrganizationDetail } from "@/models/auth/domain"
-import { Subscription } from "src/models/auth/dto";
+import { GetSubscriptionStatusResponse } from "src/models/auth/dto";
 export * from '../slices/authSlice';
 
 interface AuthState {
   user: User | null;
   organization: UserOrganizationDetail | null;
   orgExternalId: string | null;
-  subscription: Subscription | null;
+  subscription: GetSubscriptionStatusResponse | null;
   permissions: string[];
 }
 
@@ -33,7 +33,7 @@ export const authSlice = createSlice({
     setOrgExternalId: (state, action: PayloadAction<string | null>) => {
       state.orgExternalId = action.payload;
     },
-    setSubscriptionStatus: (state, action: PayloadAction<Subscription | null>) => {
+    setSubscriptionStatus: (state, action: PayloadAction<GetSubscriptionStatusResponse | null>) => {
       state.subscription = action.payload;
     },
     setPermissions: (state, action: PayloadAction<string[]>) => {

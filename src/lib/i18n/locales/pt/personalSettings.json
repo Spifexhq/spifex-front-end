@@ -1,0 +1,54 @@
+{
+  "title": "Configurações Pessoais",
+  "header": {
+    "settings": "Configurações",
+    "personal": "Pessoal"
+  },
+  "section": {
+    "company": "Empresa",
+    "personalData": "Dados pessoais",
+    "timezone": "Fuso horário",
+    "security": "Segurança"
+  },
+  "field": {
+    "companyName": "Nome da empresa",
+    "fullName": "Nome completo",
+    "primaryEmail": "E-mail principal",
+    "phone": "Telefone",
+    "jobTitle": "Cargo",
+    "department": "Departamento",
+    "country": "País"
+  },
+  "label": {
+    "current": "Atual"
+  },
+  "btn": {
+    "update": "Atualizar",
+    "updateName": "Atualizar nome",
+    "updateEmail": "Atualizar e-mail",
+    "updatePhone": "Atualizar telefone",
+    "updateJobTitle": "Atualizar cargo",
+    "updateDepartment": "Atualizar departamento",
+    "updateCountry": "Atualizar país",
+    "manageSecurity": "Gerenciar segurança",
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
+  "btnLabel": {
+    "tz": "Fuso horário"
+  },
+  "modal": {
+    "title": "Editar informações",
+    "close": "Fechar",
+    "useDeviceTz": "Usar fuso horário do dispositivo",
+    "tzLabel": "Selecione o fuso horário"
+  },
+  "security": {
+    "subtitle": "Proteja sua conta com senhas fortes e login seguro."
+  },
+  "toast": {
+    "loadError": "Não foi possível carregar suas configurações.",
+    "updateOk": "Atualizado com sucesso.",
+    "updateError": "Não foi possível atualizar suas configurações."
+  }
+}

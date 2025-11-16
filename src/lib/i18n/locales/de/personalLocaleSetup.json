@@ -1,0 +1,19 @@
+{
+  "title": "Persönliche Einstellungen",
+  "headerSettings": "Einstellungen",
+  "headerPersonal": "Persönlich",
+  "calloutTitle": "Vervollständigen Sie Ihre Locale-Angaben",
+  "calloutBody": "Wir benötigen Ihre Zeitzone und Ihr Land, um Perioden und Reset-Fenster korrekt zu berechnen.",
+  "sectionLocale": "Gebietsschema",
+  "fieldTimezone": "Zeitzone",
+  "fieldCountry": "Land",
+  "modalUseDeviceTz": "Zeitzone des Geräts verwenden",
+  "modalTzLabel": "Zeitzone auswählen",
+  "btnLabelTz": "Zeitzone",
+  "btnCancel": "Abbrechen",
+  "btnSave": "Speichern",
+  "btnSaveContinue": "Speichern & Weiter",
+  "toastLoadError": "Einstellungen konnten nicht geladen werden.",
+  "toastUpdateOk": "Erfolgreich aktualisiert.",
+  "toastUpdateError": "Einstellungen konnten nicht aktualisiert werden."
+}

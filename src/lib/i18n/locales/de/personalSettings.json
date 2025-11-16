@@ -1,0 +1,54 @@
+{
+  "title": "Persönliche Einstellungen",
+  "header": {
+    "settings": "Einstellungen",
+    "personal": "Persönlich"
+  },
+  "section": {
+    "company": "Unternehmen",
+    "personalData": "Personendaten",
+    "timezone": "Zeitzone",
+    "security": "Sicherheit"
+  },
+  "field": {
+    "companyName": "Unternehmensname",
+    "fullName": "Vollständiger Name",
+    "primaryEmail": "Primäre E-Mail",
+    "phone": "Telefon",
+    "jobTitle": "Berufsbezeichnung",
+    "department": "Abteilung",
+    "country": "Land"
+  },
+  "label": {
+    "current": "Aktuell"
+  },
+  "btn": {
+    "update": "Aktualisieren",
+    "updateName": "Name aktualisieren",
+    "updateEmail": "E-Mail aktualisieren",
+    "updatePhone": "Telefon aktualisieren",
+    "updateJobTitle": "Stellenbezeichnung aktualisieren",
+    "updateDepartment": "Abteilung aktualisieren",
+    "updateCountry": "Land aktualisieren",
+    "manageSecurity": "Sicherheit verwalten",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "btnLabel": {
+    "tz": "Zeitzone"
+  },
+  "modal": {
+    "title": "Informationen bearbeiten",
+    "close": "Schließen",
+    "useDeviceTz": "Zeitzone des Geräts verwenden",
+    "tzLabel": "Zeitzone auswählen"
+  },
+  "security": {
+    "subtitle": "Schützen Sie Ihr Konto mit starken Passwörtern und sicherer Anmeldung."
+  },
+  "toast": {
+    "loadError": "Einstellungen konnten nicht geladen werden.",
+    "updateOk": "Erfolgreich aktualisiert.",
+    "updateError": "Einstellungen konnten nicht aktualisiert werden."
+  }
+}

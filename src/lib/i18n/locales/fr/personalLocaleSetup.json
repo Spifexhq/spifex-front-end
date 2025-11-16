@@ -1,0 +1,19 @@
+{
+  "title": "Paramètres personnels",
+  "headerSettings": "Paramètres",
+  "headerPersonal": "Personnel",
+  "calloutTitle": "Complétez vos informations locales",
+  "calloutBody": "Nous avons besoin de votre fuseau horaire et de votre pays pour calculer correctement les périodes et les fenêtres de réinitialisation.",
+  "sectionLocale": "Paramètres régionaux",
+  "fieldTimezone": "Fuseau horaire",
+  "fieldCountry": "Pays",
+  "modalUseDeviceTz": "Utiliser le fuseau du dispositif",
+  "modalTzLabel": "Sélectionner un fuseau horaire",
+  "btnLabelTz": "Fuseau horaire",
+  "btnCancel": "Annuler",
+  "btnSave": "Enregistrer",
+  "btnSaveContinue": "Enregistrer et continuer",
+  "toastLoadError": "Impossible de charger vos paramètres.",
+  "toastUpdateOk": "Mise à jour réussie.",
+  "toastUpdateError": "Impossible de mettre à jour vos paramètres."
+}
