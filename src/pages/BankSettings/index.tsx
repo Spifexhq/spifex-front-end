@@ -541,7 +541,7 @@ const BankSettings: React.FC = () => {
                       {t("settings:bank.btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={busyGlobal}>
-                      t("settings:bank.btn.save")
+                      {t("settings:bank.btn.save")}
                     </Button>
                   </div>
                 </form>

@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { api } from "src/api/requests";
 import BanksTable from "src/components/Table/BanksTable";
 import type { EntryFilters } from "src/models/entries";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
 import type { CashflowKpis, SettledKpis } from "@/models/entries";
-import type { RootState } from "@/redux/rootReducer";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -71,13 +69,6 @@ const KpiCards: React.FC<KpiCardsProps> = ({
   const { t } = useTranslation(["kpiCards"]);
   const { banks, loading: banksLoading } = banksData;
 
-  const orgExternalId = useSelector(
-    (s: RootState) =>
-      (s).auth?.orgExternalId ||
-      (s).auth?.organization?.organization?.external_id ||
-      (s).auth?.organization?.external_id
-  ) as string | undefined;
-
   const [cf, setCf] = useState<CashflowKpis | null>(null);
   const [st, setSt] = useState<SettledKpis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -114,14 +105,13 @@ const KpiCards: React.FC<KpiCardsProps> = ({
 
   /* --------------------------- Fetch KPIs from API -------------------------- */
   useEffect(() => {
-    if (!orgExternalId) return;
     let mounted = true;
 
     (async () => {
       setLoading(true);
       try {
         if (context === "settled") {
-          const { data } = await api.getSettledKpis(orgExternalId, {
+          const { data } = await api.getSettledKpis({
             description: filters?.description,
             observation: filters?.observation,
             gl: glParam,
@@ -132,7 +122,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
             setCf(null);
           }
         } else {
-          const { data } = await api.getCashflowKpis(orgExternalId, {
+          const { data } = await api.getCashflowKpis({
             description: filters?.description,
             observation: filters?.observation,
             gl: glParam,
@@ -156,7 +146,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     return () => {
       mounted = false;
     };
-  }, [orgExternalId, context, glParam, bankParam, filters?.description, filters?.observation, refreshToken]);
+  }, [context, glParam, bankParam, filters?.description, filters?.observation, refreshToken]);
 
   /* ------------------------ Map server KPIs to UI cards --------------------- */
   const cashflowKpis: KpiItem[] = useMemo(() => {

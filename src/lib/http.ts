@@ -4,36 +4,35 @@ import axios, {
   type AxiosResponse,
   type Method,
   type AxiosRequestConfig,
-} from 'axios';
+} from "axios";
 
 import {
   type ApiErrorBody,
   type ApiResponse,
   type ApiSuccess,
-} from '@/models/Api';
+} from "@/models/Api";
 
-import {
-  getAccess,
-  getRefresh,
-  setTokens,
-  clearTokens,
-} from '@/lib/tokens';
+import { getAccess, getRefresh, setTokens, clearTokens } from "@/lib/tokens";
 
-// garante carregamento do singleton e da declaração global window.NetReport
-import '@/lib/netReport';
+// Ensure the NetReport singleton and window.NetReport are loaded
+import "@/lib/netReport";
+
+// We need the org to send in the header
+import { store } from "@/redux/store";
 
 /* ============================================================================
  * Base URL
  * ==========================================================================*/
 const rawBaseURL =
-  import.meta.env.VITE_ENVIRONMENT === 'development'
+  import.meta.env.VITE_ENVIRONMENT === "development"
     ? import.meta.env.VITE_SPIFEX_DEVELOPMENT_URL_API
-    : import.meta.env.VITE_SPIFEX_URL_API || 'https://spifex-backend.onrender.com/api/v1';
+    : import.meta.env.VITE_SPIFEX_URL_API ||
+      "https://spifex-backend.onrender.com/api/v1";
 
-const baseURL = rawBaseURL.endsWith('/') ? rawBaseURL : `${rawBaseURL}/`;
+const baseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
 /* ============================================================================
- * Pausa global (anti-stampede) após 429
+ * Global pause (anti-stampede) after 429
  * ==========================================================================*/
 let pauseUntil = 0; // epoch ms
 function setGlobalPause(ms: number) {
@@ -41,9 +40,9 @@ function setGlobalPause(ms: number) {
 }
 
 const scopeMinGapMs: Record<string, number> = {
-  read: 300,   // ~3.3 req/s por usuário
-  auth: 500,   // auth é mais sensível
-  write: 0,    // POST/PUT/PATCH/DELETE deixam passar
+  read: 300, // ~3.3 req/s per user
+  auth: 500, // auth is more sensitive
+  write: 0,  // POST/PUT/PATCH/DELETE bypass throttled gap
 };
 const lastByScope = new Map<string, number>();
 
@@ -78,65 +77,91 @@ export const http = axios.create({
 });
 
 /* ============================================================================
- * Telemetria: início/fim de cada request
+ * Telemetry: start/end of each request
  * ==========================================================================*/
 const startAt = new WeakMap<AxiosRequestConfig, number>();
 
 http.interceptors.request.use(async (cfg) => {
-  // PRE-EMPT: agenda por escopo para evitar burst
-  const method = (cfg.method || 'GET').toUpperCase() as Method;
-  const url = cfg.url || '';
+  // Pre-empt: schedule by scope to avoid bursts
+  const method = (cfg.method || "GET").toUpperCase() as Method;
+  const url = cfg.url || "";
   await scheduleByScope(method, url);
 
-  // Respeita pausa global (pós-429)
+  // Respect global pause (post-429)
   if (pauseUntil > Date.now()) {
     const wait = pauseUntil - Date.now();
     await new Promise((resolve) => setTimeout(resolve, wait));
   }
 
-  // Agora comece a medir duração e logar a telemetria
+  // Begin timing and push telemetry
   startAt.set(cfg, performance.now());
   window.NetReport?.push({
     t: Date.now(),
     method,
     url,
-    fullUrl: cfg.baseURL ? (cfg.baseURL + (cfg.url || '')) : (cfg.url || ''),
+    fullUrl: cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "",
   });
 
   return cfg;
 });
 
 /* ============================================================================
- * Request interceptor: injeta Authorization
+ * Request interceptor: inject Authorization and X-Org-External-Id
  * ==========================================================================*/
+function readOrgExternalId(): string | undefined {
+  const s = store.getState() as unknown as {
+    auth?: {
+      orgExternalId?: string;
+      organization?: { organization?: { external_id?: string } };
+    };
+  };
+  return s.auth?.orgExternalId || s.auth?.organization?.organization?.external_id;
+}
+
 http.interceptors.request.use((cfg) => {
+  cfg.headers = cfg.headers ?? {};
+
+  // JWT token
   const token = getAccess();
   if (token) {
-    cfg.headers = cfg.headers ?? {};
     cfg.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Organization scope via header (removes org from URL path)
+  const orgExt = readOrgExternalId();
+  if (orgExt) {
+    (cfg.headers as Record<string, string>)["X-Org-External-Id"] = orgExt;
+  }
+
   return cfg;
 });
 
 /* ============================================================================
- * Flags da config para retry/refresh
+ * Config flags for retry/refresh
  * ==========================================================================*/
 type RetriableConfig = AxiosRequestConfig & {
-  _retry?: boolean;       // já tentou refresh?
-  _retried429?: number;   // contador de retries 429
+  _retry?: boolean;      // already tried refresh?
+  _retried429?: number;  // 429 retry counter
 };
 
 /* ============================================================================
- * Helpers de type-narrowing (sem any)
+ * Type-narrowing helpers (no any)
  * ==========================================================================*/
 const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null;
+  typeof v === "object" && v !== null;
+
+type Tokens = { access: string; refresh?: string };
+const hasAccessToken = (v: unknown): v is Tokens => {
+  if (!isObject(v)) return false;
+  if (typeof v.access !== "string") return false;
+  if ("refresh" in v && typeof v.refresh !== "string" && typeof v.refresh !== "undefined") {
+    return false;
+  }
+  return true;
+};
 
 const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } =>
-  isObject(v) && 'error' in v;
-
-const hasAccessToken = (v: unknown): v is { access: string; refresh?: string } =>
-  isObject(v) && typeof v.access === 'string';
+  isObject(v) && "error" in v;
 
 /* ============================================================================
  * Refresh single-flight
@@ -150,9 +175,9 @@ function notifySubscribers() {
 
 async function doRefresh(): Promise<void> {
   const refresh = getRefresh();
-  if (!refresh) throw new Error('no-refresh-token');
+  if (!refresh) throw new Error("no-refresh-token");
 
-  // usar axios "cru" para não passar pelos interceptors (evita loops)
+  // Use raw axios to avoid hitting interceptors (prevents loops)
   const res = await axios.post(
     `${baseURL}auth/refresh/`,
     { refresh },
@@ -161,20 +186,20 @@ async function doRefresh(): Promise<void> {
 
   const { data, status } = res as AxiosResponse<unknown>;
   if (status !== 200 || !hasAccessToken(data)) {
-    throw new Error('refresh-failed');
+    throw new Error("refresh-failed");
   }
 
-  // se backend mandar um novo refresh, use; senão mantenha o atual
+  // If backend returns a new refresh token, use it; otherwise keep the current one
   setTokens(data.access, data.refresh ?? refresh);
 }
 
 /* ============================================================================
- * 429 backoff com Retry-After + jitter
+ * 429 backoff with Retry-After + jitter
  * ==========================================================================*/
 function parseRetryAfter(headerValue: unknown): number {
-  // retorna delay em ms
-  if (typeof headerValue === 'string') {
-    // "120" segundos ou uma data HTTP (ex.: Wed, 21 Oct 2015 07:28:00 GMT)
+  // Return delay in ms
+  if (typeof headerValue === "string") {
+    // Either seconds (e.g., "120") or an HTTP date (e.g., Wed, 21 Oct 2015 07:28:00 GMT)
     const secs = Number(headerValue);
     if (Number.isFinite(secs)) return Math.max(0, secs) * 1000;
 
@@ -184,18 +209,18 @@ function parseRetryAfter(headerValue: unknown): number {
       return Math.max(0, delta);
     }
   }
-  return 1000; // padrão: 1s
+  return 1000; // default: 1s
 }
 
 function calc429DelayMs(err: AxiosError): number {
-  const ra = err.response?.headers?.['retry-after'];
+  const ra = err.response?.headers?.["retry-after"];
   const base = parseRetryAfter(ra);
   const jitter = Math.random() * 250;
   return base + jitter;
 }
 
 /* ============================================================================
- * Response interceptor: log req-id, lida com 429/401
+ * Response interceptor: log req-id, handle 429/401
  * ==========================================================================*/
 type TelemetryExtra = { retried429?: number; retryAfterMs?: number };
 
@@ -208,27 +233,32 @@ function finishLog(
   const t0 = startAt.get(cfg) ?? performance.now();
   const ms = performance.now() - t0;
   const status = res?.status ?? err?.response?.status;
-  const reqId = (res?.headers?.['x-request-id'] || err?.response?.headers?.['x-request-id']) as string | undefined;
+  const reqId = (res?.headers?.["x-request-id"] ||
+    err?.response?.headers?.["x-request-id"]) as string | undefined;
 
   window.NetReport?.push({
     t: Date.now(),
-    method: (cfg.method || 'GET').toUpperCase() as Method,
-    url: cfg.url || '',
-    fullUrl: cfg.baseURL ? (cfg.baseURL + (cfg.url || '')) : (cfg.url || ''),
-    status, ms, reqId,
-    ...extra
+    method: (cfg.method || "GET").toUpperCase() as Method,
+    url: cfg.url || "",
+    fullUrl: cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "",
+    status,
+    ms,
+    reqId,
+    ...extra,
   });
 }
 
 http.interceptors.response.use(
   (r) => {
-    // Telemetria de sucesso
+    // Success telemetry
     finishLog(r.config, r);
 
-    // (opcional) debug: request-id
-    const reqId = (r.headers as Record<string, unknown> | undefined)?.['x-request-id'];
-    if (typeof reqId === 'string') {
-      console.debug('🔗 request-id', reqId);
+    // Optional: surface request-id
+    const reqId = (r.headers as Record<string, unknown> | undefined)?.[
+      "x-request-id"
+    ];
+    if (typeof reqId === "string") {
+      console.debug("🔗 request-id", reqId);
     }
     return r;
   },
@@ -236,34 +266,34 @@ http.interceptors.response.use(
     const original = (error.config || {}) as RetriableConfig;
     const status = error.response?.status;
 
-    // 429: respeita Retry-After, pausa global e aplica até 3 tentativas
+    // 429: honor Retry-After, apply global pause, retry up to 3 times
     if (status === 429) {
       original._retried429 = (original._retried429 ?? 0) + 1;
 
       const delay = calc429DelayMs(error);
-      // Telemetria do 429 (antes da espera/novo disparo)
+      // Telemetry for 429 (before waiting/retry)
       finishLog(original, undefined, error, {
         retried429: original._retried429,
         retryAfterMs: delay,
       });
 
-      setGlobalPause(delay * 1.1); // pequena margem
+      setGlobalPause(delay * 1.1); // small margin
 
       if (original._retried429 <= 3) {
         await new Promise((r) => setTimeout(r, delay));
         return http(original);
       }
-      // estourou tentativas → cai para o fluxo de erro
+      // exceeded retries → fall through to error handling
     }
 
-    // 401: tenta refresh (uma única vez por request)
+    // 401: try refresh (only once per request)
     if (status === 401 && !original._retry) {
       original._retry = true;
 
       if (!refreshingPromise) {
         refreshingPromise = doRefresh()
           .catch((e) => {
-            clearTokens(); // refresh falhou → evitar loops
+            clearTokens(); // hard fail → avoid loops
             throw e;
           })
           .finally(() => {
@@ -272,7 +302,7 @@ http.interceptors.response.use(
           });
       }
 
-      // aguarda o refresh concluir (sucesso ou falha)
+      // wait for the refresh to complete (success or failure)
       await new Promise<void>((resolve, reject) => {
         if (!refreshingPromise) return resolve();
         subscribers.push(resolve);
@@ -280,32 +310,34 @@ http.interceptors.response.use(
       });
 
       if (!getAccess()) {
-        // sem token → loga e retorna erro
+        // still no token → log and propagate error
         finishLog(original, undefined, error);
         return Promise.reject(error);
       }
 
-      // retenta com novo access
+      // retry with the new access token
       return http(original);
     }
 
-    // Outros erros → telemetria + propaga
+    // Other errors → telemetry + propagate
     finishLog(original, undefined, error);
     return Promise.reject(error);
   }
 );
 
 /* ============================================================================
- * Single-flight para GETs idênticos (deduplicação) + cache leve (5s)
+ * Single-flight for identical GETs + light cache (0.5s)
  * ==========================================================================*/
 const inflight = new Map<string, Promise<AxiosResponse>>();
 const responseCache = new Map<string, { t: number; res: AxiosResponse }>();
-const CACHE_TTL_MS = 500; // 5s: evita repingar /auth/me a cada render/rota
+const CACHE_TTL_MS = 500;
 
 function keyFrom(cfg: AxiosRequestConfig) {
-  const u = (cfg.baseURL || '') + (cfg.url || '');
-  const p = cfg.params ? JSON.stringify(cfg.params, Object.keys(cfg.params).sort()) : '';
-  return `${(cfg.method || 'GET').toUpperCase()} ${u}?${p}`;
+  const u = (cfg.baseURL || "") + (cfg.url || "");
+  const p = cfg.params
+    ? JSON.stringify(cfg.params, Object.keys(cfg.params as Record<string, unknown>).sort())
+    : "";
+  return `${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
 }
 
 function pruneParams(p: unknown) {
@@ -321,72 +353,80 @@ function pruneParams(p: unknown) {
 }
 
 /* ============================================================================
- * Envelope de request: retorna ApiSuccess<T> ou "vazio" para 204
+ * Request envelope: returns ApiSuccess<T> or empty object for 204
  * ==========================================================================*/
 export async function request<T>(
   endpoint: string,
-  method: Method = 'GET',
+  method: Method = "GET",
   payload?: object
 ): Promise<ApiSuccess<T>> {
   try {
     const cfg: AxiosRequestConfig = {
       url: endpoint,
       method,
-      data: method !== 'GET' ? payload : undefined,
-      params: method === 'GET' ? pruneParams(payload) : undefined,
-      // === [NOVO] 304 não é falha ===
+      data: method !== "GET" ? payload : undefined,
+      params: method === "GET" ? pruneParams(payload) : undefined,
+      // 304 should not be treated as failure
       validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
     };
 
     let res: AxiosResponse<ApiResponse<T> | unknown>;
 
-    if ((cfg.method || 'GET').toUpperCase() === 'GET') {
+    if ((cfg.method || "GET").toUpperCase() === "GET") {
       const k = keyFrom(cfg);
 
-      // 1) Cache leve (5s)
+      // 1) Light cache
       const hit = responseCache.get(k);
-      if (hit && (Date.now() - hit.t) < CACHE_TTL_MS) {
+      if (hit && Date.now() - hit.t < CACHE_TTL_MS) {
         res = hit.res as AxiosResponse<ApiResponse<T> | unknown>;
       } else {
-        // 2) Single-flight: evita 2+ GETs iguais em paralelo
+        // 2) Single-flight
         if (!inflight.has(k)) {
           inflight.set(
             k,
-            http.request<ApiResponse<T> | unknown>(cfg).finally(() => inflight.delete(k))
+            http.request<ApiResponse<T> | unknown>(cfg).finally(() =>
+              inflight.delete(k)
+            )
           );
         }
         res = await inflight.get(k)!;
 
-        // === [NOVO] 304 → materializar corpo 200 anterior, ou fazer refresh forçado ===
+        // 304 → materialize previous 200 or force a refresh
         if (res.status === 304) {
           const cached = responseCache.get(k);
           if (cached) {
             res = cached.res as AxiosResponse<ApiResponse<T> | unknown>;
           } else {
-            // Não há 200 materializada ainda → fazer um GET "forçado" (bypass ao cache do navegador)
             const refreshKey = `REFRESH ${k}`;
-            // muda levemente a URL (param _r) para garantir ida à origem
             const ts = Date.now();
+            const baseParams =
+              cfg.params && typeof cfg.params === "object"
+                ? (cfg.params as Record<string, unknown>)
+                : {};
             const forceCfg: AxiosRequestConfig = {
               ...cfg,
-              params: { ...(cfg.params), _r: ts },
+              params: { ...baseParams, _r: ts },
             };
             if (!inflight.has(refreshKey)) {
               inflight.set(
                 refreshKey,
-                http.request<ApiResponse<T> | unknown>(forceCfg).finally(() => inflight.delete(refreshKey))
+                http
+                  .request<ApiResponse<T> | unknown>(forceCfg)
+                  .finally(() => inflight.delete(refreshKey))
               );
             }
             const fresh = await inflight.get(refreshKey)!;
             if (fresh.status >= 200 && fresh.status < 300) {
               res = fresh;
             } else {
-              throw new Error(`Revalidação retornou ${fresh.status} — não foi possível materializar a resposta.`);
+              throw new Error(
+                `Revalidation returned ${fresh.status} — could not materialize a valid response.`
+              );
             }
           }
         }
 
-        // guarda a última resposta 2xx para reuso
+        // store the last 2xx response
         if (res.status >= 200 && res.status < 300) {
           responseCache.set(k, { t: Date.now(), res });
         }
@@ -397,42 +437,42 @@ export async function request<T>(
 
     const body = res.data;
 
-    // 204 ou corpo intencionalmente vazio
+    // 204 or intentionally empty body
     if (
       res.status === 204 ||
       body == null ||
-      (typeof body === 'string' && body.trim() === '')
+      (typeof body === "string" && body.trim() === "")
     ) {
       return {} as ApiSuccess<T>;
     }
 
-    // envelope de erro padronizado vindo do backend
+    // standardized error envelope from backend
     if (hasErrorKey(body)) {
       throw body.error;
     }
 
-    // sucesso: retorna como envelope padronizado
+    // success
     return body as ApiSuccess<T>;
   } catch (e) {
     const err = e as AxiosError<unknown>;
 
     if (axios.isAxiosError(err)) {
-      // 304 nunca deve cair aqui por causa do validateStatus acima.
+      // 304 should never land here because of validateStatus above.
       const body = err.response?.data;
 
-      // erro padronizado do backend
+      // standardized backend error
       if (hasErrorKey(body)) {
         throw body.error;
       }
 
-      // fallback legível
+      // readable fallback
       const msg = err.response
-        ? `${err.response.status} ${err.response.statusText || 'Erro na requisição'}`
+        ? `${err.response.status} ${err.response.statusText || "Request error"}`
         : err.message;
       throw new Error(msg);
     }
 
-    // erro não-Axios: propague
+    // non-Axios errors: propagate
     throw e;
   }
 }

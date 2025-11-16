@@ -37,16 +37,7 @@ import { BankAccount, GLAccount, Department,
 } from '@/models/enterprise_structure/domain';
 import { Paginated } from '@/models/Api';
 import { DashboardOverview } from '@/models/dashboard/domain';
-import { store } from '@/redux/store';
 
-const getOrgExternalId = (): string => {
-  const state = store.getState();
-  const byField = state.auth.orgExternalId;
-  const byNested = state.auth.organization?.organization?.external_id;
-  const id = byField || byNested;
-  if (!id) throw new Error('Organization external_id is not available yet.');
-  return id;
-};
 
 export const api = {
   /* --- Auth --- */
@@ -93,21 +84,18 @@ export const api = {
 
   /* --- Subscriptions --- */
   getSubscriptionStatus: () => {
-    const orgExternalId = getOrgExternalId();
-    return request<GetSubscriptionStatusResponse>(`billing/${orgExternalId}/subscription`, 'GET');
+    return request<GetSubscriptionStatusResponse>(`billing/subscription`, 'GET');
   },
   createCheckoutSession: (price_id: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<{ url?: string; message?: string }>(
-      `billing/${orgExternalId}/create-checkout-session/`,
+      `billing/create-checkout-session/`,
       'POST',
       { price_id }
     );
   },
   createCustomerPortalSession: () => {
-    const orgExternalId = getOrgExternalId();
     return request<{ url?: string }>(
-      `billing/${orgExternalId}/create-customer-portal-session/`,
+      `billing/create-customer-portal-session/`,
       'POST',
       {}
     );
@@ -138,32 +126,28 @@ export const api = {
 
   /* --- Organization --- */
   getOrganization: () => {
-    const orgExternalId = getOrgExternalId();
-    return request<Organization>(`organizations/${orgExternalId}/`, "GET");
+    return request<Organization>(`organizations/current/`, "GET");
   },
 
   editOrganization: (payload: Partial<Organization>) => {
-    const orgExternalId = getOrgExternalId();
-    return request<Organization>(`organizations/${orgExternalId}/update/`, "PUT", payload);
+    return request<Organization>(`organizations/current/update/`, "PUT", payload);
   },
 
   /* --- KPIs --- */
-  getCashflowKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
-    return request<CashflowKpis>(`cashflow/${orgExtId}/kpis/cashflow/`, 'GET', params);
+  getCashflowKpis(params: Record<string, string | number | undefined>) {
+    return request<CashflowKpis>(`cashflow/kpis/cashflow/`, 'GET', params);
   },
-  getSettledKpis(orgExtId: string, params: Record<string, string | number | undefined>) {
-    return request<SettledKpis>(`cashflow/${orgExtId}/kpis/settled/`, 'GET', params);
+  getSettledKpis(params: Record<string, string | number | undefined>) {
+    return request<SettledKpis>(`cashflow/kpis/settled/`, 'GET', params);
   },
 
   /* --- Dashboard --- */
   getCashflowDashboard: () => {
-    const org = getOrgExternalId();
-    return request<DashboardOverview>(`cashflow/${org}/dashboard/`, "GET");
+    return request<DashboardOverview>(`cashflow/dashboard/`, "GET");
   },
 
   /* --- Reports --- */
   getReportsSummary(
-    orgExternalId: string,
     params?: {
       description?: string;
       observation?: string;
@@ -173,7 +157,7 @@ export const api = {
     }
   ) {
     return request<ReportsSummary>(
-      `cashflow/${orgExternalId}/reports/summary/`,
+      `cashflow/reports/summary/`,
       'GET',
       params
     );
@@ -187,17 +171,15 @@ export const api = {
     request<GetPermission>(`rbac/permissions/${code}/`, "GET"),
 
   getGroupPermissions: (groupId: string) => {
-    const org = getOrgExternalId();
     return request<{ group: { external_id: string; name: string; slug: string }; permissions: Permission[] }>(
-      `rbac/${org}/groups/${groupId}/permissions/`,
+      `rbac/groups/${groupId}/permissions/`,
       "GET"
     );
   },
 
   updateGroupPermissions: (groupId: string, permission_codes: string[]) => {
-    const org = getOrgExternalId();
     return request<{ message: string; permissions: string[] }>(
-      `rbac/${org}/groups/${groupId}/permissions/`,
+      `rbac/groups/${groupId}/permissions/`,
       "POST",
       { permission_codes }
     );
@@ -205,59 +187,48 @@ export const api = {
   
   /* --- Groups --- */
   getAllGroups: () => {
-    const org = getOrgExternalId();
-    return request<GetGroups>(`rbac/${org}/groups/`, "GET");
+    return request<GetGroups>(`rbac/groups/`, "GET");
   },
 
   getGroup: (groupId: string) => {
-    const org = getOrgExternalId();
-    return request<GetGroup>(`rbac/${org}/groups/${groupId}/`, "GET");
+    return request<GetGroup>(`rbac/groups/${groupId}/`, "GET");
   },
 
   addGroup: (payload: AddGroupRequest) => {
-    const org = getOrgExternalId();
-    return request<GroupDetail>(`rbac/${org}/groups/`, "POST", payload);
+    return request<GroupDetail>(`rbac/groups/`, "POST", payload);
   },
 
   editGroup: (groupId: string, payload: Partial<EditGroupRequest>) => {
-    const org = getOrgExternalId();
-    return request<GroupDetail>(`rbac/${org}/groups/${groupId}/`, "PATCH", payload);
+    return request<GroupDetail>(`rbac/groups/${groupId}/`, "PATCH", payload);
   },
 
   deleteAllGroups: () => {
-    const org = getOrgExternalId();
-    return request<void>(`rbac/${org}/groups/`, "DELETE");
+    return request<void>(`rbac/groups/`, "DELETE");
   },
 
   deleteGroup: (groupId: string) => {
-    const org = getOrgExternalId();
-    return request<void>(`rbac/${org}/groups/${groupId}/`, "DELETE");
+    return request<void>(`rbac/groups/${groupId}/`, "DELETE");
   },
 
   /* --- Employees --- */
   getEmployees: () => {
-    const orgExternalId = getOrgExternalId();
-    return request<GetEmployeesResponse>(`organizations/${orgExternalId}/members/`, "GET");
+    return request<GetEmployeesResponse>(`organizations/members/`, "GET");
   },
 
   getEmployee: (membershipExternalId: string) => {
-    const orgExternalId = getOrgExternalId();
-    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipExternalId}/`, "GET");
+    return request<GetEmployeeResponse>(`organizations/members/${membershipExternalId}/`, "GET");
   },
 
   addEmployee: (payload: AddEmployeeRequest) => {
-    const orgExternalId = getOrgExternalId();
-    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/`, "POST", payload);
+    return request<GetEmployeeResponse>(`organizations/members/`, "POST", payload);
   },
 
   editEmployee: (membershipExternalId: string, payload: EditEmployeeRequest) => {
-    const orgExternalId = getOrgExternalId();
-    return request<GetEmployeeResponse>(`organizations/${orgExternalId}/members/${membershipExternalId}/`, "PATCH", payload);
+    return request<GetEmployeeResponse>(`organizations/members/${membershipExternalId}/`, "PATCH", payload);
   },
 
   deleteEmployee: (membershipExternalId: string) => {
-    const orgExternalId = getOrgExternalId();
-    return request<void>(`organizations/${orgExternalId}/members/${membershipExternalId}/`, "DELETE");
+    return request<void>(`organizations/members/${membershipExternalId}/`, "DELETE");
   },
   
   /* --- Tasks --- */
@@ -281,13 +252,12 @@ export const api = {
 
   /* --- Entries: saved views --- */
   getEntryViews: () => {
-    const org = getOrgExternalId();
     return request<Array<{
       id: string;
       name: string;
       is_default: boolean;
       filters: unknown;
-    }>>(`cashflow/${org}/entry-views/`, "GET");
+    }>>(`cashflow/entry-views/`, "GET");
   },
 
   addEntryView: (payload: {
@@ -295,13 +265,12 @@ export const api = {
     is_default?: boolean;
     filters: unknown;
   }) => {
-    const org = getOrgExternalId();
     return request<{
       id: string;
       name: string;
       is_default: boolean;
       filters: unknown;
-    }>(`cashflow/${org}/entry-views/`, "POST", payload);
+    }>(`cashflow/entry-views/`, "POST", payload);
   },
 
   editEntryView: (viewId: string, payload: {
@@ -309,58 +278,50 @@ export const api = {
     is_default?: boolean;
     filters?: unknown;
   }) => {
-    const org = getOrgExternalId();
     return request<{
       id: string;
       name: string;
       is_default: boolean;
       filters: unknown;
-    }>(`cashflow/${org}/entry-views/${viewId}/`, "PATCH", payload);
+    }>(`cashflow/entry-views/${viewId}/`, "PATCH", payload);
   },
 
   deleteEntryView: (viewId: string) => {
-    const org = getOrgExternalId();
-    return request<void>(`cashflow/${org}/entry-views/${viewId}/`, "DELETE");
+    return request<void>(`cashflow/entry-views/${viewId}/`, "DELETE");
   },
   
   /* --- Cash-flow Entries --- */
   getEntries: (payload: GetEntryRequest) => {
-    const org = getOrgExternalId();
-    return request<GetEntryResponse>(`cashflow/${org}/entries/`, "GET", payload);
+    return request<GetEntryResponse>(`cashflow/entries/`, "GET", payload);
   },
 
   getEntriesTable: (payload: GetEntryRequest) => {
-    const org = getOrgExternalId();
-    return request<GetEntryResponse>(`cashflow/${org}/entries/table/`, "GET", payload);
+    return request<GetEntryResponse>(`cashflow/entries/table/`, "GET", payload);
   },
 
   getEntry: (externalId: string) => {
-    const org = getOrgExternalId();
-    return request<Entry>(`cashflow/${org}/entries/${externalId}/`, "GET");
+    return request<Entry>(`cashflow/entries/${externalId}/`, "GET");
   },
 
   getEntriesBatch: (ids: string[]) => {
-    const org = getOrgExternalId();
     return request<Entry[]>(
-      `cashflow/${org}/entries/batch/`,
+      `cashflow/entries/batch/`,
       "POST",
       { ids }
     );
   },
 
   addEntry: (payload: AddEntryRequest) => {
-    const org = getOrgExternalId();
     return request<Entry | Entry[]>(
-      `cashflow/${org}/entries/`,
+      `cashflow/entries/`,
       "POST",
       payload
     );
   },
 
   editEntry: (externalId: string, payload: Partial<EditEntryRequest>) => {
-    const org = getOrgExternalId();
     return request<Entry | Entry[]>(
-      `cashflow/${org}/entries/${externalId}/`,
+      `cashflow/entries/${externalId}/`,
       "PATCH",
       payload
     );
@@ -371,42 +332,36 @@ export const api = {
     data: Partial<EditEntryRequest>,
     atomic: boolean = true
   ) => {
-    const org = getOrgExternalId();
     return request<{ updated: Entry[] } | { updated: Entry[]; errors: Array<{ id: string; error: string }> }>(
-      `cashflow/${org}/entries/bulk/update/`,
+      `cashflow/entries/bulk/update/`,
       "PATCH",
       { ids, data, atomic }
     );
   },
 
   deleteEntry: (externalId: string) => {
-    const org = getOrgExternalId();
-    return request<void>(`cashflow/${org}/entries/${externalId}/`, "DELETE");
+    return request<void>(`cashflow/entries/${externalId}/`, "DELETE");
   },
 
   bulkDeleteEntries: (ids: string[]) => {
-    const org = getOrgExternalId();
-    return request<void>(`cashflow/${org}/entries/bulk/delete/`, "POST", { ids });
+    return request<void>(`cashflow/entries/bulk/delete/`, "POST", { ids });
   },
 
   /* --- Settle Process --- */
   bulkSettle: (items: BulkSettleItem[], atomic: boolean = true) => {
-    const org = getOrgExternalId();
     return request<BulkSettleResponse>(
-      `cashflow/${org}/settlements/bulk/`,
+      `cashflow/settlements/bulk/settle/`,
       "POST",
       { items, atomic }
     );
   },
 
-  // Cria settlement para UMA entrada específica (opcional se quiseres usar sempre o bulk)
   addSettlement: (
     entryExternalId: string,
     payload: { bank_id: string; amount_minor?: number; amount?: string; value_date: string }
   ) => {
-    const org = getOrgExternalId();
     return request<Entry>(
-      `cashflow/${org}/entries/${entryExternalId}/settlements/`,
+      `cashflow/entries/${entryExternalId}/settlements/`,
       "POST",
       payload
     );
@@ -414,174 +369,155 @@ export const api = {
 
   /* --- Settled Entries --- */
   getSettledEntries: (payload: GetSettledEntryRequest) => {
-    const orgExternalId = getOrgExternalId();
     const params = { include_inactive: true, ...payload };
     return request<GetSettledEntry>(
-      `cashflow/${orgExternalId}/settlements/`,
+      `cashflow/settlements/`,
       "GET",
       params
     );
   },
 
   getSettledEntriesTable: (payload: GetSettledEntryRequest) => {
-    const orgExternalId = getOrgExternalId();
     const params = { include_inactive: true, ...payload };
     return request<GetSettledEntry>(
-      `cashflow/${orgExternalId}/settlements/table/`,
+      `cashflow/settlements/table/`,
       "GET",
       params
     );
   },
 
   getSettledEntry: (ids: string[], payload?: GetSettledEntryRequest) => {
-    const orgExternalId = getOrgExternalId();
     const params = { include_inactive: true, ...(payload || {}), ids: ids.join(",") };
     return request<SettledEntry[]>(
-      `cashflow/${orgExternalId}/settlements/batch/`,
+      `cashflow/settlements/batch/`,
       "GET",
       params
     );
   },
 
   editSettledEntry: (id: string, payload: Partial<EditSettledEntryRequest>) => {
-    const orgExternalId = getOrgExternalId();
     return request<SettledEntry>(
-      `cashflow/${orgExternalId}/settlements/${id}/`,
+      `cashflow/settlements/${id}/`,
       "PATCH",
       payload
     );
   },
 
   bulkDeleteSettledEntries: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<void>(
-      `cashflow/${orgExternalId}/settlements/bulk/delete/`,
+      `cashflow/settlements/bulk/delete/`,
       "POST",
       { ids }
     );
   },
 
   deleteSettledEntry: (id: string) => {
-    const orgExternalId = getOrgExternalId();
-    return request<Entry>(`cashflow/${orgExternalId}/settlements/${id}/`, "DELETE");
+    return request<Entry>(`cashflow/settlements/${id}/`, "DELETE");
   },
 
   /* --- Transferences --- */
   addTransference: (payload: AddTransferenceRequest) => {
-    const org = getOrgExternalId();
-    return request<Transference>(`cashflow/${org}/transfers/`, 'POST', payload);
+    return request<Transference>(`cashflow/transfers/`, 'POST', payload);
   },
 
   /* --- Banks --- */
   getAllBanks: (active?: boolean) => {
-    const orgExternalId = getOrgExternalId();
     const params = active == null ? undefined : { active: active ? "true" : "false" };
 
     return request<Paginated<BankAccount>>(
-      `banking/${orgExternalId}/banking/accounts/`,
+      `banking/banking/accounts/`,
       "GET",
       params
     );
   },
 
   getBanksBatch: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<BankAccount[]>(
-      `banking/${orgExternalId}/banking/accounts/batch/`,
+      `banking/banking/accounts/batch/`,
       "POST",
       { ids }
     );
   },
 
   getBank: (bankExternalId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<BankAccount>(
-      `banking/${orgExternalId}/banking/accounts/${bankExternalId}/`,
+      `banking/banking/accounts/${bankExternalId}/`,
       "GET"
     );
   },
 
   addBank: (payload: Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">) => {
-    const orgExternalId = getOrgExternalId();
     return request<BankAccount>(
-      `banking/${orgExternalId}/banking/accounts/`,
+      `banking/banking/accounts/`,
       "POST",
       payload
     );
   },
 
   editBank: (bankExternalId: string, payload: Partial<Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">>) => {
-    const orgExternalId = getOrgExternalId();
     return request<BankAccount>(
-      `banking/${orgExternalId}/banking/accounts/${bankExternalId}/`,
+      `banking/banking/accounts/${bankExternalId}/`,
       "PATCH",
       payload
     );
   },
 
   deleteBank: (bankExternalId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<unknown>(
-      `banking/${orgExternalId}/banking/accounts/${bankExternalId}/`,
+      `banking/banking/accounts/${bankExternalId}/`,
       "DELETE"
     );
   },
 
   /* --- General Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetLedgerAccountsResponse>(
-      `ledger/${orgExternalId}/ledger/accounts/`,
+      `ledger/ledger/accounts/`,
       "GET",
       params
     );
   },
 
   getLedgerAccountsBatch: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<GLAccount[]>(
-      `ledger/${orgExternalId}/ledger/accounts/batch/`,
+      `ledger/ledger/accounts/batch/`,
       "POST",
       { ids }
     );
   },
 
   getLedgerAccount: (glaId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<GLAccount>(
-      `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
+      `ledger/ledger/accounts/${glaId}/`,
       "GET"
     );
   },
 
   importLedgerAccounts: (formData: FormData) => {
-    const orgExternalId = getOrgExternalId();
     return request<{
       created_count: number;
       accounts: GLAccount[];
     }>(
-      `ledger/${orgExternalId}/ledger/accounts/import/`,
+      `ledger/ledger/accounts/import/`,
       "POST",
       formData
     );
   },
 
   importStandardLedgerAccounts: (plan: "personal" | "business") => {
-    const orgExternalId = getOrgExternalId();
     return request<{
       created_count: number;
       accounts: GLAccount[];
     }>(
-      `ledger/${orgExternalId}/ledger/accounts/import-standard/`,
+      `ledger/ledger/accounts/import-standard/`,
       "POST",
       { plan }
     );
   },
 
   downloadLedgerCsvTemplate: async () => {
-    const orgExternalId = getOrgExternalId();
     const res = await http.get(
-      `ledger/${orgExternalId}/ledger/accounts/template/csv/`,
+      `ledger/ledger/accounts/template/csv/`,
       {
         responseType: "blob",
         validateStatus: (s: number) => s >= 200 && s < 300,
@@ -601,9 +537,8 @@ export const api = {
 
   // Download XLSX template as a file (no page navigation)
   downloadLedgerXlsxTemplate: async () => {
-    const orgExternalId = getOrgExternalId();
     const res = await http.get(
-      `ledger/${orgExternalId}/ledger/accounts/template/xlsx/`,
+      `ledger/ledger/accounts/template/xlsx/`,
       {
         responseType: "blob",
         validateStatus: (s: number) => s >= 200 && s < 300,
@@ -622,45 +557,40 @@ export const api = {
   },
 
   addLedgerAccount: (payload: AddGLAccountRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<GLAccount>(
-      `ledger/${orgExternalId}/ledger/accounts/`,
+      `ledger/ledger/accounts/`,
       "POST",
       payload
     );
   },
 
   addLedgerAccountsBulk: (payload: AddGLAccountRequest[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<GLAccount[]>(
-      `ledger/${orgExternalId}/ledger/accounts/bulk/`,
+      `ledger/ledger/accounts/bulk/`,
       "POST",
       payload
     );
   },
 
   editLedgerAccount: (glaId: string, payload: EditGLAccountRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<GLAccount>(
-      `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
+      `ledger/ledger/accounts/${glaId}/`,
       "PATCH",
       payload
     );
   },
 
   deleteAllLedgerAccounts: () => {
-    const orgExternalId = getOrgExternalId();
     return request<{ message: string; deleted_count: number }>(
-      `ledger/${orgExternalId}/ledger/accounts/bulk-delete/`,
+      `ledger/ledger/accounts/bulk/delete/`,
       "DELETE",
       { confirm_delete_all: true }
     );
   },
 
   deleteLedgerAccount: (glaId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<unknown>(
-      `ledger/${orgExternalId}/ledger/accounts/${glaId}/`,
+      `ledger/ledger/accounts/${glaId}/`,
       "DELETE"
     );
   },
@@ -674,106 +604,94 @@ export const api = {
 
   /* --- Departments --- */
   getDepartments: (params?: { page_size?: number; cursor?: string; q?: string; active?: "true" | "false" }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetDepartmentsResponse>(
-      `departments/${orgExternalId}/departments/`,
+      `departments/departments/`,
       "GET",
       params
     );
   },
 
   getDepartment: (departmentId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetDepartmentResponse>(
-      `departments/${orgExternalId}/departments/${departmentId}/`,
+      `departments/departments/${departmentId}/`,
       "GET"
     );
   },
 
   getDepartmentsBatch: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<Department[]>(
-      `departments/${orgExternalId}/departments/batch/`,
+      `departments/departments/batch/`,
       "POST",
       { ids }
     );
   },
 
   addDepartment: (payload: AddDepartmentRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<Department>(
-      `departments/${orgExternalId}/departments/`,
+      `departments/departments/`,
       "POST",
       payload
     );
   },
 
   editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>) => {
-    const orgExternalId = getOrgExternalId();
     return request<Department>(
-      `departments/${orgExternalId}/departments/${departmentId}/`,
+      `departments/departments/${departmentId}/`,
       "PATCH",
       payload
     );
   },
 
   deleteDepartment: (departmentId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<void>(
-      `departments/${orgExternalId}/departments/${departmentId}/`,
+      `departments/departments/${departmentId}/`,
       "DELETE"
     );
   },
 
   /* --- Projects --- */
   getProjects: (params?: { cursor?: string; page_size?: number; active?: "true" | "false"; type?: string; q?: string }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetProjectsResponse>(
-      `projects/${orgExternalId}/projects/`,
+      `projects/projects/`,
       "GET",
       params
     );
   },
 
   getProjectsBatch: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<Project[]>(
-      `projects/${orgExternalId}/projects/batch/`,
+      `projects/projects/batch/`,
       "POST",
       { ids }
     );
   },
 
   getProject: (projectId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<Project>(
-      `projects/${orgExternalId}/projects/${projectId}/`,
+      `projects/projects/${projectId}/`,
       "GET"
     );
   },
 
   addProject: (payload: AddProjectRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<Project>(
-      `projects/${orgExternalId}/projects/`,
+      `projects/projects/`,
       "POST",
       payload
     );
   },
 
   editProject: (projectId: string, payload: EditProjectRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<Project>(
-      `projects/${orgExternalId}/projects/${projectId}/`,
+      `projects/projects/${projectId}/`,
       "PATCH",
       payload
     );
   },
 
   deleteProject: (projectId: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<void>(
-      `projects/${orgExternalId}/projects/${projectId}/`,
+      `projects/projects/${projectId}/`,
       "DELETE"
     );
   },
@@ -787,9 +705,8 @@ export const api = {
     min_qoh?: string | number;
     max_qoh?: string | number;
   }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetInventoryItemsResponse>(
-      `inventory/${orgExternalId}/inventory/items/`,
+      `inventory/inventory/items/`,
       "GET",
       params
     );
@@ -801,53 +718,47 @@ export const api = {
     active?: "true" | "false";
     q?: string;
   }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetInventoryItemsResponse>(
-      `inventory/${orgExternalId}/inventory/items/options/`,
+      `inventory/inventory/items/options/`,
       "GET",
       params
     );
   },
 
   getInventoryItemsBatch: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<InventoryItem[]>(
-      `inventory/${orgExternalId}/inventory/items/batch/`,
+      `inventory/inventory/items/batch/`,
       "POST",
       { ids }
     );
   },
 
   getInventoryItem: (id: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<InventoryItem>(
-      `inventory/${orgExternalId}/inventory/items/${id}/`,
+      `inventory/inventory/items/${id}/`,
       "GET"
     );
   },
 
   addInventoryItem: (payload: AddInventoryItemRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<InventoryItem>(
-      `inventory/${orgExternalId}/inventory/items/`,
+      `inventory/inventory/items/`,
       "POST",
       payload
     );
   },
 
   editInventoryItem: (id: string, payload: EditInventoryItemRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<InventoryItem>(
-      `inventory/${orgExternalId}/inventory/items/${id}/`,
+      `inventory/inventory/items/${id}/`,
       "PATCH",
       payload
     );
   },
 
   deleteInventoryItem: (id: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<void>(
-      `inventory/${orgExternalId}/inventory/items/${id}/`,
+      `inventory/inventory/items/${id}/`,
       "DELETE"
     );
   },
@@ -860,9 +771,8 @@ export const api = {
     type?: string; // client | supplier | employee ...
     q?: string;
   }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetEntitiesResponse>(
-      `crm/${orgExternalId}/crm/entities/`,
+      `crm/crm/entities/`,
       "GET",
       params
     );
@@ -875,9 +785,8 @@ export const api = {
     type?: string;
     q?: string;
   }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetEntitiesResponse>(
-      `crm/${orgExternalId}/crm/entities/table/`,
+      `crm/crm/entities/table/`,
       "GET",
       params
     );
@@ -890,53 +799,47 @@ export const api = {
     type?: string;
     q?: string;
   }) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetEntitiesResponse>(
-      `crm/${orgExternalId}/crm/entities/options/`,
+      `crm/crm/entities/options/`,
       "GET",
       params
     );
   },
   
   getEntity: (id: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<GetEntityResponse>(
-      `crm/${orgExternalId}/crm/entities/${id}/`,
+      `crm/crm/entities/${id}/`,
       "GET"
     );
   },
 
   getEntitiesBatch: (ids: string[]) => {
-    const orgExternalId = getOrgExternalId();
     return request<Entity[]>(
-      `crm/${orgExternalId}/crm/entities/batch/`,
+      `crm/crm/entities/batch/`,
       "POST",
       { ids }
     );
   },
 
   addEntity: (payload: AddEntityRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<Entity>(
-      `crm/${orgExternalId}/crm/entities/`,
+      `crm/crm/entities/`,
       "POST",
       payload
     );
   },
 
   editEntity: (id: string, payload: EditEntityRequest) => {
-    const orgExternalId = getOrgExternalId();
     return request<Entity>(
-      `crm/${orgExternalId}/crm/entities/${id}/`,
+      `crm/crm/entities/${id}/`,
       "PATCH",
       payload
     );
   },
 
   deleteEntity: (id: string) => {
-    const orgExternalId = getOrgExternalId();
     return request<void>(
-      `crm/${orgExternalId}/crm/entities/${id}/`,
+      `crm/crm/entities/${id}/`,
       "DELETE"
     );
   },
@@ -945,7 +848,6 @@ export const api = {
 
   // list with filters { q?, status?, bank? }
   getStatements: (params?: { q?: string; status?: string; bank?: string }) => {
-    const org = getOrgExternalId();
     return request<Paginated<{
       id: string;
       bank_account_id: string | null;
@@ -957,7 +859,7 @@ export const api = {
       status: "uploaded" | "processing" | "ready" | "failed";
       created_at: string;
     }>>(
-      `banking/${org}/banking/statements/`,
+      `banking/banking/statements/`,
       "GET",
       params
     );
@@ -965,9 +867,8 @@ export const api = {
 
   // upload with progress (FormData: file, optional bank_account_id)
   uploadStatement: (form: FormData, onProgress?: (pct: number) => void) => {
-    const org = getOrgExternalId();
     return http.post(
-      `banking/${org}/banking/statements/`,
+      `banking/banking/statements/`,
       form,
       {
         onUploadProgress: (evt: AxiosProgressEvent) => {
@@ -979,15 +880,13 @@ export const api = {
   },
 
   deleteStatement: (statementId: string) => {
-    const org = getOrgExternalId();
     return request<void>(
-      `banking/${org}/banking/statements/${statementId}/`,
+      `banking/banking/statements/${statementId}/`,
       "DELETE"
     );
   },
 
   triggerStatementAnalysis: (statementId: string) => {
-    const org = getOrgExternalId();
     return request<{
       id: string;
       status: "processing" | "ready" | "failed" | "uploaded";
@@ -995,7 +894,7 @@ export const api = {
       finished_at: string | null;
       error_message: string;
     }>(
-      `banking/${org}/banking/statements/${statementId}/analyze/`,
+      `banking/banking/statements/${statementId}/analyze/`,
       "POST",
       {}
     );
@@ -1003,9 +902,8 @@ export const api = {
 
   // download binary (Blob) via axios responseType: 'blob'
   downloadStatement: async (statementId: string) => {
-    const org = getOrgExternalId();
     const res = await http.get(
-      `banking/${org}/banking/statements/${statementId}/download/`,
+      `banking/banking/statements/${statementId}/download/`,
       { responseType: "blob", validateStatus: (s: number) => s >= 200 && s < 300 }
     );
     const blob = res.data as Blob;

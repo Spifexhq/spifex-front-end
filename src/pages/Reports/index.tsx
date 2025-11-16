@@ -1,7 +1,6 @@
 // src/pages/Reports/index.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
-import { useSelector } from "react-redux";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -23,7 +22,6 @@ import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
-import type { RootState } from "@/redux/rootReducer";
 import type { ReportsSummary } from "@/models/entries/domain";
 import { useTranslation } from "react-i18next";
 
@@ -100,12 +98,6 @@ const ReportsPage: React.FC = () => {
     document.title = t("pageTitle");
   }, [t]);
 
-  const orgExternalId = useSelector((s: RootState) =>
-    s.auth.orgExternalId ??
-    s.auth.organization?.organization?.external_id ??
-    s.auth.organization?.external_id
-  ) as string | undefined;
-
   const [data, setData] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,11 +110,10 @@ const ReportsPage: React.FC = () => {
   );
 
   const fetchData = useCallback(async () => {
-    if (!orgExternalId) return;
     try {
       setError(null);
       setLoading(true);
-      const res = await api.getReportsSummary(orgExternalId, params);
+      const res = await api.getReportsSummary(params);
       setData(res.data);
     } catch (e) {
       console.error(e);
@@ -130,7 +121,7 @@ const ReportsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [orgExternalId, params, t]);
+  }, [params, t]);
 
   useEffect(() => {
     void fetchData();

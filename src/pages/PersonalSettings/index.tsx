@@ -117,11 +117,10 @@ const PersonalSettings: React.FC = () => {
         setUseDeviceTz(data.timezone === deviceTz);
 
         if (isOwner && orgExternalId) {
-          const res = await (await import("src/api/requests")).api.getOrganization();
+          const res = await api.getOrganization();
           setOrgProfile(res.data);
         }
-      } catch (err) {
-        console.error("Erro ao buscar dados pessoais", err);
+      } catch {
         setSnack({ message: t("settings:personal.toast.loadError"), severity: "error" });
       } finally {
         setIsInitialLoading(false);
