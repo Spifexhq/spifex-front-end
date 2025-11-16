@@ -6,3 +6,4 @@ export * from "./Group";
 export * from "./Permission";
 export * from "./Counter";
 export * from "./Notifications";
+export * from "./EntitlementLimits";

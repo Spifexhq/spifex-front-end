@@ -7,3 +7,4 @@ export * from "./GetPermission";
 export * from "./GetGroup";
 export * from "./GetSubscription";
 export * from "./GetCounter";
+export * from "./GetEntitlementLimits";

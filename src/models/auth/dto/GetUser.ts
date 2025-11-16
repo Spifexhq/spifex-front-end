@@ -1,8 +1,8 @@
 import { User, UserOrganizationDetail } from "../domain";
-import { Subscription } from "./GetSubscription";
+import { GetSubscriptionStatusResponse } from "./GetSubscription";
 
 export interface GetUserResponse {
   user: User;
   organization: UserOrganizationDetail;
-  subscription: Subscription | null;
+  subscription: GetSubscriptionStatusResponse | null;
 }

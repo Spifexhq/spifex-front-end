@@ -5,6 +5,7 @@
  * ----------------------------------------------------------------------------*/
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuth } from "@/api";
 import { useAuthContext } from "@/contexts/useAuthContext";
@@ -95,6 +96,7 @@ const SubscriptionManagement: React.FC = () => {
   const isLogged = useRequireLogin();
   const { handleInitUser } = useAuth();
   const { user, isOwner, isSuperUser } = useAuthContext();
+  const navigate = useNavigate();
 
   /* Flags */
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -279,30 +281,37 @@ useEffect(() => {
               {/* Current plan summary */}
               <div className="px-4 py-3 border-b border-gray-200">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  {/* Left: status text */}
                   <div className="text-[13px]">
                     {sub?.is_subscribed ? (
                       <>
                         {t("subscription:current.youAreOn")}&nbsp;
                         <span className="font-semibold">{currentPlanLabel}</span>
-                        {sub?.subscription?.cancel_at_period_end ? (
-                          <span className="ml-2 text-gray-500">
-                            • {t("subscription:current.cancelAt", "cancels at")}{" "}
-                            {fmtDate(sub?.subscription?.current_period_end, i18n.language)}
-                          </span>
-                        ) : (
-                          <span className="ml-2 text-gray-500">
-                            • {t("subscription:current.renews", "renews on")}{" "}
-                            {fmtDate(sub?.subscription?.current_period_end, i18n.language)}
-                          </span>
-                        )}
+                        <span className="ml-2 text-gray-500">
+                          • {sub?.subscription?.cancel_at_period_end
+                            ? t("subscription:current.cancelAt", "cancels at")
+                            : t("subscription:current.renews", "renews on")}{" "}
+                          {fmtDate(sub?.subscription?.current_period_end, i18n.language)}
+                        </span>
                       </>
                     ) : (
                       t("subscription:current.noActive", "You don’t have an active plan.")
                     )}
                   </div>
 
-                  {canManage && (
-                    <div className="ml-auto">
+                  {/* Right: actions */}
+                  <div className="ml-auto flex items-center gap-2">
+                    {/* Always visible */}
+                    <Button
+                      variant="outline"
+                      disabled={isProcessing}
+                      onClick={() => navigate("/settings/limits")}
+                    >
+                      {t("subscription:btn.checkLimits", "Check your limits")}
+                    </Button>
+
+                    {/* Only for owners/superusers with active subscription */}
+                    {canManage && (
                       <Button
                         variant="outline"
                         disabled={isProcessing}
@@ -310,8 +319,8 @@ useEffect(() => {
                       >
                         {t("subscription:btn.manage", "Manage subscription")}
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -26,6 +26,7 @@ const Reports = lazy(() => import("@/pages/Reports"));
 // Settings
 const Personal = lazy(() => import("src/pages/PersonalSettings"));
 const SubscriptionManagement = lazy(() => import("@/pages/SubscriptionManagement"));
+const LimitsAndUsage = lazy(() => import("@/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/pages/SecurityAndPrivacy"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const DepartmentSettings = lazy(() => import("@/pages/DepartmentSettings"));
@@ -158,6 +159,10 @@ const routes: RouteObject[] = [
                         <SubscriptionManagement />
                     </OwnerRoute>
                 )
+                },
+                {
+                path: 'limits',
+                element: <LimitsAndUsage />
                 },
                 {
                 path: 'security',

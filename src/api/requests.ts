@@ -8,6 +8,7 @@ import {
   GetSubscriptionStatusResponse,
   GetPermission, GetPermissions,
   GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
+  GetEntitlementLimitsResponse,
 } from '@/models/auth/dto'
 import { User, Organization, Permission, GroupDetail,
   CounterUsage, IncrementCounterUsage, PersonalSettings,
@@ -68,6 +69,10 @@ export const api = {
 
   editPersonalSettings:(payload: Partial<PersonalSettings>) =>
     request<PersonalSettings>('auth/me/settings/', 'PATCH', payload),
+
+  /* --- Entitlements --- */
+  getEntitlementLimits:() =>
+    request<GetEntitlementLimitsResponse>('entitlements/limits/', 'GET'),
 
   /* --- Password --- */
   changePassword: (payload: { current_password: string; new_password: string }) =>
