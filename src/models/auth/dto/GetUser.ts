@@ -1,3 +1,4 @@
+// src/models/auth/dto/GetUser
 import { User, UserOrganizationDetail } from "../domain";
 import { GetSubscriptionStatusResponse } from "./GetSubscription";
 

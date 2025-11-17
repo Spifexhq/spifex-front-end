@@ -1,3 +1,4 @@
+// src/models/auth/domain/Counter
 import { Permission } from "./Permission";
 
 export interface CounterUsage {
