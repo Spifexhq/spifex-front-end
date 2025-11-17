@@ -8,7 +8,7 @@ import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
 //import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
-import { AuthMiddleware, PermissionMiddleware, SuccessRouteMiddleware, OwnerRoute, SubscriptionMiddleware } from "@/middlewares";
+import { AuthMiddleware, PermissionMiddleware, SuccessRouteMiddleware, SubscriptionMiddleware } from "@/middlewares";
 
 // Auth Pages
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
@@ -159,11 +159,7 @@ const routes: RouteObject[] = [
                 },
                 {
                     path: 'subscription-management',
-                    element: (
-                        <OwnerRoute>
-                            <SubscriptionManagement />
-                        </OwnerRoute>
-                    )
+                    element: <SubscriptionManagement />
                 },
                 {
                     path: 'limits',
