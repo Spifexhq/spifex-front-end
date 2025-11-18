@@ -178,7 +178,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
   return (
     <div className="border-t border-gray-200">
       {/* Header with tabs */}
-      <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+      <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-center gap-3">
         <nav className="flex gap-2" aria-label="Permission tabs">
           {TABS.map((tab) => {
             const isActive = tab.id === activeTab;
@@ -198,9 +198,6 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
             );
           })}
         </nav>
-        <span className="text-[11px] text-gray-500">
-          {t("table.hint")}
-        </span>
       </div>
 
       {/* Rows */}
@@ -223,7 +220,11 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
           return (
             <div
               key={row.code}
-              className="flex items-start justify-between px-4 py-3"
+              className="flex items-start justify-between px-4 py-3 cursor-pointer"
+              onClick={() => {
+                if (disabled) return;
+                onToggle(row.code, !checked);
+              }}
             >
               <div className="pr-3">
                 <p className="text-[13px] font-medium text-gray-900">
@@ -236,7 +237,13 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
                   {row.code}
                 </p>
               </div>
-              <div className="mt-1">
+              <div
+                className="mt-1"
+                onClick={(e) => {
+                  // prevent row onClick from firing when clicking the checkbox
+                  e.stopPropagation();
+                }}
+              >
                 <Checkbox
                   checked={checked}
                   onChange={(e) => onToggle(row.code, e.target.checked)}

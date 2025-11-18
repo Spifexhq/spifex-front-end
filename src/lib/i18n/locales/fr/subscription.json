@@ -9,10 +9,10 @@
     "noPlan": "Aucun forfait actif"
   },
   "current": {
-    "youAreOn": "Vous êtes sur",
-    "cancelAt": "se termine le",
+    "youAreOn": "Vous êtes sur le forfait",
+    "cancelAt": "sera résilié le",
     "renews": "se renouvelle le",
-    "noActive": "Vous n’avez pas d’abonnement actif.",
+    "noActive": "Vous n’avez aucun forfait actif.",
     "unknown": "Forfait inconnu"
   },
   "status": {
@@ -22,7 +22,7 @@
     "processing": "Traitement…"
   },
   "plan": {
-    "basic": "Basique",
+    "basic": "Basic",
     "premium": "Premium"
   },
   "btn": {
@@ -31,17 +31,18 @@
     "switch": "Choisir",
     "subscribe": "S’abonner",
     "cancel": "Annuler",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "checkLimits": "Consulter vos limites"
   },
   "modal": {
     "title": "Confirmer le changement de forfait",
-    "text": "Vous serez redirigé vers le paiement pour confirmer ce forfait.",
+    "text": "Vous serez redirigé vers la page de paiement pour confirmer ce forfait.",
     "close": "Fermer la fenêtre"
   },
   "errors": {
     "noRedirect": "Impossible de rediriger vers la page de paiement.",
     "checkout": "Échec de l’initialisation du paiement. Veuillez réessayer plus tard.",
     "noPortal": "Impossible d’ouvrir le portail client.",
-    "portal": "Échec de redirection vers le portail. Veuillez réessayer plus tard."
+    "portal": "Échec de la redirection vers le portail. Veuillez réessayer plus tard."
   }
 }

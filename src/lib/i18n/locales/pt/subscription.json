@@ -1,41 +1,42 @@
 {
-  "title": "Gestão da Subscrição",
+  "title": "Gestão da assinatura",
   "header": {
-    "settings": "Definições",
-    "title": "Plano e Faturação"
+    "settings": "Configurações",
+    "title": "Plano e cobrança"
   },
   "section": {
-    "withPlan": "O seu plano atual",
-    "noPlan": "Sem plano ativo"
+    "withPlan": "Seu plano atual",
+    "noPlan": "Nenhum plano ativo"
   },
   "current": {
-    "youAreOn": "Está no",
-    "cancelAt": "termina em",
+    "youAreOn": "Você está no plano",
+    "cancelAt": "será cancelado em",
     "renews": "renova em",
-    "noActive": "Não tem uma subscrição ativa.",
+    "noActive": "Você não tem um plano ativo.",
     "unknown": "Plano desconhecido"
   },
   "status": {
     "none": "Sem plano"
   },
   "badge": {
-    "processing": "A processar…"
+    "processing": "Processando…"
   },
   "plan": {
     "basic": "Básico",
     "premium": "Premium"
   },
   "btn": {
-    "manage": "Gerir subscrição",
+    "manage": "Gerenciar assinatura",
     "current": "Atual",
     "switch": "Escolher",
-    "subscribe": "Subscrever",
+    "subscribe": "Assinar",
     "cancel": "Cancelar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "checkLimits": "Ver seus limites"
   },
   "modal": {
-    "title": "Confirmar alteração de plano",
-    "text": "Será redirecionado para o checkout para confirmar este plano.",
+    "title": "Confirmar mudança de plano",
+    "text": "Você será redirecionado para a tela de pagamento para confirmar este plano.",
     "close": "Fechar modal"
   },
   "errors": {

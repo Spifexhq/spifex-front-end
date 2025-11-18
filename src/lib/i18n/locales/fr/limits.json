@@ -1,16 +1,45 @@
 {
-  "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Barre latérale",
-    "page_components": "Composants de page",
-    "entries": "Écritures",
-    "settings": "Paramètres et accès"
+  "title": "Limites et utilisation",
+  "header": {
+    "kicker": "Abonnement",
+    "title": "Limites et utilisation",
+    "subtitle": "Forfait actuel :",
+    "planUnknown": "—"
   },
-  "noItems": "Aucune permission dans cette section.",
-  "buttons": {
-    "undo": "Annuler les modifications",
-    "save": "Enregistrer les permissions"
+  "legend": {
+    "ok": "OK < 70%",
+    "warn": "70–89%",
+    "high": "90–99%",
+    "exhausted": "100% utilisé",
+    "unmetered": "Illimité"
   },
+  "searchPlaceholder": "Rechercher une permission…",
+  "th": {
+    "permission": "Permission",
+    "period": "Période",
+    "limit": "Limite",
+    "used": "Utilisé",
+    "percent": "%"
+  },
+  "status": {
+    "ok": "OK",
+    "warning": "Avertissement",
+    "high": "Élevé",
+    "exhausted": "Épuisé",
+    "unmetered": "Illimité"
+  },
+  "periods": {
+    "daily": "Par jour",
+    "weekly": "Par semaine",
+    "monthly": "Par mois",
+    "lifetime": "À vie"
+  },
+  "resets": "Se réinitialise",
+  "unmetered": "Illimité",
+  "notEnforced": "N'applique pas de blocage",
+  "infinite": "Sans plafond",
+  "remaining": "Restant",
+  "empty": "Aucune permission ne correspond à votre recherche.",
   "perms": {
     "view_cash_flow_button": {
       "label": "Bouton Flux de trésorerie",

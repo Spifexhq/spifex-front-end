@@ -1,23 +1,52 @@
 {
-  "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Barra lateral",
-    "page_components": "Componentes de página",
-    "entries": "Lançamentos",
-    "settings": "Configurações e acesso"
+  "title": "Limites e uso",
+  "header": {
+    "kicker": "Assinatura",
+    "title": "Limites e uso",
+    "subtitle": "Plano atual:",
+    "planUnknown": "—"
   },
-  "noItems": "Nenhuma permissão nesta seção.",
-  "buttons": {
-    "undo": "Descartar alterações",
-    "save": "Salvar permissões"
+  "legend": {
+    "ok": "OK < 70%",
+    "warn": "70–89%",
+    "high": "90–99%",
+    "exhausted": "100% utilizado",
+    "unmetered": "Ilimitado"
   },
+  "searchPlaceholder": "Buscar permissão…",
+  "th": {
+    "permission": "Permissão",
+    "period": "Período",
+    "limit": "Limite",
+    "used": "Usado",
+    "percent": "%"
+  },
+  "status": {
+    "ok": "OK",
+    "warning": "Atenção",
+    "high": "Alto",
+    "exhausted": "Esgotado",
+    "unmetered": "Ilimitado"
+  },
+  "periods": {
+    "daily": "Por dia",
+    "weekly": "Por semana",
+    "monthly": "Por mês",
+    "lifetime": "Vitalício"
+  },
+  "resets": "Renova",
+  "unmetered": "Ilimitado",
+  "notEnforced": "Não bloqueia ao atingir",
+  "infinite": "Sem limite máximo",
+  "remaining": "Restante",
+  "empty": "Nenhuma permissão corresponde à sua busca.",
   "perms": {
     "view_cash_flow_button": {
       "label": "Botão de Fluxo de Caixa",
       "description": "Controla se o grupo vê o botão de Fluxo de Caixa na barra superior."
     },
     "view_settled_button": {
-      "label": "Botão de Lançamentos Baixados",
+      "label": "Botão de lançamentos baixados",
       "description": "Controla se o grupo vê o botão de lançamentos baixados na barra superior."
     },
     "view_report_button": {

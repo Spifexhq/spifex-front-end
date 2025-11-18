@@ -1,16 +1,45 @@
 {
-  "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Seitenleiste",
-    "page_components": "Seitenelemente",
-    "entries": "Buchungen",
-    "settings": "Einstellungen & Zugriff"
+  "title": "Limits & Nutzung",
+  "header": {
+    "kicker": "Abonnement",
+    "title": "Limits & Nutzung",
+    "subtitle": "Aktueller Tarif:",
+    "planUnknown": "—"
   },
-  "noItems": "Keine Berechtigungen in diesem Bereich.",
-  "buttons": {
-    "undo": "Änderungen verwerfen",
-    "save": "Berechtigungen speichern"
+  "legend": {
+    "ok": "OK < 70%",
+    "warn": "70–89%",
+    "high": "90–99%",
+    "exhausted": "100% ausgeschöpft",
+    "unmetered": "Unbegrenzt"
   },
+  "searchPlaceholder": "Berechtigung suchen…",
+  "th": {
+    "permission": "Berechtigung",
+    "period": "Zeitraum",
+    "limit": "Limit",
+    "used": "Verbraucht",
+    "percent": "%"
+  },
+  "status": {
+    "ok": "OK",
+    "warning": "Warnung",
+    "high": "Hoch",
+    "exhausted": "Ausgeschöpft",
+    "unmetered": "Unbegrenzt"
+  },
+  "periods": {
+    "daily": "Pro Tag",
+    "weekly": "Pro Woche",
+    "monthly": "Pro Monat",
+    "lifetime": "Lebenszeit"
+  },
+  "resets": "Setzt sich zurück",
+  "unmetered": "Unbegrenzt",
+  "notEnforced": "Ohne harte Durchsetzung",
+  "infinite": "Kein Maximalwert",
+  "remaining": "Verbleibend",
+  "empty": "Keine Berechtigungen entsprechen deiner Suche.",
   "perms": {
     "view_cash_flow_button": {
       "label": "Cash-Flow-Button",

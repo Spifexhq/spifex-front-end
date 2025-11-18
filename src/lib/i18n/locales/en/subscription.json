@@ -31,7 +31,8 @@
     "switch": "Choose",
     "subscribe": "Subscribe",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "checkLimits": "Check your limits"
   },
   "modal": {
     "title": "Confirm plan change",

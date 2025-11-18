@@ -149,6 +149,11 @@ import enGroupPermissionsTable from "./locales/en/groupPermissionsTable.json";
 import frGroupPermissionsTable from "./locales/fr/groupPermissionsTable.json";
 import deGroupPermissionsTable from "./locales/de/groupPermissionsTable.json";
 
+import ptLimits from "./locales/pt/limits.json";
+import enLimits from "./locales/en/limits.json";
+import frLimits from "./locales/fr/limits.json";
+import deLimits from "./locales/de/limits.json";
+
 
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
@@ -181,6 +186,7 @@ const resources: Resource = {
     personalSettings: ptPersonalSettings,
     groupSettings: ptGroupSettings,
     groupPermissionsTable: ptGroupPermissionsTable,
+    limits: ptLimits,
   },
   en: {
     common: enCommon,
@@ -211,6 +217,7 @@ const resources: Resource = {
     personalSettings: enPersonalSettings,
     groupSettings: enGroupSettings,
     groupPermissionsTable: enGroupPermissionsTable,
+    limits: enLimits
   },
   fr: {
     common: frCommon,
@@ -241,6 +248,7 @@ const resources: Resource = {
     personalSettings: frPersonalSettings,
     groupSettings: frGroupSettings,
     groupPermissionsTable: frGroupPermissionsTable,
+    limits: frLimits
   },
   de: {
     common: deCommon,
@@ -271,6 +279,7 @@ const resources: Resource = {
     personalSettings: dePersonalSettings,
     groupSettings: deGroupSettings,
     groupPermissionsTable: deGroupPermissionsTable,
+    limits: deLimits
   }
 };
 
@@ -311,6 +320,7 @@ i18n
       "personalSettings",
       "groupSettings",
       "groupPermissionsTable",
+      "limits",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

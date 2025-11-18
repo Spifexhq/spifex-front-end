@@ -76,8 +76,18 @@ const CategoryRow: React.FC<{
   const meta = CATEGORY_META[category];
   const isEnabled = !!pref?.enabled;
 
+  const handleRowClick = () => {
+    if (disabled) return;
+    onToggle(category, !isEnabled);
+  };
+
   return (
-    <div className="flex items-start justify-between px-4 py-3">
+    <div
+      className={`flex items-start justify-between px-4 py-3 ${
+        disabled ? "" : "cursor-pointer"
+      }`}
+      onClick={handleRowClick}
+    >
       <div className="pr-3">
         <p className="text-[13px] font-medium text-gray-900">
           {t(meta.labelKey)}
@@ -86,7 +96,13 @@ const CategoryRow: React.FC<{
           {t(meta.descriptionKey)}
         </p>
       </div>
-      <div className="mt-1">
+      <div
+        className="mt-1"
+        onClick={(e) => {
+          // avoid triggering row click when clicking checkbox directly
+          e.stopPropagation();
+        }}
+      >
         <Checkbox
           checked={isEnabled}
           onChange={(e) => onToggle(category, e.target.checked)}

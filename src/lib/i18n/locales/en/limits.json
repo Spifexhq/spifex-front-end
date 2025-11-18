@@ -1,16 +1,45 @@
 {
-  "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Sidebar",
-    "page_components": "Page components",
-    "entries": "Entries",
-    "settings": "Settings & access"
+  "title": "Limits & Usage",
+  "header": {
+    "kicker": "Subscription",
+    "title": "Limits & Usage",
+    "subtitle": "Current plan:",
+    "planUnknown": "—"
   },
-  "noItems": "No permissions in this section.",
-  "buttons": {
-    "undo": "Discard changes",
-    "save": "Save permissions"
+  "legend": {
+    "ok": "OK < 70%",
+    "warn": "70–89%",
+    "high": "90–99%",
+    "exhausted": "100% exhausted",
+    "unmetered": "Unmetered"
   },
+  "searchPlaceholder": "Search permission…",
+  "th": {
+    "permission": "Permission",
+    "period": "Period",
+    "limit": "Limit",
+    "used": "Used",
+    "percent": "%"
+  },
+  "status": {
+    "ok": "OK",
+    "warning": "Warning",
+    "high": "High",
+    "exhausted": "Exhausted",
+    "unmetered": "Unmetered"
+  },
+  "periods": {
+    "daily": "Per day",
+    "weekly": "Per week",
+    "monthly": "Per month",
+    "lifetime": "Lifetime"
+  },
+  "resets": "Resets",
+  "unmetered": "Unmetered",
+  "notEnforced": "Not enforced",
+  "infinite": "No cap",
+  "remaining": "Remaining",
+  "empty": "No permissions match your search.",
   "perms": {
     "view_cash_flow_button": {
       "label": "Cash Flow button",

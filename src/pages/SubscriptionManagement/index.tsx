@@ -295,7 +295,7 @@ useEffect(() => {
                         </span>
                       </>
                     ) : (
-                      t("subscription:current.noActive", "You don’t have an active plan.")
+                      t("subscription:current.noActive")
                     )}
                   </div>
 

@@ -1,11 +1,11 @@
 {
-  "title": "Abonnement verwalten",
+  "title": "Aboverwaltung",
   "header": {
     "settings": "Einstellungen",
     "title": "Tarif & Abrechnung"
   },
   "section": {
-    "withPlan": "Ihr aktueller Tarif",
+    "withPlan": "Dein aktueller Tarif",
     "noPlan": "Kein aktiver Tarif"
   },
   "current": {
@@ -31,7 +31,8 @@
     "switch": "Auswählen",
     "subscribe": "Abonnieren",
     "cancel": "Abbrechen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "checkLimits": "Limits ansehen"
   },
   "modal": {
     "title": "Tarifwechsel bestätigen",
@@ -40,8 +41,8 @@
   },
   "errors": {
     "noRedirect": "Weiterleitung zur Bezahlseite nicht möglich.",
-    "checkout": "Zahlung konnte nicht initialisiert werden. Bitte später erneut versuchen.",
+    "checkout": "Fehler beim Start des Zahlungsvorgangs. Bitte versuche es später erneut.",
     "noPortal": "Kundenportal konnte nicht geöffnet werden.",
-    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte später erneut versuchen."
+    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte versuche es später erneut."
   }
 }
