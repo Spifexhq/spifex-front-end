@@ -1,0 +1,58 @@
+{
+  "title": "Permissões por grupo",
+  "header": {
+    "settings": "Configurações",
+    "title": "Grupos e acessos"
+  },
+  "badge": {
+    "syncing": "Sincronizando dados…"
+  },
+  "left": {
+    "groups": "Grupos",
+    "create": "Adicionar grupo",
+    "searchPlaceholder": "Buscar grupos…",
+    "meta": "{{perms}} permissões • {{members}} membros",
+    "empty": "Nenhum grupo encontrado."
+  },
+  "right": {
+    "selectPrompt": "Selecione um grupo à esquerda para gerenciar as permissões.",
+    "nameLabel": "Nome do grupo",
+    "rename": "Renomear",
+    "delete": "Excluir",
+    "closePanel": "Fechar painel"
+  },
+  "createModal": {
+    "title": "Criar novo grupo",
+    "close": "Fechar",
+    "nameLabel": "Nome do grupo",
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
+  "renameModal": {
+    "title": "Renomear grupo",
+    "close": "Fechar",
+    "nameLabel": "Novo nome do grupo",
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
+  "toast": {
+    "loadAllError": "Não foi possível carregar os grupos. Tente novamente.",
+    "detailError": "Não foi possível carregar os detalhes deste grupo.",
+    "createNameRequired": "Informe um nome para o grupo.",
+    "createSuccess": "Grupo criado com sucesso.",
+    "createError": "Não foi possível criar o grupo. Tente novamente.",
+    "renameEmpty": "O nome do grupo não pode ficar em branco.",
+    "renameSuccess": "Nome do grupo atualizado.",
+    "renameError": "Não foi possível renomear o grupo.",
+    "deleteSuccess": "Grupo excluído.",
+    "deleteError": "Não foi possível excluir o grupo.",
+    "saveSuccess": "Permissões atualizadas para este grupo.",
+    "saveError": "Não foi possível atualizar as permissões. Tente novamente."
+  },
+  "confirm": {
+    "deleteText": "Tem certeza de que deseja excluir o grupo \"{{name}}\"? Essa ação não pode ser desfeita.",
+    "confirmLabel": "Excluir grupo",
+    "cancelLabel": "Cancelar",
+    "fail": "Ocorreu um erro ao confirmar a ação."
+  }
+}

@@ -139,7 +139,15 @@ import enPersonalSettings from "./locales/en/personalSettings.json";
 import frPersonalSettings from "./locales/fr/personalSettings.json";
 import dePersonalSettings from "./locales/de/personalSettings.json";
 
+import ptGroupSettings from "./locales/pt/groupSettings.json";
+import enGroupSettings from "./locales/en/groupSettings.json";
+import frGroupSettings from "./locales/fr/groupSettings.json";
+import deGroupSettings from "./locales/de/groupSettings.json";
 
+import ptGroupPermissionsTable from "./locales/pt/groupPermissionsTable.json";
+import enGroupPermissionsTable from "./locales/en/groupPermissionsTable.json";
+import frGroupPermissionsTable from "./locales/fr/groupPermissionsTable.json";
+import deGroupPermissionsTable from "./locales/de/groupPermissionsTable.json";
 
 
 /* ========================= Objeto de recursos ============================ */
@@ -171,6 +179,8 @@ const resources: Resource = {
     notificationSettings: ptNotificationSettings,
     personalLocaleSetup: ptPersonalLocaleSetup,
     personalSettings: ptPersonalSettings,
+    groupSettings: ptGroupSettings,
+    groupPermissionsTable: ptGroupPermissionsTable,
   },
   en: {
     common: enCommon,
@@ -199,6 +209,8 @@ const resources: Resource = {
     notificationSettings: enNotificationSettings,
     personalLocaleSetup: enPersonalLocaleSetup,
     personalSettings: enPersonalSettings,
+    groupSettings: enGroupSettings,
+    groupPermissionsTable: enGroupPermissionsTable,
   },
   fr: {
     common: frCommon,
@@ -227,6 +239,8 @@ const resources: Resource = {
     notificationSettings: frNotificationSettings,
     personalLocaleSetup: frPersonalLocaleSetup,
     personalSettings: frPersonalSettings,
+    groupSettings: frGroupSettings,
+    groupPermissionsTable: frGroupPermissionsTable,
   },
   de: {
     common: deCommon,
@@ -255,6 +269,8 @@ const resources: Resource = {
     notificationSettings: deNotificationSettings,
     personalLocaleSetup: dePersonalLocaleSetup,
     personalSettings: dePersonalSettings,
+    groupSettings: deGroupSettings,
+    groupPermissionsTable: deGroupPermissionsTable,
   }
 };
 
@@ -293,6 +309,8 @@ i18n
       "notificationSettings",
       "personalLocaleSetup",
       "personalSettings",
+      "groupSettings",
+      "groupPermissionsTable",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

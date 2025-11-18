@@ -1,0 +1,58 @@
+{
+  "title": "Permissions par groupe",
+  "header": {
+    "settings": "Paramètres",
+    "title": "Groupes et accès"
+  },
+  "badge": {
+    "syncing": "Synchronisation des données…"
+  },
+  "left": {
+    "groups": "Groupes",
+    "create": "Ajouter un groupe",
+    "searchPlaceholder": "Rechercher des groupes…",
+    "meta": "{{perms}} permissions • {{members}} membres",
+    "empty": "Aucun groupe trouvé."
+  },
+  "right": {
+    "selectPrompt": "Sélectionnez un groupe à gauche pour gérer ses permissions.",
+    "nameLabel": "Nom du groupe",
+    "rename": "Renommer",
+    "delete": "Supprimer",
+    "closePanel": "Fermer le panneau"
+  },
+  "createModal": {
+    "title": "Créer un nouveau groupe",
+    "close": "Fermer",
+    "nameLabel": "Nom du groupe",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "renameModal": {
+    "title": "Renommer le groupe",
+    "close": "Fermer",
+    "nameLabel": "Nouveau nom du groupe",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "toast": {
+    "loadAllError": "Impossible de charger les groupes. Veuillez réessayer.",
+    "detailError": "Impossible de charger les détails de ce groupe.",
+    "createNameRequired": "Veuillez saisir un nom pour le groupe.",
+    "createSuccess": "Groupe créé avec succès.",
+    "createError": "Impossible de créer le groupe. Veuillez réessayer.",
+    "renameEmpty": "Le nom du groupe ne peut pas être vide.",
+    "renameSuccess": "Nom du groupe mis à jour.",
+    "renameError": "Impossible de renommer le groupe.",
+    "deleteSuccess": "Groupe supprimé.",
+    "deleteError": "Impossible de supprimer le groupe.",
+    "saveSuccess": "Permissions mises à jour pour ce groupe.",
+    "saveError": "Impossible de mettre à jour les permissions. Veuillez réessayer."
+  },
+  "confirm": {
+    "deleteText": "Voulez-vous vraiment supprimer le groupe « {{name}} » ? Cette action est irréversible.",
+    "confirmLabel": "Supprimer le groupe",
+    "cancelLabel": "Annuler",
+    "fail": "Une erreur s'est produite lors de la confirmation de l'action."
+  }
+}

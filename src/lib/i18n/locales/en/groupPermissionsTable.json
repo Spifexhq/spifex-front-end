@@ -1,0 +1,223 @@
+{
+  "tabs": {
+    "navbar": "Navbar",
+    "sidebar": "Sidebar",
+    "page_components": "Page components",
+    "entries": "Entries",
+    "settings": "Settings & access"
+  },
+  "table": {
+    "hint": "Choose which features this group can access."
+  },
+  "noItems": "No permissions in this section.",
+  "buttons": {
+    "undo": "Discard changes",
+    "save": "Save permissions"
+  },
+  "perms": {
+    "view_cash_flow_button": {
+      "label": "Cash Flow button",
+      "description": "Controls whether this group sees the Cash Flow button in the main navbar."
+    },
+    "view_settled_button": {
+      "label": "Settled entries button",
+      "description": "Controls whether this group sees the Settled entries button in the navbar."
+    },
+    "view_report_button": {
+      "label": "Reports button",
+      "description": "Controls whether this group sees the Reports section in the navbar."
+    },
+    "view_credit_modal_button": {
+      "label": "Credit entry button",
+      "description": "Allows users in this group to open the Credit entry modal from the sidebar."
+    },
+    "view_debit_modal_button": {
+      "label": "Debit entry button",
+      "description": "Allows users in this group to open the Debit entry modal from the sidebar."
+    },
+    "view_cash_flow_entries": {
+      "label": "Cash Flow entries list",
+      "description": "Allows viewing the list of Cash Flow entries."
+    },
+    "view_settled_entries": {
+      "label": "Settled entries list",
+      "description": "Allows viewing the list of settled entries."
+    },
+    "view_banks_table": {
+      "label": "Banks table",
+      "description": "Allows viewing the banks balance table."
+    },
+    "view_filters": {
+      "label": "Filters panel",
+      "description": "Allows viewing and using the filters panel on Cash Flow pages."
+    },
+    "add_cash_flow_entries": {
+      "label": "Add Cash Flow entry",
+      "description": "Allows creating new Cash Flow entries."
+    },
+    "change_cash_flow_entries": {
+      "label": "Edit Cash Flow entry",
+      "description": "Allows editing existing Cash Flow entries."
+    },
+    "delete_cash_flow_entries": {
+      "label": "Delete Cash Flow entry",
+      "description": "Allows deleting Cash Flow entries."
+    },
+    "change_settled_entries": {
+      "label": "Edit settled entry",
+      "description": "Allows editing entries that are already settled."
+    },
+    "delete_settled_entries": {
+      "label": "Delete settled entry",
+      "description": "Allows deleting entries that are already settled."
+    },
+    "add_transference": {
+      "label": "Add transfer",
+      "description": "Allows registering transfers between bank accounts."
+    },
+    "add_user": {
+      "label": "Add user",
+      "description": "Allows creating new users for the organization."
+    },
+    "change_user": {
+      "label": "Edit user",
+      "description": "Allows editing user details."
+    },
+    "delete_user": {
+      "label": "Delete user",
+      "description": "Allows deleting users from the organization."
+    },
+    "view_user": {
+      "label": "View users",
+      "description": "Allows viewing the list of users and their details."
+    },
+    "add_bank": {
+      "label": "Add bank account",
+      "description": "Allows creating bank accounts."
+    },
+    "change_bank": {
+      "label": "Edit bank account",
+      "description": "Allows editing bank account configuration."
+    },
+    "delete_bank": {
+      "label": "Delete bank account",
+      "description": "Allows deleting bank accounts."
+    },
+    "view_bank": {
+      "label": "View bank accounts",
+      "description": "Allows viewing bank accounts and balances."
+    },
+    "add_employee": {
+      "label": "Add employee",
+      "description": "Allows creating employee records."
+    },
+    "change_employee": {
+      "label": "Edit employee",
+      "description": "Allows editing employee records."
+    },
+    "delete_employee": {
+      "label": "Delete employee",
+      "description": "Allows deleting employee records."
+    },
+    "view_employee": {
+      "label": "View employees",
+      "description": "Allows viewing the list of employees."
+    },
+    "add_group": {
+      "label": "Add group",
+      "description": "Allows creating permission groups."
+    },
+    "change_group": {
+      "label": "Edit group",
+      "description": "Allows editing permission groups."
+    },
+    "delete_group": {
+      "label": "Delete group",
+      "description": "Allows deleting permission groups."
+    },
+    "view_group": {
+      "label": "View groups",
+      "description": "Allows viewing the list of permission groups."
+    },
+    "add_ledger_account": {
+      "label": "Add ledger account",
+      "description": "Allows creating general ledger accounts."
+    },
+    "change_ledger_account": {
+      "label": "Edit ledger account",
+      "description": "Allows editing general ledger accounts."
+    },
+    "delete_ledger_account": {
+      "label": "Delete ledger account",
+      "description": "Allows deleting general ledger accounts."
+    },
+    "view_ledger_account": {
+      "label": "View ledger accounts",
+      "description": "Allows viewing the chart of accounts."
+    },
+    "add_department": {
+      "label": "Add department",
+      "description": "Allows creating departments."
+    },
+    "change_department": {
+      "label": "Edit department",
+      "description": "Allows editing departments."
+    },
+    "delete_department": {
+      "label": "Delete department",
+      "description": "Allows deleting departments."
+    },
+    "view_department": {
+      "label": "View departments",
+      "description": "Allows viewing the list of departments."
+    },
+    "add_project": {
+      "label": "Add project",
+      "description": "Allows creating projects."
+    },
+    "change_project": {
+      "label": "Edit project",
+      "description": "Allows editing projects."
+    },
+    "delete_project": {
+      "label": "Delete project",
+      "description": "Allows deleting projects."
+    },
+    "view_project": {
+      "label": "View projects",
+      "description": "Allows viewing the list of projects."
+    },
+    "add_inventory": {
+      "label": "Add inventory item",
+      "description": "Allows creating inventory items."
+    },
+    "change_inventory": {
+      "label": "Edit inventory item",
+      "description": "Allows editing inventory items."
+    },
+    "delete_inventory": {
+      "label": "Delete inventory item",
+      "description": "Allows deleting inventory items."
+    },
+    "view_inventory": {
+      "label": "View inventory",
+      "description": "Allows viewing inventory items."
+    },
+    "add_entity": {
+      "label": "Add entity",
+      "description": "Allows creating entities (companies/branches)."
+    },
+    "change_entity": {
+      "label": "Edit entity",
+      "description": "Allows editing entities."
+    },
+    "delete_entity": {
+      "label": "Delete entity",
+      "description": "Allows deleting entities."
+    },
+    "view_entity": {
+      "label": "View entities",
+      "description": "Allows viewing the list of entities."
+    }
+  }
+}

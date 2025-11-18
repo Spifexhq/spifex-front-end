@@ -1,0 +1,58 @@
+{
+  "title": "Berechtigungen pro Gruppe",
+  "header": {
+    "settings": "Einstellungen",
+    "title": "Gruppen und Zugriffe"
+  },
+  "badge": {
+    "syncing": "Daten werden synchronisiert…"
+  },
+  "left": {
+    "groups": "Gruppen",
+    "create": "Gruppe hinzufügen",
+    "searchPlaceholder": "Gruppen suchen…",
+    "meta": "{{perms}} Berechtigungen • {{members}} Mitglieder",
+    "empty": "Keine Gruppen gefunden."
+  },
+  "right": {
+    "selectPrompt": "Wähle links eine Gruppe aus, um ihre Berechtigungen zu verwalten.",
+    "nameLabel": "Gruppenname",
+    "rename": "Umbenennen",
+    "delete": "Löschen",
+    "closePanel": "Panel schließen"
+  },
+  "createModal": {
+    "title": "Neue Gruppe erstellen",
+    "close": "Schließen",
+    "nameLabel": "Gruppenname",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "renameModal": {
+    "title": "Gruppe umbenennen",
+    "close": "Schließen",
+    "nameLabel": "Neuer Gruppenname",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "toast": {
+    "loadAllError": "Gruppen konnten nicht geladen werden. Bitte versuche es erneut.",
+    "detailError": "Details dieser Gruppe konnten nicht geladen werden.",
+    "createNameRequired": "Bitte gib einen Namen für die Gruppe ein.",
+    "createSuccess": "Gruppe erfolgreich erstellt.",
+    "createError": "Gruppe konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "renameEmpty": "Der Gruppenname darf nicht leer sein.",
+    "renameSuccess": "Gruppenname wurde aktualisiert.",
+    "renameError": "Die Gruppe konnte nicht umbenannt werden.",
+    "deleteSuccess": "Gruppe gelöscht.",
+    "deleteError": "Die Gruppe konnte nicht gelöscht werden.",
+    "saveSuccess": "Berechtigungen für diese Gruppe wurden aktualisiert.",
+    "saveError": "Berechtigungen konnten nicht aktualisiert werden. Bitte versuche es erneut."
+  },
+  "confirm": {
+    "deleteText": "Möchtest du die Gruppe „{{name}}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmLabel": "Gruppe löschen",
+    "cancelLabel": "Abbrechen",
+    "fail": "Beim Bestätigen der Aktion ist ein Fehler aufgetreten."
+  }
+}

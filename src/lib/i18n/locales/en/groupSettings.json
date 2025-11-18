@@ -1,0 +1,58 @@
+{
+  "title": "Group permissions",
+  "header": {
+    "settings": "Settings",
+    "title": "Groups & access"
+  },
+  "badge": {
+    "syncing": "Syncing data…"
+  },
+  "left": {
+    "groups": "Groups",
+    "create": "Add group",
+    "searchPlaceholder": "Search groups…",
+    "meta": "{{perms}} permissions • {{members}} members",
+    "empty": "No groups found."
+  },
+  "right": {
+    "selectPrompt": "Select a group on the left to manage its permissions.",
+    "nameLabel": "Group name",
+    "rename": "Rename",
+    "delete": "Delete",
+    "closePanel": "Close panel"
+  },
+  "createModal": {
+    "title": "Create new group",
+    "close": "Close",
+    "nameLabel": "Group name",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "renameModal": {
+    "title": "Rename group",
+    "close": "Close",
+    "nameLabel": "New group name",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "toast": {
+    "loadAllError": "We couldn't load the groups. Please try again.",
+    "detailError": "We couldn't load this group's details.",
+    "createNameRequired": "Please enter a name for the group.",
+    "createSuccess": "Group created successfully.",
+    "createError": "We couldn't create the group. Please try again.",
+    "renameEmpty": "Group name cannot be empty.",
+    "renameSuccess": "Group name updated.",
+    "renameError": "We couldn't rename the group.",
+    "deleteSuccess": "Group deleted.",
+    "deleteError": "We couldn't delete the group.",
+    "saveSuccess": "Permissions updated for this group.",
+    "saveError": "We couldn't update permissions. Please try again."
+  },
+  "confirm": {
+    "deleteText": "Are you sure you want to delete the group \"{{name}}\"? This action cannot be undone.",
+    "confirmLabel": "Delete group",
+    "cancelLabel": "Cancel",
+    "fail": "Something went wrong while confirming the action."
+  }
+}
