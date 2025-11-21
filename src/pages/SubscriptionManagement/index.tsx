@@ -108,8 +108,8 @@ const SubscriptionManagement: React.FC = () => {
 
   // Pricing map (env → label). Use your own price ids.
   const availablePlans = useMemo(() => {
-    const dev = import.meta.env.VITE_ENVIRONMENT === "development";
-    return dev
+    const isDev = import.meta.env.DEV;
+    return isDev
       ? [
           { priceId: "price_1Q01ZhJP9mPoGRyfBocieoN0", label: t("subscription:plan.basic") },
           { priceId: "price_1Q0BQ0JP9mPoGRyfvnYKUjCy", label: t("subscription:plan.premium") },

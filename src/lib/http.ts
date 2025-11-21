@@ -1,16 +1,4 @@
 // src/lib/http.ts
-// =============================================================================
-// Axios HTTP layer with:
-// - Base URL resolution
-// - Auth + Org headers
-// - Telemetry hooks (sanitized)
-// - 429 backoff and global pause
-// - 401 refresh (single-flight via HttpOnly Cookie)
-// - GET single-flight + micro-cache (0.5s)
-// - request<T> envelope returning ApiSuccess<T>
-// - clearHttpCaches() to wipe in-memory state on sign-out
-// =============================================================================
-
 import axios, {
   type AxiosError,
   type AxiosResponse,
@@ -25,39 +13,25 @@ import {
 } from "@/models/Api";
 
 import { getAccess, setTokens, clearTokens } from "@/lib/tokens";
-
-// Ensure NetReport singleton is present (no side effects if absent)
 import "@/lib/netReport";
-
-// Redux store (used for reading the org external id header)
 import { store } from "@/redux/store";
 
-// =============================================================================
-// Base URL
-// =============================================================================
-
-const rawBaseURL =
-  import.meta.env.VITE_ENVIRONMENT === "development"
-    ? import.meta.env.VITE_SPIFEX_DEVELOPMENT_URL_API
-    : import.meta.env.VITE_SPIFEX_URL_API ||
-      "https://spifex-backend.onrender.com/api/v1";
+const rawBaseURL = import.meta.env.DEV
+  ? import.meta.env.VITE_SPIFEX_DEVELOPMENT_URL_API
+  : import.meta.env.VITE_SPIFEX_URL_API || "https://spifex-backend.onrender.com/api/v1";
 
 export const baseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
-// =============================================================================
-// Throttling & anti-stampede (per-scope pacing + global pause)
-// =============================================================================
-
-let pauseUntil = 0; // epoch ms until which requests wait
+let pauseUntil = 0;
 
 function setGlobalPause(ms: number) {
   pauseUntil = Math.max(pauseUntil, Date.now() + ms);
 }
 
 const scopeMinGapMs: Record<string, number> = {
-  read: 300, // ~3.3 req/s
-  auth: 500, // auth endpoints are more sensitive
-  write: 0, // POST/PUT/PATCH/DELETE are not paced
+  read: 300,
+  auth: 500,
+  write: 0,
 };
 
 const lastByScope = new Map<string, number>();
@@ -84,10 +58,6 @@ async function scheduleByScope(method: Method, url: string) {
   lastByScope.set(scope, Date.now());
 }
 
-// =============================================================================
-// Security helper: sanitize URL (sensitive data in logs)
-// =============================================================================
-
 const SENSITIVE_PARAMS = [
   "token",
   "password",
@@ -95,12 +65,9 @@ const SENSITIVE_PARAMS = [
   "new_password",
   "refresh",
   "access",
-  "uidb64", // Base64 encoded user ID
+  "uidb64",
 ];
 
-/**
- * Removes sensitive query parameters from a URL string before logging/telemetry.
- */
 function sanitizeUrl(fullUrl: string): string {
   try {
     const hasProtocol = fullUrl.startsWith("http");
@@ -123,23 +90,14 @@ function sanitizeUrl(fullUrl: string): string {
       ? urlObj.toString()
       : urlObj.pathname + urlObj.search;
   } catch {
-    // Fallback: strip everything after '?'
     return fullUrl.split("?")[0] || fullUrl;
   }
 }
-
-// =============================================================================
-// Axios instance
-// =============================================================================
 
 export const http = axios.create({
   baseURL,
   withCredentials: true,
 });
-
-// =============================================================================
-// Telemetry: start/end timing of requests
-// =============================================================================
 
 const startAt = new WeakMap<AxiosRequestConfig, number>();
 
@@ -147,14 +105,12 @@ http.interceptors.request.use(async (cfg) => {
   const method = (cfg.method || "GET").toUpperCase() as Method;
   const url = cfg.url || "";
 
-  // Local pacing & global pause
   await scheduleByScope(method, url);
 
   if (pauseUntil > Date.now()) {
     await new Promise((resolve) => setTimeout(resolve, pauseUntil - Date.now()));
   }
 
-  // Start timer
   startAt.set(cfg, performance.now());
 
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
@@ -163,8 +119,8 @@ http.interceptors.request.use(async (cfg) => {
   (window).NetReport?.push({
     t: Date.now(),
     method,
-    url, // keep relative
-    fullUrl: safeUrl, // sanitized
+    url,
+    fullUrl: safeUrl,
     reqId: (cfg.headers as Record<string, unknown> | undefined)?.[
       "X-Request-Id"
     ] as string | undefined,
@@ -172,10 +128,6 @@ http.interceptors.request.use(async (cfg) => {
 
   return cfg;
 });
-
-// =============================================================================
-// Request interceptor: Authorization + Org scope header
-// =============================================================================
 
 function readOrgExternalId(): string | undefined {
   const s = store.getState() as unknown as {
@@ -193,13 +145,11 @@ function readOrgExternalId(): string | undefined {
 http.interceptors.request.use((cfg) => {
   cfg.headers = cfg.headers ?? {};
 
-  // Authorization header from in-memory access token
   const token = getAccess();
   if (token) {
     (cfg.headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
 
-  // Org scope header
   const orgExt = readOrgExternalId();
   if (orgExt) {
     (cfg.headers as Record<string, string>)["X-Org-External-Id"] = orgExt;
@@ -208,10 +158,6 @@ http.interceptors.request.use((cfg) => {
   return cfg;
 });
 
-// =============================================================================
-// Narrowing helpers (avoid "any")
-// =============================================================================
-
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 
@@ -219,25 +165,20 @@ type Tokens = { access: string; refresh?: string };
 
 const hasAccessToken = (v: unknown): v is Tokens => {
   if (!isObject(v)) return false;
-  if (typeof (v).access !== "string") return false;
+  if (typeof v.access !== "string") return false;
   return true;
 };
 
 const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } =>
   isObject(v) && "error" in v;
 
-/**
- * Unwraps tokens from either a flat payload or an envelope: { data: { access, refresh? } }.
- */
 function unwrapTokens(payload: unknown): Tokens | null {
-  // Flat: { access, refresh? }
   if (hasAccessToken(payload)) {
     return payload;
   }
 
-  // Envelope: { data: { access, refresh? } }
   if (isObject(payload) && "data" in payload) {
-    const inner = (payload).data;
+    const inner = payload.data;
     if (hasAccessToken(inner)) {
       return inner;
     }
@@ -245,10 +186,6 @@ function unwrapTokens(payload: unknown): Tokens | null {
 
   return null;
 }
-
-// =============================================================================
-// Refresh (single-flight)
-// =============================================================================
 
 let refreshingPromise: Promise<void> | null = null;
 const subscribers: Array<() => void> = [];
@@ -258,39 +195,27 @@ function notifySubscribers() {
 }
 
 async function doRefresh(): Promise<void> {
-  // We do NOT read 'refresh' from local storage anymore.
-  // We assume the refresh token is in an HttpOnly cookie.
-  // The backend /auth/refresh/ endpoint reads the cookie.
   const res = await axios.post(
     `${baseURL}auth/refresh/`,
-    {}, // no body needed, cookie-only
+    {},
     {
       validateStatus: (s) => s < 500,
-      withCredentials: true, // critical: sends HttpOnly cookie
+      withCredentials: true,
     },
   );
 
   const { data, status } = res as AxiosResponse<unknown>;
-
   const tokens = unwrapTokens(data);
 
   if (status !== 200 || !tokens) {
     throw new Error("refresh-failed");
   }
 
-  // Access token is stored in memory only.
-  // If a new refresh token is issued, it comes via Set-Cookie.
   setTokens(tokens.access);
 }
 
-// =============================================================================
-// 429 handlers: parse Retry-After + jitter + global pause
-// =============================================================================
-
 function parseRetryAfter(headerValue: unknown): number {
-  // returns delay in ms
   if (typeof headerValue === "string") {
-    // Either seconds (e.g., "120") or an HTTP date
     const secs = Number(headerValue);
     if (Number.isFinite(secs)) return Math.max(0, secs) * 1000;
 
@@ -299,7 +224,7 @@ function parseRetryAfter(headerValue: unknown): number {
       return Math.max(0, dateMs - Date.now());
     }
   }
-  return 1000; // default 1s
+  return 1000;
 }
 
 function calc429DelayMs(err: AxiosError): number {
@@ -308,10 +233,6 @@ function calc429DelayMs(err: AxiosError): number {
   const jitter = Math.random() * 250;
   return base + jitter;
 }
-
-// =============================================================================
-// Response interceptor: telemetry + 429 retry + 401 refresh
-// =============================================================================
 
 type TelemetryExtra = { retried429?: number; retryAfterMs?: number };
 
@@ -335,8 +256,8 @@ function finishLog(
   (window).NetReport?.push({
     t: Date.now(),
     method: (cfg.method || "GET").toUpperCase() as Method,
-    url: cfg.url || "", // keep relative
-    fullUrl: safeUrl, // sanitized
+    url: cfg.url || "",
+    fullUrl: safeUrl,
     status,
     ms,
     reqId,
@@ -345,8 +266,8 @@ function finishLog(
 }
 
 type RetriableConfig = AxiosRequestConfig & {
-  _retry?: boolean; // already tried refresh?
-  _retried429?: number; // 429 retry counter
+  _retry?: boolean;
+  _retried429?: number;
 };
 
 http.interceptors.response.use(
@@ -357,7 +278,6 @@ http.interceptors.response.use(
       "x-request-id"
     ];
     if (typeof reqId === "string") {
-      // Keep console noise low but traceable
       console.debug("🔗 request-id", reqId);
     }
 
@@ -367,7 +287,6 @@ http.interceptors.response.use(
     const original = (error.config || {}) as RetriableConfig;
     const status = error.response?.status;
 
-    // 429: exponential(ish) backoff honoring Retry-After; up to 3 retries
     if (status === 429) {
       original._retried429 = (original._retried429 ?? 0) + 1;
 
@@ -386,7 +305,6 @@ http.interceptors.response.use(
       }
     }
 
-    // 401: attempt single-flight refresh (only once per request)
     if (status === 401 && !original._retry) {
       original._retry = true;
 
@@ -402,32 +320,24 @@ http.interceptors.response.use(
           });
       }
 
-      // Wait for refresh to complete
       await new Promise<void>((resolve, reject) => {
         if (!refreshingPromise) return resolve();
         subscribers.push(resolve);
         refreshingPromise!.catch(reject);
       });
 
-      // If we still have no access token (refresh failed), propagate
       if (!getAccess()) {
         finishLog(original, undefined, error);
         return Promise.reject(error);
       }
 
-      // Retry with fresh access token
       return http(original);
     }
 
-    // Other errors: telemetry + propagate
     finishLog(original, undefined, error);
     return Promise.reject(error);
   },
 );
-
-// =============================================================================
-// GET single-flight + 0.5s micro-cache
-// =============================================================================
 
 const inflight = new Map<string, Promise<AxiosResponse>>();
 const responseCache = new Map<string, { t: number; res: AxiosResponse }>();
@@ -457,20 +367,12 @@ function pruneParams(p: unknown) {
   return out;
 }
 
-// =============================================================================
-// Public cache reset (used on sign-out)
-// =============================================================================
-
 export function clearHttpCaches() {
   inflight.clear();
   responseCache.clear();
   lastByScope.clear();
   pauseUntil = 0;
 }
-
-// =============================================================================
-// Request envelope: returns ApiSuccess<T> or {} for 204
-// =============================================================================
 
 export async function request<T>(
   endpoint: string,
@@ -491,12 +393,10 @@ export async function request<T>(
     if ((cfg.method || "GET").toUpperCase() === "GET") {
       const k = keyFrom(cfg);
 
-      // 1) Micro-cache hit?
       const hit = responseCache.get(k);
       if (hit && Date.now() - hit.t < CACHE_TTL_MS) {
         res = hit.res as AxiosResponse<ApiResponse<T> | unknown>;
       } else {
-        // 2) Single-flight
         if (!inflight.has(k)) {
           inflight.set(
             k,
@@ -507,7 +407,6 @@ export async function request<T>(
         }
         res = await inflight.get(k)!;
 
-        // 304 handling: re-use materialized response or force revalidation
         if (res.status === 304) {
           const cached = responseCache.get(k);
           if (cached) {
@@ -550,13 +449,11 @@ export async function request<T>(
         }
       }
     } else {
-      // Non-GET: no micro-cache, no single-flight
       res = await http.request<ApiResponse<T> | unknown>(cfg);
     }
 
     const body = res.data;
 
-    // 204 or empty body → return empty success
     if (
       res.status === 204 ||
       body == null ||
