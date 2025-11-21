@@ -20,6 +20,9 @@ import {
 import { getAccess, setTokens, clearTokens } from "@/lib/tokens";
 import { clearHttpCaches } from "@/lib/http";
 
+// Persistence flag key (NOT the token itself)
+const AUTH_HINT_KEY = 'auth_status';
+
 // Keep this exported for legacy call sites
 export const handleGetAccessToken = () => getAccess();
 
@@ -39,17 +42,28 @@ export const useAuth = () => {
 
     // 3) HTTP layer → clear in-flight/small cache/throttle state
     clearHttpCaches();
+    
+    // 4) Clear persistence hint
+    localStorage.removeItem(AUTH_HINT_KEY);
   }, [dispatch]);
 
   // ---------------------------------------------------------------------------
-  // Bootstrap current user if we have a token and none is loaded yet
-  // - Safe: does NOT sign out on failures (401/429 handled by interceptors)
+  // Bootstrap current user if we believe they are logged in
   // ---------------------------------------------------------------------------
   const handleInitUser = useCallback(async () => {
-    const token = getAccess();
-    if (!token || auth.user) return; // nothing to do
+    // 💥 FIX: Do NOT check getAccess() here. It is empty on page reload.
+    // Instead, check the localStorage "hint" that indicates a session should exist.
+    const shouldBeLoggedIn = localStorage.getItem(AUTH_HINT_KEY) === 'active';
+    
+    // If we don't think we are logged in, or Redux is already populated, stop.
+    if (!shouldBeLoggedIn || auth.user) return; 
 
     try {
+      // We attempt to get the user. 
+      // 1. Since memory token is empty, this request sends NO Authorization header.
+      // 2. Backend returns 401.
+      // 3. http.ts interceptor catches 401 -> calls /refresh using HttpOnly Cookie.
+      // 4. If successful, it sets the new Access Token in memory and retries this request.
       const res = await api.getUser();
 
       dispatch(setUser(res.data.user));
@@ -60,7 +74,6 @@ export const useAuth = () => {
         dispatch(setSubscriptionStatus(res.data.subscription));
       }
 
-      // 🔹 NEW: hydrate permissions as well (from whatever your API returns)
       const perms =
         res.data.permissions ??
         res.data.organization?.permissions ??
@@ -68,9 +81,12 @@ export const useAuth = () => {
 
       dispatch(setPermissions(perms));
     } catch (err) {
-      console.warn("handleInitUser failed:", err);
+      // If the refresh failed (e.g., cookie expired, invalid), we accept that we are logged out.
+      console.warn("Session restoration failed (refresh token likely expired):", err);
+      localStorage.removeItem(AUTH_HINT_KEY);
+      handleSignOut();
     }
-  }, [auth.user, dispatch]);
+  }, [auth.user, dispatch, handleSignOut]);
 
   // ---------------------------------------------------------------------------
   // Sign in: calls backend, persists tokens, hydrates redux slices
@@ -79,12 +95,16 @@ export const useAuth = () => {
     const res = await api.signIn({ email, password });
 
     const access = res.data.access;
-    const refresh = res.data.refresh; // backend sends refresh
+    // Note: 'refresh' should be set by the backend in a Set-Cookie header (HttpOnly)
 
-    if (!access || !refresh) throw new Error("Tokens ausentes");
+    if (!access) throw new Error("Tokens ausentes");
 
-    // Persist tokens
-    setTokens(access, refresh);
+    // Persist Access Token (Memory)
+    setTokens(access);
+    
+    // Set Persistence Hint (Local Storage)
+    localStorage.setItem(AUTH_HINT_KEY, 'active');
+
     console.log("✅ access salvo:", access.slice(0, 25));
 
     // Hydrate slices
@@ -94,7 +114,6 @@ export const useAuth = () => {
     if (res.data.subscription) {
       dispatch(setSubscription(res.data.subscription));
       dispatch(setSubscriptionStatus(res.data.subscription));
-      console.log("💳 Assinatura:", res.data.subscription);
     }
 
     dispatch(setPermissions(res.data.permissions ?? []));
