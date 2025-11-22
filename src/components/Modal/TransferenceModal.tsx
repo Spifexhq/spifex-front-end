@@ -77,7 +77,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     if (!isOpen) return;
     (async () => {
       try {
-        const { data } = await api.getAllBanks(true);
+        const { data } = await api.getBanks(true);
         const page = (data?.results ?? []) as BankAccount[];
         setBanks(page);
       } catch (err) {

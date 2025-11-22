@@ -168,7 +168,7 @@ const BankSettings: React.FC = () => {
     else setIsInitialLoading(true);
 
     try {
-      const { data } = await api.getAllBanks();
+      const { data } = await api.getBanks();
       const list: BankAccount[] = data?.results ?? [];
       const sorted = [...list].sort((a, b) => (a.institution || "").localeCompare(b.institution || ""));
       setBanks(sorted);

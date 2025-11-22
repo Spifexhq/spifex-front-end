@@ -123,7 +123,7 @@ const Statements: React.FC = () => {
   /* ------------------------------ Fetching -------------------------------- */
   const refreshBanks = useCallback(async () => {
     try {
-      const { data } = await api.getAllBanks();
+      const { data } = await api.getBanks();
       setBanks(data?.results ?? []);
     } catch {
       setSnack({ message: t("settings:statements.toast.banksFetchError"), severity: "error" });

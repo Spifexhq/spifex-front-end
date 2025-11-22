@@ -426,7 +426,7 @@ export const api = {
   },
 
   /* --- Banks --- */
-  getAllBanks: (active?: boolean) => {
+  getBanks: (active?: boolean) => {
     const params = active == null ? undefined : { active: active ? "true" : "false" };
 
     return request<Paginated<BankAccount>>(

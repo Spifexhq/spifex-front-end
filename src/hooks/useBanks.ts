@@ -27,7 +27,7 @@ async function getAllBanksWithBackoff(active?: boolean) {
 
   for (let attempt = 0; attempt < maxTries; attempt++) {
     try {
-      const { data } = await api.getAllBanks(active); // ← passa o booleano
+      const { data } = await api.getBanks(active); // ← passa o booleano
       return data;
     } catch (err: unknown) {
       const e = err as HttpLikeError;
