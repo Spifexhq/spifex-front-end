@@ -307,6 +307,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
   );
 
   function toEntryFilters(f: LocalFilters): EntryFilters {
+    const minCents = centsDigitsToInt(f.amount_min);
+    const maxCents = centsDigitsToInt(f.amount_max);
+
     return {
       start_date: f.start_date,
       end_date: f.end_date,
@@ -315,8 +318,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
       gla_id: f.gla_id,
       bank_id: f.bank_id,
       tx_type: f.tx_type,
-      amount_min: f.amount_min ? centsDigitsToInt(f.amount_min) : undefined,
-      amount_max: f.amount_max ? centsDigitsToInt(f.amount_max) : undefined,
+      amount_min: minCents > 0 ? minCents : undefined,
+      amount_max: maxCents > 0 ? maxCents : undefined,
       settlement_status: f.settlement_status as false | true,
     } as EntryFilters;
   }
@@ -351,6 +354,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
     if (k === "amount") setFilters((f) => ({ ...f, amount_min: "", amount_max: "" }));
   }
 
+  const hasAmountMin = centsDigitsToInt(filters.amount_min) > 0;
+  const hasAmountMax = centsDigitsToInt(filters.amount_max) > 0;
+  const hasAmountFilter = hasAmountMin || hasAmountMax;
+
   const hasActive =
     !!filters.start_date ||
     !!filters.end_date ||
@@ -359,8 +366,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     !!filters.observation ||
     !!filters.description ||
     !!filters.tx_type ||
-    !!filters.amount_min ||
-    !!filters.amount_max;
+    hasAmountFilter;
 
   /* ---------------------------------- Render -------------------------------- */
   return (
@@ -420,12 +426,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
               onRemove={() => removeChip("tx_type")}
             />
           )}
-          {(filters.amount_min || filters.amount_max) && (
+          {hasAmountFilter && (
             <Chip
               icon="note"
               label={amountChipLabel(
-                filters.amount_min,
-                filters.amount_max,
+                hasAmountMin ? filters.amount_min : undefined,
+                hasAmountMax ? filters.amount_max : undefined,
                 t
               )}
               onClick={() => toggleEditor("amount")}
@@ -783,10 +789,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
         {openEditor === "observation" && (
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
-            <input
+            <Input
               type="text"
               placeholder={t("filterBar:editors.observation.placeholder")}
-              className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
+
               value={filters.observation || ""}
               onChange={(e) =>
                 setFilters((f) => ({ ...f, observation: e.target.value }))
@@ -864,12 +870,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   {t("filterBar:editors.amount.min")}{" "}
                   {t("filterBar:editors.amount.currencySuffix")}
                 </span>
-                <input
+                <Input
                   type="text"
                   inputMode="numeric"
-                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  placeholder={t("filterBar:editors.amount.placeholder")}
-                  value={filters.amount_min ? formatCurrency(filters.amount_min) : ""}
+                  // 🔹 Sempre mostra algum valor: se estiver vazio, formata "0"
+                  value={formatCurrency(filters.amount_min ?? "0")}
                   onChange={(e) =>
                     setFilters((f) => ({ ...f, amount_min: e.target.value }))
                   }
@@ -889,12 +894,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   {t("filterBar:editors.amount.max")}{" "}
                   {t("filterBar:editors.amount.currencySuffix")}
                 </span>
-                <input
+                <Input
                   type="text"
                   inputMode="numeric"
-                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
-                  placeholder={t("filterBar:editors.amount.placeholder")}
-                  value={filters.amount_max ? formatCurrency(filters.amount_max) : ""}
+                  value={formatCurrency(filters.amount_max ?? "0")}
                   onChange={(e) =>
                     setFilters((f) => ({ ...f, amount_max: e.target.value }))
                   }
