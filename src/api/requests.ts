@@ -57,6 +57,17 @@ export const api = {
   verifyNewEmail: <T>(uidb64: string, token: string) =>
     request<T>(`auth/verify-email/${uidb64}/${token}/`, "GET"),
 
+  saveCookieConsent: (payload: {
+    functional: boolean;
+    analytics: boolean;
+    marketing: boolean;
+    personalization: boolean;
+  }) => request<{ status: string; preferences: unknown }>(
+    "cookies/consent/",
+    "POST",
+    payload
+  ),
+
   /* --- User --- */
   getUser: () =>
     request<GetUserResponse>('auth/me/', "GET"),

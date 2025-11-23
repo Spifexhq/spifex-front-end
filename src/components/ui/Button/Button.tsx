@@ -50,6 +50,9 @@ const variants: Record<ButtonVariant, string> = {
   outline:
     "text-[var(--black)] [border:var(--standardBorder)] " +
     "bg-transparent hover:bg-[#f9f9f9] active:bg-[#f2f2f2] disabled:bg-[#fbfbfb]",
+  outlineBlack:
+    "text-[var(--black)] [border:var(--standardBorder)] " +
+    "bg-black text-white hover:bg-[#1b1b1b] active:bg-[#242124] disabled:bg-[#fbfbfb]",
   link:
     "h-auto px-0 bg-transparent border-0 underline-offset-4 " +
     "text-[var(--accentPrimary)] hover:underline",

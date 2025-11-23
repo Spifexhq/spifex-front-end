@@ -6,6 +6,7 @@ import { store } from '@/redux';
 import { BrowserRouter } from 'react-router-dom';
 import "@/lib/i18n";
 import i18n from '@/lib/i18n';
+import { CookieProvider } from "@/contexts/CookieProvider";
 import './index.css';
 
 document.documentElement.lang = i18n.language;
@@ -19,9 +20,11 @@ if (rootElement) {
 
   root.render(
     <Provider store={store}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <CookieProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+      </CookieProvider>
     </Provider>
   );
 }

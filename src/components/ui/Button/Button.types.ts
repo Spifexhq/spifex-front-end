@@ -7,6 +7,7 @@ export type ButtonVariant =
   | "cancel"
   | "danger"
   | "outline"
+  | "outlineBlack"
   | "link"
   | "outlinePrimary"
   | "outlineDanger"

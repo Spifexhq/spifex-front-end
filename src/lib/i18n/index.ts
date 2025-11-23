@@ -154,6 +154,11 @@ import enLimits from "./locales/en/limits.json";
 import frLimits from "./locales/fr/limits.json";
 import deLimits from "./locales/de/limits.json";
 
+import ptCookies from "./locales/pt/cookies.json";
+import enCookies from "./locales/en/cookies.json";
+import frCookies from "./locales/fr/cookies.json";
+import deCookies from "./locales/de/cookies.json";
+
 
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
@@ -187,6 +192,7 @@ const resources: Resource = {
     groupSettings: ptGroupSettings,
     groupPermissionsTable: ptGroupPermissionsTable,
     limits: ptLimits,
+    cookies: ptCookies,
   },
   en: {
     common: enCommon,
@@ -217,7 +223,8 @@ const resources: Resource = {
     personalSettings: enPersonalSettings,
     groupSettings: enGroupSettings,
     groupPermissionsTable: enGroupPermissionsTable,
-    limits: enLimits
+    limits: enLimits,
+    cookies: enCookies,
   },
   fr: {
     common: frCommon,
@@ -248,7 +255,8 @@ const resources: Resource = {
     personalSettings: frPersonalSettings,
     groupSettings: frGroupSettings,
     groupPermissionsTable: frGroupPermissionsTable,
-    limits: frLimits
+    limits: frLimits,
+    cookies: frCookies,
   },
   de: {
     common: deCommon,
@@ -279,7 +287,8 @@ const resources: Resource = {
     personalSettings: dePersonalSettings,
     groupSettings: deGroupSettings,
     groupPermissionsTable: deGroupPermissionsTable,
-    limits: deLimits
+    limits: deLimits,
+    cookies: deCookies,
   }
 };
 
@@ -288,7 +297,7 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: { 'pt-BR': ['pt'], default: ['en'] },
+    fallbackLng: { default: ['en'] },
     supportedLngs: LANGS as unknown as string[],
     nonExplicitSupportedLngs: true,
     resources,
@@ -321,6 +330,7 @@ i18n
       "groupSettings",
       "groupPermissionsTable",
       "limits",
+      "cookies",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

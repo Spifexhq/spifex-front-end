@@ -1,0 +1,18 @@
+{
+  "banner": {
+    "title": "Wir verwenden Cookies",
+    "description": "Mit einem Klick auf „Alle akzeptieren“ stimmen Sie der Nutzung von funktionalen, analytischen und Werbe-Cookies zu.",
+    "acceptAll": "Alle akzeptieren",
+    "rejectAll": "Alle ablehnen",
+    "moreOptions": "Weitere Optionen"
+  },
+  "modal": {
+    "title": "Wofür dürfen wir die Daten verwenden?",
+    "essential": "Essentiell",
+    "functional": "Funktional",
+    "analytics": "Analyse",
+    "marketing": "Werbung",
+    "personalization": "Personalisierung",
+    "confirm": "Bestätigen"
+  }
+}

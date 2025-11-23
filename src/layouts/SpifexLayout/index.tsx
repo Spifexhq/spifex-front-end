@@ -6,6 +6,7 @@ import { useAuth } from '@/api';
 import { AuthMiddleware, LocaleProfileMiddleware } from '@/middlewares';
 import TopProgress from 'src/components/ui/Loaders/TopProgress';
 import Navbar from 'src/components/layout/Navbar';
+import { CookieBanner } from "@/components/Cookies/CookieBanner";
 
 export const SpifexLayout: FC = () => {
   const { handleInitUser } = useAuth();
@@ -29,6 +30,7 @@ export const SpifexLayout: FC = () => {
         <div className="min-h-screen pt-16 bg-white text-gray-900">
           <Outlet />
         </div>
+        <CookieBanner />
       </LocaleProfileMiddleware>
     </AuthMiddleware>
   );

@@ -1,0 +1,18 @@
+{
+  "banner": {
+    "title": "Usamos cookies",
+    "description": "Ao clicar em “Aceitar tudo”, você concorda com o uso de cookies funcionais, analíticos e publicitários.",
+    "acceptAll": "Aceitar tudo",
+    "rejectAll": "Rejeitar tudo",
+    "moreOptions": "Mais opções"
+  },
+  "modal": {
+    "title": "Para que podemos usar os dados?",
+    "essential": "Essencial",
+    "functional": "Funcional",
+    "analytics": "Análise",
+    "marketing": "Publicidade",
+    "personalization": "Personalização",
+    "confirm": "Confirmar"
+  }
+}
