@@ -40,6 +40,7 @@ const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
 const LedgerAccountsRouter = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsRouter"));
 const Statements = lazy(() => import("@/pages/Statements"));
 const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
+const FormatSettings = lazy(() => import("@/pages/FormatSettings"));
 
 // Status Pages
 const PurchaseConfirmation = lazy(() => import("@/pages/Status/PurchaseConfirmation"));
@@ -212,6 +213,10 @@ const routes: RouteObject[] = [
                 {
                     path: 'notifications',
                     element: <NotificationSettings />
+                },
+                {
+                    path: 'manage-formats',
+                    element: <FormatSettings />
                 },
             ]
             },

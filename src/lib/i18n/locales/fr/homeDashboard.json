@@ -1,0 +1,52 @@
+{
+  "header": {
+    "pageTitle": "Tableau de bord | Spifex",
+    "title": "Vue d’ensemble",
+    "subtitle": "Vue rapide de la santé financière de l’entreprise : flux ouverts, règlements récents et prochaines échéances.",
+    "today": "Aujourd’hui"
+  },
+  "summary": {
+    "openTitle": "Flux de trésorerie ouvert (global)",
+    "openCount": "{{count}} écritures ouvertes",
+    "toReceive": "À recevoir",
+    "toPay": "À payer",
+    "settledTitle": "Règlements · 30 derniers jours",
+    "settledCount": "{{count}} mouvements",
+    "entriesIn": "Entrées",
+    "entriesOut": "Sorties",
+    "bankingTitle": "Banques & structure",
+    "accountsActive": "{{count}} comptes bancaires actifs",
+    "entities": "Entités",
+    "projects": "Projets",
+    "departments": "Départements",
+    "inventoryItems": "Articles en stock"
+  },
+  "activity": {
+    "overdueTitle": "Trésorerie en retard",
+    "overdueTop": "Top {{count}} écritures",
+    "overdueEmpty": "Aucune écriture en retard pour le moment.",
+    "next7Title": "Prochains 7 jours",
+    "next7Top": "Top {{count}} écritures",
+    "next7Empty": "Aucune écriture à échéance dans les 7 prochains jours.",
+    "recentSettlementsTitle": "Règlements récents",
+    "recentSettlementsCount": "Derniers {{count}}",
+    "recentSettlementsEmpty": "Aucun règlement récent.",
+    "inflow": "Entrée",
+    "outflow": "Sortie",
+    "noDescription": "Sans description",
+    "due": "Échéance"
+  },
+  "empty": {
+    "title": "Prêt à commencer ?",
+    "description": "Créez vos premières écritures ou connectez des comptes bancaires pour voir plus d’indicateurs sur le tableau de bord.",
+    "goToCashflow": "Aller au flux de trésorerie",
+    "manageBanks": "Gérer les comptes bancaires"
+  },
+  "errors": {
+    "loadDashboard": "Impossible de charger le tableau de bord.",
+    "retry": "Veuillez rafraîchir la page."
+  },
+  "labels": {
+    "settled": "Réglé"
+  }
+}

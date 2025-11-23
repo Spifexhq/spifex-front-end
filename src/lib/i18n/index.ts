@@ -129,6 +129,11 @@ import enNotificationSettings from "./locales/en/notificationSettings.json";
 import frNotificationSettings from "./locales/fr/notificationSettings.json";
 import deNotificationSettings from "./locales/de/notificationSettings.json";
 
+import ptFormatSettings from "./locales/pt/formatSettings.json";
+import enFormatSettings from "./locales/en/formatSettings.json";
+import frFormatSettings from "./locales/fr/formatSettings.json";
+import deFormatSettings from "./locales/de/formatSettings.json";
+
 import ptPersonalLocaleSetup from "./locales/pt/personalLocaleSetup.json";
 import enPersonalLocaleSetup from "./locales/en/personalLocaleSetup.json";
 import frPersonalLocaleSetup from "./locales/fr/personalLocaleSetup.json";
@@ -159,6 +164,11 @@ import enCookies from "./locales/en/cookies.json";
 import frCookies from "./locales/fr/cookies.json";
 import deCookies from "./locales/de/cookies.json";
 
+import ptHomeDashboard from "./locales/pt/homeDashboard.json";
+import enHomeDashboard from "./locales/en/homeDashboard.json";
+import frHomeDashboard from "./locales/fr/homeDashboard.json";
+import deHomeDashboard from "./locales/de/homeDashboard.json";
+
 
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
@@ -187,12 +197,14 @@ const resources: Resource = {
     reports: ptReportsPage,
     simulatedAI: ptSimAI,
     notificationSettings: ptNotificationSettings,
+    formatSettings: ptFormatSettings,
     personalLocaleSetup: ptPersonalLocaleSetup,
     personalSettings: ptPersonalSettings,
     groupSettings: ptGroupSettings,
     groupPermissionsTable: ptGroupPermissionsTable,
     limits: ptLimits,
     cookies: ptCookies,
+    homeDashboard: ptHomeDashboard
   },
   en: {
     common: enCommon,
@@ -219,12 +231,14 @@ const resources: Resource = {
     reports: enReportsPage,
     simulatedAI: enSimAI,
     notificationSettings: enNotificationSettings,
+    formatSettings: enFormatSettings,
     personalLocaleSetup: enPersonalLocaleSetup,
     personalSettings: enPersonalSettings,
     groupSettings: enGroupSettings,
     groupPermissionsTable: enGroupPermissionsTable,
     limits: enLimits,
     cookies: enCookies,
+    homeDashboard: enHomeDashboard
   },
   fr: {
     common: frCommon,
@@ -251,12 +265,14 @@ const resources: Resource = {
     reports: frReportsPage,
     simulatedAI: frSimAI,
     notificationSettings: frNotificationSettings,
+    formatSettings: frFormatSettings,
     personalLocaleSetup: frPersonalLocaleSetup,
     personalSettings: frPersonalSettings,
     groupSettings: frGroupSettings,
     groupPermissionsTable: frGroupPermissionsTable,
     limits: frLimits,
     cookies: frCookies,
+    homeDashboard: frHomeDashboard
   },
   de: {
     common: deCommon,
@@ -283,12 +299,14 @@ const resources: Resource = {
     reports: deReportsPage,
     simulatedAI: deSimAI,
     notificationSettings: deNotificationSettings,
+    formatSettings: deFormatSettings,
     personalLocaleSetup: dePersonalLocaleSetup,
     personalSettings: dePersonalSettings,
     groupSettings: deGroupSettings,
     groupPermissionsTable: deGroupPermissionsTable,
     limits: deLimits,
     cookies: deCookies,
+    homeDashboard: deHomeDashboard
   }
 };
 
@@ -331,6 +349,7 @@ i18n
       "groupPermissionsTable",
       "limits",
       "cookies",
+      "homeDashboard",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

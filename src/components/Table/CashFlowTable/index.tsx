@@ -17,6 +17,7 @@ import { getCursorFromUrl } from "src/lib/list";
 import type { EntryFilters, Entry } from "src/models/entries/domain";
 import type { GetEntryRequest, GetEntryResponse } from "src/models/entries/dto/GetEntry";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
+import { formatDateFromISO } from "src/lib";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers (strongly typed to backend EntryReadSerializer)                    */
@@ -78,9 +79,6 @@ interface CashFlowTableProps {
 
 const formatCurrency = (amount: number, locale = "pt-BR", currency = "BRL"): string =>
   new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
-
-const formatDate = (dateStr: string, locale = "pt-BR"): string =>
-  new Intl.DateTimeFormat(locale).format(new Date(dateStr));
 
 const getMonthYear = (dateStr: string): string => {
   const d = new Date(dateStr);
@@ -174,7 +172,7 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                {t("labels.due")}: {formatDate(getDueDate(entry), i18n.language)}
+                {t("labels.due")}: {formatDateFromISO(getDueDate(entry))}
                 {(installments.index || installments.count) && (
                   <span className="ml-2">
                     {t("labels.installmentXofY", {

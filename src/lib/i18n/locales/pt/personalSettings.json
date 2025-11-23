@@ -8,7 +8,8 @@
     "company": "Empresa",
     "personalData": "Dados pessoais",
     "timezone": "Fuso horário",
-    "security": "Segurança"
+    "security": "Segurança",
+    "formats": "Formatos"
   },
   "field": {
     "companyName": "Nome da empresa",
@@ -32,7 +33,8 @@
     "updateCountry": "Atualizar país",
     "manageSecurity": "Gerenciar segurança",
     "cancel": "Cancelar",
-    "save": "Salvar"
+    "save": "Salvar",
+    "manageFormats": "Gerenciar formatos"
   },
   "btnLabel": {
     "tz": "Fuso horário"
@@ -45,6 +47,9 @@
   },
   "security": {
     "subtitle": "Proteja sua conta com senhas fortes e login seguro."
+  },
+  "formats": {
+    "subtitle": "Gerencie como datas, números e outros formatos são exibidos na sua conta."
   },
   "toast": {
     "loadError": "Não foi possível carregar suas configurações.",

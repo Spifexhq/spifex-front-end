@@ -1,0 +1,52 @@
+{
+  "header": {
+    "pageTitle": "Dashboard | Spifex",
+    "title": "Overview",
+    "subtitle": "Quick view of your company’s financial health: open cashflow, recent settlements and upcoming due dates.",
+    "today": "Today"
+  },
+  "summary": {
+    "openTitle": "Open cashflow (overall)",
+    "openCount": "{{count}} open entries",
+    "toReceive": "To receive",
+    "toPay": "To pay",
+    "settledTitle": "Settlements · last 30 days",
+    "settledCount": "{{count}} movements",
+    "entriesIn": "Inflow",
+    "entriesOut": "Outflow",
+    "bankingTitle": "Banks & structure",
+    "accountsActive": "{{count}} active bank accounts",
+    "entities": "Entities",
+    "projects": "Projects",
+    "departments": "Departments",
+    "inventoryItems": "Inventory items"
+  },
+  "activity": {
+    "overdueTitle": "Overdue cash",
+    "overdueTop": "Top {{count}} entries",
+    "overdueEmpty": "No overdue entries at the moment.",
+    "next7Title": "Next 7 days",
+    "next7Top": "Top {{count}} entries",
+    "next7Empty": "No upcoming entries in the next 7 days.",
+    "recentSettlementsTitle": "Recent settlements",
+    "recentSettlementsCount": "Last {{count}}",
+    "recentSettlementsEmpty": "No recent settlements.",
+    "inflow": "Inflow",
+    "outflow": "Outflow",
+    "noDescription": "No description",
+    "due": "Due"
+  },
+  "empty": {
+    "title": "Ready to start?",
+    "description": "Create your first entries or connect bank accounts to see more insights on the dashboard.",
+    "goToCashflow": "Go to Cashflow",
+    "manageBanks": "Manage bank accounts"
+  },
+  "errors": {
+    "loadDashboard": "Could not load the dashboard.",
+    "retry": "Please try reloading the page."
+  },
+  "labels": {
+    "settled": "Settled"
+  }
+}

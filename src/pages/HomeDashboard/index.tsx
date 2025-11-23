@@ -1,6 +1,7 @@
 // src/pages/HomeDashboard/index.tsx
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import { api } from "src/api/requests";
 
@@ -9,6 +10,7 @@ import type {
   DashboardEntryPreview,
   DashboardSettlementPreview,
 } from "@/models/dashboard/domain";
+import { formatDateFromISO } from "@/lib/date/formatDate";
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -26,11 +28,32 @@ const formatCurrencyFromMinor = (vMinor: number | null | undefined) => {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
+/**
+ * Formats a date using the cookie-aware formatter.
+ * Accepts ISO strings ("YYYY-MM-DD" or full ISO) or Date objects.
+ * Falls back to the raw value if parsing fails.
+ */
 const formatDate = (value: string | Date | null | undefined) => {
   if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("pt-BR");
+
+  if (value instanceof Date) {
+    const iso = value.toISOString().slice(0, 10);
+    const formatted = formatDateFromISO(iso);
+    return formatted || "—";
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) return "—";
+
+  // If it looks like ISO, crop to YYYY-MM-DD
+  const isoCandidate =
+    trimmed.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(trimmed)
+      ? trimmed.slice(0, 10)
+      : trimmed;
+
+  const formatted = formatDateFromISO(isoCandidate);
+  // If formatter can't parse, at least show the original string
+  return formatted || trimmed;
 };
 
 const handleGo = (path: string) => {
@@ -42,21 +65,23 @@ const handleGo = (path: string) => {
 // -----------------------------------------------------------------------------
 
 const HomeDashboard = () => {
+  const { t } = useTranslation("homeDashboard");
+
   useEffect(() => {
-    document.title = "Dashboard | Spifex";
-  }, []);
+    document.title = t("header.pageTitle");
+  }, [t]);
 
   // Dashboard data
   const [data, setData] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       setLoading(true);
-      setError(null);
+      setHasError(false);
       try {
         const res = await api.getCashflowDashboard();
         if (!cancelled) {
@@ -66,7 +91,7 @@ const HomeDashboard = () => {
         console.error("Failed to load dashboard overview", err);
         if (!cancelled) {
           setData(null);
-          setError("Não foi possível carregar o dashboard.");
+          setHasError(true);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -135,15 +160,17 @@ const HomeDashboard = () => {
           <header className="flex items-center justify-between gap-3">
             <div>
               <h1 className="text-[18px] font-semibold text-gray-900">
-                Overview{orgName ? ` · ${orgName}` : ""}
+                {t("header.title")}
+                {orgName ? ` · ${orgName}` : ""}
               </h1>
               <p className="text-[12px] text-gray-500">
-                Visão rápida da saúde financeira da empresa: fluxo aberto,
-                liquidações recentes e próximos vencimentos.
+                {t("header.subtitle")}
               </p>
             </div>
             <div className="text-right text-[11px] text-gray-500">
-              <div>Hoje: {formatDate(todayISO())}</div>
+              <div>
+                {t("header.today")}: {formatDate(todayISO())}
+              </div>
             </div>
           </header>
 
@@ -153,10 +180,10 @@ const HomeDashboard = () => {
             <div className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[11px] font-medium text-gray-600">
-                  Fluxo aberto (geral)
+                  {t("summary.openTitle")}
                 </span>
                 <span className="text-[10px] text-gray-400">
-                  {openStats.count} lançamentos em aberto
+                  {t("summary.openCount", { count: openStats.count })}
                 </span>
               </div>
               <div className="text-[18px] font-semibold tabular-nums">
@@ -172,13 +199,13 @@ const HomeDashboard = () => {
               </div>
               <div className="mt-1 text-[11px] text-gray-500 leading-snug">
                 <div>
-                  A receber:{" "}
+                  {t("summary.toReceive")}:{" "}
                   <span className="text-emerald-700 font-medium">
                     {formatCurrencyFromMinor(openStats.inflow_minor)}
                   </span>
                 </div>
                 <div>
-                  A pagar:{" "}
+                  {t("summary.toPay")}:{" "}
                   <span className="text-red-700 font-medium">
                     {formatCurrencyFromMinor(openStats.outflow_minor)}
                   </span>
@@ -190,10 +217,10 @@ const HomeDashboard = () => {
             <div className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[11px] font-medium text-gray-600">
-                  Liquidações · últimos 30 dias
+                  {t("summary.settledTitle")}
                 </span>
                 <span className="text-[10px] text-gray-400">
-                  {settledStats.count} movimentos
+                  {t("summary.settledCount", { count: settledStats.count })}
                 </span>
               </div>
               <div className="text-[18px] font-semibold tabular-nums">
@@ -209,13 +236,13 @@ const HomeDashboard = () => {
               </div>
               <div className="mt-1 text-[11px] text-gray-500 leading-snug">
                 <div>
-                  Entradas:{" "}
+                  {t("summary.entriesIn")}:{" "}
                   <span className="text-emerald-700 font-medium">
                     {formatCurrencyFromMinor(settledStats.inflow_minor)}
                   </span>
                 </div>
                 <div>
-                  Saídas:{" "}
+                  {t("summary.entriesOut")}:{" "}
                   <span className="text-red-700 font-medium">
                     {formatCurrencyFromMinor(settledStats.outflow_minor)}
                   </span>
@@ -227,14 +254,16 @@ const HomeDashboard = () => {
             <div className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[11px] font-medium text-gray-400">
-                  Bancos & estrutura
+                  {t("summary.bankingTitle")}
                 </span>
                 <span className="text-[10px] text-gray-400">
                   <span
                     className="font-medium cursor-pointer rounded px-1 hover:text-gray-500 transition"
                     onClick={() => handleGo("/settings/banks")}
                   >
-                    {bankingStats.accounts} contas bancárias ativas
+                    {t("summary.accountsActive", {
+                      count: bankingStats.accounts,
+                    })}
                   </span>
                 </span>
               </div>
@@ -247,14 +276,14 @@ const HomeDashboard = () => {
               </div>
               <div className="mt-1 text-[11px] text-gray-400 leading-snug">
                 <div>
-                  Entidades:{" "}
+                  {t("summary.entities")}:{" "}
                   <span
                     className="font-medium cursor-pointer rounded px-1 hover:text-gray-500 transition"
                     onClick={() => handleGo("/settings/entities")}
                   >
                     {mastersStats.entities}
                   </span>{" "}
-                  · Projetos:{" "}
+                  · {t("summary.projects")}:{" "}
                   <span
                     className="font-medium cursor-pointer rounded px-1 hover:text-gray-500 transition"
                     onClick={() => handleGo("/settings/projects")}
@@ -263,14 +292,14 @@ const HomeDashboard = () => {
                   </span>
                 </div>
                 <div>
-                  Departamentos:{" "}
+                  {t("summary.departments")}:{" "}
                   <span
                     className="font-medium cursor-pointer rounded px-1 hover:text-gray-500 transition"
                     onClick={() => handleGo("/settings/departments")}
                   >
                     {mastersStats.departments}
                   </span>{" "}
-                  · Itens estoque:{" "}
+                  · {t("summary.inventoryItems")}:{" "}
                   <span
                     className="font-medium cursor-pointer rounded px-1 hover:text-gray-500 transition"
                     onClick={() => handleGo("/settings/inventory")}
@@ -290,10 +319,12 @@ const HomeDashboard = () => {
               <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-0">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-[13px] font-semibold text-gray-800">
-                    Overdue cash
+                    {t("activity.overdueTitle")}
                   </h2>
                   <span className="text-[11px] text-gray-500">
-                    Top {overdueEntries.length || 0} entries
+                    {t("activity.overdueTop", {
+                      count: overdueEntries.length || 0,
+                    })}
                   </span>
                 </div>
 
@@ -302,7 +333,7 @@ const HomeDashboard = () => {
                 <div className="min-h-0 overflow-y-auto">
                   {overdueEntries.length === 0 ? (
                     <div className="text-[12px] text-gray-500 py-2">
-                      No overdue entries at the moment.
+                      {t("activity.overdueEmpty")}
                     </div>
                   ) : (
                     <ul className="divide-y divide-gray-100">
@@ -320,14 +351,16 @@ const HomeDashboard = () => {
                                     : "bg-red-50 text-red-700 border-red-100"
                                 }`}
                               >
-                                {e.tx_type === 1 ? "Inflow" : "Outflow"}
+                                {e.tx_type === 1
+                                  ? t("activity.inflow")
+                                  : t("activity.outflow")}
                               </span>
                               <span className="text-[12px] text-gray-900 truncate">
-                                {e.description || "No description"}
+                                {e.description || t("activity.noDescription")}
                               </span>
                             </div>
                             <div className="mt-0.5 text-[11px] text-gray-500 truncate">
-                              Due {formatDate(e.due_date)}
+                              {t("activity.due")} {formatDate(e.due_date)}
                               {e.entity_name && ` · ${e.entity_name}`}
                               {e.project_name && ` · ${e.project_name}`}
                             </div>
@@ -354,10 +387,12 @@ const HomeDashboard = () => {
               <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-0">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-[13px] font-semibold text-gray-800">
-                    Next 7 days
+                    {t("activity.next7Title")}
                   </h2>
                   <span className="text-[11px] text-gray-500">
-                    Top {upcomingEntries.length || 0} entries
+                    {t("activity.next7Top", {
+                      count: upcomingEntries.length || 0,
+                    })}
                   </span>
                 </div>
 
@@ -366,7 +401,7 @@ const HomeDashboard = () => {
                 <div className="min-h-0 overflow-y-auto">
                   {upcomingEntries.length === 0 ? (
                     <div className="text-[12px] text-gray-500 py-2">
-                      No upcoming entries in the next 7 days.
+                      {t("activity.next7Empty")}
                     </div>
                   ) : (
                     <ul className="divide-y divide-gray-100">
@@ -384,14 +419,16 @@ const HomeDashboard = () => {
                                     : "bg-amber-50 text-amber-700 border-amber-100"
                                 }`}
                               >
-                                {e.tx_type === 1 ? "Inflow" : "Outflow"}
+                                {e.tx_type === 1
+                                  ? t("activity.inflow")
+                                  : t("activity.outflow")}
                               </span>
                               <span className="text-[12px] text-gray-900 truncate">
-                                {e.description || "No description"}
+                                {e.description || t("activity.noDescription")}
                               </span>
                             </div>
                             <div className="mt-0.5 text-[11px] text-gray-500 truncate">
-                              Due {formatDate(e.due_date)}
+                              {t("activity.due")} {formatDate(e.due_date)}
                               {e.entity_name && ` · ${e.entity_name}`}
                               {e.project_name && ` · ${e.project_name}`}
                             </div>
@@ -421,10 +458,12 @@ const HomeDashboard = () => {
               <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-[180px]">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-[13px] font-semibold text-gray-800">
-                    Recent settlements
+                    {t("activity.recentSettlementsTitle")}
                   </h2>
                   <span className="text-[11px] text-gray-500">
-                    Last {recentSettlements.length || 0}
+                    {t("activity.recentSettlementsCount", {
+                      count: recentSettlements.length || 0,
+                    })}
                   </span>
                 </div>
 
@@ -433,7 +472,7 @@ const HomeDashboard = () => {
                 <div className="min-h-0 overflow-y-auto">
                   {recentSettlements.length === 0 ? (
                     <div className="text-[12px] text-gray-500 py-2">
-                      No recent settlements.
+                      {t("activity.recentSettlementsEmpty")}
                     </div>
                   ) : (
                     <ul className="divide-y divide-gray-100">
@@ -445,10 +484,11 @@ const HomeDashboard = () => {
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center px-2 py-[2px] rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                Settled
+                                {t("labels.settled")}
                               </span>
                               <span className="text-[12px] text-gray-900 truncate">
-                                {s.entry_description || "No description"}
+                                {s.entry_description ||
+                                  t("activity.noDescription")}
                               </span>
                             </div>
                             <div className="mt-0.5 text-[11px] text-gray-500 truncate">
@@ -468,14 +508,13 @@ const HomeDashboard = () => {
               </section>
 
               {/* Empty-state / quick helpers */}
-              {!hasAnyActivity && !error && (
+              {!hasAnyActivity && !hasError && (
                 <section className="border border-dashed border-gray-300 rounded-md bg-gray-50 px-4 py-3">
                   <h3 className="text-[13px] font-semibold text-gray-800 mb-1">
-                    Ready to start?
+                    {t("empty.title")}
                   </h3>
                   <p className="text-[12px] text-gray-600 mb-2">
-                    Crie seus primeiros lançamentos ou conecte contas bancárias
-                    para ver mais insights no dashboard.
+                    {t("empty.description")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -483,23 +522,23 @@ const HomeDashboard = () => {
                       className="text-[11px] border border-gray-300 rounded px-2 py-[4px] bg-white hover:bg-gray-100"
                       onClick={() => handleGo("/cashflow")}
                     >
-                      Go to Cashflow
+                      {t("empty.goToCashflow")}
                     </button>
                     <button
                       type="button"
                       className="text-[11px] border border-gray-300 rounded px-2 py-[4px] bg-white hover:bg-gray-100"
                       onClick={() => handleGo("/settings/banks")}
                     >
-                      Manage bank accounts
+                      {t("empty.manageBanks")}
                     </button>
                   </div>
                 </section>
               )}
 
-              {error && (
+              {hasError && (
                 <section className="border border-red-200 rounded-md bg-red-50 px-4 py-3">
                   <p className="text-[12px] text-red-700">
-                    {error} Tente recarregar a página.
+                    {t("errors.loadDashboard")} {t("errors.retry")}
                   </p>
                 </section>
               )}

@@ -1,0 +1,52 @@
+{
+  "header": {
+    "pageTitle": "Dashboard | Spifex",
+    "title": "Übersicht",
+    "subtitle": "Schneller Blick auf die finanzielle Gesundheit des Unternehmens: offene Cashflows, letzte Ausgleiche und anstehende Fälligkeiten.",
+    "today": "Heute"
+  },
+  "summary": {
+    "openTitle": "Offener Cashflow (gesamt)",
+    "openCount": "{{count}} offene Buchungen",
+    "toReceive": "Zu erhalten",
+    "toPay": "Zu zahlen",
+    "settledTitle": "Ausgleiche · letzte 30 Tage",
+    "settledCount": "{{count}} Bewegungen",
+    "entriesIn": "Einnahmen",
+    "entriesOut": "Ausgaben",
+    "bankingTitle": "Banken & Struktur",
+    "accountsActive": "{{count}} aktive Bankkonten",
+    "entities": "Einheiten",
+    "projects": "Projekte",
+    "departments": "Abteilungen",
+    "inventoryItems": "Lagerartikel"
+  },
+  "activity": {
+    "overdueTitle": "Überfällige Cashflows",
+    "overdueTop": "Top {{count}} Buchungen",
+    "overdueEmpty": "Derzeit keine überfälligen Buchungen.",
+    "next7Title": "Nächste 7 Tage",
+    "next7Top": "Top {{count}} Buchungen",
+    "next7Empty": "Keine Buchungen mit Fälligkeit in den nächsten 7 Tagen.",
+    "recentSettlementsTitle": "Letzte Ausgleiche",
+    "recentSettlementsCount": "Letzte {{count}}",
+    "recentSettlementsEmpty": "Keine aktuellen Ausgleiche.",
+    "inflow": "Einnahme",
+    "outflow": "Ausgabe",
+    "noDescription": "Keine Beschreibung",
+    "due": "Fälligkeit"
+  },
+  "empty": {
+    "title": "Bereit loszulegen?",
+    "description": "Erstellen Sie Ihre ersten Buchungen oder verbinden Sie Bankkonten, um mehr Einblicke im Dashboard zu erhalten.",
+    "goToCashflow": "Zum Cashflow",
+    "manageBanks": "Bankkonten verwalten"
+  },
+  "errors": {
+    "loadDashboard": "Dashboard konnte nicht geladen werden.",
+    "retry": "Bitte laden Sie die Seite neu."
+  },
+  "labels": {
+    "settled": "Ausgeglichen"
+  }
+}

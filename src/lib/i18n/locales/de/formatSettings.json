@@ -1,0 +1,47 @@
+{
+  "title": "Formate",
+  "header": {
+    "settings": "Einstellungen",
+    "title": "Datums- und Zahlenformate",
+    "subtitle": "Wählen Sie, wie Daten und Zahlen in Ihrem Konto angezeigt werden."
+  },
+  "section": {
+    "formats": "Formate"
+  },
+  "field": {
+    "date": "Datumsformat",
+    "number": "Zahlenformat"
+  },
+  "date": {
+    "currentAuto": "Automatisches Format basierend auf Ihrer Sprache (z. B. {{example}})",
+    "currentCustom": "Benutzerdefiniertes Format (z. B. {{example}})",
+    "auto": "Automatisch",
+    "autoHint": "Empfohlenes Format für Ihre Sprache verwenden (z. B. {{example}})",
+    "dmyTitle": "Tag / Monat / Jahr",
+    "dmyHint": "Beispiel: {{example}}",
+    "mdyTitle": "Monat / Tag / Jahr",
+    "mdyHint": "Beispiel: {{example}}",
+    "isoTitle": "Jahr - Monat - Tag",
+    "isoHint": "Beispiel: {{example}}"
+  },
+  "number": {
+    "currentAuto": "Automatisches Format basierend auf Ihrer Sprache (z. B. {{example}})",
+    "currentCustom": "Benutzerdefiniertes Format (z. B. {{example}})",
+    "auto": "Automatisch",
+    "autoHint": "Empfohlenes Format für Ihre Sprache verwenden (z. B. {{example}})",
+    "euTitle": "Europäischer Stil",
+    "euHint": "Beispiel: {{example}}",
+    "usTitle": "US-amerikanischer Stil",
+    "usHint": "Beispiel: {{example}}"
+  },
+  "footer": {
+    "preview": "Vorschau mit Ihren aktuellen Einstellungen: {{date}} · {{number}}"
+  },
+  "btn": {
+    "save": "Einstellungen speichern"
+  },
+  "toast": {
+    "saved": "Formateinstellungen gespeichert.",
+    "error": "Formateinstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+  }
+}

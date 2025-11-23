@@ -24,6 +24,7 @@ import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
 import type { ReportsSummary } from "@/models/entries/domain";
 import { useTranslation } from "react-i18next";
+import { formatDateFromISO } from "src/lib";
 
 type TipDatum = {
   value?: number | string;
@@ -167,6 +168,7 @@ const ReportsPage: React.FC = () => {
 
   const overdueItems = (data?.overdue_items ?? []).map(it => ({
     ...it,
+    date: formatDateFromISO(it.date),
     amount: it.amount_minor / 100,
   }));
 
@@ -219,7 +221,7 @@ const ReportsPage: React.FC = () => {
     <div className="flex min-h-screen bg-white text-gray-900">
       <main className={"flex-1 transition-all duration-300"}>
         <TopProgress active={loading || loadingBanks} variant="top" topOffset={64} />
-        <div className="mt-[15px] w-full px-6 md:px-10 space-y-6">
+        <div className="mt-[15px] mb-[15px] w-full px-6 md:px-10 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-semibold">{t("title")}</h1>
             <div className="flex gap-2">

@@ -8,7 +8,8 @@
     "company": "Company",
     "personalData": "Personal data",
     "timezone": "Timezone",
-    "security": "Security"
+    "security": "Security",
+    "formats": "Formats"
   },
   "field": {
     "companyName": "Company name",
@@ -32,7 +33,8 @@
     "updateCountry": "Update country",
     "manageSecurity": "Manage security",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "manageFormats": "Manage formats"
   },
   "btnLabel": {
     "tz": "Timezone"
@@ -45,6 +47,9 @@
   },
   "security": {
     "subtitle": "Protect your account with strong passwords and secure sign-in."
+  },
+  "formats": {
+    "subtitle": "Manage how dates, numbers and other formats are displayed in your account."
   },
   "toast": {
     "loadError": "Couldn’t load your settings.",

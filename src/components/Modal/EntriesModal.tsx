@@ -23,6 +23,7 @@ import {
   decimalToCentsString,
   distributePercentages,
   formatCurrency,
+  formatDateFromISO,
   handleAmountKeyDown,
 } from "src/lib";
 
@@ -39,6 +40,7 @@ import type {
 } from "@/models/enterprise_structure/domain";
 
 import documentTypesData from "@/data/documentTypes.json";
+import { DateInput } from "../ui/DateInput";
 
 /* ---------------------------------- Tipos --------------------------------- */
 type DocTypeItem = { id: string; label: string };
@@ -225,10 +227,7 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   const isFinancialLocked = !!lastSettledOnStr;
 
   const formattedLastSettledOn = useMemo(() => {
-    if (!lastSettledOnStr) return "";
-    const d = new Date(lastSettledOnStr);
-    if (Number.isNaN(d.getTime())) return lastSettledOnStr;
-    return d.toLocaleDateString();
+    return formatDateFromISO(lastSettledOnStr);
   }, [lastSettledOnStr]);
 
   const isRecurrenceLocked = useMemo(() => {
@@ -922,12 +921,14 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
       case "details":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Input
+            <DateInput
               label={t("entriesModal:details.dueDate")}
-              type="date"
               value={formData.details.dueDate}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, details: { ...p.details, dueDate: e.target.value } }))
+              onChange={(valueIso) =>
+                setFormData((p) => ({
+                  ...p,
+                  details: { ...p.details, dueDate: valueIso },
+                }))
               }
             />
             <Input

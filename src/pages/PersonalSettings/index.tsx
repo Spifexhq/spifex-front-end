@@ -254,6 +254,11 @@ const PersonalSettings: React.FC = () => {
     navigate("/settings/security");
   };
 
+  const handleFormatsNavigation = () => {
+    // Ajuste a rota se for diferente na sua app
+    navigate("/settings/manage-formats");
+  };
+
   /* ------------------------------ Modal UX ------------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
@@ -431,6 +436,29 @@ const PersonalSettings: React.FC = () => {
                   <div className="mt-3">
                     <Button variant="outline" onClick={handleSecurityNavigation} disabled={isSubmitting}>
                       {t("btn.manageSecurity")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Formatos (datas, números, etc.) */}
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("section.formats")}
+                  </span>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[12px] text-gray-700">
+                    {t("formats.subtitle")}
+                  </p>
+                  <div className="mt-3">
+                    <Button
+                      variant="outline"
+                      onClick={handleFormatsNavigation}
+                      disabled={isSubmitting}
+                    >
+                      {t("btn.manageFormats")}
                     </Button>
                   </div>
                 </div>

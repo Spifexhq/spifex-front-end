@@ -9,6 +9,7 @@ import Button from "src/components/ui/Button";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { formatCurrency, handleAmountKeyDown } from "src/lib";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
+import { DateInput } from "../ui/DateInput";
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -217,12 +218,15 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         <form id="transferenceForm" onSubmit={handleSubmit} className="relative z-10 px-5 py-4 overflow-visible flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Data / Valor / Observação */}
-            <Input
+            <DateInput
               label={t("fields.date")}
-              name="date"
-              type="date"
               value={formData.date}
-              onChange={handleChange}
+              onChange={(iso) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  date: iso,
+                }))
+              }
             />
 
             <Input

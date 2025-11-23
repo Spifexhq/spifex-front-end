@@ -14,6 +14,7 @@ import { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto"
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { getCursorFromUrl } from "src/lib/list";
 import Checkbox from "src/components/ui/Checkbox";
+import { formatDateFromISO } from "src/lib";
 
 /* ------------------------------ Helpers ----------------------------------- */
 
@@ -28,9 +29,6 @@ const hash32 = (s: string) => {
 
 const formatCurrency = (amount: number): string =>
   amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString();
 
 const getMonthYear = (iso: string): string => {
   const d = new Date(iso);
@@ -138,7 +136,7 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                {t("labels.settlement")} {formatDate(entry.value_date)}
+                {t("labels.settlement")} {formatDateFromISO(entry.value_date)}
                 {(entry.installment_index || entry.installment_count) && (
                   <span className="ml-2">
                     {t("labels.installmentXofY", {

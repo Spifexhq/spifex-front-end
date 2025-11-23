@@ -1,0 +1,47 @@
+{
+  "title": "Formats",
+  "header": {
+    "settings": "Paramètres",
+    "title": "Formats de date et de nombre",
+    "subtitle": "Choisissez comment les dates et les nombres sont affichés dans votre compte."
+  },
+  "section": {
+    "formats": "Formats"
+  },
+  "field": {
+    "date": "Format de date",
+    "number": "Format de nombre"
+  },
+  "date": {
+    "currentAuto": "Format automatique selon votre langue (par ex. {{example}})",
+    "currentCustom": "Format personnalisé (par ex. {{example}})",
+    "auto": "Automatique",
+    "autoHint": "Utiliser le format recommandé pour votre langue (par ex. {{example}})",
+    "dmyTitle": "Jour / Mois / Année",
+    "dmyHint": "Exemple : {{example}}",
+    "mdyTitle": "Mois / Jour / Année",
+    "mdyHint": "Exemple : {{example}}",
+    "isoTitle": "Année - Mois - Jour",
+    "isoHint": "Exemple : {{example}}"
+  },
+  "number": {
+    "currentAuto": "Format automatique selon votre langue (par ex. {{example}})",
+    "currentCustom": "Format personnalisé (par ex. {{example}})",
+    "auto": "Automatique",
+    "autoHint": "Utiliser le format recommandé pour votre langue (par ex. {{example}})",
+    "euTitle": "Style européen",
+    "euHint": "Exemple : {{example}}",
+    "usTitle": "Style anglais (États-Unis)",
+    "usHint": "Exemple : {{example}}"
+  },
+  "footer": {
+    "preview": "Aperçu avec vos choix actuels : {{date}} · {{number}}"
+  },
+  "btn": {
+    "save": "Enregistrer les préférences"
+  },
+  "toast": {
+    "saved": "Préférences de format enregistrées.",
+    "error": "Impossible d’enregistrer les préférences de format. Veuillez réessayer."
+  }
+}

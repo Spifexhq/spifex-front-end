@@ -1,0 +1,47 @@
+{
+  "title": "Formats",
+  "header": {
+    "settings": "Settings",
+    "title": "Date & number formats",
+    "subtitle": "Choose how dates and numbers are displayed in your account."
+  },
+  "section": {
+    "formats": "Formats"
+  },
+  "field": {
+    "date": "Date format",
+    "number": "Number format"
+  },
+  "date": {
+    "currentAuto": "Using automatic format based on your language (e.g. {{example}})",
+    "currentCustom": "Using custom format (e.g. {{example}})",
+    "auto": "Automatic",
+    "autoHint": "Use the format recommended for your language (e.g. {{example}})",
+    "dmyTitle": "Day / Month / Year",
+    "dmyHint": "Example: {{example}}",
+    "mdyTitle": "Month / Day / Year",
+    "mdyHint": "Example: {{example}}",
+    "isoTitle": "Year - Month - Day",
+    "isoHint": "Example: {{example}}"
+  },
+  "number": {
+    "currentAuto": "Using automatic format based on your language (e.g. {{example}})",
+    "currentCustom": "Using custom format (e.g. {{example}})",
+    "auto": "Automatic",
+    "autoHint": "Use the format recommended for your language (e.g. {{example}})",
+    "euTitle": "European style",
+    "euHint": "Example: {{example}}",
+    "usTitle": "English (US) style",
+    "usHint": "Example: {{example}}"
+  },
+  "footer": {
+    "preview": "Preview with your current choices: {{date}} · {{number}}"
+  },
+  "btn": {
+    "save": "Save preferences"
+  },
+  "toast": {
+    "saved": "Format preferences saved.",
+    "error": "Could not save format preferences. Please try again."
+  }
+}

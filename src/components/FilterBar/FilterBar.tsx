@@ -30,7 +30,9 @@ import Button from "src/components/ui/Button";
 import Checkbox from "src/components/ui/Checkbox";
 import { formatCurrency } from "src/lib/currency";
 import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
+import { formatDateFromISO } from "@/lib/date";
 import Input from "../ui/Input";
+import { DateInput } from "../ui/DateInput";
 
 /* ------------------------------ Utils ------------------------------ */
 function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
@@ -370,8 +372,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <Chip
               icon="calendar"
               label={`${t("filterBar:chips.date")}  ${
-                filters.start_date || "yyyy-mm-dd"
-              } - ${filters.end_date || "yyyy-mm-dd"}`}
+                filters.start_date ? formatDateFromISO(filters.start_date) : "yyyy-mm-dd"
+              } - ${
+                filters.end_date ? formatDateFromISO(filters.end_date) : "yyyy-mm-dd"
+              }`}
               onClick={() => toggleEditor("date")}
               onRemove={() => removeChip("date")}
             />
@@ -600,23 +604,19 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">{t("filterBar:editors.date.start")}</span>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
+                <DateInput
                   value={filters.start_date || ""}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, start_date: e.target.value }))
+                  onChange={(iso) =>
+                    setFilters((f) => ({ ...f, start_date: iso }))
                   }
                 />
               </label>
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">{t("filterBar:editors.date.end")}</span>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
+                <DateInput
                   value={filters.end_date || ""}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, end_date: e.target.value }))
+                  onChange={(iso) =>
+                    setFilters((f) => ({ ...f, end_date: iso }))
                   }
                 />
               </label>

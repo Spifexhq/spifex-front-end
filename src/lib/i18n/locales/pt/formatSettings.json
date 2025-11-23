@@ -1,0 +1,47 @@
+{
+  "title": "Formatos",
+  "header": {
+    "settings": "Configurações",
+    "title": "Formatos de datas e números",
+    "subtitle": "Escolha como datas e números serão exibidos na sua conta."
+  },
+  "section": {
+    "formats": "Formatos"
+  },
+  "field": {
+    "date": "Formato de data",
+    "number": "Formato de número"
+  },
+  "date": {
+    "currentAuto": "Usando formato automático com base no seu idioma (ex.: {{example}})",
+    "currentCustom": "Usando formato personalizado (ex.: {{example}})",
+    "auto": "Automático",
+    "autoHint": "Usar o formato recomendado para o seu idioma (ex.: {{example}})",
+    "dmyTitle": "Dia / Mês / Ano",
+    "dmyHint": "Exemplo: {{example}}",
+    "mdyTitle": "Mês / Dia / Ano",
+    "mdyHint": "Exemplo: {{example}}",
+    "isoTitle": "Ano - Mês - Dia",
+    "isoHint": "Exemplo: {{example}}"
+  },
+  "number": {
+    "currentAuto": "Usando formato automático com base no seu idioma (ex.: {{example}})",
+    "currentCustom": "Usando formato personalizado (ex.: {{example}})",
+    "auto": "Automático",
+    "autoHint": "Usar o formato recomendado para o seu idioma (ex.: {{example}})",
+    "euTitle": "Estilo europeu",
+    "euHint": "Exemplo: {{example}}",
+    "usTitle": "Estilo inglês (EUA)",
+    "usHint": "Exemplo: {{example}}"
+  },
+  "footer": {
+    "preview": "Pré-visualização com suas escolhas atuais: {{date}} · {{number}}"
+  },
+  "btn": {
+    "save": "Salvar preferências"
+  },
+  "toast": {
+    "saved": "Preferências de formato salvas.",
+    "error": "Não foi possível salvar as preferências de formato. Tente novamente."
+  }
+}

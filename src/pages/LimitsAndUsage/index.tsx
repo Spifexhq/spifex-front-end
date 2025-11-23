@@ -10,6 +10,7 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import { api } from "@/api/requests";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
+import { formatDateTimeFromISO } from "@/lib/date/formatDate";
 
 /* --------------------------------- Types ---------------------------------- */
 type LimitsPeriod = "daily" | "weekly" | "monthly" | "lifetime";
@@ -104,6 +105,12 @@ function statusFrom(used: number, limit: number | null, unmetered: boolean): Sta
   if (p >= 70) return { key: "warn", tone: "amber" };
   return { key: "ok", tone: "green" };
 }
+
+/* Cookie-aware date-time formatter for ISO datetime coming from backend */
+const formatUsageDateTime = (iso: string | null): string => {
+  if (!iso) return "";
+  return formatDateTimeFromISO(iso);
+};
 
 /* -------------------------------- Component ------------------------------- */
 const LimitsAndUsage: React.FC = () => {
@@ -295,6 +302,11 @@ const LimitsAndUsage: React.FC = () => {
                   ? t("status.warning")
                   : t("status.ok");
 
+              const resetsLabel =
+                !limits.unmetered && usage.resets_at
+                  ? `${t("resets")}: ${formatUsageDateTime(usage.resets_at)}`
+                  : "";
+
               return (
                 <div
                   key={`${permission.code}-${limits.period}`}
@@ -317,9 +329,9 @@ const LimitsAndUsage: React.FC = () => {
                   {/* Period */}
                   <div className="col-span-2 text-[13px] text-gray-800">
                     {periodLabel}
-                    {!limits.unmetered && usage.resets_at && (
+                    {resetsLabel && (
                       <div className="text-[11px] text-gray-500">
-                        {t("resets")}: {new Date(usage.resets_at).toLocaleString()}
+                        {resetsLabel}
                       </div>
                     )}
                   </div>

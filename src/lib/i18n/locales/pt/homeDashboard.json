@@ -1,0 +1,52 @@
+{
+  "header": {
+    "pageTitle": "Dashboard | Spifex",
+    "title": "Overview",
+    "subtitle": "Visão rápida da saúde financeira da empresa: fluxo aberto, liquidações recentes e próximos vencimentos.",
+    "today": "Hoje"
+  },
+  "summary": {
+    "openTitle": "Fluxo aberto (geral)",
+    "openCount": "{{count}} lançamentos em aberto",
+    "toReceive": "A receber",
+    "toPay": "A pagar",
+    "settledTitle": "Liquidações · últimos 30 dias",
+    "settledCount": "{{count}} movimentos",
+    "entriesIn": "Entradas",
+    "entriesOut": "Saídas",
+    "bankingTitle": "Bancos & estrutura",
+    "accountsActive": "{{count}} contas bancárias ativas",
+    "entities": "Entidades",
+    "projects": "Projetos",
+    "departments": "Departamentos",
+    "inventoryItems": "Itens estoque"
+  },
+  "activity": {
+    "overdueTitle": "Overdue cash",
+    "overdueTop": "Top {{count}} lançamentos",
+    "overdueEmpty": "Nenhum lançamento em atraso no momento.",
+    "next7Title": "Próximos 7 dias",
+    "next7Top": "Top {{count}} lançamentos",
+    "next7Empty": "Nenhum lançamento vencendo nos próximos 7 dias.",
+    "recentSettlementsTitle": "Liquidações recentes",
+    "recentSettlementsCount": "Últimos {{count}}",
+    "recentSettlementsEmpty": "Nenhuma liquidação recente.",
+    "inflow": "Entrada",
+    "outflow": "Saída",
+    "noDescription": "Sem descrição",
+    "due": "Vencimento"
+  },
+  "empty": {
+    "title": "Pronto para começar?",
+    "description": "Crie seus primeiros lançamentos ou conecte contas bancárias para ver mais insights no dashboard.",
+    "goToCashflow": "Ir para Fluxo de Caixa",
+    "manageBanks": "Gerir contas bancárias"
+  },
+  "errors": {
+    "loadDashboard": "Não foi possível carregar o dashboard.",
+    "retry": "Tente recarregar a página."
+  },
+  "labels": {
+    "settled": "Liquidado"
+  }
+}

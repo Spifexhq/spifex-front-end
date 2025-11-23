@@ -15,6 +15,7 @@ import { api } from "src/api/requests";
 import type { Entry } from "src/models/entries/domain";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
 import type { BulkSettleItem } from "@/models/entries/domain";
+import { DateInput } from "../ui/DateInput";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -351,12 +352,12 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap min-w-0">
-                  <input
-                    type="date"
+                  <DateInput
                     value={bulkDate}
-                    onChange={(e) => setBulkDate(e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 text-xs w-[120px]"
+                    onChange={(iso) => setBulkDate(iso)}
+                    variant="default"
                     aria-label={t("actions.bulkDate")}
+                    className="w-[130px]"
                   />
                   <Button
                     type="button"
@@ -392,9 +393,9 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
             {/* tabela com scroll interno; última coluna mais larga */}
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <div className="grid grid-cols-[140px_1fr_120px_80px_180px] items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-10">
+              <div className="grid grid-cols-[140px_1fr_120px_80px_180px] gap-2 items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-10">
                 <div className="text-center">{t("table.due")}</div>
-                <div>{t("table.desc")}</div>
+                <div className="text-center">{t("table.desc")}</div>
                 <div className="text-center">{t("table.amount")}</div>
                 <div className="text-center">{t("table.partialQ")}</div>
                 <div className="text-center">{t("table.partialAmount")}</div>
@@ -409,15 +410,15 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                   return (
                     <div
                       key={e.id}
-                      className="grid grid-cols-[140px_1fr_120px_80px_180px] items-center px-3 py-2 border-b border-gray-200 text-[12px] hover:bg-gray-50"
+                      className="grid grid-cols-[140px_1fr_120px_80px_180px] gap-2 items-center px-3 py-2 border-b border-gray-200 text-[12px] hover:bg-gray-50"
                     >
                       <div className="text-center">
-                        <input
-                          type="date"
+                        <DateInput
                           value={e.due_date}
-                          onChange={(ev) => updateEntryDate(e.id, ev.target.value)}
-                          className="border border-gray-300 rounded px-2 py-1 text-xs w-[120px]"
+                          onChange={(iso) => updateEntryDate(e.id, iso)}
                           aria-label={t("table.due")}
+                          variant="default"
+                          className="w-[130px] mx-auto"
                         />
                       </div>
 

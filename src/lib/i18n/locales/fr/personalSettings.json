@@ -8,7 +8,8 @@
     "company": "Entreprise",
     "personalData": "Données personnelles",
     "timezone": "Fuseau horaire",
-    "security": "Sécurité"
+    "security": "Sécurité",
+    "formats": "Formats"
   },
   "field": {
     "companyName": "Nom de l’entreprise",
@@ -32,7 +33,8 @@
     "updateCountry": "Mettre à jour le pays",
     "manageSecurity": "Gérer la sécurité",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "manageFormats": "Gérer les formats"
   },
   "btnLabel": {
     "tz": "Fuseau horaire"
@@ -45,6 +47,9 @@
   },
   "security": {
     "subtitle": "Protégez votre compte avec des mots de passe forts et une connexion sécurisée."
+  },
+  "formats": {
+    "subtitle": "Gérez la manière dont les dates, les chiffres et autres formats sont affichés dans votre compte."
   },
   "toast": {
     "loadError": "Impossible de charger vos paramètres.",

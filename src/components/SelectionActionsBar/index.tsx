@@ -2,6 +2,7 @@
 import React, { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Button from "src/components/ui/Button";
+import { formatDateFromISO } from "src/lib";
 
 /* ------------------------------ Types ------------------------------ */
 export type MinimalEntry = {
@@ -225,7 +226,10 @@ const SelectionActionsBar: React.FC<Props> = ({
               {minDue && maxDue && (
                 <div className="col-span-2">
                   {t("labels.dueShort")}{" "}
-                  <b>{minDue.toLocaleDateString()} – {maxDue.toLocaleDateString()}</b>
+                  <b>
+                    {formatDateFromISO(minDue.toISOString().slice(0, 10))} –{" "}
+                    {formatDateFromISO(maxDue.toISOString().slice(0, 10))}
+                  </b>
                 </div>
               )}
             </div>

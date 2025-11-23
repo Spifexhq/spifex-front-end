@@ -59,8 +59,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const baseInput =
       "w-full h-10 text-xs text-gray-900 rounded-md outline-none transition-colors duration-150 " +
       "placeholder:text-gray-400 border bg-white " +
-      "hover:bg-gray-50 focus:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300 " +
-      // 🔹 disabled styles — aligned with SelectDropdown
+      "hover:bg-gray-50 focus:bg-gray-50 focus-visible:ring-1 focus-visible:ring-gray-300 " +
       "disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed " +
       "disabled:hover:bg-gray-100 disabled:focus:bg-gray-100 disabled:focus-visible:ring-0 " +
       "px-3 py-2.5";
