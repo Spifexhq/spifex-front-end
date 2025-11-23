@@ -1,20 +1,38 @@
 // src/lib/form/amountKeyHandlers.ts
 
-export function handleAmountKeyDown(
+export function handleAmountKeyDown<T>(
   e: React.KeyboardEvent<HTMLInputElement>,
   currentAmount: string,
-  setFormData: React.Dispatch<React.SetStateAction<any>>,
+  setFormData: React.Dispatch<React.SetStateAction<T>>,
   isRoot: boolean = false
 ) {
   const updateAmount = (newValue: string) => {
-    setFormData((prev: any) => {
-      if (isRoot) {
-        return { ...prev, amount: newValue };
-      }
-      return {
-        ...prev,
-        details: { ...prev.details, amount: newValue },
+    setFormData((prev) => {
+      // We only care that state has amount / details.amount,
+      // but we don't force T to that shape at the type level.
+      const base = prev as unknown as {
+        amount?: string;
+        details?: {
+          amount?: string;
+          [key: string]: unknown;
+        };
+        [key: string]: unknown;
       };
+
+      if (isRoot) {
+        return {
+          ...base,
+          amount: newValue,
+        } as T;
+      }
+
+      return {
+        ...base,
+        details: {
+          ...(base.details ?? {}),
+          amount: newValue,
+        },
+      } as T;
     });
   };
 
