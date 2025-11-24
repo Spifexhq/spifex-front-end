@@ -149,6 +149,21 @@ export const api = {
     return request<Organization>(`organizations/current/update/`, "PUT", payload);
   },
 
+  getOrgCurrency: () => {
+    return request<{ currency: string | null }>(
+      `organizations/current/currency/`,
+      "GET"
+    );
+  },
+
+  updateOrgCurrency: (payload: { currency: string; current_password: string }) => {
+    return request<{ currency: string | null }>(
+      "organizations/current/currency/",
+      "PUT",
+      payload
+    );
+  },
+
   /* --- KPIs --- */
   getCashflowKpis(params: Record<string, string | number | undefined>) {
     return request<CashflowKpis>(`cashflow/kpis/cashflow/`, 'GET', params);

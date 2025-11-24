@@ -109,12 +109,13 @@
       "organization": "Organization"
     },
     "section": {
-      "orgInfo": "Organization information"
+      "orgInfo": "Organization information",
+      "timezone": "Time zone",
+      "currency": "Currency"
     },
     "field": {
       "name": "Name",
       "orgNameInput": "Organization name",
-      "timezone": "Time zone",
       "address1": "Address line 1",
       "address2": "Address line 2",
       "city": "City",
@@ -129,10 +130,18 @@
       "updateTimezone": "Update time zone",
       "updateCity": "Update city",
       "updateCountry": "Update country",
-      "updatePostalCode": "Update postal code"
+      "updatePostalCode": "Update postal code",
+      "manageCurrency": "Manage currency"
+    },
+    "label": {
+      "currentTz": "Current",
+      "currency": "Organization currency"
     },
     "btnLabel": {
       "tz": "Select timezone"
+    },
+    "description": {
+      "currency": "Configure the default currency used for prices and reports."
     },
     "modal": {
       "editName": "Edit name",

@@ -1,0 +1,34 @@
+{
+  "title": "Organization Currency",
+  "header": {
+    "settings": "Settings",
+    "title": "Default organization currency"
+  },
+  "section": {
+    "currency": "Currency"
+  },
+  "field": {
+    "current": "Current currency",
+    "currency": "New currency",
+    "password": "Current password"
+  },
+  "btn": {
+    "change": "Change currency",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "btnLabel": {
+    "currency": "Select currency"
+  },
+  "modal": {
+    "title": "Change organization currency",
+    "close": "Close"
+  },
+  "toast": {
+    "success": "Currency updated successfully.",
+    "updateError": "Could not update the currency.",
+    "noSelection": "Please select a currency to continue.",
+    "missingPassword": "Please enter your current password to change the currency.",
+    "invalidPassword": "Wrong password."
+  }
+}

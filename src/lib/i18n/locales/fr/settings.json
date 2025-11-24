@@ -109,12 +109,13 @@
       "organization": "Organisation"
     },
     "section": {
-      "orgInfo": "Informations sur l'organisation"
+      "orgInfo": "Informations sur l'organisation",
+      "timezone": "Fuseau horaire",
+      "currency": "Devise"
     },
     "field": {
       "name": "Nom",
       "orgNameInput": "Nom de l'organisation",
-      "timezone": "Fuseau horaire",
       "address1": "Adresse ligne 1",
       "address2": "Adresse ligne 2",
       "city": "Ville",
@@ -129,10 +130,18 @@
       "updateTimezone": "Mettre à jour le fuseau horaire",
       "updateCity": "Mettre à jour la ville",
       "updateCountry": "Mettre à jour le pays",
-      "updatePostalCode": "Mettre à jour le code postal"
+      "updatePostalCode": "Mettre à jour le code postal",
+      "manageCurrency": "Gérer la devise"
+    },
+    "label": {
+      "currentTz": "Actuel",
+      "currency": "Devise de l'organisation"
     },
     "btnLabel": {
       "tz": "Sélectionner le fuseau horaire"
+    },
+    "description": {
+      "currency": "Configurez la devise par défaut utilisée pour les prix et les rapports."
     },
     "modal": {
       "editName": "Modifier le nom",

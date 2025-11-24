@@ -1,6 +1,7 @@
 import {
   useEffect,
   useState,
+  useMemo,
   FormEvent,
   MouseEvent,
   ChangeEvent,
@@ -14,12 +15,15 @@ import { isApiError, validatePassword, useAutoCountry } from "src/lib";
 import Snackbar from "src/components/ui/Snackbar";
 import Button from "src/components/ui/Button";
 import Input from "src/components/ui/Input";
+import Checkbox from "src/components/ui/Checkbox";
+import { SelectDropdown } from "src/components/ui/SelectDropdown";
 
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
 
 import type { SignUpRequest } from "src/models/auth/dto/SignUp";
-import Checkbox from "src/components/ui/Checkbox";
+import { getCountries, CountryOption } from "@/lib/location/countries";
+import { getCurrencies, CurrencyOption } from "@/lib/currency/currencies";
 
 type Snack =
   | {
@@ -31,17 +35,16 @@ type Snack =
 type Step = 1 | 2 | 3 | 4;
 
 type AppLanguage = "en" | "pt" | "fr" | "de";
-type AppCurrency = "BRL" | "USD" | "EUR";
+// Allow any ISO 4217 code (we'll use currencies.ts for the options)
+type AppCurrency = string;
 
-// Minimal country list for example – replace with full ISO 3166-1 list
-const COUNTRY_OPTIONS = [
-  { code: "US", name: "United States" },
-  { code: "BR", name: "Brazil" },
-  { code: "PT", name: "Portugal" },
-  { code: "FR", name: "France" },
-  { code: "DE", name: "Germany" },
-  { code: "GB", name: "United Kingdom" },
-  // TODO: add all countries here or import from a shared constants file
+type LanguageOption = { value: AppLanguage; label: string };
+
+const LANGUAGE_OPTIONS: LanguageOption[] = [
+  { value: "en", label: "English" },
+  { value: "pt", label: "Português" },
+  { value: "fr", label: "Français" },
+  { value: "de", label: "Deutsch" },
 ];
 
 const emailProviders: Record<string, string> = {
@@ -105,18 +108,48 @@ const SignUp = () => {
       : [];
   const locale = Intl.DateTimeFormat().resolvedOptions().locale;
 
+  // Country dataset and selection
+  const COUNTRIES = useMemo<CountryOption[]>(
+    () => getCountries(i18n.language),
+    [i18n.language]
+  );
+  const [selectedCountry, setSelectedCountry] = useState<CountryOption[]>([]);
+
+  // Currency dataset and selection
+  const CURRENCIES = useMemo<CurrencyOption[]>(
+    () => getCurrencies(i18n.language),
+    [i18n.language]
+  );
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyOption[]>([]);
+
+  // Language dropdown selection
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption[]>([]);
+
   // Initialize language default from i18n
   useEffect(() => {
     const raw = (i18n.language || "en").split("-")[0];
     const allowed: AppLanguage[] = ["en", "pt", "fr", "de"];
-    const safeLang: AppLanguage =
-      allowed.includes(raw as AppLanguage) ? (raw as AppLanguage) : "en";
+    const safeLang: AppLanguage = allowed.includes(raw as AppLanguage)
+      ? (raw as AppLanguage)
+      : "en";
 
     setPrefs((prev) => ({
       ...prev,
       language: (prev.language || safeLang) as AppLanguage,
     }));
   }, [i18n.language]);
+
+  // Keep language dropdown in sync with prefs.language
+  useEffect(() => {
+    if (!prefs.language) {
+      setSelectedLanguage([]);
+      return;
+    }
+    const found = LANGUAGE_OPTIONS.find(
+      (opt) => opt.value === prefs.language
+    );
+    setSelectedLanguage(found ? [found] : []);
+  }, [prefs.language]);
 
   // Initialize country default from autoCountry
   useEffect(() => {
@@ -127,16 +160,32 @@ const SignUp = () => {
     }));
   }, [autoCountry]);
 
+  // Keep country dropdown in sync with prefs.country
+  useEffect(() => {
+    if (!prefs.country) {
+      setSelectedCountry([]);
+      return;
+    }
+    const code = prefs.country.toUpperCase();
+    const found = COUNTRIES.find((c) => c.value === code);
+    setSelectedCountry(found ? [found] : []);
+  }, [prefs.country, COUNTRIES]);
+
+  // Keep currency dropdown in sync with prefs.currency
+  useEffect(() => {
+    if (!prefs.currency) {
+      setSelectedCurrency([]);
+      return;
+    }
+    const code = prefs.currency.toUpperCase();
+    const found = CURRENCIES.find((c) => c.value === code);
+    setSelectedCurrency(found ? [found] : []);
+  }, [prefs.currency, CURRENCIES]);
+
   const handleInputChange =
     (field: keyof typeof form) =>
     (e: ChangeEvent<HTMLInputElement>) => {
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    };
-
-  const handlePrefsChange =
-    (field: keyof typeof prefs) =>
-    (e: ChangeEvent<HTMLSelectElement>) => {
-      setPrefs((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
   const handleConsentChange =
@@ -185,7 +234,6 @@ const SignUp = () => {
         return;
       }
 
-      // NEW: check if email is already in use before going to step 2
       try {
         setIsLoading(true);
         const res = await api.checkEmailAvailability(form.email);
@@ -393,6 +441,7 @@ const SignUp = () => {
                         value={form.name}
                         onChange={handleInputChange("name")}
                         disabled={isLoading}
+                        autoComplete="off"
                       />
 
                       <Input
@@ -446,65 +495,87 @@ const SignUp = () => {
                           : "opacity-0 pointer-events-none absolute inset-0"
                       }`}
                     >
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          {t("languageLabel")}
-                        </label>
-                        <select
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
-                          value={prefs.language}
-                          onChange={handlePrefsChange("language")}
-                          disabled={isLoading}
-                          required
-                        >
-                          <option value="">
-                            {t("languagePlaceholder")}
-                          </option>
-                          <option value="en">English</option>
-                          <option value="pt">Português</option>
-                          <option value="fr">Français</option>
-                          <option value="de">Deutsch</option>
-                        </select>
-                      </div>
+                      {/* Language */}
+                      <SelectDropdown<LanguageOption>
+                        label={t("languageLabel")}
+                        items={LANGUAGE_OPTIONS}
+                        selected={selectedLanguage}
+                        onChange={(items) => {
+                          const next = (items[0]?.value ??
+                            "") as AppLanguage | "";
+                          setSelectedLanguage(items);
+                          setPrefs((prev) => ({
+                            ...prev,
+                            language: next,
+                          }));
+                        }}
+                        getItemKey={(item) => item.value}
+                        getItemLabel={(item) => item.label}
+                        singleSelect
+                        hideCheckboxes
+                        clearOnClickOutside={false}
+                        buttonLabel={
+                          selectedLanguage[0]?.label ||
+                          t("languagePlaceholder")
+                        }
+                        customStyles={{ maxHeight: "260px" }}
+                        disabled={isLoading}
+                        hideFilter
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          {t("countryLabel")}
-                        </label>
-                        <select
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
-                          value={prefs.country}
-                          onChange={handlePrefsChange("country")}
-                          disabled={isLoading}
-                          required
-                        >
-                          <option value="">
-                            {t("countryPlaceholder")}
-                          </option>
-                          {COUNTRY_OPTIONS.map((c) => (
-                            <option key={c.code} value={c.code}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {/* Country */}
+                      <SelectDropdown<CountryOption>
+                        label={t("countryLabel")}
+                        items={COUNTRIES}
+                        selected={selectedCountry}
+                        onChange={(items) => {
+                          const v = (items[0]?.value ?? "")
+                            .toString()
+                            .toUpperCase();
+                          setSelectedCountry(items);
+                          setPrefs((prev) => ({
+                            ...prev,
+                            country: v,
+                          }));
+                        }}
+                        getItemKey={(item) => item.value}
+                        getItemLabel={(item) => item.label}
+                        singleSelect
+                        hideCheckboxes
+                        clearOnClickOutside={false}
+                        buttonLabel={
+                          selectedCountry[0]?.label ||
+                          t("countryPlaceholder")
+                        }
+                        customStyles={{ maxHeight: "260px" }}
+                        disabled={isLoading}
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          {t("currencyLabel")}
-                        </label>
-                        <select
-                          className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
-                          value={prefs.currency}
-                          onChange={handlePrefsChange("currency")}
-                          disabled={isLoading}
-                          required
-                        >
-                          <option value="BRL">{t("currencyReal")}</option>
-                          <option value="USD">{t("currencyDollar")}</option>
-                          <option value="EUR">{t("currencyEuro")}</option>
-                        </select>
-                      </div>
+                      {/* Currency */}
+                      <SelectDropdown<CurrencyOption>
+                        label={t("currencyLabel")}
+                        items={CURRENCIES}
+                        selected={selectedCurrency}
+                        onChange={(items) => {
+                          setSelectedCurrency(items);
+                          const value = items[0]?.value ?? "";
+                          setPrefs((prev) => ({
+                            ...prev,
+                            currency: value || prev.currency,
+                          }));
+                        }}
+                        getItemKey={(item) => item.value}
+                        getItemLabel={(item) => item.label}
+                        singleSelect
+                        hideCheckboxes
+                        clearOnClickOutside={false}
+                        buttonLabel={
+                          selectedCurrency[0]?.label ||
+                          t("currencyPlaceholder")
+                        }
+                        customStyles={{ maxHeight: "200px" }}
+                        disabled={isLoading}
+                      />
                     </div>
 
                     {/* STEP 3 – consents */}

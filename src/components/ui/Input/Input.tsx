@@ -32,17 +32,27 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const isPassword = showTogglePassword && type === "password";
     const inputType = isPassword ? (isPasswordVisible ? "text" : "password") : type;
 
+    // Extract autoComplete so we can override for email/password
+    const { autoComplete: _ignoredAutoComplete, ...restProps } =
+      rest as React.InputHTMLAttributes<HTMLInputElement>;
+
+    const derivedAutoComplete =
+      type === "password" || type === "email"
+        ? "off" // 🔒 NEVER let browser autofill password/email
+        : _ignoredAutoComplete;
+
     const valueStr =
-      typeof rest.value === "string"
-        ? (rest.value as string)
-        : typeof rest.defaultValue === "string"
-        ? (rest.defaultValue as string)
+      typeof restProps.value === "string"
+        ? (restProps.value as string)
+        : typeof restProps.defaultValue === "string"
+        ? (restProps.defaultValue as string)
         : "";
+
     const canClear =
       !isPassword &&
       !isLoading &&
-      !rest.disabled &&
-      typeof rest.onChange === "function" &&
+      !restProps.disabled &&
+      typeof restProps.onChange === "function" &&
       valueStr.length > 0 &&
       (type === "text" ||
         type === "search" ||
@@ -80,15 +90,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const togglePasswordVisibility = () => setIsPasswordVisible((v) => !v);
 
     const handleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && (rest).formNoValidate) e.preventDefault();
+      if (e.key === "Enter" && (restProps).formNoValidate) e.preventDefault();
     };
 
     const errorId = errorMessage ? `${id}-err` : undefined;
 
     const onClear = () => {
-      const onChange = rest.onChange as React.ChangeEventHandler<HTMLInputElement> | undefined;
+      const onChange = restProps.onChange as
+        | React.ChangeEventHandler<HTMLInputElement>
+        | undefined;
       if (onChange) {
-        const name = (rest).name ?? "";
+        const name = (restProps).name ?? "";
         const synthetic = {
           target: { name, value: "" },
           currentTarget: { name, value: "" },
@@ -100,7 +112,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1.5" style={style}>
         {label ? (
-          <label htmlFor={id} className="text-[10.5px] font-semibold text-gray-700 select-none">
+          <label
+            htmlFor={id}
+            className="text-[10.5px] font-semibold text-gray-700 select-none"
+          >
             {label}
           </label>
         ) : null}
@@ -113,9 +128,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className={inputClasses}
             aria-invalid={!!errorMessage}
             aria-describedby={errorId}
-            disabled={isLoading || rest.disabled}
+            disabled={isLoading || restProps.disabled}
             onKeyDown={handleKeyDown}
-            {...rest}
+            {...restProps}
+            autoComplete={derivedAutoComplete}
           />
 
           {/* Trailing controls */}

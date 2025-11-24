@@ -169,6 +169,11 @@ import enHomeDashboard from "./locales/en/homeDashboard.json";
 import frHomeDashboard from "./locales/fr/homeDashboard.json";
 import deHomeDashboard from "./locales/de/homeDashboard.json";
 
+import ptCurrencySettings from "./locales/pt/currencySettings.json";
+import enCurrencySettings from "./locales/en/currencySettings.json";
+import frCurrencySettings from "./locales/fr/currencySettings.json";
+import deCurrencySettings from "./locales/de/currencySettings.json";
+
 
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
@@ -204,7 +209,8 @@ const resources: Resource = {
     groupPermissionsTable: ptGroupPermissionsTable,
     limits: ptLimits,
     cookies: ptCookies,
-    homeDashboard: ptHomeDashboard
+    homeDashboard: ptHomeDashboard,
+    currencySettings: ptCurrencySettings
   },
   en: {
     common: enCommon,
@@ -238,7 +244,8 @@ const resources: Resource = {
     groupPermissionsTable: enGroupPermissionsTable,
     limits: enLimits,
     cookies: enCookies,
-    homeDashboard: enHomeDashboard
+    homeDashboard: enHomeDashboard,
+    currencySettings: enCurrencySettings
   },
   fr: {
     common: frCommon,
@@ -272,7 +279,8 @@ const resources: Resource = {
     groupPermissionsTable: frGroupPermissionsTable,
     limits: frLimits,
     cookies: frCookies,
-    homeDashboard: frHomeDashboard
+    homeDashboard: frHomeDashboard,
+    currencySettings: frCurrencySettings
   },
   de: {
     common: deCommon,
@@ -306,7 +314,8 @@ const resources: Resource = {
     groupPermissionsTable: deGroupPermissionsTable,
     limits: deLimits,
     cookies: deCookies,
-    homeDashboard: deHomeDashboard
+    homeDashboard: deHomeDashboard,
+    currencySettings: deCurrencySettings
   }
 };
 
@@ -350,6 +359,7 @@ i18n
       "limits",
       "cookies",
       "homeDashboard",
+      "currencySettings",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

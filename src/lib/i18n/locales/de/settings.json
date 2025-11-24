@@ -109,12 +109,13 @@
       "organization": "Organisation"
     },
     "section": {
-      "orgInfo": "Organisationsinformationen"
+      "orgInfo": "Organisationsinformationen",
+      "timezone": "Zeitzone",
+      "currency": "Währung"
     },
     "field": {
       "name": "Name",
       "orgNameInput": "Organisationsname",
-      "timezone": "Zeitzone",
       "address1": "Adresszeile 1",
       "address2": "Adresszeile 2",
       "city": "Stadt",
@@ -129,10 +130,18 @@
       "updateTimezone": "Zeitzone aktualisieren",
       "updateCity": "Stadt aktualisieren",
       "updateCountry": "Land aktualisieren",
-      "updatePostalCode": "Postleitzahl aktualisieren"
+      "updatePostalCode": "Postleitzahl aktualisieren",
+      "manageCurrency": "Währung verwalten"
+    },
+    "label": {
+      "currentTz": "Aktuell",
+      "currency": "Unternehmenswährung"
     },
     "btnLabel": {
       "tz": "Zeitzone auswählen"
+    },
+    "description": {
+      "currency": "Konfigurieren Sie die Standardwährung für Preise und Berichte."
     },
     "modal": {
       "editName": "Name bearbeiten",

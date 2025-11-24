@@ -1,0 +1,34 @@
+{
+  "title": "Währung der Organisation",
+  "header": {
+    "settings": "Einstellungen",
+    "title": "Standardwährung der Organisation"
+  },
+  "section": {
+    "currency": "Währung"
+  },
+  "field": {
+    "current": "Aktuelle Währung",
+    "currency": "Neue Währung",
+    "password": "Aktuelles Passwort"
+  },
+  "btn": {
+    "change": "Währung ändern",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "btnLabel": {
+    "currency": "Währung auswählen"
+  },
+  "modal": {
+    "title": "Währung der Organisation ändern",
+    "close": "Schließen"
+  },
+  "toast": {
+    "success": "Währung erfolgreich aktualisiert.",
+    "updateError": "Die Währung konnte nicht aktualisiert werden.",
+    "noSelection": "Bitte wählen Sie eine Währung aus, um fortzufahren.",
+    "missingPassword": "Bitte geben Sie Ihr aktuelles Passwort ein, um die Währung zu ändern.",
+    "invalidPassword": "Falsches Passwort."
+  }
+}

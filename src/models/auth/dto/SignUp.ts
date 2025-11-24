@@ -8,7 +8,7 @@ export interface SignUpRequest {
   timezone: string;
   country: string;
   language?: "en" | "pt" | "fr" | "de";
-  currency?: "BRL" | "USD" | "EUR";
+  currency: string;
   browser_language?: string;
   browser_languages?: string[];
   locale?: string;

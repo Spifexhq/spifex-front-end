@@ -1,13 +1,15 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/CompanySettings.tsx
  * Style: light borders; Navbar + SidebarSettings; compact labels
- * Standards: flags (isInitialLoading, isBackgroundSync, isSubmitting),
- *            TopProgress + PageSkeleton, background sync badge,
- *            ESC/scroll lock, robust fetch/update, consistent disabling.
+ * Standards: flags (isInitialLoading, isSubmitting),
+ *            TopProgress + PageSkeleton, ESC/scroll lock,
+ *            robust fetch/update, consistent disabling.
  * i18n: settings:company.*
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
@@ -21,11 +23,10 @@ import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { api } from "src/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
 import type { Organization } from "src/models/auth/domain";
-import { formatTimezoneLabel, TIMEZONES } from "src/lib";
-import { useTranslation } from "react-i18next";
+import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 
-/* ------------------------------ Types ------------------------------------- */
-type EditableUserField = "none" | "name" | "timezone" | "address";
+type EditableOrgField = "name" | "timezone" | "address";
+
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
@@ -50,31 +51,33 @@ const Row = ({
   <div className="flex items-center justify-between px-4 py-2.5">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">{value ?? "—"}</p>
+      <p className="text-[13px] font-medium text-gray-900 truncate">{value || "—"}</p>
     </div>
     {action}
   </div>
 );
 
-/* In-flight guard (avoid overlapping loads) */
-let INFLIGHT_FETCH = false;
-
 const CompanySettings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings", "common"]);
   const { isOwner } = useAuthContext();
+  const navigate = useNavigate();
 
-  useEffect(() => { document.title = t("settings:company.title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("settings:company.title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   /* ------------------------------ Flags ----------------------------------- */
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* ------------------------------ State ----------------------------------- */
   const [orgProfile, setOrgProfile] = useState<Organization | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingField, setEditingField] = useState<EditableUserField | null>(null);
+  const [editingField, setEditingField] = useState<EditableOrgField | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -83,7 +86,7 @@ const CompanySettings: React.FC = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    timezone: "UTC",
+    timezone: "",
     line1: "",
     line2: "",
     country: "",
@@ -91,96 +94,104 @@ const CompanySettings: React.FC = () => {
     postal_code: "",
   });
 
-  const setFormFromOrg = useCallback((org: Organization, setTzByDevice = false) => {
-    setFormData({
-      name: org.name,
-      timezone: org.timezone ?? "UTC",
-      line1: org.line1 ?? "",
-      line2: org.line2 ?? "",
-      country: org.country ?? "",
-      city: org.city ?? "",
-      postal_code: org.postal_code ?? "",
-    });
+  const setFormFromOrg = useCallback(
+    (org: Organization) => {
+      const tz = org.timezone ?? "";
+      setFormData({
+        name: org.name,
+        timezone: tz,
+        line1: org.line1 ?? "",
+        line2: org.line2 ?? "",
+        country: org.country ?? "",
+        city: org.city ?? "",
+        postal_code: org.postal_code ?? "",
+      });
 
-    const effectiveTz = setTzByDevice ? deviceTz : (org.timezone ?? "UTC");
-    setUseDeviceTz(effectiveTz === deviceTz);
-
-    const tzObj = TIMEZONES.find((t) => t.value === effectiveTz);
-    setSelectedTimezone(tzObj ? [tzObj] : []);
-  }, [deviceTz]);
+      // timezone state
+      setUseDeviceTz(tz === deviceTz);
+      const effectiveTz = tz || deviceTz;
+      const tzObj = TIMEZONES.find((t) => t.value === effectiveTz);
+      setSelectedTimezone(tzObj ? [tzObj] : []);
+    },
+    [deviceTz]
+  );
 
   /* ------------------------------ Fetch org -------------------------------- */
-  const fetchOrg = useCallback(async ({ background }: { background?: boolean } = {}) => {
-    if (INFLIGHT_FETCH) return;
-    INFLIGHT_FETCH = true;
-    try {
-      if (background) setIsBackgroundSync(true);
-      else setIsInitialLoading(true);
-
-      const response = await api.getOrganization();
-      const data = response.data as Organization;
-      setOrgProfile(data);
-      setFormFromOrg(data);
-    } catch (err) {
-      console.error("settings:company.toast.orgLoadError", err);
-      setSnack({ message: t("settings:company.toast.orgLoadError"), severity: "error" });
-    } finally {
-      if (background) setIsBackgroundSync(false);
-      else setIsInitialLoading(false);
-      INFLIGHT_FETCH = false;
-    }
+  useEffect(() => {
+    (async () => {
+      setIsInitialLoading(true);
+      try {
+        const response = await api.getOrganization();
+        const data = response.data as Organization;
+        setOrgProfile(data);
+        setFormFromOrg(data);
+      } catch (err) {
+        console.error("settings:company.toast.orgLoadError", err);
+        setSnack({ message: t("settings:company.toast.orgLoadError"), severity: "error" });
+      } finally {
+        setIsInitialLoading(false);
+      }
+    })();
   }, [setFormFromOrg, t]);
 
-  useEffect(() => {
-    void fetchOrg();
-  }, [fetchOrg]);
-
   /* ------------------------------ Handlers -------------------------------- */
-  const openModal = (field?: EditableUserField) => {
-    if (orgProfile) setFormFromOrg(orgProfile);
+  const openModal = (field?: EditableOrgField) => {
+    if (orgProfile) {
+      setFormFromOrg(orgProfile);
+    }
     setEditingField(field ?? null);
     setModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
-    if (orgProfile) setFormFromOrg(orgProfile);
+    if (orgProfile) {
+      setFormFromOrg(orgProfile);
+    }
     setEditingField(null);
     setModalOpen(false);
   }, [orgProfile, setFormFromOrg]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const submitPartial = async (partialData: Partial<typeof formData>) => {
+  const handleSubmit = async () => {
+    if (!orgProfile) {
+      setSnack({
+        message: t("settings:company.toast.orgUpdateError"),
+        severity: "error",
+      });
+      return;
+    }
+
+    const requestBody = {
+      name: formData.name,
+      timezone: formData.timezone,
+      line1: formData.line1,
+      line2: formData.line2,
+      city: formData.city,
+      country: formData.country,
+      postal_code: formData.postal_code,
+    };
+
+    setIsSubmitting(true);
     try {
-      if (!orgProfile) {
-        setSnack({ message: t("settings:company.toast.orgUpdateError"), severity: "error" });
-        return;
-      }
-      setIsSubmitting(true);
-
-      const requestBody = {
-        name: formData.name,
-        timezone: formData.timezone,
-        line1: formData.line1,
-        line2: formData.line2,
-        city: formData.city,
-        country: formData.country,
-        postal_code: formData.postal_code,
-        ...partialData,
-      };
-
       const res = await api.editOrganization(requestBody);
-      if (!res.data) throw new Error("settings:company.toast.orgUpdateError");
+      if (!res.data) {
+        throw new Error("settings:company.toast.orgUpdateError");
+      }
+
+      const updated = res.data as Organization;
+      setOrgProfile(updated);
+      setFormFromOrg(updated);
 
       closeModal();
       setSnack({ message: t("settings:company.toast.orgUpdateOk"), severity: "success" });
-
-      // background refresh (shows thin TopProgress + badge)
-      void fetchOrg({ background: true });
     } catch (err) {
       console.error(err);
-      setSnack({ message: t("settings:company.toast.orgUpdateError"), severity: "error" });
+      setSnack({
+        message: t("settings:company.toast.orgUpdateError"),
+        severity: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -195,137 +206,10 @@ const CompanySettings: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [modalOpen]);
-
-  /* ------------------------------ Modal content --------------------------- */
-  const renderModalContent = () => {
-    switch (editingField) {
-      case "name":
-        return (
-          <form
-            className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
-            onSubmit={(e) => {
-              e.preventDefault();
-              submitPartial({ name: formData.name });
-            }}
-          >
-            <Input
-              label={t("settings:company.field.orgNameInput")}
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-            />
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                {t("settings:company.btn.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {t("settings:company.btn.save")}
-              </Button>
-            </div>
-          </form>
-        );
-
-      case "timezone":
-        return (
-          <form
-            className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
-            onSubmit={(e) => {
-              e.preventDefault();
-              submitPartial({ timezone: formData.timezone });
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <label className="text-[12px] text-gray-700">{t("settings:company.modal.useDeviceTz")}</label>
-              <Checkbox
-                checked={useDeviceTz}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setUseDeviceTz(checked);
-                  setFormData((p) => ({
-                    ...p,
-                    timezone: checked ? deviceTz : p.timezone,
-                  }));
-                  if (checked) {
-                    const tzObj = TIMEZONES.find((t) => t.value === deviceTz);
-                    setSelectedTimezone(tzObj ? [tzObj] : []);
-                  }
-                }}
-                size="sm"
-                colorClass="defaultColor"
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <SelectDropdown
-              label={t("settings:company.modal.tzLabel")}
-              items={TIMEZONES}
-              selected={selectedTimezone}
-              onChange={(tz) => {
-                setSelectedTimezone(tz);
-                if (tz.length > 0) {
-                  setFormData((p) => ({ ...p, timezone: tz[0].value }));
-                }
-              }}
-              getItemKey={(item) => item.value}
-              getItemLabel={(item) => item.label}
-              singleSelect
-              hideCheckboxes
-              clearOnClickOutside={false}
-              buttonLabel={t("settings:company.btnLabel.tz")}
-              customStyles={{ maxHeight: "250px" }}
-              disabled={useDeviceTz || isSubmitting}
-            />
-
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                {t("settings:company.btn.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting || useDeviceTz}>
-                {t("settings:company.btn.save")}
-              </Button>
-            </div>
-          </form>
-        );
-
-      case "address":
-        return (
-          <form
-            className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
-            onSubmit={(e) => {
-              e.preventDefault();
-              submitPartial({
-                line1: formData.line1,
-                line2: formData.line2,
-                city: formData.city,
-                country: formData.country,
-                postal_code: formData.postal_code,
-              });
-            }}
-          >
-            <Input label={t("settings:company.field.address1")} name="line1" value={formData.line1} onChange={handleChange} disabled={isSubmitting} />
-            <Input label={t("settings:company.field.address2")} name="line2" value={formData.line2} onChange={handleChange} disabled={isSubmitting} />
-            <Input label={t("settings:company.field.city")} name="city" value={formData.city} onChange={handleChange} disabled={isSubmitting} />
-            <Input label={t("settings:company.field.country")} name="country" value={formData.country} onChange={handleChange} disabled={isSubmitting} />
-            <Input label={t("settings:company.field.postalCode")} name="postal_code" value={formData.postal_code} onChange={handleChange} disabled={isSubmitting} />
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                {t("settings:company.btn.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {t("settings:company.btn.save")}
-              </Button>
-            </div>
-          </form>
-        );
-
-      default:
-        return null;
-    }
-  };
 
   /* ------------------------------ Loading UI ------------------------------ */
   if (isInitialLoading) {
@@ -337,21 +221,13 @@ const CompanySettings: React.FC = () => {
     );
   }
 
-  const headerBadge = isBackgroundSync ? (
-    <span
-      aria-live="polite"
-      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
-    >
-      {t("settings:company.badge.syncing", "Syncing…")}
-    </span>
-  ) : null;
+  const globalBusy = isSubmitting;
 
-  const globalBusy = isSubmitting || isBackgroundSync;
-
+  /* -------------------------------- Render -------------------------------- */
   return (
     <>
-      {/* Thin progress bar during background refresh after updates */}
-      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+      {/* thin progress during submit (background action) */}
+      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
@@ -361,51 +237,145 @@ const CompanySettings: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials(orgProfile?.name)}
               </div>
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("settings:company.header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("settings:company.header.organization")}
-                  </h1>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("settings:company.header.settings")}
                 </div>
-                {headerBadge}
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("settings:company.header.organization")}
+                </h1>
               </div>
             </div>
           </header>
 
-          {/* Main card */}
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                  {t("settings:company.section.orgInfo")}
-                </span>
+          {/* Main grid — same pattern as PersonalSettings */}
+          <section className="mt-6 grid grid-cols-12 gap-6">
+            {/* LEFT */}
+            <div className="col-span-12 lg:col-span-7 space-y-6">
+              {/* Org info / address card */}
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:company.section.orgInfo")}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-gray-200">
+                  <Row
+                    label={t("settings:company.field.name")}
+                    value={orgProfile?.name}
+                    action={
+                      isOwner && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openModal("name")}
+                          disabled={globalBusy}
+                        >
+                          {t("settings:company.btn.updateName")}
+                        </Button>
+                      )
+                    }
+                  />
+
+                  <Row
+                    label={t("settings:company.field.address1")}
+                    value={orgProfile?.line1}
+                    action={
+                      isOwner && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openModal("address")}
+                          disabled={globalBusy}
+                        >
+                          {t("settings:company.btn.update")}
+                        </Button>
+                      )
+                    }
+                  />
+                  <Row
+                    label={t("settings:company.field.address2")}
+                    value={orgProfile?.line2}
+                    action={
+                      isOwner && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openModal("address")}
+                          disabled={globalBusy}
+                        >
+                          {t("settings:company.btn.update")}
+                        </Button>
+                      )
+                    }
+                  />
+                  <Row
+                    label={t("settings:company.field.city")}
+                    value={orgProfile?.city}
+                    action={
+                      isOwner && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openModal("address")}
+                          disabled={globalBusy}
+                        >
+                          {t("settings:company.btn.updateCity")}
+                        </Button>
+                      )
+                    }
+                  />
+                  <Row
+                    label={t("settings:company.field.postalCode")}
+                    value={orgProfile?.postal_code}
+                    action={
+                      isOwner && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openModal("address")}
+                          disabled={globalBusy}
+                        >
+                          {t("settings:company.btn.updatePostalCode")}
+                        </Button>
+                      )
+                    }
+                  />
+                  <Row
+                    label={t("settings:company.field.country")}
+                    value={orgProfile?.country}
+                    action={
+                      isOwner && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openModal("address")}
+                          disabled={globalBusy}
+                        >
+                          {t("settings:company.btn.updateCountry")}
+                        </Button>
+                      )
+                    }
+                  />
+                </div>
               </div>
+            </div>
 
-              <div className="divide-y divide-gray-200">
-                <Row
-                  label={t("settings:company.field.name")}
-                  value={orgProfile?.name}
-                  action={
-                    isOwner && (
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("name")}
-                        disabled={globalBusy}
-                      >
-                        {t("settings:company.btn.updateName")}
-                      </Button>
-                    )
-                  }
-                />
-
-                <Row
-                  label={t("settings:company.field.timezone")}
-                  value={formatTimezoneLabel(orgProfile?.timezone ?? "")}
-                  action={
-                    isOwner && (
+            {/* RIGHT */}
+            <div className="col-span-12 lg:col-span-5 space-y-6">
+              {/* Timezone card — same style as PersonalSettings */}
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:company.section.timezone")}
+                  </span>
+                </div>
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                        {t("settings:company.label.currentTz", "Current")}
+                      </p>
+                      <p className="text-[13px] font-medium text-gray-900">
+                        {formatTimezoneLabel(orgProfile?.timezone ?? "")}
+                      </p>
+                    </div>
+                    {isOwner && (
                       <Button
                         variant="outline"
                         onClick={() => openModal("timezone")}
@@ -413,85 +383,42 @@ const CompanySettings: React.FC = () => {
                       >
                         {t("settings:company.btn.updateTimezone")}
                       </Button>
-                    )
-                  }
-                />
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                <Row
-                  label={t("settings:company.field.address1")}
-                  value={orgProfile?.line1}
-                  action={
-                    isOwner && (
+              {/* Currency card */}
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("settings:company.section.currency")}
+                  </span>
+                </div>
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                        {t("settings:company.label.currency")}
+                      </p>
+                      <p className="text-[12px] text-gray-700">
+                        {t(
+                          "settings:company.description.currency",
+                          "Configure the default currency used for prices and reports."
+                        )}
+                      </p>
+                    </div>
+                    {isOwner && (
                       <Button
                         variant="outline"
-                        onClick={() => openModal("address")}
+                        onClick={() => navigate("/settings/manage-currency")}
                         disabled={globalBusy}
                       >
-                        {t("settings:company.btn.update")}
+                        {t("settings:company.btn.manageCurrency")}
                       </Button>
-                    )
-                  }
-                />
-                <Row
-                  label={t("settings:company.field.address2")}
-                  value={orgProfile?.line2}
-                  action={
-                    isOwner && (
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("address")}
-                        disabled={globalBusy}
-                      >
-                        {t("settings:company.btn.update")}
-                      </Button>
-                    )
-                  }
-                />
-                <Row
-                  label={t("settings:company.field.city")}
-                  value={orgProfile?.city}
-                  action={
-                    isOwner && (
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("address")}
-                        disabled={globalBusy}
-                      >
-                        {t("settings:company.btn.updateCity")}
-                      </Button>
-                    )
-                  }
-                />
-                <Row
-                  label={t("settings:company.field.country")}
-                  value={orgProfile?.country}
-                  action={
-                    isOwner && (
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("address")}
-                        disabled={globalBusy}
-                      >
-                        {t("settings:company.btn.updateCountry")}
-                      </Button>
-                    )
-                  }
-                />
-                <Row
-                  label={t("settings:company.field.postalCode")}
-                  value={orgProfile?.postal_code}
-                  action={
-                    isOwner && (
-                      <Button
-                        variant="outline"
-                        onClick={() => openModal("address")}
-                        disabled={globalBusy}
-                      >
-                        {t("settings:company.btn.updatePostalCode")}
-                      </Button>
-                    )
-                  }
-                />
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -504,6 +431,7 @@ const CompanySettings: React.FC = () => {
               className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
               role="dialog"
               aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
@@ -521,7 +449,121 @@ const CompanySettings: React.FC = () => {
                 </button>
               </header>
 
-              {renderModalContent()}
+              <form
+                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleSubmit();
+                }}
+              >
+                {editingField === "name" && (
+                  <Input
+                    label={t("settings:company.field.orgNameInput")}
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                  />
+                )}
+
+                {editingField === "timezone" && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[12px] text-gray-700">
+                        {t("settings:company.modal.useDeviceTz")}
+                      </label>
+                      <Checkbox
+                        checked={useDeviceTz}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setUseDeviceTz(checked);
+                          setFormData((p) => ({
+                            ...p,
+                            timezone: checked ? deviceTz : p.timezone,
+                          }));
+                          if (checked) {
+                            const tzObj = TIMEZONES.find((tt) => tt.value === deviceTz);
+                            setSelectedTimezone(tzObj ? [tzObj] : []);
+                          }
+                        }}
+                        size="sm"
+                        colorClass="defaultColor"
+                        disabled={isSubmitting}
+                      />
+                    </div>
+
+                    <SelectDropdown
+                      label={t("settings:company.modal.tzLabel")}
+                      items={TIMEZONES}
+                      selected={selectedTimezone}
+                      onChange={(tz) => {
+                        setSelectedTimezone(tz);
+                        if (tz.length > 0) {
+                          setFormData((p) => ({ ...p, timezone: tz[0].value }));
+                        }
+                      }}
+                      getItemKey={(item) => item.value}
+                      getItemLabel={(item) => item.label}
+                      singleSelect
+                      hideCheckboxes
+                      clearOnClickOutside={false}
+                      buttonLabel={t("settings:company.btnLabel.tz")}
+                      customStyles={{ maxHeight: "250px" }}
+                      disabled={useDeviceTz || isSubmitting}
+                    />
+                  </>
+                )}
+
+                {editingField === "address" && (
+                  <>
+                    <Input
+                      label={t("settings:company.field.address1")}
+                      name="line1"
+                      value={formData.line1}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                    />
+                    <Input
+                      label={t("settings:company.field.address2")}
+                      name="line2"
+                      value={formData.line2}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                    />
+                    <Input
+                      label={t("settings:company.field.city")}
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                    />
+                    <Input
+                      label={t("settings:company.field.postalCode")}
+                      name="postal_code"
+                      value={formData.postal_code}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                    />
+                    <Input
+                      label={t("settings:company.field.country")}
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                    />
+                  </>
+                )}
+
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                    {t("settings:company.btn.cancel")}
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {t("settings:company.btn.save")}
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         )}

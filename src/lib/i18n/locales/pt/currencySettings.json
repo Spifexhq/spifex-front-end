@@ -1,0 +1,34 @@
+{
+  "title": "Moeda da Organização",
+  "header": {
+    "settings": "Configurações",
+    "title": "Moeda padrão da organização"
+  },
+  "section": {
+    "currency": "Moeda"
+  },
+  "field": {
+    "current": "Moeda atual",
+    "currency": "Nova moeda",
+    "password": "Senha atual"
+  },
+  "btn": {
+    "change": "Alterar moeda",
+    "cancel": "Cancelar",
+    "save": "Salvar"
+  },
+  "btnLabel": {
+    "currency": "Selecionar moeda"
+  },
+  "modal": {
+    "title": "Alterar moeda da organização",
+    "close": "Fechar"
+  },
+  "toast": {
+    "success": "Moeda atualizada com sucesso.",
+    "updateError": "Não foi possível atualizar a moeda.",
+    "noSelection": "Selecione uma moeda para continuar.",
+    "missingPassword": "Informe sua senha atual para alterar a moeda.",
+    "invalidPassword": "Senha incorreta."
+  }
+}

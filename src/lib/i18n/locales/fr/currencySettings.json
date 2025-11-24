@@ -1,0 +1,34 @@
+{
+  "title": "Devise de l'Organisation",
+  "header": {
+    "settings": "Paramètres",
+    "title": "Devise par défaut de l'organisation"
+  },
+  "section": {
+    "currency": "Devise"
+  },
+  "field": {
+    "current": "Devise actuelle",
+    "currency": "Nouvelle devise",
+    "password": "Mot de passe actuel"
+  },
+  "btn": {
+    "change": "Changer de devise",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "btnLabel": {
+    "currency": "Sélectionner une devise"
+  },
+  "modal": {
+    "title": "Changer la devise de l'organisation",
+    "close": "Fermer"
+  },
+  "toast": {
+    "success": "Devise mise à jour avec succès.",
+    "updateError": "Impossible de mettre à jour la devise.",
+    "noSelection": "Veuillez sélectionner une devise pour continuer.",
+    "missingPassword": "Veuillez saisir votre mot de passe actuel pour changer la devise.",
+    "invalidPassword": "Mot de passe incorrect."
+  }
+}
