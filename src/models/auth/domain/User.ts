@@ -1,6 +1,5 @@
 // models/auth/User.ts
 export interface User {
-  id: number;
   name: string;
   email: string;
   is_active: boolean;
@@ -16,9 +15,9 @@ export interface UserOrganizationDetail {
   is_owner: boolean;
   role: string | null;
   organization: {
-    id: number;
     external_id: string;
     name: string;
+    currency: string;
   } | null;
   permissions?: string[];
 }

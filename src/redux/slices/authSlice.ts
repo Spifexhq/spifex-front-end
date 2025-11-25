@@ -50,7 +50,6 @@ const slice = createSlice({
     setSubscription: (s, a: PayloadAction<GetSubscriptionStatusResponse | null>) => {
       s.subscription = a.payload;
     },
-    // Alias para compatibilidade com código que chama setSubscriptionStatus
     setSubscriptionStatus: (s, a: PayloadAction<GetSubscriptionStatusResponse | null>) => {
       s.subscription = a.payload;
     },

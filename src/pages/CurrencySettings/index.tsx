@@ -1,6 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/CurrencySettings.tsx
- * ... (imports unchanged at top)
  * -------------------------------------------------------------------------- */
 
 import axios from "axios";
@@ -11,6 +10,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
@@ -25,6 +25,9 @@ import { useAuthContext } from "src/hooks/useAuth";
 
 import type { CurrencyOption } from "src/lib/currency/currencies";
 import { getCurrencies } from "src/lib/currency/currencies";
+
+import type { RootState } from "@/redux/rootReducer";
+import { setUserOrganization } from "@/redux";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =
@@ -66,6 +69,9 @@ const Row = ({
 const CurrencySettings: React.FC = () => {
   const { t, i18n } = useTranslation(["currencySettings", "common"]);
   const { user: authUser } = useAuthContext();
+
+  const dispatch = useDispatch();
+  const organization = useSelector((s: RootState) => s.auth.organization);
 
   useEffect(() => {
     document.title = t("currencySettings:title");
@@ -160,7 +166,23 @@ const CurrencySettings: React.FC = () => {
       });
       const updatedCode = (resp.data?.currency ?? selectedCurrency) as string;
 
+      // Local state (this page)
       setCurrency(updatedCode);
+
+      // 🔄 Update Redux auth.organization with the new currency
+      if (organization) {
+        dispatch(
+          setUserOrganization({
+            ...organization,
+            organization: organization.organization
+              ? {
+                  ...organization.organization,
+                  currency: updatedCode,
+                }
+              : organization.organization,
+          })
+        );
+      }
 
       setSnack({
         message: t("currencySettings:toast.success"),
@@ -194,7 +216,7 @@ const CurrencySettings: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedCurrency, currentPassword, t, closeModal]);
+  }, [selectedCurrency, currentPassword, t, closeModal, dispatch, organization]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
