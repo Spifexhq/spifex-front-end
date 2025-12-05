@@ -16,8 +16,8 @@ import { api } from "@/api/requests";
 import { useAuth } from "@/api";
 import { TIMEZONES } from "@/lib/location/timezonesList";
 import { formatTimezoneLabel } from "@/lib/location/formatTimezoneLabel";
-import { getCountries, CountryOption } from "@/lib/location/countries";
 import type { TimezoneOption } from "@/lib/location/timezonesList";
+import { getCountries, CountryOption } from "@/lib/location/countries";
 
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }

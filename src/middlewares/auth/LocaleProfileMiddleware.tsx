@@ -3,6 +3,8 @@ import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from "
 import { useLocation, useNavigate } from "react-router-dom";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import { api } from "@/api/requests";
+import { isSupportedCountryAlpha2 } from "@/lib/location/countries";
+import { isSupportedTimezone } from "@/lib/location/timezonesList";
 
 type Status = "idle" | "loading" | "ready" | "redirecting";
 
@@ -43,9 +45,18 @@ export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children 
       setStatus("loading");
       try {
         const res = await api.getPersonalSettings();
+
         const tz = (res?.data?.timezone || "").trim();
         const country = (res?.data?.country || "").trim();
-        const ok = tz.length > 0 && country.length >= 2;
+
+        const tzOk =
+          tz.length > 0 &&
+          tz.toUpperCase() !== "UTC" &&
+          isSupportedTimezone(tz);
+
+        const countryOk = isSupportedCountryAlpha2(country);
+
+        const ok = tzOk && countryOk;
 
         if (!ok) {
           setStatus("redirecting");
@@ -65,7 +76,9 @@ export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children 
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [location.pathname, navigate, returnTo]);
 
   if (status === "loading" || status === "redirecting") {

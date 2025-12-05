@@ -8,7 +8,7 @@ export interface CountryOption {
 }
 
 // Complete ISO 3166-1 alpha-2 list (official codes; 249 entries)
-const ISO_ALPHA2: readonly string[] = [
+export const ISO_ALPHA2: readonly string[] = [
   "AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ",
   "BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ",
   "CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ",
@@ -36,10 +36,17 @@ const ISO_ALPHA2: readonly string[] = [
   "ZA","ZM","ZW"
 ];
 
+const ISO_ALPHA2_SET: ReadonlySet<string> = new Set(ISO_ALPHA2.map((c) => c.toUpperCase()));
+
+// ✅ Use this everywhere you need to validate persisted/received country values
+export const isSupportedCountryAlpha2 = (code: string): boolean => {
+  const c = (code || "").trim().toUpperCase();
+  return c.length === 2 && ISO_ALPHA2_SET.has(c);
+};
+
 // Localize a single country name; fall back to a tiny hand map, then code itself.
 const regionDisplayName = (code: string, locale: string): string => {
   try {
-    // Some older browsers might not have Intl.DisplayNames
     if (typeof Intl.DisplayNames === "function") {
       const dn = new Intl.DisplayNames([locale], { type: "region" });
       const name = dn.of(code);
