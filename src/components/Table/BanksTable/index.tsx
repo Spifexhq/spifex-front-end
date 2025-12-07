@@ -2,10 +2,12 @@
  * File: BanksTable.tsx (compact) — i18n enabled
  * Non-table list, minimal + intuitive. Slightly reduced heights.
  * -------------------------------------------------------------------------- */
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import Spinner from "src/components/ui/Loaders/Spinner";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
+
+import { formatCurrency } from "src/lib";
 
 interface BanksTableProps {
   banks: BankAccount[];
@@ -30,21 +32,30 @@ const BanksTable: React.FC<BanksTableProps> = ({
 }) => {
   const { t } = useTranslation("banksTable");
 
+  const sorted = useMemo(
+    () => banks.slice().sort((a, b) => a.institution.localeCompare(b.institution)),
+    [banks]
+  );
+
+  const totalFmt = useMemo(
+    () => formatCurrency(Number(totalConsolidatedBalance || 0)),
+    [totalConsolidatedBalance]
+  );
+
   if (loading) {
     return (
-      <div className="flex justify-center py-3" role="status" aria-live="polite" aria-label={t("aria.loading")}>
+      <div
+        className="flex justify-center py-3"
+        role="status"
+        aria-live="polite"
+        aria-label={t("aria.loading")}
+      >
         <Spinner />
       </div>
     );
   }
+
   if (error) return <div className="text-red-600 text-xs">{error}</div>;
-
-  const totalFmt = Number(totalConsolidatedBalance || 0).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-
-  const sorted = banks.slice().sort((a, b) => a.institution.localeCompare(b.institution));
 
   return (
     <section aria-label={t("aria.section")} className="h-full flex flex-col bg-white">
@@ -67,15 +78,11 @@ const BanksTable: React.FC<BanksTableProps> = ({
       {/* Scroll area (fills remaining height) */}
       <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200">
         {sorted.length === 0 ? (
-          <div className="px-4 py-3 text-xs text-gray-600 text-center">
-            {t("empty")}
-          </div>
+          <div className="px-4 py-3 text-xs text-gray-600 text-center">{t("empty")}</div>
         ) : (
           sorted.map((bank) => {
-            const balance = Number(bank.consolidated_balance || 0).toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            });
+            const balance = formatCurrency(Number(bank.consolidated_balance || 0));
+
             return (
               <div
                 key={bank.id}
@@ -104,6 +111,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
                     </span>
                   </div>
                 </div>
+
                 <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
                   {balance}
                 </div>
