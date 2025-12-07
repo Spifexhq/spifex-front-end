@@ -367,11 +367,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     /* -------------------------- Calendar rendering --------------------------- */
 
     const renderCalendar = () => {
-      if (!isCalendarOpen) return null;
-
-      const start = startOfWeek(startOfMonth(calendarMonth), {
-        weekStartsOn: 1,
-      });
+      const start = startOfWeek(startOfMonth(calendarMonth), { weekStartsOn: 1 });
       const end = endOfWeek(endOfMonth(calendarMonth), { weekStartsOn: 1 });
 
       const days: JSX.Element[] = [];
@@ -380,9 +376,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       while (curr <= end) {
         const current = curr;
         const isCurrentMonth = isSameMonth(current, calendarMonth);
-        const isSelected = selectedDate
-          ? isSameDay(current, selectedDate)
-          : false;
+        const isSelected = selectedDate ? isSameDay(current, selectedDate) : false;
 
         days.push(
           <button
@@ -396,6 +390,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
               isSelected && "bg-gray-900 text-white",
               !isSelected && "hover:bg-gray-100",
             )}
+            tabIndex={isCalendarOpen ? 0 : -1}
           >
             {format(current, "d")}
           </button>,
@@ -407,24 +402,41 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       const weekdayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
       return (
-        <div className="absolute z-20 mt-1 left-0 rounded-md border bg-white shadow-lg p-2 text-xs min-w-[210px]">
+        <div
+          className={classNames(
+            // position
+            "absolute left-0 top-full origin-top z-[60]",
+            // box
+            "rounded-md border border-gray-200 bg-white shadow-lg p-2 text-xs min-w-[210px]",
+            // animation (same style as SelectDropdown)
+            "transition-all duration-150 ease-out will-change-transform",
+            isCalendarOpen
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 -translate-y-1 pointer-events-none",
+          )}
+          aria-hidden={!isCalendarOpen}
+        >
           <div className="flex items-center justify-between mb-2">
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
               className="h-6 w-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 text-xs"
+              tabIndex={isCalendarOpen ? 0 : -1}
             >
               ‹
             </button>
+
             <span className="font-medium text-gray-800 text-xs">
               {format(calendarMonth, "MMM yyyy")}
             </span>
+
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
               className="h-6 w-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 text-xs"
+              tabIndex={isCalendarOpen ? 0 : -1}
             >
               ›
             </button>
