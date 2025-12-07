@@ -1,21 +1,18 @@
 // src/components/Modal/SettlementModal.tsx
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-// Components
 import Button from "src/components/ui/Button";
 import Checkbox from "src/components/ui/Checkbox";
-import Input from "src/components/ui/Input";
+import { DateInput } from "../ui/DateInput";
+import { AmountInput } from "../ui/AmountInput";
 
-// Utils
-import { handleUtilitaryAmountKeyDown, formatCurrency } from "src/lib";
-
-// API and models
 import { api } from "src/api/requests";
 import type { Entry } from "src/models/entries/domain";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
-import type { BulkSettleItem } from "@/models/entries/domain";
-import { DateInput } from "../ui/DateInput";
+import type { BulkSettleItem, BulkSettleResponse } from "@/models/entries/domain/SettleItem";
+
+import { formatCurrency } from "@/lib/currency/formatCurrency";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -29,26 +26,72 @@ interface SettlementModalProps {
   };
 }
 
-interface LocalEntryState {
-  id: string;           // external_id da entry
-  due_date: string;
+type TxType = "credit" | "debit" | undefined;
+
+type LocalEntryState = {
+  id: string; // entry external_id
+  value_date: string; // ISO YYYY-MM-DD
   description: string;
-  amount: string;       // decimal "3000.00" (já vem correto)
+  amount: string; // ✅ major decimal string "3000.00"
+  tx_type: TxType;
   isPartial: boolean;
-  partialAmount: string; // string de centavos ("", "1234", ...)
-}
-
-/* -------------------------------- helpers -------------------------------- */
-const formatBRL = (valueNumber: number) =>
-  valueNumber.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-const decimalToCents = (decStr: string) => {
-  const n = parseFloat(decStr || "0");
-  if (!Number.isFinite(n)) return 0;
-  return Math.round(n * 100);
+  partial_amount: string; // ✅ major decimal string ("" allowed while editing)
+  server_error?: string | null;
 };
 
-/* ------------------------------- component -------------------------------- */
+const FORM_ID = "settlementForm";
+
+/* ------------------------------ helpers ------------------------------ */
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function toISODate(input: unknown, fallback = todayISO()): string {
+  const s = String(input ?? "").trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const d = new Date(s);
+  return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 10) : fallback;
+}
+
+function isFutureISO(iso: string): boolean {
+  const d = new Date(`${iso}T00:00:00Z`).getTime();
+  const t = new Date(`${todayISO()}T00:00:00Z`).getTime();
+  return Number.isFinite(d) && d > t;
+}
+
+function toMajorNumber(v: unknown): number {
+  const n = Number(String(v ?? "").trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+function signedAmount(tx: TxType, major: number): number {
+  return tx === "debit" ? -major : major;
+}
+
+type BulkSettleErrorItem = { id?: string; entry_id?: string; error: string };
+type BulkSettleWithErrors = { updated: Entry[]; errors: BulkSettleErrorItem[] };
+
+function hasErrors(data: BulkSettleResponse): data is BulkSettleWithErrors {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "errors" in data &&
+    Array.isArray((data as { errors?: unknown }).errors)
+  );
+}
+
+function hasStringProp<K extends string>(obj: unknown, key: K): obj is Record<K, string> {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    key in obj &&
+    typeof (obj as Record<string, unknown>)[key] === "string"
+  );
+}
+
+/* ------------------------------ component ------------------------------ */
+
 const SettlementModal: React.FC<SettlementModalProps> = ({
   isOpen,
   onClose,
@@ -57,174 +100,195 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   banksData,
 }) => {
   const { t } = useTranslation("settlementModal");
+  const { banks, loading: loadingBanks, error: banksError } = banksData;
 
-  const { banks, loading: loadingBanks, error } = banksData;
-
-  const [selectedBankId, setSelectedBankId] = useState<string | null>(null); // não auto-seleciona
+  const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
   const [entriesState, setEntriesState] = useState<LocalEntryState[]>([]);
   const [bulkDate, setBulkDate] = useState<string>("");
+
   const formRef = useRef<HTMLFormElement>(null);
+  const submitDisabledRef = useRef(true);
 
   /* ----------------------------- derived data ----------------------------- */
-  const typeById = useMemo(() => {
-    const m = new Map<string, "credit" | "debit" | undefined>();
-    selectedEntries.forEach((e) => m.set(e.id, e.tx_type as "credit" | "debit" | undefined));
-    return m;
-  }, [selectedEntries]);
 
-  const totalOriginalCentsSigned = useMemo(
-    () =>
-      selectedEntries.reduce((sum, e) => {
-        const sign = (e.tx_type as string) === "debit" ? -1 : 1;
-        return sum + sign * decimalToCents(String(e.amount ?? "0"));
-      }, 0),
-    [selectedEntries]
+  const sortedBanks = useMemo(
+    () => [...banks].sort((a, b) => a.institution.localeCompare(b.institution)),
+    [banks]
   );
-
-  const totalToSettleCentsSigned = useMemo(
-    () =>
-      entriesState.reduce((sum, e) => {
-        const sign = typeById.get(e.id) === "debit" ? -1 : 1;
-        const cents = e.isPartial
-          ? (parseInt(e.partialAmount || "0", 10) || 0)
-          : decimalToCents(e.amount);
-        return sum + sign * cents;
-      }, 0),
-    [entriesState, typeById]
-  );
-
-  const rowHasError = useCallback((e: LocalEntryState) => {
-    if (!e.isPartial) return false;
-    const p = parseInt(e.partialAmount || "0", 10) || 0;
-    const full = decimalToCents(e.amount);
-    return p <= 0 || p > full;
-  }, []);
-
-  const somePartialInvalid = useMemo(
-    () => entriesState.some(rowHasError),
-    [entriesState, rowHasError]
-  );
-
-  const isSubmitDisabled =
-    !selectedBankId || entriesState.length === 0 || somePartialInvalid;
 
   const chosenBank = useMemo(
-    () => banks.find((b) => b.id === selectedBankId) || null,
-    [banks, selectedBankId]
+    () => sortedBanks.find((b) => b.id === selectedBankId) || null,
+    [sortedBanks, selectedBankId]
   );
 
+  const rowHasError = useCallback((row: LocalEntryState) => {
+    if (!row.isPartial) return false;
+    const partial = toMajorNumber(row.partial_amount);
+    const full = toMajorNumber(row.amount);
+    return partial <= 0 || partial > full;
+  }, []);
+
+  const somePartialInvalid = useMemo(() => entriesState.some(rowHasError), [entriesState, rowHasError]);
+
+  const totalOriginalSigned = useMemo(() => {
+    return selectedEntries.reduce((sum, e) => {
+      const tx = e.tx_type as TxType;
+      const amt = toMajorNumber(e.amount);
+      return sum + signedAmount(tx, amt);
+    }, 0);
+  }, [selectedEntries]);
+
+  const totalToSettleSigned = useMemo(() => {
+    return entriesState.reduce((sum, row) => {
+      const amt = row.isPartial ? toMajorNumber(row.partial_amount) : toMajorNumber(row.amount);
+      return sum + signedAmount(row.tx_type, amt);
+    }, 0);
+  }, [entriesState]);
+
+  const isSubmitDisabled = useMemo(() => {
+    return loadingBanks || !!banksError || !selectedBankId || entriesState.length === 0 || somePartialInvalid;
+  }, [banksError, entriesState.length, loadingBanks, selectedBankId, somePartialInvalid]);
+
+  useEffect(() => {
+    submitDisabledRef.current = isSubmitDisabled;
+  }, [isSubmitDisabled]);
+
   /* -------------------------------- effects -------------------------------- */
+
   useEffect(() => {
     if (!isOpen) return;
+
+    const today = todayISO();
+    setSelectedBankId(null);
+
+    const mapped: LocalEntryState[] = selectedEntries.map((e) => {
+      const due = toISODate(e.due_date, today);
+      const valueDate = isFutureISO(due) ? today : due;
+
+      return {
+        id: e.id,
+        value_date: valueDate,
+        description: e.description ?? "",
+        amount: String(e.amount ?? "0.00"),
+        tx_type: e.tx_type as TxType,
+        isPartial: false,
+        partial_amount: "",
+        server_error: null,
+      };
+    });
+
+    setEntriesState(mapped);
+    setBulkDate(today);
+  }, [isOpen, selectedEntries]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "enter") {
+      if (e.key === "Escape") {
         e.preventDefault();
-        if (!isSubmitDisabled) formRef.current?.requestSubmit();
+        onClose();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "enter") {
+        e.preventDefault();
+        if (!submitDisabledRef.current) formRef.current?.requestSubmit();
       }
     };
-
-    if (!entriesState.length) {
-      const today = new Date().toISOString().slice(0, 10);
-      const mapped: LocalEntryState[] = selectedEntries.map((e) => ({
-        id: e.id,
-        due_date: new Date(e.due_date) > new Date() ? today : e.due_date,
-        description: e.description ?? "",
-        amount: String(e.amount ?? "0"),
-        isPartial: false,
-        partialAmount: "",
-      }));
-      setEntriesState(mapped);
-      setBulkDate(today);
-    }
 
     window.addEventListener("keydown", handleKey);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKey);
     };
-  }, [isOpen, onClose, entriesState.length, selectedEntries, isSubmitDisabled]);
+  }, [isOpen, onClose]);
 
   /* -------------------------------- handlers -------------------------------- */
-  const updateEntryDate = (id: string, val: string) =>
-    setEntriesState((prev) => prev.map((e) => (e.id === id ? { ...e, due_date: val } : e)));
 
-  const togglePartial = (id: string) =>
+  const updateEntryDate = useCallback((id: string, val: string) => {
+    setEntriesState((prev) => prev.map((row) => (row.id === id ? { ...row, value_date: val } : row)));
+  }, []);
+
+  const togglePartial = useCallback((id: string) => {
     setEntriesState((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isPartial: !e.isPartial, partialAmount: "" } : e))
+      prev.map((row) =>
+        row.id === id ? { ...row, isPartial: !row.isPartial, partial_amount: "", server_error: null } : row
+      )
     );
+  }, []);
 
-  const updatePartialAmount = (id: string, val: string) =>
-    setEntriesState((prev) => prev.map((e) => (e.id === id ? { ...e, partialAmount: val } : e)));
+  const updatePartialAmount = useCallback((id: string, val: string) => {
+    setEntriesState((prev) => prev.map((row) => (row.id === id ? { ...row, partial_amount: val, server_error: null } : row)));
+  }, []);
 
-  const applyDateToAll = () => {
+  const applyDateToAll = useCallback(() => {
     if (!bulkDate) return;
-    setEntriesState((prev) => prev.map((e) => ({ ...e, due_date: bulkDate })));
-  };
+    setEntriesState((prev) => prev.map((row) => ({ ...row, value_date: bulkDate })));
+  }, [bulkDate]);
 
-  const markAllPartial = () =>
-    setEntriesState((prev) =>
-      prev.map((e) => ({ ...e, isPartial: true, partialAmount: "" }))
-    );
+  const markAllPartial = useCallback(() => {
+    setEntriesState((prev) => prev.map((row) => ({ ...row, isPartial: true, partial_amount: "", server_error: null })));
+  }, []);
 
-  const clearAllPartial = () =>
-    setEntriesState((prev) =>
-      prev.map((e) => ({ ...e, isPartial: false, partialAmount: "" }))
-    );
+  const clearAllPartial = useCallback(() => {
+    setEntriesState((prev) => prev.map((row) => ({ ...row, isPartial: false, partial_amount: "", server_error: null })));
+  }, []);
 
   /* -------------------------------- submit --------------------------------- */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedBankId) return;
 
-    try {
-      // monta payload do bulk (sem settled_on, para casar com o backend)
-      const items = entriesState.map((row) => {
-        const amount_minor = row.isPartial
-          ? (parseInt(row.partialAmount || "0", 10) || 0)
-          : decimalToCents(row.amount);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!selectedBankId) return;
 
-        return {
+      setEntriesState((prev) => prev.map((r) => ({ ...r, server_error: null })));
+
+      try {
+        const items: BulkSettleItem[] = entriesState.map((row) => ({
           entry_id: row.id,
           bank_id: selectedBankId,
-          amount_minor,
-          value_date: row.due_date,
-        };
-      }) as unknown as BulkSettleItem[];
+          // Money rule: keep major strings
+          amount: row.isPartial ? (row.partial_amount || "0.00") : (row.amount || "0.00"),
+          value_date: row.value_date,
+        }));
 
-      const res = await api.bulkSettle(items, true);
+        // request<T>() ALWAYS resolves as ApiSuccess<T> (or throws),
+        // so `res.data` is always the payload here.
+        const res = await api.bulkSettle(items, true);
+        const data: BulkSettleResponse = res.data;
 
-      // Se vier com errors, sinaliza por linha e mantém o modal aberto
-      if ("errors" in res && Array.isArray((res).errors) && (res).errors.length) {
-        const errs = (res).errors as Array<{ id?: string; entry_id?: string; error: string }>;
-        setEntriesState((prev) =>
-          prev.map((r) => {
-            const hit = errs.find((ee) => ee.entry_id === r.id || ee.id === r.id);
-            return hit ? { ...r } : r;
-          })
-        );
-        console.error("Erros no bulk settle:", errs);
-        return;
+        if (hasErrors(data) && data.errors.length) {
+          setEntriesState((prev) =>
+            prev.map((r) => {
+              const hit = data.errors.find((ee) => ee.entry_id === r.id || ee.id === r.id);
+              return hit ? { ...r, server_error: hit.error } : r;
+            })
+          );
+          console.error("Erros no bulk settle:", data.errors);
+          return;
+        }
+
+        onSave();
+        onClose();
+      } catch (err: unknown) {
+        console.error(err);
+        const msg = hasStringProp(err, "message") ? err.message : t("errors.bulk");
+        window.alert(msg);
       }
-
-      onSave();
-      onClose();
-    } catch (err) {
-      console.error(err);
-      window.alert(t("errors.bulk"));
-    }
-  };
+    },
+    [entriesState, onClose, onSave, selectedBankId, t]
+  );
 
   /* --------------------------------- UI ------------------------------------ */
+
   if (!isOpen) return null;
 
   const selectedCount = selectedEntries.length;
   const headerTitle =
-    selectedCount === 1
-      ? t("header.title.one")
-      : t("header.title.many", { n: selectedCount });
+    selectedCount === 1 ? t("header.title.one") : t("header.title.many", { n: selectedCount });
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
@@ -245,11 +309,10 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {headerTitle}
-                </h1>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{headerTitle}</h1>
               </div>
             </div>
+
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={onClose}
@@ -263,6 +326,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
         {/* Content */}
         <form
+          id={FORM_ID}
           ref={formRef}
           onSubmit={handleSubmit}
           className="flex-1 min-h-0 px-5 py-4 grid grid-cols-1 lg:grid-cols-[35%_65%] gap-4 min-w-0"
@@ -275,65 +339,56 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase tracking-wide text-gray-600">{t("banks.title")}</span>
-                <span className="text-[10px] text-gray-500">{t("banks.count", { n: banks.length })}</span>
+                <span className="text-[10px] text-gray-500">{t("banks.count", { n: sortedBanks.length })}</span>
               </div>
+
               {selectedBankId && (
                 <span className="text-[11px] text-gray-600">
                   {t("banks.balance")}&nbsp;
-                  <b className="text-gray-900">
-                    {formatBRL(
-                      Number(banks.find((b) => b.id === selectedBankId)?.consolidated_balance ?? "0")
-                    )}
-                  </b>
+                  <b className="text-gray-900">{formatCurrency(String(chosenBank?.consolidated_balance ?? "0.00"))}</b>
                 </span>
               )}
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 bg-white">
-              {loadingBanks ? null : error ? (
-                <div className="py-4 text-center text-xs text-red-600">{error}</div>
-              ) : banks.length === 0 ? (
+              {loadingBanks ? null : banksError ? (
+                <div className="py-4 text-center text-xs text-red-600">{banksError}</div>
+              ) : sortedBanks.length === 0 ? (
                 <div className="py-4 text-center text-xs text-gray-600">{t("banks.none")}</div>
               ) : (
-                banks
-                  .slice()
-                  .sort((a, b) => a.institution.localeCompare(b.institution))
-                  .map((b) => {
-                    const selected = selectedBankId === b.id;
-                    const balance = formatBRL(Number(b.consolidated_balance ?? "0"));
-                    return (
-                      <button
-                        type="button"
-                        key={b.id}
-                        onClick={() => setSelectedBankId(selected ? null : b.id)}
-                        className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-gray-50 focus:bg-gray-50 ${
-                          selected ? "bg-gray-50" : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span
-                            className={`h-4 w-4 rounded-full border ${
-                              selected
-                                ? "border-[color:var(--accentPrimary)] bg-[color:var(--accentPrimary)]"
-                                : "border-gray-300"
-                            }`}
-                            aria-hidden="true"
-                          />
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-[13px] text-gray-800 truncate leading-tight">
-                              {b.institution}
-                            </span>
-                            <span className="text-[10px] text-gray-500 truncate leading-tight">
-                              {t("banks.agency")} {b.branch} • {t("banks.account")} {b.account_number}
-                            </span>
-                          </div>
+                sortedBanks.map((b) => {
+                  const selected = selectedBankId === b.id;
+                  const balance = formatCurrency(String(b.consolidated_balance ?? "0.00"));
+
+                  return (
+                    <button
+                      type="button"
+                      key={b.id}
+                      onClick={() => setSelectedBankId(selected ? null : b.id)}
+                      className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-gray-50 focus:bg-gray-50 ${
+                        selected ? "bg-gray-50" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={`h-4 w-4 rounded-full border ${
+                            selected
+                              ? "border-[color:var(--accentPrimary)] bg-[color:var(--accentPrimary)]"
+                              : "border-gray-300"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[13px] text-gray-800 truncate leading-tight">{b.institution}</span>
+                          <span className="text-[10px] text-gray-500 truncate leading-tight">
+                            {t("banks.agency")} {b.branch} • {t("banks.account")} {b.account_number}
+                          </span>
                         </div>
-                        <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
-                          {balance}
-                        </div>
-                      </button>
-                    );
-                  })
+                      </div>
+                      <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">{balance}</div>
+                    </button>
+                  );
+                })
               )}
             </div>
           </section>
@@ -343,7 +398,6 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             aria-label={t("entries.aria")}
             className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
           >
-            {/* header + ferramentas */}
             <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -371,29 +425,18 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
                   <div className="hidden md:block w-px h-5 bg-gray-300 mx-1" />
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="!h-8 !px-2 text-[12px]"
-                    onClick={markAllPartial}
-                  >
+                  <Button type="button" variant="outline" className="!h-8 !px-2 text-[12px]" onClick={markAllPartial}>
                     {t("actions.markAllPartial")}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="!h-8 !px-2 text-[12px]"
-                    onClick={clearAllPartial}
-                  >
+                  <Button type="button" variant="outline" className="!h-8 !px-2 text-[12px]" onClick={clearAllPartial}>
                     {t("actions.clearAllPartial")}
                   </Button>
                 </div>
               </div>
             </div>
 
-            {/* tabela com scroll interno; última coluna mais larga */}
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <div className="grid grid-cols-[140px_1fr_120px_80px_180px] gap-2 items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-10">
+              <div className="grid grid-cols-[140px_1fr_140px_80px_180px] gap-2 items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-10">
                 <div className="text-center">{t("table.due")}</div>
                 <div className="text-center">{t("table.desc")}</div>
                 <div className="text-center">{t("table.amount")}</div>
@@ -404,65 +447,53 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               {entriesState.length === 0 ? (
                 <div className="px-4 py-6 text-center text-xs text-gray-600">{t("table.none")}</div>
               ) : (
-                entriesState.map((e) => {
-                  const invalid = rowHasError(e);
-                  const amountNumber = parseFloat(e.amount || "0"); // decimal correto
+                entriesState.map((row) => {
+                  const clientInvalid = rowHasError(row);
+                  const serverInvalid = !!row.server_error;
+                  const invalid = clientInvalid || serverInvalid;
+
                   return (
-                    <div
-                      key={e.id}
-                      className="grid grid-cols-[140px_1fr_120px_80px_180px] gap-2 items-center px-3 py-2 border-b border-gray-200 text-[12px] hover:bg-gray-50"
-                    >
-                      <div className="text-center">
-                        <DateInput
-                          value={e.due_date}
-                          onChange={(iso) => updateEntryDate(e.id, iso)}
-                          aria-label={t("table.due")}
-                          variant="default"
-                          className="w-[130px] mx-auto"
-                        />
-                      </div>
-
-                      <div className="truncate pr-2">{e.description}</div>
-
-                      <div className="text-center tabular-nums font-semibold text-gray-900">
-                        {formatBRL(amountNumber)}
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <Checkbox size="sm" checked={e.isPartial} onChange={() => togglePartial(e.id)} />
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        {e.isPartial ? (
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            value={formatCurrency(e.partialAmount || "")}
-                            placeholder="0,00"
-                            onKeyDown={(ev) =>
-                              handleUtilitaryAmountKeyDown(ev, e.partialAmount, (val) =>
-                                updatePartialAmount(e.id, val)
-                              )
-                            }
-                            onChange={() => {}}
-                            className={`border border-gray-300 rounded px-2 py-1 text-xs w-[180px] text-left ${
-                              invalid ? "!border-red-400 bg-red-50" : ""
-                            }`}
-                            aria-invalid={invalid || undefined}
-                            aria-label={t("table.partialAmount")}
+                    <div key={row.id} className="px-3 py-2 border-b border-gray-200 hover:bg-gray-50">
+                      <div className="grid grid-cols-[140px_1fr_140px_80px_180px] gap-2 items-center text-[12px]">
+                        <div className="text-center">
+                          <DateInput
+                            value={row.value_date}
+                            onChange={(iso) => updateEntryDate(row.id, iso)}
+                            aria-label={t("table.due")}
+                            variant="default"
+                            className="w-[130px] mx-auto"
                           />
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                        </div>
+
+                        <div className="truncate pr-2">{row.description}</div>
+
+                        <div className="text-center tabular-nums font-semibold text-gray-900">
+                          {formatCurrency(row.amount)}
+                        </div>
+
+                        <div className="flex items-center justify-center">
+                          <Checkbox size="sm" checked={row.isPartial} onChange={() => togglePartial(row.id)} />
+                        </div>
+
+                        <div className="flex items-center justify-center">
+                          {row.isPartial ? (
+                            <AmountInput
+                              value={row.partial_amount || ""}
+                              onValueChange={(val) => updatePartialAmount(row.id, val)}
+                              display="currency"
+                              zeroAsEmpty
+                              className={invalid ? "!border-red-400 bg-red-50" : ""}
+                              aria-invalid={invalid || undefined}
+                              aria-label={t("table.partialAmount")}
+                            />
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </div>
                       </div>
 
-                      {invalid && (
-                        <div className="col-span-5 -mt-1">
-                          <p className="px-3 pt-3 text-[11px] text-red-700">
-                            {t("table.partialInvalid")}
-                          </p>
-                        </div>
-                      )}
+                      {clientInvalid ? <p className="pt-2 text-[11px] text-red-700">{t("table.partialInvalid")}</p> : null}
+                      {serverInvalid ? <p className="pt-2 text-[11px] text-red-700">{row.server_error}</p> : null}
                     </div>
                   );
                 })
@@ -471,31 +502,31 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           </section>
         </form>
 
-        {/* Footer — totais com sinal por tipo */}
+        {/* Footer */}
         <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
           <div className="text-[12px] text-gray-600">
             <span className="mr-3">
               {t("footer.original")}&nbsp;
-              <b className="text-gray-900 tabular-nums">
-                {formatBRL(totalOriginalCentsSigned / 100)}
-              </b>
+              <b className="text-gray-900 tabular-nums">{formatCurrency(String(totalOriginalSigned))}</b>
             </span>
+
             <span className="mr-3">
               {t("footer.toSettle")}&nbsp;
-              <b className="text-gray-900 tabular-nums">
-                {formatBRL(totalToSettleCentsSigned / 100)}
-              </b>
+              <b className="text-gray-900 tabular-nums">{formatCurrency(String(totalToSettleSigned))}</b>
             </span>
+
             {chosenBank ? (
               <span className="text-gray-600">
                 {t("footer.bankLabel")}&nbsp;
                 <b className="text-gray-900">
-                  {chosenBank.institution} • {t("banks.agency")} {chosenBank.branch} • {t("banks.account")} {chosenBank.account_number}
+                  {chosenBank.institution} • {t("banks.agency")} {chosenBank.branch} • {t("banks.account")}{" "}
+                  {chosenBank.account_number}
                 </b>
               </span>
             ) : (
               <span className="text-gray-500">{t("footer.selectBank")}</span>
             )}
+
             <span className="ml-3 text-gray-400">{t("footer.shortcuts")}</span>
           </div>
 
@@ -503,12 +534,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             <Button variant="cancel" type="button" onClick={onClose}>
               {t("actions.cancel")}
             </Button>
-            <Button
-              type="submit"
-              form={formRef.current ? undefined : "fake"}
-              disabled={isSubmitDisabled}
-              onClick={() => formRef.current?.requestSubmit()}
-            >
+            <Button type="submit" form={FORM_ID} disabled={isSubmitDisabled}>
               {t("actions.settle")}
             </Button>
           </div>

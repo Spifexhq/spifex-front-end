@@ -17,7 +17,7 @@ import { getCursorFromUrl } from "src/lib/list";
 import type { EntryFilters, Entry } from "src/models/entries/domain";
 import type { GetEntryRequest, GetEntryResponse } from "src/models/entries/dto/GetEntry";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
-import { formatDateFromISO } from "src/lib";
+import { formatDateFromISO, formatCurrency } from "src/lib";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers (strongly typed to backend EntryReadSerializer)                    */
@@ -41,7 +41,6 @@ const getInstallments = (e: Entry) => ({
  * NOTE: assumes 2 decimals.
  */
 const getServerRunning = (e: Entry): number | null => {
-  if (typeof e.running_balance_minor === "number") return e.running_balance_minor / 100;
   if (typeof e.running_balance === "string" && e.running_balance.length) {
     const n = Number(e.running_balance);
     return Number.isFinite(n) ? n : null;
@@ -76,9 +75,6 @@ interface CashFlowTableProps {
 /* -------------------------------------------------------------------------- */
 /* i18n-aware utils                                                           */
 /* -------------------------------------------------------------------------- */
-
-const formatCurrency = (amount: number, locale = "pt-BR", currency = "BRL"): string =>
-  new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 
 const getMonthYear = (dateStr: string): string => {
   const d = new Date(dateStr);
@@ -149,7 +145,7 @@ const EntryRow: React.FC<{
   onSelect: (id: string, event: React.MouseEvent) => void;
   onEdit: (entry: Entry) => void;
 }> = ({ entry, runningBalance, isSelected, onSelect, onEdit }) => {
-  const { t, i18n } = useTranslation("cashFlowTable");
+  const { t } = useTranslation("cashFlowTable");
   const transactionValue = getTransactionValue(entry);
   const isPositive = transactionValue >= 0;
   const installments = getInstallments(entry);
@@ -191,13 +187,13 @@ const EntryRow: React.FC<{
                     isPositive ? "text-green-900" : "text-red-900"
                   }`}
                 >
-                  {formatCurrency(transactionValue, i18n.language)}
+                  {formatCurrency(transactionValue)}
                 </div>
               </div>
 
               <div className="w-[150px] text-center">
                 <div className="text-[13px] leading-none font-semibold tabular-nums text-gray-900">
-                  {formatCurrency(runningBalance, i18n.language)}
+                  {formatCurrency(runningBalance)}
                 </div>
               </div>
 
@@ -239,7 +235,7 @@ const SummaryRow: React.FC<{
   monthlySum: number;
   runningBalance: number;
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
-  const { t, i18n } = useTranslation("cashFlowTable");
+  const { t } = useTranslation("cashFlowTable");
   const monthsShort =
     (t("months.short", { returnObjects: true }) as string[]) ??
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -264,13 +260,13 @@ const SummaryRow: React.FC<{
               monthlySum >= 0 ? "text-green-900" : "text-red-900"
             }`}
           >
-            {formatCurrency(monthlySum, i18n.language)}
+            {formatCurrency(monthlySum)}
           </div>
         </div>
 
         <div className="w-[150px] text-center">
           <div className="text-[11px] font-semibold tabular-nums text-gray-900">
-            {formatCurrency(runningBalance, i18n.language)}
+            {formatCurrency(runningBalance)}
           </div>
         </div>
 

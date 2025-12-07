@@ -1,4 +1,7 @@
 // src/pages/Reports/index.tsx
+// ✅ treat API money as decimal (string/number) — no /100
+// ✅ no need to define currency or locale — formatCurrency handles it
+
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import {
@@ -25,6 +28,7 @@ import { useBanks } from "@/hooks/useBanks";
 import type { ReportsSummary } from "@/models/entries/domain";
 import { useTranslation } from "react-i18next";
 import { formatDateFromISO } from "src/lib";
+import { formatCurrency } from "@/lib/currency/formatCurrency";
 
 type TipDatum = {
   value?: number | string;
@@ -37,21 +41,35 @@ type MinimalTipProps = {
   payload?: TipDatum[];
   label?: string | number;
   title?: string;
-  locale: string;
 };
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const startDate = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
-const endDate   = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
+const startDate = dayjs()
+  .startOf("month")
+  .subtract(12, "month")
+  .format("YYYY-MM-DD");
+const endDate = dayjs()
+  .startOf("month")
+  .add(11, "month")
+  .endOf("month")
+  .format("YYYY-MM-DD");
 
-const BRL = (v: number, locale = "pt-BR") =>
-  v.toLocaleString(locale, { style: "currency", currency: "BRL" });
+const parseMoney = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === "") return null;
+  const s = typeof v === "number" ? String(v) : String(v).trim();
+  const n = Number(s.replace(",", ".")); // backend should be "1234.56"
+  return Number.isFinite(n) ? n : null;
+};
 
-const asPct = (v: number, locale = "pt-BR") =>
-  `${(v * 100).toLocaleString(locale, { maximumFractionDigits: 1 })}%`;
+const fmtMoney = (v: unknown) => {
+  const n = parseMoney(v);
+  return n === null ? "—" : formatCurrency(n);
+};
+
+const asPct = (v: number) => `${(v * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
 
 const C_POS = "#0B5FFF";
 const C_NEG = "#D92D20";
@@ -60,7 +78,7 @@ const C_ACC = "#111827";
 const C_GRID = "rgba(17,24,39,0.12)";
 
 /* Custom tooltip (minimal) */
-const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, title, locale }) => {
+const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, title }) => {
   if (!active || payload.length === 0) return null;
 
   return (
@@ -76,13 +94,25 @@ const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, ti
       aria-live="polite"
     >
       {title ? <div style={{ fontWeight: 600, marginBottom: 2 }}>{title}</div> : null}
-      {label !== undefined ? <div style={{ color: "#6B7280", marginBottom: 4 }}>{label}</div> : null}
+      {label !== undefined ? (
+        <div style={{ color: "#6B7280", marginBottom: 4 }}>{label}</div>
+      ) : null}
+
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ width: 10, height: 10, background: p.color || "#9CA3AF", borderRadius: 2 }} />
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              background: p.color || "#9CA3AF",
+              borderRadius: 2,
+            }}
+          />
           <span style={{ color: "#374151" }}>{p.name ?? ""}:</span>
           <span className="tabular-nums">
-            {typeof p.value === "number" ? BRL(p.value, locale) : String(p.value ?? "")}
+            {typeof p.value === "number"
+              ? formatCurrency(p.value)
+              : fmtMoney(p.value)}
           </span>
         </div>
       ))}
@@ -90,10 +120,8 @@ const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, ti
   );
 };
 
-
 const ReportsPage: React.FC = () => {
-  const { t, i18n } = useTranslation(["reports"]);
-  const locale = i18n.language === "pt" ? "pt-BR" : i18n.language;
+  const { t } = useTranslation(["reports"]);
 
   useEffect(() => {
     document.title = t("pageTitle");
@@ -105,10 +133,7 @@ const ReportsPage: React.FC = () => {
 
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
 
-  const params = useMemo(
-    () => ({ date_from: startDate, date_to: endDate }),
-    []
-  );
+  const params = useMemo(() => ({ date_from: startDate, date_to: endDate }), []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -130,86 +155,81 @@ const ReportsPage: React.FC = () => {
 
   /* ------------------------------ Derived data ----------------------------- */
 
-  const totalsInMinor       = data?.totals.in_minor ?? 0;
-  const totalsOutAbsMinor   = data?.totals.out_abs_minor ?? 0;
-  const totalsNetMinor      = data?.totals.net_minor ?? 0;
-  const settlementRate      = data?.totals.settlement_rate ?? 0;
+  const totalsIn = data?.totals.in ?? 0;
+  const totalsOutAbs = data?.totals.out_abs ?? 0;
+  const totalsNet = data?.totals.net ?? 0;
+  const settlementRate = data?.totals.settlement_rate ?? 0;
 
-  const mtdInMinor          = data?.mtd.in_minor ?? 0;
-  const mtdOutMinor         = data?.mtd.out_minor ?? 0;
-  const mtdNetMinor         = data?.mtd.net_minor ?? 0;
+  const mtdIn = data?.mtd.in ?? 0;
+  const mtdOut = data?.mtd.out ?? 0;
+  const mtdNet = data?.mtd.net ?? 0;
 
-  const momInfinite         = data?.mom.infinite ?? false;
-  const momChange           = momInfinite ? Infinity : (data?.mom.change ?? 0);
+  const momInfinite = data?.mom.infinite ?? false;
+  const momChange = momInfinite ? Infinity : (data?.mom.change ?? 0);
 
-  const overdueRecMinor     = data?.overdue.rec_minor ?? 0;
-  const overduePayMinor     = data?.overdue.pay_minor ?? 0;
+  const overdueRec = data?.overdue.rec ?? 0;
+  const overduePay = data?.overdue.pay ?? 0;
 
-  const next7RecMinor       = data?.next7.rec_minor ?? 0;
-  const next7PayMinor       = data?.next7.pay_minor ?? 0;
-  const next30RecMinor      = data?.next30.rec_minor ?? 0;
-  const next30PayMinor      = data?.next30.pay_minor ?? 0;
+  const next7Rec = data?.next7.rec ?? 0;
+  const next7Pay = data?.next7.pay ?? 0;
+  const next30Rec = data?.next30.rec ?? 0;
+  const next30Pay = data?.next30.pay ?? 0;
 
-  const monthlyBars = (data?.monthly.bars ?? []).map(d => ({
+  // ✅ already decimals from API
+  const monthlyBars = (data?.monthly.bars ?? []).map((d) => ({
     key: d.key,
     month: d.month,
-    inflow: d.inflow_minor / 100,
-    outflow: d.outflow_minor / 100,
-    net: d.net_minor / 100,
+    inflow: Number(d.inflow || 0),
+    outflow: Number(d.outflow || 0),
+    net: Number(d.net || 0),
   }));
 
-  const monthlyCumulative = (data?.monthly.cumulative ?? []).map(d => ({
+  const monthlyCumulative = (data?.monthly.cumulative ?? []).map((d) => ({
     key: d.key,
     month: d.month,
-    cumulative: d.cumulative_minor / 100,
+    cumulative: Number(d.cumulative || 0),
   }));
 
-  const pieData = (data?.pie ?? []).map(p => ({ name: p.name, value: p.value_minor / 100 }));
+  const pieData = (data?.pie ?? []).map((p) => ({
+    name: p.name,
+    value: Number(p.value || 0),
+  }));
 
-  const overdueItems = (data?.overdue_items ?? []).map(it => ({
+  const overdueItems = (data?.overdue_items ?? []).map((it) => ({
     ...it,
     date: formatDateFromISO(it.date),
-    amount: it.amount_minor / 100,
+    amount: Number(it.amount || 0),
   }));
 
   const avgMonthlyOutflowAbs =
     monthlyBars.length === 0
       ? 0
-      : monthlyBars.reduce((acc, x) => acc + (x.outflow || 0), 0) / monthlyBars.length;
+      : monthlyBars.reduce((acc, x) => acc + Math.abs(x.outflow || 0), 0) / monthlyBars.length;
 
   const runwayMonths =
     avgMonthlyOutflowAbs > 0
-      ? (totalConsolidatedBalance ?? 0) / avgMonthlyOutflowAbs
+      ? Number(totalConsolidatedBalance ?? 0) / avgMonthlyOutflowAbs
       : Infinity;
 
   const insights = useMemo(() => {
     const lines: string[] = [];
 
-    if (Number.isFinite(runwayMonths) && runwayMonths < 3) {
-      lines.push(t("insights.runwayLow"));
-    } else if (Number.isFinite(runwayMonths) && runwayMonths >= 6) {
-      lines.push(t("insights.runwayHigh"));
-    }
+    if (Number.isFinite(runwayMonths) && runwayMonths < 3) lines.push(t("insights.runwayLow"));
+    else if (Number.isFinite(runwayMonths) && runwayMonths >= 6) lines.push(t("insights.runwayHigh"));
 
-    if (mtdNetMinor < 0) {
-      lines.push(t("insights.mtdNegative"));
-    } else if (mtdNetMinor > 0) {
-      lines.push(t("insights.mtdPositive"));
-    }
+    if (mtdNet < 0) lines.push(t("insights.mtdNegative"));
+    else if (mtdNet > 0) lines.push(t("insights.mtdPositive"));
 
-    if (overduePayMinor > overdueRecMinor) {
-      lines.push(t("insights.overduePressure"));
-    } else if (overdueRecMinor > 0) {
-      lines.push(t("insights.overdueReceivables"));
-    }
+    if (overduePay > overdueRec) lines.push(t("insights.overduePressure"));
+    else if (overdueRec > 0) lines.push(t("insights.overdueReceivables"));
 
     if (Number.isFinite(momChange) && momChange !== 0) {
       const sign = momChange >= 0 ? "+" : "";
-      lines.push(t("insights.mom", { value: `${sign}${asPct(momChange, locale)}` }));
+      lines.push(t("insights.mom", { value: `${sign}${asPct(momChange)}` }));
     }
 
     return lines;
-  }, [runwayMonths, mtdNetMinor, overduePayMinor, overdueRecMinor, momChange, t, locale]);
+  }, [runwayMonths, mtdNet, overduePay, overdueRec, momChange, t]);
 
   const cardCls = "border border-gray-300 rounded-md bg-white px-3 py-2";
 
@@ -221,6 +241,7 @@ const ReportsPage: React.FC = () => {
     <div className="flex min-h-screen bg-white text-gray-900">
       <main className={"flex-1 transition-all duration-300"}>
         <TopProgress active={loading || loadingBanks} variant="top" topOffset={64} />
+
         <div className="mt-[15px] mb-[15px] w-full px-6 md:px-10 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-semibold">{t("title")}</h1>
@@ -238,9 +259,11 @@ const ReportsPage: React.FC = () => {
               {/* KPI Cards */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.consolidatedBalance")}</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">
+                    {t("kpis.consolidatedBalance")}
+                  </p>
                   <p className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-                    {BRL(totalConsolidatedBalance ?? 0, locale)}
+                    {fmtMoney(totalConsolidatedBalance ?? 0)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.bankSum")}</p>
                 </div>
@@ -248,7 +271,7 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.inPeriod")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_POS }}>
-                    {BRL(totalsInMinor / 100, locale)}
+                    {fmtMoney(totalsIn)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -258,7 +281,7 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.outPeriod")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_NEG }}>
-                    -{BRL(totalsOutAbsMinor / 100, locale)}
+                    -{fmtMoney(totalsOutAbs)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -278,16 +301,16 @@ const ReportsPage: React.FC = () => {
                       }`}
                     >
                       {t("kpis.mom")}{" "}
-                      {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + asPct(momChange, locale) : "—"}
+                      {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + asPct(momChange) : "—"}
                     </span>
                   </div>
                   <p
                     className={`mt-1 text-lg font-semibold tabular-nums ${
-                      totalsNetMinor >= 0 ? "text-gray-900" : "text-red-700"
+                      totalsNet >= 0 ? "text-gray-900" : "text-red-700"
                     }`}
                   >
-                    {totalsNetMinor >= 0 ? "+" : ""}
-                    {BRL(totalsNetMinor / 100, locale)}
+                    {totalsNet >= 0 ? "+" : ""}
+                    {fmtMoney(totalsNet)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
                     {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
@@ -300,7 +323,7 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdIn")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_POS }}>
-                    {BRL(mtdInMinor / 100, locale)}
+                    {fmtMoney(mtdIn)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.currentMonth")}</p>
                 </div>
@@ -308,7 +331,7 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdOut")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_NEG }}>
-                    -{BRL(mtdOutMinor / 100, locale)}
+                    -{fmtMoney(mtdOut)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.currentMonth")}</p>
                 </div>
@@ -318,25 +341,27 @@ const ReportsPage: React.FC = () => {
                     <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdNet")}</p>
                     <span className="text-[11px] text-gray-500">
                       {t("kpis.mom")}{" "}
-                      {Number.isFinite(momChange) ? (mtdNetMinor >= 0 ? "+" : "") + asPct(Math.abs(momChange), locale) : "—"}
+                      {Number.isFinite(momChange)
+                        ? (mtdNet >= 0 ? "+" : "") + asPct(Math.abs(momChange))
+                        : "—"}
                     </span>
                   </div>
                   <p
                     className={`mt-1 text-lg font-semibold tabular-nums ${
-                      mtdNetMinor >= 0 ? "text-gray-900" : "text-red-700"
+                      mtdNet >= 0 ? "text-gray-900" : "text-red-700"
                     }`}
                   >
-                    {mtdNetMinor >= 0 ? "+" : ""}
-                    {BRL(mtdNetMinor / 100, locale)}
+                    {mtdNet >= 0 ? "+" : ""}
+                    {fmtMoney(mtdNet)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
-                    {t("kpis.in")} {BRL(mtdInMinor / 100, locale)} • {t("kpis.out")} -{BRL(mtdOutMinor / 100, locale)}
+                    {t("kpis.in")} {fmtMoney(mtdIn)} • {t("kpis.out")} -{fmtMoney(mtdOut)}
                   </p>
                 </div>
 
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.settlementRate")}</p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums">{asPct(settlementRate, locale)}</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">{asPct(settlementRate)}</p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.loadedUniverse")}</p>
                 </div>
               </section>
@@ -348,14 +373,12 @@ const ReportsPage: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
-                      <p className="text-lg font-semibold text-gray-900 tabular-nums">
-                        {BRL(overdueRecMinor / 100, locale)}
-                      </p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(overdueRec)}</p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
                       <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                        {BRL(overduePayMinor / 100, locale)}
+                        {fmtMoney(overduePay)}
                       </p>
                     </div>
                   </div>
@@ -366,14 +389,12 @@ const ReportsPage: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
-                      <p className="text-lg font-semibold text-gray-900 tabular-nums">
-                        {BRL(next7RecMinor / 100, locale)}
-                      </p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(next7Rec)}</p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
                       <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                        {BRL(next7PayMinor / 100, locale)}
+                        {fmtMoney(next7Pay)}
                       </p>
                     </div>
                   </div>
@@ -384,14 +405,12 @@ const ReportsPage: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
-                      <p className="text-lg font-semibold text-gray-900 tabular-nums">
-                        {BRL(next30RecMinor / 100, locale)}
-                      </p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(next30Rec)}</p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
                       <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                        {BRL(next30PayMinor / 100, locale)}
+                        {fmtMoney(next30Pay)}
                       </p>
                     </div>
                   </div>
@@ -403,7 +422,7 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("runway.avgOutflow")}</p>
                   <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                    -{BRL(avgMonthlyOutflowAbs, locale)}
+                    -{fmtMoney(avgMonthlyOutflowAbs)}
                   </p>
                   <p className="mt-2 text-[11px] text-gray-600">{t("runway.estimated")}</p>
                   <p className="text-lg font-semibold tabular-nums">
@@ -415,8 +434,6 @@ const ReportsPage: React.FC = () => {
                   <CumulativeAreaChart
                     data={monthlyCumulative}
                     title={t("charts.cumulativeTitle")}
-                    locale={locale}
-                    currency="BRL"
                     height={256}
                   />
                 </div>
@@ -437,17 +454,16 @@ const ReportsPage: React.FC = () => {
                       <XAxis dataKey="month" tick={{ fill: C_ACC, fontSize: 12 }} />
                       <YAxis
                         tick={{ fill: C_ACC, fontSize: 12 }}
-                        tickFormatter={(v: number) =>
-                          v.toLocaleString(locale, {
-                            style: "currency",
-                            currency: "BRL",
-                            minimumFractionDigits: 0,
-                          })
-                        }
+                        tickFormatter={(v: number) => formatCurrency(v)}
                       />
                       <Tooltip
                         content={({ active, payload, label }) => (
-                          <MinimalTip active={active} payload={payload} label={label} title={t("charts.barsTitle")} locale={locale} />
+                          <MinimalTip
+                            active={active}
+                            payload={payload as TipDatum[]}
+                            label={label}
+                            title={t("charts.barsTitle")}
+                          />
                         )}
                         cursor={{ fill: "#F3F4F6", opacity: 0.6 }}
                       />
@@ -469,7 +485,12 @@ const ReportsPage: React.FC = () => {
                       <PieChart>
                         <Tooltip
                           content={({ active, payload, label }) => (
-                            <MinimalTip active={active} payload={payload} label={label} title={t("charts.pieTitle")} locale={locale} />
+                            <MinimalTip
+                              active={active}
+                              payload={payload as TipDatum[]}
+                              label={label}
+                              title={t("charts.pieTitle")}
+                            />
                           )}
                         />
                         <Legend />
@@ -519,7 +540,7 @@ const ReportsPage: React.FC = () => {
                               </span>
                             </td>
                             <td className="px-3 py-2 text-right tabular-nums">
-                              {BRL(it.amount, locale)}
+                              {fmtMoney(it.amount)}
                             </td>
                           </tr>
                         ))}

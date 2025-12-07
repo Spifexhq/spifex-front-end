@@ -1,12 +1,20 @@
+// src/components/KpiCards.tsx
+// ✅ Stop treating KPI values as minor units (no /100)
+// ✅ No need to define currency or locale here — formatCurrency handles it
+
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
 import { api } from "src/api/requests";
 import BanksTable from "src/components/Table/BanksTable";
+
 import type { EntryFilters } from "src/models/entries";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
 import type { CashflowKpis, SettledKpis } from "@/models/entries";
+
+import { formatCurrency } from "@/lib/currency/formatCurrency";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -41,9 +49,23 @@ interface KpiCardsProps {
 /* Helpers                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const currencyFromMinor = (vMinor: number) => {
-  const v = (vMinor || 0) / 100;
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const parseMoney = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === "") return null;
+  const s = typeof v === "number" ? String(v) : String(v).trim();
+  const n = Number(s.replace(",", ".")); // backend should be "1234.56", but be lenient
+  return Number.isFinite(n) ? n : null;
+};
+
+const currencyFromDecimal = (v: unknown) => {
+  const n = parseMoney(v);
+  return n === null ? "—" : formatCurrency(n);
+};
+
+const signedCurrencyFromDecimal = (v: unknown) => {
+  const n = parseMoney(v);
+  if (n === null) return "—";
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${formatCurrency(n)}`;
 };
 
 function getInitials(name: string) {
@@ -72,6 +94,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
   const [cf, setCf] = useState<CashflowKpis | null>(null);
   const [st, setSt] = useState<SettledKpis | null>(null);
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const goToBanks = React.useCallback(() => {
     if (navigate) navigate("/settings/banks");
@@ -80,6 +103,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
 
   /* -------------------- Panel-only bank filtering (local) ------------------- */
   const toKey = (v: unknown) => String(v);
+
   const filteredBanks = useMemo(() => {
     const bankList = Array.isArray(banks) ? banks : [];
     if (!selectedBankIds || selectedBankIds.length === 0) return bankList;
@@ -152,21 +176,41 @@ const KpiCards: React.FC<KpiCardsProps> = ({
   const cashflowKpis: KpiItem[] = useMemo(() => {
     if (!cf)
       return [
-        { key: "mtdNet", label: t("kpiCards:cashflow.labels.mtdNet"), value: "—", hint: t("kpiCards:loading") },
-        { key: "overdueNet", label: t("kpiCards:cashflow.labels.overdueNet"), value: "—", hint: t("kpiCards:loading") },
-        { key: "next7Net", label: t("kpiCards:cashflow.labels.next7Net"), value: "—", hint: t("kpiCards:loading") },
+        {
+          key: "mtdNet",
+          label: t("kpiCards:cashflow.labels.mtdNet"),
+          value: "—",
+          hint: t("kpiCards:loading"),
+        },
+        {
+          key: "overdueNet",
+          label: t("kpiCards:cashflow.labels.overdueNet"),
+          value: "—",
+          hint: t("kpiCards:loading"),
+        },
+        {
+          key: "next7Net",
+          label: t("kpiCards:cashflow.labels.next7Net"),
+          value: "—",
+          hint: t("kpiCards:loading"),
+        },
       ];
 
     const mom = cf.mom_change;
+
     const momLabel = cf.mom_infinite
       ? "∞%"
       : mom == null
       ? "—"
-      : `${(Math.abs(mom) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+      : `${(Math.abs(mom) * 100).toLocaleString(undefined, {
+          maximumFractionDigits: 1,
+        })}%`;
+
+    const mtdNetN = parseMoney(cf.mtd.net) ?? 0;
 
     const momPositive = cf.mom_infinite
-      ? cf.mtd.net_minor >= 0
-      : cf.mtd.net_minor >= 0
+      ? mtdNetN >= 0
+      : mtdNetN >= 0
       ? (mom ?? 0) >= 0
       : (mom ?? 0) <= 0;
 
@@ -174,14 +218,14 @@ const KpiCards: React.FC<KpiCardsProps> = ({
       {
         key: "mtdNet",
         label: t("kpiCards:cashflow.labels.mtdNet"),
-        value: `${cf.mtd.net_minor >= 0 ? "+" : ""}${currencyFromMinor(cf.mtd.net_minor)}`,
+        value: signedCurrencyFromDecimal(cf.mtd.net),
         hint: t("kpiCards:cashflow.hints.mtd", {
-          inAmt: currencyFromMinor(cf.mtd.in_minor),
-          outAmt: currencyFromMinor(cf.mtd.out_minor),
+          inAmt: currencyFromDecimal(cf.mtd.in),
+          outAmt: currencyFromDecimal(cf.mtd.out),
         }),
         delta: {
           value: t("kpiCards:delta.mom", {
-            value: `${cf.mtd.net_minor >= 0 ? "+" : ""}${momLabel}`,
+            value: `${mtdNetN >= 0 ? "+" : ""}${momLabel}`,
           }),
           positive: momPositive,
         },
@@ -189,19 +233,19 @@ const KpiCards: React.FC<KpiCardsProps> = ({
       {
         key: "overdueNet",
         label: t("kpiCards:cashflow.labels.overdueNet"),
-        value: `${cf.overdue.net_minor >= 0 ? "+" : ""}${currencyFromMinor(cf.overdue.net_minor)}`,
+        value: signedCurrencyFromDecimal(cf.overdue.net),
         hint: t("kpiCards:cashflow.hints.overdue", {
-          recAmt: currencyFromMinor(cf.overdue.rec_minor),
-          payAmt: currencyFromMinor(cf.overdue.pay_minor),
+          recAmt: currencyFromDecimal(cf.overdue.rec),
+          payAmt: currencyFromDecimal(cf.overdue.pay),
         }),
       },
       {
         key: "next7Net",
         label: t("kpiCards:cashflow.labels.next7Net"),
-        value: `${currencyFromMinor(cf.next7.net_minor)}`,
+        value: currencyFromDecimal(cf.next7.net),
         hint: t("kpiCards:cashflow.hints.next7", {
-          recAmt: currencyFromMinor(cf.next7.rec_minor),
-          payAmt: currencyFromMinor(cf.next7.pay_minor),
+          recAmt: currencyFromDecimal(cf.next7.rec),
+          payAmt: currencyFromDecimal(cf.next7.pay),
         }),
       },
     ];
@@ -210,18 +254,39 @@ const KpiCards: React.FC<KpiCardsProps> = ({
   const settledKpis: KpiItem[] = useMemo(() => {
     if (!st)
       return [
-        { key: "mtdSettledNet", label: t("kpiCards:settled.labels.mtdSettledNet"), value: "—", hint: t("kpiCards:loading") },
-        { key: "prevSettledNet", label: t("kpiCards:settled.labels.prevSettledNet"), value: "—", hint: t("kpiCards:loading") },
-        { key: "last7Settled", label: t("kpiCards:settled.labels.last7Settled"), value: "—", hint: t("kpiCards:loading") },
+        {
+          key: "mtdSettledNet",
+          label: t("kpiCards:settled.labels.mtdSettledNet"),
+          value: "—",
+          hint: t("kpiCards:loading"),
+        },
+        {
+          key: "prevSettledNet",
+          label: t("kpiCards:settled.labels.prevSettledNet"),
+          value: "—",
+          hint: t("kpiCards:loading"),
+        },
+        {
+          key: "last7Settled",
+          label: t("kpiCards:settled.labels.last7Settled"),
+          value: "—",
+          hint: t("kpiCards:loading"),
+        },
       ];
 
     const mom = st.mom_change;
-    const momLabel =
-      st.mom_infinite ? "∞%" : mom == null ? "—" : `${(mom * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+
+    const momLabel = st.mom_infinite
+      ? "∞%"
+      : mom == null
+      ? "—"
+      : `${(mom * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
+
+    const mtdNetN = parseMoney(st.mtd.net) ?? 0;
 
     const momPositive = st.mom_infinite
-      ? st.mtd.net_minor >= 0
-      : st.mtd.net_minor >= 0
+      ? mtdNetN >= 0
+      : mtdNetN >= 0
       ? (mom ?? 0) >= 0
       : (mom ?? 0) <= 0;
 
@@ -229,14 +294,14 @@ const KpiCards: React.FC<KpiCardsProps> = ({
       {
         key: "mtdSettledNet",
         label: t("kpiCards:settled.labels.mtdSettledNet"),
-        value: `${st.mtd.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.mtd.net_minor)}`,
+        value: signedCurrencyFromDecimal(st.mtd.net),
         hint: t("kpiCards:settled.hints.mtd", {
-          recAmt: currencyFromMinor(st.mtd.in_minor),
-          payAmt: currencyFromMinor(st.mtd.out_minor),
+          recAmt: currencyFromDecimal(st.mtd.in),
+          payAmt: currencyFromDecimal(st.mtd.out),
         }),
         delta: {
           value: t("kpiCards:delta.mom", {
-            value: `${st.mtd.net_minor >= 0 ? "+" : ""}${momLabel}`,
+            value: `${mtdNetN >= 0 ? "+" : ""}${momLabel}`,
           }),
           positive: momPositive,
         },
@@ -244,19 +309,19 @@ const KpiCards: React.FC<KpiCardsProps> = ({
       {
         key: "prevSettledNet",
         label: t("kpiCards:settled.labels.prevSettledNet"),
-        value: `${st.prev.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.prev.net_minor)}`,
+        value: signedCurrencyFromDecimal(st.prev.net),
         hint: t("kpiCards:settled.hints.prev", {
-          recAmt: currencyFromMinor(st.prev.in_minor),
-          payAmt: currencyFromMinor(st.prev.out_minor),
+          recAmt: currencyFromDecimal(st.prev.in),
+          payAmt: currencyFromDecimal(st.prev.out),
         }),
       },
       {
         key: "last7Settled",
         label: t("kpiCards:settled.labels.last7Settled"),
-        value: `${st.last7.net_minor >= 0 ? "+" : ""}${currencyFromMinor(st.last7.net_minor)}`,
+        value: signedCurrencyFromDecimal(st.last7.net),
         hint: t("kpiCards:settled.hints.last7", {
-          recAmt: currencyFromMinor(st.last7.in_minor),
-          payAmt: currencyFromMinor(st.last7.out_minor),
+          recAmt: currencyFromDecimal(st.last7.in),
+          payAmt: currencyFromDecimal(st.last7.out),
         }),
       },
     ];
@@ -275,14 +340,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     return "lg:col-span-3 lg:col-start-7";
   };
 
-  const totalFmt = useMemo(
-    () =>
-      Number(filteredTotalConsolidated || 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }),
-    [filteredTotalConsolidated]
-  );
+  const totalFmt = useMemo(() => formatCurrency(filteredTotalConsolidated || 0), [filteredTotalConsolidated]);
 
   const topBank = useMemo(() => {
     if (!filteredBanks?.length) return null;
@@ -297,7 +355,9 @@ const KpiCards: React.FC<KpiCardsProps> = ({
       <LayoutGroup>
         <motion.div
           layout
-          className={`grid grid-cols-12 gap-3 w-full ${expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""}`}
+          className={`grid grid-cols-12 gap-3 w-full ${
+            expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""
+          }`}
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
         >
           {/* Bank panel (left) */}
@@ -318,19 +378,23 @@ const KpiCards: React.FC<KpiCardsProps> = ({
                     {t("kpiCards:panel.accountsCount", { count: filteredBanks.length || 0 })}
                   </span>
                 </div>
-                <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">{totalFmt}</div>
+
+                <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
+                  {totalFmt}
+                </div>
+
                 {topBank && (
                   <div className="mt-1 flex items-center gap-2 min-w-0">
                     <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
                       {getInitials(topBank.institution)}
                     </div>
+
                     <div className="min-w-0">
-                      <div className="text-[12px] text-gray-800 truncate leading-tight">{topBank.institution}</div>
+                      <div className="text-[12px] text-gray-800 truncate leading-tight">
+                        {topBank.institution}
+                      </div>
                       <div className="text-[10px] text-gray-500 truncate leading-tight">
-                        {Number(topBank.consolidated_balance || 0).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
+                        {formatCurrency(topBank.consolidated_balance ?? 0)}
                       </div>
                     </div>
                   </div>
@@ -358,6 +422,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
                         {totalFmt}
                       </button>
                     </div>
+
                     <button
                       className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
                       onClick={() => setExpanded(false)}
@@ -365,6 +430,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
                       {t("kpiCards:actions.close")}
                     </button>
                   </div>
+
                   {/* Scroll area */}
                   <div className="flex-1 min-h-0 overflow-y-auto">
                     <BanksTable
@@ -389,18 +455,25 @@ const KpiCards: React.FC<KpiCardsProps> = ({
               className={`col-span-12 sm:col-span-6 ${rightPlacement(i)} h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2`}
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[11px] uppercase tracking-wide text-gray-600">{kpi.label}</span>
+                <span className="text-[11px] uppercase tracking-wide text-gray-600">
+                  {kpi.label}
+                </span>
+
                 {kpi.delta && (
                   <span className={`text-[11px] ${kpi.delta.positive ? "text-green-600" : "text-red-600"}`}>
                     {kpi.delta.value}
                   </span>
                 )}
               </div>
+
               <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
                 {loading ? "—" : kpi.value}
               </div>
+
               {kpi.hint && (
-                <div className="mt-0.5 text-[11px] text-gray-500">{loading ? t("kpiCards:loading") : kpi.hint}</div>
+                <div className="mt-0.5 text-[11px] text-gray-500">
+                  {loading ? t("kpiCards:loading") : kpi.hint}
+                </div>
               )}
             </motion.div>
           ))}

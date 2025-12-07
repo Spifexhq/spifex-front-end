@@ -1,4 +1,7 @@
 // src/models/dashboard/domain.ts
+// ✅ switch dashboard money fields from *_minor (number) to decimal strings (2dp)
+
+export type MoneyDecimal = string; // "1234.56" (2dp), can be negative
 
 // -----------------------------------------------------------------------------
 // List item previews
@@ -7,7 +10,7 @@
 export interface DashboardEntryPreview {
   id: string;
   due_date: string;
-  amount_minor: number;
+  amount: MoneyDecimal; // ✅ was amount_minor: number
   tx_type: number; // 1 (credit / inflow) or -1 (debit / outflow)
   description: string;
   entity_name: string | null;
@@ -18,7 +21,7 @@ export interface DashboardEntryPreview {
 export interface DashboardSettlementPreview {
   id: string;
   value_date: string;
-  amount_minor: number;
+  amount: MoneyDecimal; // ✅ was amount_minor: number
   tx_type: number; // same as entry.tx_type
   bank_label: string;
   entry_description: string;
@@ -35,17 +38,17 @@ export interface DashboardOrganization {
 
 export interface DashboardOpenEntriesStats {
   count: number;
-  total_minor: number;
-  inflow_minor: number;
-  outflow_minor: number;
-  net_minor: number;
+  total: MoneyDecimal;   // ✅
+  inflow: MoneyDecimal;  // ✅
+  outflow: MoneyDecimal; // ✅
+  net: MoneyDecimal;     // ✅
 }
 
 export interface DashboardSettledLast30dStats {
   count: number;
-  inflow_minor: number;
-  outflow_minor: number;
-  net_minor: number;
+  inflow: MoneyDecimal;  // ✅
+  outflow: MoneyDecimal; // ✅
+  net: MoneyDecimal;     // ✅
 }
 
 export interface DashboardMastersStats {
@@ -57,7 +60,7 @@ export interface DashboardMastersStats {
 
 export interface DashboardBankingStats {
   accounts: number;
-  total_consolidated_balance_minor: number;
+  total_consolidated_balance: MoneyDecimal; // ✅
 }
 
 export interface DashboardStats {

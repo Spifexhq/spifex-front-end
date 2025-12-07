@@ -1,7 +1,10 @@
 // src/pages/HomeDashboard/index.tsx
+// ✅ stop dividing by 100; treat API money as decimal (string/number)
+// ✅ no need to define currency or locale — formatCurrency handles it
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import { api } from "src/api/requests";
 
@@ -10,59 +13,58 @@ import type {
   DashboardEntryPreview,
   DashboardSettlementPreview,
 } from "@/models/dashboard/domain";
-import { formatDateFromISO } from "@/lib/date/formatDate";
 
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
+import { formatDateFromISO } from "@/lib/date/formatDate";
+import { formatCurrency } from "@/lib/currency/formatCurrency";
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                     */
+/* -------------------------------------------------------------------------- */
 
 const toISO = (d: Date) => d.toISOString().slice(0, 10);
+const todayISO = () => toISO(new Date());
 
-const todayISO = () => {
-  const d = new Date();
-  return toISO(d);
+const parseMoney = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === "") return null;
+  const s = typeof v === "number" ? String(v) : String(v).trim();
+  const n = Number(s.replace(",", ".")); // backend should send "1234.56"
+  return Number.isFinite(n) ? n : null;
 };
 
-const formatCurrencyFromMinor = (vMinor: number | null | undefined) => {
-  const v = ((vMinor ?? 0) as number) / 100;
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const fmtMoney = (v: unknown) => {
+  const n = parseMoney(v);
+  return n === null ? "—" : formatCurrency(n);
 };
 
-/**
- * Formats a date using the cookie-aware formatter.
- * Accepts ISO strings ("YYYY-MM-DD" or full ISO) or Date objects.
- * Falls back to the raw value if parsing fails.
- */
+const moneyIsNonNegative = (v: unknown) => (parseMoney(v) ?? 0) >= 0;
+
+/** Formats a date using the cookie-aware formatter. */
 const formatDate = (value: string | Date | null | undefined) => {
   if (!value) return "—";
 
   if (value instanceof Date) {
     const iso = value.toISOString().slice(0, 10);
-    const formatted = formatDateFromISO(iso);
-    return formatted || "—";
+    return formatDateFromISO(iso) || "—";
   }
 
   const trimmed = value.trim();
   if (!trimmed) return "—";
 
-  // If it looks like ISO, crop to YYYY-MM-DD
   const isoCandidate =
     trimmed.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(trimmed)
       ? trimmed.slice(0, 10)
       : trimmed;
 
-  const formatted = formatDateFromISO(isoCandidate);
-  // If formatter can't parse, at least show the original string
-  return formatted || trimmed;
+  return formatDateFromISO(isoCandidate) || trimmed;
 };
 
 const handleGo = (path: string) => {
   window.location.assign(path);
 };
 
-// -----------------------------------------------------------------------------
-// Component
-// -----------------------------------------------------------------------------
+/* -------------------------------------------------------------------------- */
+/* Component                                                                   */
+/* -------------------------------------------------------------------------- */
 
 const HomeDashboard = () => {
   const { t } = useTranslation("homeDashboard");
@@ -71,7 +73,6 @@ const HomeDashboard = () => {
     document.title = t("header.pageTitle");
   }, [t]);
 
-  // Dashboard data
   const [data, setData] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -82,11 +83,10 @@ const HomeDashboard = () => {
     (async () => {
       setLoading(true);
       setHasError(false);
+
       try {
         const res = await api.getCashflowDashboard();
-        if (!cancelled) {
-          setData(res.data);
-        }
+        if (!cancelled) setData(res.data);
       } catch (err) {
         console.error("Failed to load dashboard overview", err);
         if (!cancelled) {
@@ -111,19 +111,20 @@ const HomeDashboard = () => {
   const orgName = data?.organization?.name ?? "";
   const stats = data?.stats;
 
+  // Treat as decimal strings/numbers, not minor units.
   const openStats = stats?.open_entries ?? {
     count: 0,
-    total_minor: 0,
-    inflow_minor: 0,
-    outflow_minor: 0,
-    net_minor: 0,
+    total: "0.00",
+    inflow: "0.00",
+    outflow: "0.00",
+    net: "0.00",
   };
 
   const settledStats = stats?.settled_last_30d ?? {
     count: 0,
-    inflow_minor: 0,
-    outflow_minor: 0,
-    net_minor: 0,
+    inflow: "0.00",
+    outflow: "0.00",
+    net: "0.00",
   };
 
   const mastersStats = stats?.masters ?? {
@@ -135,37 +136,27 @@ const HomeDashboard = () => {
 
   const bankingStats = stats?.banking ?? {
     accounts: 0,
-    total_consolidated_balance_minor: 0,
+    total_consolidated_balance: "0.00",
   };
-
-  const globalLoading = loading;
 
   const hasAnyActivity =
     overdueEntries.length > 0 ||
     upcomingEntries.length > 0 ||
     recentSettlements.length > 0;
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
   return (
     <div className="flex">
-      <TopProgress active={globalLoading} variant="top" topOffset={64} />
+      <TopProgress active={loading} variant="top" topOffset={64} />
 
-      {/* Full-width content (no sidebar) */}
       <div className="flex-1 min-h-0 flex flex-col">
         <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          {/* --------------------------- Page header --------------------------- */}
           <header className="flex items-center justify-between gap-3">
             <div>
               <h1 className="text-[18px] font-semibold text-gray-900">
                 {t("header.title")}
                 {orgName ? ` · ${orgName}` : ""}
               </h1>
-              <p className="text-[12px] text-gray-500">
-                {t("header.subtitle")}
-              </p>
+              <p className="text-[12px] text-gray-500">{t("header.subtitle")}</p>
             </div>
             <div className="text-right text-[11px] text-gray-500">
               <div>
@@ -174,7 +165,7 @@ const HomeDashboard = () => {
             </div>
           </header>
 
-          {/* --------------------------- Summary row -------------------------- */}
+          {/* Summary row */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Open entries summary */}
             <div className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col justify-between">
@@ -186,28 +177,30 @@ const HomeDashboard = () => {
                   {t("summary.openCount", { count: openStats.count })}
                 </span>
               </div>
+
               <div className="text-[18px] font-semibold tabular-nums">
                 <span
                   className={
-                    openStats.net_minor >= 0
+                    moneyIsNonNegative(openStats.net)
                       ? "text-emerald-700"
                       : "text-red-700"
                   }
                 >
-                  {formatCurrencyFromMinor(openStats.net_minor)}
+                  {fmtMoney(openStats.net)}
                 </span>
               </div>
+
               <div className="mt-1 text-[11px] text-gray-500 leading-snug">
                 <div>
                   {t("summary.toReceive")}:{" "}
                   <span className="text-emerald-700 font-medium">
-                    {formatCurrencyFromMinor(openStats.inflow_minor)}
+                    {fmtMoney(openStats.inflow)}
                   </span>
                 </div>
                 <div>
                   {t("summary.toPay")}:{" "}
                   <span className="text-red-700 font-medium">
-                    {formatCurrencyFromMinor(openStats.outflow_minor)}
+                    {fmtMoney(openStats.outflow)}
                   </span>
                 </div>
               </div>
@@ -223,28 +216,30 @@ const HomeDashboard = () => {
                   {t("summary.settledCount", { count: settledStats.count })}
                 </span>
               </div>
+
               <div className="text-[18px] font-semibold tabular-nums">
                 <span
                   className={
-                    settledStats.net_minor >= 0
+                    moneyIsNonNegative(settledStats.net)
                       ? "text-emerald-700"
                       : "text-red-700"
                   }
                 >
-                  {formatCurrencyFromMinor(settledStats.net_minor)}
+                  {fmtMoney(settledStats.net)}
                 </span>
               </div>
+
               <div className="mt-1 text-[11px] text-gray-500 leading-snug">
                 <div>
                   {t("summary.entriesIn")}:{" "}
                   <span className="text-emerald-700 font-medium">
-                    {formatCurrencyFromMinor(settledStats.inflow_minor)}
+                    {fmtMoney(settledStats.inflow)}
                   </span>
                 </div>
                 <div>
                   {t("summary.entriesOut")}:{" "}
                   <span className="text-red-700 font-medium">
-                    {formatCurrencyFromMinor(settledStats.outflow_minor)}
+                    {fmtMoney(settledStats.outflow)}
                   </span>
                 </div>
               </div>
@@ -261,19 +256,17 @@ const HomeDashboard = () => {
                     className="font-medium cursor-pointer rounded px-1 hover:text-gray-500 transition"
                     onClick={() => handleGo("/settings/banks")}
                   >
-                    {t("summary.accountsActive", {
-                      count: bankingStats.accounts,
-                    })}
+                    {t("summary.accountsActive", { count: bankingStats.accounts })}
                   </span>
                 </span>
               </div>
+
               <div className="text-[18px] font-semibold tabular-nums">
                 <span className="text-gray-900">
-                  {formatCurrencyFromMinor(
-                    bankingStats.total_consolidated_balance_minor
-                  )}
+                  {fmtMoney(bankingStats.total_consolidated_balance)}
                 </span>
               </div>
+
               <div className="mt-1 text-[11px] text-gray-400 leading-snug">
                 <div>
                   {t("summary.entities")}:{" "}
@@ -311,20 +304,17 @@ const HomeDashboard = () => {
             </div>
           </section>
 
-          {/* --------------------------- Activity area ------------------------ */}
+          {/* Activity area */}
           <div className="min-h-0 h-full grid grid-cols-12 gap-4">
-            {/* Left column: Overdue + Next 7 days */}
-            <div className="col-span-12 lg:col-span-7 flex flex-col gap-4 min-h-0">
+            <div className="col-span-12 lg:col-span-7 flex flex-col gap-4 min-h-0 h-full">
               {/* Overdue entries */}
-              <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-0">
+              <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-0 overflow-hidden flex-[0.85]">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-[13px] font-semibold text-gray-800">
                     {t("activity.overdueTitle")}
                   </h2>
                   <span className="text-[11px] text-gray-500">
-                    {t("activity.overdueTop", {
-                      count: overdueEntries.length || 0,
-                    })}
+                    {t("activity.overdueTop", { count: overdueEntries.length || 0 })}
                   </span>
                 </div>
 
@@ -351,9 +341,7 @@ const HomeDashboard = () => {
                                     : "bg-red-50 text-red-700 border-red-100"
                                 }`}
                               >
-                                {e.tx_type === 1
-                                  ? t("activity.inflow")
-                                  : t("activity.outflow")}
+                                {e.tx_type === 1 ? t("activity.inflow") : t("activity.outflow")}
                               </span>
                               <span className="text-[12px] text-gray-900 truncate">
                                 {e.description || t("activity.noDescription")}
@@ -365,15 +353,14 @@ const HomeDashboard = () => {
                               {e.project_name && ` · ${e.project_name}`}
                             </div>
                           </div>
+
                           <div className="text-right shrink-0">
                             <div
                               className={`text-[12px] font-semibold tabular-nums ${
-                                e.tx_type === 1
-                                  ? "text-emerald-700"
-                                  : "text-red-700"
+                                e.tx_type === 1 ? "text-emerald-700" : "text-red-700"
                               }`}
                             >
-                              {formatCurrencyFromMinor(e.amount_minor)}
+                              {fmtMoney((e as unknown as { amount?: unknown }).amount)}
                             </div>
                           </div>
                         </li>
@@ -384,15 +371,13 @@ const HomeDashboard = () => {
               </section>
 
               {/* Next 7 days */}
-              <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-0">
+              <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-0 overflow-hidden flex-[1.15]">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-[13px] font-semibold text-gray-800">
                     {t("activity.next7Title")}
                   </h2>
                   <span className="text-[11px] text-gray-500">
-                    {t("activity.next7Top", {
-                      count: upcomingEntries.length || 0,
-                    })}
+                    {t("activity.next7Top", { count: upcomingEntries.length || 0 })}
                   </span>
                 </div>
 
@@ -419,9 +404,7 @@ const HomeDashboard = () => {
                                     : "bg-amber-50 text-amber-700 border-amber-100"
                                 }`}
                               >
-                                {e.tx_type === 1
-                                  ? t("activity.inflow")
-                                  : t("activity.outflow")}
+                                {e.tx_type === 1 ? t("activity.inflow") : t("activity.outflow")}
                               </span>
                               <span className="text-[12px] text-gray-900 truncate">
                                 {e.description || t("activity.noDescription")}
@@ -433,15 +416,14 @@ const HomeDashboard = () => {
                               {e.project_name && ` · ${e.project_name}`}
                             </div>
                           </div>
+
                           <div className="text-right shrink-0">
                             <div
                               className={`text-[12px] font-semibold tabular-nums ${
-                                e.tx_type === 1
-                                  ? "text-emerald-700"
-                                  : "text-red-700"
+                                e.tx_type === 1 ? "text-emerald-700" : "text-red-700"
                               }`}
                             >
-                              {formatCurrencyFromMinor(e.amount_minor)}
+                              {fmtMoney((e as unknown as { amount?: unknown }).amount)}
                             </div>
                           </div>
                         </li>
@@ -452,7 +434,6 @@ const HomeDashboard = () => {
               </section>
             </div>
 
-            {/* Right column: Settlements + empty state helpers */}
             <div className="col-span-12 lg:col-span-5 flex flex-col gap-4 min-h-0">
               {/* Recent settlements */}
               <section className="border border-gray-300 rounded-md bg-white px-4 py-3 flex flex-col min-h-[180px]">
@@ -487,17 +468,17 @@ const HomeDashboard = () => {
                                 {t("labels.settled")}
                               </span>
                               <span className="text-[12px] text-gray-900 truncate">
-                                {s.entry_description ||
-                                  t("activity.noDescription")}
+                                {s.entry_description || t("activity.noDescription")}
                               </span>
                             </div>
                             <div className="mt-0.5 text-[11px] text-gray-500 truncate">
                               {formatDate(s.value_date)} · {s.bank_label}
                             </div>
                           </div>
+
                           <div className="text-right shrink-0">
                             <div className="text-[12px] font-semibold text-emerald-700 tabular-nums">
-                              {formatCurrencyFromMinor(s.amount_minor)}
+                              {fmtMoney((s as unknown as { amount?: unknown }).amount)}
                             </div>
                           </div>
                         </li>
@@ -507,7 +488,6 @@ const HomeDashboard = () => {
                 </div>
               </section>
 
-              {/* Empty-state / quick helpers */}
               {!hasAnyActivity && !hasError && (
                 <section className="border border-dashed border-gray-300 rounded-md bg-gray-50 px-4 py-3">
                   <h3 className="text-[13px] font-semibold text-gray-800 mb-1">

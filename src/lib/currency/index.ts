@@ -1,3 +1,2 @@
-export * from "./centsToDecimal"
-export * from "./decimalToCents"
+export * from "./currencies"
 export * from "./formatCurrency"

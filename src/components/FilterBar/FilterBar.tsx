@@ -4,37 +4,32 @@
  * UX: Keyboard shortcuts + quick date-range helpers
  *   - Ctrl/⌘+Enter → Apply
  *   - Ctrl/⌘+K → focus search
- *   - Quick ranges in date popover: Hoje / Semana / Mês / Trimestre / Ano
+ *   - Quick ranges: Hoje / Semana / Mês / Trimestre / Ano
+ * Money rule: ALWAYS store/send amount_min/amount_max as MAJOR decimals ("1234.56")
  * -------------------------------------------------------------------------- */
 
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 import SelectDropdown from "src/components/ui/SelectDropdown/SelectDropdown";
 import { useBanks } from "@/hooks/useBanks";
 import type { EntryFilters } from "src/models/entries/domain";
-import {
-  ChipKey,
-  LocalFilters,
-  Visualization,
-} from "src/models/entries/domain";
+import { ChipKey, LocalFilters, Visualization } from "src/models/entries/domain";
 import { api } from "src/api/requests";
+
 import Button from "src/components/ui/Button";
 import Checkbox from "src/components/ui/Checkbox";
-import { formatCurrency } from "src/lib/currency";
-import { handleUtilitaryAmountKeyDown } from "src/lib/form/amountKeyHandlers";
-import { formatDateFromISO } from "@/lib/date";
 import Input from "../ui/Input";
 import { DateInput } from "../ui/DateInput";
+import { AmountInput } from "../ui/AmountInput";
 
-/* ------------------------------ Utils ------------------------------ */
+import { formatCurrency } from "src/lib/currency";
+import { formatDateFromISO } from "@/lib/date";
+
+/* ------------------------------ Small utils ------------------------------ */
+
 function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -45,19 +40,19 @@ function useOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
   }, [ref, onOutside]);
 }
 
-/** GLAccount pode vir como { id } (string ULID) ou { external_id } */
+/** GLAccount can be { id } or { external_id } */
 type GLAccountLike = GLAccount & { id?: string; external_id?: string };
 function getGlaId(a: GLAccountLike): string {
   return String(a.id ?? a.external_id ?? "");
 }
 
-/* ---- Date helpers (for quick ranges) ---- */
+/* ---- Date helpers ---- */
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 function startOfWeekISO(d = new Date()) {
-  const day = d.getDay(); // 0..6 (Sun..Sat)
-  const diff = (day + 6) % 7; // start Monday
+  const day = d.getDay();
+  const diff = (day + 6) % 7; // Monday
   const start = new Date(d);
   start.setDate(d.getDate() - diff);
   return start.toISOString().slice(0, 10);
@@ -73,20 +68,27 @@ function startOfYearISO(d = new Date()) {
   return new Date(d.getFullYear(), 0, 1).toISOString().slice(0, 10);
 }
 
-/* ---- Chip amount helper ---- */
-function amountChipLabel(
-  minDigits?: string,
-  maxDigits?: string,
-  t?: (k: string) => string
-) {
+function isPositiveMajor(v?: string) {
+  const n = Number(String(v ?? "").trim());
+  return Number.isFinite(n) && n > 0;
+}
+
+function amountChipLabel(minMajor?: string, maxMajor?: string, t?: (k: string) => string) {
   const parts: string[] = [];
-  if (minDigits) parts.push(`≥ ${formatCurrency(minDigits)}`);
-  if (maxDigits) parts.push(`≤ ${formatCurrency(maxDigits)}`);
+  if (minMajor && isPositiveMajor(minMajor)) parts.push(`≥ ${formatCurrency(minMajor)}`);
+  if (maxMajor && isPositiveMajor(maxMajor)) parts.push(`≤ ${formatCurrency(maxMajor)}`);
   const prefix = t ? t("filterBar:chips.value") : "Value";
   return `${prefix} ${parts.join(" ")}`.trim();
 }
-const centsDigitsToInt = (s: string | undefined) =>
-  Number(String(s ?? "").replace(/\D/g, "")) || 0;
+
+/* Small default icon (SVG star) */
+const DefaultStarIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg viewBox="0 0 20 20" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M10 2.5l2.39 4.84 5.34.78-3.86 3.77.91 5.31L10 14.9l-4.78 2.51.91-5.31L2.27 8.12l5.34-.78L10 2.5z" />
+  </svg>
+);
+
+/* -------------------------------- Types -------------------------------- */
 
 interface FilterBarProps {
   onApply: (payload: { filters: EntryFilters }) => void;
@@ -95,19 +97,8 @@ interface FilterBarProps {
   contextSettlement: false | true;
 }
 
-/* Small default icon (SVG star, no plain "⭐" char) */
-const DefaultStarIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    viewBox="0 0 20 20"
-    aria-hidden="true"
-    className={className}
-    fill="currentColor"
-  >
-    <path d="M10 2.5l2.39 4.84 5.34.78-3.86 3.77.91 5.31L10 14.9l-4.78 2.51.91-5.31L2.27 8.12l5.34-.78L10 2.5z" />
-  </svg>
-);
-
 /* -------------------------------- Component -------------------------------- */
+
 const FilterBar: React.FC<FilterBarProps> = ({
   onApply,
   initial,
@@ -117,10 +108,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const { t } = useTranslation(["filterBar"]);
 
   const { banks: rawBanks } = useBanks(undefined, 0, bankActive);
-  const banks = useMemo(
-    () => (Array.isArray(rawBanks) ? rawBanks : []),
-    [rawBanks]
-  );
+  const banks = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
 
   const [ledgerAccounts, setLedgerAccounts] = useState<GLAccountLike[]>([]);
 
@@ -129,65 +117,82 @@ const FilterBar: React.FC<FilterBarProps> = ({
     end_date: initial?.end_date || "",
     description: initial?.description || "",
     observation: initial?.observation || "",
-    gla_id: Array.isArray(initial?.gla_id)
-      ? (initial!.gla_id as unknown[]).map(String)
-      : [],
-    bank_id: Array.isArray(initial?.bank_id)
-      ? (initial!.bank_id as unknown[]).map(String)
-      : [],
-    tx_type: undefined,
-    amount_min: "",
-    amount_max: "",
+    gla_id: Array.isArray(initial?.gla_id) ? (initial!.gla_id as unknown[]).map(String) : [],
+    bank_id: Array.isArray(initial?.bank_id) ? (initial!.bank_id as unknown[]).map(String) : [],
+    tx_type: initial?.tx_type,
+    // ✅ now major decimals
+    amount_min: initial?.amount_min ? String(initial.amount_min) : "",
+    amount_max: initial?.amount_max ? String(initial.amount_max) : "",
     settlement_status: initial?.settlement_status ?? contextSettlement,
   }));
 
   /* Saved visualizations */
   const [views, setViews] = useState<Visualization[]>([]);
+  const [viewsLoaded, setViewsLoaded] = useState(false);
+
   const scopedViews = useMemo(
     () => views.filter((v) => v.settlement_status === contextSettlement),
     [views, contextSettlement]
   );
 
   const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
-  const [viewsLoaded, setViewsLoaded] = useState(false);
+  const viewsMenuRef = useRef<HTMLDivElement>(null);
+  useOutside(viewsMenuRef, () => setViewsMenuOpen(false));
 
-  /* “Salvar visualização” — modal */
+  /* Config modal */
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [configBusy, setConfigBusy] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renamingName, setRenamingName] = useState("");
+
+  /* Save modal */
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveDefault, setSaveDefault] = useState(false);
   const [saveMode, setSaveMode] = useState<"create" | "overwrite">("create");
   const [overwriteId, setOverwriteId] = useState<string | null>(null);
-  const [overwriteView, setOverwriteView] = useState<Visualization | null>(
-    null
-  );
+  const [overwriteView, setOverwriteView] = useState<Visualization | null>(null);
   const [saveBusy, setSaveBusy] = useState(false);
-
-  /* Config modal (somente “Visualizações salvas”) */
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [configBusy, setConfigBusy] = useState(false);
-
-  const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renamingName, setRenamingName] = useState("");
 
   /* Menus/Popovers */
   const [menuOpen, setMenuOpen] = useState(false);
   const [openEditor, setOpenEditor] = useState<ChipKey | null>(null);
 
+  const menuRef = useRef<HTMLDivElement>(null);
+  useOutside(menuRef, () => setMenuOpen(false));
+
   const toggleEditor = useCallback((k: ChipKey) => {
     setOpenEditor((curr) => (curr === k ? null : k));
   }, []);
 
-  const menuRef = useRef<HTMLDivElement>(null);
-  useOutside(menuRef, () => setMenuOpen(false));
+  /* ------------------------ Conversion: Local -> API ------------------------ */
+  const toEntryFilters = useCallback(
+    (f: LocalFilters): EntryFilters => {
+      const min = isPositiveMajor(f.amount_min) ? f.amount_min : undefined;
+      const max = isPositiveMajor(f.amount_max) ? f.amount_max : undefined;
 
-  const viewsMenuRef = useRef<HTMLDivElement>(null);
-  useOutside(viewsMenuRef, () => setViewsMenuOpen(false));
+      return {
+        start_date: f.start_date || undefined,
+        end_date: f.end_date || undefined,
+        description: f.description || undefined,
+        observation: f.observation || undefined,
+        gla_id: f.gla_id?.length ? f.gla_id : undefined,
+        bank_id: f.bank_id?.length ? f.bank_id : undefined,
+        tx_type: f.tx_type,
+        // ✅ decimals to backend
+        amount_min: min,
+        amount_max: max,
+        settlement_status: f.settlement_status as false | true,
+      } as EntryFilters;
+    },
+    []
+  );
 
-  /* ---- Keyboard shortcuts ---- */
   const applyFilters = useCallback(() => {
     onApply({ filters: toEntryFilters(filters) });
-  }, [onApply, filters]);
+  }, [filters, onApply, toEntryFilters]);
 
+  /* ---- Keyboard shortcuts ---- */
   const searchInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -219,29 +224,32 @@ const FilterBar: React.FC<FilterBarProps> = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [applyFilters, saveModalOpen, configModalOpen]);
 
-  /* Load GL Accounts (cursor API) */
+  /* -------------------------- Load GL Accounts (cursor) -------------------------- */
   useEffect(() => {
     const fetchAll = async () => {
       try {
         const all: GLAccountLike[] = [];
         let cursor: string | undefined;
+
         do {
           const { data } = await api.getLedgerAccounts({ page_size: 200, cursor });
           const page = (data?.results ?? []) as GLAccountLike[];
           all.push(...page);
           cursor = (data?.next ?? undefined) || undefined;
         } while (cursor);
+
         setLedgerAccounts(all);
       } catch (err) {
         console.error("Failed to load GL Accounts", err);
         setLedgerAccounts([]);
       }
     };
-    fetchAll();
+
+    void fetchAll();
   }, []);
 
-  /* Saved views (read org id from store inside requests) */
-  const refreshViews = async () => {
+  /* ------------------------------- Saved views ------------------------------ */
+  const refreshViews = useCallback(async () => {
     try {
       const { data } = await api.getEntryViews();
       const list = Array.isArray(data)
@@ -253,15 +261,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
     } finally {
       setViewsLoaded(true);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void refreshViews();
-  }, []);
+  }, [refreshViews]);
 
-  const didInitialApply = useRef(false);
+  /* Apply default view ONCE when loaded for this settlement context */
+  const bootstrappedRef = useRef(false);
   useEffect(() => {
-    if (didInitialApply.current || !viewsLoaded) return;
+    if (bootstrappedRef.current) return;
+    if (!viewsLoaded) return;
 
     const def = scopedViews.find((v) => v.is_default);
     if (def) {
@@ -269,33 +279,16 @@ const FilterBar: React.FC<FilterBarProps> = ({
         ...(def.filters as LocalFilters),
         settlement_status: !!def.settlement_status,
       };
-      setFilters((prev) => ({ ...prev, ...nextLocal })); // reflect in chips
-      onApply({ filters: toEntryFilters(nextLocal) }); // initial request WITH filters
+      setFilters((prev) => ({ ...prev, ...nextLocal }));
+      onApply({ filters: toEntryFilters(nextLocal) });
     } else {
-      onApply({ filters: toEntryFilters(filters) }); // initial request WITHOUT filters
+      onApply({ filters: toEntryFilters(filters) });
     }
 
-    didInitialApply.current = true;
-  }, [viewsLoaded, scopedViews, filters, onApply]);
-
-  /* Apply default view automatically ONCE (when available for this context) */
-  const bootstrappedRef = useRef(false);
-  useEffect(() => {
-    if (bootstrappedRef.current) return;
-
-    const def = scopedViews.find((v) => v.is_default);
-    if (!def) return;
-
-    const nextLocal = {
-      ...(def.filters as LocalFilters),
-      settlement_status: !!def.settlement_status,
-    };
-    setFilters((prev) => ({ ...prev, ...nextLocal }));
-    onApply({ filters: toEntryFilters(nextLocal) });
-
     bootstrappedRef.current = true;
-  }, [scopedViews, contextSettlement, onApply]);
+  }, [viewsLoaded, scopedViews, contextSettlement, onApply, toEntryFilters, filters]);
 
+  /* ------------------------- Selection memo helpers ------------------------- */
   const selectedBanks = useMemo(() => {
     const sel = new Set((filters.bank_id ?? []).map(String));
     return banks.filter((b) => sel.has(String(b.id)));
@@ -306,25 +299,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
     [ledgerAccounts, filters.gla_id]
   );
 
-  function toEntryFilters(f: LocalFilters): EntryFilters {
-    const minCents = centsDigitsToInt(f.amount_min);
-    const maxCents = centsDigitsToInt(f.amount_max);
-
-    return {
-      start_date: f.start_date,
-      end_date: f.end_date,
-      description: f.description,
-      observation: f.observation,
-      gla_id: f.gla_id,
-      bank_id: f.bank_id,
-      tx_type: f.tx_type,
-      amount_min: minCents > 0 ? minCents : undefined,
-      amount_max: maxCents > 0 ? maxCents : undefined,
-      settlement_status: f.settlement_status as false | true,
-    } as EntryFilters;
-  }
-
-  function clearAll() {
+  /* ------------------------------ Clear / chips ------------------------------ */
+  const clearAll = useCallback(() => {
     const cleared: LocalFilters = {
       start_date: "",
       end_date: "",
@@ -337,25 +313,27 @@ const FilterBar: React.FC<FilterBarProps> = ({
       amount_max: "",
       settlement_status: contextSettlement,
     };
-
     setFilters(cleared);
     setOpenEditor(null);
     setMenuOpen(false);
     setViewsMenuOpen(false);
     onApply({ filters: toEntryFilters(cleared) });
-  }
+  }, [contextSettlement, onApply, toEntryFilters]);
 
-  function removeChip(k: ChipKey) {
-    if (k === "date") setFilters((f) => ({ ...f, start_date: "", end_date: "" }));
-    if (k === "banks") setFilters((f) => ({ ...f, bank_id: [] }));
-    if (k === "accounts") setFilters((f) => ({ ...f, gla_id: [] }));
-    if (k === "observation") setFilters((f) => ({ ...f, observation: "" }));
-    if (k === "tx_type") setFilters((f) => ({ ...f, tx_type: undefined }));
-    if (k === "amount") setFilters((f) => ({ ...f, amount_min: "", amount_max: "" }));
-  }
+  const removeChip = useCallback((k: ChipKey) => {
+    setFilters((f) => {
+      if (k === "date") return { ...f, start_date: "", end_date: "" };
+      if (k === "banks") return { ...f, bank_id: [] };
+      if (k === "accounts") return { ...f, gla_id: [] };
+      if (k === "observation") return { ...f, observation: "" };
+      if (k === "tx_type") return { ...f, tx_type: undefined };
+      if (k === "amount") return { ...f, amount_min: "", amount_max: "" };
+      return f;
+    });
+  }, []);
 
-  const hasAmountMin = centsDigitsToInt(filters.amount_min) > 0;
-  const hasAmountMax = centsDigitsToInt(filters.amount_max) > 0;
+  const hasAmountMin = isPositiveMajor(filters.amount_min);
+  const hasAmountMax = isPositiveMajor(filters.amount_max);
   const hasAmountFilter = hasAmountMin || hasAmountMax;
 
   const hasActive =
@@ -386,19 +364,19 @@ const FilterBar: React.FC<FilterBarProps> = ({
               onRemove={() => removeChip("date")}
             />
           )}
+
           {(filters.bank_id?.length ?? 0) > 0 && (
             <Chip
               icon="bank"
               label={`${t("filterBar:chips.bank")}  ${selectedBanks
                 .slice(0, 2)
                 .map((b) => b.institution)
-                .join(", ")}${
-                selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""
-              }`}
+                .join(", ")}${selectedBanks.length > 2 ? ` +${selectedBanks.length - 2}` : ""}`}
               onClick={() => toggleEditor("banks")}
               onRemove={() => removeChip("banks")}
             />
           )}
+
           {(filters.gla_id?.length ?? 0) > 0 && (
             <Chip
               icon="accounts"
@@ -406,14 +384,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 .slice(0, 2)
                 .map((a) => a.account)
                 .join(", ")}${
-                selectedAccounts.length > 2
-                  ? ` +${selectedAccounts.length - 2}`
-                  : ""
+                selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""
               }`}
               onClick={() => toggleEditor("accounts")}
               onRemove={() => removeChip("accounts")}
             />
           )}
+
           {!!filters.tx_type && (
             <Chip
               icon="note"
@@ -426,6 +403,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
               onRemove={() => removeChip("tx_type")}
             />
           )}
+
           {hasAmountFilter && (
             <Chip
               icon="note"
@@ -438,12 +416,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
               onRemove={() => removeChip("amount")}
             />
           )}
+
           {!!filters.observation && (
             <Chip
               icon="note"
-              label={`${t("filterBar:chips.observation")}  ${
-                filters.observation
-              }`}
+              label={`${t("filterBar:chips.observation")}  ${filters.observation}`}
               onClick={() => toggleEditor("observation")}
               onRemove={() => removeChip("observation")}
             />
@@ -454,16 +431,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
             className="flex-[1_1_30%] min-w-[160px] h-6 bg-transparent outline-none text-xs placeholder-gray-400"
             placeholder={t("filterBar:search.placeholder")}
             value={filters.description || ""}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, description: e.target.value }))
-            }
+            onChange={(e) => setFilters((f) => ({ ...f, description: e.target.value }))}
             onKeyDown={(e) => {
               if (e.key === "Enter") applyFilters();
             }}
           />
         </div>
 
-        {/* Config — MODAL (apenas 'Visualizações salvas') */}
+        {/* Config — MODAL */}
         <div className="relative">
           <Button
             variant="outline"
@@ -495,7 +470,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
           </Button>
         </div>
 
-        {/* Load visualization (menu rápido) */}
+        {/* Load visualization (menu) */}
         <div className="relative" ref={viewsMenuRef}>
           <Button
             variant="outline"
@@ -509,32 +484,31 @@ const FilterBar: React.FC<FilterBarProps> = ({
           >
             {t("filterBar:buttons.views")}
           </Button>
+
           {viewsMenuOpen && (
             <Menu
               roleLabel={t("filterBar:viewsMenu.aria")}
-              items={
-                (scopedViews.length
-                  ? scopedViews.map<MenuEntry>((v) => ({
-                      key: v.id,
-                      label: (
-                        <span className="flex items-center justify-between w-full">
-                          <span className="truncate">{v.name}</span>
-                          {v.is_default && (
-                            <DefaultStarIcon className="w-3 h-3 text-amber-500 shrink-0 ml-2" />
-                          )}
-                        </span>
-                      ),
-                      onAction: () => {
-                        setViewsMenuOpen(false);
-                        const next = {
-                          ...(v.filters as LocalFilters),
-                          settlement_status: !!v.settlement_status,
-                        };
-                        setFilters(next);
-                      },
-                    }))
-                  : []) as MenuEntry[]
-              }
+              items={(scopedViews.length
+                ? scopedViews.map<MenuEntry>((v) => ({
+                    key: v.id,
+                    label: (
+                      <span className="flex items-center justify-between w-full">
+                        <span className="truncate">{v.name}</span>
+                        {v.is_default && (
+                          <DefaultStarIcon className="w-3 h-3 text-amber-500 shrink-0 ml-2" />
+                        )}
+                      </span>
+                    ),
+                    onAction: () => {
+                      setViewsMenuOpen(false);
+                      const next: LocalFilters = {
+                        ...(v.filters as LocalFilters),
+                        settlement_status: !!v.settlement_status,
+                      };
+                      setFilters(next);
+                    },
+                  }))
+                : []) as MenuEntry[]}
               emptyLabel={t("filterBar:viewsMenu.empty")}
               activeIndex={0}
               setActiveIndex={() => void 0}
@@ -612,101 +586,46 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <span className="block">{t("filterBar:editors.date.start")}</span>
                 <DateInput
                   value={filters.start_date || ""}
-                  onChange={(iso) =>
-                    setFilters((f) => ({ ...f, start_date: iso }))
-                  }
+                  onChange={(iso) => setFilters((f) => ({ ...f, start_date: iso }))}
                 />
               </label>
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">{t("filterBar:editors.date.end")}</span>
                 <DateInput
                   value={filters.end_date || ""}
-                  onChange={(iso) =>
-                    setFilters((f) => ({ ...f, end_date: iso }))
-                  }
+                  onChange={(iso) => setFilters((f) => ({ ...f, end_date: iso }))}
                 />
               </label>
             </div>
 
-            {/* Quick date-range helpers */}
             <div className="mt-2">
               <div className="text-[11px] text-gray-500 mb-1">
                 {t("filterBar:editors.date.shortcuts")}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <QuickButton
-                  onClick={() =>
-                    setFilters((f) => ({
-                      ...f,
-                      start_date: todayISO(),
-                      end_date: todayISO(),
-                    }))
-                  }
-                >
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: todayISO(), end_date: todayISO() }))}>
                   {t("filterBar:editors.date.today")}
                 </QuickButton>
-                <QuickButton
-                  onClick={() =>
-                    setFilters((f) => ({
-                      ...f,
-                      start_date: startOfWeekISO(),
-                      end_date: todayISO(),
-                    }))
-                  }
-                >
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfWeekISO(), end_date: todayISO() }))}>
                   {t("filterBar:editors.date.thisWeek")}
                 </QuickButton>
-                <QuickButton
-                  onClick={() =>
-                    setFilters((f) => ({
-                      ...f,
-                      start_date: startOfMonthISO(),
-                      end_date: todayISO(),
-                    }))
-                  }
-                >
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfMonthISO(), end_date: todayISO() }))}>
                   {t("filterBar:editors.date.thisMonth")}
                 </QuickButton>
-                <QuickButton
-                  onClick={() =>
-                    setFilters((f) => ({
-                      ...f,
-                      start_date: startOfQuarterISO(),
-                      end_date: todayISO(),
-                    }))
-                  }
-                >
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfQuarterISO(), end_date: todayISO() }))}>
                   {t("filterBar:editors.date.thisQuarter")}
                 </QuickButton>
-                <QuickButton
-                  onClick={() =>
-                    setFilters((f) => ({
-                      ...f,
-                      start_date: startOfYearISO(),
-                      end_date: todayISO(),
-                    }))
-                  }
-                >
+                <QuickButton onClick={() => setFilters((f) => ({ ...f, start_date: startOfYearISO(), end_date: todayISO() }))}>
                   {t("filterBar:editors.date.thisYear")}
                 </QuickButton>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => removeChip("date")}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>
                 {t("filterBar:buttons.remove")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => (setOpenEditor(null), applyFilters())}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
                 {t("filterBar:buttons.apply")}
               </Button>
             </div>
@@ -719,32 +638,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
               label={t("filterBar:editors.banks.label")}
               items={banks}
               selected={selectedBanks}
-              onChange={(list) =>
-                setFilters((f) => ({
-                  ...f,
-                  bank_id: list.map((x) => String(x.id)),
-                }))
-              }
+              onChange={(list) => setFilters((f) => ({ ...f, bank_id: list.map((x) => String(x.id)) }))}
               getItemKey={(item) => item.id}
               getItemLabel={(item) => item.institution}
               buttonLabel={t("filterBar:editors.banks.button")}
               customStyles={{ maxHeight: "240px" }}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => removeChip("banks")}
-              >
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("banks")}>
                 {t("filterBar:buttons.remove")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => (setOpenEditor(null), applyFilters())}
-              >
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
                 {t("filterBar:buttons.apply")}
               </Button>
             </div>
@@ -757,30 +661,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
               label={t("filterBar:editors.accounts.label")}
               items={ledgerAccounts}
               selected={selectedAccounts}
-              onChange={(list) =>
-                setFilters((f) => ({ ...f, gla_id: list.map((x) => getGlaId(x)) }))
-              }
-              getItemKey={(item) => getGlaId(item)}
+              onChange={(list) => setFilters((f) => ({ ...f, gla_id: list.map(getGlaId) }))}
+              getItemKey={getGlaId}
               getItemLabel={(item) => item.account}
               buttonLabel={t("filterBar:editors.accounts.button")}
               customStyles={{ maxHeight: "240px" }}
               groupBy={(item) => item.subcategory || ""}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => removeChip("accounts")}
-              >
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("accounts")}>
                 {t("filterBar:buttons.remove")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => (setOpenEditor(null), applyFilters())}
-              >
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
                 {t("filterBar:buttons.apply")}
               </Button>
             </div>
@@ -792,27 +684,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <Input
               type="text"
               placeholder={t("filterBar:editors.observation.placeholder")}
-
               value={filters.observation || ""}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, observation: e.target.value }))
-              }
+              onChange={(e) => setFilters((f) => ({ ...f, observation: e.target.value }))}
             />
             <div className="flex justify-end gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => removeChip("observation")}
-              >
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("observation")}>
                 {t("filterBar:buttons.remove")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => (setOpenEditor(null), applyFilters())}
-              >
+              <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
                 {t("filterBar:buttons.apply")}
               </Button>
             </div>
@@ -822,40 +701,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
         {openEditor === "tx_type" && (
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() =>
-                  setFilters((f) => ({ ...f, tx_type: "credit" }))
-                }
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "credit" }))}>
                 {t("filterBar:editors.txType.credit")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => setFilters((f) => ({ ...f, tx_type: "debit" }))}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setFilters((f) => ({ ...f, tx_type: "debit" }))}>
                 {t("filterBar:editors.txType.debit")}
               </Button>
             </div>
             <div className="flex justify-end gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => removeChip("tx_type")}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("tx_type")}>
                 {t("filterBar:buttons.remove")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => (setOpenEditor(null), applyFilters())}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
                 {t("filterBar:buttons.apply")}
               </Button>
             </div>
@@ -867,67 +724,34 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">
-                  {t("filterBar:editors.amount.min")}{" "}
-                  {t("filterBar:editors.amount.currencySuffix")}
+                  {t("filterBar:editors.amount.min")}
                 </span>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  // 🔹 Sempre mostra algum valor: se estiver vazio, formata "0"
-                  value={formatCurrency(filters.amount_min ?? "0")}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, amount_min: e.target.value }))
-                  }
-                  onKeyDown={(e) =>
-                    handleUtilitaryAmountKeyDown(
-                      e,
-                      filters.amount_min ?? "0",
-                      (newVal: string) =>
-                        setFilters((f) => ({ ...f, amount_min: newVal }))
-                    )
-                  }
+                <AmountInput
+                  display="currency"
+                  value={filters.amount_min || ""}
+                  onValueChange={(next) => setFilters((f) => ({ ...f, amount_min: next }))}
+                  zeroAsEmpty
                 />
               </label>
 
               <label className="text-xs text-gray-600 space-y-1 block">
                 <span className="block">
-                  {t("filterBar:editors.amount.max")}{" "}
-                  {t("filterBar:editors.amount.currencySuffix")}
+                  {t("filterBar:editors.amount.max")}
                 </span>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={formatCurrency(filters.amount_max ?? "0")}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, amount_max: e.target.value }))
-                  }
-                  onKeyDown={(e) =>
-                    handleUtilitaryAmountKeyDown(
-                      e,
-                      filters.amount_max ?? "0",
-                      (newVal: string) =>
-                        setFilters((f) => ({ ...f, amount_max: newVal }))
-                    )
-                  }
+                <AmountInput
+                  display="currency"
+                  value={filters.amount_max || ""}
+                  onValueChange={(next) => setFilters((f) => ({ ...f, amount_max: next }))}
+                  zeroAsEmpty
                 />
               </label>
             </div>
 
             <div className="flex justify-end gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => removeChip("amount")}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>
                 {t("filterBar:buttons.remove")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-white hover:bg-gray-50"
-                onClick={() => (setOpenEditor(null), applyFilters())}
-              >
+              <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => (setOpenEditor(null), applyFilters())}>
                 {t("filterBar:buttons.apply")}
               </Button>
             </div>
@@ -939,30 +763,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {configModalOpen && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
-            {/* Overlay to freeze content when toggling default */}
             {configBusy && (
               <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
                 <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <svg
-                    className="h-4 w-4 animate-spin text-gray-400"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                      opacity="0.25"
-                    />
-                    <path
-                      d="M21 12a9 9 0 0 0-9-9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
+                  <svg className="h-4 w-4 animate-spin text-gray-400" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.25" />
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" fill="none" />
                   </svg>
                   <span>{t("filterBar:configModal.loading")}</span>
                 </div>
@@ -970,9 +776,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             )}
 
             <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-              <h3 className="text-[14px] font-semibold text-gray-800">
-                {t("filterBar:configModal.title")}
-              </h3>
+              <h3 className="text-[14px] font-semibold text-gray-800">{t("filterBar:configModal.title")}</h3>
               <button
                 className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                 onClick={() => !configBusy && setConfigModalOpen(false)}
@@ -985,12 +789,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
             <div className={configBusy ? "pointer-events-none opacity-60" : ""}>
               <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
                 {scopedViews.length === 0 && (
-                  <div className="px-3 py-2 text-xs text-gray-500">
-                    {t("filterBar:configModal.empty")}
-                  </div>
+                  <div className="px-3 py-2 text-xs text-gray-500">{t("filterBar:configModal.empty")}</div>
                 )}
+
                 {scopedViews.map((v) => {
                   const isRenaming = renamingId === v.id;
+
                   return (
                     <div key={v.id} className="px-3 py-2 flex items-center gap-3">
                       <label className="inline-flex items-center gap-2">
@@ -998,34 +802,30 @@ const FilterBar: React.FC<FilterBarProps> = ({
                           checked={!!v.is_default}
                           size="small"
                           disabled={configBusy}
-                          onChange={() => {
-                            (async () => {
-                              try {
-                                setConfigBusy(true);
-                                if (v.is_default) {
-                                  await api.editEntryView(v.id, { is_default: false });
-                                } else {
-                                  await api.editEntryView(v.id, { is_default: true });
-                                  const others = scopedViews.filter(
-                                    (o) => o.id !== v.id && o.is_default
-                                  );
-                                  if (others.length) {
-                                    await Promise.all(
-                                      others.map((o) =>
-                                        api.editEntryView(o.id, { is_default: false })
-                                      )
-                                    );
-                                  }
+                          onChange={async () => {
+                            try {
+                              setConfigBusy(true);
+
+                              if (v.is_default) {
+                                await api.editEntryView(v.id, { is_default: false });
+                              } else {
+                                await api.editEntryView(v.id, { is_default: true });
+
+                                const others = scopedViews.filter((o) => o.id !== v.id && o.is_default);
+                                if (others.length) {
+                                  await Promise.all(others.map((o) => api.editEntryView(o.id, { is_default: false })));
                                 }
-                                await refreshViews();
-                              } catch (err) {
-                                console.error("Failed to toggle default view", err);
-                              } finally {
-                                setConfigBusy(false);
                               }
-                            })();
+
+                              await refreshViews();
+                            } catch (err) {
+                              console.error("Failed to toggle default view", err);
+                            } finally {
+                              setConfigBusy(false);
+                            }
                           }}
                         />
+
                         {isRenaming ? (
                           <input
                             className="border border-gray-300 rounded px-2 py-1 text-sm"
@@ -1035,6 +835,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         ) : (
                           <span className="text-sm text-gray-800">{v.name}</span>
                         )}
+
                         {v.is_default ? (
                           <span className="inline-flex items-center gap-1 text-[11px] text-amber-600">
                             <DefaultStarIcon className="w-3 h-3" />
@@ -1055,6 +856,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                                 const id = renamingId;
                                 const name = renamingName.trim();
                                 if (!id || !name) return;
+
                                 try {
                                   setConfigBusy(true);
                                   await api.editEntryView(id, { name });
@@ -1097,13 +899,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             {t("filterBar:configModal.rename")}
                           </Button>
                         )}
+
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={configBusy}
                           className="bg-white hover:bg-gray-50"
                           onClick={() => {
-                            const next = {
+                            const next: LocalFilters = {
                               ...(v.filters as LocalFilters),
                               settlement_status: !!v.settlement_status,
                             };
@@ -1112,6 +915,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         >
                           {t("filterBar:configModal.apply")}
                         </Button>
+
                         <Button
                           variant="outline"
                           size="sm"
@@ -1157,30 +961,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {saveModalOpen && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
           <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md max-h-[90vh] relative">
-            {/* Loading overlay when saving */}
             {saveBusy && (
               <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
                 <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <svg
-                    className="h-4 w-4 animate-spin text-gray-400"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                      opacity="0.25"
-                    />
-                    <path
-                      d="M21 12a9 9 0 0 0-9-9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
+                  <svg className="h-4 w-4 animate-spin text-gray-400" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.25" />
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" fill="none" />
                   </svg>
                   <span>{t("filterBar:saveModal.loading")}</span>
                 </div>
@@ -1188,9 +974,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             )}
 
             <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-              <h3 className="text-[14px] font-semibold text-gray-800">
-                {t("filterBar:saveModal.title")}
-              </h3>
+              <h3 className="text-[14px] font-semibold text-gray-800">{t("filterBar:saveModal.title")}</h3>
               <button
                 className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                 onClick={() => !saveBusy && setSaveModalOpen(false)}
@@ -1202,9 +986,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
             <div className={saveBusy ? "pointer-events-none opacity-60" : ""}>
               <div className="space-y-4 text-xs text-gray-700">
-                <p className="text-[12px] text-gray-600">
-                  {t("filterBar:saveModal.description")}
-                </p>
+                <p className="text-[12px] text-gray-600">{t("filterBar:saveModal.description")}</p>
 
                 <label className="block space-y-1">
                   <Input
@@ -1216,18 +998,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 </label>
 
                 <label className="inline-flex items-center gap-2">
-                  <Checkbox
-                    checked={saveDefault}
-                    size="small"
-                    onChange={(e) => setSaveDefault(e.target.checked)}
-                  />
+                  <Checkbox checked={saveDefault} size="small" onChange={(e) => setSaveDefault(e.target.checked)} />
                   <span>{t("filterBar:saveModal.setDefault")}</span>
                 </label>
 
                 <div className="space-y-2">
-                  <div className="font-semibold text-[12px]">
-                    {t("filterBar:saveModal.modeTitle")}
-                  </div>
+                  <div className="font-semibold text-[12px]">{t("filterBar:saveModal.modeTitle")}</div>
+
                   <div className="space-y-1">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1242,13 +1019,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       />
                       <span>{t("filterBar:saveModal.create")}</span>
                     </label>
+
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="save_mode"
-                        checked={saveMode === "overwrite"}
-                        onChange={() => setSaveMode("overwrite")}
-                      />
+                      <input type="radio" name="save_mode" checked={saveMode === "overwrite"} onChange={() => setSaveMode("overwrite")} />
                       <span>{t("filterBar:saveModal.overwrite")}</span>
                     </label>
                   </div>
@@ -1266,18 +1039,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         }}
                         getItemKey={(item) => item.id}
                         getItemLabel={(item) =>
-                          item.is_default
-                            ? `${item.name} (${t("filterBar:saveModal.defaultShort")})`
-                            : item.name
+                          item.is_default ? `${item.name} (${t("filterBar:saveModal.defaultShort")})` : item.name
                         }
                         buttonLabel={t("filterBar:saveModal.choosePlaceholder")}
                         singleSelect
                         hideCheckboxes
                         customStyles={{ maxHeight: "240px" }}
                       />
-                      <p className="text-[11px] text-gray-500">
-                        {t("filterBar:saveModal.overwriteHint")}
-                      </p>
+                      <p className="text-[11px] text-gray-500">{t("filterBar:saveModal.overwriteHint")}</p>
                     </div>
                   )}
                 </div>
@@ -1301,15 +1070,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   >
                     {t("filterBar:saveModal.cancel")}
                   </Button>
+
                   <Button
                     variant="outline"
                     size="sm"
                     className="bg-white hover:bg-gray-50"
-                    disabled={
-                      saveBusy ||
-                      !saveName.trim() ||
-                      (saveMode === "overwrite" && !overwriteId)
-                    }
+                    disabled={saveBusy || !saveName.trim() || (saveMode === "overwrite" && !overwriteId)}
                     onClick={async () => {
                       const name = saveName.trim();
                       if (!name) return;
@@ -1323,6 +1089,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                       try {
                         setSaveBusy(true);
+
                         if (saveMode === "overwrite" && overwriteId) {
                           await api.editEntryView(overwriteId, payload);
                         } else {
@@ -1331,9 +1098,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
                               v.name.toLowerCase() === name.toLowerCase() &&
                               v.settlement_status === !!filters.settlement_status
                           );
+
                           if (sameName) await api.editEntryView(sameName.id, payload);
                           else await api.addEntryView(payload);
                         }
+
                         await refreshViews();
                       } catch (err) {
                         console.error("Failed to save visualization", err);
@@ -1364,9 +1133,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
 /* ------------------------------- Subcomponents ------------------------------ */
 
-const QuickButton: React.FC<
-  React.ButtonHTMLAttributes<HTMLButtonElement>
-> = ({ className = "", ...props }) => (
+const QuickButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
+  className = "",
+  ...props
+}) => (
   <button
     {...props}
     className={`text-[11px] border border-gray-300 rounded px-2 py-[3px] bg-white hover:bg-gray-50 ${className}`}
@@ -1380,31 +1150,12 @@ const Chip: React.FC<{
   onRemove(): void;
 }> = ({ icon, label, onClick, onRemove }) => {
   const { t } = useTranslation(["filterBar"]);
+
   const Icon = () => {
-    if (icon === "calendar")
-      return (
-        <span className="text-[12px]" aria-hidden>
-          📅
-        </span>
-      );
-    if (icon === "bank")
-      return (
-        <span className="text-[12px]" aria-hidden>
-          🏦
-        </span>
-      );
-    if (icon === "accounts")
-      return (
-        <span className="text-[12px]" aria-hidden>
-          🧾
-        </span>
-      );
-    if (icon === "note")
-      return (
-        <span className="text-[12px]" aria-hidden>
-          📝
-        </span>
-      );
+    if (icon === "calendar") return <span className="text-[12px]" aria-hidden>📅</span>;
+    if (icon === "bank") return <span className="text-[12px]" aria-hidden>🏦</span>;
+    if (icon === "accounts") return <span className="text-[12px]" aria-hidden>🧾</span>;
+    if (icon === "note") return <span className="text-[12px]" aria-hidden>📝</span>;
     return null;
   };
 
@@ -1438,12 +1189,10 @@ const Popover: React.FC<{
 }> = ({ children, onClose, className }) => {
   const ref = useRef<HTMLDivElement>(null);
   useOutside(ref, onClose);
+
   return (
     <div className="absolute z-[99999] mt-2">
-      <div
-        ref={ref}
-        className={`rounded-md border border-gray-300 bg-white p-3 ${className || ""}`}
-      >
+      <div ref={ref} className={`rounded-md border border-gray-300 bg-white p-3 ${className || ""}`}>
         {children}
       </div>
     </div>
@@ -1462,22 +1211,13 @@ function isActionItem(x: MenuEntry): x is MenuActionItem {
 
 const MenuItemBtn = React.forwardRef<
   HTMLButtonElement,
-  {
-    label: React.ReactNode;
-    onClick(): void;
-    active?: boolean;
-    danger?: boolean;
-  }
+  { label: React.ReactNode; onClick(): void; active?: boolean; danger?: boolean }
 >(({ label, onClick, active, danger }, ref) => (
   <button
     ref={ref}
     className={`w-full text-left px-3 py-2 rounded-md text-sm
-                ${
-                  danger
-                    ? "text-red-600 hover:bg-rose-50 focus-visible:ring-rose-200"
-                    : "text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-300"
-                }
-                focus:outline-none focus-visible:ring-2 ${active ? "bg-gray-50" : ""}`}
+      ${danger ? "text-red-600 hover:bg-rose-50 focus-visible:ring-rose-200" : "text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-300"}
+      focus:outline-none focus-visible:ring-2 ${active ? "bg-gray-50" : ""}`}
     onClick={onClick}
   >
     {label}
@@ -1494,81 +1234,37 @@ const Menu: React.FC<{
   onItem?: (key: string) => void;
   emptyLabel?: string;
   align?: "left" | "right";
-}> = ({
-  roleLabel,
-  items,
-  activeIndex,
-  setActiveIndex,
-  onClose,
-  onItem,
-  emptyLabel,
-  align = "left",
-}) => {
+}> = ({ roleLabel, items, activeIndex, setActiveIndex, onClose, onItem, emptyLabel, align = "left" }) => {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    const btn = refs.current[activeIndex];
-    if (btn) btn.focus();
+    refs.current[activeIndex]?.focus();
   }, [activeIndex]);
 
   const actionableIdxs = useMemo(
-    () =>
-      items
-        .map((it, i) => ({ it, i }))
-        .filter(({ it }) => isActionItem(it))
-        .map(({ i }) => i),
+    () => items.map((it, i) => ({ it, i })).filter(({ it }) => isActionItem(it)).map(({ i }) => i),
     [items]
   );
 
-  const focusFirst = () => {
-    if (actionableIdxs.length) setActiveIndex(actionableIdxs[0]);
-  };
-  const focusLast = () => {
-    if (actionableIdxs.length)
-      setActiveIndex(actionableIdxs[actionableIdxs.length - 1]);
-  };
   const focusNext = (dir: 1 | -1) => {
     if (!actionableIdxs.length) return;
     const curr = actionableIdxs.indexOf(activeIndex);
     const base = curr === -1 ? (dir === 1 ? -1 : 1) : curr;
-    const next =
-      actionableIdxs[(base + dir + actionableIdxs.length) % actionableIdxs.length];
+    const next = actionableIdxs[(base + dir + actionableIdxs.length) % actionableIdxs.length];
     setActiveIndex(next);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-      return;
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      focusNext(1);
-      return;
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      focusNext(-1);
-      return;
-    }
-    if (e.key === "Home") {
-      e.preventDefault();
-      focusFirst();
-      return;
-    }
-    if (e.key === "End") {
-      e.preventDefault();
-      focusLast();
-      return;
-    }
+    if (e.key === "Escape") return (e.preventDefault(), onClose());
+    if (e.key === "ArrowDown") return (e.preventDefault(), focusNext(1));
+    if (e.key === "ArrowUp") return (e.preventDefault(), focusNext(-1));
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       const item = items[activeIndex];
       if (item && isActionItem(item)) {
         onClose();
         item.onAction?.();
-        if (onItem) onItem(item.key);
+        onItem?.(item.key);
       }
     }
   };
@@ -1596,7 +1292,7 @@ const Menu: React.FC<{
               onClick={() => {
                 onClose();
                 it.onAction?.();
-                if (onItem) onItem(it.key);
+                onItem?.(it.key);
               }}
               ref={(el) => {
                 refs.current[i] = el;

@@ -1,5 +1,5 @@
 // src/components/Modal/TransferenceModal.tsx
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 
@@ -7,9 +7,10 @@ import { api } from "src/api/requests";
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import { formatCurrency, handleAmountKeyDown } from "src/lib";
+import { formatCurrency } from "src/lib";
 import type { BankAccount } from "@/models/enterprise_structure/domain";
 import { DateInput } from "../ui/DateInput";
+import AmountInput from "../ui/AmountInput/AmountInput";
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -18,117 +19,129 @@ interface TransferenceModalProps {
 }
 
 type FormState = {
-  date: string;          // ISO (YYYY-MM-DD)
-  amount: string;        // string usada no input (R$)
-  source_bank: string;   // external_id do banco origem
-  dest_bank: string;     // external_id do banco destino
-  description: string;   // observação/opcional
+  date: string;        // ISO (YYYY-MM-DD)
+  amount: string;      // ✅ major decimal string: "1234.56"
+  source_bank: string; // external_id
+  dest_bank: string;   // external_id
+  description: string;
 };
 
-const initialForm: FormState = {
+const buildInitialForm = (): FormState => ({
   date: format(new Date(), "yyyy-MM-dd"),
   amount: "",
   source_bank: "",
   dest_bank: "",
   description: "",
-};
+});
 
 const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, onSave }) => {
   const { t } = useTranslation("transferenceModal");
 
-  const [formData, setFormData] = useState<FormState>(initialForm);
+  const [formData, setFormData] = useState<FormState>(() => buildInitialForm());
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const amountRef = useRef<HTMLInputElement>(null);
 
-  const resetForm = useCallback(() => setFormData(initialForm), []);
+  const amountRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const resetForm = useCallback(() => setFormData(buildInitialForm()), []);
 
   const handleClose = useCallback(() => {
     resetForm();
     onClose();
   }, [resetForm, onClose]);
 
-  // atalhos + focus + scroll lock
+  // Lock body scroll + hotkeys when open
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    if (!isOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
         e.preventDefault();
-        const formEl = document.getElementById("transferenceForm") as HTMLFormElement | null;
-        formEl?.requestSubmit();
+        handleClose();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        formRef.current?.requestSubmit();
       }
     };
 
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-      setTimeout(() => amountRef.current?.focus(), 50);
-    } else {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    }
+    window.addEventListener("keydown", onKeyDown);
+
+    // focus after paint
+    requestAnimationFrame(() => amountRef.current?.focus());
+
     return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [isOpen, handleClose]);
 
-  // carrega bancos (usa somente ativos)
+  // Load active banks (only when open)
   useEffect(() => {
     if (!isOpen) return;
+
+    let alive = true;
     (async () => {
       try {
         const { data } = await api.getBanks(true);
         const page = (data?.results ?? []) as BankAccount[];
-        setBanks(page);
+        if (alive) setBanks(page);
       } catch (err) {
         console.error("Erro ao buscar bancos:", err);
       }
     })();
+
+    return () => {
+      alive = false;
+    };
   }, [isOpen]);
 
-  // helpers de UI
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleBankChange = (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
-    const id = selected[0]?.id ?? "";
-    setFormData((prev) => ({ ...prev, [field]: id }));
-  };
+  const handleBankChange = useCallback(
+    (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
+      const id = selected[0]?.id ?? "";
+      setFormData((prev) => ({ ...prev, [field]: id }));
+    },
+    []
+  );
 
-  const swapBanks = () =>
-    setFormData((prev) => ({ ...prev, source_bank: prev.dest_bank, dest_bank: prev.source_bank }));
+  const swapBanks = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      source_bank: prev.dest_bank,
+      dest_bank: prev.source_bank,
+    }));
+  }, []);
+
+  const sortedBanks = useMemo(() => {
+    return [...banks].sort((a, b) => a.institution.localeCompare(b.institution));
+  }, [banks]);
 
   const bankOutOptions = useMemo(
-    () =>
-      banks
-        .filter((b) => b.id !== formData.dest_bank)
-        .slice()
-        .sort((a, b) => a.institution.localeCompare(b.institution)),
-    [banks, formData.dest_bank]
+    () => sortedBanks.filter((b) => b.id !== formData.dest_bank),
+    [sortedBanks, formData.dest_bank]
   );
 
   const bankInOptions = useMemo(
-    () =>
-      banks
-        .filter((b) => b.id !== formData.source_bank)
-        .slice()
-        .sort((a, b) => a.institution.localeCompare(b.institution)),
-    [banks, formData.source_bank]
+    () => sortedBanks.filter((b) => b.id !== formData.source_bank),
+    [sortedBanks, formData.source_bank]
   );
 
-  const amountCents = useMemo(
-    () => parseInt((formData.amount || "").replace(/\D/g, ""), 10) || 0,
-    [formData.amount]
+  const optionLabelFor = useCallback(
+    (b?: BankAccount) => (b ? `${b.institution} • ${b.account_number}` : ""),
+    []
   );
 
-  // label nas opções (somente institution + account_number)
-  const optionLabelFor = (b?: BankAccount) =>
-    b ? `${b.institution} • ${b.account_number}` : "";
-
-  // label mais completo apenas no rodapé
   const footerLabelFor = useCallback(
     (b?: BankAccount) =>
       b
@@ -147,39 +160,47 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     [banks, formData.dest_bank, footerLabelFor]
   );
 
-  const isValid =
-    amountCents > 0 &&
-    !!formData.date &&
-    !!formData.source_bank &&
-    !!formData.dest_bank &&
-    formData.source_bank !== formData.dest_bank;
+  const amountMajorNumber = useMemo(() => {
+    const n = Number(formData.amount);
+    return Number.isFinite(n) ? n : 0;
+  }, [formData.amount]);
 
-  // submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid || isSubmitting) return;
-    setIsSubmitting(true);
+  const isValid = useMemo(() => {
+    return (
+      amountMajorNumber > 0 &&
+      !!formData.date &&
+      !!formData.source_bank &&
+      !!formData.dest_bank &&
+      formData.source_bank !== formData.dest_bank
+    );
+  }, [amountMajorNumber, formData.date, formData.source_bank, formData.dest_bank]);
 
-    try {
-      const payload = {
-        amount: (amountCents / 100).toFixed(2), // "3000.00"
-        date: formData.date,                    // "YYYY-MM-DD"
-        description: formData.description || "",
-        source_bank: formData.source_bank,
-        dest_bank: formData.dest_bank,
-      };
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!isValid || isSubmitting) return;
 
-      await api.addTransference(payload);
+      setIsSubmitting(true);
+      try {
+        await api.addTransference({
+          amount: formData.amount, // ✅ already canonical "1234.56"
+          date: formData.date,
+          description: formData.description || "",
+          source_bank: formData.source_bank,
+          dest_bank: formData.dest_bank,
+        });
 
-      resetForm();
-      onSave();
-    } catch (err) {
-      console.error("Erro ao salvar transferência:", err);
-      window.alert(t("errors.save"));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        resetForm();
+        onSave();
+      } catch (err) {
+        console.error("Erro ao salvar transferência:", err);
+        window.alert(t("errors.save"));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData, isSubmitting, isValid, onSave, resetForm, t]
+  );
 
   if (!isOpen) return null;
 
@@ -191,7 +212,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         aria-label={t("aria.dialog")}
         className="bg-white border border-gray-200 rounded-lg shadow-xl w-[720px] max-w-[95vw] h-[450px] max-h-[90vh] overflow-hidden flex flex-col"
       >
-        {/* Header */}
         <header className="border-b border-gray-200 bg-white">
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -199,10 +219,15 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 TR
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("header.kind")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("header.title")}
+                </h1>
               </div>
             </div>
+
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
               onClick={handleClose}
@@ -214,30 +239,26 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
           </div>
         </header>
 
-        {/* Body */}
-        <form id="transferenceForm" onSubmit={handleSubmit} className="relative z-10 px-5 py-4 overflow-visible flex-1">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="relative z-10 px-5 py-4 overflow-visible flex-1"
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Data / Valor / Observação */}
             <DateInput
               label={t("fields.date")}
               value={formData.date}
-              onChange={(iso) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  date: iso,
-                }))
-              }
+              onChange={(iso) => setFormData((prev) => ({ ...prev, date: iso }))}
             />
 
-            <Input
+            <AmountInput
               ref={amountRef}
               label={t("fields.amount")}
-              name="amount"
-              type="text"
-              placeholder={t("placeholders.amount")}
-              value={formatCurrency(formData.amount)}
-              onKeyDown={(e) => handleAmountKeyDown(e, formData.amount, setFormData, true)}
+              id="amount-input"
+              value={formData.amount}
+              onValueChange={(next) => setFormData((prev) => ({ ...prev, amount: next }))}
               aria-label={t("fields.amount")}
+              zeroAsEmpty
             />
 
             <Input
@@ -245,14 +266,17 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               name="description"
               placeholder={t("placeholders.note")}
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleTextChange}
             />
 
-            {/* Banco de saída / trocar / Banco de entrada */}
             <SelectDropdown<BankAccount>
               label={t("fields.bankOut")}
               items={bankOutOptions}
-              selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
+              selected={
+                formData.source_bank
+                  ? bankOutOptions.filter((b) => b.id === formData.source_bank)
+                  : []
+              }
               onChange={(sel) => handleBankChange("source_bank", sel)}
               getItemKey={(b) => b.id}
               getItemLabel={optionLabelFor}
@@ -278,7 +302,11 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
             <SelectDropdown<BankAccount>
               label={t("fields.bankIn")}
               items={bankInOptions}
-              selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}
+              selected={
+                formData.dest_bank
+                  ? bankInOptions.filter((b) => b.id === formData.dest_bank)
+                  : []
+              }
               onChange={(sel) => handleBankChange("dest_bank", sel)}
               getItemKey={(b) => b.id}
               getItemLabel={optionLabelFor}
@@ -287,18 +315,19 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               customStyles={{ maxHeight: "180px" }}
             />
 
-            {formData.source_bank && formData.dest_bank && formData.source_bank === formData.dest_bank && (
-              <p className="md:col-span-3 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                {t("warnings.sameBank")}
-              </p>
-            )}
+            {formData.source_bank &&
+              formData.dest_bank &&
+              formData.source_bank === formData.dest_bank && (
+                <p className="md:col-span-3 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  {t("warnings.sameBank")}
+                </p>
+              )}
           </div>
         </form>
 
-        {/* Footer */}
         <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
           <div className="text-[12px] text-gray-600">
-            {amountCents > 0 ? (
+            {amountMajorNumber > 0 ? (
               <>
                 <b>{formatCurrency(formData.amount)}</b>
                 {bankOutLabel || bankInLabel ? (
@@ -319,7 +348,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
             <Button variant="cancel" type="button" onClick={handleClose}>
               {t("actions.cancel")}
             </Button>
-            <Button type="submit" form="transferenceForm" disabled={!isValid || isSubmitting}>
+            <Button type="submit" disabled={!isValid || isSubmitting}>
               {isSubmitting ? t("actions.saving") : t("actions.save")}
             </Button>
           </div>

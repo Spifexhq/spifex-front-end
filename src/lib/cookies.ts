@@ -194,6 +194,34 @@ export const LanguageCookie = {
   },
 };
 
+export const NumberFormatCookie = {
+  NAME: "app_number_format",
+  set(code: "EU" | "US"): void {
+    Cookies.set(this.NAME, code, { maxAge: 365 * 24 * 60 * 60, sameSite: "lax" });
+  },
+  get(): "EU" | "US" | null {
+    const v = Cookies.get(this.NAME);
+    return v === "EU" || v === "US" ? v : null;
+  },
+  remove(): void {
+    Cookies.remove(this.NAME);
+  },
+};
+
+export const DateFormatCookie = {
+  NAME: "app_date_format",
+  set(code: "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO"): void {
+    Cookies.set(this.NAME, code, { maxAge: 365 * 24 * 60 * 60, sameSite: "lax" });
+  },
+  get(): "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO" | null {
+    const v = Cookies.get(this.NAME);
+    return v === "DMY_SLASH" || v === "MDY_SLASH" || v === "YMD_ISO" ? v : null;
+  },
+  remove(): void {
+    Cookies.remove(this.NAME);
+  },
+};
+
 /**
  * Cookie de tema (light/dark)
  */

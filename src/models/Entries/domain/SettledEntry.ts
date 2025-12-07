@@ -55,6 +55,5 @@ export type SettledEntry = {
   bank: BankAccount | null;
 
   /** ✅ novo: saldo vindo do backend */
-  running_balance_minor?: number | null;
   running_balance?: string | null;
 };

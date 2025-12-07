@@ -9,36 +9,36 @@ import {
   ReferenceArea,
 } from "recharts";
 
+import { formatCurrency } from "src/lib";
+
 type Datum = { month: string | number; cumulative: number };
 
 export interface CumulativeAreaChartProps {
   data: Datum[];
   title?: string;
-  locale?: string;     // "pt-BR"
-  currency?: string;   // "BRL"
-  height?: number;     // default 256
+  height?: number; // default 256
   className?: string;
 }
 
 /* ---- Tokens -------------------------------------------------------------- */
-const C_PRIMARY = "#F97316";     // orange-500
-const C_AXIS    = "#111827";     // gray-900
-const fmtMoney  = (v: number, locale = "pt-BR", currency = "BRL") =>
-  v.toLocaleString(locale, { style: "currency", currency, minimumFractionDigits: 0 });
+const C_PRIMARY = "#F97316"; // orange-500
+const C_AXIS = "#111827"; // gray-900
+
+const fmtMoney = (v: number) => formatCurrency(v);
 
 /* Minimal hover tooltip (no cursor line) */
+type HoverTipPayload = Array<{ value?: number | string; name?: string; color?: string }>;
+
 const HoverTip: React.FC<{
   active?: boolean;
-  payload?: any[];
+  payload?: HoverTipPayload;
   label?: string | number;
-  locale?: string;
-  currency?: string;
   title?: string;
-}> = ({ active, payload = [], label, locale, currency, title }) => {
+}> = ({ active, payload = [], label, title }) => {
   if (!active || payload.length === 0) return null;
+
   const p = payload[0];
-  const value =
-    typeof p?.value === "number" ? fmtMoney(p.value, locale, currency) : p?.value ?? "";
+  const value = typeof p?.value === "number" ? fmtMoney(p.value) : String(p?.value ?? "");
 
   return (
     <div
@@ -60,6 +60,7 @@ const HoverTip: React.FC<{
       {label != null ? (
         <div style={{ color: "#6B7280", marginBottom: 4 }}>{String(label)}</div>
       ) : null}
+
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ width: 10, height: 10, background: C_PRIMARY, borderRadius: 2 }} />
         <span style={{ color: "#374151" }}>Cumulativo:</span>
@@ -69,11 +70,14 @@ const HoverTip: React.FC<{
   );
 };
 
+/** We only need activeLabel from the Recharts pointer state */
+type ChartPointerState = {
+  activeLabel?: string | number | null;
+} | null;
+
 const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
   data,
   title,
-  locale = "pt-BR",
-  currency = "BRL",
   height = 256,
   className,
 }) => {
@@ -103,68 +107,60 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
     return [data[a]?.month ?? null, data[b]?.month ?? null] as const;
   }, [dragStart, dragEnd, data, labelIndex]);
 
-  // Sum over the interval using cumulative deltas:
   // Δ = cum[j] - cum[i-1]  (if i === 0, just cum[j])
   const intervalSum = useMemo(() => {
     if (x1 == null || x2 == null) return null;
     const i = data.findIndex((d) => d.month === x1);
     const j = data.findIndex((d) => d.month === x2);
     if (i < 0 || j < 0) return null;
+
     const startIdx = Math.min(i, j);
     const endIdx = Math.max(i, j);
-    const endVal = data[endIdx].cumulative;
-    const prevVal = startIdx > 0 ? data[startIdx - 1].cumulative : 0;
+    const endVal = data[endIdx]?.cumulative ?? 0;
+    const prevVal = startIdx > 0 ? data[startIdx - 1]?.cumulative ?? 0 : 0;
     return endVal - prevVal;
   }, [x1, x2, data]);
 
   /* ----------------------- Interaction handlers ----------------------- */
-  const handleMouseDown = useCallback((state: any) => {
-    // clicking in empty region clears selection
-    if (!state?.activeLabel) {
-      clearSelection();
-      return;
-    }
-    setDragStart(state.activeLabel);
-    setDragEnd(state.activeLabel);
-    setIsDragging(true);
-  }, [clearSelection]);
+  const handleMouseDown = useCallback(
+    (state: ChartPointerState) => {
+      const label = state?.activeLabel ?? null;
 
-  const handleMouseMove = useCallback((state: any) => {
+      // clicking in empty region clears selection
+      if (label == null) {
+        clearSelection();
+        return;
+      }
+
+      setDragStart(label);
+      setDragEnd(label);
+      setIsDragging(true);
+    },
+    [clearSelection]
+  );
+
+  const handleMouseMove = useCallback((state: ChartPointerState) => {
     if (!isDragging) return;
-    if (state?.activeLabel != null) {
-      setDragEnd(state.activeLabel);
-    }
+    const label = state?.activeLabel ?? null;
+    if (label != null) setDragEnd(label);
   }, [isDragging]);
 
-  const handleMouseUp = useCallback(() => {
-    // Persist selection; do not clear.
-    setIsDragging(false);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    // If the user was dragging and leaves, keep what we already had.
-    setIsDragging(false);
-  }, []);
+  const handleMouseUp = useCallback(() => setIsDragging(false), []);
+  const handleMouseLeave = useCallback(() => setIsDragging(false), []);
 
   /* --------------------------- X ticks control --------------------------- */
-  // Prevent overlapping labels by asking Recharts to preserve ends and use a minTickGap.
-  // Additionally, if the series is very dense, thin ticks manually.
   const ticks = useMemo(() => {
     if (!data?.length) return [];
     const len = data.length;
     if (len <= 8) return data.map((d) => d.month);
-    // sample every ~ len/8 points
+
     const step = Math.ceil(len / 8);
     const sampled = data.filter((_, i) => i % step === 0).map((d) => d.month);
-    // ensure last tick is present
     if (sampled[sampled.length - 1] !== data[len - 1].month) sampled.push(data[len - 1].month);
     return sampled;
   }, [data]);
 
-  const yFormatter = useMemo(
-    () => (v: number) => fmtMoney(v, locale, currency),
-    [locale, currency]
-  );
+  const yFormatter = useMemo(() => (v: number) => fmtMoney(v), []);
 
   const noSelect: React.CSSProperties = {
     userSelect: "none",
@@ -184,15 +180,13 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
         if (e.key === "Escape") clearSelection();
       }}
       style={{ outline: "none", ...noSelect }}
-      // click outside to clear (when parent wants)
       onClick={(e) => {
-        // if selection exists and user clicks wrapper (not a drag), clear only when target is wrapper
-        // (keeps selection when user clicks inside chart to start another drag)
         const el = e.target as HTMLElement;
         if (el?.closest?.(".cum-area-chart") == null && (x1 || x2)) clearSelection();
       }}
     >
       {title ? <p className="text-[12px] font-medium mb-3">{title}</p> : null}
+
       <div className="w-full cum-area-chart" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
@@ -213,7 +207,6 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
               </filter>
             </defs>
 
-            {/* Clean axes only — no grid, no dashed lines, no cursor */}
             <XAxis
               dataKey="month"
               ticks={ticks}
@@ -231,27 +224,17 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
               width={72}
             />
 
-            {/* Persistent selection highlight */}
             {x1 != null && x2 != null ? (
-              <ReferenceArea
-                x1={x1}
-                x2={x2}
-                strokeOpacity={0}
-                fill={C_PRIMARY}
-                fillOpacity={0.08}
-              />
+              <ReferenceArea x1={x1} x2={x2} strokeOpacity={0} fill={C_PRIMARY} fillOpacity={0.08} />
             ) : null}
 
-            {/* Hover tooltip (no cursor/backdrop line) */}
             <Tooltip
               content={({ active, payload, label }) => (
                 <HoverTip
                   active={active}
-                  payload={payload}
+                  payload={payload as HoverTipPayload}
                   label={label}
                   title={title}
-                  locale={locale}
-                  currency={currency}
                 />
               )}
               cursor={false}
@@ -266,7 +249,7 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
               strokeWidth={2}
               fill="url(#cumFillOrange)"
               dot={false}
-              activeDot={{ r: 3 }}         // small solid dot on hover
+              activeDot={{ r: 3 }}
               isAnimationActive
               animationDuration={600}
               animationEasing="ease-out"
@@ -276,12 +259,11 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
         </ResponsiveContainer>
       </div>
 
-      {/* Interval summary badge (persists after mouse up) */}
       {x1 != null && x2 != null && intervalSum != null && (
         <div className="mt-2 inline-flex items-center gap-2 text-[12px] px-2 py-1 rounded-md border border-gray-200 bg-white shadow-sm">
           <span className="inline-flex w-2 h-2 rounded-sm" style={{ background: C_PRIMARY }} />
           <span>Período selecionado:</span>
-          <strong className="tabular-nums">{fmtMoney(intervalSum, locale, currency)}</strong>
+          <strong className="tabular-nums">{fmtMoney(intervalSum)}</strong>
           <button
             type="button"
             onClick={clearSelection}

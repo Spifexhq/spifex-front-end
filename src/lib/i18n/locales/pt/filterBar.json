@@ -45,9 +45,7 @@
     "txType": { "credit": "Receita", "debit": "Despesa" },
     "amount": {
       "min": "Mínimo",
-      "max": "Máximo",
-      "currencySuffix": "(R$)",
-      "placeholder": "R$ 0,00"
+      "max": "Máximo"
     }
   },
   "viewsMenu": {

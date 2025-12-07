@@ -45,9 +45,7 @@
     "txType": { "credit": "Einnahme", "debit": "Ausgabe" },
     "amount": {
       "min": "Minimum",
-      "max": "Maximum",
-      "currencySuffix": "(R$)",
-      "placeholder": "R$ 0,00"
+      "max": "Maximum"
     }
   },
   "viewsMenu": {
