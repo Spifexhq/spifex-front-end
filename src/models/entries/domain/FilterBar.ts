@@ -1,7 +1,6 @@
-// src/models/entries/domain/FilterBar.ts (or wherever LocalFilters is declared)
-import type { EntryFilters } from "../domain";
+// src/models/entries/domain/FilterBar.ts
+import type { EntryFilters } from "./EntryFilters";
 
-/** Chips & menus */
 export type ChipKey =
   | "date"
   | "banks"
@@ -10,17 +9,14 @@ export type ChipKey =
   | "tx_type"
   | "amount";
 
-/** LocalFilters: UI strings for amounts; arrays for pickers */
 export type LocalFilters =
   Omit<EntryFilters, "gla_id" | "bank_id" | "amount_min" | "amount_max"> & {
     gla_id: string[];
     bank_id: string[];
-    tx_type?: "credit" | "debit";
-    amount_min?: string;  // UI decimal string
-    amount_max?: string;  // UI decimal string
+    amount_min?: string;
+    amount_max?: string;
   };
 
-/** Saved visualization payload (no group_by) */
 export type Visualization = {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-// Modal.types.ts
+// src/components/Modal/Modal.types.ts
 import { Entry } from '@/models/entries/domain';
 
 export interface FormData {
@@ -34,7 +34,7 @@ export interface FormData {
 
   export type ModalType = 'credit' | 'debit';
   
-  export interface EntriesModalFormProps {
+  export interface EntriesModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: () => void;

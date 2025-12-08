@@ -31,6 +31,8 @@ const CashFlow = () => {
   const tableRef = useRef<CashFlowTableHandle>(null);
 
   const [filters, setFilters] = useState<EntryFilters | null>(null);
+  const filterBarHotkeysEnabled =
+    !isModalOpen && !isTransferenceModalOpen && !isSettlementModalOpen;
 
   const {
     banks,
@@ -100,7 +102,12 @@ const CashFlow = () => {
       <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
 
-          <FilterBar onApply={handleApplyFilters} bankActive={true} contextSettlement={false} />
+          <FilterBar
+            onApply={handleApplyFilters}
+            bankActive={true}
+            contextSettlement={false}
+            shortcutsEnabled={filterBarHotkeysEnabled}
+          />
 
           {filters && (
             <>

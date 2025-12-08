@@ -1,4 +1,4 @@
-// EntriesModalForm.tsx
+// src/components/Modal/EntriesModal.tsx
 // Money rule: amount is ALWAYS a MAJOR decimal string ("1234.56"), never minor cents.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -25,7 +25,7 @@ import { AmountInput } from "../ui/AmountInput";
 
 import type {
   FormData,
-  EntriesModalFormProps,
+  EntriesModalProps,
   PeriodOption,
   RecurrenceOption,
   Tab,
@@ -186,7 +186,7 @@ function focusFirstInteractive(wrapId?: string, amountRef?: React.RefObject<HTML
 
 /* -------------------------------- Component -------------------------------- */
 
-const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
+const EntriesModal: React.FC<EntriesModalProps> = ({
   isOpen,
   onClose,
   type,
@@ -1461,4 +1461,4 @@ const EntriesModalForm: React.FC<EntriesModalFormProps> = ({
   );
 };
 
-export default EntriesModalForm;
+export default EntriesModal;
