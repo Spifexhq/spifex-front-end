@@ -11,7 +11,7 @@ import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import Spinner from "src/components/ui/Loaders/Spinner";
 
 import { fetchAllCursor } from "src/lib/list";
-import { distributePercentages, formatCurrency, formatDateFromISO } from "src/lib";
+import { formatCurrency, formatDateFromISO } from "src/lib";
 
 import { api } from "src/api/requests";
 import { ApiError } from "@/models/Api";
@@ -612,12 +612,30 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const handleDepartmentChange = useCallback(
     (updated: Department[]) => {
       if (isFinancialLocked) return;
+
       setSelectedDepartments(updated);
-      const ids = updated.map((d) => String(d.id));
-      const percs = distributePercentages(ids);
+
+      const departmentIds = updated.map((d) => String(d.id));
+      const count = departmentIds.length;
+
+      // Even split with rounding, last item adjusted to guarantee total = 100.00
+      const base = count > 0 ? Number((100 / count).toFixed(2)) : 0;
+      const percentages = Array.from({ length: count }, () => base);
+
+      const total = percentages.reduce((sum, v) => sum + v, 0);
+      const diff = Number((100 - total).toFixed(2));
+
+      if (count > 0) {
+        percentages[count - 1] = Number((percentages[count - 1] + diff).toFixed(2));
+      }
+
       setFormData((prev) => ({
         ...prev,
-        costCenters: { ...prev.costCenters, departments: ids, department_percentage: percs },
+        costCenters: {
+          ...prev.costCenters,
+          departments: departmentIds,
+          department_percentage: percentages.map((n) => n.toFixed(2)),
+        },
       }));
     },
     [isFinancialLocked]
