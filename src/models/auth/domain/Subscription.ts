@@ -1,7 +1,6 @@
 // models/auth/domain/Subscription.ts
 export interface Subscription {
-  id: number;
-  organization_id: number;
+  organization_id: string;
   stripe_subscription_id: string;
   status: string;
   plan_price_id: string;
@@ -19,7 +18,6 @@ export interface Subscription {
     description: string | null;
   } | null;
   customer: {
-    id: number;
     stripe_customer_id: string;
     default_payment_method_id: string | null;
     created_at: string;
