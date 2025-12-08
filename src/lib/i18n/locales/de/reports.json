@@ -1,48 +1,44 @@
 {
   "pageTitle": "Berichte",
   "title": "Cashflow-Berichte",
-  "buttons": {
-    "refresh": "Aktualisieren"
-  },
+  "buttons": { "refresh": "Aktualisieren" },
   "loading": "Berichtsdaten werden geladen…",
-  "errors": {
-    "fetch": "Berichtsdaten konnten nicht geladen werden."
-  },
+  "errors": { "fetch": "Berichtsdaten konnten nicht geladen werden." },
   "kpis": {
-    "consolidatedBalance": "Konsolidierter Bestand",
+    "consolidatedBalance": "Konsolidierter Saldo",
     "bankSum": "Summe der Bankkonten",
     "inPeriod": "Zuflüsse (Zeitraum)",
     "outPeriod": "Abflüsse (Zeitraum)",
-    "netPeriod": "Ergebnis (Zeitraum)",
+    "netPeriod": "Netto (Zeitraum)",
     "mom": "M/M",
     "mtdIn": "MTD: Zuflüsse",
     "mtdOut": "MTD: Abflüsse",
-    "mtdNet": "MTD: Ergebnis",
+    "mtdNet": "MTD: Netto",
     "currentMonth": "Aktueller Monat",
-    "in": "Zuflüsse",
-    "out": "Abflüsse",
-    "settlementRate": "Abschlussquote",
-    "loadedUniverse": "Im geladenen Umfang"
+    "in": "Zufluss",
+    "out": "Abfluss",
+    "settlementRate": "Ausgleichsquote",
+    "loadedUniverse": "Im geladenen Datenumfang"
   },
   "alerts": {
-    "overdueTitle": "Überfällig (nicht abgeschlossen)",
+    "overdueTitle": "Überfällig (nicht ausgeglichen)",
     "toReceive": "Forderungen",
     "toPay": "Verbindlichkeiten",
     "next7": "Nächste 7 Tage",
     "next30": "Nächste 30 Tage"
   },
   "runway": {
-    "avgOutflow": "Durchschn. monatlicher Abfluss",
-    "estimated": "Geschätzte Runway",
+    "avgOutflow": "Durchschnittlicher monatlicher Abfluss",
+    "estimated": "Geschätzte Reichweite",
     "months": "{{value}} Monat(e)"
   },
   "charts": {
-    "cumulativeTitle": "Kumuliertes Guthaben (Periodenabgrenzung)",
-    "barsTitle": "Zufluss vs. Abfluss (monatlich)",
+    "cumulativeTitle": "Kumuliertes Saldo (Periodenabgrenzung)",
+    "barsTitle": "Zufluss vs Abfluss (monatlich)",
     "pieTitle": "Ausgabenverteilung nach Kategorie",
-    "inflow": "Zuflüsse",
-    "outflow": "Abflüsse",
-    "net": "Ergebnis"
+    "inflow": "Zufluss",
+    "outflow": "Abfluss",
+    "net": "Netto"
   },
   "tables": {
     "overdueTitle": "Top 10 überfällige Buchungen",
@@ -55,13 +51,13 @@
     "receiveLabel": "Erhalten"
   },
   "insights": {
-    "title": "Insights",
-    "runwayLow": "Geschätzte Runway unter 3 Monaten. Abflüsse reduzieren oder Liquidität stärken.",
-    "runwayHigh": "Komfortable Runway (≥ 6 Monate). Investitionen ggf. bedacht vorziehen.",
-    "mtdNegative": "Monatsergebnis negativ. Größte Ausgabenkategorien priorisiert prüfen.",
-    "mtdPositive": "Monatsergebnis positiv. Erwartete Zuflüsse im Blick behalten.",
-    "overduePressure": "Überfällige Verbindlichkeiten > Forderungen — kurzfristiges Liquiditätsrisiko.",
-    "overdueReceivables": "Relevante überfällige Forderungen. Fokus auf Top-10-Inkasso.",
-    "mom": "Monatsveränderung (M/M) des Monatsergebnisses: {{value}}."
+    "title": "Erkenntnisse",
+    "runwayLow": "Geschätzte Reichweite unter 3 Monaten. Erwägen Sie, Abflüsse zu senken oder Liquidität zu stärken.",
+    "runwayHigh": "Komfortable Reichweite (≥ 6 Monate). Sie können Investitionen vorsichtig vorziehen.",
+    "mtdNegative": "Negatives Ergebnis in diesem Monat. Prüfen Sie die Ausgabenstruktur und gehen Sie die größten Kategorien an.",
+    "mtdPositive": "Positives Ergebnis in diesem Monat. Behalten Sie erwartete Forderungen im Blick, um das Tempo zu halten.",
+    "overduePressure": "Überfällige Verbindlichkeiten übersteigen Forderungen — Risiko kurzfristiger Liquiditätsbelastung.",
+    "overdueReceivables": "Relevante überfällige Forderungen. Priorisieren Sie das Inkasso bei den 10 größten Verzögerungen.",
+    "mom": "Monat-zu-Monat-Änderung des Monatsergebnisses: {{value}}."
   }
 }

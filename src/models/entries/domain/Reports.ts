@@ -1,6 +1,11 @@
 // models/entries/domain/reports.ts
 
-export type Money = number; // ✅ decimal major units (e.g. 10.25)
+export enum TxType {
+  DEBIT = -1,
+  CREDIT = 1,
+}
+
+export type Money = number | string; // API sends decimal strings ("123.45"), UI parses
 
 export type ReportsSummary = {
   totals: {
@@ -9,6 +14,7 @@ export type ReportsSummary = {
     net: Money;
     settlement_rate: number; // 0..1
   };
+
   mtd: { in: Money; out: Money; net: Money };
   mom: { change: number | null; infinite: boolean; prev_net: Money };
 
@@ -22,7 +28,14 @@ export type ReportsSummary = {
   };
 
   pie: { name: string; value: Money }[];
-  overdue_items: { id: string; date: string; desc: string; type: "Receber" | "Pagar"; amount: Money }[];
+
+  overdue_items: {
+    id: string;
+    date: string; // "YYYY-MM-DD"
+    desc: string;
+    tx_type: TxType; // -1 / 1
+    amount: Money;
+  }[];
 };
 
 export type ReportsSummaryResponse = {

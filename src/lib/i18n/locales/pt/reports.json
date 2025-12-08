@@ -1,16 +1,12 @@
 {
   "pageTitle": "Relatórios",
   "title": "Relatórios de Fluxo de Caixa",
-  "buttons": {
-    "refresh": "Atualizar"
-  },
+  "buttons": { "refresh": "Atualizar" },
   "loading": "Carregando dados do relatório…",
-  "errors": {
-    "fetch": "Erro ao buscar dados do relatório."
-  },
+  "errors": { "fetch": "Falha ao carregar os dados do relatório." },
   "kpis": {
     "consolidatedBalance": "Saldo consolidado",
-    "bankSum": "Somatório de contas bancárias",
+    "bankSum": "Soma das contas bancárias",
     "inPeriod": "Entradas (período)",
     "outPeriod": "Saídas (período)",
     "netPeriod": "Resultado (período)",
@@ -25,20 +21,20 @@
     "loadedUniverse": "No universo carregado"
   },
   "alerts": {
-    "overdueTitle": "Vencidos (não liquidados)",
-    "toReceive": "A Receber",
-    "toPay": "A Pagar",
+    "overdueTitle": "Em atraso (não liquidado)",
+    "toReceive": "A receber",
+    "toPay": "A pagar",
     "next7": "Próximos 7 dias",
     "next30": "Próximos 30 dias"
   },
   "runway": {
-    "avgOutflow": "Média mensal de saídas",
-    "estimated": "Runway estimada",
+    "avgOutflow": "Saída média mensal",
+    "estimated": "Runway estimado",
     "months": "{{value}} mês(es)"
   },
   "charts": {
-    "cumulativeTitle": "Saldo acumulado (por competência)",
-    "barsTitle": "Entradas x Saídas (mensal)",
+    "cumulativeTitle": "Saldo acumulado (competência)",
+    "barsTitle": "Entradas vs Saídas (mensal)",
     "pieTitle": "Distribuição de despesas por categoria",
     "inflow": "Entradas",
     "outflow": "Saídas",
@@ -50,18 +46,18 @@
     "description": "Descrição",
     "type": "Tipo",
     "amount": "Valor",
-    "noOverdue": "Nenhum lançamento em atraso",
+    "noOverdue": "Sem lançamentos em atraso",
     "payLabel": "Pagar",
     "receiveLabel": "Receber"
   },
   "insights": {
     "title": "Insights",
-    "runwayLow": "Runway estimada abaixo de 3 meses. Considere reduzir saídas ou reforçar caixa.",
-    "runwayHigh": "Runway confortável (≥ 6 meses). Avalie antecipar investimentos com critério.",
-    "mtdNegative": "Resultado do mês negativo. Revise a pizza de despesas para atacar maiores categorias.",
-    "mtdPositive": "Resultado do mês positivo. Monitore recebimentos previstos para manter o ritmo.",
-    "overduePressure": "Pagamentos vencidos > recebimentos vencidos — risco de pressão de caixa no curtíssimo prazo.",
-    "overdueReceivables": "Há recebimentos vencidos relevantes. Foque a cobrança nos top 10 atrasos.",
-    "mom": "Variação M/M do resultado do mês: {{value}}."
+    "runwayLow": "Runway estimado abaixo de 3 meses. Considere reduzir saídas ou reforçar o caixa.",
+    "runwayHigh": "Runway confortável (≥ 6 meses). Considere avançar investimentos com cautela.",
+    "mtdNegative": "Resultado negativo neste mês. Revise as despesas para atacar as maiores categorias.",
+    "mtdPositive": "Resultado positivo neste mês. Acompanhe recebíveis previstos para manter o ritmo.",
+    "overduePressure": "A pagar em atraso supera a receber — risco de pressão de caixa no curto prazo.",
+    "overdueReceivables": "Há recebíveis relevantes em atraso. Foque cobrança nos 10 maiores atrasos.",
+    "mom": "Variação mês a mês do resultado do mês: {{value}}."
   }
 }

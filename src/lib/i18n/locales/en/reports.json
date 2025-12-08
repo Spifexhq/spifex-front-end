@@ -1,13 +1,9 @@
 {
   "pageTitle": "Reports",
   "title": "Cash Flow Reports",
-  "buttons": {
-    "refresh": "Refresh"
-  },
+  "buttons": { "refresh": "Refresh" },
   "loading": "Loading report data…",
-  "errors": {
-    "fetch": "Failed to fetch report data."
-  },
+  "errors": { "fetch": "Failed to fetch report data." },
   "kpis": {
     "consolidatedBalance": "Consolidated balance",
     "bankSum": "Sum of bank accounts",

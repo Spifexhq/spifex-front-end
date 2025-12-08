@@ -1,8 +1,8 @@
 // src/pages/Reports/index.tsx
-// ✅ treat API money as decimal (string/number) — no /100
-// ✅ no need to define currency or locale — formatCurrency handles it
+// ✅ API money is MAJOR decimals (string/number) — no /100
+// ✅ overdue_items uses tx_type integer (-1 debit, +1 credit) — UI maps to i18n labels
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   ResponsiveContainer,
@@ -11,12 +11,11 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  BarChart,
+  ComposedChart,
   Bar,
   Line,
   PieChart,
   Pie,
-  Cell,
 } from "recharts";
 
 import Button from "src/components/ui/Button";
@@ -44,32 +43,14 @@ type MinimalTipProps = {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Helpers                                                                     */
+/* Constants                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const startDate = dayjs()
-  .startOf("month")
-  .subtract(12, "month")
-  .format("YYYY-MM-DD");
-const endDate = dayjs()
-  .startOf("month")
-  .add(11, "month")
-  .endOf("month")
-  .format("YYYY-MM-DD");
+const START_DATE = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
+const END_DATE = dayjs().startOf("month").add(11, "month").endOf("month").format("YYYY-MM-DD");
 
-const parseMoney = (v: unknown): number | null => {
-  if (v === null || v === undefined || v === "") return null;
-  const s = typeof v === "number" ? String(v) : String(v).trim();
-  const n = Number(s.replace(",", ".")); // backend should be "1234.56"
-  return Number.isFinite(n) ? n : null;
-};
-
-const fmtMoney = (v: unknown) => {
-  const n = parseMoney(v);
-  return n === null ? "—" : formatCurrency(n);
-};
-
-const asPct = (v: number) => `${(v * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
+const TX_DEBIT = -1; // Pagar
+const TX_CREDIT = 1; // Receber
 
 const C_POS = "#0B5FFF";
 const C_NEG = "#D92D20";
@@ -77,7 +58,31 @@ const C_NET = "#0E9384";
 const C_ACC = "#111827";
 const C_GRID = "rgba(17,24,39,0.12)";
 
-/* Custom tooltip (minimal) */
+/* -------------------------------------------------------------------------- */
+/* Money helpers                                                                */
+/* -------------------------------------------------------------------------- */
+
+const parseMoney = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === "") return null;
+  const s = typeof v === "number" ? String(v) : String(v).trim();
+  const n = Number(s.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+
+const toNum0 = (v: unknown) => parseMoney(v) ?? 0;
+
+const fmtMoney = (v: unknown) => {
+  const n = parseMoney(v);
+  return n === null ? "—" : formatCurrency(n);
+};
+
+const asPct = (v: number) =>
+  `${(v * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
+
+/* -------------------------------------------------------------------------- */
+/* Tooltip                                                                      */
+/* -------------------------------------------------------------------------- */
+
 const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, title }) => {
   if (!active || payload.length === 0) return null;
 
@@ -110,15 +115,17 @@ const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, ti
           />
           <span style={{ color: "#374151" }}>{p.name ?? ""}:</span>
           <span className="tabular-nums">
-            {typeof p.value === "number"
-              ? formatCurrency(p.value)
-              : fmtMoney(p.value)}
+            {typeof p.value === "number" ? formatCurrency(p.value) : fmtMoney(p.value)}
           </span>
         </div>
       ))}
     </div>
   );
 };
+
+/* -------------------------------------------------------------------------- */
+/* Page                                                                          */
+/* -------------------------------------------------------------------------- */
 
 const ReportsPage: React.FC = () => {
   const { t } = useTranslation(["reports"]);
@@ -133,7 +140,11 @@ const ReportsPage: React.FC = () => {
 
   const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
 
-  const params = useMemo(() => ({ date_from: startDate, date_to: endDate }), []);
+  const params = useMemo(() => ({ date_from: START_DATE, date_to: END_DATE }), []);
+  const periodLabel = useMemo(
+    () => `${dayjs(START_DATE).format("MMM/YY")} → ${dayjs(END_DATE).format("MMM/YY")}`,
+    []
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -153,83 +164,113 @@ const ReportsPage: React.FC = () => {
     void fetchData();
   }, [fetchData]);
 
+  const isBusy = loading || loadingBanks;
+
   /* ------------------------------ Derived data ----------------------------- */
 
-  const totalsIn = data?.totals.in ?? 0;
-  const totalsOutAbs = data?.totals.out_abs ?? 0;
-  const totalsNet = data?.totals.net ?? 0;
-  const settlementRate = data?.totals.settlement_rate ?? 0;
+  const derived = useMemo(() => {
+    const d = data;
 
-  const mtdIn = data?.mtd.in ?? 0;
-  const mtdOut = data?.mtd.out ?? 0;
-  const mtdNet = data?.mtd.net ?? 0;
+    const totalsIn = d?.totals.in ?? 0;
+    const totalsOutAbs = d?.totals.out_abs ?? 0;
+    const totalsNet = d?.totals.net ?? 0;
+    const settlementRate = d?.totals.settlement_rate ?? 0;
 
-  const momInfinite = data?.mom.infinite ?? false;
-  const momChange = momInfinite ? Infinity : (data?.mom.change ?? 0);
+    const mtdIn = d?.mtd.in ?? 0;
+    const mtdOut = d?.mtd.out ?? 0;
+    const mtdNet = d?.mtd.net ?? 0;
 
-  const overdueRec = data?.overdue.rec ?? 0;
-  const overduePay = data?.overdue.pay ?? 0;
+    const momInfinite = d?.mom.infinite ?? false;
+    const momChange = momInfinite ? Infinity : (d?.mom.change ?? 0);
 
-  const next7Rec = data?.next7.rec ?? 0;
-  const next7Pay = data?.next7.pay ?? 0;
-  const next30Rec = data?.next30.rec ?? 0;
-  const next30Pay = data?.next30.pay ?? 0;
+    const overdueRec = d?.overdue.rec ?? 0;
+    const overduePay = d?.overdue.pay ?? 0;
 
-  // ✅ already decimals from API
-  const monthlyBars = (data?.monthly.bars ?? []).map((d) => ({
-    key: d.key,
-    month: d.month,
-    inflow: Number(d.inflow || 0),
-    outflow: Number(d.outflow || 0),
-    net: Number(d.net || 0),
-  }));
+    const next7Rec = d?.next7.rec ?? 0;
+    const next7Pay = d?.next7.pay ?? 0;
 
-  const monthlyCumulative = (data?.monthly.cumulative ?? []).map((d) => ({
-    key: d.key,
-    month: d.month,
-    cumulative: Number(d.cumulative || 0),
-  }));
+    const next30Rec = d?.next30.rec ?? 0;
+    const next30Pay = d?.next30.pay ?? 0;
 
-  const pieData = (data?.pie ?? []).map((p) => ({
-    name: p.name,
-    value: Number(p.value || 0),
-  }));
+    const monthlyBars = (d?.monthly.bars ?? []).map((x) => ({
+      key: x.key,
+      month: x.month,
+      inflow: toNum0(x.inflow),
+      outflow: toNum0(x.outflow),
+      net: toNum0(x.net),
+    }));
 
-  const overdueItems = (data?.overdue_items ?? []).map((it) => ({
-    ...it,
-    date: formatDateFromISO(it.date),
-    amount: Number(it.amount || 0),
-  }));
+    const monthlyCumulative = (d?.monthly.cumulative ?? []).map((x) => ({
+      key: x.key,
+      month: x.month,
+      cumulative: toNum0(x.cumulative),
+    }));
 
-  const avgMonthlyOutflowAbs =
-    monthlyBars.length === 0
-      ? 0
-      : monthlyBars.reduce((acc, x) => acc + Math.abs(x.outflow || 0), 0) / monthlyBars.length;
+    const pieData = (d?.pie ?? []).map((p) => ({
+      name: p.name,
+      value: toNum0(p.value),
+    }));
 
-  const runwayMonths =
-    avgMonthlyOutflowAbs > 0
-      ? Number(totalConsolidatedBalance ?? 0) / avgMonthlyOutflowAbs
-      : Infinity;
+    const overdueItems = (d?.overdue_items ?? []).map((it) => ({
+      ...it,
+      date: formatDateFromISO(it.date),
+      amount: toNum0(it.amount),
+      tx_type: typeof it.tx_type === "number" ? it.tx_type : Number(it.tx_type),
+    }));
+
+    const avgMonthlyOutflowAbs =
+      monthlyBars.length === 0
+        ? 0
+        : monthlyBars.reduce((acc, x) => acc + Math.abs(x.outflow), 0) / monthlyBars.length;
+
+    const runwayMonths =
+      avgMonthlyOutflowAbs > 0
+        ? toNum0(totalConsolidatedBalance ?? 0) / avgMonthlyOutflowAbs
+        : Infinity;
+
+    return {
+      totalsIn,
+      totalsOutAbs,
+      totalsNet,
+      settlementRate,
+      mtdIn,
+      mtdOut,
+      mtdNet,
+      momChange,
+      overdueRec,
+      overduePay,
+      next7Rec,
+      next7Pay,
+      next30Rec,
+      next30Pay,
+      monthlyBars,
+      monthlyCumulative,
+      pieData,
+      overdueItems,
+      avgMonthlyOutflowAbs,
+      runwayMonths,
+    };
+  }, [data, totalConsolidatedBalance]);
 
   const insights = useMemo(() => {
     const lines: string[] = [];
 
-    if (Number.isFinite(runwayMonths) && runwayMonths < 3) lines.push(t("insights.runwayLow"));
-    else if (Number.isFinite(runwayMonths) && runwayMonths >= 6) lines.push(t("insights.runwayHigh"));
+    if (Number.isFinite(derived.runwayMonths) && derived.runwayMonths < 3) lines.push(t("insights.runwayLow"));
+    else if (Number.isFinite(derived.runwayMonths) && derived.runwayMonths >= 6) lines.push(t("insights.runwayHigh"));
 
-    if (mtdNet < 0) lines.push(t("insights.mtdNegative"));
-    else if (mtdNet > 0) lines.push(t("insights.mtdPositive"));
+    if (toNum0(derived.mtdNet) < 0) lines.push(t("insights.mtdNegative"));
+    else if (toNum0(derived.mtdNet) > 0) lines.push(t("insights.mtdPositive"));
 
-    if (overduePay > overdueRec) lines.push(t("insights.overduePressure"));
-    else if (overdueRec > 0) lines.push(t("insights.overdueReceivables"));
+    if (toNum0(derived.overduePay) > toNum0(derived.overdueRec)) lines.push(t("insights.overduePressure"));
+    else if (toNum0(derived.overdueRec) > 0) lines.push(t("insights.overdueReceivables"));
 
-    if (Number.isFinite(momChange) && momChange !== 0) {
-      const sign = momChange >= 0 ? "+" : "";
-      lines.push(t("insights.mom", { value: `${sign}${asPct(momChange)}` }));
+    if (Number.isFinite(derived.momChange) && derived.momChange !== 0) {
+      const sign = derived.momChange >= 0 ? "+" : "";
+      lines.push(t("insights.mom", { value: `${sign}${asPct(derived.momChange)}` }));
     }
 
     return lines;
-  }, [runwayMonths, mtdNet, overduePay, overdueRec, momChange, t]);
+  }, [derived, t]);
 
   const cardCls = "border border-gray-300 rounded-md bg-white px-3 py-2";
 
@@ -239,14 +280,14 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-white text-gray-900">
-      <main className={"flex-1 transition-all duration-300"}>
-        <TopProgress active={loading || loadingBanks} variant="top" topOffset={64} />
+      <main className="flex-1 transition-all duration-300">
+        <TopProgress active={isBusy} variant="top" topOffset={64} />
 
         <div className="mt-[15px] mb-[15px] w-full px-6 md:px-10 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-semibold">{t("title")}</h1>
             <div className="flex gap-2">
-              <Button variant="common" onClick={fetchData}>
+              <Button variant="common" onClick={fetchData} disabled={isBusy}>
                 {t("buttons.refresh")}
               </Button>
             </div>
@@ -254,7 +295,9 @@ const ReportsPage: React.FC = () => {
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
-          {!loading && !loadingBanks && !error && data && (
+          {isBusy && !error && !data && <p className="text-sm text-gray-600">{t("loading")}</p>}
+
+          {!isBusy && !error && data && (
             <>
               {/* KPI Cards */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -271,21 +314,17 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.inPeriod")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_POS }}>
-                    {fmtMoney(totalsIn)}
+                    {fmtMoney(derived.totalsIn)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">
-                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
-                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{periodLabel}</p>
                 </div>
 
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.outPeriod")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_NEG }}>
-                    -{fmtMoney(totalsOutAbs)}
+                    -{fmtMoney(derived.totalsOutAbs)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">
-                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
-                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{periodLabel}</p>
                 </div>
 
                 <div className={cardCls}>
@@ -293,37 +332,37 @@ const ReportsPage: React.FC = () => {
                     <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.netPeriod")}</p>
                     <span
                       className={`text-[11px] ${
-                        Number.isFinite(momChange)
-                          ? momChange >= 0
+                        Number.isFinite(derived.momChange)
+                          ? derived.momChange >= 0
                             ? "text-green-600"
                             : "text-red-600"
                           : "text-gray-500"
                       }`}
                     >
                       {t("kpis.mom")}{" "}
-                      {Number.isFinite(momChange) ? (momChange >= 0 ? "+" : "") + asPct(momChange) : "—"}
+                      {Number.isFinite(derived.momChange)
+                        ? (derived.momChange >= 0 ? "+" : "") + asPct(derived.momChange)
+                        : "—"}
                     </span>
                   </div>
                   <p
                     className={`mt-1 text-lg font-semibold tabular-nums ${
-                      totalsNet >= 0 ? "text-gray-900" : "text-red-700"
+                      toNum0(derived.totalsNet) >= 0 ? "text-gray-900" : "text-red-700"
                     }`}
                   >
-                    {totalsNet >= 0 ? "+" : ""}
-                    {fmtMoney(totalsNet)}
+                    {toNum0(derived.totalsNet) >= 0 ? "+" : ""}
+                    {fmtMoney(derived.totalsNet)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">
-                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
-                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">{periodLabel}</p>
                 </div>
               </section>
 
-              {/* KPIs Operacionais */}
+              {/* Operational KPIs */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdIn")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_POS }}>
-                    {fmtMoney(mtdIn)}
+                    {fmtMoney(derived.mtdIn)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.currentMonth")}</p>
                 </div>
@@ -331,7 +370,7 @@ const ReportsPage: React.FC = () => {
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdOut")}</p>
                   <p className="mt-1 text-lg font-semibold" style={{ color: C_NEG }}>
-                    -{fmtMoney(mtdOut)}
+                    -{fmtMoney(derived.mtdOut)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.currentMonth")}</p>
                 </div>
@@ -341,44 +380,44 @@ const ReportsPage: React.FC = () => {
                     <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.mtdNet")}</p>
                     <span className="text-[11px] text-gray-500">
                       {t("kpis.mom")}{" "}
-                      {Number.isFinite(momChange)
-                        ? (mtdNet >= 0 ? "+" : "") + asPct(Math.abs(momChange))
+                      {Number.isFinite(derived.momChange)
+                        ? (toNum0(derived.mtdNet) >= 0 ? "+" : "") + asPct(Math.abs(derived.momChange))
                         : "—"}
                     </span>
                   </div>
                   <p
                     className={`mt-1 text-lg font-semibold tabular-nums ${
-                      mtdNet >= 0 ? "text-gray-900" : "text-red-700"
+                      toNum0(derived.mtdNet) >= 0 ? "text-gray-900" : "text-red-700"
                     }`}
                   >
-                    {mtdNet >= 0 ? "+" : ""}
-                    {fmtMoney(mtdNet)}
+                    {toNum0(derived.mtdNet) >= 0 ? "+" : ""}
+                    {fmtMoney(derived.mtdNet)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">
-                    {t("kpis.in")} {fmtMoney(mtdIn)} • {t("kpis.out")} -{fmtMoney(mtdOut)}
+                    {t("kpis.in")} {fmtMoney(derived.mtdIn)} • {t("kpis.out")} -{fmtMoney(derived.mtdOut)}
                   </p>
                 </div>
 
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.settlementRate")}</p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums">{asPct(settlementRate)}</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">{asPct(derived.settlementRate)}</p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.loadedUniverse")}</p>
                 </div>
               </section>
 
-              {/* Alertas de Curto Prazo */}
+              {/* Short-term alerts */}
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("alerts.overdueTitle")}</p>
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
-                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(overdueRec)}</p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(derived.overdueRec)}</p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
                       <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                        {fmtMoney(overduePay)}
+                        {fmtMoney(derived.overduePay)}
                       </p>
                     </div>
                   </div>
@@ -389,12 +428,12 @@ const ReportsPage: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
-                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(next7Rec)}</p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(derived.next7Rec)}</p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
                       <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                        {fmtMoney(next7Pay)}
+                        {fmtMoney(derived.next7Pay)}
                       </p>
                     </div>
                   </div>
@@ -405,62 +444,56 @@ const ReportsPage: React.FC = () => {
                   <div className="flex items-end gap-6">
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toReceive")}</p>
-                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(next30Rec)}</p>
+                      <p className="text-lg font-semibold text-gray-900 tabular-nums">{fmtMoney(derived.next30Rec)}</p>
                     </div>
                     <div>
                       <p className="text-[12px] text-gray-600">{t("alerts.toPay")}</p>
                       <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                        {fmtMoney(next30Pay)}
+                        {fmtMoney(derived.next30Pay)}
                       </p>
                     </div>
                   </div>
                 </div>
               </section>
 
-              {/* Runway + Acumulado */}
+              {/* Runway + cumulative */}
               <section className="grid grid-cols-1 xl:grid-cols-3 gap-3">
                 <div className={cardCls}>
                   <p className="text-[11px] uppercase tracking-wide text-gray-600 mb-1">{t("runway.avgOutflow")}</p>
                   <p className="text-lg font-semibold" style={{ color: C_NEG }}>
-                    -{fmtMoney(avgMonthlyOutflowAbs)}
+                    -{fmtMoney(derived.avgMonthlyOutflowAbs)}
                   </p>
                   <p className="mt-2 text-[11px] text-gray-600">{t("runway.estimated")}</p>
                   <p className="text-lg font-semibold tabular-nums">
-                    {Number.isFinite(runwayMonths) ? t("runway.months", { value: runwayMonths.toFixed(1) }) : "—"}
+                    {Number.isFinite(derived.runwayMonths)
+                      ? t("runway.months", { value: derived.runwayMonths.toFixed(1) })
+                      : "—"}
                   </p>
                 </div>
 
                 <div className="xl:col-span-2 border border-gray-300 rounded-md bg-white px-3 py-2">
-                  <CumulativeAreaChart
-                    data={monthlyCumulative}
-                    title={t("charts.cumulativeTitle")}
-                    height={256}
-                  />
+                  <CumulativeAreaChart data={derived.monthlyCumulative} title={t("charts.cumulativeTitle")} height={256} />
                 </div>
               </section>
 
-              {/* Barras Entradas x Saídas x Resultado */}
+              {/* Bars: inflow vs outflow vs net */}
               <section className="border border-gray-300 rounded-md bg-white px-3 py-2">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[12px] font-medium">{t("charts.barsTitle")}</p>
-                  <span className="text-[11px] text-gray-500">
-                    {dayjs(startDate).format("MMM/YY")} → {dayjs(endDate).format("MMM/YY")}
-                  </span>
+                  <span className="text-[11px] text-gray-500">{periodLabel}</span>
                 </div>
+
                 <div className="w-full h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyBars}>
+                    <ComposedChart data={derived.monthlyBars}>
                       <CartesianGrid strokeDasharray="3 3" stroke={C_GRID} />
                       <XAxis dataKey="month" tick={{ fill: C_ACC, fontSize: 12 }} />
-                      <YAxis
-                        tick={{ fill: C_ACC, fontSize: 12 }}
-                        tickFormatter={(v: number) => formatCurrency(v)}
-                      />
+                      <YAxis tick={{ fill: C_ACC, fontSize: 12 }} tickFormatter={(v: number) => formatCurrency(v)} />
                       <Tooltip
                         content={({ active, payload, label }) => (
                           <MinimalTip
                             active={active}
-                            payload={payload as TipDatum[]}
+                            payload={payload as unknown as TipDatum[]}
                             label={label}
                             title={t("charts.barsTitle")}
                           />
@@ -471,12 +504,12 @@ const ReportsPage: React.FC = () => {
                       <Bar dataKey="inflow" name={t("charts.inflow")} radius={[4, 4, 0, 0]} fill={C_POS} />
                       <Bar dataKey="outflow" name={t("charts.outflow")} radius={[4, 4, 0, 0]} fill={C_NEG} />
                       <Line type="monotone" dataKey="net" name={t("charts.net")} stroke={C_NET} strokeWidth={2} dot={false} />
-                    </BarChart>
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </div>
               </section>
 
-              {/* Pizza + Tabela Atrasos */}
+              {/* Pie + overdue table */}
               <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <div className="border border-gray-300 rounded-md bg-white px-3 py-2">
                   <p className="text-[12px] font-medium mb-3">{t("charts.pieTitle")}</p>
@@ -487,18 +520,14 @@ const ReportsPage: React.FC = () => {
                           content={({ active, payload, label }) => (
                             <MinimalTip
                               active={active}
-                              payload={payload as TipDatum[]}
+                              payload={payload as unknown as TipDatum[]}
                               label={label}
                               title={t("charts.pieTitle")}
                             />
                           )}
                         />
                         <Legend />
-                        <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100}>
-                          {pieData.map((_, i) => (
-                            <Cell key={i} />
-                          ))}
-                        </Pie>
+                        <Pie data={derived.pieData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -517,33 +546,40 @@ const ReportsPage: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {overdueItems.length === 0 && (
+                        {derived.overdueItems.length === 0 && (
                           <tr>
                             <td colSpan={4} className="px-3 py-6 text-center text-gray-500">
                               {t("tables.noOverdue")}
                             </td>
                           </tr>
                         )}
-                        {overdueItems.map((it) => (
-                          <tr key={String(it.id)} className="border-t">
-                            <td className="px-3 py-2">{it.date}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{it.desc}</td>
-                            <td className="px-3 py-2 text-center">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs ${
-                                  it.type === t("tables.payLabel")
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-blue-100 text-blue-700"
-                                }`}
-                              >
-                                {it.type}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 text-right tabular-nums">
-                              {fmtMoney(it.amount)}
-                            </td>
-                          </tr>
-                        ))}
+
+                        {derived.overdueItems.map((it) => {
+                          const isPay = it.tx_type === TX_DEBIT;
+                          const isReceive = it.tx_type === TX_CREDIT;
+
+                          return (
+                            <tr key={String(it.id)} className="border-t">
+                              <td className="px-3 py-2">{it.date}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{it.desc}</td>
+                              <td className="px-3 py-2 text-center">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs ${
+                                    isPay ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+                                  }`}
+                                  title={String(it.tx_type)}
+                                >
+                                  {isPay
+                                    ? t("tables.payLabel")
+                                    : isReceive
+                                      ? t("tables.receiveLabel")
+                                      : String(it.tx_type)}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-right tabular-nums">{fmtMoney(it.amount)}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
