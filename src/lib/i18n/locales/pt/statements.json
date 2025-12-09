@@ -1,0 +1,78 @@
+{
+  "title": "Extratos Bancários",
+  "header": {
+    "settings": "Finanças",
+    "title": "Extratos bancários"
+  },
+  "badge": { "syncing": "A sincronizar…" },
+  "btn": {
+    "upload": "Carregar PDFs",
+    "send": "Enviar",
+    "remove": "Remover",
+    "sendAll": "Enviar todos",
+    "clearQueue": "Limpar fila",
+    "applyFilters": "Aplicar filtros",
+    "clearFilters": "Limpar"
+  },
+  "dnd": {
+    "text": "Arraste e largue PDF(s) aqui, ou",
+    "click": "clique para selecionar",
+    "hint": "Dica: use Ctrl/⌘ + U para abrir o seletor."
+  },
+  "queue": { "title": "Fila de upload ({{count}})" },
+  "filters": {
+    "searchLabel": "Pesquisar por nome do ficheiro",
+    "placeholder": "ex.: itau_outubro.pdf",
+    "status": "Estado",
+    "bank": "Conta",
+    "statusPick": "Selecionar estado",
+    "bankPick": "Filtrar por conta"
+  },
+  "statuses": {
+    "uploaded": "Carregado",
+    "processing": "A processar",
+    "ready": "Pronto",
+    "failed": "Falhou"
+  },
+  "list": {
+    "title": "Extratos carregados ({{count}})",
+    "empty": "Nenhum extrato encontrado."
+  },
+  "row": {
+    "accountOptional": "Conta (opcional)",
+    "accountButton": "Associar a uma conta"
+  },
+  "actions": {
+    "download": "Descarregar",
+    "analyze": "Analisar",
+    "delete": "Eliminar"
+  },
+  "confirm": {
+    "deleteText": "Eliminar este extrato? Esta ação não pode ser anulada.",
+    "confirmLabel": "Eliminar",
+    "cancelLabel": "Cancelar"
+  },
+  "toast": {
+    "banksFetchError": "Falha ao carregar contas bancárias.",
+    "listFetchError": "Falha ao obter extratos.",
+    "nonPdfIgnored": "Ficheiro ignorado (não é PDF): {{name}}",
+    "uploadFail": "Falha ao carregar o extrato.",
+    "analysisStarted": "Análise iniciada. O estado será atualizado em breve.",
+    "analysisFail": "Não foi possível iniciar a análise.",
+    "deleteFail": "Falha ao eliminar o extrato.",
+    "uploadOk": "Upload concluído.",
+    "deleteOk": "Extrato eliminado com sucesso."
+  },
+  "aria": {
+    "uploadTrigger": "Selecionar ficheiros (⌘/Ctrl+U)",
+    "progress": "Progresso do upload"
+  },
+  "meta": {
+    "chip": {
+      "uploaded": "carregado",
+      "processing": "a processar",
+      "ready": "pronto",
+      "failed": "falhou"
+    }
+  }
+}

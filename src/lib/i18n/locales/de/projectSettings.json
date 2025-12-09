@@ -1,0 +1,62 @@
+{
+  "title": "Projekte",
+  "header": { "settings": "Einstellungen", "projects": "Projekte" },
+  "badge": { "syncing": "Synchronisiere…" },
+  "section": { "list": "Projektliste" },
+  "search": {
+    "placeholder": "Nach Name oder Code suchen…",
+    "aria": "Projekte durchsuchen",
+    "button": "Suchen"
+  },
+  "row": {
+    "codePrefix": "CODE:",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "untitled": "(ohne Titel)"
+  },
+  "types": {
+    "internal": "Intern",
+    "client": "Kunde",
+    "research": "Forschung",
+    "operational": "Operativ",
+    "marketing": "Marketing",
+    "product": "Produkt",
+    "it": "IT",
+    "event": "Event",
+    "capex": "CapEx"
+  },
+  "btn": {
+    "addProject": "Projekt hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "retry": "Erneut versuchen"
+  },
+  "btnLabel": { "type": "Typ auswählen" },
+  "field": {
+    "name": "Projektname",
+    "code": "Code",
+    "type": "Projekttyp",
+    "description": "Beschreibung",
+    "isActive": "Aktives Projekt"
+  },
+  "modal": {
+    "createTitle": "Projekt hinzufügen",
+    "editTitle": "Projekt bearbeiten",
+    "close": "Schließen"
+  },
+  "confirm": { "deleteTitle": "Projekt \"{{name}}\" löschen?" },
+  "empty": "Keine Projekte gefunden.",
+  "errors": {
+    "loadFailedTitle": "Laden fehlgeschlagen",
+    "saveError": "Projekt konnte nicht gespeichert werden.",
+    "detailError": "Details konnten nicht geladen werden.",
+    "deleteError": "Projekt konnte nicht gelöscht werden.",
+    "confirmFailed": "Bestätigung fehlgeschlagen."
+  },
+  "toast": {
+    "saved": "Projekt gespeichert.",
+    "deleted": "Projekt gelöscht."
+  }
+}

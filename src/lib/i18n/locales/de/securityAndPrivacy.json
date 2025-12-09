@@ -1,0 +1,35 @@
+{
+  "title": "Sicherheit & Datenschutz",
+  "header": {
+    "settings": "Einstellungen",
+    "title": "Sicherheit & Datenschutz"
+  },
+  "section": {
+    "access": "Zugang & Anmeldedaten"
+  },
+  "field": {
+    "password": "Passwort",
+    "lastChange": "Letzte Änderung:",
+    "never": "nie",
+    "current": "Aktuelles Passwort",
+    "new": "Neues Passwort",
+    "confirm": "Neues Passwort bestätigen"
+  },
+  "btn": {
+    "changePassword": "Passwort ändern",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "modal": {
+    "title": "Passwort ändern",
+    "close": "Schließen"
+  },
+  "toast": {
+    "success": "Passwort erfolgreich geändert.",
+    "changeError": "Passwort konnte nicht geändert werden.",
+    "unexpected": "Unerwarteter Fehler.",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "samePassword": "Das neue Passwort darf nicht dem aktuellen Passwort entsprechen.",
+    "weakPassword": "Das neue Passwort erfüllt nicht die Mindestanforderungen."
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "title": "Entitäten",
+  "header": { "settings": "Einstellungen", "entities": "Entitäten" },
+  "section": { "list": "Entitätenliste" },
+  "search": {
+    "placeholder": "Nach Name oder Alias suchen…",
+    "aria": "Entitäten suchen",
+    "button": "Suchen"
+  },
+  "types": { "client": "Kunde", "supplier": "Lieferant", "employee": "Mitarbeiter" },
+  "row": { "inactive": "• Inaktiv", "untitled": "(ohne Namen)" },
+  "btn": {
+    "add": "Entität hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "retry": "Erneut versuchen",
+    "confirmDelete": "Löschen"
+  },
+  "sections": { "address": "Adresse", "bank": "Bankdaten" },
+  "field": {
+    "full_name": "Vollständiger Name",
+    "alias_name": "Handelsname / Alias",
+    "entity_type": "Entitätstyp",
+    "is_active": "Aktive Entität",
+    "ssn_tax_id": "CPF",
+    "ein_tax_id": "CNPJ",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "street": "Straße",
+    "street_number": "Nummer",
+    "city": "Stadt",
+    "state": "Bundesland",
+    "postal_code": "Postleitzahl",
+    "country": "Land",
+    "bank_name": "Bank",
+    "bank_branch": "Filiale",
+    "checking_account": "Konto",
+    "account_holder_tax_id": "Kontoinhaber (CPF/CNPJ)",
+    "account_holder_name": "Name des Kontoinhabers"
+  },
+  "modal": { "createTitle": "Entität hinzufügen", "editTitle": "Entität bearbeiten", "close": "Schließen" },
+  "empty": "Keine Entitäten gefunden.",
+  "confirm": { "deleteTitle": "Entität \"{{name}}\" löschen?" },
+  "errors": {
+    "loadFailedTitle": "Laden fehlgeschlagen",
+    "saveError": "Entität konnte nicht gespeichert werden.",
+    "deleteError": "Entität konnte nicht gelöscht werden.",
+    "detailError": "Details konnten nicht geladen werden.",
+    "confirmFailed": "Bestätigung fehlgeschlagen."
+  },
+  "toast": { "saveOk": "Entität gespeichert.", "deleteOk": "Entität entfernt." }
+}

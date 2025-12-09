@@ -1,0 +1,78 @@
+{
+  "title": "Relevés Bancaires",
+  "header": {
+    "settings": "Finance",
+    "title": "Relevés bancaires"
+  },
+  "badge": { "syncing": "Synchronisation…" },
+  "btn": {
+    "upload": "Importer des PDF",
+    "send": "Envoyer",
+    "remove": "Retirer",
+    "sendAll": "Tout envoyer",
+    "clearQueue": "Vider la file",
+    "applyFilters": "Appliquer les filtres",
+    "clearFilters": "Effacer"
+  },
+  "dnd": {
+    "text": "Glissez-déposez des PDF ici, ou",
+    "click": "cliquez pour sélectionner",
+    "hint": "Astuce : utilisez Ctrl/⌘ + U pour ouvrir le sélecteur."
+  },
+  "queue": { "title": "File d’envoi ({{count}})" },
+  "filters": {
+    "searchLabel": "Rechercher par nom de fichier",
+    "placeholder": "ex. : itau_octobre.pdf",
+    "status": "Statut",
+    "bank": "Compte",
+    "statusPick": "Choisir un statut",
+    "bankPick": "Filtrer par compte"
+  },
+  "statuses": {
+    "uploaded": "Importé",
+    "processing": "En cours",
+    "ready": "Prêt",
+    "failed": "Échec"
+  },
+  "list": {
+    "title": "Relevés importés ({{count}})",
+    "empty": "Aucun relevé trouvé."
+  },
+  "row": {
+    "accountOptional": "Compte (optionnel)",
+    "accountButton": "Associer à un compte"
+  },
+  "actions": {
+    "download": "Télécharger",
+    "analyze": "Analyser",
+    "delete": "Supprimer"
+  },
+  "confirm": {
+    "deleteText": "Supprimer ce relevé ? Cette action est irréversible.",
+    "confirmLabel": "Supprimer",
+    "cancelLabel": "Annuler"
+  },
+  "toast": {
+    "banksFetchError": "Impossible de charger les comptes bancaires.",
+    "listFetchError": "Impossible de récupérer les relevés.",
+    "nonPdfIgnored": "Fichier ignoré (pas un PDF) : {{name}}",
+    "uploadFail": "Échec de l’import du relevé.",
+    "analysisStarted": "Analyse lancée. Le statut sera mis à jour bientôt.",
+    "analysisFail": "Impossible de lancer l’analyse.",
+    "deleteFail": "Échec de la suppression du relevé.",
+    "uploadOk": "Import terminé.",
+    "deleteOk": "Relevé supprimé avec succès."
+  },
+  "aria": {
+    "uploadTrigger": "Sélectionner des fichiers (⌘/Ctrl+U)",
+    "progress": "Progression de l’import"
+  },
+  "meta": {
+    "chip": {
+      "uploaded": "importé",
+      "processing": "en cours",
+      "ready": "prêt",
+      "failed": "échec"
+    }
+  }
+}

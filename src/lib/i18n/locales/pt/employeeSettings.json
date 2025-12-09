@@ -1,0 +1,52 @@
+{
+  "title": "Funcionários",
+  "header": {
+    "settings": "Definições",
+    "employees": "Funcionários"
+  },
+  "section": {
+    "list": "Lista de funcionários"
+  },
+  "field": {
+    "name": "Nome",
+    "email": "E-mail",
+    "tempPassword": "Palavra-passe temporária",
+    "confirmPassword": "Confirmar palavra-passe",
+    "groups": "Grupos"
+  },
+  "badge": {
+    "syncing": "A sincronizar…"
+  },
+  "btn": {
+    "addEmployee": "Adicionar funcionário",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "btnLabel": {
+    "groups": "Selecionar grupos"
+  },
+  "modal": {
+    "createTitle": "Adicionar funcionário",
+    "editTitle": "Editar funcionário",
+    "close": "Fechar"
+  },
+  "empty": "Não foram encontrados funcionários.",
+  "confirm": {
+    "delete": "Eliminar o funcionário \"{{name}}\"?"
+  },
+  "errors": {
+    "fetchError": "Não foi possível obter os dados.",
+    "loadEmployeeError": "Não foi possível carregar os dados do funcionário.",
+    "saveError": "Não foi possível guardar o funcionário.",
+    "deleteError": "Não foi possível eliminar o funcionário.",
+    "confirmFailed": "Não foi possível confirmar a ação."
+  },
+  "toast": {
+    "passwordMismatch": "As palavras-passe não coincidem.",
+    "weakPassword": "A palavra-passe não cumpre os requisitos mínimos.",
+    "saveOk": "Funcionário guardado.",
+    "deleteOk": "Funcionário eliminado."
+  }
+}

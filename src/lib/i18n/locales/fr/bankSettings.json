@@ -1,0 +1,50 @@
+{
+  "title": "Banques",
+  "header": { "settings": "Paramètres", "title": "Banques" },
+  "section": { "list": "Comptes bancaires" },
+  "empty": "Aucun compte bancaire pour le moment.",
+  "btn": {
+    "addBank": "Ajouter une banque",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "selectAccountType": "Sélectionner le type de compte"
+  },
+  "field": {
+    "institution": "Banque",
+    "accountType": "Type de compte",
+    "branch": "Agence",
+    "accountNumber": "Compte",
+    "iban": "IBAN",
+    "initialBalance": "Solde initial",
+    "isActive": "Compte actif"
+  },
+  "accountType": {
+    "checking": "Courant",
+    "savings": "Épargne",
+    "investment": "Investissement",
+    "cash": "Espèces"
+  },
+  "modal": {
+    "createTitle": "Ajouter une banque",
+    "editTitle": "Modifier la banque",
+    "close": "Fermer"
+  },
+  "confirm": {
+    "delete": "Supprimer le compte « {{name}} » ?",
+    "confirmLabel": "Supprimer",
+    "cancelLabel": "Annuler"
+  },
+  "errors": {
+    "fetchError": "Impossible de récupérer les banques.",
+    "saveError": "Impossible d’enregistrer la banque.",
+    "deleteError": "Impossible de supprimer la banque.",
+    "detailError": "Impossible de charger les détails.",
+    "confirmFailed": "Impossible de confirmer l’action."
+  },
+  "toast": {
+    "saveOk": "Compte bancaire enregistré.",
+    "deleteOk": "Compte bancaire supprimé."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "title": "Employés",
+  "header": {
+    "settings": "Paramètres",
+    "employees": "Employés"
+  },
+  "section": {
+    "list": "Liste des employés"
+  },
+  "field": {
+    "name": "Nom",
+    "email": "E-mail",
+    "tempPassword": "Mot de passe temporaire",
+    "confirmPassword": "Confirmer le mot de passe",
+    "groups": "Groupes"
+  },
+  "badge": {
+    "syncing": "Synchronisation…"
+  },
+  "btn": {
+    "addEmployee": "Ajouter un employé",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "btnLabel": {
+    "groups": "Sélectionner des groupes"
+  },
+  "modal": {
+    "createTitle": "Ajouter un employé",
+    "editTitle": "Modifier l’employé",
+    "close": "Fermer"
+  },
+  "empty": "Aucun employé trouvé.",
+  "confirm": {
+    "delete": "Supprimer l’employé « {{name}} » ?"
+  },
+  "errors": {
+    "fetchError": "Impossible de récupérer les données.",
+    "loadEmployeeError": "Impossible de charger les données de l’employé.",
+    "saveError": "Impossible d’enregistrer l’employé.",
+    "deleteError": "Impossible de supprimer l’employé.",
+    "confirmFailed": "Impossible de confirmer l’action."
+  },
+  "toast": {
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "weakPassword": "Le mot de passe ne respecte pas les exigences minimales.",
+    "saveOk": "Employé enregistré.",
+    "deleteOk": "Employé supprimé."
+  }
+}

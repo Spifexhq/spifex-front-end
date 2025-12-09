@@ -1,0 +1,35 @@
+{
+  "title": "Segurança e privacidade",
+  "header": {
+    "settings": "Definições",
+    "title": "Segurança e privacidade"
+  },
+  "section": {
+    "access": "Acesso e credenciais"
+  },
+  "field": {
+    "password": "Palavra-passe",
+    "lastChange": "Última alteração:",
+    "never": "nunca",
+    "current": "Palavra-passe atual",
+    "new": "Nova palavra-passe",
+    "confirm": "Confirmar nova palavra-passe"
+  },
+  "btn": {
+    "changePassword": "Alterar palavra-passe",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "modal": {
+    "title": "Alterar palavra-passe",
+    "close": "Fechar"
+  },
+  "toast": {
+    "success": "Palavra-passe alterada com sucesso.",
+    "changeError": "Não foi possível alterar a palavra-passe.",
+    "unexpected": "Erro inesperado.",
+    "passwordMismatch": "As palavras-passe não coincidem.",
+    "samePassword": "A nova palavra-passe não pode ser igual à palavra-passe atual.",
+    "weakPassword": "A nova palavra-passe não cumpre os requisitos mínimos."
+  }
+}

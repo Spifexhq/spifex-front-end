@@ -1,0 +1,52 @@
+{
+  "title": "Inventário",
+  "header": { "settings": "Definições", "inventory": "Inventário" },
+  "badge": { "syncing": "A sincronizar…" },
+  "section": { "list": "Itens de inventário" },
+  "search": {
+    "placeholder": "Pesquisar por nome ou SKU…",
+    "aria": "Pesquisar itens",
+    "button": "Pesquisar"
+  },
+  "row": {
+    "skuPrefix": "SKU:",
+    "qtyPrefix": "Qtd:",
+    "untitled": "(sem título)"
+  },
+  "btn": {
+    "addItem": "Adicionar item",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "retry": "Tentar novamente"
+  },
+  "field": {
+    "sku": "SKU",
+    "name": "Nome",
+    "description": "Descrição",
+    "uom": "Unidade (UoM)",
+    "uomPlaceholder": "ex.: un, cx, kg, l…",
+    "qty": "Quantidade em stock",
+    "isActive": "Item ativo"
+  },
+  "modal": {
+    "createTitle": "Adicionar item",
+    "editTitle": "Editar item",
+    "close": "Fechar"
+  },
+  "confirm": { "deleteTitle": "Eliminar o item \"{{name}}\"?" },
+  "empty": "Nenhum item encontrado.",
+  "errors": {
+    "loadFailedTitle": "Falha ao carregar",
+    "saveError": "Falha ao guardar o item.",
+    "deleteError": "Falha ao eliminar o item.",
+    "detailError": "Falha ao carregar os detalhes.",
+    "confirmFailed": "Falha ao confirmar."
+  },
+  "toast": {
+    "saveOk": "Item criado.",
+    "updateOk": "Item atualizado.",
+    "deleteOk": "Item eliminado."
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "title": "Sachkonten",
+  "header": { "section": "Einstellungen", "title": "Sachkonten" },
+  "categories": {
+    "operationalRevenue": "Betriebliche Erträge",
+    "nonOperationalRevenue": "Außerordentliche Erträge",
+    "operationalExpense": "Betriebliche Aufwendungen",
+    "nonOperationalExpense": "Außerordentliche Aufwendungen"
+  },
+  "buttons": {
+    "add": "Konto hinzufügen",
+    "options": "Optionen",
+    "downloadPdf": "Sachkonten (PDF) herunterladen",
+    "downloadPdfDisabled": "Keine Konten vorhanden",
+    "resetAll": "Sachkonten zurücksetzen",
+    "deletingAll": "Wird gelöscht…",
+    "expandAll": "Alle ausklappen",
+    "collapseAll": "Alle einklappen",
+    "viewList": "Als Liste anzeigen",
+    "viewAccordion": "Als Akkordeon anzeigen",
+    "clear": "Zurücksetzen",
+    "search": "Suchen",
+    "filterCategory": "Nach Kategorie filtern",
+    "selectCategory": "Kategorie auswählen",
+    "selectSubcategory": "Unterkategorie auswählen",
+    "toggleNewSub": "+",
+    "toggleNewSubCancel": "Abbrechen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "runSearchAria": "Suchen"
+  },
+  "filters": {
+    "placeholder": "Nach Konto, Code, Kategorie oder Unterkategorie suchen…",
+    "category": "Kategorie"
+  },
+  "list": {
+    "all": "Alle Konten",
+    "empty": "Keine Konten gefunden.",
+    "groupEmpty": "Keine Konten gefunden."
+  },
+  "tags": {
+    "code": "Code",
+    "credit": "Haben",
+    "debit": "Soll",
+    "inactive": "Inaktiv",
+    "noAccount": "(kein Name)",
+    "noGroup": "(Keine Kategorie)",
+    "noSubgroup": "(Kein Untergruppe)"
+  },
+  "modal": {
+    "createTitle": "Konto hinzufügen",
+    "editTitle": "Konto bearbeiten",
+    "account": "Sachkonto",
+    "code": "Code (optional)",
+    "codePlaceholder": "z. B. 3-0001",
+    "subcategory": "Unterkategorie",
+    "subcategoryNew": "Neue Unterkategorie",
+    "active": "Aktives Konto",
+    "defaultTxLabel": "Standard-Buchungsart:",
+    "defaultTxHint": "Wählen Sie eine Kategorie, um die Standard-Buchungsart festzulegen."
+  },
+  "confirm": {
+    "deleteOne": "Konto \"{{account}}\" löschen?",
+    "deleteAll": "Möchten Sie ALLE Konten löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+  },
+  "toast": {
+    "saved": "Konto gespeichert.",
+    "saveError": "Konto konnte nicht gespeichert werden.",
+    "deleteSuccess": "Konto gelöscht.",
+    "deleteError": "Konto konnte nicht gelöscht werden.",
+    "deleteAllSuccess": "Kontenplan zurückgesetzt.",
+    "deleteAllError": "Alle Konten konnten nicht gelöscht werden.",
+    "pdfOk": "PDF erstellt.",
+    "pdfError": "Unerwarteter Fehler beim Erstellen des PDFs.",
+    "confirmFailed": "Bestätigung fehlgeschlagen."
+  },
+  "pdf": { "company": "Spifex", "title": "Kontenplan" }
+}

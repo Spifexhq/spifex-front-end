@@ -1,13 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings/LedgerAccountsGate.tsx
- * Logic (refactored):
- *  - CSV/XLSX / Manual are sent raw to backend import endpoint.
- *  - Backend parses:
- *      - CSV: CATEGORY,SUBGROUP,ACCOUNT (categories 1..4)
- *      - XLSX: official template check + _ledger_data A1:C10000
- *      - Manual: "CATEGORY;SUBGROUP;ACCOUNT" per line
- *  - Standard (personal|business) calls backend to apply JSON templates.
- *  - Template files (CSV/XLSX) are downloaded from backend endpoints.
+ * i18n: namespace "ledgerAccounts"
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState } from "react";
@@ -33,11 +26,11 @@ function getInitials() {
 
 const LedgerAccountsGate: React.FC = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("ledgerAccountsGate");
 
   /* --------- Page meta --------- */
   useEffect(() => {
-    document.title = t("settings:ledgerAccountsGate.pageTitle");
+    document.title = t("pageTitle");
   }, [t]);
 
   useEffect(() => {
@@ -62,8 +55,8 @@ const LedgerAccountsGate: React.FC = () => {
     } catch (e) {
       const msg =
         (e as { message?: string })?.message ||
-        (t("settings:ledgerAccountsGate.snackbar.downloadError") as string) ||
-        "Error while downloading CSV template.";
+        (t("snackbar.downloadError") as string) ||
+        "Error while downloading template.";
       setSnack({ message: msg, severity: "error" });
     }
   };
@@ -74,8 +67,8 @@ const LedgerAccountsGate: React.FC = () => {
     } catch (e) {
       const msg =
         (e as { message?: string })?.message ||
-        (t("settings:ledgerAccountsGate.snackbar.downloadError") as string) ||
-        "Error while downloading XLSX template.";
+        (t("snackbar.downloadError") as string) ||
+        "Error while downloading template.";
       setSnack({ message: msg, severity: "error" });
     }
   };
@@ -86,16 +79,17 @@ const LedgerAccountsGate: React.FC = () => {
   };
 
   // Standard mode now calls backend JSON templates
-  const addStandardPlan = async () => {
+  const addStandardPlan = async (): Promise<boolean> => {
     if (!stdChoice) {
       setSnack({
-        message: t("settings:ledgerAccountsGate.snackbar.standardRequired"),
+        message: t("snackbar.standardRequired"),
         severity: "warning",
       });
-      return;
+      return false;
     }
 
     await api.importStandardLedgerAccounts(stdChoice);
+    return true;
   };
 
   const submit = async () => {
@@ -106,7 +100,7 @@ const LedgerAccountsGate: React.FC = () => {
       if (mode === "csv") {
         if (!csvFile) {
           setSnack({
-            message: t("settings:ledgerAccountsGate.snackbar.selectCsv"),
+            message: t("snackbar.selectCsv"),
             severity: "warning",
           });
           return;
@@ -119,7 +113,7 @@ const LedgerAccountsGate: React.FC = () => {
         await api.importLedgerAccounts(formData);
 
         setSnack({
-          message: t("settings:ledgerAccountsGate.snackbar.csvSuccess"),
+          message: t("snackbar.csvSuccess"),
           severity: "success",
         });
       }
@@ -127,7 +121,7 @@ const LedgerAccountsGate: React.FC = () => {
       else if (mode === "manual") {
         if (!textBlock.trim()) {
           setSnack({
-            message: t("settings:ledgerAccountsGate.snackbar.manualRequired"),
+            message: t("snackbar.manualRequired"),
             severity: "warning",
           });
           return;
@@ -140,22 +134,24 @@ const LedgerAccountsGate: React.FC = () => {
         await api.importLedgerAccounts(formData);
 
         setSnack({
-          message: t("settings:ledgerAccountsGate.snackbar.manualSuccess"),
+          message: t("snackbar.manualSuccess"),
           severity: "success",
         });
       }
       // Standard -> backend JSON templates
       else if (mode === "standard") {
-        await addStandardPlan();
+        const ok = await addStandardPlan();
+        if (!ok) return;
+
         setSnack({
-          message: t("settings:ledgerAccountsGate.snackbar.standardSuccess"),
+          message: t("snackbar.standardSuccess"),
           severity: "success",
         });
       }
       // No mode
       else {
         setSnack({
-          message: t("settings:ledgerAccountsGate.snackbar.chooseMode"),
+          message: t("snackbar.chooseMode"),
           severity: "info",
         });
         return;
@@ -166,7 +162,7 @@ const LedgerAccountsGate: React.FC = () => {
     } catch (e) {
       const msg =
         (e as { message?: string })?.message ||
-        (t("settings:ledgerAccountsGate.snackbar.saveError") as string);
+        (t("snackbar.saveError") as string);
       setSnack({ message: msg, severity: "error" });
     } finally {
       setIsSubmitting(false);
@@ -186,16 +182,13 @@ const LedgerAccountsGate: React.FC = () => {
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:ledgerAccountsGate.header.settings")}
+                  {t("header.settings")}
                 </div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:ledgerAccountsGate.title")}
+                  {t("title")}
                 </h1>
                 <p className="mt-1 text-[11px] text-gray-600">
-                  {t("settings:ledgerAccountsGate.header.categoriesInfo", {
-                    defaultValue:
-                      "Categories: 1 = Operational Revenue · 2 = Non-operational Revenue · 3 = Operational Expense · 4 = Non-operational Expense.",
-                  })}
+                  {t("header.categoriesInfo")}
                 </p>
               </div>
             </div>
@@ -204,16 +197,12 @@ const LedgerAccountsGate: React.FC = () => {
           {/* Content */}
           <section className="mt-6">
             <div className="max-w-3xl mx-auto p-6 md:p-8 border border-gray-200 rounded-lg bg-white space-y-6">
-              <p className="text-sm text-gray-600">
-                {t("settings:ledgerAccountsGate.subtitle")}
-              </p>
+              <p className="text-sm text-gray-600">{t("subtitle")}</p>
 
               {/* CSV / XLSX */}
               <div className="border border-gray-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-medium">
-                    {t("settings:ledgerAccountsGate.modes.csv.title")}
-                  </h2>
+                  <h2 className="font-medium">{t("modes.csv.title")}</h2>
                   <label className="text-sm flex items-center gap-2">
                     <input
                       type="radio"
@@ -222,59 +211,34 @@ const LedgerAccountsGate: React.FC = () => {
                       onChange={() => setMode("csv")}
                       disabled={isSubmitting}
                     />
-                    {t("settings:ledgerAccountsGate.modes.csv.choose")}
+                    {t("modes.csv.choose")}
                   </label>
                 </div>
+
                 {mode === "csv" && (
                   <div className="space-y-3">
                     <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={downloadCsvTemplate}
-                        disabled={isSubmitting}
-                      >
-                        {t("settings:ledgerAccountsGate.modes.csv.downloadTemplate", {
-                          defaultValue: "Download .csv template",
-                        })}
+                      <Button variant="outline" onClick={downloadCsvTemplate} disabled={isSubmitting}>
+                        {t("modes.csv.downloadTemplate")}
                       </Button>
-                      <Button
-                        variant="outline"
-                        onClick={downloadXlsxTemplate}
-                        disabled={isSubmitting}
-                      >
-                        {t(
-                          "settings:ledgerAccountsGate.modes.csv.downloadXlsxTemplate",
-                          { defaultValue: "Download .xlsx template" }
-                        )}
+                      <Button variant="outline" onClick={downloadXlsxTemplate} disabled={isSubmitting}>
+                        {t("modes.csv.downloadXlsxTemplate")}
                       </Button>
                     </div>
+
                     <Input
                       type="file"
-                      label={t("settings:ledgerAccountsGate.modes.csv.uploadLabel")}
+                      label={t("modes.csv.uploadLabel")}
                       onChange={handleUploadCSV}
-                      // CSV or Excel
                       accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
                       disabled={isSubmitting}
                     />
+
                     <p className="text-[12px] text-gray-500">
-                      {t("settings:ledgerAccountsGate.modes.csv.hintHeaderRow")} ·{" "}
-                      {t("settings:ledgerAccountsGate.modes.csv.hintColumns", {
-                        defaultValue:
-                          "Required columns (exact order): CATEGORY, SUBGROUP, ACCOUNT.",
-                      })}
+                      {t("modes.csv.hintHeaderRow")} · {t("modes.csv.hintColumns")}
                     </p>
-                    <p className="text-[11px] text-gray-500">
-                      {t("settings:ledgerAccountsGate.modes.csv.hintCategories", {
-                        defaultValue:
-                          "CATEGORY codes: 1 = Operational Revenue · 2 = Non-operational Revenue · 3 = Operational Expense · 4 = Non-operational Expense.",
-                      })}
-                    </p>
-                    <p className="text-[11px] text-gray-400">
-                      {t("settings:ledgerAccountsGate.modes.csv.hintXlsxMeta", {
-                        defaultValue:
-                          "For .xlsx, use the official template. The file is validated using an internal meta sheet and ID.",
-                      })}
-                    </p>
+                    <p className="text-[11px] text-gray-500">{t("modes.csv.hintCategories")}</p>
+                    <p className="text-[11px] text-gray-400">{t("modes.csv.hintXlsxMeta")}</p>
                   </div>
                 )}
               </div>
@@ -282,9 +246,7 @@ const LedgerAccountsGate: React.FC = () => {
               {/* Manual */}
               <div className="border border-gray-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-medium">
-                    {t("settings:ledgerAccountsGate.modes.manual.title")}
-                  </h2>
+                  <h2 className="font-medium">{t("modes.manual.title")}</h2>
                   <label className="text-sm flex items-center gap-2">
                     <input
                       type="radio"
@@ -293,36 +255,23 @@ const LedgerAccountsGate: React.FC = () => {
                       onChange={() => setMode("manual")}
                       disabled={isSubmitting}
                     />
-                    {t("settings:ledgerAccountsGate.modes.manual.choose")}
+                    {t("modes.manual.choose")}
                   </label>
                 </div>
+
                 {mode === "manual" && (
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-500">
-                      {t("settings:ledgerAccountsGate.modes.manual.instructions", {
-                        defaultValue:
-                          "One account per line. Format: CATEGORY;SUBGROUP;ACCOUNT. CATEGORY must be 1, 2, 3 or 4.",
-                      })}
-                    </p>
+                    <p className="text-sm text-gray-500">{t("modes.manual.instructions")}</p>
+
                     <textarea
                       className="w-full border border-gray-200 rounded p-2 resize-y min-h-[140px] outline-none focus:ring-2 focus:ring-gray-200"
-                      placeholder={t(
-                        "settings:ledgerAccountsGate.modes.manual.placeholder",
-                        {
-                          defaultValue:
-                            "Example:\n1; Sales; Product sales\n3; Administrative; Salaries and wages\n4; Financial; Bank fees",
-                        }
-                      )}
+                      placeholder={t("modes.manual.placeholder")}
                       value={textBlock}
                       onChange={(e) => setTextBlock(e.target.value)}
                       disabled={isSubmitting}
                     />
-                    <p className="text-[11px] text-gray-500">
-                      {t("settings:ledgerAccountsGate.modes.manual.hintCategories", {
-                        defaultValue:
-                          "CATEGORY codes: 1 = Operational Revenue · 2 = Non-operational Revenue · 3 = Operational Expense · 4 = Non-operational Expense.",
-                      })}
-                    </p>
+
+                    <p className="text-[11px] text-gray-500">{t("modes.manual.hintCategories")}</p>
                   </div>
                 )}
               </div>
@@ -330,9 +279,7 @@ const LedgerAccountsGate: React.FC = () => {
               {/* Standard */}
               <div className="border border-gray-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-medium">
-                    {t("settings:ledgerAccountsGate.modes.standard.title")}
-                  </h2>
+                  <h2 className="font-medium">{t("modes.standard.title")}</h2>
                   <label className="text-sm flex items-center gap-2">
                     <input
                       type="radio"
@@ -341,9 +288,10 @@ const LedgerAccountsGate: React.FC = () => {
                       onChange={() => setMode("standard")}
                       disabled={isSubmitting}
                     />
-                    {t("settings:ledgerAccountsGate.modes.standard.choose")}
+                    {t("modes.standard.choose")}
                   </label>
                 </div>
+
                 {mode === "standard" && (
                   <div className="flex flex-col gap-3">
                     <div className="flex gap-4">
@@ -355,8 +303,9 @@ const LedgerAccountsGate: React.FC = () => {
                           onChange={() => setStdChoice("personal")}
                           disabled={isSubmitting}
                         />
-                        {t("settings:ledgerAccountsGate.modes.standard.personal")}
+                        {t("modes.standard.personal")}
                       </label>
+
                       <label className="flex items-center gap-2 text-sm">
                         <input
                           type="radio"
@@ -365,15 +314,11 @@ const LedgerAccountsGate: React.FC = () => {
                           onChange={() => setStdChoice("business")}
                           disabled={isSubmitting}
                         />
-                        {t("settings:ledgerAccountsGate.modes.standard.business")}
+                        {t("modes.standard.business")}
                       </label>
                     </div>
-                    <p className="text-[12px] text-gray-500">
-                      {t("settings:ledgerAccountsGate.modes.standard.hint", {
-                        defaultValue:
-                          "We will create a suggested chart of accounts using the four categories. You can edit or delete them later.",
-                      })}
-                    </p>
+
+                    <p className="text-[12px] text-gray-500">{t("modes.standard.hint")}</p>
                   </div>
                 )}
               </div>
@@ -389,12 +334,11 @@ const LedgerAccountsGate: React.FC = () => {
                   }}
                   disabled={isSubmitting}
                 >
-                  {t("settings:ledgerAccountsGate.buttons.clear")}
+                  {t("buttons.clear")}
                 </Button>
+
                 <Button onClick={submit} disabled={isSubmitting}>
-                  {isSubmitting
-                    ? t("settings:ledgerAccountsGate.buttons.finishing")
-                    : t("settings:ledgerAccountsGate.buttons.finish")}
+                  {isSubmitting ? t("buttons.finishing") : t("buttons.finish")}
                 </Button>
               </div>
             </div>

@@ -1,0 +1,42 @@
+{
+  "title": "Départements",
+  "card": { "settings": "Paramètres", "departments": "Départements" },
+  "list": { "title": "Liste des départements" },
+  "buttons": {
+    "search": "Rechercher",
+    "searchPlaceholder": "Rechercher par nom ou code…",
+    "runSearchAria": "Lancer la recherche",
+    "add": "Ajouter un département",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "tryAgain": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "confirm": { "deleteTitle": "Supprimer « {{name}} » ?" },
+  "tags": {
+    "code": "Code",
+    "inactive": "Inactif",
+    "noName": "(sans nom)"
+  },
+  "modal": {
+    "addTitle": "Ajouter un département",
+    "editTitle": "Modifier le département",
+    "name": "Nom",
+    "code": "Code",
+    "active": "Département actif"
+  },
+  "errors": {
+    "fetchError": "Échec du chargement.",
+    "saveFailed": "Impossible d’enregistrer le département.",
+    "deleteFailed": "Impossible de supprimer le département.",
+    "confirmFailed": "Impossible de confirmer l’action."
+  },
+  "toast": {
+    "saveOk": "Département enregistré.",
+    "deleteOk": "Département supprimé."
+  },
+  "alerts": {
+    "noData": "Aucun département trouvé sur cette page."
+  }
+}

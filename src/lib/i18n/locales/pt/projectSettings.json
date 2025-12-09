@@ -1,0 +1,62 @@
+{
+  "title": "Projetos",
+  "header": { "settings": "Definições", "projects": "Projetos" },
+  "badge": { "syncing": "A sincronizar…" },
+  "section": { "list": "Lista de projetos" },
+  "search": {
+    "placeholder": "Pesquisar por nome ou código…",
+    "aria": "Pesquisar projetos",
+    "button": "Buscar"
+  },
+  "row": {
+    "codePrefix": "CÓDIGO:",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "untitled": "(sem título)"
+  },
+  "types": {
+    "internal": "Interno",
+    "client": "Cliente",
+    "research": "Pesquisa",
+    "operational": "Operacional",
+    "marketing": "Marketing",
+    "product": "Produto",
+    "it": "TI",
+    "event": "Evento",
+    "capex": "CapEx"
+  },
+  "btn": {
+    "addProject": "Adicionar projeto",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "retry": "Tentar novamente"
+  },
+  "btnLabel": { "type": "Selecionar um tipo" },
+  "field": {
+    "name": "Nome do projeto",
+    "code": "Código",
+    "type": "Tipo de projeto",
+    "description": "Descrição",
+    "isActive": "Projeto ativo"
+  },
+  "modal": {
+    "createTitle": "Adicionar projeto",
+    "editTitle": "Editar projeto",
+    "close": "Fechar"
+  },
+  "confirm": { "deleteTitle": "Eliminar o projeto \"{{name}}\"?" },
+  "empty": "Nenhum projeto encontrado.",
+  "errors": {
+    "loadFailedTitle": "Falha ao carregar",
+    "saveError": "Falha ao guardar o projeto.",
+    "detailError": "Falha ao carregar detalhes.",
+    "deleteError": "Falha ao eliminar o projeto.",
+    "confirmFailed": "Falha ao confirmar."
+  },
+  "toast": {
+    "saved": "Projeto guardado.",
+    "deleted": "Projeto eliminado."
+  }
+}

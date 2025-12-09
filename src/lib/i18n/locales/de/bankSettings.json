@@ -1,0 +1,50 @@
+{
+  "title": "Banken",
+  "header": { "settings": "Einstellungen", "title": "Banken" },
+  "section": { "list": "Bankkonten" },
+  "empty": "Noch keine Bankkonten.",
+  "btn": {
+    "addBank": "Bank hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "selectAccountType": "Kontotyp auswählen"
+  },
+  "field": {
+    "institution": "Bankinstitut",
+    "accountType": "Kontotyp",
+    "branch": "Filiale",
+    "accountNumber": "Konto",
+    "iban": "IBAN",
+    "initialBalance": "Anfangssaldo",
+    "isActive": "Aktives Konto"
+  },
+  "accountType": {
+    "checking": "Girokonto",
+    "savings": "Sparkonto",
+    "investment": "Investment",
+    "cash": "Bar"
+  },
+  "modal": {
+    "createTitle": "Bank hinzufügen",
+    "editTitle": "Bank bearbeiten",
+    "close": "Schließen"
+  },
+  "confirm": {
+    "delete": "Konto „{{name}}“ löschen?",
+    "confirmLabel": "Löschen",
+    "cancelLabel": "Abbrechen"
+  },
+  "errors": {
+    "fetchError": "Banken konnten nicht geladen werden.",
+    "saveError": "Bank konnte nicht gespeichert werden.",
+    "deleteError": "Bank konnte nicht gelöscht werden.",
+    "detailError": "Details konnten nicht geladen werden.",
+    "confirmFailed": "Aktion konnte nicht bestätigt werden."
+  },
+  "toast": {
+    "saveOk": "Bankkonto gespeichert.",
+    "deleteOk": "Bankkonto gelöscht."
+  }
+}

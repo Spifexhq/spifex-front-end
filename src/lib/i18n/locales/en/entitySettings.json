@@ -1,0 +1,54 @@
+{
+  "title": "Entities",
+  "header": { "settings": "Settings", "entities": "Entities" },
+  "section": { "list": "Entity list" },
+  "search": {
+    "placeholder": "Search by name or alias…",
+    "aria": "Search entities",
+    "button": "Search"
+  },
+  "types": { "client": "Client", "supplier": "Supplier", "employee": "Employee" },
+  "row": { "inactive": "• Inactive", "untitled": "(untitled)" },
+  "btn": {
+    "add": "Add entity",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Try again",
+    "confirmDelete": "Delete"
+  },
+  "sections": { "address": "Address", "bank": "Bank details" },
+  "field": {
+    "full_name": "Full name",
+    "alias_name": "Trade name / alias",
+    "entity_type": "Entity type",
+    "is_active": "Active entity",
+    "ssn_tax_id": "SSN (CPF)",
+    "ein_tax_id": "EIN (CNPJ)",
+    "email": "Email",
+    "phone": "Phone",
+    "street": "Street",
+    "street_number": "Number",
+    "city": "City",
+    "state": "State",
+    "postal_code": "Postal code",
+    "country": "Country",
+    "bank_name": "Bank",
+    "bank_branch": "Branch",
+    "checking_account": "Checking account",
+    "account_holder_tax_id": "Holder (CPF/CNPJ)",
+    "account_holder_name": "Holder name"
+  },
+  "modal": { "createTitle": "Add entity", "editTitle": "Edit entity", "close": "Close" },
+  "empty": "No entities found.",
+  "confirm": { "deleteTitle": "Delete entity \"{{name}}\"?" },
+  "errors": {
+    "loadFailedTitle": "Failed to load",
+    "saveError": "Failed to save entity.",
+    "deleteError": "Failed to delete entity.",
+    "detailError": "Failed to load details.",
+    "confirmFailed": "Failed to confirm."
+  },
+  "toast": { "saveOk": "Entity saved.", "deleteOk": "Entity removed." }
+}

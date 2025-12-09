@@ -1,0 +1,54 @@
+{
+  "title": "Entidades",
+  "header": { "settings": "Definições", "entities": "Entidades" },
+  "section": { "list": "Lista de entidades" },
+  "search": {
+    "placeholder": "Pesquisar por nome ou apelido…",
+    "aria": "Pesquisar entidades",
+    "button": "Pesquisar"
+  },
+  "types": { "client": "Cliente", "supplier": "Fornecedor", "employee": "Colaborador" },
+  "row": { "inactive": "• Inativo", "untitled": "(sem nome)" },
+  "btn": {
+    "add": "Adicionar entidade",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "retry": "Tentar novamente",
+    "confirmDelete": "Eliminar"
+  },
+  "sections": { "address": "Endereço", "bank": "Dados bancários" },
+  "field": {
+    "full_name": "Nome completo",
+    "alias_name": "Nome comercial / alcunha",
+    "entity_type": "Tipo de entidade",
+    "is_active": "Entidade ativa",
+    "ssn_tax_id": "CPF",
+    "ein_tax_id": "CNPJ",
+    "email": "Email",
+    "phone": "Telefone",
+    "street": "Rua",
+    "street_number": "Número",
+    "city": "Cidade",
+    "state": "Estado",
+    "postal_code": "Código postal",
+    "country": "País",
+    "bank_name": "Banco",
+    "bank_branch": "Agência",
+    "checking_account": "Conta",
+    "account_holder_tax_id": "Titular (CPF/CNPJ)",
+    "account_holder_name": "Nome do titular"
+  },
+  "modal": { "createTitle": "Adicionar entidade", "editTitle": "Editar entidade", "close": "Fechar" },
+  "empty": "Nenhuma entidade encontrada.",
+  "confirm": { "deleteTitle": "Eliminar a entidade \"{{name}}\"?" },
+  "errors": {
+    "loadFailedTitle": "Falha ao carregar",
+    "saveError": "Falha ao guardar a entidade.",
+    "deleteError": "Falha ao eliminar a entidade.",
+    "detailError": "Falha ao carregar os detalhes.",
+    "confirmFailed": "Falha ao confirmar."
+  },
+  "toast": { "saveOk": "Entidade guardada.", "deleteOk": "Entidade removida." }
+}

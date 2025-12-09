@@ -1,0 +1,50 @@
+{
+  "title": "Bancos",
+  "header": { "settings": "Definições", "title": "Bancos" },
+  "section": { "list": "Contas bancárias" },
+  "empty": "Ainda não existem contas bancárias.",
+  "btn": {
+    "addBank": "Adicionar banco",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "selectAccountType": "Selecionar tipo de conta"
+  },
+  "field": {
+    "institution": "Instituição bancária",
+    "accountType": "Tipo de conta",
+    "branch": "Agência",
+    "accountNumber": "Conta",
+    "iban": "IBAN",
+    "initialBalance": "Saldo inicial",
+    "isActive": "Conta ativa"
+  },
+  "accountType": {
+    "checking": "À ordem",
+    "savings": "Poupança",
+    "investment": "Investimento",
+    "cash": "Caixa"
+  },
+  "modal": {
+    "createTitle": "Adicionar banco",
+    "editTitle": "Editar banco",
+    "close": "Fechar"
+  },
+  "confirm": {
+    "delete": "Eliminar a conta \"{{name}}\"?",
+    "confirmLabel": "Eliminar",
+    "cancelLabel": "Cancelar"
+  },
+  "errors": {
+    "fetchError": "Não foi possível obter os bancos.",
+    "saveError": "Não foi possível guardar o banco.",
+    "deleteError": "Não foi possível eliminar o banco.",
+    "detailError": "Não foi possível carregar os detalhes.",
+    "confirmFailed": "Não foi possível confirmar a ação."
+  },
+  "toast": {
+    "saveOk": "Conta bancária guardada.",
+    "deleteOk": "Conta bancária eliminada."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "title": "Abteilungen",
+  "card": { "settings": "Einstellungen", "departments": "Abteilungen" },
+  "list": { "title": "Abteilungsliste" },
+  "buttons": {
+    "search": "Suchen",
+    "searchPlaceholder": "Nach Name oder Code suchen…",
+    "runSearchAria": "Suche ausführen",
+    "add": "Abteilung hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "tryAgain": "Erneut versuchen",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "confirm": { "deleteTitle": "„{{name}}“ löschen?" },
+  "tags": {
+    "code": "Code",
+    "inactive": "Inaktiv",
+    "noName": "(ohne Namen)"
+  },
+  "modal": {
+    "addTitle": "Abteilung hinzufügen",
+    "editTitle": "Abteilung bearbeiten",
+    "name": "Name",
+    "code": "Code",
+    "active": "Aktive Abteilung"
+  },
+  "errors": {
+    "fetchError": "Laden fehlgeschlagen.",
+    "saveFailed": "Abteilung konnte nicht gespeichert werden.",
+    "deleteFailed": "Abteilung konnte nicht gelöscht werden.",
+    "confirmFailed": "Aktion konnte nicht bestätigt werden."
+  },
+  "toast": {
+    "saveOk": "Abteilung gespeichert.",
+    "deleteOk": "Abteilung gelöscht."
+  },
+  "alerts": {
+    "noData": "Keine Abteilungen auf dieser Seite gefunden."
+  }
+}

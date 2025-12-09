@@ -1,0 +1,59 @@
+{
+  "pageTitle": "Plan comptable",
+  "title": "Configurons vos comptes du Grand Livre",
+  "subtitle": "Choisissez comment créer votre plan comptable. Vous pourrez le modifier ou l’étendre plus tard.",
+  "header": {
+    "settings": "Paramètres",
+    "categoriesInfo": "Catégories : 1 = Revenu d’exploitation · 2 = Revenu hors exploitation · 3 = Dépense d’exploitation · 4 = Dépense hors exploitation."
+  },
+  "modes": {
+    "csv": {
+      "title": "Importer via CSV ou Excel",
+      "choose": "Sélectionner",
+      "downloadTemplate": "Télécharger le modèle .csv",
+      "downloadXlsxTemplate": "Télécharger le modèle .xlsx",
+      "uploadLabel": "Importer un fichier (.csv ou .xlsx)",
+      "hintHeaderRow": "Le fichier doit contenir une ligne d’en-tête",
+      "hintColumns": "Colonnes requises (dans cet ordre exact) : CATEGORY, SUBGROUP, ACCOUNT.",
+      "hintCategories": "CATEGORY doit être 1, 2, 3 ou 4.",
+      "hintXlsxMeta": "Pour .xlsx, utilisez le modèle officiel. Le fichier est validé via une feuille meta interne et un ID de modèle."
+    },
+    "manual": {
+      "title": "Saisir manuellement",
+      "choose": "Sélectionner",
+      "instructions": "Utilisez le format CATEGORY;SUBGROUP;ACCOUNT — une ligne par compte. CATEGORY doit être 1, 2, 3 ou 4.",
+      "placeholder": "Exemples :\n1; Ventes; Ventes de produits\n3; Administratif; Salaires\n4; Financier; Frais bancaires",
+      "hintCategories": "CATEGORY doit être 1, 2, 3 ou 4."
+    },
+    "standard": {
+      "title": "Utiliser un plan standard",
+      "choose": "Sélectionner",
+      "personal": "Plan comptable personnel",
+      "business": "Plan comptable entreprise",
+      "hint": "Nous créerons un plan comptable suggéré avec les quatre catégories. Vous pourrez les modifier ou supprimer ensuite."
+    }
+  },
+  "buttons": {
+    "clear": "Effacer la sélection",
+    "finish": "Terminer",
+    "finishing": "Importation…"
+  },
+  "snackbar": {
+    "selectCsv": "Veuillez sélectionner un fichier CSV ou XLSX.",
+    "emptyCsv": "Fichier vide ou invalide.",
+    "csvSuccess": "Comptes importés depuis le fichier.",
+    "manualRequired": "Remplissez le champ avec CATEGORY;SUBGROUP;ACCOUNT.",
+    "manualSuccess": "Comptes créés à partir du texte.",
+    "standardRequired": "Choisissez un plan standard (Personnel ou Entreprise).",
+    "standardEmpty": "Le plan standard est vide.",
+    "standardSuccess": "Plan standard appliqué à vos comptes.",
+    "chooseMode": "Choisissez une option (CSV/Excel, Manuel ou Plan standard).",
+    "saveError": "Erreur lors de la création des comptes.",
+    "downloadError": "Erreur lors du téléchargement du modèle."
+  },
+  "misc": {
+    "fileNameTemplate": "template_ledger_accounts.csv",
+    "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
+    "groupMappingNote": "Les catégories sont envoyées à l’API sous forme de nombres (1..4)."
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "pageTitle": "Plano de Contas",
+  "title": "Vamos configurar suas Contas Contábeis (Razão)",
+  "subtitle": "Escolha como você quer criar o seu plano de contas. Você pode editar ou expandir depois.",
+  "header": {
+    "settings": "Definições",
+    "categoriesInfo": "Categorias: 1 = Receita operacional · 2 = Receita não operacional · 3 = Despesa operacional · 4 = Despesa não operacional."
+  },
+  "modes": {
+    "csv": {
+      "title": "Enviar via CSV ou Excel",
+      "choose": "Selecionar",
+      "downloadTemplate": "Baixar modelo .csv",
+      "downloadXlsxTemplate": "Baixar modelo .xlsx",
+      "uploadLabel": "Enviar ficheiro (.csv ou .xlsx)",
+      "hintHeaderRow": "O ficheiro deve incluir uma linha de cabeçalho",
+      "hintColumns": "Colunas obrigatórias (nesta ordem exata): CATEGORY, SUBGROUP, ACCOUNT.",
+      "hintCategories": "CATEGORY deve ser 1, 2, 3 ou 4.",
+      "hintXlsxMeta": "Para .xlsx, use o modelo oficial. O ficheiro é validado usando uma folha meta interna e o ID do modelo."
+    },
+    "manual": {
+      "title": "Inserir manualmente",
+      "choose": "Selecionar",
+      "instructions": "Use o formato CATEGORY;SUBGROUP;ACCOUNT — uma por linha. CATEGORY deve ser 1, 2, 3 ou 4.",
+      "placeholder": "Exemplos:\n1; Vendas; Vendas de produtos\n3; Administrativo; Salários\n4; Financeiro; Tarifas bancárias",
+      "hintCategories": "CATEGORY deve ser 1, 2, 3 ou 4."
+    },
+    "standard": {
+      "title": "Usar um Plano Padrão",
+      "choose": "Selecionar",
+      "personal": "Plano de Contas Pessoal",
+      "business": "Plano de Contas Empresarial",
+      "hint": "Vamos criar um plano de contas sugerido usando as quatro categorias. Você pode editar ou apagar depois."
+    }
+  },
+  "buttons": {
+    "clear": "Limpar seleção",
+    "finish": "Concluir",
+    "finishing": "A importar…"
+  },
+  "snackbar": {
+    "selectCsv": "Selecione um ficheiro CSV ou XLSX.",
+    "emptyCsv": "Ficheiro vazio ou inválido.",
+    "csvSuccess": "Contas importadas do ficheiro.",
+    "manualRequired": "Preencha o campo usando CATEGORY;SUBGROUP;ACCOUNT.",
+    "manualSuccess": "Contas criadas a partir do texto.",
+    "standardRequired": "Escolha um plano padrão (Pessoal ou Empresarial).",
+    "standardEmpty": "O plano padrão está vazio.",
+    "standardSuccess": "Plano padrão aplicado às suas contas.",
+    "chooseMode": "Escolha uma opção (CSV/Excel, Manual ou Plano Padrão).",
+    "saveError": "Erro ao criar contas contábeis.",
+    "downloadError": "Erro ao baixar o modelo."
+  },
+  "misc": {
+    "fileNameTemplate": "template_ledger_accounts.csv",
+    "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
+    "groupMappingNote": "As categorias são enviadas como números (1..4) para a API."
+  }
+}

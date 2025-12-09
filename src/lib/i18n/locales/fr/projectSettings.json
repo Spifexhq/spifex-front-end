@@ -1,0 +1,62 @@
+{
+  "title": "Projets",
+  "header": { "settings": "Paramètres", "projects": "Projets" },
+  "badge": { "syncing": "Synchronisation…" },
+  "section": { "list": "Liste des projets" },
+  "search": {
+    "placeholder": "Rechercher par nom ou code…",
+    "aria": "Rechercher des projets",
+    "button": "Rechercher"
+  },
+  "row": {
+    "codePrefix": "CODE :",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "untitled": "(sans titre)"
+  },
+  "types": {
+    "internal": "Interne",
+    "client": "Client",
+    "research": "Recherche",
+    "operational": "Opérationnel",
+    "marketing": "Marketing",
+    "product": "Produit",
+    "it": "Informatique",
+    "event": "Événement",
+    "capex": "CapEx"
+  },
+  "btn": {
+    "addProject": "Ajouter un projet",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "retry": "Réessayer"
+  },
+  "btnLabel": { "type": "Choisir un type" },
+  "field": {
+    "name": "Nom du projet",
+    "code": "Code",
+    "type": "Type de projet",
+    "description": "Description",
+    "isActive": "Projet actif"
+  },
+  "modal": {
+    "createTitle": "Ajouter un projet",
+    "editTitle": "Modifier le projet",
+    "close": "Fermer"
+  },
+  "confirm": { "deleteTitle": "Supprimer le projet \"{{name}}\" ?" },
+  "empty": "Aucun projet trouvé.",
+  "errors": {
+    "loadFailedTitle": "Échec du chargement",
+    "saveError": "Impossible d’enregistrer le projet.",
+    "detailError": "Impossible de charger les détails.",
+    "deleteError": "Impossible de supprimer le projet.",
+    "confirmFailed": "Impossible de confirmer."
+  },
+  "toast": {
+    "saved": "Projet enregistré.",
+    "deleted": "Projet supprimé."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "title": "Mitarbeiter",
+  "header": {
+    "settings": "Einstellungen",
+    "employees": "Mitarbeiter"
+  },
+  "section": {
+    "list": "Mitarbeiterliste"
+  },
+  "field": {
+    "name": "Name",
+    "email": "E-Mail",
+    "tempPassword": "Temporäres Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "groups": "Gruppen"
+  },
+  "badge": {
+    "syncing": "Synchronisiere…"
+  },
+  "btn": {
+    "addEmployee": "Mitarbeiter hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "btnLabel": {
+    "groups": "Gruppen auswählen"
+  },
+  "modal": {
+    "createTitle": "Mitarbeiter hinzufügen",
+    "editTitle": "Mitarbeiter bearbeiten",
+    "close": "Schließen"
+  },
+  "empty": "Keine Mitarbeiter gefunden.",
+  "confirm": {
+    "delete": "Mitarbeiter „{{name}}“ löschen?"
+  },
+  "errors": {
+    "fetchError": "Daten konnten nicht geladen werden.",
+    "loadEmployeeError": "Mitarbeiterdaten konnten nicht geladen werden.",
+    "saveError": "Mitarbeiter konnte nicht gespeichert werden.",
+    "deleteError": "Mitarbeiter konnte nicht gelöscht werden.",
+    "confirmFailed": "Aktion konnte nicht bestätigt werden."
+  },
+  "toast": {
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "weakPassword": "Das Passwort erfüllt nicht die Mindestanforderungen.",
+    "saveOk": "Mitarbeiter gespeichert.",
+    "deleteOk": "Mitarbeiter gelöscht."
+  }
+}

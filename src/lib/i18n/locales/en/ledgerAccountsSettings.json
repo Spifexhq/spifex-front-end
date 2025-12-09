@@ -1,0 +1,80 @@
+{
+  "title": "Ledger accounts",
+  "header": { "section": "Settings", "title": "Ledger accounts" },
+  "categories": {
+    "operationalRevenue": "Operating revenue",
+    "nonOperationalRevenue": "Non-operating revenue",
+    "operationalExpense": "Operating expense",
+    "nonOperationalExpense": "Non-operating expense"
+  },
+  "buttons": {
+    "add": "Add account",
+    "options": "Options",
+    "downloadPdf": "Download ledger accounts (PDF)",
+    "downloadPdfDisabled": "No accounts available",
+    "resetAll": "Reset ledger accounts",
+    "deletingAll": "Deleting…",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "viewList": "View as List",
+    "viewAccordion": "View as Accordion",
+    "clear": "Clear",
+    "search": "Search",
+    "filterCategory": "Filter by category",
+    "selectCategory": "Select a category",
+    "selectSubcategory": "Select a subcategory",
+    "toggleNewSub": "+",
+    "toggleNewSubCancel": "Cancel",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "runSearchAria": "Search"
+  },
+  "filters": {
+    "placeholder": "Search by account, code, category or subcategory...",
+    "category": "Category"
+  },
+  "list": {
+    "all": "All accounts",
+    "empty": "No accounts found.",
+    "groupEmpty": "No accounts found."
+  },
+  "tags": {
+    "code": "Code",
+    "credit": "Credit",
+    "debit": "Debit",
+    "inactive": "Inactive",
+    "noAccount": "(no name)",
+    "noGroup": "(No category)",
+    "noSubgroup": "(No subgroup)"
+  },
+  "modal": {
+    "createTitle": "Add account",
+    "editTitle": "Edit account",
+    "account": "Ledger account",
+    "code": "Code (optional)",
+    "codePlaceholder": "e.g., 3-0001",
+    "subcategory": "Subcategory",
+    "subcategoryNew": "New subcategory",
+    "active": "Active account",
+    "defaultTxLabel": "Default transaction type:",
+    "defaultTxHint": "Select a category to define the default transaction type."
+  },
+  "confirm": {
+    "deleteOne": "Delete account \"{{account}}\"?",
+    "deleteAll": "Are you sure you want to delete ALL ledger accounts? This action cannot be undone."
+  },
+  "toast": {
+    "saved": "Account saved successfully.",
+    "saveError": "Failed to save account.",
+    "deleteSuccess": "Account deleted.",
+    "deleteError": "Failed to delete account.",
+    "deleteAllSuccess": "Chart of accounts reset.",
+    "deleteAllError": "Failed to delete all accounts.",
+    "pdfOk": "PDF generated.",
+    "pdfError": "Unexpected error generating PDF.",
+    "confirmFailed": "Failed to confirm."
+  },
+  "pdf": { "company": "Spifex", "title": "Ledger Chart of Accounts" }
+}

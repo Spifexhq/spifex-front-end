@@ -1,0 +1,42 @@
+{
+  "title": "Departments",
+  "card": { "settings": "Settings", "departments": "Departments" },
+  "list": { "title": "Department list" },
+  "buttons": {
+    "search": "Search",
+    "searchPlaceholder": "Search by name or code…",
+    "runSearchAria": "Run search",
+    "add": "Add department",
+    "edit": "Edit",
+    "delete": "Delete",
+    "tryAgain": "Try again",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "confirm": { "deleteTitle": "Delete “{{name}}”?" },
+  "tags": {
+    "code": "Code",
+    "inactive": "Inactive",
+    "noName": "(no name)"
+  },
+  "modal": {
+    "addTitle": "Add department",
+    "editTitle": "Edit department",
+    "name": "Name",
+    "code": "Code",
+    "active": "Active department"
+  },
+  "errors": {
+    "fetchError": "Failed to load.",
+    "saveFailed": "Failed to save department.",
+    "deleteFailed": "Failed to delete department.",
+    "confirmFailed": "Failed to confirm action."
+  },
+  "toast": {
+    "saveOk": "Saved department.",
+    "deleteOk": "Department deleted."
+  },
+  "alerts": {
+    "noData": "No departments found on this page."
+  }
+}

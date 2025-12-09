@@ -1,0 +1,80 @@
+{
+  "title": "Comptes du grand livre",
+  "header": { "section": "Paramètres", "title": "Comptes du grand livre" },
+  "categories": {
+    "operationalRevenue": "Produits d’exploitation",
+    "nonOperationalRevenue": "Produits hors exploitation",
+    "operationalExpense": "Charges d’exploitation",
+    "nonOperationalExpense": "Charges hors exploitation"
+  },
+  "buttons": {
+    "add": "Ajouter un compte",
+    "options": "Options",
+    "downloadPdf": "Télécharger les comptes (PDF)",
+    "downloadPdfDisabled": "Aucun compte disponible",
+    "resetAll": "Réinitialiser les comptes",
+    "deletingAll": "Suppression…",
+    "expandAll": "Tout développer",
+    "collapseAll": "Tout réduire",
+    "viewList": "Voir en liste",
+    "viewAccordion": "Voir en accordéon",
+    "clear": "Effacer",
+    "search": "Rechercher",
+    "filterCategory": "Filtrer par catégorie",
+    "selectCategory": "Sélectionner une catégorie",
+    "selectSubcategory": "Sélectionner une sous-catégorie",
+    "toggleNewSub": "+",
+    "toggleNewSubCancel": "Annuler",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "runSearchAria": "Rechercher"
+  },
+  "filters": {
+    "placeholder": "Rechercher par compte, code, catégorie ou sous-catégorie…",
+    "category": "Catégorie"
+  },
+  "list": {
+    "all": "Tous les comptes",
+    "empty": "Aucun compte trouvé.",
+    "groupEmpty": "Aucun compte trouvé."
+  },
+  "tags": {
+    "code": "Code",
+    "credit": "Crédit",
+    "debit": "Débit",
+    "inactive": "Inactif",
+    "noAccount": "(sans nom)",
+    "noGroup": "(Sans catégorie)",
+    "noSubgroup": "(Sans sous-groupe)"
+  },
+  "modal": {
+    "createTitle": "Ajouter un compte",
+    "editTitle": "Modifier le compte",
+    "account": "Compte",
+    "code": "Code (optionnel)",
+    "codePlaceholder": "ex. : 3-0001",
+    "subcategory": "Sous-catégorie",
+    "subcategoryNew": "Nouvelle sous-catégorie",
+    "active": "Compte actif",
+    "defaultTxLabel": "Type de transaction par défaut :",
+    "defaultTxHint": "Sélectionnez une catégorie pour définir le type de transaction par défaut."
+  },
+  "confirm": {
+    "deleteOne": "Supprimer le compte \"{{account}}\" ?",
+    "deleteAll": "Voulez-vous supprimer TOUS les comptes ? Cette action est irréversible."
+  },
+  "toast": {
+    "saved": "Compte enregistré.",
+    "saveError": "Échec de l’enregistrement du compte.",
+    "deleteSuccess": "Compte supprimé.",
+    "deleteError": "Échec de la suppression du compte.",
+    "deleteAllSuccess": "Plan de comptes réinitialisé.",
+    "deleteAllError": "Échec de la suppression de tous les comptes.",
+    "pdfOk": "PDF généré.",
+    "pdfError": "Erreur inattendue lors de la génération du PDF.",
+    "confirmFailed": "Échec de la confirmation."
+  },
+  "pdf": { "company": "Spifex", "title": "Plan de comptes" }
+}

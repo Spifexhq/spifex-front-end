@@ -2,18 +2,26 @@
 import i18n, { type Resource } from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-// import Backend from "i18next-http-backend"; // opção para carregar via HTTP
+// import Backend from "i18next-http-backend"; // option: load via HTTP
 
-export const LANGS = ['pt', 'en', 'fr', 'de'] as const;
-export type AppLang = typeof LANGS[number];
+/* -------------------------------------------------------------------------- */
+/* Languages                                                                   */
+/* -------------------------------------------------------------------------- */
 
-/* ===================== Imports de JSON (sem require) ===================== */
-// PT
+export const LANGS = ["pt", "en", "fr", "de"] as const;
+export type AppLang = (typeof LANGS)[number];
+
+/* -------------------------------------------------------------------------- */
+/* Locale JSON imports (grouped by domain)                                     */
+/* -------------------------------------------------------------------------- */
+
+/** Common */
 import ptCommon from "./locales/pt/common.json";
 import enCommon from "./locales/en/common.json";
 import frCommon from "./locales/fr/common.json";
 import deCommon from "./locales/de/common.json";
 
+/** Auth */
 import ptSignIn from "./locales/pt/signIn.json";
 import enSignIn from "./locales/en/signIn.json";
 import frSignIn from "./locales/fr/signIn.json";
@@ -44,6 +52,7 @@ import enEmailVerification from "./locales/en/emailVerification.json";
 import frEmailVerification from "./locales/fr/emailVerification.json";
 import deEmailVerification from "./locales/de/emailVerification.json";
 
+/** Layout / Navigation */
 import ptNavbar from "./locales/pt/navbar.json";
 import enNavbar from "./locales/en/navbar.json";
 import frNavbar from "./locales/fr/navbar.json";
@@ -59,21 +68,34 @@ import enSettingsSidebar from "./locales/en/settingsSidebar.json";
 import frSettingsSidebar from "./locales/fr/settingsSidebar.json";
 import deSettingsSidebar from "./locales/de/settingsSidebar.json";
 
+import ptUserMenu from "./locales/pt/userMenu.json";
+import enUserMenu from "./locales/en/userMenu.json";
+import frUserMenu from "./locales/fr/userMenu.json";
+import deUserMenu from "./locales/de/userMenu.json";
+
+/** Subscription / Plans */
 import ptSubscription from "./locales/pt/subscription.json";
 import enSubscription from "./locales/en/subscription.json";
 import frSubscription from "./locales/fr/subscription.json";
 import deSubscription from "./locales/de/subscription.json";
 
+import ptLimits from "./locales/pt/limits.json";
+import enLimits from "./locales/en/limits.json";
+import frLimits from "./locales/fr/limits.json";
+import deLimits from "./locales/de/limits.json";
+
+/** App UI blocks */
 import ptSelectionActionsBar from "./locales/pt/selectionActionsBar.json";
 import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
 import frSelectionActionsBar from "./locales/fr/selectionActionsBar.json";
 import deSelectionActionsBar from "./locales/de/selectionActionsBar.json";
 
-import ptSettings from "./locales/pt/settings.json";
-import enSettings from "./locales/en/settings.json";
-import frSettings from "./locales/fr/settings.json";
-import deSettings from "./locales/de/settings.json";
+import ptSelectDropdown from "./locales/pt/selectDropdown.json";
+import enSelectDropdown from "./locales/en/selectDropdown.json";
+import frSelectDropdown from "./locales/fr/selectDropdown.json";
+import deSelectDropdown from "./locales/de/selectDropdown.json";
 
+/** Cashflow / Finance UI */
 import ptFilterBar from "./locales/pt/filterBar.json";
 import enFilterBar from "./locales/en/filterBar.json";
 import frFilterBar from "./locales/fr/filterBar.json";
@@ -89,20 +111,15 @@ import enEntriesModal from "./locales/en/entriesModal.json";
 import frEntriesModal from "./locales/fr/entriesModal.json";
 import deEntriesModal from "./locales/de/entriesModal.json";
 
-import ptTransf from "./locales/pt/transferenceModal.json";
-import enTransf from "./locales/en/transferenceModal.json";
-import frTransf from "./locales/fr/transferenceModal.json";
-import deTransf from "./locales/de/transferenceModal.json";
+import ptTransferenceModal from "./locales/pt/transferenceModal.json";
+import enTransferenceModal from "./locales/en/transferenceModal.json";
+import frTransferenceModal from "./locales/fr/transferenceModal.json";
+import deTransferenceModal from "./locales/de/transferenceModal.json";
 
 import ptSettlementModal from "./locales/pt/settlementModal.json";
 import enSettlementModal from "./locales/en/settlementModal.json";
 import frSettlementModal from "./locales/fr/settlementModal.json";
 import deSettlementModal from "./locales/de/settlementModal.json";
-
-import ptSelect from "./locales/pt/selectDropdown.json";
-import enSelect from "./locales/en/selectDropdown.json";
-import frSelect from "./locales/fr/selectDropdown.json";
-import deSelect from "./locales/de/selectDropdown.json";
 
 import ptBanksTable from "./locales/pt/banksTable.json";
 import enBanksTable from "./locales/en/banksTable.json";
@@ -119,16 +136,33 @@ import enSettledTable from "./locales/en/settledTable.json";
 import frSettledTable from "./locales/fr/settledTable.json";
 import deSettledTable from "./locales/de/settledTable.json";
 
-import ptReportsPage from "./locales/pt/reports.json";
-import enReportsPage from "./locales/en/reports.json";
-import frReportsPage from "./locales/fr/reports.json";
-import deReportsPage from "./locales/de/reports.json";
+import ptReports from "./locales/pt/reports.json";
+import enReports from "./locales/en/reports.json";
+import frReports from "./locales/fr/reports.json";
+import deReports from "./locales/de/reports.json";
 
-import ptSimAI from "./locales/pt/simulatedAI.json";
-import enSimAI from "./locales/en/simulatedAI.json";
-import frSimAI from "./locales/fr/simulatedAI.json";
-import deSimAI from "./locales/de/simulatedAI.json";
+import ptStatements from "./locales/pt/statements.json";
+import enStatements from "./locales/en/statements.json";
+import frStatements from "./locales/fr/statements.json";
+import deStatements from "./locales/de/statements.json";
 
+/** Misc */
+import ptSimulatedAI from "./locales/pt/simulatedAI.json";
+import enSimulatedAI from "./locales/en/simulatedAI.json";
+import frSimulatedAI from "./locales/fr/simulatedAI.json";
+import deSimulatedAI from "./locales/de/simulatedAI.json";
+
+import ptCookies from "./locales/pt/cookies.json";
+import enCookies from "./locales/en/cookies.json";
+import frCookies from "./locales/fr/cookies.json";
+import deCookies from "./locales/de/cookies.json";
+
+import ptHomeDashboard from "./locales/pt/homeDashboard.json";
+import enHomeDashboard from "./locales/en/homeDashboard.json";
+import frHomeDashboard from "./locales/fr/homeDashboard.json";
+import deHomeDashboard from "./locales/de/homeDashboard.json";
+
+/** Settings / Preferences */
 import ptNotificationSettings from "./locales/pt/notificationSettings.json";
 import enNotificationSettings from "./locales/en/notificationSettings.json";
 import frNotificationSettings from "./locales/fr/notificationSettings.json";
@@ -164,33 +198,129 @@ import enGroupPermissionsTable from "./locales/en/groupPermissionsTable.json";
 import frGroupPermissionsTable from "./locales/fr/groupPermissionsTable.json";
 import deGroupPermissionsTable from "./locales/de/groupPermissionsTable.json";
 
-import ptLimits from "./locales/pt/limits.json";
-import enLimits from "./locales/en/limits.json";
-import frLimits from "./locales/fr/limits.json";
-import deLimits from "./locales/de/limits.json";
-
-import ptCookies from "./locales/pt/cookies.json";
-import enCookies from "./locales/en/cookies.json";
-import frCookies from "./locales/fr/cookies.json";
-import deCookies from "./locales/de/cookies.json";
-
-import ptHomeDashboard from "./locales/pt/homeDashboard.json";
-import enHomeDashboard from "./locales/en/homeDashboard.json";
-import frHomeDashboard from "./locales/fr/homeDashboard.json";
-import deHomeDashboard from "./locales/de/homeDashboard.json";
-
 import ptCurrencySettings from "./locales/pt/currencySettings.json";
 import enCurrencySettings from "./locales/en/currencySettings.json";
 import frCurrencySettings from "./locales/fr/currencySettings.json";
 import deCurrencySettings from "./locales/de/currencySettings.json";
 
-import ptUserMenu from "./locales/pt/userMenu.json";
-import enUserMenu from "./locales/en/userMenu.json";
-import frUserMenu from "./locales/fr/userMenu.json";
-import deUserMenu from "./locales/de/userMenu.json";
+import ptSecurityAndPrivacy from "./locales/pt/securityAndPrivacy.json";
+import enSecurityAndPrivacy from "./locales/en/securityAndPrivacy.json";
+import frSecurityAndPrivacy from "./locales/fr/securityAndPrivacy.json";
+import deSecurityAndPrivacy from "./locales/de/securityAndPrivacy.json";
 
+/** Settings screens (tables/pages) */
+import ptEmployeeSettings from "./locales/pt/employeeSettings.json";
+import enEmployeeSettings from "./locales/en/employeeSettings.json";
+import frEmployeeSettings from "./locales/fr/employeeSettings.json";
+import deEmployeeSettings from "./locales/de/employeeSettings.json";
 
-/* ========================= Objeto de recursos ============================ */
+import ptBankSettings from "./locales/pt/bankSettings.json";
+import enBankSettings from "./locales/en/bankSettings.json";
+import frBankSettings from "./locales/fr/bankSettings.json";
+import deBankSettings from "./locales/de/bankSettings.json";
+
+import ptDepartmentSettings from "./locales/pt/departmentSettings.json";
+import enDepartmentSettings from "./locales/en/departmentSettings.json";
+import frDepartmentSettings from "./locales/fr/departmentSettings.json";
+import deDepartmentSettings from "./locales/de/departmentSettings.json";
+
+import ptProjectSettings from "./locales/pt/projectSettings.json";
+import enProjectSettings from "./locales/en/projectSettings.json";
+import frProjectSettings from "./locales/fr/projectSettings.json";
+import deProjectSettings from "./locales/de/projectSettings.json";
+
+import ptLedgerAccountsSettings from "./locales/pt/ledgerAccountsSettings.json";
+import enLedgerAccountsSettings from "./locales/en/ledgerAccountsSettings.json";
+import frLedgerAccountsSettings from "./locales/fr/ledgerAccountsSettings.json";
+import deLedgerAccountsSettings from "./locales/de/ledgerAccountsSettings.json";
+
+import ptLedgerAccountsGate from "./locales/pt/ledgerAccountsGate.json";
+import enLedgerAccountsGate from "./locales/en/ledgerAccountsGate.json";
+import frLedgerAccountsGate from "./locales/fr/ledgerAccountsGate.json";
+import deLedgerAccountsGate from "./locales/de/ledgerAccountsGate.json";
+
+import ptInventorySettings from "./locales/pt/inventorySettings.json";
+import enInventorySettings from "./locales/en/inventorySettings.json";
+import frInventorySettings from "./locales/fr/inventorySettings.json";
+import deInventorySettings from "./locales/de/inventorySettings.json";
+
+import ptEntitySettings from "./locales/pt/entitySettings.json";
+import enEntitySettings from "./locales/en/entitySettings.json";
+import frEntitySettings from "./locales/fr/entitySettings.json";
+import deEntitySettings from "./locales/de/entitySettings.json";
+
+/* -------------------------------------------------------------------------- */
+/* Namespaces                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const NAMESPACES = [
+  "common",
+
+  // Auth
+  "signIn",
+  "signUp",
+  "passwordValidation",
+  "forgotPassword",
+  "resetPassword",
+  "emailVerification",
+
+  // Layout
+  "navbar",
+  "sidebar",
+  "settingsSidebar",
+  "userMenu",
+
+  // Subscription
+  "subscription",
+  "limits",
+
+  // Generic UI
+  "selectionActionsBar",
+  "selectDropdown",
+
+  // Cashflow / Finance
+  "filterBar",
+  "kpiCards",
+  "entriesModal",
+  "transferenceModal",
+  "settlementModal",
+  "banksTable",
+  "cashFlowTable",
+  "settledTable",
+  "reports",
+  "statements",
+
+  // App / misc
+  "simulatedAI",
+  "cookies",
+  "homeDashboard",
+
+  // Settings / preferences
+  "notificationSettings",
+  "formatSettings",
+  "personalLocaleSetup",
+  "personalSettings",
+  "organizationSettings",
+  "groupSettings",
+  "groupPermissionsTable",
+  "currencySettings",
+  "securityAndPrivacy",
+
+  // Settings screens
+  "employeeSettings",
+  "bankSettings",
+  "departmentSettings",
+  "projectSettings",
+  "ledgerAccountsSettings",
+  "ledgerAccountsGate",
+  "inventorySettings",
+  "entitySettings",
+] as const;
+
+/* -------------------------------------------------------------------------- */
+/* Resources                                                                   */
+/* -------------------------------------------------------------------------- */
+
 const resources: Resource = {
   pt: {
     common: ptCommon,
@@ -200,23 +330,33 @@ const resources: Resource = {
     forgotPassword: ptForgotPassword,
     resetPassword: ptResetPassword,
     emailVerification: ptEmailVerification,
+
     navbar: ptNavbar,
     sidebar: ptSidebar,
     settingsSidebar: ptSettingsSidebar,
+    userMenu: ptUserMenu,
+
     subscription: ptSubscription,
+    limits: ptLimits,
+
     selectionActionsBar: ptSelectionActionsBar,
-    settings: ptSettings,
+    selectDropdown: ptSelectDropdown,
+
     filterBar: ptFilterBar,
     kpiCards: ptKpiCards,
     entriesModal: ptEntriesModal,
-    transferenceModal: ptTransf,
+    transferenceModal: ptTransferenceModal,
     settlementModal: ptSettlementModal,
-    selectDropdown: ptSelect,
     banksTable: ptBanksTable,
     cashFlowTable: ptCashFlowTable,
     settledTable: ptSettledTable,
-    reports: ptReportsPage,
-    simulatedAI: ptSimAI,
+    reports: ptReports,
+    statements: ptStatements,
+
+    simulatedAI: ptSimulatedAI,
+    cookies: ptCookies,
+    homeDashboard: ptHomeDashboard,
+
     notificationSettings: ptNotificationSettings,
     formatSettings: ptFormatSettings,
     personalLocaleSetup: ptPersonalLocaleSetup,
@@ -224,11 +364,17 @@ const resources: Resource = {
     organizationSettings: ptOrganizationSettings,
     groupSettings: ptGroupSettings,
     groupPermissionsTable: ptGroupPermissionsTable,
-    limits: ptLimits,
-    cookies: ptCookies,
-    homeDashboard: ptHomeDashboard,
     currencySettings: ptCurrencySettings,
-    userMenu: ptUserMenu,
+    securityAndPrivacy: ptSecurityAndPrivacy,
+
+    employeeSettings: ptEmployeeSettings,
+    bankSettings: ptBankSettings,
+    departmentSettings: ptDepartmentSettings,
+    projectSettings: ptProjectSettings,
+    ledgerAccountsSettings: ptLedgerAccountsSettings,
+    ledgerAccountsGate: ptLedgerAccountsGate,
+    inventorySettings: ptInventorySettings,
+    entitySettings: ptEntitySettings,
   },
   en: {
     common: enCommon,
@@ -238,23 +384,33 @@ const resources: Resource = {
     forgotPassword: enForgotPassword,
     resetPassword: enResetPassword,
     emailVerification: enEmailVerification,
+
     navbar: enNavbar,
     sidebar: enSidebar,
     settingsSidebar: enSettingsSidebar,
+    userMenu: enUserMenu,
+
     subscription: enSubscription,
+    limits: enLimits,
+
     selectionActionsBar: enSelectionActionsBar,
-    settings: enSettings,
+    selectDropdown: enSelectDropdown,
+
     filterBar: enFilterBar,
     kpiCards: enKpiCards,
     entriesModal: enEntriesModal,
-    transferenceModal: enTransf,
+    transferenceModal: enTransferenceModal,
     settlementModal: enSettlementModal,
-    selectDropdown: enSelect,
     banksTable: enBanksTable,
     cashFlowTable: enCashFlowTable,
     settledTable: enSettledTable,
-    reports: enReportsPage,
-    simulatedAI: enSimAI,
+    reports: enReports,
+    statements: enStatements,
+
+    simulatedAI: enSimulatedAI,
+    cookies: enCookies,
+    homeDashboard: enHomeDashboard,
+
     notificationSettings: enNotificationSettings,
     formatSettings: enFormatSettings,
     personalLocaleSetup: enPersonalLocaleSetup,
@@ -262,11 +418,17 @@ const resources: Resource = {
     organizationSettings: enOrganizationSettings,
     groupSettings: enGroupSettings,
     groupPermissionsTable: enGroupPermissionsTable,
-    limits: enLimits,
-    cookies: enCookies,
-    homeDashboard: enHomeDashboard,
     currencySettings: enCurrencySettings,
-    userMenu: enUserMenu,
+    securityAndPrivacy: enSecurityAndPrivacy,
+
+    employeeSettings: enEmployeeSettings,
+    bankSettings: enBankSettings,
+    departmentSettings: enDepartmentSettings,
+    projectSettings: enProjectSettings,
+    ledgerAccountsSettings: enLedgerAccountsSettings,
+    ledgerAccountsGate: enLedgerAccountsGate,
+    inventorySettings: enInventorySettings,
+    entitySettings: enEntitySettings,
   },
   fr: {
     common: frCommon,
@@ -276,23 +438,33 @@ const resources: Resource = {
     forgotPassword: frForgotPassword,
     resetPassword: frResetPassword,
     emailVerification: frEmailVerification,
+
     navbar: frNavbar,
     sidebar: frSidebar,
     settingsSidebar: frSettingsSidebar,
+    userMenu: frUserMenu,
+
     subscription: frSubscription,
+    limits: frLimits,
+
     selectionActionsBar: frSelectionActionsBar,
-    settings: frSettings,
+    selectDropdown: frSelectDropdown,
+
     filterBar: frFilterBar,
     kpiCards: frKpiCards,
     entriesModal: frEntriesModal,
-    transferenceModal: frTransf,
+    transferenceModal: frTransferenceModal,
     settlementModal: frSettlementModal,
-    selectDropdown: frSelect,
     banksTable: frBanksTable,
     cashFlowTable: frCashFlowTable,
     settledTable: frSettledTable,
-    reports: frReportsPage,
-    simulatedAI: frSimAI,
+    reports: frReports,
+    statements: frStatements,
+
+    simulatedAI: frSimulatedAI,
+    cookies: frCookies,
+    homeDashboard: frHomeDashboard,
+
     notificationSettings: frNotificationSettings,
     formatSettings: frFormatSettings,
     personalLocaleSetup: frPersonalLocaleSetup,
@@ -300,11 +472,17 @@ const resources: Resource = {
     organizationSettings: frOrganizationSettings,
     groupSettings: frGroupSettings,
     groupPermissionsTable: frGroupPermissionsTable,
-    limits: frLimits,
-    cookies: frCookies,
-    homeDashboard: frHomeDashboard,
     currencySettings: frCurrencySettings,
-    userMenu: frUserMenu,
+    securityAndPrivacy: frSecurityAndPrivacy,
+
+    employeeSettings: frEmployeeSettings,
+    bankSettings: frBankSettings,
+    departmentSettings: frDepartmentSettings,
+    projectSettings: frProjectSettings,
+    ledgerAccountsSettings: frLedgerAccountsSettings,
+    ledgerAccountsGate: frLedgerAccountsGate,
+    inventorySettings: frInventorySettings,
+    entitySettings: frEntitySettings,
   },
   de: {
     common: deCommon,
@@ -314,23 +492,33 @@ const resources: Resource = {
     forgotPassword: deForgotPassword,
     resetPassword: deResetPassword,
     emailVerification: deEmailVerification,
+
     navbar: deNavbar,
     sidebar: deSidebar,
     settingsSidebar: deSettingsSidebar,
+    userMenu: deUserMenu,
+
     subscription: deSubscription,
+    limits: deLimits,
+
     selectionActionsBar: deSelectionActionsBar,
-    settings: deSettings,
+    selectDropdown: deSelectDropdown,
+
     filterBar: deFilterBar,
     kpiCards: deKpiCards,
     entriesModal: deEntriesModal,
-    transferenceModal: deTransf,
+    transferenceModal: deTransferenceModal,
     settlementModal: deSettlementModal,
-    selectDropdown: deSelect,
     banksTable: deBanksTable,
     cashFlowTable: deCashFlowTable,
     settledTable: deSettledTable,
-    reports: deReportsPage,
-    simulatedAI: deSimAI,
+    reports: deReports,
+    statements: deStatements,
+
+    simulatedAI: deSimulatedAI,
+    cookies: deCookies,
+    homeDashboard: deHomeDashboard,
+
     notificationSettings: deNotificationSettings,
     formatSettings: deFormatSettings,
     personalLocaleSetup: dePersonalLocaleSetup,
@@ -338,66 +526,44 @@ const resources: Resource = {
     organizationSettings: deOrganizationSettings,
     groupSettings: deGroupSettings,
     groupPermissionsTable: deGroupPermissionsTable,
-    limits: deLimits,
-    cookies: deCookies,
-    homeDashboard: deHomeDashboard,
     currencySettings: deCurrencySettings,
-    userMenu: deUserMenu,
-  }
+    securityAndPrivacy: deSecurityAndPrivacy,
+
+    employeeSettings: deEmployeeSettings,
+    bankSettings: deBankSettings,
+    departmentSettings: deDepartmentSettings,
+    projectSettings: deProjectSettings,
+    ledgerAccountsSettings: deLedgerAccountsSettings,
+    ledgerAccountsGate: deLedgerAccountsGate,
+    inventorySettings: deInventorySettings,
+    entitySettings: deEntitySettings,
+  },
 };
 
+/* -------------------------------------------------------------------------- */
+/* Init                                                                        */
+/* -------------------------------------------------------------------------- */
+
 i18n
-  // .use(Backend) // se for carregar via HTTP
+  // .use(Backend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: { default: ['en'] },
+    fallbackLng: { default: ["en"] },
     supportedLngs: LANGS as unknown as string[],
     nonExplicitSupportedLngs: true,
+
     resources,
-    ns: [
-      "common",
-      "signIn",
-      "signUp",
-      "passwordValidation",
-      "forgotPassword",
-      "resetPassword",
-      "emailVerification",
-      "navbar",
-      "sidebar",
-      "settingsSidebar",
-      "subscription",
-      "selectionActionsBar",
-      "settings",
-      "filterBar",
-      "kpiCards",
-      "entriesModal",
-      "transferenceModal",
-      "selectDropdown",
-      "banksTable",
-      "cashFlowTable",
-      "settledTable",
-      "reports",
-      "simulatedAI",
-      "notificationSettings",
-      "personalLocaleSetup",
-      "personalSettings",
-      "organizationSettings",
-      "groupSettings",
-      "groupPermissionsTable",
-      "limits",
-      "cookies",
-      "homeDashboard",
-      "currencySettings",
-      "userMenu",
-    ],
+    ns: [...NAMESPACES],
     defaultNS: "common",
+
     interpolation: { escapeValue: false },
+
     detection: {
-      // ordem: querystring > localStorage > navegador
       order: ["querystring", "localStorage", "navigator"],
       caches: ["localStorage"],
     },
+
     react: { useSuspense: false },
   });
 

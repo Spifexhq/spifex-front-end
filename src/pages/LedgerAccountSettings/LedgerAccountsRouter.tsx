@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings/LedgerAccountsRouter.tsx
+ * i18n: namespace "ledgerAccounts"
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState } from "react";
@@ -18,43 +19,36 @@ import LedgerAccountSettings from "./index";
 type View = "loading" | "gate" | "settings";
 
 const LedgerAccountsRouter: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("ledgerAccountsGate");
   const [view, setView] = useState<View>("loading");
   const location = useLocation();
 
-  // Are we on /settings/register/ledger-accounts?
   const isRegisterRoute = location.pathname.endsWith("/register/ledger-accounts");
 
-  // Page meta (title + html lang)
   useEffect(() => {
-    document.title = t("settings:ledgerAccounts.title");
+    document.title = t("pageTitle");
   }, [t]);
 
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  // Decide if there are any GL accounts
   useEffect(() => {
     let cancelled = false;
 
-    // Every time the ledger-accounts URL changes, re-check
     setView("loading");
 
     (async () => {
       try {
-        const { data } = (await api.getLedgerAccounts({
-          page_size: 1,
-        })) as { data: GetLedgerAccountsResponse };
+        const { data } = (await api.getLedgerAccounts({ page_size: 1 })) as {
+          data: GetLedgerAccountsResponse;
+        };
 
         const list = data?.results ?? [];
         const any = Array.isArray(list) && list.length > 0;
 
-        if (!cancelled) {
-          setView(any ? "settings" : "gate");
-        }
+        if (!cancelled) setView(any ? "settings" : "gate");
       } catch {
-        // On error, safest is to assume "no accounts yet" → gate
         if (!cancelled) setView("gate");
       }
     })();
@@ -62,7 +56,7 @@ const LedgerAccountsRouter: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [location.pathname]); // 🔴 key change: depend on pathname
+  }, [location.pathname]);
 
   if (view === "loading") {
     return (
@@ -73,24 +67,13 @@ const LedgerAccountsRouter: React.FC = () => {
     );
   }
 
-  // ─────────────────────────── No accounts (view === "gate") ───────────────────────────
   if (view === "gate") {
-    if (isRegisterRoute) {
-      // Already on /settings/register/ledger-accounts → show the gate
-      return <LedgerAccountsGate />;
-    }
-
-    // On /settings/ledger-accounts but no accounts → move URL to register/ledger-accounts
+    if (isRegisterRoute) return <LedgerAccountsGate />;
     return <Navigate to="/settings/register/ledger-accounts" replace />;
   }
 
-  // ─────────────────────────── Accounts exist (view === "settings") ─────────────────────
-  if (isRegisterRoute) {
-    // There ARE accounts, but user is on /settings/register/ledger-accounts → send to listing
-    return <Navigate to="/settings/ledger-accounts" replace />;
-  }
+  if (isRegisterRoute) return <Navigate to="/settings/ledger-accounts" replace />;
 
-  // There ARE accounts and path is /settings/ledger-accounts → show settings page
   return <LedgerAccountSettings />;
 };
 

@@ -1,0 +1,50 @@
+{
+  "title": "Banks",
+  "header": { "settings": "Settings", "title": "Banks" },
+  "section": { "list": "Bank accounts" },
+  "empty": "No bank accounts yet.",
+  "btn": {
+    "addBank": "Add bank",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "selectAccountType": "Select account type"
+  },
+  "field": {
+    "institution": "Bank institution",
+    "accountType": "Account type",
+    "branch": "Branch",
+    "accountNumber": "Account",
+    "iban": "IBAN",
+    "initialBalance": "Initial balance",
+    "isActive": "Active account"
+  },
+  "accountType": {
+    "checking": "Checking",
+    "savings": "Savings",
+    "investment": "Investment",
+    "cash": "Cash"
+  },
+  "modal": {
+    "createTitle": "Add bank",
+    "editTitle": "Edit bank",
+    "close": "Close"
+  },
+  "confirm": {
+    "delete": "Delete account \"{{name}}\"?",
+    "confirmLabel": "Delete",
+    "cancelLabel": "Cancel"
+  },
+  "errors": {
+    "fetchError": "Failed to fetch banks.",
+    "saveError": "Failed to save bank.",
+    "deleteError": "Failed to delete bank.",
+    "detailError": "Failed to load details.",
+    "confirmFailed": "Failed to confirm action."
+  },
+  "toast": {
+    "saveOk": "Saved bank account.",
+    "deleteOk": "Bank account deleted."
+  }
+}

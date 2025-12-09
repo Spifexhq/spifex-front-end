@@ -1,0 +1,52 @@
+{
+  "title": "Inventar",
+  "header": { "settings": "Einstellungen", "inventory": "Inventar" },
+  "badge": { "syncing": "Synchronisiere…" },
+  "section": { "list": "Inventarartikel" },
+  "search": {
+    "placeholder": "Nach Name oder SKU suchen…",
+    "aria": "Artikel suchen",
+    "button": "Suchen"
+  },
+  "row": {
+    "skuPrefix": "SKU:",
+    "qtyPrefix": "Menge:",
+    "untitled": "(ohne Titel)"
+  },
+  "btn": {
+    "addItem": "Artikel hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "retry": "Erneut versuchen"
+  },
+  "field": {
+    "sku": "SKU",
+    "name": "Name",
+    "description": "Beschreibung",
+    "uom": "Einheit (UoM)",
+    "uomPlaceholder": "z. B.: Stk, Kiste, kg, l…",
+    "qty": "Bestand",
+    "isActive": "Aktiver Artikel"
+  },
+  "modal": {
+    "createTitle": "Artikel hinzufügen",
+    "editTitle": "Artikel bearbeiten",
+    "close": "Schließen"
+  },
+  "confirm": { "deleteTitle": "Artikel \"{{name}}\" löschen?" },
+  "empty": "Keine Artikel gefunden.",
+  "errors": {
+    "loadFailedTitle": "Laden fehlgeschlagen",
+    "saveError": "Artikel konnte nicht gespeichert werden.",
+    "deleteError": "Artikel konnte nicht gelöscht werden.",
+    "detailError": "Details konnten nicht geladen werden.",
+    "confirmFailed": "Bestätigung fehlgeschlagen."
+  },
+  "toast": {
+    "saveOk": "Artikel erstellt.",
+    "updateOk": "Artikel aktualisiert.",
+    "deleteOk": "Artikel gelöscht."
+  }
+}

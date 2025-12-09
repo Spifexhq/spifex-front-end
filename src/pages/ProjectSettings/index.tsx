@@ -1,11 +1,9 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/ProjectSettings.tsx
- * Standardized flags + UX (matches Employee/Entity/Groups/Department/Inventory)
- * Pagination: cursor + arrow-only, click-to-search via "Buscar"
- * Dinâmica: overlay local p/ add/delete + refresh do pager (ConfirmToast on delete)
- * Guard: INFLIGHT_FETCH for pager fetcher
- * i18n: group "project" inside the "settings" namespace
+ * ...
+ * i18n: namespace "project"
  * -------------------------------------------------------------------------- */
+
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
@@ -54,25 +52,24 @@ const ModalSkeleton: React.FC = () => (
   </div>
 );
 
-/* ------------------------- Tipos / constantes ----------------------------- */
-const PROJECT_TYPES = [
-  { label: "Interno", value: "internal" },
-  { label: "Cliente", value: "client" },
-  { label: "Pesquisa", value: "research" },
-  { label: "Operacional", value: "operational" },
-  { label: "Marketing", value: "marketing" },
-  { label: "Produto", value: "product" },
-  { label: "TI", value: "it" },
-  { label: "Evento", value: "event" },
-  { label: "CapEx", value: "capex" },
+/* ------------------------- Types / constants ----------------------------- */
+const PROJECT_TYPE_VALUES = [
+  "internal",
+  "client",
+  "research",
+  "operational",
+  "marketing",
+  "product",
+  "it",
+  "event",
+  "capex",
 ] as const;
 
-type ProjectType = (typeof PROJECT_TYPES)[number]["value"];
+type ProjectType = (typeof PROJECT_TYPE_VALUES)[number];
 type TypeOption = { label: string; value: ProjectType };
-const TYPE_OPTIONS: TypeOption[] = PROJECT_TYPES as unknown as TypeOption[];
 
 function isProjectType(v: unknown): v is ProjectType {
-  return TYPE_OPTIONS.some((o) => o.value === v);
+  return PROJECT_TYPE_VALUES.includes(v as ProjectType);
 }
 
 function getInitials() {
@@ -88,15 +85,15 @@ const emptyForm = {
 };
 type FormState = typeof emptyForm;
 
-/* sort estável por código, depois nome */
+/* stable sort by code then name */
 function sortByCodeThenName(a: Project, b: Project) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
-  if (ca && cb && ca !== cb) return ca.localeCompare(cb, "pt-BR", { numeric: true });
-  return (a.name || "").localeCompare(b.name || "", "pt-BR");
+  if (ca && cb && ca !== cb) return ca.localeCompare(cb, "en", { numeric: true });
+  return (a.name || "").localeCompare(b.name || "", "en");
 }
 
-/* Linha */
+/* Row */
 const Row = ({
   project,
   onEdit,
@@ -104,6 +101,7 @@ const Row = ({
   canEdit,
   t,
   busy,
+  typeLabel,
 }: {
   project: Project;
   onEdit: (p: Project) => void;
@@ -111,50 +109,43 @@ const Row = ({
   canEdit: boolean;
   t: TFunction;
   busy?: boolean;
-}) => {
-  const typeLabel = isProjectType(project.type)
-    ? TYPE_OPTIONS.find((tt) => tt.value === project.type)?.label ?? "—"
-    : (project.type as string | undefined) ?? "—";
-
-  return (
-    <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-          {t("settings:project.row.codePrefix")} {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
-        </p>
-        <p className="text-[13px] font-medium text-gray-900 truncate">
-          {project.name || t("settings:project.row.untitled")}
-          {project.description ? ` — ${project.description}` : ""}
-        </p>
-      </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <span className="text-[12px] text-gray-700">
-          {project.is_active ? t("settings:project.row.active") : t("settings:project.row.inactive")}
-        </span>
-        {canEdit && (
-          <>
-            <Button
-              variant="outline"
-              onClick={() => onEdit(project)}
-              disabled={busy}
-            >
-              {t("settings:project.btn.edit")}
-            </Button>
-            <Button variant="outline" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
-              {t("settings:project.btn.delete")}
-            </Button>
-          </>
-        )}
-      </div>
+  typeLabel: string;
+}) => (
+  <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase tracking-wide text-gray-600">
+        {t("row.codePrefix")} {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
+      </p>
+      <p className="text-[13px] font-medium text-gray-900 truncate">
+        {project.name || t("row.untitled")}
+        {project.description ? ` — ${project.description}` : ""}
+      </p>
     </div>
-  );
-};
+
+    <div className="flex items-center gap-3 shrink-0">
+      <span className="text-[12px] text-gray-700">
+        {project.is_active ? t("row.active") : t("row.inactive")}
+      </span>
+
+      {canEdit && (
+        <>
+          <Button variant="outline" onClick={() => onEdit(project)} disabled={busy}>
+            {t("btn.edit")}
+          </Button>
+          <Button variant="outline" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
+            {t("btn.delete")}
+          </Button>
+        </>
+      )}
+    </div>
+  </div>
+);
 
 const ProjectSettings: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("projectSettings");
   const { isOwner } = useAuthContext();
 
-  useEffect(() => { document.title = t("settings:project.title"); }, [t]);
+  useEffect(() => { document.title = t("title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   /* ----------------------------- Flags ------------------------------------ */
@@ -162,28 +153,28 @@ const ProjectSettings: React.FC = () => {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  /* ----------------------------- Estados ---------------------------------- */
+  /* ----------------------------- State ------------------------------------ */
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [snack, setSnack] = useState<Snack>(null);
 
-  /* Confirm Toast */
+  /* ConfirmToast */
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-  /* Overlay dinâmico: adicionados e excluídos (UI imediata) */
+  /* Overlay */
   const [added, setAdded] = useState<Project[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
-  /* ----------------------------- Filtro (click-to-search) ------------------ */
+  /* ----------------------------- Search (click-to-search) ------------------ */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
 
-  /* ----------------------------- Paginação por cursor ---------------------- */
+  /* ----------------------------- Cursor pagination ------------------------- */
   const fetchProjectsPage = useCallback(
     async (cursor?: string) => {
       if (INFLIGHT_FETCH) return { items: [] as Project[], nextCursor: undefined as string | undefined };
@@ -220,7 +211,7 @@ const ProjectSettings: React.FC = () => {
     else setAppliedQuery(trimmed);
   }, [query, appliedQuery, refresh]);
 
-  /* ------------------------------ Helpers overlay ------------------------- */
+  /* ------------------------------ Overlay helpers -------------------------- */
   const matchesQuery = useCallback((p: Project, q: string) => {
     if (!q) return true;
     const s = q.toLowerCase();
@@ -231,7 +222,6 @@ const ProjectSettings: React.FC = () => {
     );
   }, []);
 
-  // sincroniza overlay ao trocar a busca
   useEffect(() => {
     setAdded((prev) => prev.filter((p) => matchesQuery(p, appliedQuery)));
   }, [appliedQuery, matchesQuery]);
@@ -242,6 +232,24 @@ const ProjectSettings: React.FC = () => {
     const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIdsSet.has(p.id));
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
+
+  /* ------------------------------ Type options (i18n) ---------------------- */
+  const typeOptions = useMemo<TypeOption[]>(
+    () =>
+      PROJECT_TYPE_VALUES.map((value) => ({
+        value,
+        label: t(`types.${value}`),
+      })),
+    [t]
+  );
+
+  const getTypeLabel = useCallback(
+    (value: unknown) => {
+      if (!isProjectType(value)) return (value as string | undefined) ?? "—";
+      return typeOptions.find((o) => o.value === value)?.label ?? "—";
+    },
+    [typeOptions]
+  );
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
@@ -258,7 +266,7 @@ const ProjectSettings: React.FC = () => {
     setIsDetailLoading(true);
 
     try {
-      const res = await (api).getProject(project.id);
+      const res = await api.getProject(project.id);
       const detail = res.data as Project;
 
       setFormData({
@@ -276,10 +284,7 @@ const ProjectSettings: React.FC = () => {
         description: project.description || "",
         is_active: project.is_active ?? true,
       });
-      setSnack({
-        message: t("settings:project.errors.detailError"),
-        severity: "error",
-      });
+      setSnack({ message: t("errors.detailError"), severity: "error" });
     } finally {
       setIsDetailLoading(false);
     }
@@ -303,6 +308,7 @@ const ProjectSettings: React.FC = () => {
   const submitProject = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
     try {
       if (mode === "create") {
         const { data: created } = await api.addProject({
@@ -312,8 +318,8 @@ const ProjectSettings: React.FC = () => {
           description: formData.description || "",
           is_active: formData.is_active,
         });
-        setAdded((prev) => [created, ...prev]); // overlay local
-        setSnack({ message: t("settings:project.toast.saved"), severity: "success" });
+        setAdded((prev) => [created, ...prev]);
+        setSnack({ message: t("toast.saved"), severity: "success" });
       } else if (editingProject) {
         await api.editProject(editingProject.id, {
           name: formData.name,
@@ -322,58 +328,49 @@ const ProjectSettings: React.FC = () => {
           description: formData.description,
           is_active: formData.is_active,
         });
-        setSnack({ message: t("settings:project.toast.saved"), severity: "success" });
+        setSnack({ message: t("toast.saved"), severity: "success" });
       }
+
       await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnack({
-        message: err instanceof Error ? err.message : t("settings:project.errors.saveError"),
-        severity: "error",
-      });
+      setSnack({ message: err instanceof Error ? err.message : t("errors.saveError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* ---------- ConfirmToast delete (same pattern as Department/Inventory) --- */
   const requestDeleteProject = (project: Project) => {
     const name = project.name ?? project.code ?? "";
-    setConfirmText(t("settings:project.confirm.deleteTitle", { name }));
+    setConfirmText(t("confirm.deleteTitle", { name }));
+
     setConfirmAction(() => async () => {
       setDeleteTargetId(project.id);
-      try {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.add(project.id);
-          return next;
-        });
 
+      try {
+        setDeletedIds((prev) => new Set(prev).add(project.id));
         await api.deleteProject(project.id);
         await pager.refresh();
         setAdded((prev) => prev.filter((p) => p.id !== project.id));
-
-        setSnack({ message: t("settings:project.toast.deleted"), severity: "info" });
+        setSnack({ message: t("toast.deleted"), severity: "info" });
       } catch (err) {
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(project.id);
           return next;
         });
-        setSnack({
-          message: err instanceof Error ? err.message : t("settings:project.errors.deleteError"),
-          severity: "error",
-        });
+        setSnack({ message: err instanceof Error ? err.message : t("errors.deleteError"), severity: "error" });
       } finally {
         setDeleteTargetId(null);
         setConfirmOpen(false);
         setConfirmBusy(false);
       }
     });
+
     setConfirmOpen(true);
   };
 
-  /* ------------------------------ Esc key / scroll lock -------------------- */
+  /* ------------------------------ UX hooks -------------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
@@ -385,7 +382,7 @@ const ProjectSettings: React.FC = () => {
     return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  /* ------------------------------ Loading states --------------------------- */
+  /* ------------------------------ Loading --------------------------------- */
   if (isInitialLoading) {
     return (
       <>
@@ -400,7 +397,7 @@ const ProjectSettings: React.FC = () => {
       aria-live="polite"
       className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
     >
-      {t("settings:project.badge.syncing")}
+      {t("badge.syncing")}
     </span>
   ) : null;
 
@@ -410,12 +407,10 @@ const ProjectSettings: React.FC = () => {
   /* -------------------------------- UI ------------------------------------ */
   return (
     <>
-      {/* progress fino durante sync da paginação */}
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -424,10 +419,10 @@ const ProjectSettings: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("settings:project.header.settings")}
+                    {t("header.settings")}
                   </div>
                   <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("settings:project.header.projects")}
+                    {t("header.projects")}
                   </h1>
                 </div>
                 {headerBadge}
@@ -435,32 +430,31 @@ const ProjectSettings: React.FC = () => {
             </div>
           </header>
 
-          {/* Card principal */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:project.section.list")}
+                    {t("section.list")}
                   </span>
 
-                  {/* Busca (clique para aplicar) */}
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder={t("settings:project.search.placeholder")}
-                      aria-label={t("settings:project.search.aria")}
+                      placeholder={t("search.placeholder")}
+                      aria-label={t("search.aria")}
                       disabled={globalBusy}
                     />
                     <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
-                      {t("settings:project.search.button")}
+                      {t("search.button")}
                     </Button>
+
                     {canEdit && (
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("settings:project.btn.addProject")}
+                        {t("btn.addProject")}
                       </Button>
                     )}
                   </div>
@@ -469,25 +463,20 @@ const ProjectSettings: React.FC = () => {
 
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">
-                    {t("settings:project.errors.loadFailedTitle")}
-                  </p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
                   <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                    {t("settings:project.btn.retry")}
+                    {t("btn.retry")}
                   </Button>
                 </div>
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">
-                        {t("settings:project.empty")}
-                      </p>
+                      <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
                     ) : (
                       visibleItems.map((p) => {
-                        const rowBusy =
-                          globalBusy || deleteTargetId === p.id || deletedIds.has(p.id);
+                        const rowBusy = globalBusy || deleteTargetId === p.id || deletedIds.has(p.id);
                         return (
                           <Row
                             key={p.id}
@@ -497,6 +486,7 @@ const ProjectSettings: React.FC = () => {
                             onDelete={requestDeleteProject}
                             t={t}
                             busy={rowBusy}
+                            typeLabel={getTypeLabel(p.type)}
                           />
                         );
                       })
@@ -515,24 +505,17 @@ const ProjectSettings: React.FC = () => {
           </section>
         </div>
 
-        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create"
-                    ? t("settings:project.modal.createTitle")
-                    : t("settings:project.modal.editTitle")}
+                  {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label={t("settings:project.modal.close")}
+                  aria-label={t("modal.close")}
                   disabled={isSubmitting}
                 >
                   &times;
@@ -544,7 +527,7 @@ const ProjectSettings: React.FC = () => {
               ) : (
                 <form className="space-y-3" onSubmit={submitProject}>
                   <Input
-                    label={t("settings:project.field.name")}
+                    label={t("field.name")}
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -552,7 +535,7 @@ const ProjectSettings: React.FC = () => {
                     disabled={isSubmitting}
                   />
                   <Input
-                    label={t("settings:project.field.code")}
+                    label={t("field.code")}
                     name="code"
                     value={formData.code}
                     onChange={handleChange}
@@ -560,38 +543,37 @@ const ProjectSettings: React.FC = () => {
                   />
 
                   <SelectDropdown<TypeOption>
-                    label={t("settings:project.field.type")}
-                    items={TYPE_OPTIONS}
-                    selected={TYPE_OPTIONS.filter((opt) => opt.value === formData.type)}
-                    onChange={(items) => {
-                      if (items[0]) setFormData((p) => ({ ...p, type: items[0].value }));
-                    }}
+                    label={t("field.type")}
+                    items={typeOptions}
+                    selected={typeOptions.filter((opt) => opt.value === formData.type)}
+                    onChange={(items) => items[0] && setFormData((p) => ({ ...p, type: items[0].value }))}
                     getItemKey={(i) => i.value}
                     getItemLabel={(i) => i.label}
                     singleSelect
                     hideCheckboxes
-                    buttonLabel={t("settings:project.btnLabel.type")}
+                    buttonLabel={t("btnLabel.type")}
                     customStyles={{ maxHeight: "240px" }}
                   />
 
                   <Input
-                    label={t("settings:project.field.description")}
+                    label={t("field.description")}
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     disabled={isSubmitting}
                   />
+
                   <label className="flex items-center gap-2 text-sm">
                     <Checkbox checked={formData.is_active} onChange={handleActiveChange} disabled={isSubmitting} />
-                    {t("settings:project.field.isActive")}
+                    {t("field.isActive")}
                   </label>
 
                   <div className="flex justify-end gap-2 pt-1">
                     <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                      {t("settings:project.btn.cancel")}
+                      {t("btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {t("settings:project.btn.save")}
+                      {t("btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -601,12 +583,11 @@ const ProjectSettings: React.FC = () => {
         )}
       </main>
 
-      {/* Confirm Toast */}
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:project.btn.delete")}
-        cancelLabel={t("settings:project.btn.cancel")}
+        confirmLabel={t("btn.delete")}
+        cancelLabel={t("btn.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -615,17 +596,13 @@ const ProjectSettings: React.FC = () => {
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
-          confirmAction
-            ?.()
-            .catch(() => {
-              setSnack({ message: t("settings:project.errors.confirmFailed"), severity: "error" });
-            })
+          confirmAction()
+            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
-      {/* Typed Snackbar (single source of truth) */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

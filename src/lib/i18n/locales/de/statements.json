@@ -1,0 +1,78 @@
+{
+  "title": "Kontoauszüge",
+  "header": {
+    "settings": "Finanzen",
+    "title": "Kontoauszüge"
+  },
+  "badge": { "syncing": "Synchronisiere…" },
+  "btn": {
+    "upload": "PDFs hochladen",
+    "send": "Senden",
+    "remove": "Entfernen",
+    "sendAll": "Alle senden",
+    "clearQueue": "Warteschlange leeren",
+    "applyFilters": "Filter anwenden",
+    "clearFilters": "Zurücksetzen"
+  },
+  "dnd": {
+    "text": "PDF(s) hierher ziehen und ablegen, oder",
+    "click": "zum Auswählen klicken",
+    "hint": "Tipp: Ctrl/⌘ + U öffnet den Dateiauswahldialog."
+  },
+  "queue": { "title": "Upload-Warteschlange ({{count}})" },
+  "filters": {
+    "searchLabel": "Nach Dateinamen suchen",
+    "placeholder": "z. B.: itau_oktober.pdf",
+    "status": "Status",
+    "bank": "Konto",
+    "statusPick": "Status wählen",
+    "bankPick": "Nach Konto filtern"
+  },
+  "statuses": {
+    "uploaded": "Hochgeladen",
+    "processing": "Wird verarbeitet",
+    "ready": "Bereit",
+    "failed": "Fehlgeschlagen"
+  },
+  "list": {
+    "title": "Hochgeladene Auszüge ({{count}})",
+    "empty": "Keine Auszüge gefunden."
+  },
+  "row": {
+    "accountOptional": "Konto (optional)",
+    "accountButton": "Mit Konto verknüpfen"
+  },
+  "actions": {
+    "download": "Download",
+    "analyze": "Analysieren",
+    "delete": "Löschen"
+  },
+  "confirm": {
+    "deleteText": "Diesen Auszug löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmLabel": "Löschen",
+    "cancelLabel": "Abbrechen"
+  },
+  "toast": {
+    "banksFetchError": "Bankkonten konnten nicht geladen werden.",
+    "listFetchError": "Auszüge konnten nicht abgerufen werden.",
+    "nonPdfIgnored": "Datei ignoriert (kein PDF): {{name}}",
+    "uploadFail": "Auszug konnte nicht hochgeladen werden.",
+    "analysisStarted": "Analyse gestartet. Der Status wird in Kürze aktualisiert.",
+    "analysisFail": "Analyse konnte nicht gestartet werden.",
+    "deleteFail": "Auszug konnte nicht gelöscht werden.",
+    "uploadOk": "Upload abgeschlossen.",
+    "deleteOk": "Auszug erfolgreich gelöscht."
+  },
+  "aria": {
+    "uploadTrigger": "Dateien auswählen (⌘/Ctrl+U)",
+    "progress": "Upload-Fortschritt"
+  },
+  "meta": {
+    "chip": {
+      "uploaded": "hochgeladen",
+      "processing": "wird verarbeitet",
+      "ready": "bereit",
+      "failed": "fehlgeschlagen"
+    }
+  }
+}

@@ -1,11 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/InventorySettings.tsx
- * Standardized flags + UX (matches Employee/Entity/Groups/Department)
- * Pagination: cursor + arrow-only, click-to-search via "Buscar"
- * Dinâmica: overlay local p/ add/delete + refresh do pager (ConfirmToast on delete)
- * Flags: isInitialLoading, isBackgroundSync, isSubmitting, deleteTargetId, confirmBusy
- * Guard: INFLIGHT_FETCH for pager fetcher
- * i18n: group "inventory" inside the "settings" namespace
+ * i18n: namespace "inventory"
  * -------------------------------------------------------------------------- */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
@@ -92,27 +87,23 @@ const Row = ({
   <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        {t("settings:inventory.row.skuPrefix")} {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
+        {t("row.skuPrefix")} {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
       </p>
       <p className="text-[13px] font-medium text-gray-900 truncate">
-        {item.name || t("settings:inventory.row.untitled")} {item.description ? `— ${item.description}` : ""}
+        {item.name || t("row.untitled")} {item.description ? `— ${item.description}` : ""}
       </p>
     </div>
     <div className="flex items-center gap-3 shrink-0">
       <span className="text-[12px] text-gray-700">
-        {t("settings:inventory.row.qtyPrefix")} {item.quantity_on_hand ?? "0"}
+        {t("row.qtyPrefix")} {item.quantity_on_hand ?? "0"}
       </span>
       {canEdit && (
         <>
-          <Button
-            variant="outline"
-            onClick={() => onEdit(item)}
-            disabled={busy}
-          >
-            {t("settings:inventory.btn.edit")}
+          <Button variant="outline" onClick={() => onEdit(item)} disabled={busy}>
+            {t("btn.edit")}
           </Button>
           <Button variant="outline" onClick={() => onDelete(item)} disabled={busy} aria-busy={busy || undefined}>
-            {t("settings:inventory.btn.delete")}
+            {t("btn.delete")}
           </Button>
         </>
       )}
@@ -121,11 +112,16 @@ const Row = ({
 );
 
 const InventorySettings: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("inventorySettings");
   const { isOwner } = useAuthContext();
 
-  useEffect(() => { document.title = t("settings:inventory.title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   /* ----------------------------- Flags ------------------------------------ */
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -235,23 +231,19 @@ const InventorySettings: React.FC = () => {
         name: detail.name ?? "",
         description: detail.description ?? "",
         uom: detail.uom ?? "",
-        quantity_on_hand: (detail.quantity_on_hand) ?? "0",
+        quantity_on_hand: detail.quantity_on_hand ?? "0",
         is_active: detail.is_active ?? true,
       });
     } catch {
-      // Fallback from list row data
       setFormData({
         sku: item.sku ?? "",
         name: item.name ?? "",
         description: item.description ?? "",
         uom: item.uom ?? "",
-        quantity_on_hand: (item.quantity_on_hand) ?? "0",
+        quantity_on_hand: item.quantity_on_hand ?? "0",
         is_active: item.is_active ?? true,
       });
-      setSnack({
-        message: t("settings:inventory.errors.detailError"),
-        severity: "error",
-      });
+      setSnack({ message: t("errors.detailError"), severity: "error" });
     } finally {
       setIsDetailLoading(false);
     }
@@ -279,33 +271,23 @@ const InventorySettings: React.FC = () => {
       if (mode === "create") {
         const { data: created } = await api.addInventoryItem(formData);
         setAdded((prev) => [created, ...prev]);
-        setSnack({
-          message: t("settings:inventory.toast.saveOk"),
-          severity: "success",
-        });
+        setSnack({ message: t("toast.saveOk"), severity: "success" });
       } else if (editingItem) {
         await api.editInventoryItem(editingItem.id, formData);
-        setSnack({
-          message: t("settings:inventory.toast.updateOk"),
-          severity: "success",
-        });
+        setSnack({ message: t("toast.updateOk"), severity: "success" });
       }
       await pager.refresh();
       closeModal();
     } catch (err) {
-      setSnack({
-        message: err instanceof Error ? err.message : t("settings:inventory.errors.saveError"),
-        severity: "error",
-      });
+      setSnack({ message: err instanceof Error ? err.message : t("errors.saveError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* ---------- ConfirmToast delete (same pattern as Department) ------------- */
   const requestDeleteItem = (item: InventoryItem) => {
     const name = item.name ?? item.sku ?? "";
-    setConfirmText(t("settings:inventory.confirm.deleteTitle", { name }));
+    setConfirmText(t("confirm.deleteTitle", { name }));
     setConfirmAction(() => async () => {
       setDeleteTargetId(item.id);
       try {
@@ -319,20 +301,14 @@ const InventorySettings: React.FC = () => {
         await pager.refresh();
         setAdded((prev) => prev.filter((i) => i.id !== item.id));
 
-        setSnack({
-          message: t("settings:inventory.toast.deleteOk"),
-          severity: "info",
-        });
+        setSnack({ message: t("toast.deleteOk"), severity: "info" });
       } catch (err) {
         setDeletedIds((prev) => {
           const next = new Set(prev);
           next.delete(item.id);
           return next;
         });
-        setSnack({
-          message: err instanceof Error ? err.message : t("settings:inventory.errors.deleteError"),
-          severity: "error",
-        });
+        setSnack({ message: err instanceof Error ? err.message : t("errors.deleteError"), severity: "error" });
       } finally {
         setDeleteTargetId(null);
         setConfirmOpen(false);
@@ -342,7 +318,6 @@ const InventorySettings: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  /* ------------------------------ Esc key / scroll lock -------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
     if (modalOpen) window.addEventListener("keydown", handleKeyDown);
@@ -354,7 +329,6 @@ const InventorySettings: React.FC = () => {
     return () => { document.body.style.overflow = ""; };
   }, [modalOpen]);
 
-  /* ------------------------------ Loading states --------------------------- */
   if (isInitialLoading) {
     return (
       <>
@@ -365,26 +339,20 @@ const InventorySettings: React.FC = () => {
   }
 
   const headerBadge = isBackgroundSync ? (
-    <span
-      aria-live="polite"
-      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
-    >
-      {t("settings:inventory.badge.syncing")}
+    <span aria-live="polite" className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
+      {t("badge.syncing")}
     </span>
   ) : null;
 
   const canEdit = !!isOwner;
   const globalBusy = isSubmitting || isBackgroundSync || confirmBusy;
 
-  /* --------------------------------- UI ----------------------------------- */
   return (
     <>
-      {/* Background sync progress */}
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -392,44 +360,36 @@ const InventorySettings: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("settings:inventory.header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("settings:inventory.header.inventory")}
-                  </h1>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.inventory")}</h1>
                 </div>
                 {headerBadge}
               </div>
             </div>
           </header>
 
-          {/* Card principal */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:inventory.section.list")}
-                  </span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.list")}</span>
 
-                  {/* Busca (clique para aplicar) */}
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder={t("settings:inventory.search.placeholder")}
-                      aria-label={t("settings:inventory.search.aria")}
+                      placeholder={t("search.placeholder")}
+                      aria-label={t("search.aria")}
                       disabled={globalBusy}
                     />
                     <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
-                      {t("settings:inventory.search.button")}
+                      {t("search.button")}
                     </Button>
                     {canEdit && (
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("settings:inventory.btn.addItem")}
+                        {t("btn.addItem")}
                       </Button>
                     )}
                   </div>
@@ -438,25 +398,20 @@ const InventorySettings: React.FC = () => {
 
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">
-                    {t("settings:inventory.errors.loadFailedTitle")}
-                  </p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
                   <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                    {t("settings:inventory.btn.retry")}
+                    {t("btn.retry")}
                   </Button>
                 </div>
               ) : (
                 <>
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">
-                        {t("settings:inventory.empty")}
-                      </p>
+                      <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
                     ) : (
                       visibleItems.map((i) => {
-                        const rowBusy =
-                          globalBusy || deleteTargetId === i.id || deletedIds.has(i.id);
+                        const rowBusy = globalBusy || deleteTargetId === i.id || deletedIds.has(i.id);
                         return (
                           <Row
                             key={i.id}
@@ -484,24 +439,17 @@ const InventorySettings: React.FC = () => {
           </section>
         </div>
 
-        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create"
-                    ? t("settings:inventory.modal.createTitle")
-                    : t("settings:inventory.modal.editTitle")}
+                  {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label={t("settings:inventory.modal.close")}
+                  aria-label={t("modal.close")}
                   disabled={isSubmitting}
                 >
                   &times;
@@ -512,23 +460,22 @@ const InventorySettings: React.FC = () => {
                 <ModalSkeleton />
               ) : (
                 <form className="space-y-3" onSubmit={submitItem}>
-                  <Input label={t("settings:inventory.field.sku")} name="sku" value={formData.sku} onChange={handleChange} required disabled={isSubmitting} />
-                  <Input label={t("settings:inventory.field.name")} name="name" value={formData.name} onChange={handleChange} required disabled={isSubmitting} />
-                  <Input label={t("settings:inventory.field.description")} name="description" value={formData.description} onChange={handleChange} disabled={isSubmitting} />
-                  <Input label={t("settings:inventory.field.uom")} name="uom" value={formData.uom} onChange={handleChange} placeholder={t("settings:inventory.field.uomPlaceholder")} disabled={isSubmitting} />
-                  <Input label={t("settings:inventory.field.qty")} name="quantity_on_hand" type="number" step="1" min="0"
-                        value={formData.quantity_on_hand} onChange={handleChange} disabled={isSubmitting} />
+                  <Input label={t("field.sku")} name="sku" value={formData.sku} onChange={handleChange} required disabled={isSubmitting} />
+                  <Input label={t("field.name")} name="name" value={formData.name} onChange={handleChange} required disabled={isSubmitting} />
+                  <Input label={t("field.description")} name="description" value={formData.description} onChange={handleChange} disabled={isSubmitting} />
+                  <Input label={t("field.uom")} name="uom" value={formData.uom} onChange={handleChange} placeholder={t("field.uomPlaceholder")} disabled={isSubmitting} />
+                  <Input label={t("field.qty")} name="quantity_on_hand" type="number" step="1" min="0" value={formData.quantity_on_hand} onChange={handleChange} disabled={isSubmitting} />
                   <label className="flex items-center gap-2 text-sm">
                     <Checkbox checked={formData.is_active} onChange={handleActive} disabled={isSubmitting} />
-                    {t("settings:inventory.field.isActive")}
+                    {t("field.isActive")}
                   </label>
 
                   <div className="flex justify-end gap-2 pt-1">
                     <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                      {t("settings:inventory.btn.cancel")}
+                      {t("btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {t("settings:inventory.btn.save")}
+                      {t("btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -538,12 +485,11 @@ const InventorySettings: React.FC = () => {
         )}
       </main>
 
-      {/* Confirm Toast */}
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:inventory.btn.delete")}
-        cancelLabel={t("settings:inventory.btn.cancel")}
+        confirmLabel={t("btn.delete")}
+        cancelLabel={t("btn.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -552,17 +498,15 @@ const InventorySettings: React.FC = () => {
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
-          confirmAction
-            ?.()
+          confirmAction()
             .catch(() => {
-              setSnack({ message: t("settings:inventory.errors.confirmFailed"), severity: "error" });
+              setSnack({ message: t("errors.confirmFailed"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
-      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

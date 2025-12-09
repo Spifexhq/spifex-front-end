@@ -4,6 +4,7 @@
  * - Flags: isInitialLoading, isBackgroundSync, isSubmitting, isDetailLoading
  * - Delete: deleteTargetId (freezes the row), ConfirmToast for confirmation
  * - Modal: skeleton when loading detail on edit
+ * - i18n: namespace "employeeSettings"
  * -------------------------------------------------------------------------- */
 
 import React, {
@@ -51,7 +52,7 @@ type FormState = typeof emptyForm;
 /* ---------------------------- In-memory guards --------------------------- */
 let INFLIGHT_FETCH = false;
 
-/* ------------------------------ Helpers (module scope to fix deps) ------- */
+/* ------------------------------ Helpers (module scope) ------------------- */
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
@@ -103,7 +104,6 @@ const ModalSkeleton: React.FC = () => (
 const getInitials = () => "FN";
 
 /* ----------------------------- UI: Row ----------------------------------- */
-
 const Row = ({
   emp,
   onEdit,
@@ -126,12 +126,8 @@ const Row = ({
     </div>
     {canEdit && (
       <div className="flex gap-2 shrink-0">
-        <Button
-          variant="outline"
-          onClick={() => onEdit(emp)}
-          disabled={busy}
-        >
-          {t("settings:employee.btn.edit")}
+        <Button variant="outline" onClick={() => onEdit(emp)} disabled={busy}>
+          {t("btn.edit")}
         </Button>
         <Button
           variant="outline"
@@ -139,7 +135,7 @@ const Row = ({
           disabled={busy}
           aria-busy={busy || undefined}
         >
-          {t("settings:employee.btn.delete")}
+          {t("btn.delete")}
         </Button>
       </div>
     )}
@@ -147,12 +143,11 @@ const Row = ({
 );
 
 /* ----------------------------- Component --------------------------------- */
-
 const EmployeeSettings: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("employeeSettings");
   const { isOwner } = useAuthContext();
 
-  useEffect(() => { document.title = t("settings:employee.title"); }, [t]);
+  useEffect(() => { document.title = t("title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -174,7 +169,7 @@ const EmployeeSettings: React.FC = () => {
   // Toast
   const [snack, setSnack] = useState<Snack>(null);
 
-  // ConfirmToast (same as EntitySettings)
+  // ConfirmToast
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
@@ -189,16 +184,16 @@ const EmployeeSettings: React.FC = () => {
   }, []);
 
   /* ----------------------------- Fetchers --------------------------------- */
-
   const normalizeAndSet = useCallback((empRes: Employee[], grpRes: GroupListItem[]) => {
     const onlyMembers = empRes.filter((e) => e.role === "member");
-    // sort by name, then email
+
     const normEmployees = [...onlyMembers].sort((a, b) => {
       const an = (a.name || "").toLowerCase();
       const bn = (b.name || "").toLowerCase();
       if (an !== bn) return an.localeCompare(bn);
       return (a.email || "").toLowerCase().localeCompare((b.email || "").toLowerCase());
     });
+
     const normGroups = [...grpRes].sort((a, b) => a.id - b.id);
 
     startTransition(() => {
@@ -224,7 +219,7 @@ const EmployeeSettings: React.FC = () => {
       } catch (err: unknown) {
         if (mountedRef.current) {
           console.error("Fetch employees/groups failed", err);
-          setSnack({ message: t("settings:employee.errors.fetchError"), severity: "error" });
+          setSnack({ message: t("errors.fetchError"), severity: "error" });
         }
       } finally {
         if (mountedRef.current) {
@@ -243,7 +238,6 @@ const EmployeeSettings: React.FC = () => {
   }, []);
 
   /* ------------------------------ Handlers -------------------------------- */
-
   const openCreateModal = () => {
     setModalMode("create");
     setEditingEmployee(null);
@@ -271,7 +265,7 @@ const EmployeeSettings: React.FC = () => {
       });
     } catch (error: unknown) {
       console.error(error);
-      setSnack({ message: t("settings:employee.errors.loadEmployeeError"), severity: "error" });
+      setSnack({ message: t("errors.loadEmployeeError"), severity: "error" });
       setModalOpen(false);
       setEditingEmployee(null);
     } finally {
@@ -297,15 +291,12 @@ const EmployeeSettings: React.FC = () => {
 
     if (modalMode === "create") {
       if (formData.password !== formData.confirmPassword) {
-        setSnack({ message: t("settings:employee.toast.passwordMismatch"), severity: "warning" });
+        setSnack({ message: t("toast.passwordMismatch"), severity: "warning" });
         return;
       }
       const { isValid, message } = validatePassword(formData.password);
       if (!isValid) {
-        setSnack({
-          message: message || t("settings:employee.toast.weakPassword"),
-          severity: "warning",
-        });
+        setSnack({ message: message || t("toast.weakPassword"), severity: "warning" });
         return;
       }
     }
@@ -329,33 +320,27 @@ const EmployeeSettings: React.FC = () => {
 
       await fetchList();
       closeModal();
-      setSnack({
-        message: t("settings:employee.toast.saveOk"),
-        severity: "success",
-      });
+      setSnack({ message: t("toast.saveOk"), severity: "success" });
     } catch (err: unknown) {
       console.error(err);
-      setSnack({ message: t("settings:employee.errors.saveError"), severity: "error" });
+      setSnack({ message: t("errors.saveError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* ---------- ConfirmToast delete (same as EntitySettings) ----------------- */
+  /* ---------- ConfirmToast delete ----------------- */
   const requestDeleteEmployee = (emp: Employee) => {
-    setConfirmText(t("settings:employee.confirm.delete", { name: emp.name }));
+    setConfirmText(t("confirm.delete", { name: emp.name }));
     setConfirmAction(() => async () => {
       setDeleteTargetId(emp.external_id);
       try {
         await api.deleteEmployee(emp.external_id);
         await fetchList({ background: true });
-        setSnack({
-          message: t("settings:employee.toast.deleteOk"),
-          severity: "info",
-        });
+        setSnack({ message: t("toast.deleteOk"), severity: "info" });
       } catch (err: unknown) {
         console.error(err);
-        setSnack({ message: t("settings:employee.errors.deleteError"), severity: "error" });
+        setSnack({ message: t("errors.deleteError"), severity: "error" });
       } finally {
         setDeleteTargetId(null);
         setConfirmOpen(false);
@@ -378,7 +363,6 @@ const EmployeeSettings: React.FC = () => {
   }, [modalOpen]);
 
   /* ------------------------------ Render ---------------------------------- */
-
   if (isInitialLoading) {
     return (
       <>
@@ -394,7 +378,7 @@ const EmployeeSettings: React.FC = () => {
       aria-live="polite"
       className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
     >
-      {t("settings:employee.badge.syncing")}
+      {t("badge.syncing")}
     </span>
   ) : null;
 
@@ -404,7 +388,6 @@ const EmployeeSettings: React.FC = () => {
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -413,10 +396,10 @@ const EmployeeSettings: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("settings:employee.header.settings")}
+                    {t("header.settings")}
                   </div>
                   <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("settings:employee.header.employees")}
+                    {t("header.employees")}
                   </h1>
                 </div>
                 {headerBadge}
@@ -424,13 +407,12 @@ const EmployeeSettings: React.FC = () => {
             </div>
           </header>
 
-          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:employee.section.list")}
+                    {t("section.list")}
                   </span>
                   {canEdit && (
                     <Button
@@ -438,7 +420,7 @@ const EmployeeSettings: React.FC = () => {
                       className="!py-1.5"
                       disabled={isSubmitting || isBackgroundSync || confirmBusy}
                     >
-                      {t("settings:employee.btn.addEmployee")}
+                      {t("btn.addEmployee")}
                     </Button>
                   )}
                 </div>
@@ -468,7 +450,7 @@ const EmployeeSettings: React.FC = () => {
 
                 {employees.length === 0 && !isBackgroundSync && (
                   <p className="p-4 text-center text-sm text-gray-500">
-                    {t("settings:employee.empty")}
+                    {t("empty")}
                   </p>
                 )}
               </div>
@@ -476,7 +458,6 @@ const EmployeeSettings: React.FC = () => {
           </section>
         </div>
 
-        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
             <div
@@ -486,14 +467,12 @@ const EmployeeSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {modalMode === "create"
-                    ? t("settings:employee.modal.createTitle")
-                    : t("settings:employee.modal.editTitle")}
+                  {modalMode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label={t("settings:employee.modal.close")}
+                  aria-label={t("modal.close")}
                   disabled={isSubmitting || isDetailLoading}
                 >
                   &times;
@@ -505,7 +484,7 @@ const EmployeeSettings: React.FC = () => {
               ) : (
                 <form className="grid grid-cols-2 gap-4" onSubmit={submitEmployee}>
                   <Input
-                    label={t("settings:employee.field.name")}
+                    label={t("field.name")}
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -513,7 +492,7 @@ const EmployeeSettings: React.FC = () => {
                     disabled={isSubmitting || isDetailLoading}
                   />
                   <Input
-                    label={t("settings:employee.field.email")}
+                    label={t("field.email")}
                     name="email"
                     type="email"
                     value={formData.email}
@@ -525,7 +504,7 @@ const EmployeeSettings: React.FC = () => {
                   {modalMode === "create" && (
                     <>
                       <Input
-                        label={t("settings:employee.field.tempPassword")}
+                        label={t("field.tempPassword")}
                         name="password"
                         type="password"
                         value={formData.password}
@@ -535,7 +514,7 @@ const EmployeeSettings: React.FC = () => {
                         disabled={isSubmitting}
                       />
                       <Input
-                        label={t("settings:employee.field.confirmPassword")}
+                        label={t("field.confirmPassword")}
                         name="confirmPassword"
                         type="password"
                         value={formData.confirmPassword}
@@ -550,13 +529,13 @@ const EmployeeSettings: React.FC = () => {
                   <div className="col-span-2">
                     <div className={(isSubmitting || isDetailLoading) ? "pointer-events-none opacity-70" : ""}>
                       <SelectDropdown<GroupListItem>
-                        label={t("settings:employee.field.groups")}
+                        label={t("field.groups")}
                         items={groups}
                         selected={formData.groups}
                         onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
                         getItemKey={(g) => g.external_id}
                         getItemLabel={(g) => g.name}
-                        buttonLabel={t("settings:employee.btnLabel.groups")}
+                        buttonLabel={t("btnLabel.groups")}
                         hideCheckboxes={false}
                         clearOnClickOutside={false}
                       />
@@ -570,10 +549,10 @@ const EmployeeSettings: React.FC = () => {
                       onClick={closeModal}
                       disabled={isSubmitting || isDetailLoading}
                     >
-                      {t("settings:employee.btn.cancel")}
+                      {t("btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={isSubmitting || isDetailLoading}>
-                      {t("settings:employee.btn.save")}
+                      {t("btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -583,12 +562,11 @@ const EmployeeSettings: React.FC = () => {
         )}
       </main>
 
-      {/* ConfirmToast */}
       <ConfirmToast
         open={confirmOpen}
         text={confirmText}
-        confirmLabel={t("settings:employee.btn.delete")}
-        cancelLabel={t("settings:employee.btn.cancel")}
+        confirmLabel={t("btn.delete")}
+        cancelLabel={t("btn.cancel")}
         variant="danger"
         onCancel={() => {
           if (confirmBusy) return;
@@ -599,14 +577,13 @@ const EmployeeSettings: React.FC = () => {
           setConfirmBusy(true);
           confirmAction()
             .catch(() => {
-              setSnack({ message: t("settings:employee.errors.confirmFailed"), severity: "error" });
+              setSnack({ message: t("errors.confirmFailed"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}
       />
 
-      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

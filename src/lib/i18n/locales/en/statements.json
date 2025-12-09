@@ -1,0 +1,78 @@
+{
+  "title": "Bank Statements",
+  "header": {
+    "settings": "Finance",
+    "title": "Bank statements"
+  },
+  "badge": { "syncing": "Syncing…" },
+  "btn": {
+    "upload": "Upload PDFs",
+    "send": "Send",
+    "remove": "Remove",
+    "sendAll": "Send all",
+    "clearQueue": "Clear queue",
+    "applyFilters": "Apply filters",
+    "clearFilters": "Clear"
+  },
+  "dnd": {
+    "text": "Drag and drop PDF(s) here, or",
+    "click": "click to select",
+    "hint": "Tip: use Ctrl/⌘ + U to open the selector."
+  },
+  "queue": { "title": "Upload queue ({{count}})" },
+  "filters": {
+    "searchLabel": "Search by file name",
+    "placeholder": "e.g.: itau_october.pdf",
+    "status": "Status",
+    "bank": "Account",
+    "statusPick": "Select status",
+    "bankPick": "Filter by account"
+  },
+  "statuses": {
+    "uploaded": "Uploaded",
+    "processing": "Processing",
+    "ready": "Ready",
+    "failed": "Failed"
+  },
+  "list": {
+    "title": "Uploaded statements ({{count}})",
+    "empty": "No statements found."
+  },
+  "row": {
+    "accountOptional": "Account (optional)",
+    "accountButton": "Link to an account"
+  },
+  "actions": {
+    "download": "Download",
+    "analyze": "Analyze",
+    "delete": "Delete"
+  },
+  "confirm": {
+    "deleteText": "Delete this statement? This action cannot be undone.",
+    "confirmLabel": "Delete",
+    "cancelLabel": "Cancel"
+  },
+  "toast": {
+    "banksFetchError": "Failed to load bank accounts.",
+    "listFetchError": "Failed to fetch statements.",
+    "nonPdfIgnored": "File ignored (not a PDF): {{name}}",
+    "uploadFail": "Failed to upload statement.",
+    "analysisStarted": "Analysis started. Status will update shortly.",
+    "analysisFail": "Could not start analysis.",
+    "deleteFail": "Failed to delete statement.",
+    "uploadOk": "Upload completed.",
+    "deleteOk": "Statement deleted successfully."
+  },
+  "aria": {
+    "uploadTrigger": "Select files (⌘/Ctrl+U)",
+    "progress": "Upload progress"
+  },
+  "meta": {
+    "chip": {
+      "uploaded": "uploaded",
+      "processing": "processing",
+      "ready": "ready",
+      "failed": "failed"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "title": "Inventaire",
+  "header": { "settings": "Paramètres", "inventory": "Inventaire" },
+  "badge": { "syncing": "Synchronisation…" },
+  "section": { "list": "Articles d’inventaire" },
+  "search": {
+    "placeholder": "Rechercher par nom ou SKU…",
+    "aria": "Rechercher des articles",
+    "button": "Rechercher"
+  },
+  "row": {
+    "skuPrefix": "SKU :",
+    "qtyPrefix": "Qté :",
+    "untitled": "(sans titre)"
+  },
+  "btn": {
+    "addItem": "Ajouter un article",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "retry": "Réessayer"
+  },
+  "field": {
+    "sku": "SKU",
+    "name": "Nom",
+    "description": "Description",
+    "uom": "Unité (UoM)",
+    "uomPlaceholder": "ex. : pc, boîte, kg, l…",
+    "qty": "Quantité en stock",
+    "isActive": "Article actif"
+  },
+  "modal": {
+    "createTitle": "Ajouter un article",
+    "editTitle": "Modifier l’article",
+    "close": "Fermer"
+  },
+  "confirm": { "deleteTitle": "Supprimer l’article \"{{name}}\" ?" },
+  "empty": "Aucun article trouvé.",
+  "errors": {
+    "loadFailedTitle": "Échec du chargement",
+    "saveError": "Échec de l’enregistrement de l’article.",
+    "deleteError": "Échec de la suppression de l’article.",
+    "detailError": "Échec du chargement des détails.",
+    "confirmFailed": "Échec de la confirmation."
+  },
+  "toast": {
+    "saveOk": "Article créé.",
+    "updateOk": "Article mis à jour.",
+    "deleteOk": "Article supprimé."
+  }
+}

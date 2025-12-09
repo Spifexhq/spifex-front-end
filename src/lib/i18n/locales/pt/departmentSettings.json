@@ -1,0 +1,42 @@
+{
+  "title": "Departamentos",
+  "card": { "settings": "Definições", "departments": "Departamentos" },
+  "list": { "title": "Lista de departamentos" },
+  "buttons": {
+    "search": "Pesquisar",
+    "searchPlaceholder": "Pesquisar por nome ou código…",
+    "runSearchAria": "Executar pesquisa",
+    "add": "Adicionar departamento",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "tryAgain": "Tentar novamente",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "confirm": { "deleteTitle": "Eliminar “{{name}}”?" },
+  "tags": {
+    "code": "Código",
+    "inactive": "Inativo",
+    "noName": "(sem nome)"
+  },
+  "modal": {
+    "addTitle": "Adicionar departamento",
+    "editTitle": "Editar departamento",
+    "name": "Nome",
+    "code": "Código",
+    "active": "Departamento ativo"
+  },
+  "errors": {
+    "fetchError": "Falha ao carregar.",
+    "saveFailed": "Falha ao guardar o departamento.",
+    "deleteFailed": "Falha ao eliminar o departamento.",
+    "confirmFailed": "Falha ao confirmar a ação."
+  },
+  "toast": {
+    "saveOk": "Departamento guardado.",
+    "deleteOk": "Departamento eliminado."
+  },
+  "alerts": {
+    "noData": "Nenhum departamento encontrado nesta página."
+  }
+}

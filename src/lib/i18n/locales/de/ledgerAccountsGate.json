@@ -1,0 +1,59 @@
+{
+  "pageTitle": "Kontenplan",
+  "title": "Lassen Sie uns Ihre Hauptbuchkonten einrichten",
+  "subtitle": "Wählen Sie, wie Sie Ihren Kontenplan erstellen möchten. Sie können ihn später bearbeiten oder erweitern.",
+  "header": {
+    "settings": "Einstellungen",
+    "categoriesInfo": "Kategorien: 1 = Betriebsertrag · 2 = Sonstiger Ertrag · 3 = Betriebsaufwand · 4 = Sonstiger Aufwand."
+  },
+  "modes": {
+    "csv": {
+      "title": "Import per CSV oder Excel",
+      "choose": "Auswählen",
+      "downloadTemplate": ".csv-Vorlage herunterladen",
+      "downloadXlsxTemplate": ".xlsx-Vorlage herunterladen",
+      "uploadLabel": "Datei hochladen (.csv oder .xlsx)",
+      "hintHeaderRow": "Die Datei muss eine Kopfzeile enthalten",
+      "hintColumns": "Pflichtspalten (in genau dieser Reihenfolge): CATEGORY, SUBGROUP, ACCOUNT.",
+      "hintCategories": "CATEGORY muss 1, 2, 3 oder 4 sein.",
+      "hintXlsxMeta": "Für .xlsx verwenden Sie die offizielle Vorlage. Die Datei wird über ein internes Meta-Sheet und eine Template-ID validiert."
+    },
+    "manual": {
+      "title": "Manuell eingeben",
+      "choose": "Auswählen",
+      "instructions": "Format: CATEGORY;SUBGROUP;ACCOUNT — eine Zeile pro Eintrag. CATEGORY muss 1, 2, 3 oder 4 sein.",
+      "placeholder": "Beispiele:\n1; Verkauf; Produktverkäufe\n3; Verwaltung; Löhne und Gehälter\n4; Finanzen; Bankgebühren",
+      "hintCategories": "CATEGORY muss 1, 2, 3 oder 4 sein."
+    },
+    "standard": {
+      "title": "Standardplan verwenden",
+      "choose": "Auswählen",
+      "personal": "Privater Kontenplan",
+      "business": "Geschäftlicher Kontenplan",
+      "hint": "Wir erstellen einen vorgeschlagenen Kontenplan mit den vier Kategorien. Sie können ihn später bearbeiten oder löschen."
+    }
+  },
+  "buttons": {
+    "clear": "Auswahl löschen",
+    "finish": "Fertig",
+    "finishing": "Importiere…"
+  },
+  "snackbar": {
+    "selectCsv": "Bitte wählen Sie eine CSV- oder XLSX-Datei aus.",
+    "emptyCsv": "Leere oder ungültige Datei.",
+    "csvSuccess": "Konten aus der Datei importiert.",
+    "manualRequired": "Füllen Sie das Feld mit CATEGORY;SUBGROUP;ACCOUNT aus.",
+    "manualSuccess": "Konten aus dem Text erstellt.",
+    "standardRequired": "Wählen Sie einen Standardplan (Privat oder Geschäft).",
+    "standardEmpty": "Der Standardplan ist leer.",
+    "standardSuccess": "Standardplan auf Ihre Konten angewendet.",
+    "chooseMode": "Wählen Sie eine Option (CSV/Excel, Manuell oder Standardplan).",
+    "saveError": "Fehler beim Erstellen der Konten.",
+    "downloadError": "Fehler beim Herunterladen der Vorlage."
+  },
+  "misc": {
+    "fileNameTemplate": "template_ledger_accounts.csv",
+    "fileNameTemplateXlsx": "template_ledger_accounts.xlsx",
+    "groupMappingNote": "Kategorien werden als Zahlen (1..4) an die API gesendet."
+  }
+}

@@ -2,6 +2,7 @@
  * File: src/pages/BankSettings.tsx
  * - Currency: ALWAYS from auth org; fallback USD (never from bank/detail)
  * - Money rule: initial_balance is a MAJOR decimal string "1234.56" (API-ready)
+ * - i18n: namespace "bankSettings"
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -68,7 +69,6 @@ function buildEmptyForm(): BankForm {
 
 function coerceMajorDecimalOrZero(v: unknown) {
   const s = String(v ?? "").trim();
-  // backend should already return decimals; fallback keeps API-safe
   if (!s) return "0.00";
   return s;
 }
@@ -109,10 +109,10 @@ const Row = React.memo(function Row({
       {canEdit && (
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" onClick={() => onEdit(bank)} disabled={busy}>
-            {t("settings:bank.btn.edit")}
+            {t("btn.edit")}
           </Button>
           <Button variant="outline" onClick={() => onDelete(bank)} disabled={busy}>
-            {t("settings:bank.btn.delete")}
+            {t("btn.delete")}
           </Button>
         </div>
       )}
@@ -143,7 +143,7 @@ const ModalSkeleton: React.FC = () => (
 /* ---------------------------------- Page --------------------------------- */
 
 const BankSettings: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("bankSettings");
   const { isOwner } = useAuthContext();
 
   const { organization: authOrg } = useAuth();
@@ -153,7 +153,7 @@ const BankSettings: React.FC = () => {
   );
 
   useEffect(() => {
-    document.title = t("settings:bank.title");
+    document.title = t("title");
   }, [t]);
 
   useEffect(() => {
@@ -208,7 +208,7 @@ const BankSettings: React.FC = () => {
         list.sort((a, b) => (a.institution || "").localeCompare(b.institution || ""));
         setBanks(list);
       } catch {
-        setSnack({ message: t("settings:bank.errors.fetchError"), severity: "error" });
+        setSnack({ message: t("errors.fetchError"), severity: "error" });
       } finally {
         if (opts.background) setIsBackgroundSync(false);
         else setIsInitialLoading(false);
@@ -270,7 +270,7 @@ const BankSettings: React.FC = () => {
           initial_balance: coerceMajorDecimalOrZero(bank.initial_balance),
           is_active: bank.is_active ?? true,
         });
-        setSnack({ message: t("settings:bank.errors.detailError"), severity: "error" });
+        setSnack({ message: t("errors.detailError"), severity: "error" });
       } finally {
         setIsDetailLoading(false);
       }
@@ -296,7 +296,7 @@ const BankSettings: React.FC = () => {
     () =>
       ACCOUNT_TYPE_VALUES.map((value) => ({
         value,
-        label: t(`settings:bank.accountType.${value}`),
+        label: t(`accountType.${value}`),
       })),
     [t]
   );
@@ -315,7 +315,7 @@ const BankSettings: React.FC = () => {
           branch: formData.branch,
           account_number: formData.account_number,
           iban: formData.iban || "",
-          initial_balance: formData.initial_balance || "0.00", // keep API-safe
+          initial_balance: formData.initial_balance || "0.00",
           is_active: formData.is_active,
         };
 
@@ -336,9 +336,9 @@ const BankSettings: React.FC = () => {
 
         await fetchBanks({ background: true });
         closeModal();
-        setSnack({ message: t("settings:bank.toast.saveOk"), severity: "success" });
+        setSnack({ message: t("toast.saveOk"), severity: "success" });
       } catch {
-        setSnack({ message: t("settings:bank.errors.saveError"), severity: "error" });
+        setSnack({ message: t("errors.saveError"), severity: "error" });
       } finally {
         setIsSubmitting(false);
       }
@@ -354,7 +354,7 @@ const BankSettings: React.FC = () => {
 
   const confirmText = useMemo(() => {
     if (!deleteCandidate) return "";
-    return t("settings:bank.confirm.delete", { name: deleteCandidate.institution });
+    return t("confirm.delete", { name: deleteCandidate.institution });
   }, [deleteCandidate, t]);
 
   const handleConfirmDelete = useCallback(async () => {
@@ -364,14 +364,13 @@ const BankSettings: React.FC = () => {
     setConfirmBusy(true);
     setDeleteTargetId(bank.id);
 
-    // optimistic hide
     setDeletedIds((prev) => new Set(prev).add(bank.id));
 
     try {
       await api.deleteBank(bank.id);
       await fetchBanks({ background: true });
       setAdded((prev) => prev.filter((b) => b.id !== bank.id));
-      setSnack({ message: t("settings:bank.toast.deleteOk"), severity: "info" });
+      setSnack({ message: t("toast.deleteOk"), severity: "info" });
       setDeleteCandidate(null);
     } catch {
       setDeletedIds((prev) => {
@@ -379,7 +378,7 @@ const BankSettings: React.FC = () => {
         next.delete(bank.id);
         return next;
       });
-      setSnack({ message: t("settings:bank.errors.deleteError"), severity: "error" });
+      setSnack({ message: t("errors.deleteError"), severity: "error" });
     } finally {
       setDeleteTargetId(null);
       setConfirmBusy(false);
@@ -434,10 +433,10 @@ const BankSettings: React.FC = () => {
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("settings:bank.header.settings")}
+                  {t("header.settings")}
                 </div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("settings:bank.header.title")}
+                  {t("header.title")}
                 </h1>
               </div>
             </div>
@@ -448,11 +447,11 @@ const BankSettings: React.FC = () => {
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("settings:bank.section.list")}
+                    {t("section.list")}
                   </span>
                   {isOwner && (
                     <Button onClick={openCreateModal} className="!py-1.5" disabled={busyGlobal}>
-                      {t("settings:bank.btn.addBank")}
+                      {t("btn.addBank")}
                     </Button>
                   )}
                 </div>
@@ -461,7 +460,7 @@ const BankSettings: React.FC = () => {
               <div className="divide-y divide-gray-200">
                 {visibleBanks.length === 0 ? (
                   <p className="p-4 text-center text-sm text-gray-500">
-                    {t("settings:bank.empty")}
+                    {t("empty")}
                   </p>
                 ) : (
                   visibleBanks.map((b) => {
@@ -493,14 +492,12 @@ const BankSettings: React.FC = () => {
             >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create"
-                    ? t("settings:bank.modal.createTitle")
-                    : t("settings:bank.modal.editTitle")}
+                  {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label={t("settings:bank.modal.close")}
+                  aria-label={t("modal.close")}
                   disabled={busyGlobal}
                 >
                   &times;
@@ -515,7 +512,7 @@ const BankSettings: React.FC = () => {
                   onSubmit={handleSubmit}
                 >
                   <Input
-                    label={t("settings:bank.field.institution")}
+                    label={t("field.institution")}
                     name="institution"
                     value={formData.institution}
                     onChange={handleTextChange}
@@ -523,7 +520,7 @@ const BankSettings: React.FC = () => {
                   />
 
                   <SelectDropdown<{ value: AccountType; label: string }>
-                    label={t("settings:bank.field.accountType")}
+                    label={t("field.accountType")}
                     items={accountTypeOptions}
                     selected={accountTypeOptions.filter((a) => a.value === formData.account_type)}
                     onChange={(items) =>
@@ -537,30 +534,30 @@ const BankSettings: React.FC = () => {
                     getItemLabel={(item) => item.label}
                     singleSelect
                     hideCheckboxes
-                    buttonLabel={t("settings:bank.btn.selectAccountType")}
+                    buttonLabel={t("btn.selectAccountType")}
                   />
 
                   <Input
-                    label={t("settings:bank.field.branch")}
+                    label={t("field.branch")}
                     name="branch"
                     value={formData.branch}
                     onChange={handleTextChange}
                   />
                   <Input
-                    label={t("settings:bank.field.accountNumber")}
+                    label={t("field.accountNumber")}
                     name="account_number"
                     value={formData.account_number}
                     onChange={handleTextChange}
                   />
                   <Input
-                    label={t("settings:bank.field.iban")}
+                    label={t("field.iban")}
                     name="iban"
                     value={formData.iban}
                     onChange={handleTextChange}
                   />
 
                   <AmountInput
-                    label={t("settings:bank.field.initialBalance")}
+                    label={t("field.initialBalance")}
                     value={formData.initial_balance}
                     onValueChange={(nextMajor) =>
                       setFormData((p) => ({ ...p, initial_balance: nextMajor || "0.00" }))
@@ -578,16 +575,16 @@ const BankSettings: React.FC = () => {
                       colorClass="defaultColor"
                     />
                     <span className="text-[12px] text-gray-700">
-                      {t("settings:bank.field.isActive")}
+                      {t("field.isActive")}
                     </span>
                   </div>
 
                   <div className="flex justify-end gap-2 pt-1">
                     <Button variant="cancel" type="button" onClick={closeModal} disabled={busyGlobal}>
-                      {t("settings:bank.btn.cancel")}
+                      {t("btn.cancel")}
                     </Button>
                     <Button type="submit" disabled={busyGlobal}>
-                      {t("settings:bank.btn.save")}
+                      {t("btn.save")}
                     </Button>
                   </div>
                 </form>
@@ -600,8 +597,8 @@ const BankSettings: React.FC = () => {
       <ConfirmToast
         open={!!deleteCandidate}
         text={confirmText}
-        confirmLabel={t("settings:bank.confirm.confirmLabel")}
-        cancelLabel={t("settings:bank.confirm.cancelLabel")}
+        confirmLabel={t("confirm.confirmLabel")}
+        cancelLabel={t("confirm.cancelLabel")}
         variant="danger"
         busy={confirmBusy}
         onCancel={() => {

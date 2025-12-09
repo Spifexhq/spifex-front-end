@@ -1,0 +1,80 @@
+{
+  "title": "Plano de contas",
+  "header": { "section": "Definições", "title": "Plano de contas" },
+  "categories": {
+    "operationalRevenue": "Receita operacional",
+    "nonOperationalRevenue": "Receita não operacional",
+    "operationalExpense": "Despesa operacional",
+    "nonOperationalExpense": "Despesa não operacional"
+  },
+  "buttons": {
+    "add": "Adicionar conta",
+    "options": "Opções",
+    "downloadPdf": "Descarregar plano de contas (PDF)",
+    "downloadPdfDisabled": "Sem contas disponíveis",
+    "resetAll": "Repor plano de contas",
+    "deletingAll": "A eliminar…",
+    "expandAll": "Expandir tudo",
+    "collapseAll": "Colapsar tudo",
+    "viewList": "Ver como lista",
+    "viewAccordion": "Ver como acordeão",
+    "clear": "Limpar",
+    "search": "Pesquisar",
+    "filterCategory": "Filtrar por categoria",
+    "selectCategory": "Selecionar categoria",
+    "selectSubcategory": "Selecionar subcategoria",
+    "toggleNewSub": "+",
+    "toggleNewSubCancel": "Cancelar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "runSearchAria": "Pesquisar"
+  },
+  "filters": {
+    "placeholder": "Pesquisar por conta, código, categoria ou subcategoria…",
+    "category": "Categoria"
+  },
+  "list": {
+    "all": "Todas as contas",
+    "empty": "Nenhuma conta encontrada.",
+    "groupEmpty": "Nenhuma conta encontrada."
+  },
+  "tags": {
+    "code": "Código",
+    "credit": "Crédito",
+    "debit": "Débito",
+    "inactive": "Inativo",
+    "noAccount": "(sem nome)",
+    "noGroup": "(Sem categoria)",
+    "noSubgroup": "(Sem subcategoria)"
+  },
+  "modal": {
+    "createTitle": "Adicionar conta",
+    "editTitle": "Editar conta",
+    "account": "Conta contabilística",
+    "code": "Código (opcional)",
+    "codePlaceholder": "ex.: 3-0001",
+    "subcategory": "Subcategoria",
+    "subcategoryNew": "Nova subcategoria",
+    "active": "Conta ativa",
+    "defaultTxLabel": "Tipo de transação padrão:",
+    "defaultTxHint": "Selecione uma categoria para definir o tipo de transação padrão."
+  },
+  "confirm": {
+    "deleteOne": "Eliminar a conta \"{{account}}\"?",
+    "deleteAll": "Tem a certeza que pretende eliminar TODAS as contas do plano de contas? Esta ação não pode ser anulada."
+  },
+  "toast": {
+    "saved": "Conta guardada com sucesso.",
+    "saveError": "Falha ao guardar a conta.",
+    "deleteSuccess": "Conta eliminada.",
+    "deleteError": "Falha ao eliminar a conta.",
+    "deleteAllSuccess": "Plano de contas reposto.",
+    "deleteAllError": "Falha ao eliminar todas as contas.",
+    "pdfOk": "PDF gerado.",
+    "pdfError": "Erro inesperado ao gerar o PDF.",
+    "confirmFailed": "Falha ao confirmar."
+  },
+  "pdf": { "company": "Spifex", "title": "Plano de Contas" }
+}

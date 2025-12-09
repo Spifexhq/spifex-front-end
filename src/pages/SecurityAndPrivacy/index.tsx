@@ -4,7 +4,7 @@
  * - Flags: isInitialLoading, isSubmitting
  * - Initial: TopProgress + PageSkeleton
  * - Background: TopProgress while submitting (change password)
- * - i18n: group "securityAndPrivacy" inside "settings"
+ * - i18n: namespace "securityAndPrivacy"
  * -------------------------------------------------------------------------- */
 
 import axios from "axios";
@@ -59,21 +59,30 @@ const Row = ({
 
 /* -------------------------------------------------------------------------- */
 const SecurityAndPrivacy: React.FC = () => {
-  const { t, i18n } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation("securityAndPrivacy");
   const { user: authUser } = useAuthContext();
 
   /* ----------------------------- Title + lang ------------------------------ */
-  useEffect(() => { document.title = t("settings:securityAndPrivacy.title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   /* ----------------------------- date-fns locale --------------------------- */
   const dateLocale = useMemo(() => {
     const base = (i18n.language || "en").split("-")[0];
     switch (base) {
-      case "pt": return ptBR;
-      case "fr": return fr;
-      case "de": return de;
-      default: return enUS;
+      case "pt":
+        return ptBR;
+      case "fr":
+        return fr;
+      case "de":
+        return de;
+      default:
+        return enUS;
     }
   }, [i18n.language]);
 
@@ -112,7 +121,9 @@ const SecurityAndPrivacy: React.FC = () => {
         if (mounted) setIsInitialLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   /* ------------------------------- Handlers -------------------------------- */
@@ -131,17 +142,18 @@ const SecurityAndPrivacy: React.FC = () => {
     const { current_password, new_password, confirm } = pwData;
 
     if (new_password !== confirm) {
-      setSnack({ message: t("settings:securityAndPrivacy.toast.passwordMismatch"), severity: "error" });
+      setSnack({ message: t("toast.passwordMismatch"), severity: "error" });
       return;
     }
     if (current_password === new_password) {
-      setSnack({ message: t("settings:securityAndPrivacy.toast.samePassword"), severity: "error" });
+      setSnack({ message: t("toast.samePassword"), severity: "error" });
       return;
     }
+
     const validation = validatePassword(new_password);
     if (!validation.isValid) {
       setSnack({
-        message: validation.message || t("settings:securityAndPrivacy.toast.weakPassword"),
+        message: validation.message || t("toast.weakPassword"),
         severity: "error",
       });
       return;
@@ -151,23 +163,25 @@ const SecurityAndPrivacy: React.FC = () => {
     try {
       await api.changePassword({ current_password, new_password });
       closeModal();
-      setSnack({ message: t("settings:securityAndPrivacy.toast.success"), severity: "success" });
+      setSnack({ message: t("toast.success"), severity: "success" });
 
-      // Optionally refresh last_password_change from backend:
+      // refresh last_password_change
       try {
         const resp = await api.getUser();
         setUser(resp.data.user as User);
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setSnack({
-          message: (err.response?.data)?.message ?? t("settings:securityAndPrivacy.toast.changeError"),
+          message: (err.response?.data as { message?: string } | undefined)?.message ?? t("toast.changeError"),
           severity: "error",
         });
       } else if (err instanceof Error) {
         setSnack({ message: err.message, severity: "error" });
       } else {
-        setSnack({ message: t("settings:securityAndPrivacy.toast.unexpected"), severity: "error" });
+        setSnack({ message: t("toast.unexpected"), severity: "error" });
       }
     } finally {
       setIsSubmitting(false);
@@ -183,7 +197,9 @@ const SecurityAndPrivacy: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [modalOpen]);
 
   /* ----------------------------- Loading UI -------------------------------- */
@@ -199,12 +215,10 @@ const SecurityAndPrivacy: React.FC = () => {
   /* ---------------------------------- UI ---------------------------------- */
   return (
     <>
-      {/* thin progress during password submission */}
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -213,43 +227,38 @@ const SecurityAndPrivacy: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("settings:securityAndPrivacy.header.settings")}
+                    {t("header.settings")}
                   </div>
                   <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("settings:securityAndPrivacy.header.title")}
+                    {t("header.title")}
                   </h1>
                 </div>
               </div>
             </div>
           </header>
 
-          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                  {t("settings:securityAndPrivacy.section.access")}
+                  {t("section.access")}
                 </span>
               </div>
 
               <div className="divide-y divide-gray-200">
                 <Row
-                  label={t("settings:securityAndPrivacy.field.password")}
+                  label={t("field.password")}
                   value={
                     <>
-                      {t("settings:securityAndPrivacy.field.lastChange")}{" "}
+                      {t("field.lastChange")}{" "}
                       {user?.last_password_change
                         ? format(new Date(user.last_password_change), datePattern, { locale: dateLocale })
-                        : t("settings:securityAndPrivacy.field.never")}
+                        : t("field.never")}
                     </>
                   }
                   action={
-                    <Button
-                      variant="outline"
-                      onClick={openModal}
-                      disabled={isSubmitting}
-                    >
-                      {t("settings:securityAndPrivacy.btn.changePassword")}
+                    <Button variant="outline" onClick={openModal} disabled={isSubmitting}>
+                      {t("btn.changePassword")}
                     </Button>
                   }
                   disabled={isSubmitting}
@@ -259,22 +268,15 @@ const SecurityAndPrivacy: React.FC = () => {
           </section>
         </div>
 
-        {/* Modal */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {t("settings:securityAndPrivacy.modal.title")}
-                </h3>
+                <h3 className="text-[14px] font-semibold text-gray-800">{t("modal.title")}</h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
-                  aria-label={t("settings:securityAndPrivacy.modal.close")}
+                  aria-label={t("modal.close")}
                   disabled={isSubmitting}
                 >
                   &times;
@@ -289,7 +291,7 @@ const SecurityAndPrivacy: React.FC = () => {
                 }}
               >
                 <Input
-                  label={t("settings:securityAndPrivacy.field.current")}
+                  label={t("field.current")}
                   name="current_password"
                   type="password"
                   value={pwData.current_password}
@@ -299,7 +301,7 @@ const SecurityAndPrivacy: React.FC = () => {
                   required
                 />
                 <Input
-                  label={t("settings:securityAndPrivacy.field.new")}
+                  label={t("field.new")}
                   name="new_password"
                   type="password"
                   value={pwData.new_password}
@@ -309,7 +311,7 @@ const SecurityAndPrivacy: React.FC = () => {
                   required
                 />
                 <Input
-                  label={t("settings:securityAndPrivacy.field.confirm")}
+                  label={t("field.confirm")}
                   name="confirm"
                   type="password"
                   value={pwData.confirm}
@@ -321,10 +323,10 @@ const SecurityAndPrivacy: React.FC = () => {
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                    {t("settings:securityAndPrivacy.btn.cancel")}
+                    {t("btn.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {t("settings:securityAndPrivacy.btn.save")}
+                    {t("btn.save")}
                   </Button>
                 </div>
               </form>
@@ -333,7 +335,6 @@ const SecurityAndPrivacy: React.FC = () => {
         )}
       </main>
 
-      {/* Snackbar */}
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}

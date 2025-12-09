@@ -1,0 +1,52 @@
+{
+  "title": "Employees",
+  "header": {
+    "settings": "Settings",
+    "employees": "Employees"
+  },
+  "section": {
+    "list": "Employee list"
+  },
+  "field": {
+    "name": "Name",
+    "email": "Email",
+    "tempPassword": "Temporary password",
+    "confirmPassword": "Confirm password",
+    "groups": "Groups"
+  },
+  "badge": {
+    "syncing": "Syncing…"
+  },
+  "btn": {
+    "addEmployee": "Add employee",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "btnLabel": {
+    "groups": "Select groups"
+  },
+  "modal": {
+    "createTitle": "Add employee",
+    "editTitle": "Edit employee",
+    "close": "Close"
+  },
+  "empty": "No employees found.",
+  "confirm": {
+    "delete": "Delete employee \"{{name}}\"?"
+  },
+  "errors": {
+    "fetchError": "Failed to fetch data.",
+    "loadEmployeeError": "Failed to load employee data.",
+    "saveError": "Failed to save employee.",
+    "deleteError": "Failed to delete employee.",
+    "confirmFailed": "Failed to confirm action."
+  },
+  "toast": {
+    "passwordMismatch": "Passwords do not match.",
+    "weakPassword": "The password does not meet the minimum requirements.",
+    "saveOk": "Saved employee.",
+    "deleteOk": "Employee deleted."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "title": "Security & Privacy",
+  "header": {
+    "settings": "Settings",
+    "title": "Security & privacy"
+  },
+  "section": {
+    "access": "Access & credentials"
+  },
+  "field": {
+    "password": "Password",
+    "lastChange": "Last change:",
+    "never": "never",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password"
+  },
+  "btn": {
+    "changePassword": "Change password",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "modal": {
+    "title": "Change password",
+    "close": "Close"
+  },
+  "toast": {
+    "success": "Password changed successfully.",
+    "changeError": "Failed to change password.",
+    "unexpected": "Unexpected error.",
+    "passwordMismatch": "Passwords do not match.",
+    "samePassword": "The new password cannot be the same as the current password.",
+    "weakPassword": "The new password does not meet the minimum requirements."
+  }
+}

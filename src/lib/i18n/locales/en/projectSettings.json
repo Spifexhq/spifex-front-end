@@ -1,0 +1,62 @@
+{
+  "title": "Projects",
+  "header": { "settings": "Settings", "projects": "Projects" },
+  "badge": { "syncing": "Syncing…" },
+  "section": { "list": "Project list" },
+  "search": {
+    "placeholder": "Search by name or code…",
+    "aria": "Search projects",
+    "button": "Search"
+  },
+  "row": {
+    "codePrefix": "CODE:",
+    "active": "Active",
+    "inactive": "Inactive",
+    "untitled": "(untitled)"
+  },
+  "types": {
+    "internal": "Internal",
+    "client": "Client",
+    "research": "Research",
+    "operational": "Operational",
+    "marketing": "Marketing",
+    "product": "Product",
+    "it": "IT",
+    "event": "Event",
+    "capex": "CapEx"
+  },
+  "btn": {
+    "addProject": "Add project",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Try again"
+  },
+  "btnLabel": { "type": "Select a type" },
+  "field": {
+    "name": "Project name",
+    "code": "Code",
+    "type": "Project type",
+    "description": "Description",
+    "isActive": "Active project"
+  },
+  "modal": {
+    "createTitle": "Add project",
+    "editTitle": "Edit project",
+    "close": "Close"
+  },
+  "confirm": { "deleteTitle": "Delete project \"{{name}}\"?" },
+  "empty": "No projects found.",
+  "errors": {
+    "loadFailedTitle": "Failed to load",
+    "saveError": "Failed to save project.",
+    "detailError": "Failed to load details.",
+    "deleteError": "Failed to delete project.",
+    "confirmFailed": "Failed to confirm."
+  },
+  "toast": {
+    "saved": "Project saved.",
+    "deleted": "Project deleted."
+  }
+}
