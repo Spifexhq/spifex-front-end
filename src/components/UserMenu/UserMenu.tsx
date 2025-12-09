@@ -22,7 +22,7 @@ interface UserMenuProps {
 const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
   const navigate = useNavigate();
   const { handleSignOut } = useAuth();
-  const { t } = useTranslation(["settings"]);
+  const { t } = useTranslation("userMenu");
 
   const handleLogout = () => {
     handleSignOut();
@@ -35,7 +35,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
   return (
     <div
       role="menu"
-      aria-label={t("settings:userMenu.aria.menu")}
+      aria-label={t("aria.menu")}
       className="user-menu absolute top-[85%] z-50 w-64 max-w-[calc(100vw-1rem)] bg-white
                  shadow-lg rounded-md py-1 border-[0.5px] border-[#d6d6d6] right-2"
     >
@@ -45,22 +45,22 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         onClick={onClose}
         className="flex items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
         role="menuitem"
-        aria-label={t("settings:userMenu.items.personal")}
+        aria-label={t("items.personal")}
       >
-        <img alt={t("settings:userMenu.alt.personal")} src={personalIcon} className="w-5 h-5" />
-        <span className="ml-2">{t("settings:userMenu.items.personal")}</span>
+        <img alt={t("alt.personal")} src={personalIcon} className="w-5 h-5" />
+        <span className="ml-2">{t("items.personal")}</span>
       </Link>
 
-      {/* Company Settings */}
+      {/* Organization Settings (renamed from Company) */}
       <Link
-        to="/settings/company-settings"
+        to="/settings/organization-settings"
         onClick={onClose}
         className="flex items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
         role="menuitem"
-        aria-label={t("settings:userMenu.items.company")}
+        aria-label={t("items.organization")}
       >
-        <img alt={t("settings:userMenu.alt.company")} src={settingsIcon} className="w-5 h-5" />
-        <span className="ml-2">{t("settings:userMenu.items.company")}</span>
+        <img alt={t("alt.organization")} src={settingsIcon} className="w-5 h-5" />
+        <span className="ml-2">{t("items.organization")}</span>
       </Link>
 
       {/* Notifications */}
@@ -69,10 +69,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         onClick={onClose}
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
         role="menuitem"
-        aria-label={t("settings:userMenu.items.notifications")}
+        aria-label={t("items.notifications")}
       >
-        <img alt={t("settings:userMenu.alt.notifications")} src={notificationsIcon} className="w-5 h-5" />
-        <span className="ml-2">{t("settings:userMenu.items.notifications")}</span>
+        <img alt={t("alt.notifications")} src={notificationsIcon} className="w-5 h-5" />
+        <span className="ml-2">{t("items.notifications")}</span>
       </Link>
 
       {/* Help */}
@@ -83,10 +83,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         }}
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
         role="menuitem"
-        aria-label={t("settings:userMenu.items.help")}
+        aria-label={t("items.help")}
       >
-        <img alt={t("settings:userMenu.alt.help")} src={helpIcon} className="w-5 h-5" />
-        <span className="ml-2">{t("settings:userMenu.items.help")}</span>
+        <img alt={t("alt.help")} src={helpIcon} className="w-5 h-5" />
+        <span className="ml-2">{t("items.help")}</span>
       </button>
 
       {/* Sign out */}
@@ -94,10 +94,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ onClose, onHelpClick }) => {
         onClick={handleLogout}
         className="flex w-full items-center justify-start px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
         role="menuitem"
-        aria-label={t("settings:userMenu.items.signout")}
+        aria-label={t("items.signout")}
       >
-        <img alt={t("settings:userMenu.alt.signout")} src={exitIcon} className="w-5 h-5" />
-        <span className="ml-2">{t("settings:userMenu.items.signout")}</span>
+        <img alt={t("alt.signout")} src={exitIcon} className="w-5 h-5" />
+        <span className="ml-2">{t("items.signout")}</span>
       </button>
     </div>
   );

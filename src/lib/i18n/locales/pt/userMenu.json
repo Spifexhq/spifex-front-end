@@ -1,0 +1,19 @@
+{
+  "aria": {
+    "menu": "Menu de ações do utilizador"
+  },
+  "items": {
+    "personal": "Definições pessoais",
+    "organization": "Definições da organização",
+    "notifications": "Notificações",
+    "help": "Ajuda",
+    "signout": "Terminar sessão"
+  },
+  "alt": {
+    "personal": "Definições pessoais",
+    "organization": "Definições da organização",
+    "notifications": "Notificações",
+    "help": "Ajuda",
+    "signout": "Terminar sessão"
+  }
+}

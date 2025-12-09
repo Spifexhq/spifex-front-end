@@ -1,0 +1,28 @@
+{
+  "aria": {
+    "nav": "Barre latérale de navigation des paramètres"
+  },
+  "sections": {
+    "organization": "Organisation",
+    "banking": "Banque",
+    "management": "Gestion",
+    "accounting": "Comptabilité et structure"
+  },
+  "items": {
+    "personal": "Paramètres personnels",
+    "notifications": "Notifications",
+    "security": "Sécurité et confidentialité",
+    "organization-settings": "Paramètres de l’organisation",
+    "employees": "Employés",
+    "groups": "Groupes",
+    "subscription-management": "Forfait",
+    "banks": "Banques",
+    "bank-statements": "Relevés",
+    "expenses": "Dépenses",
+    "projects": "Projets",
+    "inventory": "Inventaire",
+    "entities": "Entités",
+    "ledger-accounts": "Comptes du grand livre",
+    "departments": "Départements"
+  }
+}

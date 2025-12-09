@@ -29,7 +29,7 @@ const Personal = lazy(() => import("src/pages/PersonalSettings"));
 const SubscriptionManagement = lazy(() => import("@/pages/SubscriptionManagement"));
 const LimitsAndUsage = lazy(() => import("@/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/pages/SecurityAndPrivacy"));
-const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
+const OrganizationSettings = lazy(() => import("src/pages/OrganizationSettings"));
 const DepartmentSettings = lazy(() => import("@/pages/DepartmentSettings"));
 const BankSettings = lazy(() => import("@/pages/BankSettings"));
 const EntitySettings = lazy(() => import("@/pages/EntitySettings"));
@@ -157,7 +157,7 @@ const routes: RouteObject[] = [
                 },
                 {
                     path: 'company-settings',
-                    element: <CompanySettings />
+                    element: <OrganizationSettings />
                 },
                 {
                     path: 'subscription-management',

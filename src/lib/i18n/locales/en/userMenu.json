@@ -1,0 +1,19 @@
+{
+  "aria": {
+    "menu": "User actions menu"
+  },
+  "items": {
+    "personal": "Personal settings",
+    "organization": "Organization settings",
+    "notifications": "Notifications",
+    "help": "Help",
+    "signout": "Sign out"
+  },
+  "alt": {
+    "personal": "Personal settings",
+    "organization": "Organization settings",
+    "notifications": "Notifications",
+    "help": "Help",
+    "signout": "Sign out"
+  }
+}

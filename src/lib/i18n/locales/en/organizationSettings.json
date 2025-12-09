@@ -1,0 +1,41 @@
+{
+  "title": "Organization Settings",
+  "header": { "settings": "Settings", "organization": "Organization" },
+  "section": { "orgInfo": "Organization information", "address": "Address", "timezone": "Time zone", "currency": "Currency" },
+  "field": {
+    "name": "Name",
+    "orgNameInput": "Organization name",
+    "address1": "Address line 1",
+    "address2": "Address line 2",
+    "city": "City",
+    "country": "Country",
+    "postalCode": "Postal code"
+  },
+  "btn": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "updateName": "Update name",
+    "updateTimezone": "Update time zone",
+    "updateAddress1": "Update address line 1",
+    "updateAddress2": "Update address line 2",
+    "updateCity": "Update city",
+    "updateCountry": "Update country",
+    "updatePostalCode": "Update postal code",
+    "manageCurrency": "Manage currency"
+  },
+  "label": { "currentTz": "Current" },
+  "btnLabel": { "tz": "Select timezone" },
+  "description": { "currency": "Configure the default currency used for prices and reports." },
+  "modal": {
+    "title": "Edit organization",
+    "useDeviceTz": "Use device time zone",
+    "tzLabel": "Time zone",
+    "close": "Close"
+  },
+  "toast": {
+    "orgLoadError": "Failed to fetch organization data.",
+    "orgUpdateOk": "Organization updated successfully.",
+    "orgUpdateError": "Failed to update organization."
+  },
+  "errors": { "ownerOnly": "Only organization owners can access these settings." }
+}

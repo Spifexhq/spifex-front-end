@@ -1,0 +1,41 @@
+{
+  "title": "Definições da Organização",
+  "header": { "settings": "Definições", "organization": "Organização" },
+  "section": { "orgInfo": "Informações da organização", "address": "Morada", "timezone": "Fuso horário", "currency": "Moeda" },
+  "field": {
+    "name": "Nome",
+    "orgNameInput": "Nome da organização",
+    "address1": "Linha de morada 1",
+    "address2": "Linha de morada 2",
+    "city": "Cidade",
+    "country": "País",
+    "postalCode": "Código postal"
+  },
+  "btn": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "updateName": "Atualizar nome",
+    "updateTimezone": "Atualizar fuso horário",
+    "updateAddress1": "Atualizar morada (linha 1)",
+    "updateAddress2": "Atualizar morada (linha 2)",
+    "updateCity": "Atualizar cidade",
+    "updateCountry": "Atualizar país",
+    "updatePostalCode": "Atualizar código postal",
+    "manageCurrency": "Gerir moeda"
+  },
+  "label": { "currentTz": "Atual" },
+  "btnLabel": { "tz": "Selecionar fuso horário" },
+  "description": { "currency": "Configure a moeda padrão utilizada em preços e relatórios." },
+  "modal": {
+    "title": "Editar organização",
+    "useDeviceTz": "Usar fuso horário do dispositivo",
+    "tzLabel": "Fuso horário",
+    "close": "Fechar"
+  },
+  "toast": {
+    "orgLoadError": "Falha ao obter os dados da organização.",
+    "orgUpdateOk": "Organização atualizada com sucesso.",
+    "orgUpdateError": "Falha ao atualizar a organização."
+  },
+  "errors": { "ownerOnly": "Apenas os proprietários da organização podem aceder a estas definições." }
+}

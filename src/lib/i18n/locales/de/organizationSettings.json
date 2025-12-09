@@ -1,0 +1,41 @@
+{
+  "title": "Organisationseinstellungen",
+  "header": { "settings": "Einstellungen", "organization": "Organisation" },
+  "section": { "orgInfo": "Organisationsinformationen", "address": "Adresse", "timezone": "Zeitzone", "currency": "Währung" },
+  "field": {
+    "name": "Name",
+    "orgNameInput": "Name der Organisation",
+    "address1": "Adresszeile 1",
+    "address2": "Adresszeile 2",
+    "city": "Stadt",
+    "country": "Land",
+    "postalCode": "Postleitzahl"
+  },
+  "btn": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "updateName": "Name ändern",
+    "updateTimezone": "Zeitzone ändern",
+    "updateAddress1": "Adresszeile 1 ändern",
+    "updateAddress2": "Adresszeile 2 ändern",
+    "updateCity": "Stadt ändern",
+    "updateCountry": "Land ändern",
+    "updatePostalCode": "Postleitzahl ändern",
+    "manageCurrency": "Währung verwalten"
+  },
+  "label": { "currentTz": "Aktuell" },
+  "btnLabel": { "tz": "Zeitzone auswählen" },
+  "description": { "currency": "Legen Sie die Standardwährung für Preise und Berichte fest." },
+  "modal": {
+    "title": "Organisation bearbeiten",
+    "useDeviceTz": "Gerätezeitzone verwenden",
+    "tzLabel": "Zeitzone",
+    "close": "Schließen"
+  },
+  "toast": {
+    "orgLoadError": "Organisationsdaten konnten nicht geladen werden.",
+    "orgUpdateOk": "Organisation erfolgreich aktualisiert.",
+    "orgUpdateError": "Organisation konnte nicht aktualisiert werden."
+  },
+  "errors": { "ownerOnly": "Nur Organisationsinhaber können auf diese Einstellungen zugreifen." }
+}

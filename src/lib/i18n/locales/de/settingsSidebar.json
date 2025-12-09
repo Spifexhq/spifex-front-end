@@ -1,0 +1,28 @@
+{
+  "aria": {
+    "nav": "Navigationsleiste für Einstellungen"
+  },
+  "sections": {
+    "organization": "Organisation",
+    "banking": "Banking",
+    "management": "Verwaltung",
+    "accounting": "Buchhaltung & Struktur"
+  },
+  "items": {
+    "personal": "Persönliche Einstellungen",
+    "notifications": "Benachrichtigungen",
+    "security": "Sicherheit und Datenschutz",
+    "organization-settings": "Organisationseinstellungen",
+    "employees": "Mitarbeitende",
+    "groups": "Gruppen",
+    "subscription-management": "Plan",
+    "banks": "Banken",
+    "bank-statements": "Auszüge",
+    "expenses": "Ausgaben",
+    "projects": "Projekte",
+    "inventory": "Inventar",
+    "entities": "Entitäten",
+    "ledger-accounts": "Hauptbuchkonten",
+    "departments": "Abteilungen"
+  }
+}

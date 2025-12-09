@@ -1,0 +1,19 @@
+{
+  "aria": {
+    "menu": "Menu des actions utilisateur"
+  },
+  "items": {
+    "personal": "Paramètres personnels",
+    "organization": "Paramètres de l’organisation",
+    "notifications": "Notifications",
+    "help": "Aide",
+    "signout": "Se déconnecter"
+  },
+  "alt": {
+    "personal": "Paramètres personnels",
+    "organization": "Paramètres de l’organisation",
+    "notifications": "Notifications",
+    "help": "Aide",
+    "signout": "Se déconnecter"
+  }
+}

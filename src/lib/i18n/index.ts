@@ -54,6 +54,11 @@ import enSidebar from "./locales/en/sidebar.json";
 import frSidebar from "./locales/fr/sidebar.json";
 import deSidebar from "./locales/de/sidebar.json";
 
+import ptSettingsSidebar from "./locales/pt/settingsSidebar.json";
+import enSettingsSidebar from "./locales/en/settingsSidebar.json";
+import frSettingsSidebar from "./locales/fr/settingsSidebar.json";
+import deSettingsSidebar from "./locales/de/settingsSidebar.json";
+
 import ptSubscription from "./locales/pt/subscription.json";
 import enSubscription from "./locales/en/subscription.json";
 import frSubscription from "./locales/fr/subscription.json";
@@ -144,6 +149,11 @@ import enPersonalSettings from "./locales/en/personalSettings.json";
 import frPersonalSettings from "./locales/fr/personalSettings.json";
 import dePersonalSettings from "./locales/de/personalSettings.json";
 
+import ptOrganizationSettings from "./locales/pt/organizationSettings.json";
+import enOrganizationSettings from "./locales/en/organizationSettings.json";
+import frOrganizationSettings from "./locales/fr/organizationSettings.json";
+import deOrganizationSettings from "./locales/de/organizationSettings.json";
+
 import ptGroupSettings from "./locales/pt/groupSettings.json";
 import enGroupSettings from "./locales/en/groupSettings.json";
 import frGroupSettings from "./locales/fr/groupSettings.json";
@@ -174,6 +184,11 @@ import enCurrencySettings from "./locales/en/currencySettings.json";
 import frCurrencySettings from "./locales/fr/currencySettings.json";
 import deCurrencySettings from "./locales/de/currencySettings.json";
 
+import ptUserMenu from "./locales/pt/userMenu.json";
+import enUserMenu from "./locales/en/userMenu.json";
+import frUserMenu from "./locales/fr/userMenu.json";
+import deUserMenu from "./locales/de/userMenu.json";
+
 
 /* ========================= Objeto de recursos ============================ */
 const resources: Resource = {
@@ -187,6 +202,7 @@ const resources: Resource = {
     emailVerification: ptEmailVerification,
     navbar: ptNavbar,
     sidebar: ptSidebar,
+    settingsSidebar: ptSettingsSidebar,
     subscription: ptSubscription,
     selectionActionsBar: ptSelectionActionsBar,
     settings: ptSettings,
@@ -205,12 +221,14 @@ const resources: Resource = {
     formatSettings: ptFormatSettings,
     personalLocaleSetup: ptPersonalLocaleSetup,
     personalSettings: ptPersonalSettings,
+    organizationSettings: ptOrganizationSettings,
     groupSettings: ptGroupSettings,
     groupPermissionsTable: ptGroupPermissionsTable,
     limits: ptLimits,
     cookies: ptCookies,
     homeDashboard: ptHomeDashboard,
-    currencySettings: ptCurrencySettings
+    currencySettings: ptCurrencySettings,
+    userMenu: ptUserMenu,
   },
   en: {
     common: enCommon,
@@ -222,6 +240,7 @@ const resources: Resource = {
     emailVerification: enEmailVerification,
     navbar: enNavbar,
     sidebar: enSidebar,
+    settingsSidebar: enSettingsSidebar,
     subscription: enSubscription,
     selectionActionsBar: enSelectionActionsBar,
     settings: enSettings,
@@ -240,12 +259,14 @@ const resources: Resource = {
     formatSettings: enFormatSettings,
     personalLocaleSetup: enPersonalLocaleSetup,
     personalSettings: enPersonalSettings,
+    organizationSettings: enOrganizationSettings,
     groupSettings: enGroupSettings,
     groupPermissionsTable: enGroupPermissionsTable,
     limits: enLimits,
     cookies: enCookies,
     homeDashboard: enHomeDashboard,
-    currencySettings: enCurrencySettings
+    currencySettings: enCurrencySettings,
+    userMenu: enUserMenu,
   },
   fr: {
     common: frCommon,
@@ -257,6 +278,7 @@ const resources: Resource = {
     emailVerification: frEmailVerification,
     navbar: frNavbar,
     sidebar: frSidebar,
+    settingsSidebar: frSettingsSidebar,
     subscription: frSubscription,
     selectionActionsBar: frSelectionActionsBar,
     settings: frSettings,
@@ -275,12 +297,14 @@ const resources: Resource = {
     formatSettings: frFormatSettings,
     personalLocaleSetup: frPersonalLocaleSetup,
     personalSettings: frPersonalSettings,
+    organizationSettings: frOrganizationSettings,
     groupSettings: frGroupSettings,
     groupPermissionsTable: frGroupPermissionsTable,
     limits: frLimits,
     cookies: frCookies,
     homeDashboard: frHomeDashboard,
-    currencySettings: frCurrencySettings
+    currencySettings: frCurrencySettings,
+    userMenu: frUserMenu,
   },
   de: {
     common: deCommon,
@@ -292,6 +316,7 @@ const resources: Resource = {
     emailVerification: deEmailVerification,
     navbar: deNavbar,
     sidebar: deSidebar,
+    settingsSidebar: deSettingsSidebar,
     subscription: deSubscription,
     selectionActionsBar: deSelectionActionsBar,
     settings: deSettings,
@@ -310,12 +335,14 @@ const resources: Resource = {
     formatSettings: deFormatSettings,
     personalLocaleSetup: dePersonalLocaleSetup,
     personalSettings: dePersonalSettings,
+    organizationSettings: deOrganizationSettings,
     groupSettings: deGroupSettings,
     groupPermissionsTable: deGroupPermissionsTable,
     limits: deLimits,
     cookies: deCookies,
     homeDashboard: deHomeDashboard,
-    currencySettings: deCurrencySettings
+    currencySettings: deCurrencySettings,
+    userMenu: deUserMenu,
   }
 };
 
@@ -338,6 +365,7 @@ i18n
       "emailVerification",
       "navbar",
       "sidebar",
+      "settingsSidebar",
       "subscription",
       "selectionActionsBar",
       "settings",
@@ -354,12 +382,14 @@ i18n
       "notificationSettings",
       "personalLocaleSetup",
       "personalSettings",
+      "organizationSettings",
       "groupSettings",
       "groupPermissionsTable",
       "limits",
       "cookies",
       "homeDashboard",
       "currencySettings",
+      "userMenu",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },

@@ -1,0 +1,41 @@
+{
+  "title": "Paramètres de l’organisation",
+  "header": { "settings": "Paramètres", "organization": "Organisation" },
+  "section": { "orgInfo": "Informations sur l’organisation", "address": "Adresse", "timezone": "Fuseau horaire", "currency": "Devise" },
+  "field": {
+    "name": "Nom",
+    "orgNameInput": "Nom de l’organisation",
+    "address1": "Adresse (ligne 1)",
+    "address2": "Adresse (ligne 2)",
+    "city": "Ville",
+    "country": "Pays",
+    "postalCode": "Code postal"
+  },
+  "btn": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "updateName": "Modifier le nom",
+    "updateTimezone": "Modifier le fuseau horaire",
+    "updateAddress1": "Modifier l’adresse (ligne 1)",
+    "updateAddress2": "Modifier l’adresse (ligne 2)",
+    "updateCity": "Modifier la ville",
+    "updateCountry": "Modifier le pays",
+    "updatePostalCode": "Modifier le code postal",
+    "manageCurrency": "Gérer la devise"
+  },
+  "label": { "currentTz": "Actuel" },
+  "btnLabel": { "tz": "Sélectionner le fuseau horaire" },
+  "description": { "currency": "Configurez la devise par défaut utilisée pour les prix et les rapports." },
+  "modal": {
+    "title": "Modifier l’organisation",
+    "useDeviceTz": "Utiliser le fuseau horaire de l’appareil",
+    "tzLabel": "Fuseau horaire",
+    "close": "Fermer"
+  },
+  "toast": {
+    "orgLoadError": "Impossible de récupérer les données de l’organisation.",
+    "orgUpdateOk": "Organisation mise à jour avec succès.",
+    "orgUpdateError": "Échec de la mise à jour de l’organisation."
+  },
+  "errors": { "ownerOnly": "Seuls les propriétaires de l’organisation peuvent accéder à ces paramètres." }
+}

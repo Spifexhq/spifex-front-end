@@ -1,0 +1,28 @@
+{
+  "aria": {
+    "nav": "Barra lateral de navegação das definições"
+  },
+  "sections": {
+    "organization": "Organização",
+    "banking": "Bancos",
+    "management": "Gestão",
+    "accounting": "Contabilidade e Estrutura"
+  },
+  "items": {
+    "personal": "Definições pessoais",
+    "notifications": "Notificações",
+    "security": "Segurança e privacidade",
+    "organization-settings": "Definições da organização",
+    "employees": "Colaboradores",
+    "groups": "Grupos",
+    "subscription-management": "Plano",
+    "banks": "Bancos",
+    "bank-statements": "Extratos",
+    "expenses": "Despesas",
+    "projects": "Projetos",
+    "inventory": "Inventário",
+    "entities": "Entidades",
+    "ledger-accounts": "Contas contábeis",
+    "departments": "Departamentos"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "aria": {
+    "nav": "Settings navigation sidebar"
+  },
+  "sections": {
+    "organization": "Organization",
+    "banking": "Banking",
+    "management": "Management",
+    "accounting": "Accounting & Structure"
+  },
+  "items": {
+    "personal": "Personal settings",
+    "notifications": "Notifications",
+    "security": "Security and privacy",
+    "organization-settings": "Organization settings",
+    "employees": "Employees",
+    "groups": "Groups",
+    "subscription-management": "Plan",
+    "banks": "Banks",
+    "bank-statements": "Statements",
+    "expenses": "Expenses",
+    "projects": "Projects",
+    "inventory": "Inventory",
+    "entities": "Entities",
+    "ledger-accounts": "Ledger Accounts",
+    "departments": "Departments"
+  }
+}
