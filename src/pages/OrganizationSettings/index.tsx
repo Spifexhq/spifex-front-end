@@ -1,11 +1,12 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/OrganizationSettings/index.tsx
  * - Same modal + partial-update pattern as PersonalSettings
- * - Uses Organization type returned by api.getOrganization()
- * - Country modal logic matches PersonalSettings
+ * - Uses PUT (partial payload when editingField !== null)
+ * - Country: ISO-3166 alpha-2 uppercase
+ * - Timezone select only inside modal
  * -------------------------------------------------------------------------- */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -22,7 +23,7 @@ import { api } from "src/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
 import type { Organization } from "src/models/auth/domain";
 
-import { TIMEZONES } from "src/lib/location";
+import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 import { getCountries, type CountryOption } from "@/lib/location/countries";
 
 /* ----------------------------- Snackbar type ----------------------------- */
@@ -31,14 +32,7 @@ type Snack =
   | null;
 
 /* ----------------------------- Helpers/Types ----------------------------- */
-type EditableOrgField =
-  | "name"
-  | "timezone"
-  | "line1"
-  | "line2"
-  | "city"
-  | "country"
-  | "postal_code";
+type EditableOrgField = "name" | "timezone" | "line1" | "line2" | "city" | "country" | "postal_code";
 
 type OrgFormData = {
   name: string;
@@ -60,6 +54,7 @@ function getInitials(name?: string) {
   return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 }
 
+/* Linha sem bordas próprias; o container usa divide-y */
 const Row = ({
   label,
   value,
@@ -78,65 +73,76 @@ const Row = ({
   </div>
 );
 
-const normalizeCountry = (v: unknown) => (v ?? "").toString().toUpperCase();
+const normalizeCountry = (v: unknown) => (v ?? "").toString().toUpperCase().trim();
+
+function toFormData(o: Organization | null): OrgFormData {
+  const cc = normalizeCountry(o?.country ?? "");
+  return {
+    name: o?.name ?? "",
+    timezone: o?.timezone ?? "",
+    line1: (o?.line1 ?? "") || "",
+    line2: (o?.line2 ?? "") || "",
+    city: (o?.city ?? "") || "",
+    country: cc,
+    postal_code: (o?.postal_code ?? "") || "",
+  };
+}
 
 const OrganizationSettings: React.FC = () => {
   const { t, i18n } = useTranslation("organizationSettings");
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
 
-  useEffect(() => { document.title = t("title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
 
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  /* ------------------------------ Flags ------------------------------ */
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /* ------------------------------ State ------------------------------ */
   const [org, setOrg] = useState<Organization | null>(null);
+  const orgRef = useRef<Organization | null>(null);
+
+  useEffect(() => {
+    orgRef.current = org;
+  }, [org]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditableOrgField | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
-  // TZ modal
+  // Timezone (apenas no modal)
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [useDeviceTz, setUseDeviceTz] = useState(true);
   const [selectedTimezone, setSelectedTimezone] = useState<{ label: string; value: string }[]>([]);
 
   // Countries
-  const COUNTRIES = useMemo<CountryOption[]>(() => getCountries(i18n.language), [i18n.language]);
+  const COUNTRIES = useMemo<CountryOption[]>(
+    () => getCountries(i18n.language),
+    [i18n.language]
+  );
   const [selectedCountry, setSelectedCountry] = useState<CountryOption[]>([]);
 
-  const [formData, setFormData] = useState<OrgFormData>({
-    name: "",
-    timezone: "",
-    line1: "",
-    line2: "",
-    city: "",
-    country: "",
-    postal_code: "",
-  });
+  const [formData, setFormData] = useState<OrgFormData>(() => toFormData(null));
 
-  const hydrateFromOrg = useCallback(
+  const hydrateSelectionsFrom = useCallback(
     (o: Organization | null) => {
-      const cc = normalizeCountry(o?.country ?? "");
-      const next: OrgFormData = {
-        name: o?.name ?? "",
-        timezone: o?.timezone ?? "",
-        line1: (o?.line1 ?? "") || "",
-        line2: (o?.line2 ?? "") || "",
-        city: (o?.city ?? "") || "",
-        country: cc,
-        postal_code: (o?.postal_code ?? "") || "",
-      };
-
+      const next = toFormData(o);
       setFormData(next);
 
-      // TZ state
+      // TZ selection state
       setUseDeviceTz((next.timezone ?? "") === deviceTz);
       const tzObj = TIMEZONES.find((z) => z.value === (next.timezone ?? ""));
       setSelectedTimezone(tzObj ? [tzObj] : []);
 
-      // Country state
+      // Country selection state
+      const cc = normalizeCountry(next.country);
       const cObj = COUNTRIES.find((c) => c.value === cc);
       setSelectedCountry(cObj ? [cObj] : []);
     },
@@ -152,70 +158,74 @@ const OrganizationSettings: React.FC = () => {
 
     (async () => {
       try {
-        const res = await api.getOrganization(); // returns Organization
-        setOrg(res.data);
-        hydrateFromOrg(res.data);
+        const { data } = await api.getOrganization();
+        setOrg(data);
+        orgRef.current = data;
+        hydrateSelectionsFrom(data);
       } catch {
         setSnack({ message: t("toast.orgLoadError"), severity: "error" });
       } finally {
         setIsInitialLoading(false);
       }
     })();
-  }, [hydrateFromOrg, isOwner, t]);
+  }, [hydrateSelectionsFrom, isOwner, t]);
 
   /* ------------------------------ Modal ------------------------------ */
   const openModal = (field?: EditableOrgField) => {
-    hydrateFromOrg(org);
+    const current = orgRef.current;
+    hydrateSelectionsFrom(current);
     setEditingField(field ?? null);
     setModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
-    hydrateFromOrg(org);
+    const current = orgRef.current;
+    hydrateSelectionsFrom(current);
     setEditingField(null);
     setModalOpen(false);
-  }, [hydrateFromOrg, org]);
+  }, [hydrateSelectionsFrom]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [modalOpen, closeModal]);
-
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [modalOpen]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
-
-  const buildPayload = (): Partial<Organization> => {
-    if (editingField !== null) {
-      if (editingField === "country") {
-        return { country: normalizeCountry(formData.country) };
-      }
-      return pickField(formData, editingField) as Partial<Organization>;
-    }
-
-    return {
-      name: formData.name,
-      timezone: formData.timezone,
-      line1: formData.line1,
-      line2: formData.line2,
-      city: formData.city,
-      country: normalizeCountry(formData.country),
-      postal_code: formData.postal_code,
-    };
+  /* ------------------------------ Handlers ------------------------------ */
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const handleSubmit = async () => {
+    let payload: Partial<Organization>;
+
+    if (editingField !== null) {
+      payload = pickField(formData, editingField) as Partial<Organization>;
+
+      if (editingField === "country") {
+        payload.country = normalizeCountry(formData.country);
+      }
+
+      if (editingField === "timezone") {
+        payload.timezone = useDeviceTz ? deviceTz : (formData.timezone ?? "");
+      }
+    } else {
+      payload = {
+        name: formData.name,
+        timezone: useDeviceTz ? deviceTz : formData.timezone,
+        line1: formData.line1,
+        line2: formData.line2,
+        city: formData.city,
+        country: normalizeCountry(formData.country),
+        postal_code: formData.postal_code,
+      };
+    }
+
     setIsSubmitting(true);
     try {
-      const payload = buildPayload();
-      const res = await api.editOrganization(payload);
-      setOrg(res.data);
-      hydrateFromOrg(res.data);
+      const { data } = await api.editOrganization(payload); // PUT (partial payload allowed on backend)
+
+      setOrg(data);
+      orgRef.current = data;
+
+      // Rehydrate inputs + selection states from server response
+      hydrateSelectionsFrom(data);
+
       closeModal();
       setSnack({ message: t("toast.orgUpdateOk"), severity: "success" });
     } catch (err) {
@@ -230,7 +240,21 @@ const OrganizationSettings: React.FC = () => {
     navigate("/settings/manage-currency");
   };
 
-  /* ------------------------------ Render ------------------------------ */
+  /* ------------------------------ Modal UX ------------------------------ */
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
+    if (modalOpen) window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [modalOpen, closeModal]);
+
+  useEffect(() => {
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
+
+  /* ------------------------------ Loading UI ------------------------------ */
   if (isInitialLoading) {
     return (
       <>
@@ -252,13 +276,12 @@ const OrganizationSettings: React.FC = () => {
     );
   }
 
+  /* -------------------------------- Render -------------------------------- */
   const countryCode = normalizeCountry(org?.country ?? "");
-  const countryLabel = countryCode
-    ? COUNTRIES.find((c) => c.value === countryCode)?.label ?? countryCode
-    : "";
+  const countryLabel =
+    countryCode ? (COUNTRIES.find((c) => c.value === countryCode)?.label ?? countryCode) : "";
 
-  const timezoneLabel =
-    TIMEZONES.find((z) => z.value === (org?.timezone ?? ""))?.label ?? (org?.timezone ?? "—");
+  const timezoneLabel = formatTimezoneLabel(org?.timezone ?? "");
 
   return (
     <>
@@ -305,27 +328,47 @@ const OrganizationSettings: React.FC = () => {
                   <Row
                     label={t("field.address1")}
                     value={org?.line1 ?? ""}
-                    action={<Button variant="outline" onClick={() => openModal("line1")} disabled={isSubmitting}>{t("btn.updateAddress1")}</Button>}
+                    action={
+                      <Button variant="outline" onClick={() => openModal("line1")} disabled={isSubmitting}>
+                        {t("btn.updateAddress1")}
+                      </Button>
+                    }
                   />
                   <Row
                     label={t("field.address2")}
                     value={org?.line2 ?? ""}
-                    action={<Button variant="outline" onClick={() => openModal("line2")} disabled={isSubmitting}>{t("btn.updateAddress2")}</Button>}
+                    action={
+                      <Button variant="outline" onClick={() => openModal("line2")} disabled={isSubmitting}>
+                        {t("btn.updateAddress2")}
+                      </Button>
+                    }
                   />
                   <Row
                     label={t("field.city")}
                     value={org?.city ?? ""}
-                    action={<Button variant="outline" onClick={() => openModal("city")} disabled={isSubmitting}>{t("btn.updateCity")}</Button>}
+                    action={
+                      <Button variant="outline" onClick={() => openModal("city")} disabled={isSubmitting}>
+                        {t("btn.updateCity")}
+                      </Button>
+                    }
                   />
                   <Row
                     label={t("field.country")}
                     value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
-                    action={<Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>{t("btn.updateCountry")}</Button>}
+                    action={
+                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>
+                        {t("btn.updateCountry")}
+                      </Button>
+                    }
                   />
                   <Row
                     label={t("field.postalCode")}
                     value={org?.postal_code ?? ""}
-                    action={<Button variant="outline" onClick={() => openModal("postal_code")} disabled={isSubmitting}>{t("btn.updatePostalCode")}</Button>}
+                    action={
+                      <Button variant="outline" onClick={() => openModal("postal_code")} disabled={isSubmitting}>
+                        {t("btn.updatePostalCode")}
+                      </Button>
+                    }
                   />
                 </div>
               </div>
@@ -366,9 +409,15 @@ const OrganizationSettings: React.FC = () => {
           </section>
         </div>
 
+        {/* ------------------------------ Modal ------------------------------ */}
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">{t("modal.title")}</h3>
                 <button
@@ -383,10 +432,19 @@ const OrganizationSettings: React.FC = () => {
 
               <form
                 className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
-                onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
               >
                 {(editingField === null || editingField === "name") && (
-                  <Input label={t("field.orgNameInput")} name="name" value={formData.name} onChange={handleChange} required />
+                  <Input
+                    label={t("field.orgNameInput")}
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
                 )}
 
                 {(editingField === null || editingField === "line1") && (
@@ -402,7 +460,12 @@ const OrganizationSettings: React.FC = () => {
                 )}
 
                 {(editingField === null || editingField === "postal_code") && (
-                  <Input label={t("field.postalCode")} name="postal_code" value={formData.postal_code} onChange={handleChange} />
+                  <Input
+                    label={t("field.postalCode")}
+                    name="postal_code"
+                    value={formData.postal_code}
+                    onChange={handleChange}
+                  />
                 )}
 
                 {(editingField === null || editingField === "country") && (
@@ -434,7 +497,10 @@ const OrganizationSettings: React.FC = () => {
                         onChange={(e) => {
                           const checked = e.target.checked;
                           setUseDeviceTz(checked);
-                          setFormData((p) => ({ ...p, timezone: checked ? deviceTz : p.timezone }));
+                          setFormData((p) => ({
+                            ...p,
+                            timezone: checked ? deviceTz : p.timezone,
+                          }));
                           if (checked) {
                             const tzObj = TIMEZONES.find((tt) => tt.value === deviceTz);
                             setSelectedTimezone(tzObj ? [tzObj] : []);
