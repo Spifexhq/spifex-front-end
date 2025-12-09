@@ -26,7 +26,7 @@ import { useAuthContext } from "src/hooks/useAuth";
 import type { CurrencyOption } from "src/lib/currency/currencies";
 import { getCurrencies } from "src/lib/currency/currencies";
 
-import type { RootState } from "@/redux/rootReducer";
+import type { RootState } from "@/redux/store";
 import { setUserOrganization } from "@/redux";
 
 /* ------------------------------- Types ----------------------------------- */

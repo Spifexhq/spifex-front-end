@@ -45,6 +45,9 @@ export const api = {
   signIn: (payload: SignInRequest) =>
     request<SignInResponse>('auth/signin/', 'POST', payload),
 
+  signOut: () =>
+    request<{ ok: true } | Record<string, never>>("auth/signout/", "POST"),
+
   signUp: (payload: SignUpRequest) =>
     request<SignUpResponse>('auth/signup/', 'POST', payload),
 

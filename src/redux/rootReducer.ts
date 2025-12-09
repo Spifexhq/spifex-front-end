@@ -1,12 +1,8 @@
 // redux/rootReducer.ts
-import authReducer from "./reducers/authReducer";
+import authSlice from "./slices/authSlice";
 
 const rootReducer = {
-  auth: authReducer,
-};
-
-export type RootState = {
-  auth: ReturnType<typeof authReducer>;
+  auth: authSlice,
 };
 
 export default rootReducer;

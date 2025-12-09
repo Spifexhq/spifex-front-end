@@ -1,6 +1,6 @@
 // src/hooks/useRequireLogin.ts
 import { useSelector } from 'react-redux'
-import { RootState } from '@/redux/rootReducer'
+import { RootState } from '@/redux/store'
 import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 

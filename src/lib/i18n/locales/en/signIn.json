@@ -1,5 +1,5 @@
 {
-  "pageTitle": "Login | Spifex",
+  "pageTitle": "Sign in | Spifex",
   "heading": "Sign in to your Spifex account",
   "subheading": "Keep your cash flow under control in one place.",
   "emailLabel": "Email",
@@ -12,6 +12,10 @@
   "signUpCta": "Create one.",
   "forgotPassword": "Forgot your password?",
   "fillAllFields": "Fill in all fields",
+  "invalidCredentials": "Incorrect email and/or password.",
+  "emailNotVerified": "Email not verified. Please check your inbox to activate your account.",
+  "accountInactive": "Your account is inactive. Please contact support.",
+  "tooManyAttempts": "Too many attempts. Please try again in a few minutes.",
   "unexpectedError": "Unexpected error. Please try again later.",
   "copyright": "Copyright © 2025 Spifex.",
   "emailNotRegistered": "This email address is not registered. Please check it or sign up."

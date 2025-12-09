@@ -1,13 +1,14 @@
 // src/redux/slices/authSlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, UserOrganizationDetail } from '@/models/auth/domain';
-import { GetSubscriptionStatusResponse } from '@/models/auth/dto';
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { User, UserOrganizationDetail } from "@/models/auth/domain";
 
 export interface AuthState {
   user: User | null;
   organization: UserOrganizationDetail | null;
   orgExternalId: string | null;
-  subscription: GetSubscriptionStatusResponse | null;
+
+  isSubscribed: boolean;
+
   permissions: string[];
 }
 
@@ -15,12 +16,12 @@ const initialState: AuthState = {
   user: null,
   organization: null,
   orgExternalId: null,
-  subscription: null,
+  isSubscribed: false,
   permissions: [],
 };
 
 const slice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     setUser: (s, a: PayloadAction<User | null>) => {
@@ -47,15 +48,11 @@ const slice = createSlice({
       s.permissions = Array.isArray(a.payload) ? a.payload : [];
       if (s.organization) s.organization.permissions = s.permissions;
     },
-    setSubscription: (s, a: PayloadAction<GetSubscriptionStatusResponse | null>) => {
-      s.subscription = a.payload;
+
+    setIsSubscribed: (s, a: PayloadAction<boolean>) => {
+      s.isSubscribed = Boolean(a.payload);
     },
-    setSubscriptionStatus: (s, a: PayloadAction<GetSubscriptionStatusResponse | null>) => {
-      s.subscription = a.payload;
-    },
-    clearSubscriptionStatus: (s) => {
-      s.subscription = null;
-    },
+
     resetAuth: () => initialState,
   },
 });
@@ -66,9 +63,7 @@ export const {
   setOrgExternalId,
   setOrganizationPermissions,
   setPermissions,
-  setSubscription,
-  setSubscriptionStatus,
-  clearSubscriptionStatus,
+  setIsSubscribed,
   resetAuth,
 } = slice.actions;
 

@@ -1,5 +1,5 @@
-import { useEffect, useState, FormEvent, MouseEvent, ChangeEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ApiErrorBody } from "@/models/Api";
 
@@ -16,15 +16,23 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
+type SnackSeverity = NonNullable<Snack>["severity"];
+
 const REMEMBERED_EMAIL_KEY = "spifex:rememberedEmail";
 
-const SignIn = () => {
+function isApiErrorBody(err: unknown): err is ApiErrorBody {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    "message" in err &&
+    typeof err.code === "string" &&
+    typeof err.message === "string"
+  );
+}
+
+const SignIn: React.FC = () => {
   const { t } = useTranslation("signIn");
-
-  useEffect(() => {
-    document.title = t("pageTitle");
-  }, [t]);
-
   const navigate = useNavigate();
   const { handleSignIn } = useAuth();
 
@@ -35,7 +43,9 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
 
-  const isFormIncomplete = !email || !password;
+  useEffect(() => {
+    document.title = t("pageTitle");
+  }, [t]);
 
   // Load remembered email on mount
   useEffect(() => {
@@ -46,9 +56,37 @@ const SignIn = () => {
     }
   }, []);
 
-  const handleSubmit = async (
-    e: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>
-  ) => {
+  const isFormIncomplete = useMemo(() => {
+    return email.trim() === "" || password === "";
+  }, [email, password]);
+
+  const resolveErrorMessage = (
+    err: unknown,
+  ): { message: React.ReactNode; severity: SnackSeverity } => {
+    if (isApiErrorBody(err)) {
+      switch (err.code) {
+        case "invalid_credentials":
+          return { message: t("invalidCredentials"), severity: "error" };
+        case "email_not_verified":
+          return { message: t("emailNotVerified"), severity: "warning" };
+        case "account_inactive":
+          return { message: t("accountInactive"), severity: "warning" };
+        case "throttled":
+          return { message: t("tooManyAttempts"), severity: "warning" };
+        default:
+          // Prefer a generic message; don't surface backend strings unless you explicitly want it.
+          return { message: t("unexpectedError"), severity: "error" };
+      }
+    }
+
+    if (err instanceof Error) {
+      return { message: err.message || t("unexpectedError"), severity: "error" };
+    }
+
+    return { message: t("unexpectedError"), severity: "error" };
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (isFormIncomplete) {
@@ -56,39 +94,19 @@ const SignIn = () => {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     setIsLoading(true);
-
     try {
-      await handleSignIn(email, password);
+      await handleSignIn(normalizedEmail, password);
 
-      if (rememberDevice) {
-        localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
-      } else {
-        localStorage.removeItem(REMEMBERED_EMAIL_KEY);
-      }
+      if (rememberDevice) localStorage.setItem(REMEMBERED_EMAIL_KEY, normalizedEmail);
+      else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
 
       navigate("/cashflow");
-    } catch (error) {
-      const apiError = error as ApiErrorBody | Error;
-
-      const code =
-        (apiError as ApiErrorBody).code ??
-        undefined;
-      const apiMessage =
-        (apiError as ApiErrorBody).message ??
-        (error instanceof Error ? error.message : undefined);
-
-      if (code === "email_not_registered") {
-        setSnack({
-          message: t("emailNotRegistered"),
-          severity: "warning",
-        });
-      } else {
-        setSnack({
-          message: apiMessage || t("unexpectedError"),
-          severity: "error",
-        });
-      }
+    } catch (err) {
+      const { message, severity } = resolveErrorMessage(err);
+      setSnack({ message, severity: severity ?? "error" });
     } finally {
       setIsLoading(false);
     }
@@ -96,32 +114,23 @@ const SignIn = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      {/* Left section */}
       <div className="flex flex-col w-full md:w-[55%] lg:w-1/2 px-6 py-6 sm:px-10 sm:py-8">
-        {/* Top logo */}
         <header className="flex items-center justify-between mb-8">
           <a
             href="https://spifex.com"
             className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10 rounded-lg"
           >
-            <img
-              src={logoBlack}
-              alt="Spifex logo"
-              className="h-7 w-auto sm:h-8"
-            />
+            <img src={logoBlack} alt="Spifex logo" className="h-7 w-auto sm:h-8" />
           </a>
         </header>
 
-        {/* Centered form */}
         <main className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="mb-8">
               <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
                 {t("heading")}
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
-                {t("subheading")}
-              </p>
+              <p className="mt-2 text-sm text-slate-500">{t("subheading")}</p>
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -131,9 +140,7 @@ const SignIn = () => {
                   placeholder={t("emailPlaceholder")}
                   type="email"
                   value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   disabled={isLoading}
                   autoComplete="email"
                   autoCorrect="off"
@@ -144,9 +151,7 @@ const SignIn = () => {
                   placeholder={t("passwordPlaceholder")}
                   type="password"
                   value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setPassword(e.target.value)
-                  }
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={isLoading}
                   showTogglePassword
                   autoComplete="current-password"
@@ -158,14 +163,14 @@ const SignIn = () => {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={rememberDevice}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setRememberDevice(e.target.checked)
-                    }
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setRememberDevice(e.target.checked)}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setRememberDevice((prev) => !prev)}
                     className="text-sm text-slate-600 select-none"
+                    disabled={isLoading}
                   >
                     {t("rememberDevice")}
                   </button>
@@ -179,43 +184,30 @@ const SignIn = () => {
                 </Link>
               </div>
 
-              <div>
-                <Button
-                  variant="primary"
-                  type="submit"
-                  onClick={handleSubmit}
-                  isLoading={isLoading}
-                  disabled={isFormIncomplete || isLoading}
-                  className="w-full h-12 rounded-xl text-sm font-medium"
-                >
-                  {t("signInButton")}
-                </Button>
-              </div>
+              <Button
+                variant="primary"
+                type="submit"
+                isLoading={isLoading}
+                disabled={isFormIncomplete || isLoading}
+                className="w-full h-12 rounded-xl text-sm font-medium"
+              >
+                {t("signInButton")}
+              </Button>
             </form>
 
             <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-slate-600">
               <span>{t("noAccount")}</span>
-              <Link
-                to="/signup"
-                className="font-medium text-slate-900 hover:underline underline-offset-4"
-              >
+              <Link to="/signup" className="font-medium text-slate-900 hover:underline underline-offset-4">
                 {t("signUpCta")}
               </Link>
             </div>
           </div>
         </main>
 
-        {/* Footer (left section) */}
         <footer className="mt-8 flex flex-col gap-2 text-[11px] text-slate-400">
-          <div className="hidden sm:block">
-            {t("copyright")}
-          </div>
-          <div className="sm:hidden">
-            {t("copyright")}
-          </div>
+          <div>{t("copyright")}</div>
         </footer>
 
-        {/* Snackbar */}
         <Snackbar
           open={!!snack}
           onClose={() => setSnack(null)}
@@ -228,7 +220,6 @@ const SignIn = () => {
         />
       </div>
 
-      {/* Right section */}
       <div className="hidden md:flex md:w-[45%] lg:w-1/2 relative overflow-hidden bg-slate-900">
         <img
           src={signInBackground}
@@ -236,9 +227,7 @@ const SignIn = () => {
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/80 to-slate-800/60" />
-        <div className="relative z-10 flex items-end justify-end w-full p-8">
-          {/* Minimal, purely visual side */}
-        </div>
+        <div className="relative z-10 flex items-end justify-end w-full p-8" />
       </div>
     </div>
   );

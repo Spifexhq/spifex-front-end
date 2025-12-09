@@ -1,14 +1,12 @@
-// src/api/auth.ts
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/redux/rootReducer";
+import type { RootState } from "@/redux/store";
 import { api } from "src/api/requests";
 
 import {
   setUser,
   setUserOrganization,
-  setSubscription,
-  setSubscriptionStatus,
+  setIsSubscribed,
   setPermissions,
   resetAuth,
 } from "@/redux";
@@ -24,12 +22,22 @@ export const useAuth = () => {
   const auth = useSelector((s: RootState) => s.auth);
   const dispatch = useDispatch();
 
-  const handleSignOut = useCallback(() => {
+  const clearClientSession = useCallback(() => {
     dispatch(resetAuth());
     clearTokens();
     clearHttpCaches();
     localStorage.removeItem(AUTH_HINT_KEY);
   }, [dispatch]);
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await api.signOut(); // best-effort (clears HttpOnly cookie server-side)
+    } catch {
+      // ignore
+    } finally {
+      clearClientSession();
+    }
+  }, [clearClientSession]);
 
   const handleInitUser = useCallback(async () => {
     const shouldBeLoggedIn = localStorage.getItem(AUTH_HINT_KEY) === "active";
@@ -40,20 +48,14 @@ export const useAuth = () => {
 
       dispatch(setUser(res.data.user));
       dispatch(setUserOrganization(res.data.organization));
+      dispatch(setIsSubscribed(!!res.data.is_subscribed));
 
-      if (res.data.subscription) {
-        dispatch(setSubscription(res.data.subscription));
-        dispatch(setSubscriptionStatus(res.data.subscription));
-      }
-
-      const perms =
-        res.data.permissions ?? res.data.organization?.permissions ?? [];
-
+      const perms = res.data.permissions ?? res.data.organization?.permissions ?? [];
       dispatch(setPermissions(perms));
     } catch (err) {
       console.warn("Session restoration failed:", err);
       localStorage.removeItem(AUTH_HINT_KEY);
-      handleSignOut();
+      await handleSignOut();
     }
   }, [auth.user, dispatch, handleSignOut]);
 
@@ -68,13 +70,9 @@ export const useAuth = () => {
 
     dispatch(setUser(res.data.user));
     dispatch(setUserOrganization(res.data.organization));
-
-    if (res.data.subscription) {
-      dispatch(setSubscription(res.data.subscription));
-      dispatch(setSubscriptionStatus(res.data.subscription));
-    }
-
+    dispatch(setIsSubscribed(!!res.data.is_subscribed));
     dispatch(setPermissions(res.data.permissions ?? []));
+
     return res;
   };
 
@@ -90,7 +88,7 @@ export const useAuth = () => {
   return {
     user: auth.user,
     organization: auth.organization,
-    subscription: auth.subscription,
+    isSubscribed: auth.isSubscribed,
     isLogged: auth.user != null,
 
     handleInitUser,

@@ -5,4 +5,3 @@ export interface GetSubscriptionStatusResponse {
   is_subscribed: boolean;
   subscription: Subscription | null;
 }
-export type SubscriptionDTO = GetSubscriptionStatusResponse;

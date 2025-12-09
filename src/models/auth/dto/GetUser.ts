@@ -1,10 +1,9 @@
 // src/models/auth/dto/GetUser
 import { User, UserOrganizationDetail } from "../domain";
-import { GetSubscriptionStatusResponse } from "./GetSubscription";
 
 export interface GetUserResponse {
   user: User;
   organization: UserOrganizationDetail;
-  subscription: GetSubscriptionStatusResponse | null;
+  is_subscribed: boolean;
   permissions: string[];
 }

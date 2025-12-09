@@ -1,15 +1,15 @@
 // contexts/AuthProvider.tsx
-import { useMemo, useCallback, ReactNode } from "react";
+import { useMemo, useCallback, type ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { useAuth as useAuthHook } from "@/api/auth";
 import { AuthContext } from "@/contexts/AuthContext";
-import { RootState } from "@/redux/rootReducer";
-import { User, UserOrganizationDetail, Subscription } from "src/models/auth";
+import type { RootState } from "@/redux/store";
+import type { User, UserOrganizationDetail } from "src/models/auth";
 
 interface UserInfo {
   user: User | null;
   organization: UserOrganizationDetail | null;
-  subscription: Subscription | null;
+
   isLogged: boolean;
   isSuperUser: boolean;
   isOwner: boolean;
@@ -17,6 +17,8 @@ interface UserInfo {
   isActive: boolean;
   isEmailVerified: boolean;
   permissions: string[];
+  
+  isSubscribed: boolean;
 }
 
 const useCombinedUserInfo = (): UserInfo => {
@@ -30,7 +32,7 @@ const useCombinedUserInfo = (): UserInfo => {
   return {
     user: auth.user,
     organization: auth.organization,
-    subscription: auth.subscription,
+
     isLogged: auth.user !== null,
     isSuperUser: auth.user?.is_superuser ?? false,
     isOwner: auth.organization?.is_owner ?? false,
@@ -38,6 +40,8 @@ const useCombinedUserInfo = (): UserInfo => {
     isActive: auth.user?.is_active ?? false,
     isEmailVerified: auth.user?.is_email_verified ?? false,
     permissions: effectivePermissions,
+
+    isSubscribed: Boolean(auth.isSubscribed),
   };
 };
 
@@ -45,59 +49,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { handleInitUser, handleSignIn, handleSignOut } = useAuthHook();
   const userInfo = useCombinedUserInfo();
 
-  // 👇 derived fields from subscription
-  const isSubscribed =
-    ["active", "trialing"].includes(userInfo.subscription?.status ?? "");
-
-  const activePlanId = userInfo.subscription?.plan_price_id ?? null;
-  const activePlanCode = userInfo.subscription?.plan?.code ?? null;
-  const activePlanName = userInfo.subscription?.plan?.name ?? null;
-  const subscriptionStatus = userInfo.subscription?.status ?? null;
-  const stripeCustomerId = userInfo.subscription?.customer?.stripe_customer_id ?? null;
-  const cancelAtPeriodEnd = !!userInfo.subscription?.cancel_at_period_end;
-
   const handlePermissionExists = useCallback(
     (codename: string) => (userInfo.permissions || []).includes(codename),
-    [userInfo.permissions]
+    [userInfo.permissions],
   );
 
   const authContextValue = useMemo(
     () => ({
       ...userInfo,
-      // expose derived legacy fields
-      isSubscribed,
-      activePlanId,
-      activePlanCode,
-      activePlanName,
-      subscriptionStatus,
-      stripeCustomerId,
-      cancelAtPeriodEnd,
-
-      // methods
       handleInitUser,
       handleSignIn,
       handleSignOut,
       handlePermissionExists,
     }),
-    [
-      userInfo,
-      isSubscribed,
-      activePlanId,
-      activePlanCode,
-      activePlanName,
-      subscriptionStatus,
-      stripeCustomerId,
-      cancelAtPeriodEnd,
-      handleInitUser,
-      handleSignIn,
-      handleSignOut,
-      handlePermissionExists,
-    ]
+    [userInfo, handleInitUser, handleSignIn, handleSignOut, handlePermissionExists],
   );
 
-  return (
-    <AuthContext.Provider value={authContextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;
 };
