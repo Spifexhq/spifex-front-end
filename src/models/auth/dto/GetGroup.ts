@@ -1,8 +1,14 @@
 // models/auth/dto/GetGroup.ts
 import { GroupDetail, GroupListItem } from "../domain";
 
-export type GetGroups = GroupListItem[] | { results: GroupListItem[] };
-export type GetGroup = GroupDetail;
+export interface GetGroupsResponse {
+  results: GroupListItem[];
+  next?: string | null;
+  previous?: string | null;
+  count?: number;
+}
+
+export type GetGroupResponse = GroupDetail;
 
 export interface GroupPayloadBase {
   name: string;

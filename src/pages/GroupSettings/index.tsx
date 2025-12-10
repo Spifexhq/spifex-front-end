@@ -1,15 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/GroupSettings/index.tsx
- * Standardized flags + UX (matches Employee/Entity)
- * - Flags: isInitialLoading, isBackgroundSync, isSubmitting, isDetailLoading
- * - INFLIGHT_FETCH guard, TopProgress, header syncing badge
- * - ConfirmToast on delete
- *
- * Permissions:
- * - Hard-coded table with tabs in GroupPermissionsTable
- * - Link to group permissions by code via api.getGroupPermissions
- *
- * i18n namespace: groupSettings
+ * Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -27,7 +18,7 @@ import { useAuthContext } from "src/hooks/useAuth";
 
 import type { Permission } from "src/models/auth/domain/Permission";
 import type { GroupDetail, GroupListItem } from "src/models/auth/domain/Group";
-import type { AddGroupRequest, GetGroups } from "src/models/auth/dto/GetGroup";
+import type { AddGroupRequest } from "src/models/auth/dto/GetGroup";
 import { useTranslation } from "react-i18next";
 
 import GroupPermissionsTable from "./GroupPermissionsTable";
@@ -36,77 +27,6 @@ import GroupPermissionsTable from "./GroupPermissionsTable";
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
-
-/* ------------------------------ Type guards -------------------------------- */
-
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
-
-const isString = (x: unknown): x is string => typeof x === "string";
-
-const isPermission = (v: unknown): v is Permission => {
-  if (!isRecord(v)) return false;
-  return isString(v.code) && isString(v.name);
-};
-
-const isPermissionArray = (v: unknown): v is Permission[] =>
-  Array.isArray(v) && v.every(isPermission);
-
-type PermissionsEnvelope = { permissions: Permission[] };
-type ResultsEnvelope = { results: Permission[] };
-type DataEnvelope = { data?: unknown };
-
-const hasPermissionsArray = (v: unknown): v is PermissionsEnvelope =>
-  isRecord(v) &&
-  Array.isArray((v).permissions) &&
-  (v).permissions.every(isPermission);
-
-const hasResultsArray = (v: unknown): v is ResultsEnvelope =>
-  isRecord(v) &&
-  Array.isArray((v).results) &&
-  (v).results.every(isPermission);
-
-/** Accepts: Permission[] | {permissions: Permission[]} | {results: Permission[]} | {data:{permissions|results}} */
-const parsePermissionsResponse = (payload: unknown): Permission[] => {
-  if (isPermissionArray(payload)) return payload;
-
-  if (isRecord(payload)) {
-    if (hasPermissionsArray(payload)) return (payload as PermissionsEnvelope).permissions;
-    if (hasResultsArray(payload)) return (payload as ResultsEnvelope).results;
-
-    const data = (payload as DataEnvelope).data;
-    if (isRecord(data)) {
-      if (hasPermissionsArray(data)) return (data as PermissionsEnvelope).permissions;
-      if (hasResultsArray(data)) return (data as ResultsEnvelope).results;
-    }
-  }
-  return [];
-};
-
-const isGroupListItem = (v: unknown): v is GroupListItem => {
-  if (!isRecord(v)) return false;
-  const o = v as Record<string, unknown>;
-  return (
-    typeof o.id === "number" &&
-    isString(o.external_id) &&
-    isString(o.slug) &&
-    isString(o.name) &&
-    typeof o.is_system === "boolean" &&
-    typeof o.permissions_count === "number" &&
-    typeof o.members_count === "number"
-  );
-};
-
-const toGroupArray = (payload: GetGroups): GroupListItem[] => {
-  if (Array.isArray(payload) && payload.every(isGroupListItem)) return payload;
-  if (isRecord(payload)) {
-    const results = (payload as { results?: unknown[] }).results;
-    if (Array.isArray(results) && results.every(isGroupListItem)) {
-      return results as GroupListItem[];
-    }
-  }
-  return [];
-};
 
 /* ------------------------------ INFLIGHT guard ---------------------------- */
 let INFLIGHT_FETCH = false;
@@ -139,6 +59,7 @@ const GroupSettings: React.FC = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null); // external_id
   const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
+  const [originalCodes, setOriginalCodes] = useState<Set<string>>(new Set<string>());
 
   // Group search
   const [groupSearch, setGroupSearch] = useState("");
@@ -169,9 +90,9 @@ const GroupSettings: React.FC = () => {
       else setIsInitialLoading(true);
 
       try {
-        const groupRes = await api.getAllGroups();
-        const groupList = toGroupArray(groupRes.data as GetGroups);
-        setGroups(groupList.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
+        const response = await api.getGroups();
+        const groupList = response.data.results || [];
+        setGroups([...groupList].sort((a, b) => (a.name || "").localeCompare(b.name || "", "en")));
       } catch (e) {
         console.error(e);
         setSnack({
@@ -196,6 +117,7 @@ const GroupSettings: React.FC = () => {
     if (!selectedGroupId) {
       setSelectedGroupDetail(null);
       setSelectedCodes(new Set<string>());
+      setOriginalCodes(new Set<string>());
       return;
     }
     const load = async () => {
@@ -205,12 +127,15 @@ const GroupSettings: React.FC = () => {
           api.getGroup(selectedGroupId),
           api.getGroupPermissions(selectedGroupId),
         ]);
-        const detail = detailRes.data as GroupDetail;
+        
+        const detail = detailRes.data;
         setSelectedGroupDetail(detail);
 
-        const currentPerms = parsePermissionsResponse(permRes.data);
-        const activeCodes = new Set<string>(currentPerms.map((p) => p.code));
+        const perms = permRes.data.permissions || [];
+        
+        const activeCodes = new Set<string>(perms.map((p: Permission) => p.code));
         setSelectedCodes(activeCodes);
+        setOriginalCodes(new Set<string>(activeCodes));
       } catch (e) {
         console.error(e);
         setSnack({
@@ -231,17 +156,13 @@ const GroupSettings: React.FC = () => {
     return groups.filter((g) => (g.name || "").toLowerCase().includes(q));
   }, [groups, groupSearch]);
 
-  const dirty =
-    !!selectedGroupDetail &&
-    selectedGroupDetail.permissions &&
-    (() => {
-      const orig = new Set<string>(
-        (selectedGroupDetail.permissions || []).map((p) => p.code)
-      );
-      if (orig.size !== selectedCodes.size) return true;
-      for (const c of selectedCodes) if (!orig.has(c)) return true;
-      return false;
-    })();
+  const dirty = useMemo(() => {
+    if (originalCodes.size !== selectedCodes.size) return true;
+    for (const c of selectedCodes) {
+      if (!originalCodes.has(c)) return true;
+    }
+    return false;
+  }, [originalCodes, selectedCodes]);
 
   /* ----------------------------- Actions ---------------------------------- */
   const setPermissionChecked = (code: string, enabled: boolean) => {
@@ -279,7 +200,7 @@ const GroupSettings: React.FC = () => {
     try {
       const payload: AddGroupRequest = { name, permission_codes: [] };
       const res = await api.addGroup(payload);
-      const created = res.data as GroupDetail;
+      const created = res.data;
       setNewGroupName("");
       await fetchAll({ background: true });
       setSelectedGroupId(created.external_id);
@@ -383,10 +304,13 @@ const GroupSettings: React.FC = () => {
         selectedGroupDetail.external_id,
         Array.from(selectedCodes)
       );
+      
+      // Update original codes to match saved state
+      setOriginalCodes(new Set<string>(selectedCodes));
+      
       await fetchAll({ background: true });
-      const detail = (
-        await api.getGroup(selectedGroupDetail.external_id)
-      ).data as GroupDetail;
+      const res = await api.getGroup(selectedGroupDetail.external_id);
+      const detail = res.data;
       setSelectedGroupDetail(detail);
       setSnack({
         message: t("toast.saveSuccess"),
@@ -404,11 +328,7 @@ const GroupSettings: React.FC = () => {
   };
 
   const handleDiscard = () => {
-    if (!selectedGroupDetail) return;
-    const orig = new Set<string>(
-      (selectedGroupDetail.permissions || []).map((p) => p.code)
-    );
-    setSelectedCodes(orig);
+    setSelectedCodes(new Set<string>(originalCodes));
   };
 
   /* -------------------------------- Render -------------------------------- */

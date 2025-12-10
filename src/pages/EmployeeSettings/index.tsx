@@ -1,10 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/EmployeeSettings.tsx
- * Standardized naming & logic (matches EntitySettings)
- * - Flags: isInitialLoading, isBackgroundSync, isSubmitting, isDetailLoading
- * - Delete: deleteTargetId (freezes the row), ConfirmToast for confirmation
- * - Modal: skeleton when loading detail on edit
- * - i18n: namespace "employeeSettings"
+ * Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>
  * -------------------------------------------------------------------------- */
 
 import React, {
@@ -28,7 +24,6 @@ import Shimmer from "@/components/ui/Loaders/Shimmer";
 import { api } from "src/api/requests";
 import { Employee } from "src/models/auth/domain";
 import type { GroupListItem } from "src/models/auth/domain/Group";
-import type { GetGroups } from "src/models/auth/dto/GetGroup";
 import { useAuthContext } from "src/hooks/useAuth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
@@ -51,38 +46,6 @@ type FormState = typeof emptyForm;
 
 /* ---------------------------- In-memory guards --------------------------- */
 let INFLIGHT_FETCH = false;
-
-/* ------------------------------ Helpers (module scope) ------------------- */
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null;
-}
-
-function isGroupListItem(v: unknown): v is GroupListItem {
-  if (!isRecord(v)) return false;
-  const o = v as Record<string, unknown>;
-  return (
-    typeof o.id === "number" &&
-    typeof o.external_id === "string" &&
-    typeof o.slug === "string" &&
-    typeof o.name === "string" &&
-    typeof o.is_system === "boolean" &&
-    typeof o.permissions_count === "number" &&
-    typeof o.members_count === "number"
-  );
-}
-
-function isResultsWrapper(v: unknown): v is { results: unknown[] } {
-  return isRecord(v) && "results" in v && Array.isArray((v as Record<string, unknown>).results);
-}
-
-function toGroupArray(payload: GetGroups): GroupListItem[] {
-  if (Array.isArray(payload) && payload.every(isGroupListItem)) return payload;
-  if (isResultsWrapper(payload)) {
-    const { results } = payload;
-    return results.every(isGroupListItem) ? (results as GroupListItem[]) : [];
-  }
-  return [];
-}
 
 /* ------------------------------ Modal skeleton ---------------------------- */
 const ModalSkeleton: React.FC = () => (
@@ -194,7 +157,9 @@ const EmployeeSettings: React.FC = () => {
       return (a.email || "").toLowerCase().localeCompare((b.email || "").toLowerCase());
     });
 
-    const normGroups = [...grpRes].sort((a, b) => a.id - b.id);
+    const normGroups = [...grpRes].sort((a, b) => 
+      (a.name || "").localeCompare(b.name || "", "en")
+    );
 
     startTransition(() => {
       setEmployees(normEmployees);
@@ -212,10 +177,14 @@ const EmployeeSettings: React.FC = () => {
       else setIsInitialLoading(true);
 
       try {
-        const [empResp, grpResp] = await Promise.all([api.getEmployees(), api.getAllGroups()]);
+        const [empResp, grpResp] = await Promise.all([api.getEmployees(), api.getGroups()]);
         if (seq !== fetchSeqRef.current || !mountedRef.current) return;
 
-        normalizeAndSet(empResp.data.employees || [], toGroupArray(grpResp.data as GetGroups));
+        // request() already unwraps data, so access .data.results directly
+        const empList = empResp.data.employees || [];
+        const grpList = grpResp.data.results || [];
+        
+        normalizeAndSet(empList, grpList);
       } catch (err: unknown) {
         if (mountedRef.current) {
           console.error("Fetch employees/groups failed", err);

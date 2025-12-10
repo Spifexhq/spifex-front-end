@@ -7,10 +7,10 @@ import {
   SignInRequest, SignInResponse, SignUpRequest, SignUpResponse,
   GetSubscriptionStatusResponse,
   GetPermission, GetPermissions,
-  GetGroups, GetGroup, AddGroupRequest, EditGroupRequest,
+  GetGroupsResponse, GetGroupResponse, AddGroupRequest, EditGroupRequest,
   GetEntitlementLimitsResponse,
 } from '@/models/auth/dto'
-import { User, Organization, Permission, GroupDetail,
+import { User, Organization, Permission,
   CounterUsage, IncrementCounterUsage, PersonalSettings,
   NotificationPreference
 } from '@/models/auth/domain'
@@ -220,20 +220,20 @@ export const api = {
   },
   
   /* --- Groups --- */
-  getAllGroups: () => {
-    return request<GetGroups>(`rbac/groups/`, "GET");
+  getGroups: () => {
+    return request<GetGroupsResponse>(`rbac/groups/`, "GET");
   },
 
   getGroup: (groupId: string) => {
-    return request<GetGroup>(`rbac/groups/${groupId}/`, "GET");
+    return request<GetGroupResponse>(`rbac/groups/${groupId}/`, "GET");
   },
 
   addGroup: (payload: AddGroupRequest) => {
-    return request<GroupDetail>(`rbac/groups/`, "POST", payload);
+    return request<GetGroupResponse>(`rbac/groups/`, "POST", payload);
   },
 
   editGroup: (groupId: string, payload: Partial<EditGroupRequest>) => {
-    return request<GroupDetail>(`rbac/groups/${groupId}/`, "PATCH", payload);
+    return request<GetGroupResponse>(`rbac/groups/${groupId}/`, "PATCH", payload);
   },
 
   deleteAllGroups: () => {
@@ -483,7 +483,7 @@ export const api = {
   /* --- General Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) => {
     return request<GetLedgerAccountsResponse>(
-      `ledger/ledger/accounts/`,
+      `ledger/accounts/`,
       "GET",
       params
     );
@@ -491,7 +491,7 @@ export const api = {
 
   getLedgerAccountsBatch: (ids: string[]) => {
     return request<GLAccount[]>(
-      `ledger/ledger/accounts/batch/`,
+      `ledger/accounts/batch/`,
       "POST",
       { ids }
     );
@@ -499,7 +499,7 @@ export const api = {
 
   getLedgerAccount: (glaId: string) => {
     return request<GLAccount>(
-      `ledger/ledger/accounts/${glaId}/`,
+      `ledger/accounts/${glaId}/`,
       "GET"
     );
   },
@@ -509,7 +509,7 @@ export const api = {
       created_count: number;
       accounts: GLAccount[];
     }>(
-      `ledger/ledger/accounts/import/`,
+      `ledger/accounts/import/`,
       "POST",
       formData
     );
@@ -520,7 +520,7 @@ export const api = {
       created_count: number;
       accounts: GLAccount[];
     }>(
-      `ledger/ledger/accounts/import-standard/`,
+      `ledger/accounts/import-standard/`,
       "POST",
       { plan }
     );
@@ -528,7 +528,7 @@ export const api = {
 
   downloadLedgerCsvTemplate: async () => {
     const res = await http.get(
-      `ledger/ledger/accounts/template/csv/`,
+      `ledger/accounts/template/csv/`,
       {
         responseType: "blob",
         validateStatus: (s: number) => s >= 200 && s < 300,
@@ -549,7 +549,7 @@ export const api = {
   // Download XLSX template as a file (no page navigation)
   downloadLedgerXlsxTemplate: async () => {
     const res = await http.get(
-      `ledger/ledger/accounts/template/xlsx/`,
+      `ledger/accounts/template/xlsx/`,
       {
         responseType: "blob",
         validateStatus: (s: number) => s >= 200 && s < 300,
@@ -569,7 +569,7 @@ export const api = {
 
   addLedgerAccount: (payload: AddGLAccountRequest) => {
     return request<GLAccount>(
-      `ledger/ledger/accounts/`,
+      `ledger/accounts/`,
       "POST",
       payload
     );
@@ -577,7 +577,7 @@ export const api = {
 
   addLedgerAccountsBulk: (payload: AddGLAccountRequest[]) => {
     return request<GLAccount[]>(
-      `ledger/ledger/accounts/bulk/`,
+      `ledger/accounts/bulk/`,
       "POST",
       payload
     );
@@ -585,7 +585,7 @@ export const api = {
 
   editLedgerAccount: (glaId: string, payload: EditGLAccountRequest) => {
     return request<GLAccount>(
-      `ledger/ledger/accounts/${glaId}/`,
+      `ledger/accounts/${glaId}/`,
       "PATCH",
       payload
     );
@@ -593,7 +593,7 @@ export const api = {
 
   deleteAllLedgerAccounts: () => {
     return request<{ message: string; deleted_count: number }>(
-      `ledger/ledger/accounts/bulk/delete/`,
+      `ledger/accounts/bulk/delete/`,
       "DELETE",
       { confirm_delete_all: true }
     );
@@ -601,7 +601,7 @@ export const api = {
 
   deleteLedgerAccount: (glaId: string) => {
     return request<unknown>(
-      `ledger/ledger/accounts/${glaId}/`,
+      `ledger/accounts/${glaId}/`,
       "DELETE"
     );
   },
@@ -616,7 +616,7 @@ export const api = {
   /* --- Departments --- */
   getDepartments: (params?: { page_size?: number; cursor?: string; q?: string; active?: "true" | "false" }) => {
     return request<GetDepartmentsResponse>(
-      `departments/departments/`,
+      `departments/`,
       "GET",
       params
     );
@@ -624,14 +624,14 @@ export const api = {
 
   getDepartment: (departmentId: string) => {
     return request<GetDepartmentResponse>(
-      `departments/departments/${departmentId}/`,
+      `departments/${departmentId}/`,
       "GET"
     );
   },
 
   getDepartmentsBatch: (ids: string[]) => {
     return request<Department[]>(
-      `departments/departments/batch/`,
+      `departments/batch/`,
       "POST",
       { ids }
     );
@@ -639,7 +639,7 @@ export const api = {
 
   addDepartment: (payload: AddDepartmentRequest) => {
     return request<Department>(
-      `departments/departments/`,
+      `departments/`,
       "POST",
       payload
     );
@@ -647,7 +647,7 @@ export const api = {
 
   editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>) => {
     return request<Department>(
-      `departments/departments/${departmentId}/`,
+      `departments/${departmentId}/`,
       "PATCH",
       payload
     );
@@ -655,7 +655,7 @@ export const api = {
 
   deleteDepartment: (departmentId: string) => {
     return request<void>(
-      `departments/departments/${departmentId}/`,
+      `departments/${departmentId}/`,
       "DELETE"
     );
   },
@@ -663,7 +663,7 @@ export const api = {
   /* --- Projects --- */
   getProjects: (params?: { cursor?: string; page_size?: number; active?: "true" | "false"; type?: string; q?: string }) => {
     return request<GetProjectsResponse>(
-      `projects/projects/`,
+      `projects/`,
       "GET",
       params
     );
@@ -671,7 +671,7 @@ export const api = {
 
   getProjectsBatch: (ids: string[]) => {
     return request<Project[]>(
-      `projects/projects/batch/`,
+      `projects/batch/`,
       "POST",
       { ids }
     );
@@ -679,14 +679,14 @@ export const api = {
 
   getProject: (projectId: string) => {
     return request<Project>(
-      `projects/projects/${projectId}/`,
+      `projects/${projectId}/`,
       "GET"
     );
   },
 
   addProject: (payload: AddProjectRequest) => {
     return request<Project>(
-      `projects/projects/`,
+      `projects/`,
       "POST",
       payload
     );
@@ -694,7 +694,7 @@ export const api = {
 
   editProject: (projectId: string, payload: EditProjectRequest) => {
     return request<Project>(
-      `projects/projects/${projectId}/`,
+      `projects/${projectId}/`,
       "PATCH",
       payload
     );
@@ -702,7 +702,7 @@ export const api = {
 
   deleteProject: (projectId: string) => {
     return request<void>(
-      `projects/projects/${projectId}/`,
+      `projects/${projectId}/`,
       "DELETE"
     );
   },
@@ -717,7 +717,7 @@ export const api = {
     max_qoh?: string | number;
   }) => {
     return request<GetInventoryItemsResponse>(
-      `inventory/inventory/items/`,
+      `inventory/items/`,
       "GET",
       params
     );
@@ -730,7 +730,7 @@ export const api = {
     q?: string;
   }) => {
     return request<GetInventoryItemsResponse>(
-      `inventory/inventory/items/options/`,
+      `inventory/items/options/`,
       "GET",
       params
     );
@@ -738,7 +738,7 @@ export const api = {
 
   getInventoryItemsBatch: (ids: string[]) => {
     return request<InventoryItem[]>(
-      `inventory/inventory/items/batch/`,
+      `inventory/items/batch/`,
       "POST",
       { ids }
     );
@@ -746,14 +746,14 @@ export const api = {
 
   getInventoryItem: (id: string) => {
     return request<InventoryItem>(
-      `inventory/inventory/items/${id}/`,
+      `inventory/items/${id}/`,
       "GET"
     );
   },
 
   addInventoryItem: (payload: AddInventoryItemRequest) => {
     return request<InventoryItem>(
-      `inventory/inventory/items/`,
+      `inventory/items/`,
       "POST",
       payload
     );
@@ -761,7 +761,7 @@ export const api = {
 
   editInventoryItem: (id: string, payload: EditInventoryItemRequest) => {
     return request<InventoryItem>(
-      `inventory/inventory/items/${id}/`,
+      `inventory/items/${id}/`,
       "PATCH",
       payload
     );
@@ -769,7 +769,7 @@ export const api = {
 
   deleteInventoryItem: (id: string) => {
     return request<void>(
-      `inventory/inventory/items/${id}/`,
+      `inventory/items/${id}/`,
       "DELETE"
     );
   },
@@ -783,7 +783,7 @@ export const api = {
     q?: string;
   }) => {
     return request<GetEntitiesResponse>(
-      `crm/crm/entities/`,
+      `crm/entities/`,
       "GET",
       params
     );
@@ -797,7 +797,7 @@ export const api = {
     q?: string;
   }) => {
     return request<GetEntitiesResponse>(
-      `crm/crm/entities/table/`,
+      `crm/entities/table/`,
       "GET",
       params
     );
@@ -811,7 +811,7 @@ export const api = {
     q?: string;
   }) => {
     return request<GetEntitiesResponse>(
-      `crm/crm/entities/options/`,
+      `crm/entities/options/`,
       "GET",
       params
     );
@@ -819,14 +819,14 @@ export const api = {
   
   getEntity: (id: string) => {
     return request<GetEntityResponse>(
-      `crm/crm/entities/${id}/`,
+      `crm/entities/${id}/`,
       "GET"
     );
   },
 
   getEntitiesBatch: (ids: string[]) => {
     return request<Entity[]>(
-      `crm/crm/entities/batch/`,
+      `crm/entities/batch/`,
       "POST",
       { ids }
     );
@@ -834,7 +834,7 @@ export const api = {
 
   addEntity: (payload: AddEntityRequest) => {
     return request<Entity>(
-      `crm/crm/entities/`,
+      `crm/entities/`,
       "POST",
       payload
     );
@@ -842,7 +842,7 @@ export const api = {
 
   editEntity: (id: string, payload: EditEntityRequest) => {
     return request<Entity>(
-      `crm/crm/entities/${id}/`,
+      `crm/entities/${id}/`,
       "PATCH",
       payload
     );
@@ -850,7 +850,7 @@ export const api = {
 
   deleteEntity: (id: string) => {
     return request<void>(
-      `crm/crm/entities/${id}/`,
+      `crm/entities/${id}/`,
       "DELETE"
     );
   },
@@ -870,7 +870,7 @@ export const api = {
       status: "uploaded" | "processing" | "ready" | "failed";
       created_at: string;
     }>>(
-      `banking/banking/statements/`,
+      `banking/statements/`,
       "GET",
       params
     );
@@ -879,7 +879,7 @@ export const api = {
   // upload with progress (FormData: file, optional bank_account_id)
   uploadStatement: (form: FormData, onProgress?: (pct: number) => void) => {
     return http.post(
-      `banking/banking/statements/`,
+      `banking/statements/`,
       form,
       {
         onUploadProgress: (evt: AxiosProgressEvent) => {
@@ -892,7 +892,7 @@ export const api = {
 
   deleteStatement: (statementId: string) => {
     return request<void>(
-      `banking/banking/statements/${statementId}/`,
+      `banking/statements/${statementId}/`,
       "DELETE"
     );
   },
@@ -905,7 +905,7 @@ export const api = {
       finished_at: string | null;
       error_message: string;
     }>(
-      `banking/banking/statements/${statementId}/analyze/`,
+      `banking/statements/${statementId}/analyze/`,
       "POST",
       {}
     );
@@ -914,7 +914,7 @@ export const api = {
   // download binary (Blob) via axios responseType: 'blob'
   downloadStatement: async (statementId: string) => {
     const res = await http.get(
-      `banking/banking/statements/${statementId}/download/`,
+      `banking/statements/${statementId}/download/`,
       { responseType: "blob", validateStatus: (s: number) => s >= 200 && s < 300 }
     );
     const blob = res.data as Blob;
