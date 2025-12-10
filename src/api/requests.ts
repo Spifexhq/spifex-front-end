@@ -291,7 +291,7 @@ export const api = {
       name: string;
       is_default: boolean;
       filters: unknown;
-    }>>(`cashflow/entry-views/`, "GET");
+    }>>(`cashflow/entry-view-preset/`, "GET");
   },
 
   addEntryView: (payload: {
@@ -304,7 +304,7 @@ export const api = {
       name: string;
       is_default: boolean;
       filters: unknown;
-    }>(`cashflow/entry-views/`, "POST", payload);
+    }>(`cashflow/entry-view-preset/`, "POST", payload);
   },
 
   editEntryView: (viewId: string, payload: {
@@ -317,11 +317,11 @@ export const api = {
       name: string;
       is_default: boolean;
       filters: unknown;
-    }>(`cashflow/entry-views/${viewId}/`, "PATCH", payload);
+    }>(`cashflow/entry-view-preset/${viewId}/`, "PATCH", payload);
   },
 
   deleteEntryView: (viewId: string) => {
-    return request<void>(`cashflow/entry-views/${viewId}/`, "DELETE");
+    return request<void>(`cashflow/entry-view-preset/${viewId}/`, "DELETE");
   },
   
   /* --- Cash-flow Entries --- */
@@ -457,50 +457,27 @@ export const api = {
   /* --- Banks --- */
   getBanks: (active?: boolean) => {
     const params = active == null ? undefined : { active: active ? "true" : "false" };
-
-    return request<Paginated<BankAccount>>(
-      `banking/banking/accounts/`,
-      "GET",
-      params
-    );
+    return request<Paginated<BankAccount>>(`banking/accounts/`, "GET", params);
   },
 
   getBanksBatch: (ids: string[]) => {
-    return request<BankAccount[]>(
-      `banking/banking/accounts/batch/`,
-      "POST",
-      { ids }
-    );
+    return request<BankAccount[]>(`banking/accounts/batch/`, "POST", { ids });
   },
 
   getBank: (bankExternalId: string) => {
-    return request<BankAccount>(
-      `banking/banking/accounts/${bankExternalId}/`,
-      "GET"
-    );
+    return request<BankAccount>(`banking/accounts/${bankExternalId}/`, "GET");
   },
 
   addBank: (payload: Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">) => {
-    return request<BankAccount>(
-      `banking/banking/accounts/`,
-      "POST",
-      payload
-    );
+    return request<BankAccount>(`banking/accounts/`, "POST", payload);
   },
 
   editBank: (bankExternalId: string, payload: Partial<Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">>) => {
-    return request<BankAccount>(
-      `banking/banking/accounts/${bankExternalId}/`,
-      "PATCH",
-      payload
-    );
+    return request<BankAccount>(`banking/accounts/${bankExternalId}/`, "PATCH", payload);
   },
 
   deleteBank: (bankExternalId: string) => {
-    return request<unknown>(
-      `banking/banking/accounts/${bankExternalId}/`,
-      "DELETE"
-    );
+    return request<unknown>(`banking/accounts/${bankExternalId}/`, "DELETE");
   },
 
   /* --- General Ledger Acccounts --- */

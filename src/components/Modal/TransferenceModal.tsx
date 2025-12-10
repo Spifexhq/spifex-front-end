@@ -19,10 +19,10 @@ interface TransferenceModalProps {
 }
 
 type FormState = {
-  date: string;        // ISO (YYYY-MM-DD)
-  amount: string;      // ✅ major decimal string: "1234.56"
+  date: string; // ISO (YYYY-MM-DD)
+  amount: string; // major decimal string: "1234.56"
   source_bank: string; // external_id
-  dest_bank: string;   // external_id
+  dest_bank: string; // external_id
   description: string;
 };
 
@@ -33,6 +33,14 @@ const buildInitialForm = (): FormState => ({
   dest_bank: "",
   description: "",
 });
+
+const sortBanksByInstitution = (items: BankAccount[]) =>
+  [...items].sort((a, b) => a.institution.localeCompare(b.institution));
+
+type TranslateFn = (key: string) => string;
+
+const getBankFooterLabel = (t: TranslateFn, b?: BankAccount) =>
+  b ? `${b.institution} • ${t("labels.agency")} ${b.branch} • ${t("labels.account")} ${b.account_number}` : "";
 
 const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, onSave }) => {
   const { t } = useTranslation("transferenceModal");
@@ -45,13 +53,68 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   const formRef = useRef<HTMLFormElement>(null);
 
   const resetForm = useCallback(() => setFormData(buildInitialForm()), []);
-
-  const handleClose = useCallback(() => {
+  const closeModal = useCallback(() => {
     resetForm();
     onClose();
-  }, [resetForm, onClose]);
+  }, [onClose, resetForm]);
 
-  // Lock body scroll + hotkeys when open
+  const setField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  // ---------- Derived state ----------
+  const sortedBanks = useMemo(() => sortBanksByInstitution(banks), [banks]);
+
+  const selectedOut = useMemo(
+    () => banks.find((b) => b.id === formData.source_bank),
+    [banks, formData.source_bank]
+  );
+  const selectedIn = useMemo(
+    () => banks.find((b) => b.id === formData.dest_bank),
+    [banks, formData.dest_bank]
+  );
+
+  const bankOutOptions = useMemo(
+    () => sortedBanks.filter((b) => b.id !== formData.dest_bank),
+    [sortedBanks, formData.dest_bank]
+  );
+  const bankInOptions = useMemo(
+    () => sortedBanks.filter((b) => b.id !== formData.source_bank),
+    [sortedBanks, formData.source_bank]
+  );
+
+  const amountMajorNumber = useMemo(() => {
+    const n = Number(formData.amount);
+    return Number.isFinite(n) ? n : 0;
+  }, [formData.amount]);
+
+  const isValid = useMemo(() => {
+    return (
+      amountMajorNumber > 0 &&
+      !!formData.date &&
+      !!formData.source_bank &&
+      !!formData.dest_bank &&
+      formData.source_bank !== formData.dest_bank
+    );
+  }, [amountMajorNumber, formData.date, formData.source_bank, formData.dest_bank]);
+
+  const showSameBankWarning =
+    !!formData.source_bank && !!formData.dest_bank && formData.source_bank === formData.dest_bank;
+
+  const tKey = useCallback((key: string) => String(t(key)), [t]);
+
+  const bankOutFooterLabel = useMemo(
+    () => getBankFooterLabel(tKey, selectedOut),
+    [tKey, selectedOut]
+  );
+
+  const bankInFooterLabel = useMemo(
+    () => getBankFooterLabel(tKey, selectedIn),
+    [tKey, selectedIn]
+  );
+
+  // ---------- Effects ----------
+  // lock scroll + shortcuts while open
   useEffect(() => {
     if (!isOpen) return;
 
@@ -61,7 +124,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        handleClose();
+        closeModal();
         return;
       }
 
@@ -80,9 +143,9 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [isOpen, handleClose]);
+  }, [isOpen, closeModal]);
 
-  // Load active banks (only when open)
+  // load banks when opening
   useEffect(() => {
     if (!isOpen) return;
 
@@ -102,17 +165,23 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     };
   }, [isOpen]);
 
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  }, []);
+  // ---------- Handlers ----------
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      if (name === "description") setField("description", value);
+    },
+    [setField]
+  );
 
   const handleBankChange = useCallback(
     (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
+      // IMPORTANT: your BankAccount domain uses `id` as the external_id in the UI layer.
+      // (Keeping consistent with the rest of your app + current modal usage.)
       const id = selected[0]?.id ?? "";
-      setFormData((prev) => ({ ...prev, [field]: id }));
+      setField(field, id);
     },
-    []
+    [setField]
   );
 
   const swapBanks = useCallback(() => {
@@ -123,58 +192,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     }));
   }, []);
 
-  const sortedBanks = useMemo(() => {
-    return [...banks].sort((a, b) => a.institution.localeCompare(b.institution));
-  }, [banks]);
-
-  const bankOutOptions = useMemo(
-    () => sortedBanks.filter((b) => b.id !== formData.dest_bank),
-    [sortedBanks, formData.dest_bank]
-  );
-
-  const bankInOptions = useMemo(
-    () => sortedBanks.filter((b) => b.id !== formData.source_bank),
-    [sortedBanks, formData.source_bank]
-  );
-
-  const optionLabelFor = useCallback(
-    (b?: BankAccount) => (b ? `${b.institution} • ${b.account_number}` : ""),
-    []
-  );
-
-  const footerLabelFor = useCallback(
-    (b?: BankAccount) =>
-      b
-        ? `${b.institution} • ${t("labels.agency")} ${b.branch} • ${t("labels.account")} ${b.account_number}`
-        : "",
-    [t]
-  );
-
-  const bankOutLabel = useMemo(
-    () => footerLabelFor(banks.find((b) => b.id === formData.source_bank)),
-    [banks, formData.source_bank, footerLabelFor]
-  );
-
-  const bankInLabel = useMemo(
-    () => footerLabelFor(banks.find((b) => b.id === formData.dest_bank)),
-    [banks, formData.dest_bank, footerLabelFor]
-  );
-
-  const amountMajorNumber = useMemo(() => {
-    const n = Number(formData.amount);
-    return Number.isFinite(n) ? n : 0;
-  }, [formData.amount]);
-
-  const isValid = useMemo(() => {
-    return (
-      amountMajorNumber > 0 &&
-      !!formData.date &&
-      !!formData.source_bank &&
-      !!formData.dest_bank &&
-      formData.source_bank !== formData.dest_bank
-    );
-  }, [amountMajorNumber, formData.date, formData.source_bank, formData.dest_bank]);
-
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -183,7 +200,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
       setIsSubmitting(true);
       try {
         await api.addTransference({
-          amount: formData.amount, // ✅ already canonical "1234.56"
+          amount: formData.amount, // major decimal string
           date: formData.date,
           description: formData.description || "",
           source_bank: formData.source_bank,
@@ -202,6 +219,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     [formData, isSubmitting, isValid, onSave, resetForm, t]
   );
 
+  // ---------- Render ----------
   if (!isOpen) return null;
 
   return (
@@ -219,140 +237,141 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 TR
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("header.kind")}
-                </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("header.title")}
-                </h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
               </div>
             </div>
 
             <button
               className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-              onClick={handleClose}
+              onClick={closeModal}
               aria-label={t("actions.close")}
               title={t("actions.close")}
+              type="button"
             >
               &times;
             </button>
           </div>
         </header>
 
-        <form
-          ref={formRef}
-          onSubmit={handleSubmit}
-          className="relative z-10 px-5 py-4 overflow-visible flex-1"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <DateInput
-              label={t("fields.date")}
-              value={formData.date}
-              onChange={(iso) => setFormData((prev) => ({ ...prev, date: iso }))}
-            />
+        {/* IMPORTANT: footer must be inside the form so the submit button works */}
+        <form ref={formRef} onSubmit={handleSubmit} className="relative z-10 flex-1 flex flex-col">
+          <div className="px-5 py-4 overflow-visible">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <DateInput
+                label={t("fields.date")}
+                value={formData.date}
+                onChange={(iso) => setField("date", iso)}
+              />
 
-            <AmountInput
-              ref={amountRef}
-              label={t("fields.amount")}
-              id="amount-input"
-              value={formData.amount}
-              onValueChange={(next) => setFormData((prev) => ({ ...prev, amount: next }))}
-              aria-label={t("fields.amount")}
-              zeroAsEmpty
-            />
+              <AmountInput
+                ref={amountRef}
+                label={t("fields.amount")}
+                id="amount-input"
+                value={formData.amount}
+                onValueChange={(next) => setField("amount", next)}
+                aria-label={t("fields.amount")}
+                zeroAsEmpty
+              />
 
-            <Input
-              label={t("fields.note")}
-              name="description"
-              placeholder={t("placeholders.note")}
-              value={formData.description}
-              onChange={handleTextChange}
-            />
+              <Input
+                label={t("fields.note")}
+                name="description"
+                placeholder={t("placeholders.note")}
+                value={formData.description}
+                onChange={handleTextChange}
+              />
 
-            <SelectDropdown<BankAccount>
-              label={t("fields.bankOut")}
-              items={bankOutOptions}
-              selected={
-                formData.source_bank
-                  ? bankOutOptions.filter((b) => b.id === formData.source_bank)
-                  : []
-              }
-              onChange={(sel) => handleBankChange("source_bank", sel)}
-              getItemKey={(b) => b.id}
-              getItemLabel={optionLabelFor}
-              singleSelect
-              buttonLabel={t("placeholders.selectBank")}
-              customStyles={{ maxHeight: "180px" }}
-            />
+              <SelectDropdown<BankAccount>
+                label={t("fields.bankOut")}
+                items={bankOutOptions}
+                selected={
+                  formData.source_bank
+                    ? bankOutOptions.filter((b) => b.id === formData.source_bank)
+                    : []
+                }
+                onChange={(sel) => handleBankChange("source_bank", sel)}
+                getItemKey={(b) => b.id}
+                getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
+                singleSelect
+                buttonLabel={t("placeholders.selectBank")}
+                customStyles={{ maxHeight: "180px" }}
+              />
 
-            <div className="flex items-end justify-center">
-              <Button
-                type="button"
-                variant="outline"
-                className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                onClick={swapBanks}
-                disabled={!formData.source_bank && !formData.dest_bank}
-                title={t("actions.swap")}
-                aria-label={t("actions.swap")}
-              >
-                ⇄
-              </Button>
-            </div>
+              <div className="flex items-end justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  onClick={swapBanks}
+                  disabled={!formData.source_bank && !formData.dest_bank}
+                  title={t("actions.swap")}
+                  aria-label={t("actions.swap")}
+                >
+                  ⇄
+                </Button>
+              </div>
 
-            <SelectDropdown<BankAccount>
-              label={t("fields.bankIn")}
-              items={bankInOptions}
-              selected={
-                formData.dest_bank
-                  ? bankInOptions.filter((b) => b.id === formData.dest_bank)
-                  : []
-              }
-              onChange={(sel) => handleBankChange("dest_bank", sel)}
-              getItemKey={(b) => b.id}
-              getItemLabel={optionLabelFor}
-              singleSelect
-              buttonLabel={t("placeholders.selectBank")}
-              customStyles={{ maxHeight: "180px" }}
-            />
+              <SelectDropdown<BankAccount>
+                label={t("fields.bankIn")}
+                items={bankInOptions}
+                selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}
+                onChange={(sel) => handleBankChange("dest_bank", sel)}
+                getItemKey={(b) => b.id}
+                getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
+                singleSelect
+                buttonLabel={t("placeholders.selectBank")}
+                customStyles={{ maxHeight: "180px" }}
+              />
 
-            {formData.source_bank &&
-              formData.dest_bank &&
-              formData.source_bank === formData.dest_bank && (
+              {showSameBankWarning && (
                 <p className="md:col-span-3 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                   {t("warnings.sameBank")}
                 </p>
               )}
+            </div>
           </div>
+
+          {/* Keep the exact same footer design, but inside the form */}
+          <footer className="mt-auto border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
+            <div className="text-[12px] text-gray-600">
+              {amountMajorNumber > 0 ? (
+                <>
+                  <b>{formatCurrency(formData.amount)}</b>
+                  {bankOutFooterLabel || bankInFooterLabel ? (
+                    <>
+                      {" "}
+                      —{" "}
+                      {bankOutFooterLabel ? (
+                        <>
+                          {t("labels.from")} <b>{bankOutFooterLabel}</b>
+                        </>
+                      ) : null}
+                      {bankInFooterLabel ? (
+                        <>
+                          {" "}
+                          {t("labels.to")} <b>{bankInFooterLabel}</b>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <>{t("hints.fillToSave")}</>
+              )}
+              <span className="ml-3 text-gray-400">{t("hints.shortcuts")}</span>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="cancel" type="button" onClick={closeModal}>
+                {t("actions.cancel")}
+              </Button>
+              <Button type="submit" disabled={!isValid || isSubmitting}>
+                {isSubmitting ? t("actions.saving") : t("actions.save")}
+              </Button>
+            </div>
+          </footer>
         </form>
-
-        <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
-          <div className="text-[12px] text-gray-600">
-            {amountMajorNumber > 0 ? (
-              <>
-                <b>{formatCurrency(formData.amount)}</b>
-                {bankOutLabel || bankInLabel ? (
-                  <>
-                    {" "}
-                    — {bankOutLabel ? <>{t("labels.from")} <b>{bankOutLabel}</b></> : null}
-                    {bankInLabel ? <> {t("labels.to")} <b>{bankInLabel}</b></> : null}
-                  </>
-                ) : null}
-              </>
-            ) : (
-              <>{t("hints.fillToSave")}</>
-            )}
-            <span className="ml-3 text-gray-400">{t("hints.shortcuts")}</span>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="cancel" type="button" onClick={handleClose}>
-              {t("actions.cancel")}
-            </Button>
-            <Button type="submit" disabled={!isValid || isSubmitting}>
-              {isSubmitting ? t("actions.saving") : t("actions.save")}
-            </Button>
-          </div>
-        </footer>
       </div>
     </div>
   );

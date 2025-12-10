@@ -76,9 +76,9 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
         title: t("sections.organization"),
         id: "org",
         items: [
-          // keep id "company-settings" if your route is /settings/company-settings
+          // keep id "organization-settings" if your route is /settings/organization-settings
           // label updated to Organization language
-          { id: "company-settings", icon: "building" as IconKey, label: t("items.organization-settings") },
+          { id: "organization-settings", icon: "building" as IconKey, label: t("items.organization-settings") },
           { id: "employees", icon: "employees" as IconKey, label: t("items.employees") },
           { id: "groups", icon: "groups" as IconKey, label: t("items.groups") },
           { id: "subscription-management", icon: "layers" as IconKey, label: t("items.subscription-management") },

@@ -156,7 +156,7 @@ const routes: RouteObject[] = [
                     element: <Personal />
                 },
                 {
-                    path: 'company-settings',
+                    path: 'organization-settings',
                     element: <OrganizationSettings />
                 },
                 {

@@ -259,8 +259,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const isRecurrenceLocked = useMemo(() => {
     if (!initialEntry) return false;
     const count = (initialEntry as unknown as { installment_count?: number }).installment_count ?? 1;
-    return count > 1;
-  }, [initialEntry]);
+    return count > 1 || !!lastSettledOnStr;
+  }, [initialEntry, lastSettledOnStr]);
 
   const amountMajorNum = useMemo(() => majorToNumber(formData.details.amount), [formData.details.amount]);
 
