@@ -52,13 +52,13 @@ export const api = {
     request<SignUpResponse>('auth/signup/', 'POST', payload),
 
   checkEmailAvailability: (email: string) =>
-    request<{ available: boolean }>("auth/check-email/", "POST", { email }),
+    request<{ available: boolean }>("auth/emails/check/", "POST", { email }),
 
   verifyEmail: <T>(uidb64: string, token: string) =>
-    request<T>(`auth/verify-email/${uidb64}/${token}/`, "GET"),
+    request<T>(`auth/emails/verify/${uidb64}/${token}/`, "GET"),
 
   verifyNewEmail: <T>(uidb64: string, token: string) =>
-    request<T>(`auth/verify-email/${uidb64}/${token}/`, "GET"),
+    request<T>(`auth/emails/verify/${uidb64}/${token}/`, "GET"),
 
   saveCookieConsent: (payload: {
     functional: boolean;
@@ -73,16 +73,16 @@ export const api = {
 
   /* --- User --- */
   getUser: () =>
-    request<GetUserResponse>('auth/me/', "GET"),
+    request<GetUserResponse>("auth/profile/", "GET"),
 
   editUser:(payload: Partial<User>) =>
-    request<User>('auth/me/', 'PUT', payload),
+    request<User>("auth/profile/", "PUT", payload),
 
   getPersonalSettings: () =>
-    request<PersonalSettings>('auth/me/settings/', "GET"),
+    request<PersonalSettings>("auth/profile/settings/", "GET"),
 
   editPersonalSettings:(payload: Partial<PersonalSettings>) =>
-    request<PersonalSettings>('auth/me/settings/', 'PATCH', payload),
+    request<PersonalSettings>("auth/profile/settings/", "PATCH", payload),
 
   /* --- Entitlements --- */
   getEntitlementLimits:() =>
