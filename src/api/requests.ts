@@ -149,7 +149,7 @@ export const api = {
   },
 
   editOrganization: (payload: Partial<Organization>) => {
-    return request<Organization>(`organizations/current/update/`, "PUT", payload);
+    return request<Organization>(`organizations/current/`, "PUT", payload);
   },
 
   getOrgCurrency: () => {
