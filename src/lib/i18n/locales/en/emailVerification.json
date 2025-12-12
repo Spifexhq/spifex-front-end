@@ -6,5 +6,7 @@
   "genericBackendError": "Error verifying email.",
   "genericUnexpectedError": "An error occurred while verifying your email.",
   "successMessage": "Email verified successfully!",
-  "goToLoginButton": "Go to login"
+  "goToLoginButton": "Go to login",
+  "cancelSuccessTitle": "Email Change Cancelled",
+  "cancelSuccessMessage": "The email change request has been successfully cancelled. Your email address remains unchanged."
 }

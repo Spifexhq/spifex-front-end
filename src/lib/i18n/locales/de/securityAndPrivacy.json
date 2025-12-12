@@ -13,15 +13,22 @@
     "never": "nie",
     "current": "Aktuelles Passwort",
     "new": "Neues Passwort",
-    "confirm": "Neues Passwort bestätigen"
+    "confirm": "Neues Passwort bestätigen",
+    "primaryEmail": "Primäre E-Mail-Adresse",
+    "currentEmail": "Aktuelle E-Mail-Adresse",
+    "newEmail": "Neue E-Mail-Adresse",
+    "currentPassword": "Aktuelles Passwort"
   },
   "btn": {
     "changePassword": "Passwort ändern",
+    "changeEmail": "E-Mail-Adresse ändern",
     "save": "Speichern",
+    "saveEmail": "E-Mail speichern",
     "cancel": "Abbrechen"
   },
   "modal": {
     "title": "Passwort ändern",
+    "emailTitle": "E-Mail-Adresse ändern",
     "close": "Schließen"
   },
   "toast": {
@@ -30,6 +37,13 @@
     "unexpected": "Unerwarteter Fehler.",
     "passwordMismatch": "Die Passwörter stimmen nicht überein.",
     "samePassword": "Das neue Passwort darf nicht dem aktuellen Passwort entsprechen.",
-    "weakPassword": "Das neue Passwort erfüllt nicht die Mindestanforderungen."
+    "weakPassword": "Das neue Passwort erfüllt nicht die Mindestanforderungen.",
+    "missingFields": "Bitte füllen Sie alle Felder aus.",
+    "emailChangeRequested": "Wir haben einen Bestätigungslink an die neue E-Mail-Adresse gesendet.",
+    "emailChangeError": "Die Anforderung zur Änderung der E-Mail-Adresse ist fehlgeschlagen.",
+    "emailInUse": "Diese E-Mail-Adresse wird bereits verwendet.",
+    "sameEmail": "Die neue E-Mail-Adresse darf nicht mit der aktuellen Adresse identisch sein.",
+    "invalidCurrentPassword": "Das aktuelle Passwort ist falsch.",
+    "currentEmailMismatch": "Die aktuelle E-Mail-Adresse stimmt nicht mit Ihrem Konto überein."
   }
 }

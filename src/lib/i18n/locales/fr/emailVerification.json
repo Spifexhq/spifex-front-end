@@ -6,5 +6,7 @@
   "genericBackendError": "Erreur lors de la vérification de l'e-mail.",
   "genericUnexpectedError": "Une erreur s'est produite lors de la vérification de votre e-mail.",
   "successMessage": "E-mail vérifié avec succès !",
-  "goToLoginButton": "Aller à la connexion"
+  "goToLoginButton": "Aller à la connexion",
+  "cancelSuccessTitle": "Changement d'E-mail Annulé",
+  "cancelSuccessMessage": "La demande de changement d'e-mail a été annulée avec succès. Votre adresse e-mail reste inchangée."
 }

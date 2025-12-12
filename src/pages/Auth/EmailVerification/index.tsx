@@ -21,6 +21,7 @@ const EmailVerification = () => {
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationMessage, setMsg] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isCancellation, setIsCancellation] = useState(false);
 
   useEffect(() => {
     document.title = t("pageTitle");
@@ -34,8 +35,15 @@ const EmailVerification = () => {
       }
 
       try {
-        const call = location.pathname.includes("verify-pending-email")
-          ? api.verifyNewEmail
+        const isPendingEmailRoute = location.pathname.includes("verify-pending-email");
+        const searchParams = new URLSearchParams(location.search);
+        const isCancel = isPendingEmailRoute && searchParams.get("cancel") === "1";
+
+        // Set cancellation flag
+        setIsCancellation(isCancel);
+
+        const call = isPendingEmailRoute
+          ? (isCancel ? api.cancelEmailChange : api.verifyNewEmail)
           : api.verifyEmail;
 
         const res: ApiResponse<VerifyEmailResponse | VerifyNewEmailResponse> =
@@ -45,7 +53,12 @@ const EmailVerification = () => {
           setMsg(res.error.message || t("genericBackendError"));
           setSuccess(false);
         } else {
-          setMsg(t("successMessage"));
+          // Set different message based on whether it's a cancellation
+          if (isCancel) {
+            setMsg(t("cancelSuccessMessage"));
+          } else {
+            setMsg(t("successMessage"));
+          }
           setSuccess(true);
         }
       } catch (err) {
@@ -60,8 +73,8 @@ const EmailVerification = () => {
       }
     };
 
-    verify();
-  }, [uidb64, token, location.pathname, t]);
+    void verify();
+  }, [uidb64, token, location.pathname, location.search, t]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
@@ -73,7 +86,10 @@ const EmailVerification = () => {
         ) : (
           <div className="bg-white shadow-sm rounded-2xl p-6 sm:p-8 text-center">
             <h1 className="text-2xl font-semibold text-slate-900 mb-4">
-              {success ? t("successTitle") : t("errorTitle")}
+              {success 
+                ? (isCancellation ? t("cancelSuccessTitle") : t("successTitle"))
+                : t("errorTitle")
+              }
             </h1>
             <p className="text-sm text-slate-500 mb-6">
               {verificationMessage}

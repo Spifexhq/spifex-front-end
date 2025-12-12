@@ -6,5 +6,7 @@
   "genericBackendError": "Fehler bei der Bestätigung der E-Mail.",
   "genericUnexpectedError": "Beim Bestätigen Ihrer E-Mail ist ein Fehler aufgetreten.",
   "successMessage": "E-Mail erfolgreich bestätigt!",
-  "goToLoginButton": "Zum Login"
+  "goToLoginButton": "Zum Login",
+  "cancelSuccessTitle": "E-Mail-Änderung Abgebrochen",
+  "cancelSuccessMessage": "Die Anfrage zur E-Mail-Änderung wurde erfolgreich abgebrochen. Ihre E-Mail-Adresse bleibt unverändert."
 }

@@ -13,15 +13,22 @@
     "never": "nunca",
     "current": "Palavra-passe atual",
     "new": "Nova palavra-passe",
-    "confirm": "Confirmar nova palavra-passe"
+    "confirm": "Confirmar nova palavra-passe",
+    "primaryEmail": "Email principal",
+    "currentEmail": "Email atual",
+    "newEmail": "Novo email",
+    "currentPassword": "Palavra-passe atual"
   },
   "btn": {
     "changePassword": "Alterar palavra-passe",
+    "changeEmail": "Alterar email",
     "save": "Guardar",
+    "saveEmail": "Guardar email",
     "cancel": "Cancelar"
   },
   "modal": {
     "title": "Alterar palavra-passe",
+    "emailTitle": "Alterar email",
     "close": "Fechar"
   },
   "toast": {
@@ -30,6 +37,13 @@
     "unexpected": "Erro inesperado.",
     "passwordMismatch": "As palavras-passe não coincidem.",
     "samePassword": "A nova palavra-passe não pode ser igual à palavra-passe atual.",
-    "weakPassword": "A nova palavra-passe não cumpre os requisitos mínimos."
+    "weakPassword": "A nova palavra-passe não cumpre os requisitos mínimos.",
+    "missingFields": "Preencha todos os campos.",
+    "emailChangeRequested": "Enviámos um link de confirmação para o novo email.",
+    "emailChangeError": "Não foi possível solicitar a alteração de email.",
+    "emailInUse": "Este email já está a ser utilizado.",
+    "sameEmail": "O novo email não pode ser igual ao email atual.",
+    "invalidCurrentPassword": "A palavra-passe atual está incorreta.",
+    "currentEmailMismatch": "O email atual não corresponde à sua conta."
   }
 }

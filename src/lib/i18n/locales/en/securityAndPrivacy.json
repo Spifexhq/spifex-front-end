@@ -13,15 +13,22 @@
     "never": "never",
     "current": "Current password",
     "new": "New password",
-    "confirm": "Confirm new password"
+    "confirm": "Confirm new password",
+    "primaryEmail": "Primary email",
+    "currentEmail": "Current email",
+    "newEmail": "New email",
+    "currentPassword": "Current password"
   },
   "btn": {
     "changePassword": "Change password",
+    "changeEmail": "Change email",
     "save": "Save",
+    "saveEmail": "Save email",
     "cancel": "Cancel"
   },
   "modal": {
     "title": "Change password",
+    "emailTitle": "Change email",
     "close": "Close"
   },
   "toast": {
@@ -30,6 +37,13 @@
     "unexpected": "Unexpected error.",
     "passwordMismatch": "Passwords do not match.",
     "samePassword": "The new password cannot be the same as the current password.",
-    "weakPassword": "The new password does not meet the minimum requirements."
+    "weakPassword": "The new password does not meet the minimum requirements.",
+    "missingFields": "Please fill in all fields.",
+    "emailChangeRequested": "We sent a confirmation link to your new email.",
+    "emailChangeError": "Failed to request the email change.",
+    "emailInUse": "This email is already in use.",
+    "sameEmail": "The new email cannot be the same as the current email.",
+    "invalidCurrentPassword": "The current password is incorrect.",
+    "currentEmailMismatch": "The current email does not match your account."
   }
 }

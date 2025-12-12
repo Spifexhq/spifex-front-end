@@ -13,15 +13,22 @@
     "never": "jamais",
     "current": "Mot de passe actuel",
     "new": "Nouveau mot de passe",
-    "confirm": "Confirmer le nouveau mot de passe"
+    "confirm": "Confirmer le nouveau mot de passe",
+    "primaryEmail": "Adresse e-mail principale",
+    "currentEmail": "Adresse e-mail actuelle",
+    "newEmail": "Nouvelle adresse e-mail",
+    "currentPassword": "Mot de passe actuel"
   },
   "btn": {
     "changePassword": "Changer le mot de passe",
+    "changeEmail": "Modifier l’adresse e-mail",
     "save": "Enregistrer",
+    "saveEmail": "Enregistrer l’e-mail",
     "cancel": "Annuler"
   },
   "modal": {
     "title": "Changer le mot de passe",
+    "emailTitle": "Modifier l’adresse e-mail",
     "close": "Fermer"
   },
   "toast": {
@@ -30,6 +37,13 @@
     "unexpected": "Erreur inattendue.",
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
     "samePassword": "Le nouveau mot de passe ne peut pas être identique à l’actuel.",
-    "weakPassword": "Le nouveau mot de passe ne respecte pas les exigences minimales."
+    "weakPassword": "Le nouveau mot de passe ne respecte pas les exigences minimales.",
+    "missingFields": "Veuillez remplir tous les champs.",
+    "emailChangeRequested": "Nous avons envoyé un lien de confirmation à la nouvelle adresse e-mail.",
+    "emailChangeError": "Échec de la demande de changement d’e-mail.",
+    "emailInUse": "Cette adresse e-mail est déjà utilisée.",
+    "sameEmail": "La nouvelle adresse e-mail ne peut pas être identique à l’adresse actuelle.",
+    "invalidCurrentPassword": "Le mot de passe actuel est incorrect.",
+    "currentEmailMismatch": "L’adresse e-mail actuelle ne correspond pas à votre compte."
   }
 }

@@ -57,8 +57,11 @@ export const api = {
   verifyEmail: <T>(uidb64: string, token: string) =>
     request<T>(`auth/emails/verify/${uidb64}/${token}/`, "GET"),
 
-  verifyNewEmail: <T>(uidb64: string, token: string) =>
-    request<T>(`auth/emails/verify/${uidb64}/${token}/`, "GET"),
+  verifyNewEmail: <T>(changeId: string, token: string) =>
+    request<T>(`auth/emails/verify-change/${changeId}/${token}/`, "GET"),
+
+  cancelEmailChange: <T>(changeId: string, token: string) =>
+    request<T>(`auth/emails/cancel-change/${changeId}/${token}/`, "GET"),
 
   saveCookieConsent: (payload: {
     functional: boolean;
@@ -81,22 +84,33 @@ export const api = {
   getPersonalSettings: () =>
     request<PersonalSettings>("auth/profile/settings/", "GET"),
 
-  editPersonalSettings:(payload: Partial<PersonalSettings>) =>
+  editPersonalSettings:(payload: Partial<Omit<PersonalSettings, "email">>) =>
     request<PersonalSettings>("auth/profile/settings/", "PATCH", payload),
 
   /* --- Entitlements --- */
   getEntitlementLimits:() =>
     request<GetEntitlementLimitsResponse>('entitlements/limits/', 'GET'),
 
-  /* --- Password --- */
+  /* --- Password / Email security --- */
   changePassword: (payload: { current_password: string; new_password: string }) =>
-    request<unknown>('auth/password/change/', 'PUT', payload),
+    request<unknown>("auth/password/change/", "PUT", payload),
+
+  changeEmail: (payload: {
+    current_email: string;
+    new_email: string;
+    current_password: string;
+  }) =>
+    request<{ status: string; message: string }>(
+      "auth/emails/change/",
+      "POST",
+      payload
+    ),
 
   requestPasswordReset: (email: string) =>
-    request<void>('auth/password/reset/', 'POST', { email }),
+    request<void>("auth/password/reset/", "POST", { email }),
 
   confirmPasswordReset: (uidb64: string, token: string, password: string) =>
-    request<void>(`auth/password/reset/${uidb64}/${token}/`, 'POST', {
+    request<void>(`auth/password/reset/${uidb64}/${token}/`, "POST", {
       password,
       password_confirm: password,
     }),

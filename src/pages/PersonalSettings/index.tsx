@@ -36,7 +36,6 @@ type Snack =
 /* ----------------------------- Helpers/Types ----------------------------- */
 type EditableUserField =
   | "name"
-  | "email"
   | "phone"
   | "job_title"
   | "department"
@@ -219,11 +218,14 @@ const PersonalSettings: React.FC = () => {
         payload.country = (formData.country ?? "").toString().toUpperCase();
       }
     } else {
-      // Full form update, normalizing country
+      // Full form update, but never send email in this endpoint
       payload = {
         ...formData,
         country: (formData.country ?? "").toString().toUpperCase(),
       };
+
+      // Explicitly strip email before sending to the backend
+      delete payload.email;
     }
 
     setIsSubmitting(true);
@@ -340,21 +342,22 @@ const PersonalSettings: React.FC = () => {
                   </span>
                 </div>
                 <div className="divide-y divide-gray-200">
+                  {/* Email FIRST, read-only */}
+                  <Row
+                    label={t("field.primaryEmail")}
+                    value={profile?.email ?? ""}
+                  />
+                  {/* Full name below, editable */}
                   <Row
                     label={t("field.fullName")}
                     value={profile?.name ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("name")} disabled={isSubmitting}>
+                      <Button
+                        variant="outline"
+                        onClick={() => openModal("name")}
+                        disabled={isSubmitting}
+                      >
                         {t("btn.updateName")}
-                      </Button>
-                    }
-                  />
-                  <Row
-                    label={t("field.primaryEmail")}
-                    value={profile?.email ?? ""}
-                    action={
-                      <Button variant="outline" onClick={() => openModal("email")} disabled={isSubmitting}>
-                        {t("btn.updateEmail")}
                       </Button>
                     }
                   />
@@ -362,7 +365,11 @@ const PersonalSettings: React.FC = () => {
                     label={t("field.phone")}
                     value={profile?.phone ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("phone")} disabled={isSubmitting}>
+                      <Button
+                        variant="outline"
+                        onClick={() => openModal("phone")}
+                        disabled={isSubmitting}
+                      >
                         {t("btn.updatePhone")}
                       </Button>
                     }
@@ -371,7 +378,11 @@ const PersonalSettings: React.FC = () => {
                     label={t("field.jobTitle")}
                     value={profile?.job_title ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("job_title")} disabled={isSubmitting}>
+                      <Button
+                        variant="outline"
+                        onClick={() => openModal("job_title")}
+                        disabled={isSubmitting}
+                      >
                         {t("btn.updateJobTitle")}
                       </Button>
                     }
@@ -380,7 +391,11 @@ const PersonalSettings: React.FC = () => {
                     label={t("field.department")}
                     value={profile?.department ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("department")} disabled={isSubmitting}>
+                      <Button
+                        variant="outline"
+                        onClick={() => openModal("department")}
+                        disabled={isSubmitting}
+                      >
                         {t("btn.updateDepartment")}
                       </Button>
                     }
@@ -389,7 +404,11 @@ const PersonalSettings: React.FC = () => {
                     label={t("field.country")}
                     value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
                     action={
-                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>
+                      <Button
+                        variant="outline"
+                        onClick={() => openModal("country")}
+                        disabled={isSubmitting}
+                      >
                         {t("btn.updateCountry")}
                       </Button>
                     }
@@ -417,7 +436,11 @@ const PersonalSettings: React.FC = () => {
                         {formatTimezoneLabel(profile?.timezone ?? "")}
                       </p>
                     </div>
-                    <Button variant="outline" onClick={() => openModal("timezone")} disabled={isSubmitting}>
+                    <Button
+                      variant="outline"
+                      onClick={() => openModal("timezone")}
+                      disabled={isSubmitting}
+                    >
                       {t("btn.update")}
                     </Button>
                   </div>
@@ -434,7 +457,11 @@ const PersonalSettings: React.FC = () => {
                 <div className="px-4 py-3">
                   <p className="text-[12px] text-gray-700">{t("security.subtitle")}</p>
                   <div className="mt-3">
-                    <Button variant="outline" onClick={handleSecurityNavigation} disabled={isSubmitting}>
+                    <Button
+                      variant="outline"
+                      onClick={handleSecurityNavigation}
+                      disabled={isSubmitting}
+                    >
                       {t("btn.manageSecurity")}
                     </Button>
                   </div>
@@ -496,19 +523,39 @@ const PersonalSettings: React.FC = () => {
                 }}
               >
                 {(editingField === null || editingField === "name") && (
-                  <Input label={t("field.fullName")} name="name" value={formData.name ?? ""} onChange={handleChange} required />
+                  <Input
+                    label={t("field.fullName")}
+                    name="name"
+                    value={formData.name ?? ""}
+                    onChange={handleChange}
+                    required
+                  />
                 )}
-                {(editingField === null || editingField === "email") && (
-                  <Input label={t("field.primaryEmail")} name="email" type="email" value={formData.email ?? ""} onChange={handleChange} required />
-                )}
+
                 {(editingField === null || editingField === "phone") && (
-                  <Input label={t("field.phone")} name="phone" type="tel" value={formData.phone ?? ""} onChange={handleChange} />
+                  <Input
+                    label={t("field.phone")}
+                    name="phone"
+                    type="tel"
+                    value={formData.phone ?? ""}
+                    onChange={handleChange}
+                  />
                 )}
                 {(editingField === null || editingField === "job_title") && (
-                  <Input label={t("field.jobTitle")} name="job_title" value={formData.job_title ?? ""} onChange={handleChange} />
+                  <Input
+                    label={t("field.jobTitle")}
+                    name="job_title"
+                    value={formData.job_title ?? ""}
+                    onChange={handleChange}
+                  />
                 )}
                 {(editingField === null || editingField === "department") && (
-                  <Input label={t("field.department")} name="department" value={formData.department ?? ""} onChange={handleChange} />
+                  <Input
+                    label={t("field.department")}
+                    name="department"
+                    value={formData.department ?? ""}
+                    onChange={handleChange}
+                  />
                 )}
 
                 {(editingField === null || editingField === "country") && (
@@ -534,7 +581,9 @@ const PersonalSettings: React.FC = () => {
                 {(editingField === null || editingField === "timezone") && (
                   <>
                     <div className="flex items-center justify-between">
-                      <label className="text-[12px] text-gray-700">{t("modal.useDeviceTz")}</label>
+                      <label className="text-[12px] text-gray-700">
+                        {t("modal.useDeviceTz")}
+                      </label>
                       <Checkbox
                         checked={useDeviceTz}
                         onChange={(e) => {
@@ -577,7 +626,12 @@ const PersonalSettings: React.FC = () => {
                 )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                  <Button
+                    variant="cancel"
+                    type="button"
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
                     {t("btn.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>

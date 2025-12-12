@@ -6,5 +6,7 @@
   "genericBackendError": "Erro ao verificar email.",
   "genericUnexpectedError": "Ocorreu um erro ao verificar seu email.",
   "successMessage": "Email verificado com sucesso!",
-  "goToLoginButton": "Ir para login"
+  "goToLoginButton": "Ir para login",
+  "cancelSuccessTitle": "Alteração de E-mail Cancelada",
+  "cancelSuccessMessage": "A solicitação de alteração de e-mail foi cancelada com sucesso. Seu endereço de e-mail permanece inalterado."
 }

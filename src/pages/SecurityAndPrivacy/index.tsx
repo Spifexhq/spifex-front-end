@@ -3,11 +3,10 @@
  * Standardized flags + UX (matches Employee/Entity/Department/Inventory)
  * - Flags: isInitialLoading, isSubmitting
  * - Initial: TopProgress + PageSkeleton
- * - Background: TopProgress while submitting (change password)
+ * - Background: TopProgress while submitting (change password / email)
  * - i18n: namespace "securityAndPrivacy"
  * -------------------------------------------------------------------------- */
 
-import axios from "axios";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
@@ -24,6 +23,7 @@ import { useAuthContext } from "src/hooks/useAuth";
 import type { User } from "src/models/auth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
+import type { ApiErrorBody } from "@/models/Api";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =
@@ -48,7 +48,11 @@ const Row = ({
   action?: React.ReactNode;
   disabled?: boolean;
 }) => (
-  <div className={`flex items-center justify-between px-4 py-2.5 ${disabled ? "opacity-70 pointer-events-none" : ""}`}>
+  <div
+    className={`flex items-center justify-between px-4 py-2.5 ${
+      disabled ? "opacity-70 pointer-events-none" : ""
+    }`}
+  >
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
       <p className="text-[13px] font-medium text-gray-900 truncate">{value}</p>
@@ -56,6 +60,41 @@ const Row = ({
     {action}
   </div>
 );
+
+/**
+ * Type guard for ApiErrorBody thrown by our `request<T>` helper.
+ */
+const isApiErrorBody = (value: unknown): value is ApiErrorBody => {
+  return typeof value === "object" && value !== null && "code" in value;
+};
+
+/**
+ * Try to extract a human-readable message from ApiErrorBody
+ * (message, detail, or detail.detail).
+ */
+const getApiErrorMessage = (error: ApiErrorBody): string | undefined => {
+  if (typeof error.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  const detail = error.detail;
+
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  if (
+    detail &&
+    typeof detail === "object" &&
+    "detail" in detail &&
+    typeof (detail as { detail: unknown }).detail === "string"
+  ) {
+    const inner = (detail as { detail: string }).detail;
+    if (inner.trim()) return inner;
+  }
+
+  return undefined;
+};
 
 /* -------------------------------------------------------------------------- */
 const SecurityAndPrivacy: React.FC = () => {
@@ -100,13 +139,19 @@ const SecurityAndPrivacy: React.FC = () => {
 
   const [user, setUser] = useState<User | null>(null);
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"password" | "email" | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
   const [pwData, setPwData] = useState({
     current_password: "",
     new_password: "",
     confirm: "",
+  });
+
+  const [emailData, setEmailData] = useState({
+    current_email: "",
+    new_email: "",
+    current_password: "",
   });
 
   /* ------------------------------ Bootstrap -------------------------------- */
@@ -127,18 +172,41 @@ const SecurityAndPrivacy: React.FC = () => {
   }, []);
 
   /* ------------------------------- Handlers -------------------------------- */
-  const openModal = useCallback(() => setModalOpen(true), []);
-  const closeModal = useCallback(() => {
+  const openPasswordModal = useCallback(() => {
     setPwData({ current_password: "", new_password: "", confirm: "" });
-    setModalOpen(false);
+    setModalMode("password");
   }, []);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const openEmailModal = useCallback(() => {
+    setEmailData({
+      current_email: user?.email ?? authUser?.email ?? "",
+      new_email: "",
+      current_password: "",
+    });
+    setModalMode("email");
+  }, [user, authUser]);
+
+  const closeModal = useCallback(() => {
+    setPwData({ current_password: "", new_password: "", confirm: "" });
+    setEmailData((prev) => ({
+      current_email: user?.email ?? authUser?.email ?? prev.current_email,
+      new_email: "",
+      current_password: "",
+    }));
+    setModalMode(null);
+  }, [user, authUser]);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPwData((p) => ({ ...p, [name]: value }));
   }, []);
 
-  const handleSubmit = useCallback(async () => {
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEmailData((p) => ({ ...p, [name]: value }));
+  }, []);
+
+  const handlePasswordSubmit = useCallback(async () => {
     const { current_password, new_password, confirm } = pwData;
 
     if (new_password !== confirm) {
@@ -172,10 +240,15 @@ const SecurityAndPrivacy: React.FC = () => {
       } catch {
         /* silent */
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
+    } catch (err: unknown) {
+      if (isApiErrorBody(err)) {
+        const message =
+          err.code === "invalid_credentials"
+            ? t("toast.invalidCurrentPassword")
+            : getApiErrorMessage(err) ?? t("toast.changeError");
+
         setSnack({
-          message: (err.response?.data as { message?: string } | undefined)?.message ?? t("toast.changeError"),
+          message,
           severity: "error",
         });
       } else if (err instanceof Error) {
@@ -188,19 +261,95 @@ const SecurityAndPrivacy: React.FC = () => {
     }
   }, [pwData, t, closeModal]);
 
+  const handleEmailSubmit = useCallback(async () => {
+    const { current_email, new_email, current_password } = emailData;
+
+    if (!current_email || !new_email || !current_password) {
+      setSnack({ message: t("toast.missingFields"), severity: "error" });
+      return;
+    }
+
+    // Local check: new e-mail cannot be the same as current
+    if (current_email.trim().toLowerCase() === new_email.trim().toLowerCase()) {
+      setSnack({ message: t("toast.sameEmail"), severity: "error" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await api.changeEmail({
+        current_email,
+        new_email,
+        current_password,
+      });
+      closeModal();
+      setSnack({
+        message: t("toast.emailChangeRequested"),
+        severity: "success",
+      });
+
+      // Optional: refresh user (email will only change after verification)
+      try {
+        const resp = await api.getUser();
+        setUser(resp.data.user as User);
+      } catch {
+        /* silent */
+      }
+    } catch (err: unknown) {
+      if (isApiErrorBody(err)) {
+        let message: string;
+
+        switch (err.code) {
+          case "email_unavailable": {
+            // Prefer backend text ("This email is already in use.")
+            // but fall back to i18n if needed.
+            message = getApiErrorMessage(err) ?? t("toast.emailInUse");
+            break;
+          }
+          case "same_email": {
+            message = getApiErrorMessage(err) ?? t("toast.sameEmail");
+            break;
+          }
+          case "invalid_credentials": {
+            message = t("toast.invalidCurrentPassword");
+            break;
+          }
+          case "current_email_mismatch": {
+            message = t("toast.currentEmailMismatch");
+            break;
+          }
+          default: {
+            message = getApiErrorMessage(err) ?? t("toast.emailChangeError");
+          }
+        }
+
+        setSnack({
+          message,
+          severity: "error",
+        });
+      } else if (err instanceof Error) {
+        setSnack({ message: err.message, severity: "error" });
+      } else {
+        setSnack({ message: t("toast.unexpected"), severity: "error" });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [emailData, t, closeModal]);
+
   /* ------------------------------- UX hooks -------------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
+    if (modalMode) window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
+  }, [modalMode, closeModal]);
 
   useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
+    document.body.style.overflow = modalMode ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [modalOpen]);
+  }, [modalMode]);
 
   /* ----------------------------- Loading UI -------------------------------- */
   if (isInitialLoading) {
@@ -246,18 +395,41 @@ const SecurityAndPrivacy: React.FC = () => {
               </div>
 
               <div className="divide-y divide-gray-200">
+                {/* Email change row */}
+                <Row
+                  label={t("field.primaryEmail")}
+                  value={user?.email ?? authUser?.email ?? ""}
+                  action={
+                    <Button
+                      variant="outline"
+                      onClick={openEmailModal}
+                      disabled={isSubmitting}
+                    >
+                      {t("btn.changeEmail")}
+                    </Button>
+                  }
+                  disabled={isSubmitting}
+                />
+
+                {/* Password change row */}
                 <Row
                   label={t("field.password")}
                   value={
                     <>
                       {t("field.lastChange")}{" "}
                       {user?.last_password_change
-                        ? format(new Date(user.last_password_change), datePattern, { locale: dateLocale })
+                        ? format(new Date(user.last_password_change), datePattern, {
+                            locale: dateLocale,
+                          })
                         : t("field.never")}
                     </>
                   }
                   action={
-                    <Button variant="outline" onClick={openModal} disabled={isSubmitting}>
+                    <Button
+                      variant="outline"
+                      onClick={openPasswordModal}
+                      disabled={isSubmitting}
+                    >
                       {t("btn.changePassword")}
                     </Button>
                   }
@@ -268,11 +440,17 @@ const SecurityAndPrivacy: React.FC = () => {
           </section>
         </div>
 
-        {modalOpen && (
+        {modalMode && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">{t("modal.title")}</h3>
+                <h3 className="text-[14px] font-semibold text-gray-800">
+                  {modalMode === "password" ? t("modal.title") : t("modal.emailTitle")}
+                </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
@@ -284,49 +462,95 @@ const SecurityAndPrivacy: React.FC = () => {
               </header>
 
               <form
-                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
+                className={`space-y-3 ${
+                  isSubmitting ? "opacity-70 pointer-events-none" : ""
+                }`}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  void handleSubmit();
+                  if (modalMode === "password") {
+                    void handlePasswordSubmit();
+                  } else if (modalMode === "email") {
+                    void handleEmailSubmit();
+                  }
                 }}
               >
-                <Input
-                  label={t("field.current")}
-                  name="current_password"
-                  type="password"
-                  value={pwData.current_password}
-                  onChange={handleChange}
-                  showTogglePassword
-                  autoComplete="current-password"
-                  required
-                />
-                <Input
-                  label={t("field.new")}
-                  name="new_password"
-                  type="password"
-                  value={pwData.new_password}
-                  onChange={handleChange}
-                  showTogglePassword
-                  autoComplete="new-password"
-                  required
-                />
-                <Input
-                  label={t("field.confirm")}
-                  name="confirm"
-                  type="password"
-                  value={pwData.confirm}
-                  onChange={handleChange}
-                  showTogglePassword
-                  autoComplete="new-password"
-                  required
-                />
+                {modalMode === "password" ? (
+                  <>
+                    <Input
+                      label={t("field.current")}
+                      name="current_password"
+                      type="password"
+                      value={pwData.current_password}
+                      onChange={handlePasswordChange}
+                      showTogglePassword
+                      autoComplete="current-password"
+                      required
+                    />
+                    <Input
+                      label={t("field.new")}
+                      name="new_password"
+                      type="password"
+                      value={pwData.new_password}
+                      onChange={handlePasswordChange}
+                      showTogglePassword
+                      autoComplete="new-password"
+                      required
+                    />
+                    <Input
+                      label={t("field.confirm")}
+                      name="confirm"
+                      type="password"
+                      value={pwData.confirm}
+                      onChange={handlePasswordChange}
+                      showTogglePassword
+                      autoComplete="new-password"
+                      required
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      label={t("field.currentEmail")}
+                      name="current_email"
+                      type="email"
+                      value={emailData.current_email}
+                      onChange={handleEmailChange}
+                      autoComplete="email"
+                      required
+                    />
+                    <Input
+                      label={t("field.newEmail")}
+                      name="new_email"
+                      type="email"
+                      value={emailData.new_email}
+                      onChange={handleEmailChange}
+                      autoComplete="email"
+                      required
+                    />
+                    <Input
+                      label={t("field.currentPassword")}
+                      name="current_password"
+                      type="password"
+                      value={emailData.current_password}
+                      onChange={handleEmailChange}
+                      showTogglePassword
+                      autoComplete="current-password"
+                      required
+                    />
+                  </>
+                )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                  <Button
+                    variant="cancel"
+                    type="button"
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
                     {t("btn.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {t("btn.save")}
+                    {modalMode === "password" ? t("btn.save") : t("btn.saveEmail")}
                   </Button>
                 </div>
               </form>
