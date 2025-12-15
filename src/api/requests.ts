@@ -883,6 +883,7 @@ export const api = {
       pages: number | null;
       status: "uploaded" | "processing" | "ready" | "failed";
       created_at: string;
+      json_ready: boolean; // <-- add this
     }>>(
       `banking/statements/`,
       "GET",
@@ -940,7 +941,23 @@ export const api = {
     a.remove();
   },
 
+  downloadStatementJson: async (statementId: string) => {
+    const res = await http.get(`banking/statements/${statementId}/download-json/`, { responseType: "blob" });
 
+    const cd = res.headers?.["content-disposition"] as string | undefined;
+    const match = cd?.match(/filename="([^"]+)"/i);
+    const fallbackName = `statement_${statementId}.json`;
+    const filename = match?.[1] ?? fallbackName;
+
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.setAttribute("download", filename);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
 
 
 

@@ -31,6 +31,7 @@ type Statement = {
   pages: number | null;
   status: StatementStatus;
   created_at: string; // ISO
+  json_ready?: boolean; // backend provides this (optional in type)
 };
 
 type UploadRow = {
@@ -60,13 +61,10 @@ const chipClass: Record<StatementStatus, string> = {
   failed: "bg-rose-100 text-rose-800",
 };
 
-const isPDF = (f: File) =>
-  f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+const isPDF = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
 
 const toStatus = (v?: string): "" | StatementStatus =>
-  v === "uploaded" || v === "processing" || v === "ready" || v === "failed"
-    ? (v as StatementStatus)
-    : "";
+  v === "uploaded" || v === "processing" || v === "ready" || v === "failed" ? (v as StatementStatus) : "";
 
 /* ----------------------- In-memory guard for fetches ---------------------- */
 let INFLIGHT_FETCH = false;
@@ -88,7 +86,7 @@ const Statements: React.FC = () => {
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isBackgroundSync, setIsBackgroundSync] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // batch uploads trigger this
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // banks for selector
   const [banks, setBanks] = useState<BankAccount[]>([]);
@@ -160,6 +158,18 @@ const Statements: React.FC = () => {
   useEffect(() => {
     void Promise.all([refreshBanks(), refreshStatements()]);
   }, [refreshBanks, refreshStatements]);
+
+  // Poll while there is any processing statement
+  useEffect(() => {
+    const hasProcessing = statements.some((s) => s.status === "processing");
+    if (!hasProcessing) return;
+
+    const timer = window.setInterval(() => {
+      void refreshStatements({ background: true });
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [statements, refreshStatements]);
 
   /* ------------------------------- Upload --------------------------------- */
   const addFiles = (files: FileList | File[]) => {
@@ -255,6 +265,14 @@ const Statements: React.FC = () => {
     }
   };
 
+  const downloadJson = async (id: string) => {
+    try {
+      await api.downloadStatementJson(id);
+    } catch {
+      setSnack({ message: t("toast.downloadJsonFail", { defaultValue: "Failed to download JSON." }), severity: "error" });
+    }
+  };
+
   // Keyboard: ⌘/Ctrl+U focuses hidden file input; ⌘/Ctrl+F focuses search
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -315,12 +333,8 @@ const Statements: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.title")}
-                  </h1>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
                 </div>
                 {headerBadge}
               </div>
@@ -388,9 +402,7 @@ const Statements: React.FC = () => {
                   {queue.map((row) => (
                     <li
                       key={row.id}
-                      className={`px-4 py-3 flex items-center gap-3 ${
-                        globalBusy ? "opacity-70 pointer-events-none" : ""
-                      }`}
+                      className={`px-4 py-3 flex items-center gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-gray-900 truncate">{row.file.name}</p>
@@ -459,12 +471,7 @@ const Statements: React.FC = () => {
                   items={statusOptions}
                   selected={
                     statusFilter
-                      ? [
-                          {
-                            label: statusOptions.find((s) => s.value === statusFilter)?.label ?? "",
-                            value: statusFilter,
-                          },
-                        ]
+                      ? [{ label: statusOptions.find((s) => s.value === statusFilter)?.label ?? "", value: statusFilter }]
                       : []
                   }
                   onChange={(items) => setStatusFilter(toStatus(items?.[0]?.value))}
@@ -486,11 +493,7 @@ const Statements: React.FC = () => {
                   buttonLabel={t("filters.bankPick")}
                 />
                 <div className="flex items-end gap-2">
-                  <Button
-                    onClick={() => refreshStatements({ background: true })}
-                    className="!w-full"
-                    disabled={globalBusy}
-                  >
+                  <Button onClick={() => refreshStatements({ background: true })} className="!w-full" disabled={globalBusy}>
                     {t("btn.applyFilters")}
                   </Button>
                   <Button
@@ -524,18 +527,17 @@ const Statements: React.FC = () => {
                 <ul className="divide-y divide-gray-200">
                   {statements.map((s) => {
                     const rowBusy = globalBusy || deleteTargetId === s.id || s.status === "processing";
+                    const canDownloadJson = s.status === "ready" && (s.json_ready ?? true);
+
                     return (
                       <li
                         key={s.id}
-                        className={`px-4 py-3 grid grid-cols-12 gap-3 ${
-                          rowBusy ? "opacity-70 pointer-events-none" : ""
-                        }`}
+                        className={`px-4 py-3 grid grid-cols-12 gap-3 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}
                       >
                         <div className="col-span-6 min-w-0">
                           <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
                           <p className="text-[12px] text-gray-600">
-                            {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág ·{" "}
-                            {new Date(s.created_at).toLocaleString()}
+                            {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág · {new Date(s.created_at).toLocaleString()}
                           </p>
                         </div>
 
@@ -549,8 +551,22 @@ const Statements: React.FC = () => {
                             {t(`meta.chip.${s.status}`)}
                           </span>
 
-                          <Button variant="outline" onClick={() => api.downloadStatement(s.id)} title={t("actions.download")}>
+                          <Button
+                            variant="outline"
+                            onClick={() => api.downloadStatement(s.id)}
+                            title={t("actions.download")}
+                            disabled={globalBusy}
+                          >
                             {t("actions.download")}
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            onClick={() => downloadJson(s.id)}
+                            title={t("actions.downloadJson", { defaultValue: "Download JSON" })}
+                            disabled={!canDownloadJson || globalBusy}
+                          >
+                            {t("actions.downloadJson", { defaultValue: "JSON" })}
                           </Button>
 
                           <Button
