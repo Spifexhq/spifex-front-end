@@ -62,6 +62,13 @@ const chipClass: Record<StatementStatus, string> = {
 };
 
 const isPDF = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+const isImage = (f: File) =>
+  f.type === "image/png" ||
+  f.type === "image/jpeg" ||
+  f.name.toLowerCase().endsWith(".png") ||
+  f.name.toLowerCase().endsWith(".jpg") ||
+  f.name.toLowerCase().endsWith(".jpeg");
+const isSupported = (f: File) => isPDF(f) || isImage(f);
 
 const toStatus = (v?: string): "" | StatementStatus =>
   v === "uploaded" || v === "processing" || v === "ready" || v === "failed" ? (v as StatementStatus) : "";
@@ -175,8 +182,14 @@ const Statements: React.FC = () => {
   const addFiles = (files: FileList | File[]) => {
     const rows: UploadRow[] = [];
     Array.from(files).forEach((file) => {
-      if (!isPDF(file)) {
-        setSnack({ message: t("toast.nonPdfIgnored", { name: file.name }), severity: "warning" });
+      if (!isSupported(file)) {
+        setSnack({
+          message: t("toast.nonPdfIgnored", {
+            name: file.name,
+            defaultValue: "Unsupported file ignored: {{name}}",
+          }),
+          severity: "warning",
+        });
         return;
       }
       const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random().toString(36).slice(2, 8)}`;
@@ -350,7 +363,7 @@ const Statements: React.FC = () => {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="application/pdf"
+                  accept="application/pdf,image/png,image/jpeg"
                   multiple
                   className="hidden"
                   onChange={onInputChange}
@@ -402,7 +415,7 @@ const Statements: React.FC = () => {
                   {queue.map((row) => (
                     <li
                       key={row.id}
-                      className={`px-4 py-3 flex items-center gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
+                      className={`px-4 py-3 flex items-end gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-gray-900 truncate">{row.file.name}</p>
@@ -534,19 +547,19 @@ const Statements: React.FC = () => {
                         key={s.id}
                         className={`px-4 py-3 grid grid-cols-12 gap-3 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}
                       >
-                        <div className="col-span-6 min-w-0">
+                        <div className="col-span-4 min-w-0">
                           <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
                           <p className="text-[12px] text-gray-600">
                             {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág · {new Date(s.created_at).toLocaleString()}
                           </p>
                         </div>
 
-                        <div className="col-span-4">
+                        <div className="col-span-3">
                           <p className="text-[12px] text-gray-600">{t("filters.bank")}</p>
                           <p className="text-[13px] text-gray-900">{s.bank_account_label ?? "—"}</p>
                         </div>
 
-                        <div className="col-span-2 flex items-center gap-2 justify-end">
+                        <div className="col-span-5 flex items-center gap-2 justify-end">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}>
                             {t(`meta.chip.${s.status}`)}
                           </span>

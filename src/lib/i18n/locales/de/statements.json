@@ -6,7 +6,7 @@
   },
   "badge": { "syncing": "Synchronisiere…" },
   "btn": {
-    "upload": "PDFs hochladen",
+    "upload": "Dateien hochladen",
     "send": "Senden",
     "remove": "Entfernen",
     "sendAll": "Alle senden",
@@ -15,7 +15,7 @@
     "clearFilters": "Zurücksetzen"
   },
   "dnd": {
-    "text": "PDF(s) hierher ziehen und ablegen, oder",
+    "text": "PDF-, PNG- oder JPEG-Dateien hierher ziehen und ablegen, oder",
     "click": "zum Auswählen klicken",
     "hint": "Tipp: Ctrl/⌘ + U öffnet den Dateiauswahldialog."
   },
@@ -55,7 +55,7 @@
   "toast": {
     "banksFetchError": "Bankkonten konnten nicht geladen werden.",
     "listFetchError": "Auszüge konnten nicht abgerufen werden.",
-    "nonPdfIgnored": "Datei ignoriert (kein PDF): {{name}}",
+    "nonPdfIgnored": "Datei ignoriert (nicht unterstütztes Format): {{name}}",
     "uploadFail": "Auszug konnte nicht hochgeladen werden.",
     "analysisStarted": "Analyse gestartet. Der Status wird in Kürze aktualisiert.",
     "analysisFail": "Analyse konnte nicht gestartet werden.",

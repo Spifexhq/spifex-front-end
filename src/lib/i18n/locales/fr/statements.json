@@ -6,7 +6,7 @@
   },
   "badge": { "syncing": "Synchronisation…" },
   "btn": {
-    "upload": "Importer des PDF",
+    "upload": "Importer des fichiers",
     "send": "Envoyer",
     "remove": "Retirer",
     "sendAll": "Tout envoyer",
@@ -15,14 +15,14 @@
     "clearFilters": "Effacer"
   },
   "dnd": {
-    "text": "Glissez-déposez des PDF ici, ou",
+    "text": "Glissez-déposez des fichiers PDF, PNG ou JPEG ici, ou",
     "click": "cliquez pour sélectionner",
     "hint": "Astuce : utilisez Ctrl/⌘ + U pour ouvrir le sélecteur."
   },
   "queue": { "title": "File d’envoi ({{count}})" },
   "filters": {
     "searchLabel": "Rechercher par nom de fichier",
-    "placeholder": "ex. : itau_octobre.pdf",
+    "placeholder": "ex. : relevé_octobre.pdf",
     "status": "Statut",
     "bank": "Compte",
     "statusPick": "Choisir un statut",
@@ -55,7 +55,7 @@
   "toast": {
     "banksFetchError": "Impossible de charger les comptes bancaires.",
     "listFetchError": "Impossible de récupérer les relevés.",
-    "nonPdfIgnored": "Fichier ignoré (pas un PDF) : {{name}}",
+    "nonPdfIgnored": "Fichier ignoré (format non pris en charge) : {{name}}",
     "uploadFail": "Échec de l’import du relevé.",
     "analysisStarted": "Analyse lancée. Le statut sera mis à jour bientôt.",
     "analysisFail": "Impossible de lancer l’analyse.",

@@ -6,7 +6,7 @@
   },
   "badge": { "syncing": "A sincronizar…" },
   "btn": {
-    "upload": "Carregar PDFs",
+    "upload": "Carregar ficheiros",
     "send": "Enviar",
     "remove": "Remover",
     "sendAll": "Enviar todos",
@@ -15,7 +15,7 @@
     "clearFilters": "Limpar"
   },
   "dnd": {
-    "text": "Arraste e largue PDF(s) aqui, ou",
+    "text": "Arraste e largue ficheiros PDF, PNG ou JPEG aqui, ou",
     "click": "clique para selecionar",
     "hint": "Dica: use Ctrl/⌘ + U para abrir o seletor."
   },
@@ -55,7 +55,7 @@
   "toast": {
     "banksFetchError": "Falha ao carregar contas bancárias.",
     "listFetchError": "Falha ao obter extratos.",
-    "nonPdfIgnored": "Ficheiro ignorado (não é PDF): {{name}}",
+    "nonPdfIgnored": "Ficheiro ignorado (formato não suportado): {{name}}",
     "uploadFail": "Falha ao carregar o extrato.",
     "analysisStarted": "Análise iniciada. O estado será atualizado em breve.",
     "analysisFail": "Não foi possível iniciar a análise.",

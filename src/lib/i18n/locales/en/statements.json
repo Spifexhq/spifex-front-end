@@ -6,7 +6,7 @@
   },
   "badge": { "syncing": "Syncing…" },
   "btn": {
-    "upload": "Upload PDFs",
+    "upload": "Upload files",
     "send": "Send",
     "remove": "Remove",
     "sendAll": "Send all",
@@ -15,14 +15,14 @@
     "clearFilters": "Clear"
   },
   "dnd": {
-    "text": "Drag and drop PDF(s) here, or",
+    "text": "Drag and drop PDF, PNG or JPEG files here, or",
     "click": "click to select",
     "hint": "Tip: use Ctrl/⌘ + U to open the selector."
   },
   "queue": { "title": "Upload queue ({{count}})" },
   "filters": {
     "searchLabel": "Search by file name",
-    "placeholder": "e.g.: itau_october.pdf",
+    "placeholder": "e.g.: statement_october.pdf",
     "status": "Status",
     "bank": "Account",
     "statusPick": "Select status",
@@ -55,7 +55,7 @@
   "toast": {
     "banksFetchError": "Failed to load bank accounts.",
     "listFetchError": "Failed to fetch statements.",
-    "nonPdfIgnored": "File ignored (not a PDF): {{name}}",
+    "nonPdfIgnored": "File ignored (unsupported format): {{name}}",
     "uploadFail": "Failed to upload statement.",
     "analysisStarted": "Analysis started. Status will update shortly.",
     "analysisFail": "Could not start analysis.",
