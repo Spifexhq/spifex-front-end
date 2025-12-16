@@ -44,6 +44,7 @@
   },
   "actions": {
     "download": "Download",
+    "downloadJson": "JSON",
     "analyze": "Analysieren",
     "delete": "Löschen"
   },
@@ -60,6 +61,7 @@
     "analysisStarted": "Analyse gestartet. Der Status wird in Kürze aktualisiert.",
     "analysisFail": "Analyse konnte nicht gestartet werden.",
     "deleteFail": "Auszug konnte nicht gelöscht werden.",
+    "downloadJsonFail": "JSON konnte nicht heruntergeladen werden.",
     "uploadOk": "Upload abgeschlossen.",
     "deleteOk": "Auszug erfolgreich gelöscht."
   },
@@ -74,5 +76,13 @@
       "ready": "bereit",
       "failed": "fehlgeschlagen"
     }
+  },
+  "paywall": {
+    "badge": "KI-gestützt",
+    "title": "Abo erforderlich",
+    "body": "Diese Seite nutzt KI, um Kontoauszüge zu extrahieren und zu strukturieren. Bitte abonnieren Sie, um Uploads, Analyse und JSON-Export freizuschalten.",
+    "cta": "Abonnieren",
+    "back": "Zurück",
+    "note": "Schon abonniert? Seite aktualisieren oder erneut anmelden."
   }
 }

@@ -44,6 +44,7 @@
   },
   "actions": {
     "download": "Descarregar",
+    "downloadJson": "JSON",
     "analyze": "Analisar",
     "delete": "Eliminar"
   },
@@ -60,6 +61,7 @@
     "analysisStarted": "Análise iniciada. O estado será atualizado em breve.",
     "analysisFail": "Não foi possível iniciar a análise.",
     "deleteFail": "Falha ao eliminar o extrato.",
+    "downloadJsonFail": "Falha ao descarregar o JSON.",
     "uploadOk": "Upload concluído.",
     "deleteOk": "Extrato eliminado com sucesso."
   },
@@ -74,5 +76,13 @@
       "ready": "pronto",
       "failed": "falhou"
     }
+  },
+  "paywall": {
+    "badge": "Com IA",
+    "title": "Subscrição necessária",
+    "body": "Esta página usa IA para extrair e estruturar os seus extratos bancários. Subscreva para desbloquear uploads, análise e exportação JSON.",
+    "cta": "Subscrever",
+    "back": "Voltar",
+    "note": "Já tem subscrição? Atualize a página ou inicie sessão novamente."
   }
 }

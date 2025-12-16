@@ -44,6 +44,7 @@
   },
   "actions": {
     "download": "Download",
+    "downloadJson": "JSON",
     "analyze": "Analyze",
     "delete": "Delete"
   },
@@ -60,6 +61,7 @@
     "analysisStarted": "Analysis started. Status will update shortly.",
     "analysisFail": "Could not start analysis.",
     "deleteFail": "Failed to delete statement.",
+    "downloadJsonFail": "Failed to download JSON.",
     "uploadOk": "Upload completed.",
     "deleteOk": "Statement deleted successfully."
   },
@@ -74,5 +76,13 @@
       "ready": "ready",
       "failed": "failed"
     }
+  },
+  "paywall": {
+    "badge": "AI powered",
+    "title": "Subscription required",
+    "body": "This page uses AI to extract and structure your bank statements. Please subscribe to unlock uploads, analysis, and JSON export.",
+    "cta": "Subscribe",
+    "back": "Go back",
+    "note": "Already subscribed? Refresh the page or sign in again."
   }
 }

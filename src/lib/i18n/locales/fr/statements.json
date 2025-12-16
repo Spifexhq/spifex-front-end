@@ -44,6 +44,7 @@
   },
   "actions": {
     "download": "Télécharger",
+    "downloadJson": "JSON",
     "analyze": "Analyser",
     "delete": "Supprimer"
   },
@@ -60,6 +61,7 @@
     "analysisStarted": "Analyse lancée. Le statut sera mis à jour bientôt.",
     "analysisFail": "Impossible de lancer l’analyse.",
     "deleteFail": "Échec de la suppression du relevé.",
+    "downloadJsonFail": "Échec du téléchargement du JSON.",
     "uploadOk": "Import terminé.",
     "deleteOk": "Relevé supprimé avec succès."
   },
@@ -74,5 +76,13 @@
       "ready": "prêt",
       "failed": "échec"
     }
+  },
+  "paywall": {
+    "badge": "Propulsé par l’IA",
+    "title": "Abonnement requis",
+    "body": "Cette page utilise l’IA pour extraire et structurer vos relevés bancaires. Abonnez-vous pour débloquer l’import, l’analyse et l’export JSON.",
+    "cta": "S’abonner",
+    "back": "Retour",
+    "note": "Déjà abonné ? Actualisez la page ou reconnectez-vous."
   }
 }
