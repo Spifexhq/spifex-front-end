@@ -14,6 +14,7 @@
     "renews": "renova em",
     "endedOn": "terminou em",
     "notActiveHint": "Não está ativo no momento",
+    "noAccessHint": "O acesso está desativado no momento",
     "noActive": "Você não tem um plano ativo.",
     "unknown": "Plano desconhecido"
   },
@@ -70,9 +71,8 @@
     },
     "canceled": {
       "title": "Seu plano foi cancelado.",
-      "body": "Reative a qualquer momento assinando novamente.",
-      "titleWindow": "Seu plano foi cancelado, mas você ainda tem acesso.",
-      "bodyWindow": "O acesso permanece disponível até {{date}}."
+      "bodyEnded": "O acesso terminou em {{date}}.",
+      "bodyNoAccess": "O acesso não está mais disponível. Você pode reativar a qualquer momento."
     },
     "unknown": {
       "title": "Status da assinatura disponível.",

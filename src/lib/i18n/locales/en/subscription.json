@@ -14,6 +14,7 @@
     "renews": "renews on",
     "endedOn": "ended on",
     "notActiveHint": "Not currently active",
+    "noAccessHint": "Access is currently disabled",
     "noActive": "You don’t have an active plan.",
     "unknown": "Unknown plan"
   },
@@ -70,9 +71,8 @@
     },
     "canceled": {
       "title": "Your plan is canceled.",
-      "body": "Reactivate anytime by subscribing again.",
-      "titleWindow": "Your plan was canceled, but you still have access.",
-      "bodyWindow": "Access remains available until {{date}}."
+      "bodyEnded": "Access ended on {{date}}.",
+      "bodyNoAccess": "Access is no longer available. Reactivate anytime."
     },
     "unknown": {
       "title": "Subscription status available.",

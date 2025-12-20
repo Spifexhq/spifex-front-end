@@ -14,6 +14,7 @@
     "renews": "se renouvelle le",
     "endedOn": "s’est terminé le",
     "notActiveHint": "Pas actif actuellement",
+    "noAccessHint": "L’accès est actuellement désactivé",
     "noActive": "Vous n’avez aucun forfait actif.",
     "unknown": "Forfait inconnu"
   },
@@ -70,9 +71,8 @@
     },
     "canceled": {
       "title": "Votre forfait est résilié.",
-      "body": "Vous pouvez réactiver à tout moment en vous réabonnant.",
-      "titleWindow": "Votre forfait est résilié, mais vous avez toujours accès.",
-      "bodyWindow": "L’accès reste disponible jusqu’au {{date}}."
+      "bodyEnded": "L’accès s’est terminé le {{date}}.",
+      "bodyNoAccess": "L’accès n’est plus disponible. Vous pouvez réactiver à tout moment."
     },
     "unknown": {
       "title": "Statut d’abonnement disponible.",

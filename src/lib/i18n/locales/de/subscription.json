@@ -14,6 +14,7 @@
     "renews": "verlängert sich am",
     "endedOn": "endete am",
     "notActiveHint": "Derzeit nicht aktiv",
+    "noAccessHint": "Zugriff ist derzeit deaktiviert",
     "noActive": "Sie haben kein aktives Abonnement.",
     "unknown": "Unbekannter Tarif"
   },
@@ -70,9 +71,8 @@
     },
     "canceled": {
       "title": "Ihr Tarif wurde gekündigt.",
-      "body": "Sie können jederzeit durch erneutes Abonnieren reaktivieren.",
-      "titleWindow": "Ihr Tarif wurde gekündigt, aber Sie haben noch Zugriff.",
-      "bodyWindow": "Der Zugriff bleibt bis {{date}} verfügbar."
+      "bodyEnded": "Der Zugriff endete am {{date}}.",
+      "bodyNoAccess": "Der Zugriff ist nicht mehr verfügbar. Sie können jederzeit reaktivieren."
     },
     "unknown": {
       "title": "Abo-Status verfügbar.",

@@ -1,4 +1,7 @@
-// src/lib/http.ts
+/* -----------------------------------------------------------------------------
+ * File: src/lib/http.ts
+ * ---------------------------------------------------------------------------- */
+
 import axios, {
   type AxiosError,
   type AxiosResponse,
@@ -6,15 +9,24 @@ import axios, {
   type AxiosRequestConfig,
 } from "axios";
 
-import {
-  type ApiErrorBody,
-  type ApiResponse,
-  type ApiSuccess,
-} from "@/models/Api";
+import { type ApiErrorBody, type ApiSuccess } from "@/models/Api";
 
 import { getAccess, setTokens, clearTokens } from "@/lib/tokens";
 import "@/lib/netReport";
 import { store } from "@/redux/store";
+
+/**
+ * Auth/Sub sync events
+ * - AUTH_SYNC_EVENT fires when tokens were refreshed or refresh failed
+ * - SUBSCRIPTION_BLOCKED_EVENT fires when backend denies access due to subscription
+ */
+export const AUTH_SYNC_EVENT = "spifex:auth-sync";
+export const SUBSCRIPTION_BLOCKED_EVENT = "spifex:subscription-blocked";
+
+function emitWindowEvent(name: string, detail?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
 
 const rawBaseURL = import.meta.env.DEV
   ? import.meta.env.VITE_SPIFEX_DEVELOPMENT_URL_API
@@ -71,24 +83,19 @@ const SENSITIVE_PARAMS = [
 function sanitizeUrl(fullUrl: string): string {
   try {
     const hasProtocol = fullUrl.startsWith("http");
-    const urlObj = new URL(
-      fullUrl,
-      hasProtocol ? undefined : "http://dummy.com",
-    );
+    const urlObj = new URL(fullUrl, hasProtocol ? undefined : "http://dummy.com");
 
     let changed = false;
-    SENSITIVE_PARAMS.forEach((param) => {
+    for (const param of SENSITIVE_PARAMS) {
       if (urlObj.searchParams.has(param)) {
         urlObj.searchParams.set(param, "[REDACTED]");
         changed = true;
       }
-    });
+    }
 
     if (!changed) return fullUrl;
 
-    return hasProtocol
-      ? urlObj.toString()
-      : urlObj.pathname + urlObj.search;
+    return hasProtocol ? urlObj.toString() : urlObj.pathname + urlObj.search;
   } catch {
     return fullUrl.split("?")[0] || fullUrl;
   }
@@ -102,7 +109,7 @@ export const http = axios.create({
 const startAt = new WeakMap<AxiosRequestConfig, number>();
 
 http.interceptors.request.use(async (cfg) => {
-  const method = (cfg.method || "GET").toUpperCase() as Method;
+  const method = ((cfg.method || "GET").toUpperCase() as Method) ?? "GET";
   const url = cfg.url || "";
 
   await scheduleByScope(method, url);
@@ -116,14 +123,14 @@ http.interceptors.request.use(async (cfg) => {
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
   const safeUrl = sanitizeUrl(fullUrl);
 
-  (window).NetReport?.push({
+  const headers = (cfg.headers ?? {}) as Record<string, unknown>;
+
+  window.NetReport?.push({
     t: Date.now(),
     method,
     url,
     fullUrl: safeUrl,
-    reqId: (cfg.headers as Record<string, unknown> | undefined)?.[
-      "X-Request-Id"
-    ] as string | undefined,
+    reqId: typeof headers["X-Request-Id"] === "string" ? (headers["X-Request-Id"] as string) : undefined,
   });
 
   return cfg;
@@ -137,9 +144,7 @@ function readOrgExternalId(): string | undefined {
     };
   };
 
-  return (
-    s.auth?.orgExternalId || s.auth?.organization?.organization?.external_id
-  );
+  return s.auth?.orgExternalId || s.auth?.organization?.organization?.external_id;
 }
 
 http.interceptors.request.use((cfg) => {
@@ -165,26 +170,76 @@ type Tokens = { access: string; refresh?: string };
 
 const hasAccessToken = (v: unknown): v is Tokens => {
   if (!isObject(v)) return false;
-  if (typeof v.access !== "string") return false;
-  return true;
+  return typeof v.access === "string";
 };
 
-const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } =>
-  isObject(v) && "error" in v;
+const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } => {
+  if (!isObject(v)) return false;
+  if (!("error" in v)) return false;
+  const e = v.error;
+  if (!isObject(e)) return false;
+  return typeof e.code === "string";
+};
 
 function unwrapTokens(payload: unknown): Tokens | null {
-  if (hasAccessToken(payload)) {
-    return payload;
-  }
+  if (hasAccessToken(payload)) return payload;
 
   if (isObject(payload) && "data" in payload) {
     const inner = payload.data;
-    if (hasAccessToken(inner)) {
-      return inner;
-    }
+    if (hasAccessToken(inner)) return inner;
   }
 
   return null;
+}
+
+function getApiErrorCode(err: AxiosError): string | undefined {
+  const data = err.response?.data;
+  if (!isObject(data)) return undefined;
+  const e = data.error;
+  if (!isObject(e)) return undefined;
+  const code = e.code;
+  return typeof code === "string" ? code : undefined;
+}
+
+function getDetailMessage(err: AxiosError): string | undefined {
+  const data = err.response?.data;
+
+  if (typeof data === "string") return data;
+
+  if (isObject(data)) {
+    const detail = data.detail;
+    if (typeof detail === "string") return detail;
+
+    if (Array.isArray(detail)) {
+      const s = detail.filter((x) => typeof x === "string").join(" ");
+      return s || undefined;
+    }
+
+    const msg = data.message;
+    if (typeof msg === "string") return msg;
+
+    const e = data.error;
+    if (isObject(e) && typeof e.message === "string") return e.message;
+  }
+
+  return undefined;
+}
+
+function isSubscriptionBlocked(err: AxiosError): boolean {
+  const status = err.response?.status;
+  if (status === 402) return true;
+
+  if (status !== 403) return false;
+
+  const code = getApiErrorCode(err);
+  if (code === "subscription_required" || code === "subscription_inactive" || code === "payment_required") {
+    return true;
+  }
+
+  const detail = getDetailMessage(err);
+  if (detail && /subscription required/i.test(detail)) return true;
+
+  return false;
 }
 
 let refreshingPromise: Promise<void> | null = null;
@@ -212,6 +267,7 @@ async function doRefresh(): Promise<void> {
   }
 
   setTokens(tokens.access);
+  emitWindowEvent(AUTH_SYNC_EVENT, { reason: "token_refreshed" });
 }
 
 function parseRetryAfter(headerValue: unknown): number {
@@ -220,15 +276,13 @@ function parseRetryAfter(headerValue: unknown): number {
     if (Number.isFinite(secs)) return Math.max(0, secs) * 1000;
 
     const dateMs = Date.parse(headerValue);
-    if (!Number.isNaN(dateMs)) {
-      return Math.max(0, dateMs - Date.now());
-    }
+    if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - Date.now());
   }
   return 1000;
 }
 
 function calc429DelayMs(err: AxiosError): number {
-  const ra = err.response?.headers?.["retry-after"];
+  const ra = (err.response?.headers as Record<string, unknown> | undefined)?.["retry-after"];
   const base = parseRetryAfter(ra);
   const jitter = Math.random() * 250;
   return base + jitter;
@@ -246,14 +300,17 @@ function finishLog(
   const ms = performance.now() - t0;
   const status = res?.status ?? err?.response?.status;
 
+  const resHeaders = res?.headers as Record<string, unknown> | undefined;
+  const errHeaders = err?.response?.headers as Record<string, unknown> | undefined;
+
   const reqId =
-    (res?.headers?.["x-request-id"] as string | undefined) ||
-    (err?.response?.headers?.["x-request-id"] as string | undefined);
+    (typeof resHeaders?.["x-request-id"] === "string" ? (resHeaders["x-request-id"] as string) : undefined) ||
+    (typeof errHeaders?.["x-request-id"] === "string" ? (errHeaders["x-request-id"] as string) : undefined);
 
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
   const safeUrl = sanitizeUrl(fullUrl);
 
-  (window).NetReport?.push({
+  window.NetReport?.push({
     t: Date.now(),
     method: (cfg.method || "GET").toUpperCase() as Method,
     url: cfg.url || "",
@@ -274,9 +331,8 @@ http.interceptors.response.use(
   (r) => {
     finishLog(r.config, r);
 
-    const reqId = (r.headers as Record<string, unknown> | undefined)?.[
-      "x-request-id"
-    ];
+    const headers = r.headers as Record<string, unknown> | undefined;
+    const reqId = headers?.["x-request-id"];
     if (typeof reqId === "string") {
       console.debug("🔗 request-id", reqId);
     }
@@ -286,6 +342,17 @@ http.interceptors.response.use(
   async (error: AxiosError) => {
     const original = (error.config || {}) as RetriableConfig;
     const status = error.response?.status;
+
+    if (axios.isAxiosError(error) && isSubscriptionBlocked(error)) {
+      emitWindowEvent(SUBSCRIPTION_BLOCKED_EVENT, {
+        reason: "backend_blocked",
+        status,
+        detail: getDetailMessage(error),
+        code: getApiErrorCode(error),
+        url: original?.url,
+        method: (original?.method || "GET").toUpperCase(),
+      });
+    }
 
     if (status === 429) {
       original._retried429 = (original._retried429 ?? 0) + 1;
@@ -312,6 +379,7 @@ http.interceptors.response.use(
         refreshingPromise = doRefresh()
           .catch((e) => {
             clearTokens();
+            emitWindowEvent(AUTH_SYNC_EVENT, { reason: "refresh_failed" });
             throw e;
           })
           .finally(() => {
@@ -323,7 +391,7 @@ http.interceptors.response.use(
       await new Promise<void>((resolve, reject) => {
         if (!refreshingPromise) return resolve();
         subscribers.push(resolve);
-        refreshingPromise!.catch(reject);
+        refreshingPromise.catch(reject);
       });
 
       if (!getAccess()) {
@@ -339,18 +407,15 @@ http.interceptors.response.use(
   },
 );
 
-const inflight = new Map<string, Promise<AxiosResponse>>();
-const responseCache = new Map<string, { t: number; res: AxiosResponse }>();
+const inflight = new Map<string, Promise<AxiosResponse<unknown>>>();
+const responseCache = new Map<string, { t: number; res: AxiosResponse<unknown> }>();
 const CACHE_TTL_MS = 500;
 
 function keyFrom(cfg: AxiosRequestConfig) {
   const u = (cfg.baseURL || "") + (cfg.url || "");
   const p =
     cfg.params && typeof cfg.params === "object"
-      ? JSON.stringify(
-          cfg.params,
-          Object.keys(cfg.params as Record<string, unknown>).sort(),
-        )
+      ? JSON.stringify(cfg.params, Object.keys(cfg.params as Record<string, unknown>).sort())
       : "";
   return `${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
 }
@@ -388,36 +453,29 @@ export async function request<T>(
       validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
     };
 
-    let res: AxiosResponse<ApiResponse<T> | unknown>;
+    let res: AxiosResponse<unknown>;
 
     if ((cfg.method || "GET").toUpperCase() === "GET") {
       const k = keyFrom(cfg);
 
       const hit = responseCache.get(k);
       if (hit && Date.now() - hit.t < CACHE_TTL_MS) {
-        res = hit.res as AxiosResponse<ApiResponse<T> | unknown>;
+        res = hit.res;
       } else {
         if (!inflight.has(k)) {
-          inflight.set(
-            k,
-            http
-              .request<ApiResponse<T> | unknown>(cfg)
-              .finally(() => inflight.delete(k)),
-          );
+          inflight.set(k, http.request(cfg).finally(() => inflight.delete(k)));
         }
         res = await inflight.get(k)!;
 
         if (res.status === 304) {
           const cached = responseCache.get(k);
           if (cached) {
-            res = cached.res as AxiosResponse<ApiResponse<T> | unknown>;
+            res = cached.res;
           } else {
             const refreshKey = `REFRESH ${k}`;
             const ts = Date.now();
             const baseParams =
-              cfg.params && typeof cfg.params === "object"
-                ? (cfg.params as Record<string, unknown>)
-                : {};
+              cfg.params && typeof cfg.params === "object" ? (cfg.params as Record<string, unknown>) : {};
 
             const forceCfg: AxiosRequestConfig = {
               ...cfg,
@@ -425,12 +483,7 @@ export async function request<T>(
             };
 
             if (!inflight.has(refreshKey)) {
-              inflight.set(
-                refreshKey,
-                http
-                  .request<ApiResponse<T> | unknown>(forceCfg)
-                  .finally(() => inflight.delete(refreshKey)),
-              );
+              inflight.set(refreshKey, http.request(forceCfg).finally(() => inflight.delete(refreshKey)));
             }
 
             const fresh = await inflight.get(refreshKey)!;
@@ -449,16 +502,12 @@ export async function request<T>(
         }
       }
     } else {
-      res = await http.request<ApiResponse<T> | unknown>(cfg);
+      res = await http.request(cfg);
     }
 
     const body = res.data;
 
-    if (
-      res.status === 204 ||
-      body == null ||
-      (typeof body === "string" && body.trim() === "")
-    ) {
+    if (res.status === 204 || body == null || (typeof body === "string" && body.trim() === "")) {
       return {} as ApiSuccess<T>;
     }
 
@@ -476,9 +525,7 @@ export async function request<T>(
         throw body.error;
       }
       const msg = err.response
-        ? `${err.response.status} ${
-            err.response.statusText || "Request error"
-          }`
+        ? `${err.response.status} ${err.response.statusText || "Request error"}`
         : err.message;
       throw new Error(msg);
     }

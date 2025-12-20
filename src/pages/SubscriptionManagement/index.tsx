@@ -24,6 +24,12 @@ const getInitials = (name?: string) => {
   return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 };
 
+const toIso = (v: unknown): string | undefined => {
+  if (typeof v !== "string") return undefined;
+  const s = v.trim();
+  return s ? s : undefined;
+};
+
 const fmtDate = (iso?: string, locale = navigator.language) => {
   if (!iso) return "—";
   try {
@@ -37,18 +43,11 @@ const fmtDate = (iso?: string, locale = navigator.language) => {
   }
 };
 
-const isFuture = (iso?: string) => {
-  if (!iso) return false;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return false;
-  return d.getTime() > Date.now();
-};
-
 const Badge: React.FC<{
   tone?: "green" | "amber" | "red" | "gray";
   children: React.ReactNode;
 }> = ({ tone = "gray", children }) => {
-  const tones: Record<string, string> = {
+  const tones: Record<NonNullable<React.ComponentProps<typeof Badge>["tone"]>, string> = {
     green: "bg-emerald-50 text-emerald-700 border-emerald-200",
     amber: "bg-amber-50 text-amber-700 border-amber-200",
     red: "bg-rose-50 text-rose-700 border-rose-200",
@@ -147,16 +146,18 @@ const SubscriptionManagement: React.FC = () => {
     return isKnownStatus(raw) ? raw : "unknown";
   }, [subscription?.status]);
 
-  const hasSubscription = !!subscription;
-  const isSubscribed = sub?.is_subscribed ?? false;
+  const hasSubscription = Boolean(subscription);
+  const isSubscribed = Boolean(sub?.is_subscribed);
+  const hasAccess = Boolean(sub?.has_access);
 
-  const accessUntil = subscription?.current_period_end;
-  const hasAccessWindow = hasSubscription && isFuture(accessUntil);
-  const cancelAtPeriodEnd = !!subscription?.cancel_at_period_end;
+  const accessUntilIso = toIso(subscription?.current_period_end);
+  const endedAtIso = toIso(subscription?.ended_at);
+
+  const cancelAtPeriodEnd = Boolean(subscription?.cancel_at_period_end);
 
   // NOTE: backend is owner/admin; UI uses owner/superuser. If you have isAdmin in context, add it here.
-  const canCheckout = isOwner || isSuperUser;
-  const canManage = hasSubscription && canCheckout;
+  const canCheckout = Boolean(isOwner || isSuperUser);
+  const canManage = Boolean(hasSubscription && canCheckout);
 
   const availablePlans = useMemo(() => {
     const isDev = import.meta.env.DEV;
@@ -171,11 +172,11 @@ const SubscriptionManagement: React.FC = () => {
         ];
   }, [t]);
 
-  const currentPriceId: string | null = subscription?.plan_price_id ?? null;
+  const currentPriceId = toIso(subscription?.plan_price_id);
 
   const currentPlanLabel =
     availablePlans.find((p) => p.priceId === currentPriceId)?.label ??
-    subscription?.plan_nickname ??
+    toIso(subscription?.plan_nickname) ??
     t("subscription:current.unknown", "Unknown plan");
 
   // ----- Lifecycle -----
@@ -215,7 +216,7 @@ const SubscriptionManagement: React.FC = () => {
       setIsProcessing(true);
       try {
         const resp = await api.createCheckoutSession(priceId);
-        const url = resp?.data?.url;
+        const url = toIso(resp?.data?.url);
         if (url) window.location.href = url;
         else alert(t("subscription:errors.noRedirect", "Couldn’t redirect to the payment page."));
       } catch (e) {
@@ -233,7 +234,7 @@ const SubscriptionManagement: React.FC = () => {
     setIsProcessing(true);
     try {
       const resp = await api.createCustomerPortalSession();
-      const url = resp?.data?.url;
+      const url = toIso(resp?.data?.url);
       if (url) window.location.href = url;
       else alert(t("subscription:errors.noPortal", "Couldn’t open the customer portal."));
     } catch (e) {
@@ -246,7 +247,8 @@ const SubscriptionManagement: React.FC = () => {
 
   // ----- Render helpers (NO hooks) -----
   const renderStatusNotice = () => {
-    const dateLabel = fmtDate(accessUntil, i18n.language);
+    const accessUntilLabel = fmtDate(accessUntilIso, i18n.language);
+    const endedAtLabel = fmtDate(endedAtIso, i18n.language);
 
     const manageBtn = (
       <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
@@ -260,17 +262,17 @@ const SubscriptionManagement: React.FC = () => {
       </Button>
     );
 
-    const reactivateBtn = currentPriceId ? (
-      <Button disabled={!canCheckout || isProcessing} onClick={() => startCheckout(currentPriceId)}>
-        {t("subscription:btn.reactivate", "Reactivate")}
-      </Button>
-    ) : (
-      <Button disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
-        {t("subscription:btn.reactivate", "Reactivate")}
-      </Button>
-    );
+    const reactivateBtn =
+      currentPriceId != null ? (
+        <Button disabled={!canCheckout || isProcessing} onClick={() => startCheckout(currentPriceId)}>
+          {t("subscription:btn.reactivate", "Reactivate")}
+        </Button>
+      ) : (
+        <Button disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+          {t("subscription:btn.reactivate", "Reactivate")}
+        </Button>
+      );
 
-    // Minimal tones: only a left border accent. No colored backgrounds.
     switch (statusKind) {
       case "none":
         return (
@@ -295,9 +297,9 @@ const SubscriptionManagement: React.FC = () => {
           ? t(
               "subscription:callout.active.cancelAtBody",
               "Your plan is scheduled to end on {{date}}. You’ll keep access until then.",
-              { date: dateLabel },
+              { date: accessUntilLabel },
             )
-          : t("subscription:callout.active.renewsBody", "Next renewal on {{date}}.", { date: dateLabel });
+          : t("subscription:callout.active.renewsBody", "Next renewal on {{date}}.", { date: accessUntilLabel });
 
         return <Notice tone="good" title={title} body={body} actions={canManage ? manageBtn : null} />;
       }
@@ -341,22 +343,17 @@ const SubscriptionManagement: React.FC = () => {
           />
         );
 
-      case "canceled":
+      case "canceled": {
+        // UX rule: canceled means no access (backend also enforces has_access=false)
+        const body = endedAtIso
+          ? t("subscription:callout.canceled.bodyEnded", "Access ended on {{date}}.", { date: endedAtLabel })
+          : t("subscription:callout.canceled.bodyNoAccess", "Access is no longer available. Reactivate anytime.");
+
         return (
           <Notice
             tone="neutral"
-            title={
-              hasAccessWindow
-                ? t("subscription:callout.canceled.titleWindow", "Your plan was canceled, but you still have access.")
-                : t("subscription:callout.canceled.title", "Your plan is canceled.")
-            }
-            body={
-              hasAccessWindow
-                ? t("subscription:callout.canceled.bodyWindow", "Access remains available until {{date}}.", {
-                    date: dateLabel,
-                  })
-                : t("subscription:callout.canceled.body", "Reactivate anytime by subscribing again.")
-            }
+            title={t("subscription:callout.canceled.title", "Your plan is canceled.")}
+            body={body}
             actions={
               <>
                 {reactivateBtn}
@@ -365,6 +362,7 @@ const SubscriptionManagement: React.FC = () => {
             }
           />
         );
+      }
 
       default:
         return (
@@ -381,14 +379,6 @@ const SubscriptionManagement: React.FC = () => {
   const renderPlanAction = (planPriceId: string) => {
     const isCurrent = planPriceId === currentPriceId;
 
-    const shouldUsePortalForChanges =
-      statusKind === "active" ||
-      statusKind === "trialing" ||
-      statusKind === "past_due" ||
-      statusKind === "unpaid" ||
-      statusKind === "incomplete";
-
-    // No subscription: direct checkout
     if (statusKind === "none") {
       return (
         <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
@@ -397,20 +387,14 @@ const SubscriptionManagement: React.FC = () => {
       );
     }
 
-    // Canceled: allow direct checkout to (re)subscribe
     if (statusKind === "canceled") {
-      return isCurrent ? (
+      return (
         <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
-          {t("subscription:btn.reactivate", "Reactivate")}
-        </Button>
-      ) : (
-        <Button variant="outline" onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
-          {t("subscription:btn.subscribe", "Subscribe")}
+          {isCurrent ? t("subscription:btn.reactivate", "Reactivate") : t("subscription:btn.subscribe", "Subscribe")}
         </Button>
       );
     }
 
-    // Problem states: fix payment in portal
     if (statusKind === "past_due" || statusKind === "unpaid" || statusKind === "incomplete") {
       return (
         <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
@@ -419,8 +403,7 @@ const SubscriptionManagement: React.FC = () => {
       );
     }
 
-    // Active / Trialing: changes go through portal
-    if (shouldUsePortalForChanges) {
+    if (statusKind === "active" || statusKind === "trialing") {
       if (isCurrent) {
         return (
           <Button variant="outline" className="!border-gray-200 !text-gray-500" disabled>
@@ -435,18 +418,9 @@ const SubscriptionManagement: React.FC = () => {
       );
     }
 
-    // Fallback
-    if (hasSubscription) {
-      return (
-        <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
-          {t("subscription:btn.manage", "Manage subscription")}
-        </Button>
-      );
-    }
-
     return (
-      <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
-        {t("subscription:btn.subscribe", "Subscribe")}
+      <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+        {t("subscription:btn.manage", "Manage subscription")}
       </Button>
     );
   };
@@ -474,6 +448,16 @@ const SubscriptionManagement: React.FC = () => {
   );
 
   const headerBadge = isProcessing ? <Badge>{t("subscription:badge.processing", "Processing…")}</Badge> : null;
+
+  const summaryDateIso: string | undefined =
+    statusKind === "canceled" ? endedAtIso : accessUntilIso;
+
+  const summaryVerb =
+    statusKind === "canceled"
+      ? t("subscription:current.endedOn", "ended on")
+      : cancelAtPeriodEnd
+        ? t("subscription:current.cancelAt", "cancels on")
+        : t("subscription:current.renews", "renews on");
 
   return (
     <>
@@ -507,7 +491,7 @@ const SubscriptionManagement: React.FC = () => {
           {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              {/* Top bar (moved Check Limits here, aligned with Settings style) */}
+              {/* Top bar */}
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
                   {hasSubscription
@@ -520,7 +504,7 @@ const SubscriptionManagement: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Status note (minimal, consistent) */}
+              {/* Status note */}
               <div className="px-4 py-3 border-b border-gray-200">{renderStatusNotice()}</div>
 
               {/* Summary row */}
@@ -531,18 +515,18 @@ const SubscriptionManagement: React.FC = () => {
                       <>
                         {t("subscription:current.youAreOn", "You are on")}&nbsp;
                         <span className="font-semibold">{currentPlanLabel}</span>
+
                         <span className="ml-2 text-gray-600">
                           {" "}
-                          •{" "}
-                          {statusKind === "canceled"
-                            ? t("subscription:current.endedOn", "ended on")
-                            : cancelAtPeriodEnd
-                              ? t("subscription:current.cancelAt", "cancels on")
-                              : t("subscription:current.renews", "renews on")}{" "}
-                          {fmtDate(accessUntil, i18n.language)}
+                          • {summaryVerb} {fmtDate(summaryDateIso, i18n.language)}
                           {!isSubscribed && (
                             <span className="ml-2 text-gray-500">
                               • {t("subscription:current.notActiveHint", "Not currently active")}
+                            </span>
+                          )}
+                          {!hasAccess && statusKind !== "none" && (
+                            <span className="ml-2 text-gray-500">
+                              • {t("subscription:current.noAccessHint", "Access is currently disabled")}
                             </span>
                           )}
                         </span>
