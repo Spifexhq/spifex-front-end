@@ -96,8 +96,23 @@ const SubscriptionManagement: React.FC = () => {
 
   const [sub, setSub] = useState<GetSubscriptionStatusResponse | null>(null);
 
-  const hasSubscription = !!sub?.subscription;
-  const isSubscribed = sub?.is_subscribed ?? false;
+  const effectiveSub = useMemo(() => {
+    if (!sub) return null;
+
+    const status = String(sub.subscription?.status ?? "");
+    if (status === "canceled") {
+      return {
+        ...sub,
+        is_subscribed: false,
+        subscription: null,
+      };
+    }
+
+    return sub;
+  }, [sub]);
+
+  const hasSubscription = !!effectiveSub?.subscription;
+  const isSubscribed = effectiveSub?.is_subscribed ?? false;
 
   // Pricing map (env → label). Use your own price ids.
   const availablePlans = useMemo(() => {
@@ -113,11 +128,11 @@ const SubscriptionManagement: React.FC = () => {
         ];
   }, [t]);
 
-  const currentPriceId: string | null = sub?.subscription?.plan_price_id ?? null;
+  const currentPriceId: string | null = effectiveSub?.subscription?.plan_price_id ?? null;
 
   const currentPlanLabel =
     availablePlans.find((p) => p.priceId === currentPriceId)?.label ??
-    sub?.subscription?.plan_nickname ??
+    effectiveSub?.subscription?.plan_nickname ??
     t("subscription:current.unknown");
 
   const canCheckout = isOwner || isSuperUser;
@@ -134,8 +149,8 @@ const SubscriptionManagement: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        await handleInitUser(); // ensures user/org flags are available (owner/superuser)
-        const resp = await api.getSubscriptionStatus(); // returns { is_subscribed, subscription }
+        await handleInitUser();
+        const resp = await api.getSubscriptionStatus();
         setSub(resp.data);
       } finally {
         setIsInitialLoading(false);
@@ -205,7 +220,7 @@ const SubscriptionManagement: React.FC = () => {
     );
   }
 
-  const rawStatus = String(sub?.subscription?.status ?? "canceled");
+  const rawStatus = String(effectiveSub?.subscription?.status ?? "canceled");
   const tone = isKnownStatus(rawStatus) ? statusTone[rawStatus] : "gray";
 
   const statusBadge = hasSubscription ? (
@@ -216,8 +231,8 @@ const SubscriptionManagement: React.FC = () => {
 
   const headerBadge = isProcessing ? <Badge>{t("subscription:badge.processing", "Processing…")}</Badge> : null;
 
-  const currentPeriodEnd = sub?.subscription?.current_period_end;
-  const cancelAtPeriodEnd = !!sub?.subscription?.cancel_at_period_end;
+  const currentPeriodEnd = effectiveSub?.subscription?.current_period_end;
+  const cancelAtPeriodEnd = !!effectiveSub?.subscription?.cancel_at_period_end;
 
   return (
     <>
