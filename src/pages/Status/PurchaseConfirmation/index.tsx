@@ -1,67 +1,90 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+// src/pages/Status/PurchaseConfirmation/index.tsx
 
-import { useAuth, apiRequest } from "@/api";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
+import { request } from "@/lib/http";
+import { useAuth } from "@/api";
+
 import Snackbar from "src/components/ui/Snackbar";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-
-import logo from "@/assets/Icons/Logo/logo-black.svg";
-import bgImage from "@/assets/Images/background/purchase-success.svg";
 import Button from "src/components/ui/Button";
+
+type ToastSeverity = "success" | "error" | "info" | "warning";
 
 interface PurchaseDetails {
   item: string;
   amount: string;
-  date: string;          // epoch seconds (string)
+  date: string;
   transactionId: string;
 }
 
-const PurchaseConfirmation: React.FC = () => {
-  useEffect(() => {
-    document.title = "Confirmação de Compra";
-  }, []);
+const fmtDate = (epochSecondsAsString: string, locale = navigator.language) => {
+  const n = Number(epochSecondsAsString);
+  if (!Number.isFinite(n)) return "—";
+  const d = new Date(n * 1000);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" });
+};
 
+const PurchaseConfirmation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { handleInitUser } = useAuth();
 
-  const [toast, setToast] = useState<{ message: React.ReactNode; severity: "success" | "error" | "info" | "warning" } | null>(null);
+  const [toast, setToast] = useState<{ message: React.ReactNode; severity: ToastSeverity } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetails | null>(null);
   const [isFetching, setIsFetching] = useState(true);
 
-  const query = new URLSearchParams(location.search);
-  const sessionId = query.get("session_id");
+  const sessionId = useMemo(() => {
+    const query = new URLSearchParams(location.search);
+    return query.get("session_id");
+  }, [location.search]);
 
   useEffect(() => {
     document.title = "Compra Confirmada";
+  }, []);
 
+  useEffect(() => {
     const fetchPurchaseDetails = async () => {
       if (!sessionId) {
         setToast({ message: "Sessão inválida.", severity: "error" });
+        setPurchaseDetails(null);
         setIsFetching(false);
         return;
       }
 
+      setIsFetching(true);
+
       try {
-        const response = await apiRequest<{ purchase_details: PurchaseDetails }>(
-          "payments/get-purchase-details/",
+        const res = await request<{ purchase_details: PurchaseDetails }>(
+          "billing/purchase-details/",
           "GET",
           { session_id: sessionId },
-          true
         );
 
-        if (response.status === "error") {
-          setToast({ message: response.message || "Erro ao recuperar detalhes da compra.", severity: "error" });
-        } else if (response.data?.purchase_details) {
-          setPurchaseDetails(response.data.purchase_details);
-          await handleInitUser();
-        } else {
+        const details = res.data?.purchase_details;
+
+        if (!details) {
           setToast({ message: "Não foi possível recuperar os detalhes da compra.", severity: "error" });
+          setPurchaseDetails(null);
+          return;
         }
+
+        setPurchaseDetails(details);
+
+        await handleInitUser();
       } catch (err) {
         console.error("Erro ao buscar detalhes da compra:", err);
-        setToast({ message: "Erro ao recuperar detalhes da compra.", severity: "error" });
+
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Erro ao recuperar detalhes da compra.";
+
+        setToast({ message: msg, severity: "error" });
+        setPurchaseDetails(null);
       } finally {
         setIsFetching(false);
       }
@@ -73,7 +96,7 @@ const PurchaseConfirmation: React.FC = () => {
   const handleRedirect = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       navigate("/settings/subscription-management");
     } catch (err) {
       console.error("Erro ao redirecionar:", err);
@@ -86,7 +109,7 @@ const PurchaseConfirmation: React.FC = () => {
   if (isFetching) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <TopProgress active={true} variant='center' />
+        <TopProgress active={true} variant="center" />
       </div>
     );
   }
@@ -98,8 +121,12 @@ const PurchaseConfirmation: React.FC = () => {
           <h1 className="text-lg font-semibold text-gray-800 mb-2">Não foi possível confirmar sua compra</h1>
           <p className="text-sm text-gray-600 mb-4">Verifique o link ou tente novamente mais tarde.</p>
           <div className="flex gap-2 justify-center">
-            <Button variant="outline" onClick={() => navigate("/")}>Ir para início</Button>
-            <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+            <Button variant="outline" onClick={() => navigate("/")}>
+              Ir para início
+            </Button>
+            <Button onClick={() => window.location.reload()}>
+              Tentar novamente
+            </Button>
           </div>
         </div>
 
@@ -117,18 +144,12 @@ const PurchaseConfirmation: React.FC = () => {
     );
   }
 
-  const purchaseDate = new Date(Number(purchaseDetails.date) * 1000);
+  const purchaseDate = fmtDate(purchaseDetails.date);
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-white">
-      {/* Left side */}
+    <div className="flex flex-col bg-white">
       <div className="flex-1 flex items-center justify-center px-6 py-10">
         <div className="w-full max-w-md">
-          <div className="mb-6 text-center">
-            <a href="https://spifex.com" aria-label="Ir para o site da Spifex">
-              <img src={logo} alt="Spifex" className="h-10 mx-auto" />
-            </a>
-          </div>
 
           <div className="bg-white rounded-md border border-gray-200 p-6">
             <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
@@ -140,18 +161,17 @@ const PurchaseConfirmation: React.FC = () => {
                 <span className="font-medium">Item:</span>
                 <span className="text-gray-900">{purchaseDetails.item}</span>
               </div>
+
               <div className="flex justify-between text-sm text-gray-700">
                 <span className="font-medium">Valor:</span>
                 <span className="text-gray-900">{purchaseDetails.amount}</span>
               </div>
+
               <div className="flex justify-between text-sm text-gray-700">
                 <span className="font-medium">Data:</span>
-                <span className="text-gray-900">
-                  {isNaN(purchaseDate.getTime())
-                    ? "—"
-                    : purchaseDate.toLocaleDateString()}
-                </span>
+                <span className="text-gray-900">{purchaseDate}</span>
               </div>
+
               <div className="flex justify-between text-sm text-gray-700">
                 <span className="font-medium">ID da Transação:</span>
                 <span className="text-gray-900">{purchaseDetails.transactionId}</span>
@@ -165,22 +185,12 @@ const PurchaseConfirmation: React.FC = () => {
                 className="w-full h-12"
                 aria-label="Voltar para gerenciamento de assinatura"
               >
-                {isLoading ? <TopProgress active={true} variant='center' /> : "Voltar"}
+                {isLoading ? "Carregando..." : "Voltar"}
               </Button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Right side image */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-6">
-        <img
-          src={bgImage}
-          alt="Compra confirmada"
-          className="max-h-[650px] w-auto object-contain select-none pointer-events-none"
-        />
-      </div>
-
       {/* Snackbar */}
       <Snackbar
         open={!!toast}
