@@ -12,11 +12,20 @@
     "youAreOn": "Vous êtes sur le forfait",
     "cancelAt": "sera résilié le",
     "renews": "se renouvelle le",
+    "endedOn": "s’est terminé le",
+    "notActiveHint": "Pas actif actuellement",
     "noActive": "Vous n’avez aucun forfait actif.",
     "unknown": "Forfait inconnu"
   },
   "status": {
-    "none": "Aucun forfait"
+    "none": "Aucun forfait",
+    "active": "Actif",
+    "trialing": "Essai",
+    "past_due": "Paiement en retard",
+    "incomplete": "Incomplet",
+    "unpaid": "Impayé",
+    "canceled": "Résilié",
+    "unknown": "Inconnu"
   },
   "badge": {
     "processing": "Traitement…"
@@ -27,17 +36,48 @@
   },
   "btn": {
     "manage": "Gérer l’abonnement",
+    "fixPayment": "Corriger le paiement",
+    "changeInPortal": "Modifier dans le portail",
+    "reactivate": "Réactiver",
     "current": "Actuel",
-    "switch": "Choisir",
     "subscribe": "S’abonner",
-    "cancel": "Annuler",
-    "confirm": "Confirmer",
     "checkLimits": "Consulter vos limites"
   },
-  "modal": {
-    "title": "Confirmer le changement de forfait",
-    "text": "Vous serez redirigé vers la page de paiement pour confirmer ce forfait.",
-    "close": "Fermer la fenêtre"
+  "callout": {
+    "none": {
+      "title": "Vous n’avez pas encore de forfait actif.",
+      "body": "Choisissez un forfait ci-dessous. Vous pourrez gérer la facturation à tout moment depuis le portail après l’abonnement."
+    },
+    "active": {
+      "title": "Votre abonnement est actif.",
+      "renewsBody": "Prochain renouvellement le {{date}}.",
+      "cancelAtBody": "Votre forfait est programmé pour se terminer le {{date}}. Vous gardez l’accès jusqu’à cette date."
+    },
+    "trialing": {
+      "title": "Votre période d’essai est en cours."
+    },
+    "incomplete": {
+      "title": "Paiement en cours de traitement.",
+      "body": "Si vous venez de payer, la mise à jour peut prendre un moment. Si cela persiste, ouvrez la facturation pour finaliser le paiement ou mettre à jour votre moyen de paiement."
+    },
+    "pastDue": {
+      "title": "Nous n’avons pas pu traiter votre dernier paiement.",
+      "body": "Mettez à jour votre moyen de paiement pour éviter une interruption de service. Vous pouvez le faire en toute sécurité dans le portail de facturation."
+    },
+    "unpaid": {
+      "title": "Votre abonnement est impayé.",
+      "body": "La facturation nécessite une action. Ouvrez le portail pour corriger le paiement ou vous réabonner afin de rétablir l’accès."
+    },
+    "canceled": {
+      "title": "Votre forfait est résilié.",
+      "body": "Vous pouvez réactiver à tout moment en vous réabonnant.",
+      "titleWindow": "Votre forfait est résilié, mais vous avez toujours accès.",
+      "bodyWindow": "L’accès reste disponible jusqu’au {{date}}."
+    },
+    "unknown": {
+      "title": "Statut d’abonnement disponible.",
+      "body": "Ouvrez la facturation pour consulter les détails de votre abonnement."
+    }
   },
   "errors": {
     "noRedirect": "Impossible de rediriger vers la page de paiement.",

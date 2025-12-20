@@ -10,13 +10,22 @@
   },
   "current": {
     "youAreOn": "Você está no plano",
-    "cancelAt": "será cancelado em",
+    "cancelAt": "cancela em",
     "renews": "renova em",
+    "endedOn": "terminou em",
+    "notActiveHint": "Não está ativo no momento",
     "noActive": "Você não tem um plano ativo.",
     "unknown": "Plano desconhecido"
   },
   "status": {
-    "none": "Sem plano"
+    "none": "Sem plano",
+    "active": "Ativo",
+    "trialing": "Em teste",
+    "past_due": "Pagamento atrasado",
+    "incomplete": "Incompleto",
+    "unpaid": "Não pago",
+    "canceled": "Cancelado",
+    "unknown": "Desconhecido"
   },
   "badge": {
     "processing": "Processando…"
@@ -27,17 +36,48 @@
   },
   "btn": {
     "manage": "Gerenciar assinatura",
+    "fixPayment": "Corrigir pagamento",
+    "changeInPortal": "Alterar no portal",
+    "reactivate": "Reativar",
     "current": "Atual",
-    "switch": "Escolher",
     "subscribe": "Assinar",
-    "cancel": "Cancelar",
-    "confirm": "Confirmar",
     "checkLimits": "Ver seus limites"
   },
-  "modal": {
-    "title": "Confirmar mudança de plano",
-    "text": "Você será redirecionado para a tela de pagamento para confirmar este plano.",
-    "close": "Fechar modal"
+  "callout": {
+    "none": {
+      "title": "Você ainda não tem um plano ativo.",
+      "body": "Escolha um plano abaixo. Depois de assinar, você pode gerenciar a cobrança a qualquer momento no portal."
+    },
+    "active": {
+      "title": "Sua assinatura está ativa.",
+      "renewsBody": "Próxima renovação em {{date}}.",
+      "cancelAtBody": "Seu plano está programado para terminar em {{date}}. Você manterá o acesso até lá."
+    },
+    "trialing": {
+      "title": "Seu período de teste está em andamento."
+    },
+    "incomplete": {
+      "title": "Pagamento ainda está sendo processado.",
+      "body": "Se você acabou de pagar, pode levar um momento para atualizar. Se persistir, abra a cobrança para concluir o pagamento ou atualizar o método."
+    },
+    "pastDue": {
+      "title": "Não foi possível processar seu último pagamento.",
+      "body": "Atualize seu método de pagamento para evitar interrupção do serviço. Você pode fazer isso com segurança no portal de cobrança."
+    },
+    "unpaid": {
+      "title": "Sua assinatura está não paga.",
+      "body": "A cobrança precisa de atenção. Abra o portal para corrigir o pagamento ou assine novamente para restaurar o acesso."
+    },
+    "canceled": {
+      "title": "Seu plano foi cancelado.",
+      "body": "Reative a qualquer momento assinando novamente.",
+      "titleWindow": "Seu plano foi cancelado, mas você ainda tem acesso.",
+      "bodyWindow": "O acesso permanece disponível até {{date}}."
+    },
+    "unknown": {
+      "title": "Status da assinatura disponível.",
+      "body": "Abra a cobrança para revisar os detalhes da sua assinatura."
+    }
   },
   "errors": {
     "noRedirect": "Não foi possível redirecionar para a página de pagamento.",

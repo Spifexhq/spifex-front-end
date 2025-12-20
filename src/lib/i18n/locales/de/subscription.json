@@ -12,11 +12,20 @@
     "youAreOn": "Sie nutzen",
     "cancelAt": "endet am",
     "renews": "verlängert sich am",
+    "endedOn": "endete am",
+    "notActiveHint": "Derzeit nicht aktiv",
     "noActive": "Sie haben kein aktives Abonnement.",
     "unknown": "Unbekannter Tarif"
   },
   "status": {
-    "none": "Kein Tarif"
+    "none": "Kein Tarif",
+    "active": "Aktiv",
+    "trialing": "Testphase",
+    "past_due": "Überfällig",
+    "incomplete": "Unvollständig",
+    "unpaid": "Unbezahlt",
+    "canceled": "Gekündigt",
+    "unknown": "Unbekannt"
   },
   "badge": {
     "processing": "Wird verarbeitet…"
@@ -27,22 +36,53 @@
   },
   "btn": {
     "manage": "Abo verwalten",
+    "fixPayment": "Zahlung korrigieren",
+    "changeInPortal": "Im Portal ändern",
+    "reactivate": "Reaktivieren",
     "current": "Aktuell",
-    "switch": "Auswählen",
     "subscribe": "Abonnieren",
-    "cancel": "Abbrechen",
-    "confirm": "Bestätigen",
     "checkLimits": "Limits ansehen"
   },
-  "modal": {
-    "title": "Tarifwechsel bestätigen",
-    "text": "Sie werden zum Checkout weitergeleitet, um diesen Tarif zu bestätigen.",
-    "close": "Modal schließen"
+  "callout": {
+    "none": {
+      "title": "Sie haben noch keinen aktiven Tarif.",
+      "body": "Wählen Sie unten einen Tarif aus. Nach dem Abschluss können Sie die Abrechnung jederzeit im Portal verwalten."
+    },
+    "active": {
+      "title": "Ihr Abonnement ist aktiv.",
+      "renewsBody": "Nächste Verlängerung am {{date}}.",
+      "cancelAtBody": "Ihr Tarif endet planmäßig am {{date}}. Sie behalten den Zugriff bis dahin."
+    },
+    "trialing": {
+      "title": "Ihre Testphase läuft."
+    },
+    "incomplete": {
+      "title": "Zahlung wird noch verarbeitet.",
+      "body": "Wenn Sie gerade bezahlt haben, kann die Aktualisierung einen Moment dauern. Wenn es so bleibt, öffnen Sie die Abrechnung, um die Zahlung abzuschließen oder die Zahlungsmethode zu aktualisieren."
+    },
+    "pastDue": {
+      "title": "Wir konnten Ihre letzte Zahlung nicht verarbeiten.",
+      "body": "Aktualisieren Sie Ihre Zahlungsmethode, um eine Unterbrechung zu vermeiden. Das geht sicher im Abrechnungsportal."
+    },
+    "unpaid": {
+      "title": "Ihr Abonnement ist unbezahlt.",
+      "body": "Die Abrechnung erfordert eine Aktion. Öffnen Sie das Portal, um die Zahlung zu korrigieren oder erneut zu abonnieren, um den Zugriff wiederherzustellen."
+    },
+    "canceled": {
+      "title": "Ihr Tarif wurde gekündigt.",
+      "body": "Sie können jederzeit durch erneutes Abonnieren reaktivieren.",
+      "titleWindow": "Ihr Tarif wurde gekündigt, aber Sie haben noch Zugriff.",
+      "bodyWindow": "Der Zugriff bleibt bis {{date}} verfügbar."
+    },
+    "unknown": {
+      "title": "Abo-Status verfügbar.",
+      "body": "Öffnen Sie die Abrechnung, um die Abonnementdetails zu prüfen."
+    }
   },
   "errors": {
     "noRedirect": "Weiterleitung zur Bezahlseite nicht möglich.",
-    "checkout": "Fehler beim Start des Zahlungsvorgangs. Bitte versuche es später erneut.",
+    "checkout": "Fehler beim Start des Zahlungsvorgangs. Bitte versuchen Sie es später erneut.",
     "noPortal": "Kundenportal konnte nicht geöffnet werden.",
-    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte versuche es später erneut."
+    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte versuchen Sie es später erneut."
   }
 }

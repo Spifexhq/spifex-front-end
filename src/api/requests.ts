@@ -117,18 +117,18 @@ export const api = {
 
   /* --- Subscriptions --- */
   getSubscriptionStatus: () => {
-    return request<GetSubscriptionStatusResponse>(`billing/subscription`, 'GET');
+    return request<GetSubscriptionStatusResponse>(`billing/subscription/`, 'GET');
   },
   createCheckoutSession: (price_id: string) => {
     return request<{ url?: string; message?: string }>(
-      `billing/create-checkout-session/`,
+      `billing/checkout-session/`,
       'POST',
       { price_id }
     );
   },
   createCustomerPortalSession: () => {
     return request<{ url?: string }>(
-      `billing/create-customer-portal-session/`,
+      `billing/customer-portal-session/`,
       'POST',
       {}
     );

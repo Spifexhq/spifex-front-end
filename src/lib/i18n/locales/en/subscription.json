@@ -12,11 +12,20 @@
     "youAreOn": "You are on",
     "cancelAt": "cancels on",
     "renews": "renews on",
+    "endedOn": "ended on",
+    "notActiveHint": "Not currently active",
     "noActive": "You don’t have an active plan.",
     "unknown": "Unknown plan"
   },
   "status": {
-    "none": "No plan"
+    "none": "No plan",
+    "active": "Active",
+    "trialing": "Trialing",
+    "past_due": "Past due",
+    "incomplete": "Incomplete",
+    "unpaid": "Unpaid",
+    "canceled": "Canceled",
+    "unknown": "Unknown"
   },
   "badge": {
     "processing": "Processing…"
@@ -27,17 +36,48 @@
   },
   "btn": {
     "manage": "Manage subscription",
+    "fixPayment": "Fix payment",
+    "changeInPortal": "Change in portal",
+    "reactivate": "Reactivate",
     "current": "Current",
-    "switch": "Choose",
     "subscribe": "Subscribe",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
     "checkLimits": "Check your limits"
   },
-  "modal": {
-    "title": "Confirm plan change",
-    "text": "You’ll be redirected to the checkout to confirm this plan.",
-    "close": "Close modal"
+  "callout": {
+    "none": {
+      "title": "You don’t have an active plan yet.",
+      "body": "Choose a plan below. You can manage billing anytime from the portal after subscribing."
+    },
+    "active": {
+      "title": "Your subscription is active.",
+      "renewsBody": "Next renewal on {{date}}.",
+      "cancelAtBody": "Your plan is scheduled to end on {{date}}. You’ll keep access until then."
+    },
+    "trialing": {
+      "title": "Your trial is running."
+    },
+    "incomplete": {
+      "title": "Payment still processing.",
+      "body": "If you just checked out, it can take a moment to update. If it stays here, open billing to complete payment or update your method."
+    },
+    "pastDue": {
+      "title": "We couldn’t process your last payment.",
+      "body": "Update your payment method to avoid service interruption. You can do this securely in the billing portal."
+    },
+    "unpaid": {
+      "title": "Your subscription is unpaid.",
+      "body": "Billing needs attention. Open the portal to fix payment or re-subscribe to restore access."
+    },
+    "canceled": {
+      "title": "Your plan is canceled.",
+      "body": "Reactivate anytime by subscribing again.",
+      "titleWindow": "Your plan was canceled, but you still have access.",
+      "bodyWindow": "Access remains available until {{date}}."
+    },
+    "unknown": {
+      "title": "Subscription status available.",
+      "body": "Open billing to review your subscription details."
+    }
   },
   "errors": {
     "noRedirect": "Couldn’t redirect to the payment page.",

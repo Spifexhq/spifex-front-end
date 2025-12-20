@@ -1,10 +1,8 @@
 /* -----------------------------------------------------------------------------
- * File: src/pages/SubscriptionManagement.tsx
- * Style: Navbar fixed + light settings card
- * i18n:   group "subscription"
+ * File: src/pages/SubscriptionManagement/index.tsx
  * ----------------------------------------------------------------------------*/
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -39,6 +37,13 @@ const fmtDate = (iso?: string, locale = navigator.language) => {
   }
 };
 
+const isFuture = (iso?: string) => {
+  if (!iso) return false;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.getTime() > Date.now();
+};
+
 const Badge: React.FC<{
   tone?: "green" | "amber" | "red" | "gray";
   children: React.ReactNode;
@@ -66,20 +71,59 @@ const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ lef
   </div>
 );
 
+/* ------------------------- Minimal notice (no blue) ------------------------ */
+type NoticeTone = "neutral" | "good" | "warn" | "danger";
+
+const Notice: React.FC<{
+  tone?: NoticeTone;
+  title: React.ReactNode;
+  body?: React.ReactNode;
+  actions?: React.ReactNode;
+}> = ({ tone = "neutral", title, body, actions }) => {
+  const leftBorder: Record<NoticeTone, string> = {
+    neutral: "border-l-gray-300",
+    good: "border-l-emerald-400",
+    warn: "border-l-amber-400",
+    danger: "border-l-rose-400",
+  };
+
+  return (
+    <div className={`rounded-md border border-gray-200 border-l-4 ${leftBorder[tone]} bg-white px-4 py-3`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-gray-900">{title}</p>
+          {body ? <p className="mt-1 text-[12px] text-gray-600">{body}</p> : null}
+        </div>
+
+        {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+      </div>
+    </div>
+  );
+};
+
 /* ------------------------------ Status mapping ------------------------------ */
 type KnownStatus = "incomplete" | "trialing" | "active" | "past_due" | "canceled" | "unpaid";
+type StatusKind = KnownStatus | "none" | "unknown";
 
-const statusTone: Record<KnownStatus, "green" | "amber" | "red" | "gray"> = {
+const statusTone: Record<StatusKind, "green" | "amber" | "red" | "gray"> = {
   active: "green",
   trialing: "green",
   past_due: "amber",
   incomplete: "amber",
   unpaid: "red",
   canceled: "gray",
+  none: "gray",
+  unknown: "gray",
 };
 
 const isKnownStatus = (v: string): v is KnownStatus =>
   (["incomplete", "trialing", "active", "past_due", "canceled", "unpaid"] as const).includes(v as KnownStatus);
+
+const humanStatus = (s: StatusKind) => {
+  if (s === "none") return "no plan";
+  if (s === "unknown") return "unknown";
+  return s.split("_").join(" ");
+};
 
 /* -------------------------------- Component -------------------------------- */
 const SubscriptionManagement: React.FC = () => {
@@ -92,29 +136,28 @@ const SubscriptionManagement: React.FC = () => {
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [modalPlanId, setModalPlanId] = useState<string>("");
 
   const [sub, setSub] = useState<GetSubscriptionStatusResponse | null>(null);
 
-  const effectiveSub = useMemo(() => {
-    if (!sub) return null;
+  const subscription = sub?.subscription ?? null;
 
-    const status = String(sub.subscription?.status ?? "");
-    if (status === "canceled") {
-      return {
-        ...sub,
-        is_subscribed: false,
-        subscription: null,
-      };
-    }
+  const statusKind: StatusKind = useMemo(() => {
+    const raw = String(subscription?.status ?? "");
+    if (!raw) return "none";
+    return isKnownStatus(raw) ? raw : "unknown";
+  }, [subscription?.status]);
 
-    return sub;
-  }, [sub]);
+  const hasSubscription = !!subscription;
+  const isSubscribed = sub?.is_subscribed ?? false;
 
-  const hasSubscription = !!effectiveSub?.subscription;
-  const isSubscribed = effectiveSub?.is_subscribed ?? false;
+  const accessUntil = subscription?.current_period_end;
+  const hasAccessWindow = hasSubscription && isFuture(accessUntil);
+  const cancelAtPeriodEnd = !!subscription?.cancel_at_period_end;
 
-  // Pricing map (env → label). Use your own price ids.
+  // NOTE: backend is owner/admin; UI uses owner/superuser. If you have isAdmin in context, add it here.
+  const canCheckout = isOwner || isSuperUser;
+  const canManage = hasSubscription && canCheckout;
+
   const availablePlans = useMemo(() => {
     const isDev = import.meta.env.DEV;
     return isDev
@@ -128,16 +171,14 @@ const SubscriptionManagement: React.FC = () => {
         ];
   }, [t]);
 
-  const currentPriceId: string | null = effectiveSub?.subscription?.plan_price_id ?? null;
+  const currentPriceId: string | null = subscription?.plan_price_id ?? null;
 
   const currentPlanLabel =
     availablePlans.find((p) => p.priceId === currentPriceId)?.label ??
-    effectiveSub?.subscription?.plan_nickname ??
-    t("subscription:current.unknown");
+    subscription?.plan_nickname ??
+    t("subscription:current.unknown", "Unknown plan");
 
-  const canCheckout = isOwner || isSuperUser;
-  const canManage = hasSubscription && canCheckout;
-
+  // ----- Lifecycle -----
   useEffect(() => {
     document.title = t("subscription:title");
   }, [t]);
@@ -146,54 +187,48 @@ const SubscriptionManagement: React.FC = () => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
+  const loadStatus = useCallback(async () => {
+    setIsProcessing(true);
+    try {
+      await handleInitUser();
+      const resp = await api.getSubscriptionStatus();
+      setSub(resp.data);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [handleInitUser]);
+
   useEffect(() => {
     (async () => {
       try {
-        await handleInitUser();
-        const resp = await api.getSubscriptionStatus();
-        setSub(resp.data);
+        await loadStatus();
       } finally {
         setIsInitialLoading(false);
       }
     })();
-  }, [handleInitUser]);
+  }, [loadStatus]);
 
-  const closeModal = useCallback(() => {
-    if (!isProcessing) setModalPlanId("");
-  }, [isProcessing]);
+  // ----- Actions -----
+  const startCheckout = useCallback(
+    async (priceId: string) => {
+      if (!canCheckout || isProcessing) return;
+      setIsProcessing(true);
+      try {
+        const resp = await api.createCheckoutSession(priceId);
+        const url = resp?.data?.url;
+        if (url) window.location.href = url;
+        else alert(t("subscription:errors.noRedirect", "Couldn’t redirect to the payment page."));
+      } catch (e) {
+        console.error(e);
+        alert(t("subscription:errors.checkout", "Payment initialization failed. Please try again later."));
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [canCheckout, isProcessing, t],
+  );
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
-    };
-    if (modalPlanId) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [modalPlanId, closeModal]);
-
-  useEffect(() => {
-    document.body.style.overflow = modalPlanId ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalPlanId]);
-
-  const startCheckout = async (priceId: string) => {
-    if (!canCheckout || isProcessing) return;
-    setIsProcessing(true);
-    try {
-      const resp = await api.createCheckoutSession(priceId);
-      const url = resp?.data?.url;
-      if (url) window.location.href = url;
-      else alert(t("subscription:errors.noRedirect", "Couldn’t redirect to payment page."));
-    } catch (e) {
-      console.error(e);
-      alert(t("subscription:errors.checkout", "Payment init failed. Try again later."));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const openCustomerPortal = async () => {
+  const openCustomerPortal = useCallback(async () => {
     if (!canManage || isProcessing) return;
     setIsProcessing(true);
     try {
@@ -203,12 +238,220 @@ const SubscriptionManagement: React.FC = () => {
       else alert(t("subscription:errors.noPortal", "Couldn’t open the customer portal."));
     } catch (e) {
       console.error(e);
-      alert(t("subscription:errors.portal", "Portal redirect failed. Try again later."));
+      alert(t("subscription:errors.portal", "Portal redirect failed. Please try again later."));
     } finally {
       setIsProcessing(false);
     }
+  }, [canManage, isProcessing, t]);
+
+  // ----- Render helpers (NO hooks) -----
+  const renderStatusNotice = () => {
+    const dateLabel = fmtDate(accessUntil, i18n.language);
+
+    const manageBtn = (
+      <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+        {t("subscription:btn.manage", "Manage subscription")}
+      </Button>
+    );
+
+    const fixPaymentBtn = (
+      <Button disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+        {t("subscription:btn.fixPayment", "Fix payment")}
+      </Button>
+    );
+
+    const reactivateBtn = currentPriceId ? (
+      <Button disabled={!canCheckout || isProcessing} onClick={() => startCheckout(currentPriceId)}>
+        {t("subscription:btn.reactivate", "Reactivate")}
+      </Button>
+    ) : (
+      <Button disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+        {t("subscription:btn.reactivate", "Reactivate")}
+      </Button>
+    );
+
+    // Minimal tones: only a left border accent. No colored backgrounds.
+    switch (statusKind) {
+      case "none":
+        return (
+          <Notice
+            tone="neutral"
+            title={t("subscription:callout.none.title", "You don’t have an active plan yet.")}
+            body={t(
+              "subscription:callout.none.body",
+              "Choose a plan below. You can manage billing anytime from the portal after subscribing.",
+            )}
+          />
+        );
+
+      case "active":
+      case "trialing": {
+        const title =
+          statusKind === "trialing"
+            ? t("subscription:callout.trialing.title", "Your trial is running.")
+            : t("subscription:callout.active.title", "Your subscription is active.");
+
+        const body = cancelAtPeriodEnd
+          ? t(
+              "subscription:callout.active.cancelAtBody",
+              "Your plan is scheduled to end on {{date}}. You’ll keep access until then.",
+              { date: dateLabel },
+            )
+          : t("subscription:callout.active.renewsBody", "Next renewal on {{date}}.", { date: dateLabel });
+
+        return <Notice tone="good" title={title} body={body} actions={canManage ? manageBtn : null} />;
+      }
+
+      case "incomplete":
+        return (
+          <Notice
+            tone="warn"
+            title={t("subscription:callout.incomplete.title", "Payment still processing.")}
+            body={t(
+              "subscription:callout.incomplete.body",
+              "If you just checked out, it can take a moment to update. If it stays here, open billing to complete payment or update your method.",
+            )}
+            actions={fixPaymentBtn}
+          />
+        );
+
+      case "past_due":
+        return (
+          <Notice
+            tone="warn"
+            title={t("subscription:callout.pastDue.title", "We couldn’t process your last payment.")}
+            body={t(
+              "subscription:callout.pastDue.body",
+              "Update your payment method to avoid service interruption. You can do this securely in the billing portal.",
+            )}
+            actions={fixPaymentBtn}
+          />
+        );
+
+      case "unpaid":
+        return (
+          <Notice
+            tone="danger"
+            title={t("subscription:callout.unpaid.title", "Your subscription is unpaid.")}
+            body={t(
+              "subscription:callout.unpaid.body",
+              "Billing needs attention. Open the portal to fix payment or re-subscribe to restore access.",
+            )}
+            actions={fixPaymentBtn}
+          />
+        );
+
+      case "canceled":
+        return (
+          <Notice
+            tone="neutral"
+            title={
+              hasAccessWindow
+                ? t("subscription:callout.canceled.titleWindow", "Your plan was canceled, but you still have access.")
+                : t("subscription:callout.canceled.title", "Your plan is canceled.")
+            }
+            body={
+              hasAccessWindow
+                ? t("subscription:callout.canceled.bodyWindow", "Access remains available until {{date}}.", {
+                    date: dateLabel,
+                  })
+                : t("subscription:callout.canceled.body", "Reactivate anytime by subscribing again.")
+            }
+            actions={
+              <>
+                {reactivateBtn}
+                {canManage ? manageBtn : null}
+              </>
+            }
+          />
+        );
+
+      default:
+        return (
+          <Notice
+            tone="neutral"
+            title={t("subscription:callout.unknown.title", "Subscription status available.")}
+            body={t("subscription:callout.unknown.body", "Open billing to review your subscription details.")}
+            actions={canManage ? manageBtn : null}
+          />
+        );
+    }
   };
 
+  const renderPlanAction = (planPriceId: string) => {
+    const isCurrent = planPriceId === currentPriceId;
+
+    const shouldUsePortalForChanges =
+      statusKind === "active" ||
+      statusKind === "trialing" ||
+      statusKind === "past_due" ||
+      statusKind === "unpaid" ||
+      statusKind === "incomplete";
+
+    // No subscription: direct checkout
+    if (statusKind === "none") {
+      return (
+        <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
+          {t("subscription:btn.subscribe", "Subscribe")}
+        </Button>
+      );
+    }
+
+    // Canceled: allow direct checkout to (re)subscribe
+    if (statusKind === "canceled") {
+      return isCurrent ? (
+        <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
+          {t("subscription:btn.reactivate", "Reactivate")}
+        </Button>
+      ) : (
+        <Button variant="outline" onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
+          {t("subscription:btn.subscribe", "Subscribe")}
+        </Button>
+      );
+    }
+
+    // Problem states: fix payment in portal
+    if (statusKind === "past_due" || statusKind === "unpaid" || statusKind === "incomplete") {
+      return (
+        <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+          {t("subscription:btn.fixPayment", "Fix payment")}
+        </Button>
+      );
+    }
+
+    // Active / Trialing: changes go through portal
+    if (shouldUsePortalForChanges) {
+      if (isCurrent) {
+        return (
+          <Button variant="outline" className="!border-gray-200 !text-gray-500" disabled>
+            {t("subscription:btn.current", "Current")}
+          </Button>
+        );
+      }
+      return (
+        <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+          {t("subscription:btn.changeInPortal", "Change in portal")}
+        </Button>
+      );
+    }
+
+    // Fallback
+    if (hasSubscription) {
+      return (
+        <Button variant="outline" disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+          {t("subscription:btn.manage", "Manage subscription")}
+        </Button>
+      );
+    }
+
+    return (
+      <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
+        {t("subscription:btn.subscribe", "Subscribe")}
+      </Button>
+    );
+  };
+
+  // ----- Early returns AFTER hooks -----
   if (!isLogged) return null;
 
   if (isInitialLoading) {
@@ -220,19 +463,17 @@ const SubscriptionManagement: React.FC = () => {
     );
   }
 
-  const rawStatus = String(effectiveSub?.subscription?.status ?? "canceled");
-  const tone = isKnownStatus(rawStatus) ? statusTone[rawStatus] : "gray";
+  const tone = statusTone[statusKind];
 
-  const statusBadge = hasSubscription ? (
-    <Badge tone={tone}>{rawStatus.split("_").join(" ")}</Badge>
-  ) : (
-    <Badge tone="gray">{t("subscription:status.none", "No plan")}</Badge>
+  const statusBadge = (
+    <Badge tone={tone}>
+      {statusKind === "none"
+        ? t("subscription:status.none", "No plan")
+        : t(`subscription:status.${statusKind}`, humanStatus(statusKind))}
+    </Badge>
   );
 
   const headerBadge = isProcessing ? <Badge>{t("subscription:badge.processing", "Processing…")}</Badge> : null;
-
-  const currentPeriodEnd = effectiveSub?.subscription?.current_period_end;
-  const cancelAtPeriodEnd = !!effectiveSub?.subscription?.cancel_at_period_end;
 
   return (
     <>
@@ -240,152 +481,88 @@ const SubscriptionManagement: React.FC = () => {
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
+          {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials(user?.name)}
               </div>
-              <div className="flex items-center gap-3">
-                <div>
+
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="min-w-0">
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("subscription:header.settings")}
+                    {t("subscription:header.settings", "Settings")}
                   </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("subscription:header.title")}
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug truncate">
+                    {t("subscription:header.title", "Plan & Billing")}
                   </h1>
                 </div>
+
                 {statusBadge}
                 {headerBadge}
               </div>
             </div>
           </header>
 
+          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+              {/* Top bar (moved Check Limits here, aligned with Settings style) */}
+              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                  {hasSubscription ? t("subscription:section.withPlan") : t("subscription:section.noPlan")}
+                  {hasSubscription
+                    ? t("subscription:section.withPlan", "Your current plan")
+                    : t("subscription:section.noPlan", "No active plan")}
                 </span>
+
+                <Button variant="outline" disabled={isProcessing} onClick={() => navigate("/settings/limits")}>
+                  {t("subscription:btn.checkLimits", "Check your limits")}
+                </Button>
               </div>
 
+              {/* Status note (minimal, consistent) */}
+              <div className="px-4 py-3 border-b border-gray-200">{renderStatusNotice()}</div>
+
+              {/* Summary row */}
               <div className="px-4 py-3 border-b border-gray-200">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <div className="text-[13px]">
                     {hasSubscription ? (
                       <>
-                        {t("subscription:current.youAreOn")}&nbsp;
+                        {t("subscription:current.youAreOn", "You are on")}&nbsp;
                         <span className="font-semibold">{currentPlanLabel}</span>
-                        <span className="ml-2 text-gray-500">
+                        <span className="ml-2 text-gray-600">
                           {" "}
                           •{" "}
-                          {cancelAtPeriodEnd
-                            ? t("subscription:current.cancelAt", "cancels at")
-                            : t("subscription:current.renews", "renews on")}{" "}
-                          {fmtDate(currentPeriodEnd, i18n.language)}
+                          {statusKind === "canceled"
+                            ? t("subscription:current.endedOn", "ended on")
+                            : cancelAtPeriodEnd
+                              ? t("subscription:current.cancelAt", "cancels on")
+                              : t("subscription:current.renews", "renews on")}{" "}
+                          {fmtDate(accessUntil, i18n.language)}
                           {!isSubscribed && (
-                            <span className="ml-2">
+                            <span className="ml-2 text-gray-500">
                               • {t("subscription:current.notActiveHint", "Not currently active")}
                             </span>
                           )}
                         </span>
                       </>
                     ) : (
-                      t("subscription:current.noActive")
-                    )}
-                  </div>
-
-                  <div className="ml-auto flex items-center gap-2">
-                    <Button variant="outline" disabled={isProcessing} onClick={() => navigate("/settings/limits")}>
-                      {t("subscription:btn.checkLimits", "Check your limits")}
-                    </Button>
-
-                    {canManage && (
-                      <Button variant="outline" disabled={isProcessing} onClick={openCustomerPortal}>
-                        {t("subscription:btn.manage", "Manage subscription")}
-                      </Button>
+                      t("subscription:current.noActive", "You don’t have an active plan.")
                     )}
                   </div>
                 </div>
               </div>
 
+              {/* Plans */}
               <div className="divide-y divide-gray-200">
-                {availablePlans.map((plan) => {
-                  const isCurrent = plan.priceId === currentPriceId;
-
-                  return (
-                    <Row
-                      key={plan.priceId}
-                      left={plan.label}
-                      right={
-                        hasSubscription ? (
-                          isCurrent ? (
-                            <Button variant="outline" className="!border-gray-200 !text-gray-500" disabled>
-                              {t("subscription:btn.current")}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              disabled={!canCheckout || isProcessing}
-                              onClick={() => setModalPlanId(plan.priceId)}
-                            >
-                              {t("subscription:btn.switch", "Choose")}
-                            </Button>
-                          )
-                        ) : (
-                          <Button
-                            onClick={() => setModalPlanId(plan.priceId)}
-                            disabled={!canCheckout || isProcessing}
-                            isLoading={isProcessing && modalPlanId === plan.priceId}
-                          >
-                            {t("subscription:btn.subscribe", "Subscribe")}
-                          </Button>
-                        )
-                      }
-                    />
-                  );
-                })}
+                {availablePlans.map((plan) => (
+                  <Row key={plan.priceId} left={plan.label} right={renderPlanAction(plan.priceId)} />
+                ))}
               </div>
             </div>
           </section>
         </div>
-
-        {modalPlanId && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
-              {isProcessing ? (
-                <div className="flex items-center justify-center h-32">
-                  <TopProgress active={true} variant="center" />
-                </div>
-              ) : (
-                <>
-                  <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                    <h3 className="text-[14px] font-semibold text-gray-800">
-                      {t("subscription:modal.title")}
-                    </h3>
-                    <button
-                      className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                      onClick={closeModal}
-                      aria-label={t("subscription:modal.close")}
-                    >
-                      &times;
-                    </button>
-                  </header>
-
-                  <p className="text-[13px] text-gray-700 mb-4">{t("subscription:modal.text")}</p>
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={closeModal} disabled={isProcessing}>
-                      {t("subscription:btn.cancel")}
-                    </Button>
-                    <Button onClick={() => startCheckout(modalPlanId)} disabled={isProcessing} isLoading={isProcessing}>
-                      {t("subscription:btn.confirm")}
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </main>
     </>
   );
