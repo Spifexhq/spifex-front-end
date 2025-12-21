@@ -1,9 +1,5 @@
 import { useState } from "react";
 
-/**
- * Shift-select hook that works with either string or number IDs.
- * Provide an `idSelector` so the hook doesn't care about your item shape.
- */
 export function useShiftSelect<T, K extends string | number = string>(
   items: T[],
   idSelector: (item: T) => K

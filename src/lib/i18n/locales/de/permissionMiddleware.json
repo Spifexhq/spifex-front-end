@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Gesperrt",
+    "title": "Du hast noch keine Berechtigung, auf diesen Bereich zuzugreifen!",
+    "subtitle": "Wenn du die Freigabe bei der Administration angefragt hast, klicke unten auf den Button und aktualisiere die Seite!",
+    "btn": {
+      "refresh": "Seite aktualisieren"
+    }
+  }
+}

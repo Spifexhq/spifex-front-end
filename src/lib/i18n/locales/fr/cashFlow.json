@@ -1,0 +1,8 @@
+{
+  "documentTitle": "Flux de trésorerie",
+  "errors": {
+    "loadEntryDetails": "Erreur lors du chargement des détails de l’écriture.",
+    "loadEntryDetailsUnexpected": "Erreur inattendue lors du chargement des détails de l’écriture.",
+    "deleteEntries": "Erreur lors de la suppression des écritures."
+  }
+}

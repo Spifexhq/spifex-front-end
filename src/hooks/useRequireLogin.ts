@@ -1,5 +1,4 @@
 // src/hooks/useRequireLogin.ts
-
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -7,7 +6,7 @@ import { useAuthContext } from "@/hooks/useAuth";
 const AUTH_HINT_KEY = "auth_status";
 
 type Options = {
-  redirectTo?: string; // adjust if your login route differs
+  redirectTo?: string;
 };
 
 export function useRequireLogin(opts?: Options): boolean {

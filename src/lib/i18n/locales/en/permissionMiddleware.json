@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Locked",
+    "title": "You don’t have permission to access this area yet!",
+    "subtitle": "If you requested access from an admin, click the button below and refresh the page!",
+    "btn": {
+      "refresh": "Refresh page"
+    }
+  }
+}

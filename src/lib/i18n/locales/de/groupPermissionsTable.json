@@ -32,6 +32,10 @@
       "label": "Button Belastungs-Buchung",
       "description": "Erlaubt das Öffnen des Modals für Belastungs-Buchungen über die Seitenleiste."
     },
+    "view_transference_modal_button": {
+      "label": "Button Überweisungs-Buchung",
+      "description": "Erlaubt das Öffnen des Modals für Überweisungs-Buchungen über die Seitenleiste."
+    },
     "view_cash_flow_entries": {
       "label": "Liste der Cash-Flow-Buchungen",
       "description": "Erlaubt das Anzeigen der Liste der Cash-Flow-Buchungen."

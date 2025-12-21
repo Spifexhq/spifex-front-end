@@ -1,0 +1,8 @@
+{
+  "documentTitle": "Cashflow",
+  "errors": {
+    "loadEntryDetails": "Fehler beim Laden der Buchungsdetails.",
+    "loadEntryDetailsUnexpected": "Unerwarteter Fehler beim Laden der Buchungsdetails.",
+    "deleteEntries": "Fehler beim Löschen der Buchungen."
+  }
+}

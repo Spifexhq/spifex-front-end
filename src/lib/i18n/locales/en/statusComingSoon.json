@@ -1,0 +1,26 @@
+{
+  "documentTitle": "Status - Coming Soon",
+  "heading": "Coming soon",
+  "subtitle": "We’re polishing the final details before launch!",
+  "actions": {
+    "back": "Back to previous page"
+  },
+  "timer": {
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "expired": "Time’s up!"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "comingSoonAlt": "Coming soon",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

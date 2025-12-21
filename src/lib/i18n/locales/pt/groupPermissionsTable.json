@@ -32,6 +32,10 @@
       "label": "Botão de lançamento de débito",
       "description": "Permite abrir o modal para adicionar lançamentos de débito pela barra lateral."
     },
+    "view_transference_modal_button": {
+      "label": "Botão de lançamento de transferência",
+      "description": "Permite abrir o modal para adicionar lançamentos de transferência pela barra lateral."
+    },
     "view_cash_flow_entries": {
       "label": "Lista de lançamentos do Fluxo de Caixa",
       "description": "Permite visualizar a lista de lançamentos do Fluxo de Caixa."

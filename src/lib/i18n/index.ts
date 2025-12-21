@@ -84,6 +84,22 @@ import enLimits from "./locales/en/limits.json";
 import frLimits from "./locales/fr/limits.json";
 import deLimits from "./locales/de/limits.json";
 
+/** Pages */
+import ptCashFlow from "./locales/pt/cashFlow.json";
+import enCashFlow from "./locales/en/cashFlow.json";
+import frCashFlow from "./locales/fr/cashFlow.json";
+import deCashFlow from "./locales/de/cashFlow.json";
+
+import ptSettled from "./locales/pt/settled.json";
+import enSettled from "./locales/en/settled.json";
+import frSettled from "./locales/fr/settled.json";
+import deSettled from "./locales/de/settled.json";
+
+import ptReports from "./locales/pt/reports.json";
+import enReports from "./locales/en/reports.json";
+import frReports from "./locales/fr/reports.json";
+import deReports from "./locales/de/reports.json";
+
 /** App UI blocks */
 import ptSelectionActionsBar from "./locales/pt/selectionActionsBar.json";
 import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
@@ -135,11 +151,6 @@ import ptSettledTable from "./locales/pt/settledTable.json";
 import enSettledTable from "./locales/en/settledTable.json";
 import frSettledTable from "./locales/fr/settledTable.json";
 import deSettledTable from "./locales/de/settledTable.json";
-
-import ptReports from "./locales/pt/reports.json";
-import enReports from "./locales/en/reports.json";
-import frReports from "./locales/fr/reports.json";
-import deReports from "./locales/de/reports.json";
 
 import ptStatements from "./locales/pt/statements.json";
 import enStatements from "./locales/en/statements.json";
@@ -249,6 +260,32 @@ import enEntitySettings from "./locales/en/entitySettings.json";
 import frEntitySettings from "./locales/fr/entitySettings.json";
 import deEntitySettings from "./locales/de/entitySettings.json";
 
+import ptPermissionMiddleware from "./locales/pt/permissionMiddleware.json";
+import enPermissionMiddleware from "./locales/en/permissionMiddleware.json";
+import frPermissionMiddleware from "./locales/fr/permissionMiddleware.json";
+import dePermissionMiddleware from "./locales/de/permissionMiddleware.json";
+
+/** Status */
+import ptStatusComingSoon from "./locales/pt/statusComingSoon.json";
+import enStatusComingSoon from "./locales/en/statusComingSoon.json";
+import frStatusComingSoon from "./locales/fr/statusComingSoon.json";
+import deStatusComingSoon from "./locales/de/statusComingSoon.json";
+
+import ptStatusMaintenance from "./locales/pt/statusMaintenance.json";
+import enStatusMaintenance from "./locales/en/statusMaintenance.json";
+import frStatusMaintenance from "./locales/fr/statusMaintenance.json";
+import deStatusMaintenance from "./locales/de/statusMaintenance.json";
+
+import ptStatus404 from "./locales/pt/status404.json";
+import enStatus404 from "./locales/en/status404.json";
+import frStatus404 from "./locales/fr/status404.json";
+import deStatus404 from "./locales/de/status404.json";
+
+import ptStatus500 from "./locales/pt/status500.json";
+import enStatus500 from "./locales/en/status500.json";
+import frStatus500 from "./locales/fr/status500.json";
+import deStatus500 from "./locales/de/status500.json";
+
 /* -------------------------------------------------------------------------- */
 /* Namespaces                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -264,6 +301,8 @@ const NAMESPACES = [
   "resetPassword",
   "emailVerification",
 
+  "permissionMiddleware",
+
   // Layout
   "navbar",
   "sidebar",
@@ -273,6 +312,11 @@ const NAMESPACES = [
   // Subscription
   "subscription",
   "limits",
+
+  // Pages
+  "cashFlow",
+  "settled",
+  "reports",
 
   // Generic UI
   "selectionActionsBar",
@@ -287,7 +331,6 @@ const NAMESPACES = [
   "banksTable",
   "cashFlowTable",
   "settledTable",
-  "reports",
   "statements",
 
   // App / misc
@@ -315,6 +358,12 @@ const NAMESPACES = [
   "ledgerAccountsGate",
   "inventorySettings",
   "entitySettings",
+
+  // Status
+  "statusComingSoon",
+  "statusMaintenance",
+  "status404",
+  "status500",
 ] as const;
 
 /* -------------------------------------------------------------------------- */
@@ -331,6 +380,8 @@ const resources: Resource = {
     resetPassword: ptResetPassword,
     emailVerification: ptEmailVerification,
 
+    permissionMiddleware: ptPermissionMiddleware,
+
     navbar: ptNavbar,
     sidebar: ptSidebar,
     settingsSidebar: ptSettingsSidebar,
@@ -338,6 +389,10 @@ const resources: Resource = {
 
     subscription: ptSubscription,
     limits: ptLimits,
+
+    cashFlow: ptCashFlow,
+    settled: ptSettled,
+    reports: ptReports,
 
     selectionActionsBar: ptSelectionActionsBar,
     selectDropdown: ptSelectDropdown,
@@ -350,7 +405,6 @@ const resources: Resource = {
     banksTable: ptBanksTable,
     cashFlowTable: ptCashFlowTable,
     settledTable: ptSettledTable,
-    reports: ptReports,
     statements: ptStatements,
 
     simulatedAI: ptSimulatedAI,
@@ -375,6 +429,11 @@ const resources: Resource = {
     ledgerAccountsGate: ptLedgerAccountsGate,
     inventorySettings: ptInventorySettings,
     entitySettings: ptEntitySettings,
+
+    statusComingSoon: ptStatusComingSoon,
+    statusMaintenance: ptStatusMaintenance,
+    status404: ptStatus404,
+    status500: ptStatus500,
   },
   en: {
     common: enCommon,
@@ -385,6 +444,8 @@ const resources: Resource = {
     resetPassword: enResetPassword,
     emailVerification: enEmailVerification,
 
+    permissionMiddleware: enPermissionMiddleware,
+
     navbar: enNavbar,
     sidebar: enSidebar,
     settingsSidebar: enSettingsSidebar,
@@ -392,6 +453,10 @@ const resources: Resource = {
 
     subscription: enSubscription,
     limits: enLimits,
+
+    cashFlow: enCashFlow,
+    settled: enSettled,
+    reports: enReports,
 
     selectionActionsBar: enSelectionActionsBar,
     selectDropdown: enSelectDropdown,
@@ -404,7 +469,6 @@ const resources: Resource = {
     banksTable: enBanksTable,
     cashFlowTable: enCashFlowTable,
     settledTable: enSettledTable,
-    reports: enReports,
     statements: enStatements,
 
     simulatedAI: enSimulatedAI,
@@ -429,6 +493,11 @@ const resources: Resource = {
     ledgerAccountsGate: enLedgerAccountsGate,
     inventorySettings: enInventorySettings,
     entitySettings: enEntitySettings,
+
+    statusComingSoon: enStatusComingSoon,
+    statusMaintenance: enStatusMaintenance,
+    status404: enStatus404,
+    status500: enStatus500,
   },
   fr: {
     common: frCommon,
@@ -439,6 +508,8 @@ const resources: Resource = {
     resetPassword: frResetPassword,
     emailVerification: frEmailVerification,
 
+    permissionMiddleware: frPermissionMiddleware,
+
     navbar: frNavbar,
     sidebar: frSidebar,
     settingsSidebar: frSettingsSidebar,
@@ -446,6 +517,10 @@ const resources: Resource = {
 
     subscription: frSubscription,
     limits: frLimits,
+
+    cashFlow: frCashFlow,
+    settled: frSettled,
+    reports: frReports,
 
     selectionActionsBar: frSelectionActionsBar,
     selectDropdown: frSelectDropdown,
@@ -458,7 +533,6 @@ const resources: Resource = {
     banksTable: frBanksTable,
     cashFlowTable: frCashFlowTable,
     settledTable: frSettledTable,
-    reports: frReports,
     statements: frStatements,
 
     simulatedAI: frSimulatedAI,
@@ -483,6 +557,11 @@ const resources: Resource = {
     ledgerAccountsGate: frLedgerAccountsGate,
     inventorySettings: frInventorySettings,
     entitySettings: frEntitySettings,
+
+    statusComingSoon: frStatusComingSoon,
+    statusMaintenance: frStatusMaintenance,
+    status404: frStatus404,
+    status500: frStatus500,
   },
   de: {
     common: deCommon,
@@ -493,6 +572,8 @@ const resources: Resource = {
     resetPassword: deResetPassword,
     emailVerification: deEmailVerification,
 
+    permissionMiddleware: dePermissionMiddleware,
+
     navbar: deNavbar,
     sidebar: deSidebar,
     settingsSidebar: deSettingsSidebar,
@@ -500,6 +581,10 @@ const resources: Resource = {
 
     subscription: deSubscription,
     limits: deLimits,
+
+    cashFlow: deCashFlow,
+    settled: deSettled,
+    reports: deReports,
 
     selectionActionsBar: deSelectionActionsBar,
     selectDropdown: deSelectDropdown,
@@ -512,7 +597,6 @@ const resources: Resource = {
     banksTable: deBanksTable,
     cashFlowTable: deCashFlowTable,
     settledTable: deSettledTable,
-    reports: deReports,
     statements: deStatements,
 
     simulatedAI: deSimulatedAI,
@@ -537,6 +621,11 @@ const resources: Resource = {
     ledgerAccountsGate: deLedgerAccountsGate,
     inventorySettings: deInventorySettings,
     entitySettings: deEntitySettings,
+
+    statusComingSoon: deStatusComingSoon,
+    statusMaintenance: deStatusMaintenance,
+    status404: deStatus404,
+    status500: deStatus500,
   },
 };
 

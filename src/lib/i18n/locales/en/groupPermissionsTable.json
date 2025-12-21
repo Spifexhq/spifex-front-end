@@ -32,6 +32,10 @@
       "label": "Debit entry button",
       "description": "Allows users in this group to open the Debit entry modal from the sidebar."
     },
+    "view_transference_modal_button": {
+      "label": "Transfer entry button",
+      "description": "Allows users in this group to open the Transfer entry modal from the sidebar."
+    },
     "view_cash_flow_entries": {
       "label": "Cash Flow entries list",
       "description": "Allows viewing the list of Cash Flow entries."

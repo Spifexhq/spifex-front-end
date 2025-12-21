@@ -1,0 +1,19 @@
+{
+  "documentTitle": "Status - 500",
+  "heading": "Something went wrong. Please try again later.",
+  "subtitle": "The server encountered an internal error and could not complete your request.",
+  "actions": {
+    "backHome": "Back to home"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "errorAlt": "500 error",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

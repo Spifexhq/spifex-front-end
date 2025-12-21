@@ -103,7 +103,7 @@ const Navbar: React.FC = () => {
             {/* Desktop links */}
             {!isMobile && (
               <div className="flex items-center space-x-4">
-                <PermissionMiddleware codeName="view_cash_flow_button" isPage={false}>
+                <PermissionMiddleware codeName="view_cash_flow_button">
                   <NavLink
                     to="/cashflow"
                     end
@@ -117,7 +117,7 @@ const Navbar: React.FC = () => {
                   </NavLink>
                 </PermissionMiddleware>
 
-                <PermissionMiddleware codeName="view_settled_button" isPage={false}>
+                <PermissionMiddleware codeName="view_settled_button">
                   <NavLink
                     to="/settled"
                     className={({ isActive }) =>
@@ -131,7 +131,7 @@ const Navbar: React.FC = () => {
                 </PermissionMiddleware>
 
                 {(isSubscribed || isSuperUser) && (
-                  <PermissionMiddleware codeName="view_report_button" isPage={false}>
+                  <PermissionMiddleware codeName="view_report_button">
                     <NavLink
                       to="/reports"
                       className={({ isActive }) =>
@@ -201,7 +201,7 @@ const Navbar: React.FC = () => {
             </button>
 
             <nav className="mt-4 space-y-2">
-              <PermissionMiddleware codeName="view_cash_flow_button" isPage={false}>
+              <PermissionMiddleware codeName="view_cash_flow_button">
                 <NavLink
                   to="/cashflow"
                   end
@@ -212,7 +212,7 @@ const Navbar: React.FC = () => {
                 </NavLink>
               </PermissionMiddleware>
 
-              <PermissionMiddleware codeName="view_settled_button" isPage={false}>
+              <PermissionMiddleware codeName="view_settled_button">
                 <NavLink
                   to="/settled"
                   onClick={() => setDrawerOpen(false)}
@@ -223,7 +223,7 @@ const Navbar: React.FC = () => {
               </PermissionMiddleware>
 
               {(isSubscribed || isSuperUser) && (
-                <PermissionMiddleware codeName="view_report_button" isPage={false}>
+                <PermissionMiddleware codeName="view_report_button">
                   <NavLink
                     to="/reports"
                     onClick={() => setDrawerOpen(false)}

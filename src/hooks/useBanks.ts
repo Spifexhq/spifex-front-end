@@ -19,7 +19,6 @@ type HttpLikeError = {
   response?: { status?: number; headers?: Record<string, string | string[] | undefined>; };
 };
 
-// 🔁 recebe o filtro de “ativos” e repassa para a API com backoff
 async function getAllBanksWithBackoff(active?: boolean) {
   let delay = 300;
   const maxDelay = 5000;
@@ -27,7 +26,7 @@ async function getAllBanksWithBackoff(active?: boolean) {
 
   for (let attempt = 0; attempt < maxTries; attempt++) {
     try {
-      const { data } = await api.getBanks(active); // ← passa o booleano
+      const { data } = await api.getBanks(active);
       return data;
     } catch (err: unknown) {
       const e = err as HttpLikeError;
@@ -43,15 +42,15 @@ async function getAllBanksWithBackoff(active?: boolean) {
       throw err;
     }
   }
-  throw new Error("Falha ao carregar bancos (limite de tentativas).");
+  throw new Error("Failed to load databases (limit of attempts).");
 }
 
 /**
- * useBanks
- * @param selectedBankIds  lista opcional de IDs para filtrar localmente
- * @param refreshKey       bump para refetch
- * @param active           filtro remoto: true=ativos, false=inativos, undefined=todos
- */
+  * useBanks
+  * @param selectedBankIds optional list of IDs to filter locally
+  * @param refreshKey bump for refetch
+  * @param active remote filter: true=active, false=inactive, undefined=all
+*/
 export function useBanks(
   selectedBankIds?: Array<string | number>,
   refreshKey: number = 0,
@@ -61,7 +60,6 @@ export function useBanks(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Busca sempre no mount / refreshKey / active
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -76,14 +74,14 @@ export function useBanks(
         setLoading(false);
       } catch (err: unknown) {
         if (!alive) return;
-        const message = err instanceof Error ? err.message : "Erro ao carregar bancos";
+        const message = err instanceof Error ? err.message : "Error loading banks.";
         setError(message);
         setLoading(false);
       }
     })();
 
     return () => { alive = false; };
-  }, [refreshKey, active]); // ← depende do filtro
+  }, [refreshKey, active]);
 
   const selectedIdsSet = useMemo(
     () => new Set((selectedBankIds ?? []).map(toKey)),

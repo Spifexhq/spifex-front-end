@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type FetchPage<T> = (cursor?: string) => Promise<{
   items: T[];
-  nextCursor?: string; // undefined/null -> end reached
+  nextCursor?: string;
 }>;
 
 export type UseCursorPagerOptions = {
@@ -39,7 +39,7 @@ export function useCursorPager<T>(
 
   /** ---------- Internal refs (source of truth, no staleness) ---------- */
   const pagesRef = useRef<Array<{ items: T[]; nextCursor?: string }>>([]);
-  const tokensRef = useRef<Array<string | undefined>>([undefined]); // token for page i
+  const tokensRef = useRef<Array<string | undefined>>([undefined]);
   const reachedEndRef = useRef(false);
   const indexRef = useRef(0);
   const loadingRef = useRef(false);
@@ -133,7 +133,7 @@ export function useCursorPager<T>(
   const next = useCallback(async () => {
     if (loadingRef.current) return;
     const target = indexRef.current + 1;
-    await goto(target); // load & advance in a single click
+    await goto(target);
   }, [goto]);
 
   const prev = useCallback(async () => {

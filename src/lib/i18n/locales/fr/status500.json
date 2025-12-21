@@ -1,0 +1,19 @@
+{
+  "documentTitle": "Statut - 500",
+  "heading": "Une erreur s’est produite. Veuillez réessayer plus tard.",
+  "subtitle": "Le serveur a rencontré une erreur interne et n’a pas pu traiter votre demande.",
+  "actions": {
+    "backHome": "Retour à l’accueil"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "errorAlt": "Erreur 500",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

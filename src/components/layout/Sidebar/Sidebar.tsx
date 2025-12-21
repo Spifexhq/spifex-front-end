@@ -29,27 +29,25 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex flex-col flex-grow p-3 space-y-1 select-none">
         {mode !== 'settled' && (
           <>
-            <PermissionMiddleware codeName="add_cash_flow_entries">
-              <PermissionMiddleware codeName="view_credit_modal_button">
-                <button
-                  onClick={() => handleOpenModal('credit')}
-                  className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"
-                  aria-label={t('sidebar:sidebar.items.credit')}
+            <PermissionMiddleware codeName={["view_credit_modal_button"]} requireAll>
+              <button
+                onClick={() => handleOpenModal('credit')}
+                className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"
+                aria-label={t('sidebar:sidebar.items.credit')}
+              >
+                <div className="flex items-center justify-center w-10 h-10">
+                  {/* decorative icon */}
+                  <img src="src/assets/Icons/buttons/credit.svg" alt="" className="w-4 h-4" />
+                </div>
+                <span
+                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 max-w-40' : 'opacity-0 max-w-0 pointer-events-none'}`}
                 >
-                  <div className="flex items-center justify-center w-10 h-10">
-                    {/* decorative icon */}
-                    <img src="src/assets/Icons/buttons/credit.svg" alt="" className="w-4 h-4" />
-                  </div>
-                  <span
-                    className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 max-w-40' : 'opacity-0 max-w-0 pointer-events-none'}`}
-                  >
-                    {t('sidebar:sidebar.items.credit')}
-                  </span>
-                </button>
-              </PermissionMiddleware>
+                  {t('sidebar:sidebar.items.credit')}
+                </span>
+              </button>
             </PermissionMiddleware>
 
-            <PermissionMiddleware codeName="view_debit_modal_button">
+            <PermissionMiddleware codeName={["view_debit_modal_button"]} requireAll>
               <button
                 onClick={() => handleOpenModal('debit')}
                 className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"
@@ -66,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </PermissionMiddleware>
 
-            <PermissionMiddleware codeName="add_transference">
+            <PermissionMiddleware codeName={["view_transference_modal_button"]} requireAll>
               <button
                 onClick={handleOpenTransferenceModal}
                 className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"

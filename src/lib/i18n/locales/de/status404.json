@@ -1,0 +1,19 @@
+{
+  "documentTitle": "Status - 404",
+  "heading": "Diese Seite existiert nicht",
+  "subtitle": "Möglicherweise wurde sie entfernt oder an eine andere Adresse verschoben.",
+  "actions": {
+    "backHome": "Zur Startseite"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "errorAlt": "404-Fehler",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

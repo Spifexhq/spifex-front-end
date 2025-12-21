@@ -8,7 +8,7 @@ import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
 //import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
-import { AuthMiddleware, PermissionMiddleware, SuccessRouteMiddleware, SubscriptionMiddleware } from "@/middlewares";
+import { AuthMiddleware, PermissionMiddleware, SubscriptionMiddleware } from "@/middlewares";
 
 // Auth Pages
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
@@ -44,7 +44,6 @@ const FormatSettings = lazy(() => import("@/pages/FormatSettings"));
 const CurrencySettings = lazy(() => import("@/pages/CurrencySettings"));
 
 // Status Pages
-const PurchaseConfirmation = lazy(() => import("@/pages/Status/PurchaseConfirmation"));
 const Status404 = lazy(() => import("@/pages/Status/Status404"));
 const Status500 = lazy(() => import("@/pages/Status/Status500"));
 const StatusComingSoon = lazy(() => import("@/pages/Status/ComingSoon"));
@@ -232,14 +231,6 @@ const routes: RouteObject[] = [
                     {
                         path: '',
                         element: <Navigate to="404" replace />
-                    },
-                    {
-                        path: 'success',
-                        element: (
-                            <SuccessRouteMiddleware>
-                                <PurchaseConfirmation />
-                            </SuccessRouteMiddleware>
-                        )
                     },
                     {
                         path: '500',

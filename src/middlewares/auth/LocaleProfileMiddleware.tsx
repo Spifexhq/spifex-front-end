@@ -31,7 +31,6 @@ export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children 
   useEffect(() => {
     let mounted = true;
 
-    // ✅ PASS-THROUGH when already on /locale-setup to avoid any blocking/redirecting
     if (isAllowlisted(location.pathname)) {
       setStatus("ready");
       setShouldRenderChildren(true);

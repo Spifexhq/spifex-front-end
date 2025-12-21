@@ -1,0 +1,8 @@
+{
+  "documentTitle": "Fluxo de Caixa",
+  "errors": {
+    "loadEntryDetails": "Erro ao carregar detalhes do lançamento.",
+    "loadEntryDetailsUnexpected": "Erro inesperado ao carregar detalhes do lançamento.",
+    "deleteEntries": "Erro ao deletar lançamentos."
+  }
+}

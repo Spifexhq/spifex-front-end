@@ -32,6 +32,10 @@
       "label": "Bouton écriture de débit",
       "description": "Permet d'ouvrir la fenêtre modale pour ajouter une écriture de débit depuis la barre latérale."
     },
+    "view_transference_modal_button": {
+      "label": "Bouton écriture de virement",
+      "description": "Permet d'ouvrir la fenêtre modale pour ajouter une écriture de virement depuis la barre latérale."
+    },
     "view_cash_flow_entries": {
       "label": "Liste des écritures du flux de trésorerie",
       "description": "Permet d'afficher la liste des écritures du flux de trésorerie."

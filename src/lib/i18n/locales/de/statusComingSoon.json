@@ -1,0 +1,26 @@
+{
+  "documentTitle": "Status - Bald verfügbar",
+  "heading": "Bald verfügbar",
+  "subtitle": "Wir arbeiten an den letzten Details vor dem Launch!",
+  "actions": {
+    "back": "Zurück zur vorherigen Seite"
+  },
+  "timer": {
+    "days": "Tage",
+    "hours": "Stunden",
+    "minutes": "Minuten",
+    "seconds": "Sekunden",
+    "expired": "Die Zeit ist abgelaufen!"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "comingSoonAlt": "Bald verfügbar",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

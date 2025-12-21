@@ -1,0 +1,16 @@
+{
+  "documentTitle": "Statut - Maintenance",
+  "heading": "Le site est actuellement en maintenance",
+  "subtitle": "Nous nous excusons pour la gêne occasionnée.",
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "maintenanceAlt": "Maintenance",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

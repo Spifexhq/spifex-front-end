@@ -1,0 +1,16 @@
+{
+  "documentTitle": "Status - Manutenção",
+  "heading": "O site está atualmente em manutenção",
+  "subtitle": "Pedimos desculpas por qualquer inconveniente causado.",
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "maintenanceAlt": "Manutenção",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "documentTitle": "Cash Flow",
+  "errors": {
+    "loadEntryDetails": "Failed to load entry details.",
+    "loadEntryDetailsUnexpected": "Unexpected error while loading entry details.",
+    "deleteEntries": "Failed to delete entries."
+  }
+}

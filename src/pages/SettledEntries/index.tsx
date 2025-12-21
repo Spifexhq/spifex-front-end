@@ -1,5 +1,7 @@
 // src/pages/Settled/index.tsx
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+
 import { Sidebar } from "src/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
@@ -13,7 +15,11 @@ import { useBanks } from "@/hooks/useBanks";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const Settled = () => {
-  useEffect(() => { document.title = "Realizado"; }, []);
+  const { t } = useTranslation(["settled"]);
+
+  useEffect(() => {
+    document.title = t("settled:documentTitle");
+  }, [t]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,17 +45,17 @@ const Settled = () => {
   } = useBanks(undefined, banksKey);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const handleOpenModal = (type: ModalType) => { setModalType(type); setIsModalOpen(true); };
+  const handleOpenModal = (type: ModalType) => {
+    setModalType(type);
+    setIsModalOpen(true);
+  };
 
-  const handleApplyFilters = useCallback(
-    ({ filters: newFilters }: { filters: EntryFilters }) => {
-      setFilters(newFilters);
-      setTableKey((k) => k + 1);
-      setBanksKey((k) => k + 1);
-      setKpiRefresh((k) => k + 1);
-    },
-    []
-  );
+  const handleApplyFilters = useCallback(({ filters: newFilters }: { filters: EntryFilters }) => {
+    setFilters(newFilters);
+    setTableKey((k) => k + 1);
+    setBanksKey((k) => k + 1);
+    setKpiRefresh((k) => k + 1);
+  }, []);
 
   const selectedAsMinimal: MinimalEntry[] = selectedEntries.map((e) => ({
     amount: e.amount,
@@ -74,9 +80,12 @@ const Settled = () => {
         mode="default"
       />
 
-      <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
+      <div
+        className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${
+          isSidebarOpen ? "ml-60" : "ml-16"
+        }`}
+      >
         <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          
           <FilterBar onApply={handleApplyFilters} contextSettlement={true} />
 
           {filters && (
@@ -87,7 +96,12 @@ const Settled = () => {
                 selectedBankIds={filters.bank_id}
                 refreshToken={kpiRefresh}
                 banksRefreshKey={banksKey}
-                banksData={{ banks, totalConsolidatedBalance, loading: banksLoading, error: banksError }}
+                banksData={{
+                  banks,
+                  totalConsolidatedBalance,
+                  loading: banksLoading,
+                  error: banksError,
+                }}
               />
 
               <div className="min-h-0 h-full">
@@ -114,10 +128,8 @@ const Settled = () => {
                 setIsReturning(true);
                 try {
                   if (selectedIds.length > 1) {
-                    // bulk "return" (bulk delete from settlements)
                     await api.bulkDeleteSettledEntries(selectedIds as string[]);
                   } else {
-                    // single "return"
                     await api.deleteSettledEntry(selectedIds[0] as string);
                   }
 
@@ -130,7 +142,7 @@ const Settled = () => {
                   setKpiRefresh((k) => k + 1);
                 } catch (err) {
                   console.error(err);
-                  alert("Erro ao retornar liquidações.");
+                  alert(t("settled:errors.returnSettlements"));
                 } finally {
                   setIsReturning(false);
                 }

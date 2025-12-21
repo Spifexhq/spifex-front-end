@@ -1,0 +1,19 @@
+{
+  "documentTitle": "Status - 404",
+  "heading": "This page doesn’t exist",
+  "subtitle": "It may have been removed or moved to a different address.",
+  "actions": {
+    "backHome": "Back to home"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "errorAlt": "404 error",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

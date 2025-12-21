@@ -80,6 +80,7 @@ const PERMISSION_ROWS: PermissionRow[] = [
   /* ------------------------------ SIDEBAR --------------------------------- */
   { code: "view_credit_modal_button", category: "sidebar" },
   { code: "view_debit_modal_button", category: "sidebar" },
+  { code: "view_transference_modal_button", category: "sidebar" },
 
   /* -------------------------- PAGE COMPONENTS ----------------------------- */
   { code: "view_cash_flow_entries", category: "page_components" },

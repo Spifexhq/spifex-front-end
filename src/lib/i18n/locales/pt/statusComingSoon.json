@@ -1,0 +1,26 @@
+{
+  "documentTitle": "Status - Em breve",
+  "heading": "Em breve",
+  "subtitle": "Estamos trabalhando nos últimos detalhes antes do nosso lançamento!",
+  "actions": {
+    "back": "Voltar à página anterior"
+  },
+  "timer": {
+    "days": "Dias",
+    "hours": "Horas",
+    "minutes": "Minutos",
+    "seconds": "Segundos",
+    "expired": "O tempo acabou!"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "comingSoonAlt": "Em breve",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

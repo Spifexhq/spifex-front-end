@@ -1,0 +1,19 @@
+{
+  "documentTitle": "Status - 500",
+  "heading": "Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.",
+  "subtitle": "Der Server ist auf einen internen Fehler gestoßen und konnte deine Anfrage nicht abschließen.",
+  "actions": {
+    "backHome": "Zur Startseite"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "errorAlt": "500-Fehler",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

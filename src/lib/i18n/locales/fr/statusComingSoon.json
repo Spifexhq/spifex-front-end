@@ -1,0 +1,26 @@
+{
+  "documentTitle": "Statut - Bientôt disponible",
+  "heading": "Bientôt disponible",
+  "subtitle": "Nous finalisons les derniers détails avant le lancement !",
+  "actions": {
+    "back": "Retour à la page précédente"
+  },
+  "timer": {
+    "days": "Jours",
+    "hours": "Heures",
+    "minutes": "Minutes",
+    "seconds": "Secondes",
+    "expired": "Le temps est écoulé !"
+  },
+  "social": {
+    "facebook": "Facebook",
+    "x": "X",
+    "instagram": "Instagram"
+  },
+  "images": {
+    "comingSoonAlt": "Bientôt disponible",
+    "facebookAlt": "Facebook",
+    "xAlt": "X",
+    "instagramAlt": "Instagram"
+  }
+}

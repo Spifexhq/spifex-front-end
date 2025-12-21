@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Verrouillé",
+    "title": "Vous n’avez pas encore l’autorisation d’accéder à cette zone !",
+    "subtitle": "Si vous en avez fait la demande à l’administration, cliquez sur le bouton ci-dessous et actualisez la page !",
+    "btn": {
+      "refresh": "Actualiser la page"
+    }
+  }
+}
