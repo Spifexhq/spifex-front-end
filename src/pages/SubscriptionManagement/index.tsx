@@ -43,11 +43,29 @@ const fmtDate = (iso?: string, locale = navigator.language) => {
   }
 };
 
+const parseIsoMs = (iso?: string): number | null => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  const ms = d.getTime();
+  return Number.isNaN(ms) ? null : ms;
+};
+
+const isOlderThanMonths = (iso?: string, months = 2): boolean => {
+  const ms = parseIsoMs(iso);
+  if (ms == null) return false;
+
+  const threshold = new Date();
+  threshold.setMonth(threshold.getMonth() - months);
+  return ms < threshold.getTime();
+};
+
+type BadgeTone = "green" | "amber" | "red" | "gray";
+
 const Badge: React.FC<{
-  tone?: "green" | "amber" | "red" | "gray";
+  tone?: BadgeTone;
   children: React.ReactNode;
 }> = ({ tone = "gray", children }) => {
-  const tones: Record<NonNullable<React.ComponentProps<typeof Badge>["tone"]>, string> = {
+  const tones: Record<BadgeTone, string> = {
     green: "bg-emerald-50 text-emerald-700 border-emerald-200",
     amber: "bg-amber-50 text-amber-700 border-amber-200",
     red: "bg-rose-50 text-rose-700 border-rose-200",
@@ -104,7 +122,7 @@ const Notice: React.FC<{
 type KnownStatus = "incomplete" | "trialing" | "active" | "past_due" | "canceled" | "unpaid";
 type StatusKind = KnownStatus | "none" | "unknown";
 
-const statusTone: Record<StatusKind, "green" | "amber" | "red" | "gray"> = {
+const statusTone: Record<StatusKind, BadgeTone> = {
   active: "green",
   trialing: "green",
   past_due: "amber",
@@ -138,17 +156,37 @@ const SubscriptionManagement: React.FC = () => {
 
   const [sub, setSub] = useState<GetSubscriptionStatusResponse | null>(null);
 
-  const subscription = sub?.subscription ?? null;
+  // Raw subscription snapshot from API
+  const rawSubscription = sub?.subscription ?? null;
 
-  const statusKind: StatusKind = useMemo(() => {
-    const raw = String(subscription?.status ?? "");
+  const rawStatusKind: StatusKind = useMemo(() => {
+    const raw = String(rawSubscription?.status ?? "");
     if (!raw) return "none";
     return isKnownStatus(raw) ? raw : "unknown";
-  }, [subscription?.status]);
+  }, [rawSubscription?.status]);
+
+  // ISO dates (raw)
+  const rawAccessUntilIso = toIso(rawSubscription?.current_period_end);
+  const rawEndedAtIso = toIso(rawSubscription?.ended_at);
+
+  // UX rule:
+  // If canceled and cancellation is older than 2 months -> behave like "none" (no prior subscription)
+  const isStaleCanceled = useMemo(() => {
+    if (rawStatusKind !== "canceled") return false;
+
+    // Primary: ended_at. Fallback: period_end.
+    const endedRef = rawEndedAtIso ?? rawAccessUntilIso;
+    return isOlderThanMonths(endedRef, 2);
+  }, [rawStatusKind, rawEndedAtIso, rawAccessUntilIso]);
+
+  // Effective state used by UI
+  const subscription = isStaleCanceled ? null : rawSubscription;
+
+  const statusKind: StatusKind = isStaleCanceled ? "none" : rawStatusKind;
 
   const hasSubscription = Boolean(subscription);
-  const isSubscribed = Boolean(sub?.is_subscribed);
-  const hasAccess = Boolean(sub?.has_access);
+  const isSubscribed = Boolean(sub?.is_subscribed) && !isStaleCanceled;
+  const hasAccess = Boolean(sub?.has_access) && !isStaleCanceled;
 
   const accessUntilIso = toIso(subscription?.current_period_end);
   const endedAtIso = toIso(subscription?.ended_at);
@@ -344,7 +382,6 @@ const SubscriptionManagement: React.FC = () => {
         );
 
       case "canceled": {
-        // UX rule: canceled means no access (backend also enforces has_access=false)
         const body = endedAtIso
           ? t("subscription:callout.canceled.bodyEnded", "Access ended on {{date}}.", { date: endedAtLabel })
           : t("subscription:callout.canceled.bodyNoAccess", "Access is no longer available. Reactivate anytime.");
@@ -449,8 +486,7 @@ const SubscriptionManagement: React.FC = () => {
 
   const headerBadge = isProcessing ? <Badge>{t("subscription:badge.processing", "Processing…")}</Badge> : null;
 
-  const summaryDateIso: string | undefined =
-    statusKind === "canceled" ? endedAtIso : accessUntilIso;
+  const summaryDateIso: string | undefined = statusKind === "canceled" ? endedAtIso : accessUntilIso;
 
   const summaryVerb =
     statusKind === "canceled"
@@ -524,9 +560,9 @@ const SubscriptionManagement: React.FC = () => {
                               • {t("subscription:current.notActiveHint", "Not currently active")}
                             </span>
                           )}
-                          {!hasAccess && statusKind !== "none" && (
+                          {!hasAccess && (
                             <span className="ml-2 text-gray-500">
-                              • {t("subscription:current.noAccessHint", "Access is currently disabled")}
+                              • {t("subscription:current.notActiveHint", "Not currently active")}
                             </span>
                           )}
                         </span>
