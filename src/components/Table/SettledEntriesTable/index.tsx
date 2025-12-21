@@ -45,6 +45,25 @@ const txValue = (e: SettledEntry) => {
   return isCredit(e.tx_type) ? major : -major;
 };
 
+const parseOptionalAmount = (v: unknown): number | undefined => {
+  if (v === null || v === undefined) return undefined;
+
+  if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
+
+  const raw = String(v).trim();
+  if (!raw) return undefined;
+
+  const cleaned = raw.replace(/[^\d.,-]/g, "").replace(/\s+/g, "");
+
+  const normalized =
+    cleaned.includes(",") && cleaned.includes(".")
+      ? cleaned.replace(/\./g, "").replace(",", ".")
+      : cleaned.replace(",", ".");
+
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : undefined;
+};
+
 /** running balance comes as major string; return number or null */
 const getServerRunning = (e: SettledEntry): number | null => {
   const raw = (e as unknown as { running_balance?: unknown }).running_balance;
@@ -399,19 +418,14 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
       page_size: 100,
       value_from: f?.start_date || undefined,
       value_to: f?.end_date || undefined,
-
       bank,
       q,
-
       description: f?.description || undefined,
       observation: f?.observation || undefined,
-
       gl,
       tx_type,
-
-      amount_min: f?.amount_min,
-      amount_max: f?.amount_max,
-
+      amount_min: parseOptionalAmount(f?.amount_min),
+      amount_max: parseOptionalAmount(f?.amount_max),
       include_inactive: true,
     };
 

@@ -42,7 +42,7 @@ type BankForm = {
   branch: string;
   account_number: string;
   iban: string;
-  initial_balance: string; // ✅ "1234.56"
+  initial_balance: string;
   is_active: boolean;
 };
 

@@ -1,7 +1,6 @@
-// ✅ models (frontend) — replace the KPI types to use DECIMAL strings (2dp)
-// e.g. src/models/entries/kpis.ts  (or wherever you keep these)
+// src/models/entries/domain/kpis.ts
 
-export type MoneyDecimal = string; // "1234.56" (2dp), can be negative
+export type MoneyDecimal = string;
 
 // Cashflow KPIs (planned / due_date based)
 export type CashflowKpis = {
@@ -11,7 +10,6 @@ export type CashflowKpis = {
     next7: { start: string; end: string };
   };
 
-  // ✅ now decimals (strings), not minors
   mtd: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };
   prev: { net: MoneyDecimal };
 
@@ -32,7 +30,6 @@ export type SettledKpis = {
     last7: { start: string; end: string };
   };
 
-  // ✅ now decimals (strings), not minors
   mtd: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };
   prev: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };
   last7: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };

@@ -1,11 +1,6 @@
 import { BankAccount } from "../../enterprise_structure/domain/Bank";
 
-/**
- * Row retornada por SettlementReadSerializer.
- * Observação: agora inclui os campos de saldo corrido vindos do backend.
- */
 export type SettledEntry = {
-  /** entry.external_id (id lógico do lançamento) */
   id: string;
   organization: string;
 
@@ -13,17 +8,13 @@ export type SettledEntry = {
   observation: string | null;
   notes: string | null;
 
-  /** decimal string derivada de amount_minor no serializer */
   amount: string;
-  /** rótulo livre, ex.: "credit" | "debit" */
   tx_type: string;
 
-  /** datas da liquidação */
-  value_date: string;     // YYYY-MM-DD
-  settled_on: string;     // ISO datetime
+  value_date: string;
+  settled_on: string;
   partial_index: number | null;
 
-  /** metadados do entry “espelhados” na liquidação */
   document_type: string | null;
   installment_group_id: string | null;
   installment_index: number | null;
@@ -40,20 +31,18 @@ export type SettledEntry = {
     department_id: string | null;
     code: string;
     name: string;
-    percent: string; // "100.00"
+    percent: string;
   }>;
   items: Array<{
     item_id: string | null;
     sku: string;
     name: string;
-    quantity: string; // "1.000"
+    quantity: string;
   }>;
 
-  /** identificadores da liquidação */
-  external_id: string; // settlement.external_id
-  entry_id: string;    // entry.external_id
+  external_id: string;
+  entry_id: string;
   bank: BankAccount | null;
 
-  /** ✅ novo: saldo vindo do backend */
   running_balance?: string | null;
 };

@@ -18,6 +18,7 @@ import type { EntryFilters, Entry } from "src/models/entries/domain";
 import type { GetEntryRequest, GetEntryResponse } from "src/models/entries/dto/GetEntry";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { formatDateFromISO, formatCurrency } from "src/lib";
+import { PermissionMiddleware } from "src/middlewares";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers (strongly typed to backend EntryReadSerializer)                    */
@@ -35,6 +36,27 @@ const getInstallments = (e: Entry) => ({
   index: e.installment_index ?? null,
   count: e.installment_count ?? null,
 });
+
+const parseOptionalAmount = (v: unknown): number | undefined => {
+  if (v === null || v === undefined) return undefined;
+
+  if (typeof v === "number") {
+    return Number.isFinite(v) ? v : undefined;
+  }
+
+  const raw = String(v).trim();
+  if (!raw) return undefined;
+
+  const cleaned = raw.replace(/[^\d.,-]/g, "").replace(/\s+/g, "");
+
+  const normalized =
+    cleaned.includes(",") && cleaned.includes(".")
+      ? cleaned.replace(/\./g, "").replace(",", ".")
+      : cleaned.replace(",", ".");
+
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : undefined;
+};
 
 /**
  * Prefer *_minor if present (convert minor->major). Fallback to decimal string.
@@ -132,7 +154,7 @@ const TableHeader: React.FC<{
       <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
         <div className="w-[150px] text-center">{t("columns.amount")}</div>
         <div className="w-[150px] text-center">{t("columns.balance")}</div>
-        <div className="w-[32px]" />
+        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll><div className="w-[32px]" /></PermissionMiddleware>
       </div>
     </div>
   );
@@ -196,32 +218,33 @@ const EntryRow: React.FC<{
                   {formatCurrency(runningBalance)}
                 </div>
               </div>
-
-              <div className="w-8 flex justify-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 !h-8 !w-8 !p-0 grid place-items-center rounded-md"
-                  onClick={() => onEdit(entry)}
-                  aria-label={t("actions.edit")}
-                  title={t("actions.edit")}
-                >
-                  <svg
-                    className="w-4 h-4 text-gray-300 group-hover:text-gray-500"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.75}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
+              <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
+                <div className="w-8 flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 !h-8 !w-8 !p-0 grid place-items-center rounded-md"
+                    onClick={() => onEdit(entry)}
+                    aria-label={t("actions.edit")}
+                    title={t("actions.edit")}
                   >
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                    <path d="M15 5l3 3" />
-                  </svg>
-                </Button>
-              </div>
+                    <svg
+                      className="w-4 h-4 text-gray-300 group-hover:text-gray-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.75}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                      <path d="M15 5l3 3" />
+                    </svg>
+                  </Button>
+                </div>
+              </PermissionMiddleware>
             </div>
           </div>
         </div>
@@ -270,7 +293,7 @@ const SummaryRow: React.FC<{
           </div>
         </div>
 
-        <div className="w-[32px]" />
+        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll><div className="w-[32px]" /></PermissionMiddleware>
       </div>
     </div>
   );
@@ -452,8 +475,8 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         q,
         gl,
         tx_type,
-        amount_min: f?.amount_min,
-        amount_max: f?.amount_max,
+        amount_min: parseOptionalAmount(f?.amount_min),
+        amount_max: parseOptionalAmount(f?.amount_max),
         bank,
       };
 

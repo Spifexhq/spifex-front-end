@@ -29,13 +29,13 @@ interface SettlementModalProps {
 type TxType = "credit" | "debit" | undefined;
 
 type LocalEntryState = {
-  id: string; // entry external_id
-  value_date: string; // ISO YYYY-MM-DD
+  id: string;
+  value_date: string;
   description: string;
-  amount: string; // ✅ major decimal string "3000.00"
+  amount: string;
   tx_type: TxType;
   isPartial: boolean;
-  partial_amount: string; // ✅ major decimal string ("" allowed while editing)
+  partial_amount: string;
   server_error?: string | null;
 };
 

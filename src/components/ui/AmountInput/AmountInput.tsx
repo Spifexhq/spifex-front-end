@@ -14,22 +14,11 @@ export type AmountInputProps = Omit<
   InputProps,
   "type" | "value" | "defaultValue" | "onChange" | "onKeyDown" | "inputMode" | "pattern"
 > & {
-  /** ✅ MAJOR decimal string (API-ready): "1234.56" | "-10.00" | "" */
   value: string;
-
-  /** ✅ Always emits canonical MAJOR decimal string: "1234.56" or "" */
   onValueChange: (nextMajor: string) => void;
-
-  /** Default: "currency" */
   display?: "currency" | "amount";
-
-  /** If true, show empty string when value is "" or "0.00". Default false. */
   zeroAsEmpty?: boolean;
-
-  /** Optional override currency. If omitted, formatter uses org currency (fallback USD). */
   currency?: string;
-
-  /** Optional: allow toggling negative via "-" key / paste. Default false. */
   allowNegative?: boolean;
 };
 

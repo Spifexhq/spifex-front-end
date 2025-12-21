@@ -20,7 +20,7 @@ export const formatTimezoneLabel = (iana: string): string => {
   const tz = (iana || "").trim();
   if (!tz) return "";
 
-  // ✅ If invalid, do NOT attempt offset calculations (would throw). Just show raw.
+  // If invalid, do NOT attempt offset calculations (would throw). Just show raw.
   if (!isValidIanaTimezone(tz)) {
     return tz.replace(/_/g, " ");
   }

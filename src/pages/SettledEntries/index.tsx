@@ -13,6 +13,7 @@ import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar, { MinimalEntry } from "src/components/SelectionActionsBar";
 import { useBanks } from "@/hooks/useBanks";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
+import { PermissionMiddleware } from "src/middlewares";
 
 const Settled = () => {
   const { t } = useTranslation(["settled"]);
@@ -86,7 +87,11 @@ const Settled = () => {
         }`}
       >
         <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          <FilterBar onApply={handleApplyFilters} contextSettlement={true} />
+          <PermissionMiddleware codeName={["view_filters"]} requireAll>
+            <FilterBar
+              onApply={handleApplyFilters}
+              contextSettlement={true} />
+          </PermissionMiddleware>
 
           {filters && (
             <>
@@ -105,12 +110,14 @@ const Settled = () => {
               />
 
               <div className="min-h-0 h-full">
-                <SettledEntriesTable
-                  ref={tableRef}
-                  key={tableKey}
-                  filters={filters}
-                  onSelectionChange={handleSelectionChange}
-                />
+                <PermissionMiddleware codeName={["view_settled_entries"]} requireAll>
+                  <SettledEntriesTable
+                    ref={tableRef}
+                    key={tableKey}
+                    filters={filters}
+                    onSelectionChange={handleSelectionChange}
+                  />
+                </PermissionMiddleware>
               </div>
             </>
           )}
@@ -152,27 +159,34 @@ const Settled = () => {
         </div>
 
         {modalType && (
-          <EntriesModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            type={modalType}
-            onSave={() => {
-              setIsModalOpen(false);
-              setKpiRefresh((k) => k + 1);
-              setTableKey((k) => k + 1);
-            }}
-          />
+          <PermissionMiddleware
+            codeName={["add_cash_flow_entries", "view_credit_modal_button", "view_debit_modal_button"]}
+            requireAll
+          >
+            <EntriesModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              type={modalType}
+              onSave={() => {
+                setIsModalOpen(false);
+                setKpiRefresh((k) => k + 1);
+                setTableKey((k) => k + 1);
+              }}
+            />
+          </PermissionMiddleware>
         )}
 
         {isTransferenceModalOpen && (
-          <TransferenceModal
-            isOpen={isTransferenceModalOpen}
-            onClose={() => setIsTransferenceModalOpen(false)}
-            onSave={() => {
-              setIsTransferenceModalOpen(false);
-              setBanksKey((k) => k + 1);
-            }}
-          />
+          <PermissionMiddleware codeName={["add_transference", "view_transference_modal_button"]} requireAll>
+            <TransferenceModal
+              isOpen={isTransferenceModalOpen}
+              onClose={() => setIsTransferenceModalOpen(false)}
+              onSave={() => {
+                setIsTransferenceModalOpen(false);
+                setBanksKey((k) => k + 1);
+              }}
+            />
+          </PermissionMiddleware>
         )}
       </div>
     </div>

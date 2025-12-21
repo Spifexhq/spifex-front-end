@@ -1,6 +1,4 @@
 // src/pages/Reports/index.tsx
-// ✅ API money is MAJOR decimals (string/number) — no /100
-// ✅ overdue_items uses tx_type integer (-1 debit, +1 credit) — UI maps to i18n labels
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";

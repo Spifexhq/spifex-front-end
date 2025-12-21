@@ -118,12 +118,14 @@ const CashFlow = () => {
         }`}
       >
         <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
-          <FilterBar
-            onApply={handleApplyFilters}
-            bankActive={true}
-            contextSettlement={false}
-            shortcutsEnabled={filterBarHotkeysEnabled}
-          />
+          <PermissionMiddleware codeName={["view_filters"]} requireAll>
+            <FilterBar
+              onApply={handleApplyFilters}
+              bankActive={true}
+              contextSettlement={false}
+              shortcutsEnabled={filterBarHotkeysEnabled}
+            />
+          </PermissionMiddleware>
 
           {filters && (
             <>
@@ -142,13 +144,15 @@ const CashFlow = () => {
               />
 
               <div className="min-h-0 h-full">
-                <CashFlowTable
-                  ref={tableRef}
-                  key={cashflowKey}
-                  filters={filters}
-                  onEdit={handleEditEntry}
-                  onSelectionChange={handleSelectionChange}
-                />
+                <PermissionMiddleware codeName={["view_cash_flow_entries"]} requireAll>
+                  <CashFlowTable
+                    ref={tableRef}
+                    key={cashflowKey}
+                    filters={filters}
+                    onEdit={handleEditEntry}
+                    onSelectionChange={handleSelectionChange}
+                  />
+                </PermissionMiddleware>
               </div>
             </>
           )}

@@ -4,8 +4,8 @@ import type { Entry } from "@/models/entries/domain";
 export interface BulkSettleItem {
   entry_id: string;
   bank_id: string;
-  amount: string;      // ✅ "1234.56" (MAJOR)
-  value_date: string;  // YYYY-MM-DD
+  amount: string;
+  value_date: string;
 }
 
 // a resposta pode vir só com updated ou com updated + errors

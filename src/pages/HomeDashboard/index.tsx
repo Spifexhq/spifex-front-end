@@ -1,6 +1,4 @@
 // src/pages/HomeDashboard/index.tsx
-// ✅ stop dividing by 100; treat API money as decimal (string/number)
-// ✅ no need to define currency or locale — formatCurrency handles it
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

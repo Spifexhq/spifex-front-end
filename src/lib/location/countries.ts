@@ -38,7 +38,7 @@ export const ISO_ALPHA2: readonly string[] = [
 
 const ISO_ALPHA2_SET: ReadonlySet<string> = new Set(ISO_ALPHA2.map((c) => c.toUpperCase()));
 
-// ✅ Use this everywhere you need to validate persisted/received country values
+// Use this everywhere you need to validate persisted/received country values
 export const isSupportedCountryAlpha2 = (code: string): boolean => {
   const c = (code || "").trim().toUpperCase();
   return c.length === 2 && ISO_ALPHA2_SET.has(c);

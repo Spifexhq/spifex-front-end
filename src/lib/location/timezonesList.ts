@@ -83,7 +83,7 @@ export const TIMEZONES: TimezoneOption[] = timezonesSource.map(
   }),
 );
 
-// ✅ fast membership check against TIMEZONES
+// Fast membership check against TIMEZONES
 const TIMEZONE_SET: ReadonlySet<string> = new Set(TIMEZONES.map((t) => t.value));
 
 export const isSupportedTimezone = (iana: string): boolean => {

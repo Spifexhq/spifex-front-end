@@ -1,7 +1,4 @@
 // src/components/KpiCards.tsx
-// ✅ Stop treating KPI values as minor units (no /100)
-// ✅ No need to define currency or locale here — formatCurrency handles it
-
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +12,7 @@ import type { BankAccount } from "@/models/enterprise_structure/domain";
 import type { CashflowKpis, SettledKpis } from "@/models/entries";
 
 import { formatCurrency } from "@/lib/currency/formatCurrency";
+import { PermissionMiddleware } from "src/middlewares";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */
@@ -361,90 +359,94 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
         >
           {/* Bank panel (left) */}
-          <AnimatePresence initial={false}>
-            {!expanded ? (
-              <motion.button
-                key="banks-card"
-                layout
-                transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
-                onClick={() => setExpanded(true)}
-                className="col-span-12 sm:col-span-6 lg:col-span-3 h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-600">
-                    {t("kpiCards:panel.consolidatedBalance")}
-                  </span>
-                  <span className="text-[11px] text-gray-500">
-                    {t("kpiCards:panel.accountsCount", { count: filteredBanks.length || 0 })}
-                  </span>
-                </div>
-
-                <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-                  {totalFmt}
-                </div>
-
-                {topBank && (
-                  <div className="mt-1 flex items-center gap-2 min-w-0">
-                    <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
-                      {getInitials(topBank.institution)}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="text-[12px] text-gray-800 truncate leading-tight">
-                        {topBank.institution}
-                      </div>
-                      <div className="text-[10px] text-gray-500 truncate leading-tight">
-                        {formatCurrency(topBank.consolidated_balance ?? 0)}
-                      </div>
-                    </div>
+          <PermissionMiddleware codeName={["view_banks_table"]} requireAll>
+            <AnimatePresence initial={false}>
+              {!expanded ? (
+                <motion.button
+                  key="banks-card"
+                  layout
+                  transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
+                  onClick={() => setExpanded(true)}
+                  className="col-span-12 sm:col-span-6 lg:col-span-3 h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-600">
+                      {t("kpiCards:panel.consolidatedBalance")}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      {t("kpiCards:panel.accountsCount", { count: filteredBanks.length || 0 })}
+                    </span>
                   </div>
-                )}
-              </motion.button>
-            ) : (
-              <motion.div
-                key="banks-panel"
-                layout
-                transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
-                className="col-span-12 lg:col-span-6 lg:col-start-1 row-span-2"
-              >
-                <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full">
-                  {/* Sticky header */}
-                  <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
-                    <div className="text-[12px] text-gray-700">
-                      {t("kpiCards:panel.header")}{" "}
+
+                  <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
+                    {totalFmt}
+                  </div>
+
+                  {topBank && (
+                    <div className="mt-1 flex items-center gap-2 min-w-0">
+                      <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
+                        {getInitials(topBank.institution)}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-[12px] text-gray-800 truncate leading-tight">
+                          {topBank.institution}
+                        </div>
+                        <div className="text-[10px] text-gray-500 truncate leading-tight">
+                          {formatCurrency(topBank.consolidated_balance ?? 0)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="banks-panel"
+                  layout
+                  transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
+                  className="col-span-12 lg:col-span-6 lg:col-start-1 row-span-2"
+                >
+                  <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full">
+                    {/* Sticky header */}
+                    <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
+                      <div className="text-[12px] text-gray-700">
+                        {t("kpiCards:panel.header")}{" "}
+                        <button
+                          type="button"
+                          onClick={goToBanks}
+                          className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
+                          aria-label={t("kpiCards:aria.goToBanks")}
+                          title={t("kpiCards:aria.openBanks")}
+                        >
+                          {totalFmt}
+                        </button>
+                      </div>
+
                       <button
-                        type="button"
-                        onClick={goToBanks}
-                        className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
-                        aria-label={t("kpiCards:aria.goToBanks")}
-                        title={t("kpiCards:aria.openBanks")}
+                        className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
+                        onClick={() => setExpanded(false)}
                       >
-                        {totalFmt}
+                        {t("kpiCards:actions.close")}
                       </button>
                     </div>
 
-                    <button
-                      className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
-                      onClick={() => setExpanded(false)}
-                    >
-                      {t("kpiCards:actions.close")}
-                    </button>
+                    {/* Scroll area */}
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <PermissionMiddleware codeName={["view_banks_table"]} requireAll>
+                        <BanksTable
+                          key={banksRefreshKey}
+                          banks={filteredBanks}
+                          totalConsolidatedBalance={filteredTotalConsolidated}
+                          loading={banksLoading}
+                          error={banksData.error}
+                        />
+                      </PermissionMiddleware>
+                    </div>
                   </div>
-
-                  {/* Scroll area */}
-                  <div className="flex-1 min-h-0 overflow-y-auto">
-                    <BanksTable
-                      key={banksRefreshKey}
-                      banks={filteredBanks}
-                      totalConsolidatedBalance={filteredTotalConsolidated}
-                      loading={banksLoading}
-                      error={banksData.error}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </PermissionMiddleware>
 
           {/* KPI cards (right) */}
           {autoKpis.map((kpi, i) => (
