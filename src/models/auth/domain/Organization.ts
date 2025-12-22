@@ -5,7 +5,7 @@ export interface Owner {
 }
 
 export interface Organization {
-  external_id: string;
+  id: string;
   name: string;
   timezone?: string;
   line1?: string | null;
