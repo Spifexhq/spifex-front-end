@@ -238,6 +238,11 @@ const SubscriptionManagement: React.FC = () => {
   }, [handleInitUser]);
 
   useEffect(() => {
+    if (!isOwner) {
+      setIsInitialLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         await loadStatus();
@@ -245,7 +250,7 @@ const SubscriptionManagement: React.FC = () => {
         setIsInitialLoading(false);
       }
     })();
-  }, [loadStatus]);
+  }, [loadStatus, isOwner]);
 
   // ----- Actions -----
   const startCheckout = useCallback(
@@ -256,7 +261,7 @@ const SubscriptionManagement: React.FC = () => {
         const resp = await api.createCheckoutSession(priceId);
         const url = toIso(resp?.data?.url);
         if (url) window.location.href = url;
-        else alert(t("subscription:errors.noRedirect", "Couldn’t redirect to the payment page."));
+        else alert(t("subscription:errors.noRedirect", "Couldn't redirect to the payment page."));
       } catch (e) {
         console.error(e);
         alert(t("subscription:errors.checkout", "Payment initialization failed. Please try again later."));
@@ -274,7 +279,7 @@ const SubscriptionManagement: React.FC = () => {
       const resp = await api.createCustomerPortalSession();
       const url = toIso(resp?.data?.url);
       if (url) window.location.href = url;
-      else alert(t("subscription:errors.noPortal", "Couldn’t open the customer portal."));
+      else alert(t("subscription:errors.noPortal", "Couldn't open the customer portal."));
     } catch (e) {
       console.error(e);
       alert(t("subscription:errors.portal", "Portal redirect failed. Please try again later."));
@@ -316,7 +321,7 @@ const SubscriptionManagement: React.FC = () => {
         return (
           <Notice
             tone="neutral"
-            title={t("subscription:callout.none.title", "You don’t have an active plan yet.")}
+            title={t("subscription:callout.none.title", "You don't have an active plan yet.")}
             body={t(
               "subscription:callout.none.body",
               "Choose a plan below. You can manage billing anytime from the portal after subscribing.",
@@ -334,7 +339,7 @@ const SubscriptionManagement: React.FC = () => {
         const body = cancelAtPeriodEnd
           ? t(
               "subscription:callout.active.cancelAtBody",
-              "Your plan is scheduled to end on {{date}}. You’ll keep access until then.",
+              "Your plan is scheduled to end on {{date}}. You'll keep access until then.",
               { date: accessUntilLabel },
             )
           : t("subscription:callout.active.renewsBody", "Next renewal on {{date}}.", { date: accessUntilLabel });
@@ -359,7 +364,7 @@ const SubscriptionManagement: React.FC = () => {
         return (
           <Notice
             tone="warn"
-            title={t("subscription:callout.pastDue.title", "We couldn’t process your last payment.")}
+            title={t("subscription:callout.pastDue.title", "We couldn't process your last payment.")}
             body={t(
               "subscription:callout.pastDue.body",
               "Update your payment method to avoid service interruption. You can do this securely in the billing portal.",
@@ -474,6 +479,48 @@ const SubscriptionManagement: React.FC = () => {
     );
   }
 
+  if (!isOwner) {
+    return (
+      <>
+        <TopProgress active={isProcessing} variant="top" topOffset={64} />
+
+        <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
+          <div className="max-w-5xl mx-auto">
+            {/* Header card */}
+            <header className="bg-white border border-gray-200 rounded-lg">
+              <div className="px-5 py-4 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+                  {getInitials(user?.name)}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("subscription:header.settings", "Settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("subscription:header.title", "Plan & Billing")}
+                  </h1>
+                </div>
+              </div>
+            </header>
+
+            {/* Restricted access message */}
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-[13px] text-gray-700 mb-4">
+                  {t("subscription:errors.ownerOnly", "Only organization owners can manage subscription and billing settings.")}
+                </p>
+                <Button variant="outline" onClick={() => navigate("/settings/limits")}>
+                  {t("subscription:btn.checkLimits", "Check your limits")}
+                </Button>
+              </div>
+            </section>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   const tone = statusTone[statusKind];
 
   const statusBadge = (
@@ -568,7 +615,7 @@ const SubscriptionManagement: React.FC = () => {
                         </span>
                       </>
                     ) : (
-                      t("subscription:current.noActive", "You don’t have an active plan.")
+                      t("subscription:current.noActive", "You don't have an active plan.")
                     )}
                   </div>
                 </div>

@@ -83,6 +83,7 @@
     "noRedirect": "Weiterleitung zur Bezahlseite nicht möglich.",
     "checkout": "Fehler beim Start des Zahlungsvorgangs. Bitte versuchen Sie es später erneut.",
     "noPortal": "Kundenportal konnte nicht geöffnet werden.",
-    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte versuchen Sie es später erneut."
+    "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte versuchen Sie es später erneut.",
+    "ownerOnly": "Nur Organisationsinhaber können Abonnement- und Abrechnungseinstellungen verwalten."
   }
 }

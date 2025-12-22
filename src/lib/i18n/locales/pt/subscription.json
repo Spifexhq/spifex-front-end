@@ -83,6 +83,7 @@
     "noRedirect": "Não foi possível redirecionar para a página de pagamento.",
     "checkout": "Falha ao iniciar o pagamento. Tente novamente mais tarde.",
     "noPortal": "Não foi possível abrir o portal do cliente.",
-    "portal": "Falha ao redirecionar para o portal. Tente novamente mais tarde."
+    "portal": "Falha ao redirecionar para o portal. Tente novamente mais tarde.",
+    "ownerOnly": "Somente os proprietários da organização podem gerenciar as configurações de assinatura e faturamento."
   }
 }

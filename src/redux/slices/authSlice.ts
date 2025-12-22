@@ -36,6 +36,8 @@ const slice = createSlice({
               : s.organization?.permissions,
           }
         : null;
+
+      s.orgExternalId = a.payload?.organization?.external_id ?? null;
     },
     setOrgExternalId: (s, a: PayloadAction<string | null>) => {
       s.orgExternalId = a.payload;

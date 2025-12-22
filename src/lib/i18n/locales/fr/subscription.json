@@ -83,6 +83,7 @@
     "noRedirect": "Impossible de rediriger vers la page de paiement.",
     "checkout": "Échec de l’initialisation du paiement. Veuillez réessayer plus tard.",
     "noPortal": "Impossible d’ouvrir le portail client.",
-    "portal": "Échec de la redirection vers le portail. Veuillez réessayer plus tard."
+    "portal": "Échec de la redirection vers le portail. Veuillez réessayer plus tard.",
+    "ownerOnly": "Seuls les propriétaires de l'organisation peuvent gérer les paramètres d'abonnement et de facturation."
   }
 }

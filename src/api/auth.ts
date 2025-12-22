@@ -13,9 +13,10 @@ import {
   setIsSubscribed,
   setPermissions,
   resetAuth,
+  setOrgExternalId,
 } from "@/redux";
 
-import { getAccess, setTokens, clearTokens } from "@/lib/tokens";
+import { getAccess, setTokens, clearTokens, setOrgExternalIdStored, clearOrgExternalIdStored } from "@/lib/tokens";
 import {
   clearHttpCaches,
   AUTH_SYNC_EVENT,
@@ -66,13 +67,14 @@ export const useAuth = () => {
   const clearClientSession = useCallback(() => {
     dispatch(resetAuth());
     clearTokens();
+    clearOrgExternalIdStored();
     clearHttpCaches();
     localStorage.removeItem(AUTH_HINT_KEY);
   }, [dispatch]);
 
   const handleSignOut = useCallback(async () => {
     try {
-      await api.signOut(); // best-effort (clears HttpOnly cookie server-side)
+      await api.signOut();
     } catch {
       // ignore
     } finally {
@@ -111,13 +113,15 @@ export const useAuth = () => {
             const perms = res.data.permissions ?? res.data.organization?.permissions ?? [];
             dispatch(setPermissions(perms));
 
+            const orgExt = res.data.organization?.organization?.external_id ?? null;
+            dispatch(setOrgExternalId(orgExt));
+            if (orgExt) setOrgExternalIdStored(orgExt);
+            else clearOrgExternalIdStored();
+
             localStorage.setItem(AUTH_HINT_KEY, "active");
           } catch (err) {
             console.warn("Auth sync failed:", opts?.reason || "unknown", err);
 
-            // Critical behavior change:
-            // - Do NOT auto-logout on non-auth failures (runtime bug, transient network, etc.)
-            // - Only logout when session is truly invalid/expired.
             if (shouldHardSignOut(err)) {
               localStorage.removeItem(AUTH_HINT_KEY);
               await handleSignOut();
@@ -159,6 +163,11 @@ export const useAuth = () => {
       dispatch(setUserOrganization(res.data.organization));
       dispatch(setIsSubscribed(!!res.data.is_subscribed));
       dispatch(setPermissions(res.data.permissions ?? []));
+
+      const orgExt = res.data.organization?.organization?.external_id ?? null;
+      dispatch(setOrgExternalId(orgExt));
+      if (orgExt) setOrgExternalIdStored(orgExt);
+      else clearOrgExternalIdStored();
 
       return res;
     },
@@ -225,8 +234,7 @@ export const useAuth = () => {
     handlePermissionExists,
     handleSignIn,
     handleSignOut,
-
-    // Useful for edge cases: after checkout redirect, portal return, etc.
+    
     syncAuth,
 
     accessToken: getAccess(),

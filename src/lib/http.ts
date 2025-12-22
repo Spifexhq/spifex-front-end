@@ -11,7 +11,7 @@ import axios, {
 
 import { type ApiErrorBody, type ApiSuccess } from "@/models/Api";
 
-import { getAccess, setTokens, clearTokens } from "@/lib/tokens";
+import { getAccess, setTokens, clearTokens, getOrgExternalIdStored } from "@/lib/tokens";
 import "@/lib/netReport";
 import { store } from "@/redux/store";
 
@@ -139,12 +139,18 @@ http.interceptors.request.use(async (cfg) => {
 function readOrgExternalId(): string | undefined {
   const s = store.getState() as unknown as {
     auth?: {
-      orgExternalId?: string;
-      organization?: { organization?: { external_id?: string } };
+      orgExternalId?: string | null;
+      organization?: { organization?: { external_id?: string } } | null;
     };
   };
 
-  return s.auth?.orgExternalId || s.auth?.organization?.organization?.external_id;
+  const fromRedux =
+    s.auth?.orgExternalId ||
+    s.auth?.organization?.organization?.external_id;
+
+  const fromSession = getOrgExternalIdStored();
+
+  return (fromRedux || fromSession || "").trim() || undefined;
 }
 
 http.interceptors.request.use((cfg) => {

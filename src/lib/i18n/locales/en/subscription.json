@@ -83,6 +83,7 @@
     "noRedirect": "Couldn’t redirect to the payment page.",
     "checkout": "Payment initialization failed. Please try again later.",
     "noPortal": "Couldn’t open the customer portal.",
-    "portal": "Portal redirect failed. Please try again later."
+    "portal": "Portal redirect failed. Please try again later.",
+    "ownerOnly": "Only organization owners can manage subscription and billing settings."
   }
 }
