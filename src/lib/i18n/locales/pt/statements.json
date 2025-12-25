@@ -63,7 +63,17 @@
     "deleteFail": "Falha ao eliminar o extrato.",
     "downloadJsonFail": "Falha ao descarregar o JSON.",
     "uploadOk": "Upload concluído.",
-    "deleteOk": "Extrato eliminado com sucesso."
+    "deleteOk": "Extrato eliminado com sucesso.",
+
+    "pdfTooLargeFriendly": "PDF demasiado grande ({{size}}). O máximo permitido é {{max}}.",
+    "imageTooLargeFriendly": "Imagem demasiado grande ({{size}}). O máximo permitido é {{max}}.",
+    "pdfTooManyPagesFriendly": "O PDF tem demasiadas páginas. O máximo permitido é {{max}} páginas.",
+    "networkError": "Erro de rede. Verifique a sua ligação e tente novamente.",
+    "permissionDenied": "Não tem permissões para executar esta ação.",
+    "notFound": "Recurso não encontrado.",
+    "payloadTooLarge": "Upload demasiado grande. Reduza o tamanho do ficheiro e tente novamente.",
+    "rateLimited": "Demasiados pedidos. Aguarde um momento e tente novamente.",
+    "serverError": "Erro do servidor. Tente novamente mais tarde."
   },
   "aria": {
     "uploadTrigger": "Selecionar ficheiros (⌘/Ctrl+U)",

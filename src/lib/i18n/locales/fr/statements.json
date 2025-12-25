@@ -63,7 +63,17 @@
     "deleteFail": "Échec de la suppression du relevé.",
     "downloadJsonFail": "Échec du téléchargement du JSON.",
     "uploadOk": "Import terminé.",
-    "deleteOk": "Relevé supprimé avec succès."
+    "deleteOk": "Relevé supprimé avec succès.",
+
+    "pdfTooLargeFriendly": "PDF trop volumineux ({{size}}). La limite est {{max}}.",
+    "imageTooLargeFriendly": "Image trop volumineuse ({{size}}). La limite est {{max}}.",
+    "pdfTooManyPagesFriendly": "Le PDF contient trop de pages. La limite est {{max}} pages.",
+    "networkError": "Erreur réseau. Vérifiez votre connexion et réessayez.",
+    "permissionDenied": "Vous n’avez pas l’autorisation d’effectuer cette action.",
+    "notFound": "Ressource introuvable.",
+    "payloadTooLarge": "Fichier trop volumineux. Réduisez la taille et réessayez.",
+    "rateLimited": "Trop de requêtes. Patientez un instant et réessayez.",
+    "serverError": "Erreur serveur. Réessayez plus tard."
   },
   "aria": {
     "uploadTrigger": "Sélectionner des fichiers (⌘/Ctrl+U)",

@@ -63,7 +63,17 @@
     "deleteFail": "Failed to delete statement.",
     "downloadJsonFail": "Failed to download JSON.",
     "uploadOk": "Upload completed.",
-    "deleteOk": "Statement deleted successfully."
+    "deleteOk": "Statement deleted successfully.",
+
+    "pdfTooLargeFriendly": "PDF too large ({{size}}). Max allowed is {{max}}.",
+    "imageTooLargeFriendly": "Image too large ({{size}}). Max allowed is {{max}}.",
+    "pdfTooManyPagesFriendly": "PDF has too many pages. Max allowed is {{max}} pages.",
+    "networkError": "Network error. Check your connection and try again.",
+    "permissionDenied": "You do not have permission to perform this action.",
+    "notFound": "Resource not found.",
+    "payloadTooLarge": "Upload too large. Please reduce file size and try again.",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "serverError": "Server error. Please try again later."
   },
   "aria": {
     "uploadTrigger": "Select files (⌘/Ctrl+U)",

@@ -63,7 +63,17 @@
     "deleteFail": "Auszug konnte nicht gelöscht werden.",
     "downloadJsonFail": "JSON konnte nicht heruntergeladen werden.",
     "uploadOk": "Upload abgeschlossen.",
-    "deleteOk": "Auszug erfolgreich gelöscht."
+    "deleteOk": "Auszug erfolgreich gelöscht.",
+
+    "pdfTooLargeFriendly": "PDF ist zu groß ({{size}}). Maximal erlaubt sind {{max}}.",
+    "imageTooLargeFriendly": "Bild ist zu groß ({{size}}). Maximal erlaubt sind {{max}}.",
+    "pdfTooManyPagesFriendly": "PDF hat zu viele Seiten. Maximal erlaubt sind {{max}} Seiten.",
+    "networkError": "Netzwerkfehler. Bitte Verbindung prüfen und erneut versuchen.",
+    "permissionDenied": "Sie haben keine Berechtigung für diese Aktion.",
+    "notFound": "Ressource nicht gefunden.",
+    "payloadTooLarge": "Upload zu groß. Bitte Dateigröße reduzieren und erneut versuchen.",
+    "rateLimited": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen.",
+    "serverError": "Serverfehler. Bitte später erneut versuchen."
   },
   "aria": {
     "uploadTrigger": "Dateien auswählen (⌘/Ctrl+U)",

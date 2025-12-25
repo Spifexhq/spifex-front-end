@@ -4,6 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
@@ -18,7 +21,6 @@ import { useAuth } from "@/api";
 import { useAuthContext } from "src/hooks/useAuth";
 
 import type { BankAccount } from "src/models/enterprise_structure/domain";
-import { useTranslation } from "react-i18next";
 
 /* --------------------------------- Types ---------------------------------- */
 type StatementStatus = "uploaded" | "processing" | "ready" | "failed";
@@ -48,6 +50,19 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
+/* ------------------------------ UI Limits --------------------------------- */
+/**
+ * Keep these aligned with backend:
+ * - STATEMENT_UPLOAD_MAX_PDF_BYTES = 25MB
+ * - STATEMENT_UPLOAD_MAX_IMAGE_BYTES = 10MB
+ * - STATEMENT_PDF_MAX_PAGES = 10
+ */
+const LIMITS = {
+  PDF_MAX_BYTES: 25 * 1024 * 1024,
+  IMAGE_MAX_BYTES: 10 * 1024 * 1024,
+  PDF_MAX_PAGES: 10
+} as const;
+
 /* ------------------------------ Utilities --------------------------------- */
 const formatBytes = (n: number) => {
   if (!Number.isFinite(n)) return "-";
@@ -72,8 +87,136 @@ const isImage = (f: File) =>
   f.name.toLowerCase().endsWith(".jpeg");
 const isSupported = (f: File) => isPDF(f) || isImage(f);
 
+const maxBytesForFile = (f: File) => (isPDF(f) ? LIMITS.PDF_MAX_BYTES : LIMITS.IMAGE_MAX_BYTES);
+const isTooLarge = (f: File) => f.size > maxBytesForFile(f);
+
 const toStatus = (v?: string): "" | StatementStatus =>
   v === "uploaded" || v === "processing" || v === "ready" || v === "failed" ? (v as StatementStatus) : "";
+
+/**
+ * Your API wraps errors like:
+ * { error: { message, detail, fields, status, ... }, meta: { request_id } }
+ *
+ * This extracts a readable string from:
+ * - { error: { fields: { file: ["..."] } } }
+ * - { error: { detail: { file: ["..."] } } }
+ * - { detail: "..." } (plain DRF)
+ * - { file: ["..."] } (plain DRF serializer errors)
+ */
+const extractApiMessage = (data: unknown, depth = 0): string | null => {
+  if (!data || depth > 4) return null;
+
+  if (typeof data === "string") return data.trim() || null;
+
+  if (Array.isArray(data)) {
+    const s = data.find((x) => typeof x === "string" && x.trim());
+    return typeof s === "string" ? s.trim() : null;
+  }
+
+  if (typeof data !== "object") return null;
+  const obj = data as Record<string, unknown>;
+
+  // Envelope
+  if (obj.error && typeof obj.error === "object") {
+    return extractApiMessage(obj.error, depth + 1);
+  }
+
+  // Common message
+  if (typeof obj.message === "string" && obj.message.trim()) return obj.message.trim();
+
+  // Prefer structured field errors
+  if (obj.fields) {
+    const msg = extractApiMessage(obj.fields, depth + 1);
+    if (msg) return msg;
+  }
+  if (obj.detail) {
+    const msg = extractApiMessage(obj.detail, depth + 1);
+    if (msg) return msg;
+  }
+
+  // Plain DRF fallback
+  if (typeof obj.detail === "string" && obj.detail.trim()) return obj.detail.trim();
+
+  // Serializer errors (prefer file)
+  if (obj.file) {
+    const msg = extractApiMessage(obj.file, depth + 1);
+    if (msg) return msg;
+  }
+
+  // First nested string
+  for (const v of Object.values(obj)) {
+    const msg = extractApiMessage(v, depth + 1);
+    if (msg) return msg;
+  }
+
+  return null;
+};
+
+const getHttpStatus = (err: unknown): number | null =>
+  axios.isAxiosError(err) ? (err.response?.status ?? null) : null;
+
+/**
+ * Convert server “bytes” messages into dynamic, user-facing messages using:
+ * - the actual file size the user selected (row.file.size)
+ * - the configured limit (LIMITS.*)
+ */
+const normalizeUploadErrorMessage = (
+  t: TFunction,
+  row: UploadRow,
+  err: unknown,
+  serverMessage: string
+): string => {
+  const status = getHttpStatus(err);
+
+  const lower = (serverMessage || "").toLowerCase();
+
+  const isOversize =
+    status === 413 ||
+    /too\s+large/.test(lower) ||
+    /max\s+allowed\s+is/.test(lower) ||
+    /payload\s+too\s+large/.test(lower);
+
+  if (isOversize) {
+    const max = maxBytesForFile(row.file);
+    if (isPDF(row.file)) {
+      return t("toast.pdfTooLargeFriendly", {
+        size: formatBytes(row.file.size),
+        max: formatBytes(max)
+      });
+    }
+    return t("toast.imageTooLargeFriendly", {
+      size: formatBytes(row.file.size),
+      max: formatBytes(max)
+    });
+  }
+
+  if (/pdf\s+has\s+\d+\s+pages/.test(lower) || /max\s+allowed\s+is\s+\d+/.test(lower)) {
+    return t("toast.pdfTooManyPagesFriendly", { max: LIMITS.PDF_MAX_PAGES });
+  }
+
+  return serverMessage;
+};
+
+const getApiErrorMessage = (t: TFunction, err: unknown, fallbackKey: string): string => {
+  if (axios.isAxiosError(err)) {
+    if (!err.response) return t("toast.networkError", { defaultValue: t(fallbackKey) });
+
+    const extracted = extractApiMessage(err.response.data);
+    if (extracted) return extracted;
+
+    const status = err.response.status;
+    if (status === 403) return t("toast.permissionDenied", { defaultValue: t(fallbackKey) });
+    if (status === 404) return t("toast.notFound", { defaultValue: t(fallbackKey) });
+    if (status === 429) return t("toast.rateLimited", { defaultValue: t(fallbackKey) });
+    if (status === 413) return t("toast.payloadTooLarge", { defaultValue: t(fallbackKey) });
+    if (status >= 500) return t("toast.serverError", { defaultValue: t(fallbackKey) });
+
+    return t(fallbackKey);
+  }
+
+  if (err instanceof Error && err.message) return err.message;
+  return t(fallbackKey);
+};
 
 /* ----------------------- In-memory guard for fetches ---------------------- */
 let INFLIGHT_FETCH = false;
@@ -150,8 +293,9 @@ const Statements: React.FC = () => {
     try {
       const { data } = await api.getBanks();
       setBanks(data?.results ?? []);
-    } catch {
-      setSnack({ message: t("toast.banksFetchError"), severity: "error" });
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(t, err, "toast.banksFetchError");
+      setSnack({ message: msg, severity: "error" });
     }
   }, [t]);
 
@@ -173,8 +317,9 @@ const Statements: React.FC = () => {
           bank: bankFilter || undefined
         });
         setStatements(data?.results ?? []);
-      } catch {
-        setSnack({ message: t("toast.listFetchError"), severity: "error" });
+      } catch (err: unknown) {
+        const msg = getApiErrorMessage(t, err, "toast.listFetchError");
+        setSnack({ message: msg, severity: "error" });
       } finally {
         setLoading(false);
         INFLIGHT_FETCH = false;
@@ -211,8 +356,17 @@ const Statements: React.FC = () => {
   }, [statements, refreshStatements, isAccessLocked]);
 
   /* ------------------------------- Upload --------------------------------- */
+  const buildTooLargeRowError = (file: File) => {
+    const max = maxBytesForFile(file);
+    if (isPDF(file)) {
+      return t("toast.pdfTooLargeFriendly", { size: formatBytes(file.size), max: formatBytes(max) });
+    }
+    return t("toast.imageTooLargeFriendly", { size: formatBytes(file.size), max: formatBytes(max) });
+  };
+
   const addFiles = (files: FileList | File[]) => {
     const rows: UploadRow[] = [];
+
     Array.from(files).forEach((file) => {
       if (!isSupported(file)) {
         setSnack({
@@ -221,9 +375,20 @@ const Statements: React.FC = () => {
         });
         return;
       }
+
       const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random().toString(36).slice(2, 8)}`;
+
+      // Client-side size gate (dynamic size + configured limit)
+      if (isTooLarge(file)) {
+        const msg = buildTooLargeRowError(file);
+        rows.push({ id, file, progress: 0, bankAccount: null, error: msg });
+        setSnack({ message: msg, severity: "error" });
+        return;
+      }
+
       rows.push({ id, file, progress: 0, bankAccount: null });
     });
+
     if (rows.length) setQueue((prev) => [...rows, ...prev]);
   };
 
@@ -246,6 +411,20 @@ const Statements: React.FC = () => {
   const removeFromQueue = (id: string) => setQueue((prev) => prev.filter((r) => r.id !== id));
 
   const uploadOne = async (row: UploadRow) => {
+    // If already flagged invalid (e.g. too large), don’t even hit the API.
+    if (row.error) {
+      setSnack({ message: row.error, severity: "error" });
+      return;
+    }
+
+    // Extra safety (in case rows were created elsewhere)
+    if (isTooLarge(row.file)) {
+      const msg = buildTooLargeRowError(row.file);
+      setQueue((prev) => prev.map((r) => (r.id === row.id ? { ...r, error: msg } : r)));
+      setSnack({ message: msg, severity: "error" });
+      return;
+    }
+
     try {
       const form = new FormData();
       form.append("file", row.file);
@@ -260,11 +439,9 @@ const Statements: React.FC = () => {
       await refreshStatements({ background: true });
       setSnack({ message: t("toast.uploadOk"), severity: "success" });
     } catch (err: unknown) {
-      let msg = t("toast.uploadFail");
-      if (err && typeof err === "object") {
-        const maybe = err as { response?: { data?: { detail?: string } }; message?: string };
-        msg = maybe.response?.data?.detail ?? maybe.message ?? msg;
-      }
+      const raw = getApiErrorMessage(t, err, "toast.uploadFail");
+      const msg = normalizeUploadErrorMessage(t, row, err, raw);
+
       setQueue((prev) => prev.map((r) => (r.id === row.id ? { ...r, error: msg } : r)));
       setSnack({ message: msg, severity: "error" });
     } finally {
@@ -288,8 +465,9 @@ const Statements: React.FC = () => {
       await api.deleteStatement(deleteTargetId);
       await refreshStatements({ background: true });
       setSnack({ message: t("toast.deleteOk"), severity: "success" });
-    } catch {
-      setSnack({ message: t("toast.deleteFail"), severity: "error" });
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(t, err, "toast.deleteFail");
+      setSnack({ message: msg, severity: "error" });
     } finally {
       setConfirmBusy(false);
       setConfirmOpen(false);
@@ -302,16 +480,18 @@ const Statements: React.FC = () => {
       await api.triggerStatementAnalysis(id);
       setSnack({ message: t("toast.analysisStarted"), severity: "info" });
       await refreshStatements({ background: true });
-    } catch {
-      setSnack({ message: t("toast.analysisFail"), severity: "error" });
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(t, err, "toast.analysisFail");
+      setSnack({ message: msg, severity: "error" });
     }
   };
 
   const downloadJson = async (id: string) => {
     try {
       await api.downloadStatementJson(id);
-    } catch {
-      setSnack({ message: t("toast.downloadJsonFail"), severity: "error" });
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(t, err, "toast.downloadJsonFail");
+      setSnack({ message: msg, severity: "error" });
     }
   };
 
@@ -485,11 +665,12 @@ const Statements: React.FC = () => {
                             singleSelect
                             hideCheckboxes
                             buttonLabel={t("row.accountButton")}
+                            disabled={globalBusy || !!row.error}
                           />
                         </div>
 
                         <div className="flex gap-2">
-                          <Button variant="outline" onClick={() => uploadOne(row)} disabled={globalBusy}>
+                          <Button variant="outline" onClick={() => uploadOne(row)} disabled={globalBusy || !!row.error}>
                             {t("btn.send")}
                           </Button>
                           <Button variant="cancel" onClick={() => removeFromQueue(row.id)} disabled={globalBusy}>
@@ -687,7 +868,14 @@ const Statements: React.FC = () => {
                 <p className="mt-2 text-[13px] text-gray-700">{t("paywall.body")}</p>
 
                 <div className="mt-4 flex gap-2">
-                  <Button onClick={() => navigate("/settings/subscription-management", { replace: true, state: { from: location.pathname } })}>
+                  <Button
+                    onClick={() =>
+                      navigate("/settings/subscription-management", {
+                        replace: true,
+                        state: { from: location.pathname }
+                      })
+                    }
+                  >
                     {t("paywall.cta")}
                   </Button>
                   <Button variant="outline" onClick={() => navigate(-1)}>
