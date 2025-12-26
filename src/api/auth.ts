@@ -16,20 +16,22 @@ import {
   setOrgExternalId,
 } from "@/redux";
 
-import { getAccess, setTokens, clearTokens, setOrgExternalIdStored, clearOrgExternalIdStored } from "@/lib/tokens";
 import {
-  clearHttpCaches,
-  AUTH_SYNC_EVENT,
-  SUBSCRIPTION_BLOCKED_EVENT,
-} from "@/lib/http";
+  getAccess,
+  setTokens,
+  clearTokens,
+  setOrgExternalIdStored,
+  clearOrgExternalIdStored,
+} from "@/lib/tokens";
+
+import { clearHttpCaches, AUTH_SYNC_EVENT, SUBSCRIPTION_BLOCKED_EVENT } from "@/lib/http";
 
 import type { ApiErrorBody } from "@/models/Api";
 
 const AUTH_HINT_KEY = "auth_status";
 
-// conservative default: avoids storms, but keeps state fresh enough after portal actions
+// conservative default: avoids storms in case syncAuth is called multiple times
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
-const AUTH_SYNC_POLL_MS = 120_000;
 
 export const handleGetAccessToken = () => getAccess();
 
@@ -41,7 +43,6 @@ function isApiErrorBody(err: unknown): err is ApiErrorBody {
 }
 
 function shouldHardSignOut(err: unknown): boolean {
-  // Only sign out when it is clearly an auth/session problem.
   if (isApiErrorBody(err)) {
     if (err.status === 401) return true;
     if (err.code === "token_not_valid" || err.code === "authentication_failed") return true;
@@ -49,7 +50,6 @@ function shouldHardSignOut(err: unknown): boolean {
   }
 
   if (err instanceof Error) {
-    // Covers axios-wrapped errors we rethrow as Error("401 ...") etc.
     if (/(^|\s)401(\s|$)/.test(err.message)) return true;
     if (/refresh-failed/i.test(err.message)) return true;
   }
@@ -83,22 +83,21 @@ export const useAuth = () => {
   }, [clearClientSession]);
 
   /**
-   * Single-flight auth sync that:
-   * - refreshes subscription/permissions/org snapshot
-   * - throttles to avoid storms
-   * - only signs out on real auth/session errors (401/token invalid)
+   * syncAuth is now NOT a "keep fresh" mechanism.
+   * It only hits getUser() when needed:
+   * - bootstrap (auth.user == null)
+   * - explicit force (e.g., user clicked "Refresh account", or post-checkout return page)
    */
   const syncAuth = useCallback(
     async (opts?: { force?: boolean; reason?: string }) => {
       const shouldBeLoggedIn = localStorage.getItem(AUTH_HINT_KEY) === "active";
       if (!shouldBeLoggedIn) return;
 
+      const mustFetch = !!opts?.force || auth.user == null;
+      if (!mustFetch) return;
+
       const now = Date.now();
-      const force = !!opts?.force;
-
-      if (!force && now - lastSyncAt.current < AUTH_SYNC_MIN_GAP_MS) return;
-
-      // Set early to throttle storms (even if request fails)
+      if (!opts?.force && now - lastSyncAt.current < AUTH_SYNC_MIN_GAP_MS) return;
       lastSyncAt.current = now;
 
       if (!syncInFlight.current) {
@@ -134,13 +133,12 @@ export const useAuth = () => {
 
       return syncInFlight.current;
     },
-    [dispatch, handleSignOut],
+    [auth.user, dispatch, handleSignOut],
   );
 
   /**
-   * Initializer used across the app.
-   * - If user is missing, force a sync (session restoration).
-   * - Otherwise, do a throttled refresh.
+   * Initializer:
+   * Only bootstraps user once (if missing). No background refresh.
    */
   const handleInitUser = useCallback(async () => {
     await syncAuth({
@@ -184,45 +182,37 @@ export const useAuth = () => {
   );
 
   useEffect(() => {
-    // Boot sync: covers “subscription changed while tab was closed”
-    void syncAuth({ reason: "boot" });
+    // One-time bootstrap only
+    void handleInitUser();
 
-    const onAuthSync = () => void syncAuth({ reason: "event_auth_sync" });
-    const onSubscriptionBlocked = () => void syncAuth({ force: true, reason: "event_subscription_blocked" });
+    // Token refresh events should NOT cause getUser().
+    // Only react to refresh failure to hard sign out.
+    const onAuthSync = (e: Event) => {
+      const ce = e as CustomEvent;
+      const reason = (ce.detail as { reason?: string } | undefined)?.reason;
+
+      if (reason === "refresh_failed") {
+        void handleSignOut();
+      }
+    };
+
+    // If backend blocks due to subscription, update local UI state.
+    // Do NOT call getUser() here.
+    const onSubscriptionBlocked = () => {
+      // idempotent
+      dispatch(setIsSubscribed(false));
+      // Optional: also clear permissions to avoid optimistic UI gates
+      // dispatch(setPermissions([]));
+    };
 
     window.addEventListener(AUTH_SYNC_EVENT, onAuthSync as EventListener);
     window.addEventListener(SUBSCRIPTION_BLOCKED_EVENT, onSubscriptionBlocked as EventListener);
 
-    const onFocus = () => void syncAuth({ reason: "focus" });
-    window.addEventListener("focus", onFocus);
-
-    const onVis = () => {
-      if (!document.hidden) void syncAuth({ reason: "visibility" });
-    };
-    document.addEventListener("visibilitychange", onVis);
-
-    // BFCache / "back from checkout" reliability
-    const onPageShow = (e: PageTransitionEvent) => {
-      // If the page was restored from bfcache, it may have stale auth/subscription state.
-      if (e.persisted) void syncAuth({ force: true, reason: "pageshow_bfcache" });
-      else void syncAuth({ reason: "pageshow" });
-    };
-    window.addEventListener("pageshow", onPageShow);
-
-    const poll = window.setInterval(() => {
-      if (document.hidden) return;
-      void syncAuth({ reason: "poll" });
-    }, AUTH_SYNC_POLL_MS);
-
     return () => {
       window.removeEventListener(AUTH_SYNC_EVENT, onAuthSync as EventListener);
       window.removeEventListener(SUBSCRIPTION_BLOCKED_EVENT, onSubscriptionBlocked as EventListener);
-      window.removeEventListener("focus", onFocus);
-      window.removeEventListener("pageshow", onPageShow);
-      document.removeEventListener("visibilitychange", onVis);
-      window.clearInterval(poll);
     };
-  }, [syncAuth]);
+  }, [dispatch, handleInitUser, handleSignOut]);
 
   return {
     user: auth.user,
@@ -234,7 +224,9 @@ export const useAuth = () => {
     handlePermissionExists,
     handleSignIn,
     handleSignOut,
-    
+
+    // Keep exposed; now it will NOT spam getUser().
+    // Only calls getUser() when auth.user is null or force=true.
     syncAuth,
 
     accessToken: getAccess(),

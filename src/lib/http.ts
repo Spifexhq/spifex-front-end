@@ -273,7 +273,6 @@ async function doRefresh(): Promise<void> {
   }
 
   setTokens(tokens.access);
-  emitWindowEvent(AUTH_SYNC_EVENT, { reason: "token_refreshed" });
 }
 
 function parseRetryAfter(headerValue: unknown): number {
