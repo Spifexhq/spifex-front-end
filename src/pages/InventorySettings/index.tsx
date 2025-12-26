@@ -156,7 +156,6 @@ const InventorySettings: React.FC = () => {
       INFLIGHT_FETCH = true;
       try {
         const { data, meta } = await api.getInventoryItems({
-          page_size: 100,
           cursor,
           q: appliedQuery || undefined,
         });

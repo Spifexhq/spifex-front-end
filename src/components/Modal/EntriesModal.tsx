@@ -335,15 +335,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   /* --------------------------- Fetch helpers --------------------------- */
   const fetchAllLedgerAccounts = useCallback(async () => {
-    const all = await fetchAllCursor<GLAccount>(api.getLedgerAccounts, 500);
+    const all = await fetchAllCursor<GLAccount>(api.getLedgerAccounts);
     const wanted = type === "credit" ? "credit" : "debit";
     return all.filter((a) => (a?.default_tx || "").toLowerCase() === wanted);
   }, [type]);
 
-  const fetchAllDepartments = useCallback(() => fetchAllCursor<Department>(api.getDepartments, 500), []);
-  const fetchAllProjects = useCallback(() => fetchAllCursor<Project>(api.getProjects, 500), []);
-  const fetchAllInventoryItems = useCallback(() => fetchAllCursor<InventoryItem>(api.getInventoryOptions, 500), []);
-  const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions, 500), []);
+  const fetchAllDepartments = useCallback(() => fetchAllCursor<Department>(api.getDepartmentsOptions), []);
+  const fetchAllProjects = useCallback(() => fetchAllCursor<Project>(api.getProjectsOptions), []);
+  const fetchAllInventoryItems = useCallback(() => fetchAllCursor<InventoryItem>(api.getInventoryOptions), []);
+  const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions), []);
 
   /* --------------------------- Load sources on open --------------------------- */
   useEffect(() => {
@@ -368,7 +368,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         setInventoryItems(invs);
         setEntities(ents);
       } catch (e) {
-        console.error("Erro carregando fontes do modal:", e);
+        console.error("Error loading modal sources:", e);
       }
 
       // default due date for new entry

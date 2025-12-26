@@ -213,7 +213,6 @@ const EntitySettings: React.FC = () => {
       INFLIGHT_FETCH = true;
       try {
         const { data, meta } = await api.getEntitiesTable({
-          page_size: 100,
           cursor,
           q: appliedQuery || undefined,
         });

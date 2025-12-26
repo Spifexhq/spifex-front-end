@@ -1,10 +1,9 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/DepartmentSettings.tsx
- * ...
  * - i18n: namespace "departmentSettings"
  * -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import Input from "src/components/ui/Input";
@@ -30,9 +29,6 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* ----------------------- In-memory guard for fetches ---------------------- */
-let INFLIGHT_FETCH = false;
-
 /* ------------------------------ Modal skeleton ---------------------------- */
 const ModalSkeleton: React.FC = () => (
   <div className="space-y-3 py-1">
@@ -49,7 +45,14 @@ const ModalSkeleton: React.FC = () => (
 function getInitials() {
   return "DP";
 }
-function sortByCodeThenName(a: Department, b: Department) {
+
+/**
+ * IMPORTANT:
+ * Cursor pagination relies on backend ordering.
+ * Avoid re-sorting server pages on the client, or you risk perceived "jumps".
+ * Only sort local overlay items if needed.
+ */
+function sortOverlayByCodeThenName(a: Department, b: Department) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
   if (ca && cb && ca !== cb) return ca.localeCompare(cb, "en", { numeric: true });
@@ -82,6 +85,7 @@ const Row = ({
         {dept.name || t("tags.noName")}
       </p>
     </div>
+
     {canEdit && (
       <div className="flex gap-2 shrink-0">
         <Button variant="outline" onClick={() => onEdit(dept)} disabled={busy}>
@@ -146,22 +150,29 @@ const DepartmentSettings: React.FC = () => {
   const [appliedQuery, setAppliedQuery] = useState("");
 
   /* --------------------------- Pagination (reusable) ----------------------- */
+  const inflightRef = useRef(false);
+
   const fetchDepartmentsPage = useCallback(
     async (cursor?: string) => {
-      if (INFLIGHT_FETCH) return { items: [] as Department[], nextCursor: undefined as string | undefined };
-      INFLIGHT_FETCH = true;
+      if (inflightRef.current) {
+        return { items: [] as Department[], nextCursor: undefined as string | undefined };
+      }
+
+      inflightRef.current = true;
       try {
         const { data, meta } = await api.getDepartments({
-          page_size: 100,
           cursor,
           q: appliedQuery || undefined,
         });
-        const items = (data.results ?? []).slice().sort(sortByCodeThenName) as Department[];
-        const nextUrl = meta?.pagination?.next ?? data.next ?? null;
+
+        const items = (data.results ?? []) as Department[];
+
+        const nextUrl = meta?.pagination?.next ?? (data as unknown as { next?: string | null }).next ?? null;
         const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+
         return { items, nextCursor };
       } finally {
-        INFLIGHT_FETCH = false;
+        inflightRef.current = false;
       }
     },
     [appliedQuery]
@@ -188,13 +199,21 @@ const DepartmentSettings: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // keep overlay consistent with current query
     setAdded((prev) => prev.filter((d) => matchesQuery(d, appliedQuery)));
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
-    const addedFiltered = added.filter((d) => matchesQuery(d, appliedQuery));
+    const addedFiltered = added
+      .filter((d) => matchesQuery(d, appliedQuery))
+      .slice()
+      .sort(sortOverlayByCodeThenName);
+
     const addedIds = new Set(addedFiltered.map((d) => d.id));
+
+    // pager.items is already server-ordered; do NOT sort it again
     const base = pager.items.filter((d) => !deletedIds.has(d.id) && !addedIds.has(d.id));
+
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
@@ -251,6 +270,7 @@ const DepartmentSettings: React.FC = () => {
 
   const submitDepartment = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const payload = {
       name: formData.name.trim(),
       code: formData.code,
@@ -265,6 +285,7 @@ const DepartmentSettings: React.FC = () => {
       } else if (editingDept) {
         await api.editDepartment(editingDept.id, payload);
       }
+
       await pager.refresh();
       closeModal();
       setSnack({ message: t("toast.saveOk"), severity: "success" });
@@ -281,14 +302,18 @@ const DepartmentSettings: React.FC = () => {
   /* ---------- ConfirmToast delete ----------------------------------------- */
   const requestDeleteDepartment = (dept: Department) => {
     const name = dept.name ?? "";
+
     setConfirmText(t("confirm.deleteTitle", { name }));
     setConfirmAction(() => async () => {
       setDeleteTargetId(dept.id);
+
       try {
         setDeletedIds((prev) => new Set(prev).add(dept.id));
         await api.deleteDepartment(dept.id);
+
         await pager.refresh();
         setAdded((prev) => prev.filter((d) => d.id !== dept.id));
+
         setSnack({ message: t("toast.deleteOk"), severity: "info" });
       } catch (err) {
         setDeletedIds((prev) => {
@@ -296,6 +321,7 @@ const DepartmentSettings: React.FC = () => {
           next.delete(dept.id);
           return next;
         });
+
         setSnack({
           message: err instanceof Error ? err.message : t("errors.deleteFailed"),
           severity: "error",
@@ -306,6 +332,7 @@ const DepartmentSettings: React.FC = () => {
         setConfirmBusy(false);
       }
     });
+
     setConfirmOpen(true);
   };
 
@@ -455,7 +482,11 @@ const DepartmentSettings: React.FC = () => {
 
         {modalOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl" role="dialog" aria-modal="true">
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {modalMode === "create" ? t("modal.addTitle") : t("modal.editTitle")}
@@ -491,7 +522,11 @@ const DepartmentSettings: React.FC = () => {
                       disabled={isSubmitting || isDetailLoading}
                     />
                     <label className="flex items-center gap-2 text-sm pt-5">
-                      <Checkbox checked={formData.is_active} onChange={handleActive} disabled={isSubmitting || isDetailLoading} />
+                      <Checkbox
+                        checked={formData.is_active}
+                        onChange={handleActive}
+                        disabled={isSubmitting || isDetailLoading}
+                      />
                       {t("modal.active")}
                     </label>
                   </div>

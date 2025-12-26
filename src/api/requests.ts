@@ -628,9 +628,17 @@ export const api = {
     request<GetDocumentType>(`enterprise_structure/document-types/${ids.join(',')}`, "GET"),
 
   /* --- Departments --- */
-  getDepartments: (params?: { page_size?: number; cursor?: string; q?: string; active?: "true" | "false" }) => {
+  getDepartments: (params?: { cursor?: string; q?: string; active?: "true" | "false" }) => {
     return request<GetDepartmentsResponse>(
       `departments/`,
+      "GET",
+      params
+    );
+  },
+
+  getDepartmentsOptions: (params?: { cursor?: string; q?: string; active?: "true" | "false" }) => {
+    return request<GetDepartmentsResponse>(
+      `departments/options/`,
       "GET",
       params
     );
@@ -675,12 +683,12 @@ export const api = {
   },
 
   /* --- Projects --- */
-  getProjects: (params?: { cursor?: string; page_size?: number; active?: "true" | "false"; type?: string; q?: string }) => {
-    return request<GetProjectsResponse>(
-      `projects/`,
-      "GET",
-      params
-    );
+  getProjects: (params?: { cursor?: string; active?: "true" | "false"; type?: string; q?: string }) => {
+    return request<GetProjectsResponse>(`projects/`, "GET", params);
+  },
+
+  getProjectsOptions: (params?: { cursor?: string; active?: "true" | "false"; type?: string; q?: string }) => {
+    return request<GetProjectsResponse>(`projects/options/`, "GET", params);
   },
 
   getProjectsBatch: (ids: string[]) => {
@@ -724,11 +732,8 @@ export const api = {
   /* --- Inventory --- */
   getInventoryItems: (params?: {
     cursor?: string;
-    page_size?: number;
     active?: "true" | "false";
     q?: string;
-    min_qoh?: string | number;
-    max_qoh?: string | number;
   }) => {
     return request<GetInventoryItemsResponse>(
       `inventory/items/`,
@@ -739,7 +744,6 @@ export const api = {
 
   getInventoryOptions: (params?: {
     cursor?: string;
-    page_size?: number;
     active?: "true" | "false";
     q?: string;
   }) => {
@@ -791,7 +795,6 @@ export const api = {
   /* --- Entities --- */
   getEntities: (params?: {
     cursor?: string;
-    page_size?: number;
     active?: "true" | "false";
     type?: string; // client | supplier | employee ...
     q?: string;
@@ -805,7 +808,6 @@ export const api = {
 
   getEntitiesTable: (params?: {
     cursor?: string;
-    page_size?: number;
     active?: "true" | "false";
     type?: string;
     q?: string;
@@ -819,7 +821,6 @@ export const api = {
 
   getEntitiesOptions: (params?: {
     cursor?: string;
-    page_size?: number;
     active?: "true" | "false";
     type?: string;
     q?: string;
