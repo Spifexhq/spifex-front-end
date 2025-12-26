@@ -11,7 +11,6 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 
 import { api } from "src/api/requests";
-import type { GetLedgerAccountsResponse } from "src/models/enterprise_structure/dto";
 
 import LedgerAccountsGate from "./LedgerAccountsGate";
 import LedgerAccountSettings from "./index";
@@ -40,12 +39,8 @@ const LedgerAccountsRouter: React.FC = () => {
 
     (async () => {
       try {
-        const { data } = (await api.getLedgerAccounts({ page_size: 1 })) as {
-          data: GetLedgerAccountsResponse;
-        };
-
-        const list = data?.results ?? [];
-        const any = Array.isArray(list) && list.length > 0;
+        const { data } = await api.getLedgerAccountsExists();
+        const any = !!data?.exists;
 
         if (!cancelled) setView(any ? "settings" : "gate");
       } catch {

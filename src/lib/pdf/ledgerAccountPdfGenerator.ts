@@ -145,7 +145,6 @@ export class LedgerAccountPdfGenerator {
     do {
       const { data } = (await api.getLedgerAccounts({
         cursor,
-        page_size: 200,
       })) as { data: GetLedgerAccountsResponse };
 
       const items = (data?.results ?? []).slice().sort(sortByCodeThenName);

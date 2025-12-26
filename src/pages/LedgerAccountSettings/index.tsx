@@ -219,7 +219,6 @@ const LedgerAccountSettings: React.FC = () => {
     INFLIGHT_FETCH = true;
     try {
       const { data, meta } = (await api.getLedgerAccounts({
-        page_size: 120,
         cursor,
       })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
 
@@ -436,14 +435,8 @@ const LedgerAccountSettings: React.FC = () => {
 
         await api.deleteLedgerAccount(id);
 
-        let anyLeft = true;
-        try {
-          const { data } = (await api.getLedgerAccounts({ page_size: 1 })) as { data: GetLedgerAccountsResponse };
-          const list = data?.results ?? [];
-          anyLeft = Array.isArray(list) && list.length > 0;
-        } catch {
-          anyLeft = true;
-        }
+        const { data: existsRes } = await api.getLedgerAccountsExists();
+        const anyLeft = !!existsRes?.exists;
 
         if (!anyLeft) {
           setAdded([]);

@@ -181,7 +181,7 @@ function useLedgerAccounts() {
         let cursor: string | undefined;
 
         do {
-          const res = await api.getLedgerAccounts({ page_size: 200, cursor });
+          const res = await api.getLedgerAccounts({ cursor });
           const page = (res?.data as CursorPage<GLAccountLike> | undefined) ?? {};
           all.push(...(page.results ?? []));
           cursor = page.next ? String(page.next) : undefined;

@@ -467,7 +467,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           : undefined;
 
       const base: GetEntryRequest = {
-        page_size: 100,
         date_from: f?.start_date || undefined,
         date_to: f?.end_date || undefined,
         description: f?.description || undefined,

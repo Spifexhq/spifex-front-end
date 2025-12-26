@@ -3,7 +3,7 @@ import { GLAccount } from "../domain/GLAccount";
 
 export interface GetLedgerAccountsRequest {
   active?: "true" | "false";
-  category?: string | number; // aceita label OU número
+  category?: string | number;
   q?: string;
   page_size?: number;
   cursor?: string;
@@ -21,7 +21,7 @@ export interface GetLedgerAccountsResponse extends CursorLinks {
 export type AddGLAccountRequest = {
   account: string;
   code?: string;
-  category: 1 | 2 | 3 | 4; // número fixo
+  category: 1 | 2 | 3 | 4;
   subcategory?: string;
   is_active?: boolean;
 };

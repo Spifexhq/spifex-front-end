@@ -518,6 +518,13 @@ export const api = {
     );
   },
 
+  getLedgerAccountsExists: () => {
+    return request<{ exists: boolean }>(
+      `ledger/accounts/exists/`,
+      "GET"
+    );
+  },
+
   importLedgerAccounts: (formData: FormData) => {
     return request<{
       created_count: number;
@@ -560,7 +567,6 @@ export const api = {
     URL.revokeObjectURL(url);
   },
 
-  // Download XLSX template as a file (no page navigation)
   downloadLedgerXlsxTemplate: async () => {
     const res = await http.get(
       `ledger/accounts/template/xlsx/`,

@@ -415,7 +415,6 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
       f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
 
     const base: GetSettledEntryRequest = {
-      page_size: 100,
       value_from: f?.start_date || undefined,
       value_to: f?.end_date || undefined,
       bank,
