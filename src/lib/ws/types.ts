@@ -7,6 +7,7 @@ export type LiveSyncEventType =
   | "subscription.deleted"
   | "payment.failed"
   | "payment.succeeded"
+  | "permissions.updated"
   | "profile.updated"
   | "notification.created"
   | "admin.action";

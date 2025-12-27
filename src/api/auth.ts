@@ -1,7 +1,4 @@
-/* -----------------------------------------------------------------------------
- * File: src/api/auth.ts
- * ---------------------------------------------------------------------------- */
-
+// src/api/auth.ts
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
@@ -30,7 +27,6 @@ import type { ApiErrorBody } from "@/models/Api";
 const AUTH_HINT_KEY = "auth_status";
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
 
-// Guard: if the hook is mounted multiple times, bootstrap /auth/profile/ once.
 let AUTH_BOOTSTRAP_STARTED = false;
 
 export const handleGetAccessToken = () => getAccess();
@@ -41,8 +37,7 @@ function emitAuthSync(reason: string) {
 }
 
 function isApiErrorBody(err: unknown): err is ApiErrorBody {
-  if (typeof err !== "object" || err == null) return false;
-  return typeof (err as Record<string, unknown>).code === "string";
+  return typeof err === "object" && err != null && typeof (err as Record<string, unknown>).code === "string";
 }
 
 function shouldHardSignOut(err: unknown): boolean {
@@ -78,6 +73,8 @@ export const useAuth = () => {
     clearOrgExternalIdStored();
     clearHttpCaches();
     localStorage.removeItem(AUTH_HINT_KEY);
+
+    AUTH_BOOTSTRAP_STARTED = false;
     emitAuthSync("signed_out");
   }, [dispatch]);
 
@@ -91,14 +88,14 @@ export const useAuth = () => {
     }
   }, [clearClientSession]);
 
-  const applyProfile = useCallback(
+  const applyGetUserResponse = useCallback(
     (res: Awaited<ReturnType<typeof api.getUser>>) => {
       dispatch(setUser(res.data.user));
       dispatch(setUserOrganization(res.data.organization));
-      dispatch(setIsSubscribed(!!res.data.is_subscribed));
+      dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
 
-      const perms = res.data.permissions ?? res.data.organization?.permissions ?? [];
-      dispatch(setPermissions(perms));
+      // Permissions are USER-scoped in this system:
+      dispatch(setPermissions(res.data.permissions ?? []));
 
       const orgExt = res.data.organization?.organization?.external_id ?? null;
       dispatch(setOrgExternalId(orgExt));
@@ -110,19 +107,15 @@ export const useAuth = () => {
     [dispatch],
   );
 
-  /**
-   * Hits /auth/profile/ only when:
-   * - force=true, OR
-   * - auth.user is missing (bootstrap / after hard reset)
-   */
   const syncAuth = useCallback(
     async (opts?: { force?: boolean; reason?: string }) => {
-      if (localStorage.getItem(AUTH_HINT_KEY) !== "active") return;
+      const shouldBeLoggedIn = localStorage.getItem(AUTH_HINT_KEY) === "active";
+      if (!shouldBeLoggedIn) return;
 
-      const token = (getAccess() || "").trim();
+      const token = getAccess();
       if (!token) return;
 
-      const mustFetch = !!opts?.force || authUserRef.current == null;
+      const mustFetch = Boolean(opts?.force) || authUserRef.current == null;
       if (!mustFetch) return;
 
       const now = Date.now();
@@ -133,9 +126,8 @@ export const useAuth = () => {
         syncInFlight.current = (async () => {
           try {
             const res = await api.getUser();
-            applyProfile(res);
+            applyGetUserResponse(res);
           } catch (err) {
-            // Keep logs minimal; caller context is in opts.reason
             console.warn("Auth sync failed:", opts?.reason || "unknown", err);
 
             if (shouldHardSignOut(err)) {
@@ -150,7 +142,7 @@ export const useAuth = () => {
 
       return syncInFlight.current;
     },
-    [applyProfile, handleSignOut],
+    [applyGetUserResponse, handleSignOut],
   );
 
   const handleInitUser = useCallback(async () => {
@@ -161,7 +153,7 @@ export const useAuth = () => {
     async (email: string, password: string) => {
       const res = await api.signIn({ email, password });
 
-      const access = (res.data.access || "").trim();
+      const access = res.data.access;
       if (!access) throw new Error("Missing access token");
 
       setTokens(access);
@@ -169,7 +161,7 @@ export const useAuth = () => {
 
       dispatch(setUser(res.data.user));
       dispatch(setUserOrganization(res.data.organization));
-      dispatch(setIsSubscribed(!!res.data.is_subscribed));
+      dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
       dispatch(setPermissions(res.data.permissions ?? []));
 
       const orgExt = res.data.organization?.organization?.external_id ?? null;
@@ -186,9 +178,9 @@ export const useAuth = () => {
   const handlePermissionExists = useCallback(
     (code: string) => {
       if (auth.organization?.is_owner) return true;
-      return (auth.organization?.permissions ?? []).includes(code);
+      return (auth.permissions || []).includes(code);
     },
-    [auth.organization],
+    [auth.organization?.is_owner, auth.permissions],
   );
 
   useEffect(() => {
@@ -204,7 +196,10 @@ export const useAuth = () => {
     const onAuthSync = (e: Event) => {
       const ce = e as CustomEvent;
       const reason = (ce.detail as { reason?: string } | undefined)?.reason;
-      if (reason === "refresh_failed") void handleSignOut();
+
+      if (reason === "refresh_failed") {
+        void handleSignOut();
+      }
     };
 
     const onSubscriptionBlocked = () => {

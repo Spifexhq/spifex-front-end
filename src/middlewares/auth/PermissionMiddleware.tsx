@@ -1,8 +1,11 @@
 // src/middlewares/auth/PermissionMiddleware.tsx
-import { ReactNode, useEffect, useMemo, useRef } from "react";
+import { type ReactNode, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/api";
+import { useSelector } from "react-redux";
+
+import type { RootState } from "@/redux/store";
+import { getAccess } from "@/lib/tokens";
 
 type PermissionBehavior = "hide" | "redirect" | "lock";
 
@@ -22,29 +25,31 @@ export const PermissionMiddleware = ({
   requireAll = false,
 }: Props) => {
   const { t } = useTranslation(["permissionMiddleware"]);
-
   const navigate = useNavigate();
   const location = useLocation();
-  const { handlePermissionExists, user, accessToken } = useAuth();
 
+  const user = useSelector((s: RootState) => s.auth.user);
+  const isOwner = useSelector((s: RootState) => s.auth.organization?.is_owner ?? false);
+  const permissions = useSelector((s: RootState) => s.auth.permissions);
+
+  const accessToken = getAccess();
   const authReady = !accessToken || !!user;
 
   const hasPermission = useMemo(() => {
-    if (!authReady) return false;
-    if (!user) return false;
+    if (!authReady || !user) return false;
+    if (isOwner) return true;
 
-    const perms = Array.isArray(codeName) ? codeName : [codeName];
+    const required = Array.isArray(codeName) ? codeName : [codeName];
     return requireAll
-      ? perms.every((cn) => handlePermissionExists(cn))
-      : perms.some((cn) => handlePermissionExists(cn));
-  }, [authReady, user, codeName, requireAll, handlePermissionExists]);
+      ? required.every((cn) => permissions.includes(cn))
+      : required.some((cn) => permissions.includes(cn));
+  }, [authReady, user, isOwner, codeName, requireAll, permissions]);
 
   const didNavigate = useRef(false);
 
   useEffect(() => {
     if (!authReady) return;
     if (hasPermission) return;
-
     if (behavior !== "redirect") return;
 
     const target = redirectTo ?? "/";
@@ -66,12 +71,8 @@ export const PermissionMiddleware = ({
               src="src/assets/Images/status/lock.svg"
               className="my-6 h-52"
             />
-            <h1 className="text-lg font-semibold">
-              {t("permissionMiddleware:lock.title")}
-            </h1>
-            <h2 className="mb-6 text-sm font-medium">
-              {t("permissionMiddleware:lock.subtitle")}
-            </h2>
+            <h1 className="text-lg font-semibold">{t("permissionMiddleware:lock.title")}</h1>
+            <h2 className="mb-6 text-sm font-medium">{t("permissionMiddleware:lock.subtitle")}</h2>
             <button
               type="button"
               onClick={() => navigate(0)}

@@ -19,7 +19,6 @@ export interface UserOrganizationDetail {
     name: string;
     currency: string;
   } | null;
-  permissions?: string[];
 }
 
 export interface PersonalSettings {

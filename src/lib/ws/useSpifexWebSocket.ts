@@ -123,7 +123,7 @@ export function useSpifexWebSocket(opts: Options) {
 
       pingTimer.current = window.setInterval(() => {
         try {
-          ws.send(JSON.stringify({ type: "ping" }));
+          ws.send(JSON.stringify({ type: "livesync.ping" }));
         } catch {
           // ignore
         }
@@ -145,6 +145,7 @@ export function useSpifexWebSocket(opts: Options) {
     };
 
     ws.onclose = (evt) => {
+      console.warn("[ws] closed", { code: evt.code, reason: evt.reason, wasClean: evt.wasClean });
       clearTimers();
 
       if (evt.code === 4401 || evt.code === 4403) {

@@ -1,11 +1,11 @@
-import React, { useCallback, useMemo } from "react";
+// src/lib/ws/LiveSyncBridge.tsx
+import React, { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 
 import { useSpifexWebSocket } from "@/lib/ws/useSpifexWebSocket";
 import type { LiveSyncEnvelope } from "@/lib/ws/types";
 import { getAccess } from "@/lib/tokens";
 import { setAuthGate, clearAuthGate } from "@/lib/authGate";
-
 import { setIsSubscribed } from "@/redux";
 
 type Props = {
@@ -16,41 +16,62 @@ type Props = {
 
 export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAuth }) => {
   const dispatch = useDispatch();
+  const gatePromiseRef = useRef<Promise<void> | null>(null);
 
   const tokenProvider = useCallback(() => getAccess(), []);
+
+  const runGatedSync = useCallback(
+    (reason: string) => {
+      const p = Promise.resolve(syncAuth({ force: true, reason })) as Promise<void>;
+      gatePromiseRef.current = p;
+      setAuthGate(p);
+
+      p.finally(() => {
+        if (gatePromiseRef.current === p) {
+          gatePromiseRef.current = null;
+          clearAuthGate();
+        }
+      });
+    },
+    [syncAuth],
+  );
 
   const handleEvent = useCallback(
     (ev: LiveSyncEnvelope) => {
       const t = ev.type;
 
-      const isSubEvent =
+      // Multi-tenant safety: ignore events for a different org.
+      const evOrg = (ev.scope?.org_external_id || "").trim();
+      const curOrg = (orgExternalId || "").trim();
+      if (curOrg && evOrg && evOrg !== curOrg) return;
+
+      const shouldSync =
         t === "subscription.updated" ||
         t === "subscription.deleted" ||
         t === "payment.failed" ||
-        t === "payment.succeeded";
+        t === "payment.succeeded" ||
+        t === "permissions.updated" ||
+        t === "profile.updated";
 
-      if (!isSubEvent) return;
+      if (!shouldSync) return;
 
-      if (t === "payment.failed") {
+      if (t === "payment.failed" || t === "subscription.deleted") {
         dispatch(setIsSubscribed(false));
       }
 
-      const p = Promise.resolve(syncAuth({ force: true, reason: `ws:${t}` })) as Promise<void>;
-      setAuthGate(p);
-      p.finally(() => clearAuthGate());
+      runGatedSync(`ws:${t}`);
     },
-    [dispatch, syncAuth],
+    [dispatch, runGatedSync, orgExternalId],
   );
 
-  const onAuthError = useMemo(
-    () => () => {
-      void syncAuth({ force: true, reason: "ws_auth_error" });
-    },
-    [syncAuth],
-  );
+  const onAuthError = useCallback(() => {
+    runGatedSync("ws_auth_error");
+  }, [runGatedSync]);
+
+  const wsEnabled = enabled && !!(orgExternalId || "").trim();
 
   useSpifexWebSocket({
-    enabled,
+    enabled: wsEnabled,
     tokenProvider,
     orgExternalId,
     onEvent: handleEvent,

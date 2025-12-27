@@ -8,7 +8,6 @@ export interface AuthState {
   orgExternalId: string | null;
 
   isSubscribed: boolean;
-
   permissions: string[];
 }
 
@@ -27,28 +26,19 @@ const slice = createSlice({
     setUser: (s, a: PayloadAction<User | null>) => {
       s.user = a.payload;
     },
-    setUserOrganization: (s, a: PayloadAction<UserOrganizationDetail | null>) => {
-      s.organization = a.payload
-        ? {
-            ...a.payload,
-            permissions: Array.isArray(a.payload.permissions)
-              ? a.payload.permissions
-              : s.organization?.permissions,
-          }
-        : null;
 
+    setUserOrganization: (s, a: PayloadAction<UserOrganizationDetail | null>) => {
+      s.organization = a.payload;
       s.orgExternalId = a.payload?.organization?.external_id ?? null;
     },
+
     setOrgExternalId: (s, a: PayloadAction<string | null>) => {
       s.orgExternalId = a.payload;
+      if (!a.payload) s.organization = null;
     },
-    setOrganizationPermissions: (s, a: PayloadAction<string[]>) => {
-      if (s.organization) s.organization.permissions = a.payload;
-      s.permissions = Array.isArray(a.payload) ? a.payload : [];
-    },
+
     setPermissions: (s, a: PayloadAction<string[]>) => {
       s.permissions = Array.isArray(a.payload) ? a.payload : [];
-      if (s.organization) s.organization.permissions = s.permissions;
     },
 
     setIsSubscribed: (s, a: PayloadAction<boolean>) => {
@@ -63,7 +53,6 @@ export const {
   setUser,
   setUserOrganization,
   setOrgExternalId,
-  setOrganizationPermissions,
   setPermissions,
   setIsSubscribed,
   resetAuth,
