@@ -1,15 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import {
-  VerifyEmailResponse,
-  VerifyNewEmailResponse,
-} from "@/models/auth/dto/EmailVerification";
-import { ApiResponse } from "@/models/Api";
 import { api } from "src/api/requests";
 import Button from "src/components/ui/Button";
-import { isApiError } from "src/lib/api/apiError";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const EmailVerification = () => {
@@ -23,6 +17,17 @@ const EmailVerification = () => {
   const [success, setSuccess] = useState(false);
   const [isCancellation, setIsCancellation] = useState(false);
 
+  const getApiErrorMessage = useCallback(
+    (err: unknown) => {
+      if (!err || typeof err !== "object") return t("genericBackendError");
+      const e = err as { message?: unknown; detail?: unknown };
+      if (typeof e.message === "string" && e.message) return e.message;
+      if (typeof e.detail === "string" && e.detail) return e.detail;
+      return t("genericBackendError");
+    },
+    [t]
+  );
+
   useEffect(() => {
     document.title = t("pageTitle");
 
@@ -35,38 +40,32 @@ const EmailVerification = () => {
       }
 
       try {
-        const isPendingEmailRoute = location.pathname.includes("verify-pending-email");
+        const isPendingEmailRoute = location.pathname.includes(
+          "verify-pending-email"
+        );
         const searchParams = new URLSearchParams(location.search);
-        const isCancel = isPendingEmailRoute && searchParams.get("cancel") === "1";
+        const isCancel =
+          isPendingEmailRoute && searchParams.get("cancel") === "1";
 
-        // Set cancellation flag
         setIsCancellation(isCancel);
 
         const call = isPendingEmailRoute
-          ? (isCancel ? api.cancelEmailChange : api.verifyNewEmail)
+          ? isCancel
+            ? api.cancelEmailChange
+            : api.verifyNewEmail
           : api.verifyEmail;
 
-        const res: ApiResponse<VerifyEmailResponse | VerifyNewEmailResponse> =
-          await call(uidb64, token);
+        const res = await call(uidb64, token);
 
-        if (isApiError(res)) {
-          setMsg(res.error.message || t("genericBackendError"));
+        if ("error" in res) {
+          setMsg(getApiErrorMessage(res.error));
           setSuccess(false);
         } else {
-          // Set different message based on whether it's a cancellation
-          if (isCancel) {
-            setMsg(t("cancelSuccessMessage"));
-          } else {
-            setMsg(t("successMessage"));
-          }
+          setMsg(isCancel ? t("cancelSuccessMessage") : t("successMessage"));
           setSuccess(true);
         }
       } catch (err) {
-        setMsg(
-          err instanceof Error
-            ? err.message
-            : t("genericUnexpectedError")
-        );
+        setMsg(err instanceof Error ? err.message : t("genericUnexpectedError"));
         setSuccess(false);
       } finally {
         setIsVerifying(false);
@@ -74,7 +73,14 @@ const EmailVerification = () => {
     };
 
     void verify();
-  }, [uidb64, token, location.pathname, location.search, t]);
+  }, [
+    uidb64,
+    token,
+    location.pathname,
+    location.search,
+    t,
+    getApiErrorMessage,
+  ]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
@@ -86,14 +92,15 @@ const EmailVerification = () => {
         ) : (
           <div className="bg-white shadow-sm rounded-2xl p-6 sm:p-8 text-center">
             <h1 className="text-2xl font-semibold text-slate-900 mb-4">
-              {success 
-                ? (isCancellation ? t("cancelSuccessTitle") : t("successTitle"))
-                : t("errorTitle")
-              }
+              {success
+                ? isCancellation
+                  ? t("cancelSuccessTitle")
+                  : t("successTitle")
+                : t("errorTitle")}
             </h1>
-            <p className="text-sm text-slate-500 mb-6">
-              {verificationMessage}
-            </p>
+
+            <p className="text-sm text-slate-500 mb-6">{verificationMessage}</p>
+
             {success && (
               <Button
                 variant="primary"

@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { api } from "src/api/requests";
-import { isApiError, validatePassword, useAutoCountry } from "src/lib";
+import { validatePassword, useAutoCountry } from "src/lib";
 
 import Snackbar from "src/components/ui/Snackbar";
 import Button from "src/components/ui/Button";
@@ -35,7 +35,6 @@ type Snack =
 type Step = 1 | 2 | 3 | 4;
 
 type AppLanguage = "en" | "pt" | "fr" | "de";
-// Allow any ISO 4217 code (we'll use currencies.ts for the options)
 type AppCurrency = string;
 
 type LanguageOption = { value: AppLanguage; label: string };
@@ -125,6 +124,14 @@ const SignUp = () => {
   // Language dropdown selection
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption[]>([]);
 
+  const getApiErrorMessage = (err: unknown) => {
+    if (!err || typeof err !== "object") return t("apiFallbackError");
+    const e = err as { message?: unknown; detail?: unknown };
+    if (typeof e.message === "string" && e.message) return e.message;
+    if (typeof e.detail === "string" && e.detail) return e.detail;
+    return t("apiFallbackError");
+  };
+
   // Initialize language default from i18n
   useEffect(() => {
     const raw = (i18n.language || "en").split("-")[0];
@@ -145,9 +152,7 @@ const SignUp = () => {
       setSelectedLanguage([]);
       return;
     }
-    const found = LANGUAGE_OPTIONS.find(
-      (opt) => opt.value === prefs.language
-    );
+    const found = LANGUAGE_OPTIONS.find((opt) => opt.value === prefs.language);
     setSelectedLanguage(found ? [found] : []);
   }, [prefs.language]);
 
@@ -198,8 +203,7 @@ const SignUp = () => {
   const isStep1Incomplete =
     !form.name || !form.email || !form.password || !form.confirmPassword;
 
-  const isStep2Incomplete =
-    !prefs.language || !prefs.country || !prefs.currency;
+  const isStep2Incomplete = !prefs.language || !prefs.country || !prefs.currency;
 
   const isStep3Incomplete = !consents.privacy || !consents.tos;
 
@@ -221,10 +225,7 @@ const SignUp = () => {
       }
 
       if (form.password !== form.confirmPassword) {
-        setSnack({
-          message: t("passwordsDontMatch"),
-          severity: "warning",
-        });
+        setSnack({ message: t("passwordsDontMatch"), severity: "warning" });
         return;
       }
 
@@ -238,31 +239,22 @@ const SignUp = () => {
         setIsLoading(true);
         const res = await api.checkEmailAvailability(form.email);
 
-        if (isApiError(res)) {
-          const fallback =
-            res.error.message ??
-            (typeof res.error.detail === "string"
-              ? res.error.detail
-              : t("apiFallbackError"));
-          setSnack({ message: fallback, severity: "error" });
+        if ("error" in res) {
+          setSnack({
+            message: getApiErrorMessage(res.error),
+            severity: "error",
+          });
           return;
         }
 
-        const available = res.data.available;
-        if (!available) {
-          setSnack({
-            message: t("emailAlreadyInUse"),
-            severity: "warning",
-          });
+        if (!res.data.available) {
+          setSnack({ message: t("emailAlreadyInUse"), severity: "warning" });
           return;
         }
 
         setStep(2);
       } catch {
-        setSnack({
-          message: t("signUpUnexpectedError"),
-          severity: "error",
-        });
+        setSnack({ message: t("signUpUnexpectedError"), severity: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -273,10 +265,7 @@ const SignUp = () => {
     // STEP 2 – validate and go to step 3
     if (step === 2) {
       if (isStep2Incomplete) {
-        setSnack({
-          message: t("fillAllFields"),
-          severity: "warning",
-        });
+        setSnack({ message: t("fillAllFields"), severity: "warning" });
         return;
       }
 
@@ -320,26 +309,20 @@ const SignUp = () => {
 
         const res = await api.signUp(payload);
 
-        if (isApiError(res)) {
-          const fallback =
-            res.error.message ??
-            (typeof res.error.detail === "string"
-              ? res.error.detail
-              : t("apiFallbackError"));
-          setSnack({ message: fallback, severity: "error" });
+        if ("error" in res) {
+          setSnack({
+            message: getApiErrorMessage(res.error),
+            severity: "error",
+          });
           return;
         }
 
-        setSnack({
-          message: t("signUpSuccess"),
-          severity: "success",
-        });
+        setSnack({ message: t("signUpSuccess"), severity: "success" });
 
         const url = computeEmailServiceUrl(form.email);
         setCreatedEmail(form.email);
         setEmailServiceUrl(url);
 
-        // Clear sensitive fields
         setForm({
           name: "",
           email: "",
@@ -348,10 +331,7 @@ const SignUp = () => {
         });
         setStep(4);
       } catch {
-        setSnack({
-          message: t("signUpUnexpectedError"),
-          severity: "error",
-        });
+        setSnack({ message: t("signUpUnexpectedError"), severity: "error" });
       } finally {
         setIsLoading(false);
       }
@@ -361,7 +341,7 @@ const SignUp = () => {
   const handleBack = () => {
     setStep((prev) => {
       if (prev <= 1) return 1;
-      if (prev >= 4) return 3; // defensive; step 4 has its own UI
+      if (prev >= 4) return 3;
       return (prev - 1) as Step;
     });
   };
@@ -411,7 +391,6 @@ const SignUp = () => {
                   <p className="mt-2 text-sm text-slate-500">
                     {t("subheading")}
                   </p>
-                  {/* simple step indicator */}
                   <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                     {[1, 2, 3].map((s) => (
                       <div
@@ -495,19 +474,16 @@ const SignUp = () => {
                           : "opacity-0 pointer-events-none absolute inset-0"
                       }`}
                     >
-                      {/* Language */}
                       <SelectDropdown<LanguageOption>
                         label={t("languageLabel")}
                         items={LANGUAGE_OPTIONS}
                         selected={selectedLanguage}
                         onChange={(items) => {
-                          const next = (items[0]?.value ??
-                            "") as AppLanguage | "";
+                          const next = (items[0]?.value ?? "") as
+                            | AppLanguage
+                            | "";
                           setSelectedLanguage(items);
-                          setPrefs((prev) => ({
-                            ...prev,
-                            language: next,
-                          }));
+                          setPrefs((prev) => ({ ...prev, language: next }));
                         }}
                         getItemKey={(item) => item.value}
                         getItemLabel={(item) => item.label}
@@ -515,15 +491,13 @@ const SignUp = () => {
                         hideCheckboxes
                         clearOnClickOutside={false}
                         buttonLabel={
-                          selectedLanguage[0]?.label ||
-                          t("languagePlaceholder")
+                          selectedLanguage[0]?.label || t("languagePlaceholder")
                         }
                         customStyles={{ maxHeight: "260px" }}
                         disabled={isLoading}
                         hideFilter
                       />
 
-                      {/* Country */}
                       <SelectDropdown<CountryOption>
                         label={t("countryLabel")}
                         items={COUNTRIES}
@@ -533,10 +507,7 @@ const SignUp = () => {
                             .toString()
                             .toUpperCase();
                           setSelectedCountry(items);
-                          setPrefs((prev) => ({
-                            ...prev,
-                            country: v,
-                          }));
+                          setPrefs((prev) => ({ ...prev, country: v }));
                         }}
                         getItemKey={(item) => item.value}
                         getItemLabel={(item) => item.label}
@@ -544,14 +515,12 @@ const SignUp = () => {
                         hideCheckboxes
                         clearOnClickOutside={false}
                         buttonLabel={
-                          selectedCountry[0]?.label ||
-                          t("countryPlaceholder")
+                          selectedCountry[0]?.label || t("countryPlaceholder")
                         }
                         customStyles={{ maxHeight: "260px" }}
                         disabled={isLoading}
                       />
 
-                      {/* Currency */}
                       <SelectDropdown<CurrencyOption>
                         label={t("currencyLabel")}
                         items={CURRENCIES}
@@ -570,8 +539,7 @@ const SignUp = () => {
                         hideCheckboxes
                         clearOnClickOutside={false}
                         buttonLabel={
-                          selectedCurrency[0]?.label ||
-                          t("currencyPlaceholder")
+                          selectedCurrency[0]?.label || t("currencyPlaceholder")
                         }
                         customStyles={{ maxHeight: "200px" }}
                         disabled={isLoading}
@@ -641,7 +609,6 @@ const SignUp = () => {
                     </div>
                   </div>
 
-                  {/* Footer buttons */}
                   <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {step > 1 && step < 4 && (
                       <Button
@@ -684,7 +651,6 @@ const SignUp = () => {
                 </div>
               </>
             ) : (
-              // STEP 4 – success message (redirect-like UI)
               <div className="bg-white shadow-sm rounded-2xl p-6 sm:p-8 text-center">
                 <h1 className="text-2xl font-semibold text-slate-900 mb-4">
                   {t("redirectHeading")}
@@ -716,7 +682,6 @@ const SignUp = () => {
           </div>
         </main>
 
-        {/* Snackbar */}
         <Snackbar
           open={!!snack}
           autoHideDuration={6000}
