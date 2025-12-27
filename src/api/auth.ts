@@ -25,21 +25,24 @@ import {
 } from "@/lib/tokens";
 
 import { clearHttpCaches, AUTH_SYNC_EVENT, SUBSCRIPTION_BLOCKED_EVENT } from "@/lib/http";
-
 import type { ApiErrorBody } from "@/models/Api";
 
 const AUTH_HINT_KEY = "auth_status";
-
-// conservative default: avoids storms in case syncAuth is called multiple times
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
+
+// Guard: if the hook is mounted multiple times, bootstrap /auth/profile/ once.
+let AUTH_BOOTSTRAP_STARTED = false;
 
 export const handleGetAccessToken = () => getAccess();
 
+function emitAuthSync(reason: string) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: { reason } }));
+}
+
 function isApiErrorBody(err: unknown): err is ApiErrorBody {
   if (typeof err !== "object" || err == null) return false;
-  if (!("code" in err)) return false;
-  const code = (err as Record<string, unknown>).code;
-  return typeof code === "string";
+  return typeof (err as Record<string, unknown>).code === "string";
 }
 
 function shouldHardSignOut(err: unknown): boolean {
@@ -61,6 +64,11 @@ export const useAuth = () => {
   const auth = useSelector((s: RootState) => s.auth);
   const dispatch = useDispatch();
 
+  const authUserRef = useRef(auth.user);
+  useEffect(() => {
+    authUserRef.current = auth.user;
+  }, [auth.user]);
+
   const syncInFlight = useRef<Promise<void> | null>(null);
   const lastSyncAt = useRef<number>(0);
 
@@ -70,6 +78,7 @@ export const useAuth = () => {
     clearOrgExternalIdStored();
     clearHttpCaches();
     localStorage.removeItem(AUTH_HINT_KEY);
+    emitAuthSync("signed_out");
   }, [dispatch]);
 
   const handleSignOut = useCallback(async () => {
@@ -82,18 +91,38 @@ export const useAuth = () => {
     }
   }, [clearClientSession]);
 
+  const applyProfile = useCallback(
+    (res: Awaited<ReturnType<typeof api.getUser>>) => {
+      dispatch(setUser(res.data.user));
+      dispatch(setUserOrganization(res.data.organization));
+      dispatch(setIsSubscribed(!!res.data.is_subscribed));
+
+      const perms = res.data.permissions ?? res.data.organization?.permissions ?? [];
+      dispatch(setPermissions(perms));
+
+      const orgExt = res.data.organization?.organization?.external_id ?? null;
+      dispatch(setOrgExternalId(orgExt));
+      if (orgExt) setOrgExternalIdStored(orgExt);
+      else clearOrgExternalIdStored();
+
+      localStorage.setItem(AUTH_HINT_KEY, "active");
+    },
+    [dispatch],
+  );
+
   /**
-   * syncAuth is now NOT a "keep fresh" mechanism.
-   * It only hits getUser() when needed:
-   * - bootstrap (auth.user == null)
-   * - explicit force (e.g., user clicked "Refresh account", or post-checkout return page)
+   * Hits /auth/profile/ only when:
+   * - force=true, OR
+   * - auth.user is missing (bootstrap / after hard reset)
    */
   const syncAuth = useCallback(
     async (opts?: { force?: boolean; reason?: string }) => {
-      const shouldBeLoggedIn = localStorage.getItem(AUTH_HINT_KEY) === "active";
-      if (!shouldBeLoggedIn) return;
+      if (localStorage.getItem(AUTH_HINT_KEY) !== "active") return;
 
-      const mustFetch = !!opts?.force || auth.user == null;
+      const token = (getAccess() || "").trim();
+      if (!token) return;
+
+      const mustFetch = !!opts?.force || authUserRef.current == null;
       if (!mustFetch) return;
 
       const now = Date.now();
@@ -104,21 +133,9 @@ export const useAuth = () => {
         syncInFlight.current = (async () => {
           try {
             const res = await api.getUser();
-
-            dispatch(setUser(res.data.user));
-            dispatch(setUserOrganization(res.data.organization));
-            dispatch(setIsSubscribed(!!res.data.is_subscribed));
-
-            const perms = res.data.permissions ?? res.data.organization?.permissions ?? [];
-            dispatch(setPermissions(perms));
-
-            const orgExt = res.data.organization?.organization?.external_id ?? null;
-            dispatch(setOrgExternalId(orgExt));
-            if (orgExt) setOrgExternalIdStored(orgExt);
-            else clearOrgExternalIdStored();
-
-            localStorage.setItem(AUTH_HINT_KEY, "active");
+            applyProfile(res);
           } catch (err) {
+            // Keep logs minimal; caller context is in opts.reason
             console.warn("Auth sync failed:", opts?.reason || "unknown", err);
 
             if (shouldHardSignOut(err)) {
@@ -133,25 +150,18 @@ export const useAuth = () => {
 
       return syncInFlight.current;
     },
-    [auth.user, dispatch, handleSignOut],
+    [applyProfile, handleSignOut],
   );
 
-  /**
-   * Initializer:
-   * Only bootstraps user once (if missing). No background refresh.
-   */
   const handleInitUser = useCallback(async () => {
-    await syncAuth({
-      force: auth.user == null,
-      reason: "init_user",
-    });
-  }, [auth.user, syncAuth]);
+    await syncAuth({ force: authUserRef.current == null, reason: "init_user" });
+  }, [syncAuth]);
 
   const handleSignIn = useCallback(
     async (email: string, password: string) => {
       const res = await api.signIn({ email, password });
 
-      const access = res.data.access;
+      const access = (res.data.access || "").trim();
       if (!access) throw new Error("Missing access token");
 
       setTokens(access);
@@ -167,6 +177,7 @@ export const useAuth = () => {
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
 
+      emitAuthSync("signed_in");
       return res;
     },
     [dispatch],
@@ -175,34 +186,29 @@ export const useAuth = () => {
   const handlePermissionExists = useCallback(
     (code: string) => {
       if (auth.organization?.is_owner) return true;
-      const list = auth.organization?.permissions ?? [];
-      return list.includes(code);
+      return (auth.organization?.permissions ?? []).includes(code);
     },
     [auth.organization],
   );
 
   useEffect(() => {
-    // One-time bootstrap only
-    void handleInitUser();
+    if (AUTH_BOOTSTRAP_STARTED) return;
+    AUTH_BOOTSTRAP_STARTED = true;
 
-    // Token refresh events should NOT cause getUser().
-    // Only react to refresh failure to hard sign out.
+    void Promise.resolve(handleInitUser()).catch(() => {
+      // auth flow handles failures
+    });
+  }, [handleInitUser]);
+
+  useEffect(() => {
     const onAuthSync = (e: Event) => {
       const ce = e as CustomEvent;
       const reason = (ce.detail as { reason?: string } | undefined)?.reason;
-
-      if (reason === "refresh_failed") {
-        void handleSignOut();
-      }
+      if (reason === "refresh_failed") void handleSignOut();
     };
 
-    // If backend blocks due to subscription, update local UI state.
-    // Do NOT call getUser() here.
     const onSubscriptionBlocked = () => {
-      // idempotent
       dispatch(setIsSubscribed(false));
-      // Optional: also clear permissions to avoid optimistic UI gates
-      // dispatch(setPermissions([]));
     };
 
     window.addEventListener(AUTH_SYNC_EVENT, onAuthSync as EventListener);
@@ -212,7 +218,7 @@ export const useAuth = () => {
       window.removeEventListener(AUTH_SYNC_EVENT, onAuthSync as EventListener);
       window.removeEventListener(SUBSCRIPTION_BLOCKED_EVENT, onSubscriptionBlocked as EventListener);
     };
-  }, [dispatch, handleInitUser, handleSignOut]);
+  }, [dispatch, handleSignOut]);
 
   return {
     user: auth.user,
@@ -225,10 +231,7 @@ export const useAuth = () => {
     handleSignIn,
     handleSignOut,
 
-    // Keep exposed; now it will NOT spam getUser().
-    // Only calls getUser() when auth.user is null or force=true.
     syncAuth,
-
     accessToken: getAccess(),
   };
 };

@@ -5,6 +5,7 @@ import { useAuth as useAuthHook } from "@/api/auth";
 import { AuthContext } from "@/contexts/AuthContext";
 import type { RootState } from "@/redux/store";
 import type { User, UserOrganizationDetail } from "src/models/auth";
+import { LiveSyncBridge } from "src/lib/ws/LiveSyncBridge";
 
 interface UserInfo {
   user: User | null;
@@ -46,7 +47,7 @@ const useCombinedUserInfo = (): UserInfo => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { handleInitUser, handleSignIn, handleSignOut } = useAuthHook();
+  const { handleInitUser, handleSignIn, handleSignOut, syncAuth } = useAuthHook();
   const userInfo = useCombinedUserInfo();
 
   const handlePermissionExists = useCallback(
@@ -65,5 +66,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [userInfo, handleInitUser, handleSignIn, handleSignOut, handlePermissionExists],
   );
 
-  return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;
+  const orgExternalId = userInfo.organization?.organization?.external_id ?? null;
+
+  return (
+    <AuthContext.Provider value={authContextValue}>
+      <LiveSyncBridge
+        enabled={userInfo.isLogged}
+        orgExternalId={orgExternalId}
+        syncAuth={syncAuth}
+      />
+      {children}
+    </AuthContext.Provider>
+  );
 };

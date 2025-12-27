@@ -5,21 +5,16 @@
 import axios, {
   type AxiosError,
   type AxiosResponse,
-  type Method,
   type AxiosRequestConfig,
+  type Method,
 } from "axios";
 
 import { type ApiErrorBody, type ApiSuccess } from "@/models/Api";
-
 import { getAccess, setTokens, clearTokens, getOrgExternalIdStored } from "@/lib/tokens";
 import "@/lib/netReport";
+import { waitAuthGate } from "@/lib/authGate";
 import { store } from "@/redux/store";
 
-/**
- * Auth/Sub sync events
- * - AUTH_SYNC_EVENT fires when tokens were refreshed or refresh failed
- * - SUBSCRIPTION_BLOCKED_EVENT fires when backend denies access due to subscription
- */
 export const AUTH_SYNC_EVENT = "spifex:auth-sync";
 export const SUBSCRIPTION_BLOCKED_EVENT = "spifex:subscription-blocked";
 
@@ -34,51 +29,32 @@ const rawBaseURL = import.meta.env.DEV
 
 export const baseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
-let pauseUntil = 0;
+export const http = axios.create({
+  baseURL,
+  withCredentials: true,
+});
 
-function setGlobalPause(ms: number) {
-  pauseUntil = Math.max(pauseUntil, Date.now() + ms);
-}
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
-const scopeMinGapMs: Record<string, number> = {
-  read: 300,
-  auth: 500,
-  write: 0,
+const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } => {
+  if (!isObject(v)) return false;
+  const e = (v as Record<string, unknown>).error;
+  return isObject(e) && typeof (e as Record<string, unknown>).code === "string";
 };
 
-const lastByScope = new Map<string, number>();
+type Tokens = { access: string; refresh?: string };
 
-function inferScope(method: Method, url: string): "read" | "auth" | "write" {
-  const m = (method || "GET").toUpperCase();
-  const u = url || "";
-  if (m !== "GET") return "write";
-  if (u.includes("/auth/")) return "auth";
-  return "read";
+const hasAccessToken = (v: unknown): v is Tokens => isObject(v) && typeof (v as Tokens).access === "string";
+
+function unwrapTokens(payload: unknown): Tokens | null {
+  if (hasAccessToken(payload)) return payload;
+  if (isObject(payload) && "data" in payload && hasAccessToken(payload.data)) return payload.data as Tokens;
+  return null;
 }
 
-async function scheduleByScope(method: Method, url: string) {
-  const scope = inferScope(method, url);
-  const gap = scopeMinGapMs[scope];
-  if (!gap) return;
+// --- telemetry / throttling
 
-  const now = Date.now();
-  const last = lastByScope.get(scope) ?? 0;
-  const wait = last + gap - now;
-  if (wait > 0) {
-    await new Promise((resolve) => setTimeout(resolve, wait));
-  }
-  lastByScope.set(scope, Date.now());
-}
-
-const SENSITIVE_PARAMS = [
-  "token",
-  "password",
-  "old_password",
-  "new_password",
-  "refresh",
-  "access",
-  "uidb64",
-];
+const SENSITIVE_PARAMS = ["token", "password", "old_password", "new_password", "refresh", "access", "uidb64"];
 
 function sanitizeUrl(fullUrl: string): string {
   try {
@@ -94,47 +70,43 @@ function sanitizeUrl(fullUrl: string): string {
     }
 
     if (!changed) return fullUrl;
-
     return hasProtocol ? urlObj.toString() : urlObj.pathname + urlObj.search;
   } catch {
     return fullUrl.split("?")[0] || fullUrl;
   }
 }
 
-export const http = axios.create({
-  baseURL,
-  withCredentials: true,
-});
+let pauseUntil = 0;
 
-const startAt = new WeakMap<AxiosRequestConfig, number>();
+function setGlobalPause(ms: number) {
+  pauseUntil = Math.max(pauseUntil, Date.now() + ms);
+}
 
-http.interceptors.request.use(async (cfg) => {
-  const method = ((cfg.method || "GET").toUpperCase() as Method) ?? "GET";
-  const url = cfg.url || "";
+const scopeMinGapMs: Record<"read" | "auth" | "write", number> = {
+  read: 300,
+  auth: 500,
+  write: 0,
+};
 
-  await scheduleByScope(method, url);
+const lastByScope = new Map<"read" | "auth" | "write", number>();
 
-  if (pauseUntil > Date.now()) {
-    await new Promise((resolve) => setTimeout(resolve, pauseUntil - Date.now()));
-  }
+function inferScope(method: Method, url: string): "read" | "auth" | "write" {
+  const m = (method || "GET").toUpperCase();
+  if (m !== "GET") return "write";
+  return (url || "").includes("/auth/") ? "auth" : "read";
+}
 
-  startAt.set(cfg, performance.now());
+async function scheduleByScope(method: Method, url: string) {
+  const scope = inferScope(method, url);
+  const gap = scopeMinGapMs[scope];
+  if (!gap) return;
 
-  const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
-  const safeUrl = sanitizeUrl(fullUrl);
-
-  const headers = (cfg.headers ?? {}) as Record<string, unknown>;
-
-  window.NetReport?.push({
-    t: Date.now(),
-    method,
-    url,
-    fullUrl: safeUrl,
-    reqId: typeof headers["X-Request-Id"] === "string" ? (headers["X-Request-Id"] as string) : undefined,
-  });
-
-  return cfg;
-});
+  const now = Date.now();
+  const last = lastByScope.get(scope) ?? 0;
+  const wait = last + gap - now;
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastByScope.set(scope, Date.now());
+}
 
 function readOrgExternalId(): string | undefined {
   const s = store.getState() as unknown as {
@@ -144,163 +116,14 @@ function readOrgExternalId(): string | undefined {
     };
   };
 
-  const fromRedux =
-    s.auth?.orgExternalId ||
-    s.auth?.organization?.organization?.external_id;
-
+  const fromRedux = s.auth?.orgExternalId || s.auth?.organization?.organization?.external_id;
   const fromSession = getOrgExternalIdStored();
-
   return (fromRedux || fromSession || "").trim() || undefined;
 }
 
-http.interceptors.request.use((cfg) => {
-  cfg.headers = cfg.headers ?? {};
+const startAt = new WeakMap<AxiosRequestConfig, number>();
 
-  const token = getAccess();
-  if (token) {
-    (cfg.headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
-
-  const orgExt = readOrgExternalId();
-  if (orgExt) {
-    (cfg.headers as Record<string, string>)["X-Org-External-Id"] = orgExt;
-  }
-
-  return cfg;
-});
-
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null;
-
-type Tokens = { access: string; refresh?: string };
-
-const hasAccessToken = (v: unknown): v is Tokens => {
-  if (!isObject(v)) return false;
-  return typeof v.access === "string";
-};
-
-const hasErrorKey = (v: unknown): v is { error: ApiErrorBody } => {
-  if (!isObject(v)) return false;
-  if (!("error" in v)) return false;
-  const e = v.error;
-  if (!isObject(e)) return false;
-  return typeof e.code === "string";
-};
-
-function unwrapTokens(payload: unknown): Tokens | null {
-  if (hasAccessToken(payload)) return payload;
-
-  if (isObject(payload) && "data" in payload) {
-    const inner = payload.data;
-    if (hasAccessToken(inner)) return inner;
-  }
-
-  return null;
-}
-
-function getApiErrorCode(err: AxiosError): string | undefined {
-  const data = err.response?.data;
-  if (!isObject(data)) return undefined;
-  const e = data.error;
-  if (!isObject(e)) return undefined;
-  const code = e.code;
-  return typeof code === "string" ? code : undefined;
-}
-
-function getDetailMessage(err: AxiosError): string | undefined {
-  const data = err.response?.data;
-
-  if (typeof data === "string") return data;
-
-  if (isObject(data)) {
-    const detail = data.detail;
-    if (typeof detail === "string") return detail;
-
-    if (Array.isArray(detail)) {
-      const s = detail.filter((x) => typeof x === "string").join(" ");
-      return s || undefined;
-    }
-
-    const msg = data.message;
-    if (typeof msg === "string") return msg;
-
-    const e = data.error;
-    if (isObject(e) && typeof e.message === "string") return e.message;
-  }
-
-  return undefined;
-}
-
-function isSubscriptionBlocked(err: AxiosError): boolean {
-  const status = err.response?.status;
-  if (status === 402) return true;
-
-  if (status !== 403) return false;
-
-  const code = getApiErrorCode(err);
-  if (code === "subscription_required" || code === "subscription_inactive" || code === "payment_required") {
-    return true;
-  }
-
-  const detail = getDetailMessage(err);
-  if (detail && /subscription required/i.test(detail)) return true;
-
-  return false;
-}
-
-let refreshingPromise: Promise<void> | null = null;
-const subscribers: Array<() => void> = [];
-
-function notifySubscribers() {
-  subscribers.splice(0).forEach((fn) => fn());
-}
-
-async function doRefresh(): Promise<void> {
-  const res = await axios.post(
-    `${baseURL}auth/refresh/`,
-    {},
-    {
-      validateStatus: (s) => s < 500,
-      withCredentials: true,
-    },
-  );
-
-  const { data, status } = res as AxiosResponse<unknown>;
-  const tokens = unwrapTokens(data);
-
-  if (status !== 200 || !tokens) {
-    throw new Error("refresh-failed");
-  }
-
-  setTokens(tokens.access);
-}
-
-function parseRetryAfter(headerValue: unknown): number {
-  if (typeof headerValue === "string") {
-    const secs = Number(headerValue);
-    if (Number.isFinite(secs)) return Math.max(0, secs) * 1000;
-
-    const dateMs = Date.parse(headerValue);
-    if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - Date.now());
-  }
-  return 1000;
-}
-
-function calc429DelayMs(err: AxiosError): number {
-  const ra = (err.response?.headers as Record<string, unknown> | undefined)?.["retry-after"];
-  const base = parseRetryAfter(ra);
-  const jitter = Math.random() * 250;
-  return base + jitter;
-}
-
-type TelemetryExtra = { retried429?: number; retryAfterMs?: number };
-
-function finishLog(
-  cfg: AxiosRequestConfig,
-  res?: AxiosResponse,
-  err?: AxiosError,
-  extra?: TelemetryExtra,
-) {
+function finishLog(cfg: AxiosRequestConfig, res?: AxiosResponse, err?: AxiosError, extra?: Record<string, unknown>) {
   const t0 = startAt.get(cfg) ?? performance.now();
   const ms = performance.now() - t0;
   const status = res?.status ?? err?.response?.status;
@@ -317,31 +140,157 @@ function finishLog(
 
   window.NetReport?.push({
     t: Date.now(),
-    method: (cfg.method || "GET").toUpperCase() as Method,
+    method: ((cfg.method || "GET").toUpperCase() as Method) ?? "GET",
     url: cfg.url || "",
     fullUrl: safeUrl,
     status,
     ms,
     reqId,
-    ...extra,
+    ...(extra || {}),
   });
 }
 
-type RetriableConfig = AxiosRequestConfig & {
-  _retry?: boolean;
-  _retried429?: number;
-};
+// --- request interceptors
+
+http.interceptors.request.use(async (cfg) => {
+  const method = ((cfg.method || "GET").toUpperCase() as Method) ?? "GET";
+  const url = cfg.url || "";
+
+  if (!String(url).includes("/auth/")) {
+    await waitAuthGate(4000);
+  }
+
+  await scheduleByScope(method, url);
+
+  if (pauseUntil > Date.now()) {
+    await new Promise((r) => setTimeout(r, pauseUntil - Date.now()));
+  }
+
+  startAt.set(cfg, performance.now());
+
+  const headers = (cfg.headers ?? {}) as Record<string, unknown>;
+  const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
+
+  window.NetReport?.push({
+    t: Date.now(),
+    method,
+    url,
+    fullUrl: sanitizeUrl(fullUrl),
+    reqId: typeof headers["X-Request-Id"] === "string" ? (headers["X-Request-Id"] as string) : undefined,
+  });
+
+  return cfg;
+});
+
+http.interceptors.request.use((cfg) => {
+  cfg.headers = cfg.headers ?? {};
+
+  const token = getAccess();
+  if (token) (cfg.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+
+  const orgExt = readOrgExternalId();
+  if (orgExt) (cfg.headers as Record<string, string>)["X-Org-External-Id"] = orgExt;
+
+  return cfg;
+});
+
+// --- error helpers
+
+function getApiErrorCode(err: AxiosError): string | undefined {
+  const data = err.response?.data;
+  if (!isObject(data)) return undefined;
+  const e = (data as Record<string, unknown>).error;
+  if (!isObject(e)) return undefined;
+  const code = (e as Record<string, unknown>).code;
+  return typeof code === "string" ? code : undefined;
+}
+
+function getDetailMessage(err: AxiosError): string | undefined {
+  const data = err.response?.data;
+
+  if (typeof data === "string") return data;
+
+  if (isObject(data)) {
+    const detail = (data as Record<string, unknown>).detail;
+    if (typeof detail === "string") return detail;
+
+    if (Array.isArray(detail)) {
+      const s = detail.filter((x) => typeof x === "string").join(" ");
+      return s || undefined;
+    }
+
+    const msg = (data as Record<string, unknown>).message;
+    if (typeof msg === "string") return msg;
+
+    const e = (data as Record<string, unknown>).error;
+    if (isObject(e) && typeof (e as Record<string, unknown>).message === "string") {
+      return (e as Record<string, unknown>).message as string;
+    }
+  }
+
+  return undefined;
+}
+
+function isSubscriptionBlocked(err: AxiosError): boolean {
+  const status = err.response?.status;
+  if (status === 402) return true;
+  if (status !== 403) return false;
+
+  const code = getApiErrorCode(err);
+  if (code === "subscription_required" || code === "subscription_inactive" || code === "payment_required") return true;
+
+  const detail = getDetailMessage(err);
+  return !!detail && /subscription required/i.test(detail);
+}
+
+function parseRetryAfter(headerValue: unknown): number {
+  if (typeof headerValue === "string") {
+    const secs = Number(headerValue);
+    if (Number.isFinite(secs)) return Math.max(0, secs) * 1000;
+
+    const dateMs = Date.parse(headerValue);
+    if (!Number.isNaN(dateMs)) return Math.max(0, dateMs - Date.now());
+  }
+  return 1000;
+}
+
+function calc429DelayMs(err: AxiosError): number {
+  const ra = (err.response?.headers as Record<string, unknown> | undefined)?.["retry-after"];
+  return parseRetryAfter(ra) + Math.random() * 250;
+}
+
+// --- token refresh single-flight
+
+let refreshingPromise: Promise<void> | null = null;
+const subscribers: Array<() => void> = [];
+
+function notifySubscribers() {
+  subscribers.splice(0).forEach((fn) => fn());
+}
+
+async function doRefresh(): Promise<void> {
+  const res = await axios.post(
+    `${baseURL}auth/refresh/`,
+    {},
+    { validateStatus: (s) => s < 500, withCredentials: true },
+  );
+
+  const { data, status } = res as AxiosResponse<unknown>;
+  const tokens = unwrapTokens(data);
+
+  if (status !== 200 || !tokens) throw new Error("refresh-failed");
+
+  setTokens(tokens.access);
+  emitWindowEvent(AUTH_SYNC_EVENT, { reason: "token_refreshed" });
+}
+
+// --- response interceptor
+
+type RetriableConfig = AxiosRequestConfig & { _retry?: boolean; _retried429?: number };
 
 http.interceptors.response.use(
   (r) => {
     finishLog(r.config, r);
-
-    const headers = r.headers as Record<string, unknown> | undefined;
-    const reqId = headers?.["x-request-id"];
-    if (typeof reqId === "string") {
-      console.debug("🔗 request-id", reqId);
-    }
-
     return r;
   },
   async (error: AxiosError) => {
@@ -363,11 +312,7 @@ http.interceptors.response.use(
       original._retried429 = (original._retried429 ?? 0) + 1;
 
       const delay = calc429DelayMs(error);
-
-      finishLog(original, undefined, error, {
-        retried429: original._retried429,
-        retryAfterMs: delay,
-      });
+      finishLog(original, undefined, error, { retried429: original._retried429, retryAfterMs: delay });
 
       setGlobalPause(delay * 1.1);
 
@@ -394,9 +339,8 @@ http.interceptors.response.use(
       }
 
       await new Promise<void>((resolve, reject) => {
-        if (!refreshingPromise) return resolve();
         subscribers.push(resolve);
-        refreshingPromise.catch(reject);
+        refreshingPromise?.catch(reject);
       });
 
       if (!getAccess()) {
@@ -411,6 +355,8 @@ http.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// --- lightweight GET coalescing + short TTL cache (incl. 304 revalidation)
 
 const inflight = new Map<string, Promise<AxiosResponse<unknown>>>();
 const responseCache = new Map<string, { t: number; res: AxiosResponse<unknown> }>();
@@ -444,11 +390,7 @@ export function clearHttpCaches() {
   pauseUntil = 0;
 }
 
-export async function request<T>(
-  endpoint: string,
-  method: Method = "GET",
-  payload?: object,
-): Promise<ApiSuccess<T>> {
+export async function request<T>(endpoint: string, method: Method = "GET", payload?: object): Promise<ApiSuccess<T>> {
   try {
     const cfg: AxiosRequestConfig = {
       url: endpoint,
@@ -482,23 +424,15 @@ export async function request<T>(
             const baseParams =
               cfg.params && typeof cfg.params === "object" ? (cfg.params as Record<string, unknown>) : {};
 
-            const forceCfg: AxiosRequestConfig = {
-              ...cfg,
-              params: { ...baseParams, _r: ts },
-            };
+            const forceCfg: AxiosRequestConfig = { ...cfg, params: { ...baseParams, _r: ts } };
 
             if (!inflight.has(refreshKey)) {
               inflight.set(refreshKey, http.request(forceCfg).finally(() => inflight.delete(refreshKey)));
             }
 
             const fresh = await inflight.get(refreshKey)!;
-            if (fresh.status >= 200 && fresh.status < 300) {
-              res = fresh;
-            } else {
-              throw new Error(
-                `Revalidation returned ${fresh.status} — could not materialize a valid response.`,
-              );
-            }
+            if (fresh.status >= 200 && fresh.status < 300) res = fresh;
+            else throw new Error(`Revalidation returned ${fresh.status} — could not materialize a valid response.`);
           }
         }
 
@@ -516,22 +450,19 @@ export async function request<T>(
       return {} as ApiSuccess<T>;
     }
 
-    if (hasErrorKey(body)) {
-      throw body.error;
-    }
-
+    if (hasErrorKey(body)) throw body.error;
     return body as ApiSuccess<T>;
   } catch (e) {
     const err = e as AxiosError<unknown>;
 
     if (axios.isAxiosError(err)) {
       const body = err.response?.data;
-      if (hasErrorKey(body)) {
-        throw body.error;
-      }
+      if (hasErrorKey(body)) throw body.error;
+
       const msg = err.response
         ? `${err.response.status} ${err.response.statusText || "Request error"}`
         : err.message;
+
       throw new Error(msg);
     }
 
