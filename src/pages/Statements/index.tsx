@@ -17,7 +17,6 @@ import ConfirmToast from "src/components/ui/ConfirmToast";
 import Input from "src/components/ui/Input";
 
 import { api } from "@/api/requests";
-import { useAuth } from "@/api";
 import { useAuthContext } from "src/hooks/useAuth";
 
 import type { BankAccount } from "src/models/enterprise_structure/domain";
@@ -228,8 +227,7 @@ const Statements: React.FC = () => {
   // Subscription (same verification pattern as SubscriptionMiddleware)
   const location = useLocation();
   const navigate = useNavigate();
-  const { handleInitUser } = useAuth();
-  const { isSuperUser, isSubscribed } = useAuthContext();
+  const { handleInitUser, isSuperUser, isSubscribed } = useAuthContext();
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {

@@ -23,7 +23,6 @@ import { AmountInput } from "src/components/ui/AmountInput";
 import { api } from "src/api/requests";
 import type { BankAccount } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "src/hooks/useAuth";
-import { useAuth } from "@/api/auth";
 
 /* ----------------------------- Constants/Types ---------------------------- */
 
@@ -144,9 +143,8 @@ const ModalSkeleton: React.FC = () => (
 
 const BankSettings: React.FC = () => {
   const { t, i18n } = useTranslation("bankSettings");
-  const { isOwner } = useAuthContext();
+  const { organization: authOrg, isOwner } = useAuthContext();
 
-  const { organization: authOrg } = useAuth();
   const orgCurrency = useMemo(
     () => safeCurrency(authOrg?.organization?.currency),
     [authOrg]

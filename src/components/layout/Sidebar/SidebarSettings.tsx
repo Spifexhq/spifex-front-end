@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth as useAuthHook } from "@/api/auth";
+import { useAuthContext } from "src/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
 /* -------------------------------- Types ----------------------------------- */
@@ -56,7 +56,7 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
   topOffsetPx = 64,
 }) => {
   const navigate = useNavigate();
-  const { user } = useAuthHook();
+  const { user } = useAuthContext();
   const { t } = useTranslation("settingsSidebar");
 
   const displayName = user?.name || userName;

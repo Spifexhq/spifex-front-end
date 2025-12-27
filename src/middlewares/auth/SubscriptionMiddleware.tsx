@@ -2,7 +2,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
-import { useAuth } from "@/api";
 import { useAuthContext } from "src/hooks/useAuth";
 import TopProgress from "src/components/ui/Loaders/TopProgress";
 
@@ -13,8 +12,7 @@ type Props = {
 
 export const SubscriptionMiddleware = ({ children, redirectTo }: Props) => {
   const location = useLocation();
-  const { handleInitUser } = useAuth();
-  const { isSuperUser, isSubscribed } = useAuthContext();
+  const { handleInitUser, isSuperUser, isSubscribed } = useAuthContext();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

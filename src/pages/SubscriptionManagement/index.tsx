@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { useRequireLogin } from "@/hooks/useRequireLogin";
-import { useAuth } from "@/api";
 import { useAuthContext } from "src/hooks/useAuth";
 
 import TopProgress from "@/components/ui/Loaders/TopProgress";
@@ -147,8 +146,7 @@ const SubscriptionManagement: React.FC = () => {
   const { t, i18n } = useTranslation(["subscription"]);
   const isLogged = useRequireLogin();
 
-  const { handleInitUser } = useAuth();
-  const { user, isOwner, isSuperUser } = useAuthContext();
+  const { handleInitUser, user, isOwner, isSuperUser } = useAuthContext();
   const navigate = useNavigate();
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);

@@ -2,14 +2,14 @@
 import { useState, useEffect, FC } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { useAuth } from '@/api';
+import { useAuthContext } from "src/hooks/useAuth";
 import { AuthMiddleware, LocaleProfileMiddleware } from '@/middlewares';
 import TopProgress from 'src/components/ui/Loaders/TopProgress';
 import Navbar from 'src/components/layout/Navbar';
 import { CookieBanner } from "@/components/Cookies/CookieBanner";
 
 export const SpifexLayout: FC = () => {
-  const { handleInitUser } = useAuth();
+  const { handleInitUser } = useAuthContext();
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   useEffect(() => {
