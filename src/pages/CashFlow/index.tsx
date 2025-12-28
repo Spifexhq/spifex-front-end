@@ -1,5 +1,5 @@
 // src/pages/CashFlow/index.tsx
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "src/components/layout/Sidebar";
@@ -16,6 +16,18 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 import { ApiError } from "@/models/Api";
 import { PermissionMiddleware } from "src/middlewares";
 
+const DEFAULT_FILTERS: EntryFilters = {
+  bank_id: [],
+  gla_id: [],
+  tx_type: undefined,
+  start_date: undefined,
+  end_date: undefined,
+  description: "",
+  observation: "",
+  amount_min: "",
+  amount_max: "",
+} as unknown as EntryFilters;
+
 const CashFlow = () => {
   const { t } = useTranslation(["cashFlow"]);
 
@@ -24,30 +36,47 @@ const CashFlow = () => {
   }, [t]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
+  const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
+
   const [modalType, setModalType] = useState<ModalType | null>(null);
+
   const [banksKey, setBanksKey] = useState(0);
   const [cashflowKey, setCashflowKey] = useState(0);
   const [kpiRefresh, setKpiRefresh] = useState(0);
+
+  const bumpCashflow = useCallback(() => setCashflowKey((k) => k + 1), []);
+  const bumpBanks = useCallback(() => setBanksKey((k) => k + 1), []);
+  const bumpKpis = useCallback(() => setKpiRefresh((k) => k + 1), []);
+  const bumpAll = useCallback(() => {
+    bumpCashflow();
+    bumpBanks();
+    bumpKpis();
+  }, [bumpCashflow, bumpBanks, bumpKpis]);
+
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [isEditingEntryLoading, setIsEditingEntryLoading] = useState(false);
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const tableRef = useRef<CashFlowTableHandle>(null);
 
-  const [filters, setFilters] = useState<EntryFilters | null>(null);
-  const filterBarHotkeysEnabled =
-    !isModalOpen && !isTransferenceModalOpen && !isSettlementModalOpen;
+  const [filters, setFilters] = useState<EntryFilters>(() => DEFAULT_FILTERS);
 
-  const {
-    banks,
-    totalConsolidatedBalance,
-    loading: banksLoading,
-    error: banksError,
-  } = useBanks(undefined, banksKey, true);
+  const filterBarHotkeysEnabled = useMemo(
+    () => !isModalOpen && !isTransferenceModalOpen && !isSettlementModalOpen,
+    [isModalOpen, isTransferenceModalOpen, isSettlementModalOpen],
+  );
+
+  const { banks, totalConsolidatedBalance, loading: banksLoading, error: banksError } = useBanks(
+    undefined,
+    banksKey,
+    true,
+  );
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -86,15 +115,13 @@ const CashFlow = () => {
         setIsEditingEntryLoading(false);
       }
     },
-    [t]
+    [t],
   );
 
   const handleApplyFilters = useCallback(({ filters: newFilters }: { filters: EntryFilters }) => {
     setFilters(newFilters);
-    setCashflowKey((k) => k + 1);
-    setBanksKey((k) => k + 1);
-    setKpiRefresh((k) => k + 1);
-  }, []);
+    bumpAll();
+  }, [bumpAll]);
 
   const handleSelectionChange = useCallback((ids: string[], rows: Entry[]) => {
     setSelectedIds(ids);
@@ -104,6 +131,7 @@ const CashFlow = () => {
   return (
     <div className="flex">
       <TopProgress active={banksLoading} variant="top" topOffset={64} />
+
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
@@ -127,35 +155,31 @@ const CashFlow = () => {
             />
           </PermissionMiddleware>
 
-          {filters && (
-            <>
-              <KpiCards
-                selectedBankIds={filters.bank_id}
-                filters={filters}
-                context="cashflow"
-                refreshToken={kpiRefresh}
-                banksRefreshKey={banksKey}
-                banksData={{
-                  banks,
-                  totalConsolidatedBalance,
-                  loading: banksLoading,
-                  error: banksError,
-                }}
-              />
+          <KpiCards
+            selectedBankIds={filters.bank_id}
+            filters={filters}
+            context="cashflow"
+            refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey}
+            banksData={{
+              banks,
+              totalConsolidatedBalance,
+              loading: banksLoading,
+              error: banksError,
+            }}
+          />
 
-              <div className="min-h-0 h-full">
-                <PermissionMiddleware codeName={["view_cash_flow_entries"]} requireAll>
-                  <CashFlowTable
-                    ref={tableRef}
-                    key={cashflowKey}
-                    filters={filters}
-                    onEdit={handleEditEntry}
-                    onSelectionChange={handleSelectionChange}
-                  />
-                </PermissionMiddleware>
-              </div>
-            </>
-          )}
+          <div className="min-h-0 h-full">
+            <PermissionMiddleware codeName={["view_cash_flow_entries"]} requireAll>
+              <CashFlowTable
+                ref={tableRef}
+                key={cashflowKey}
+                filters={filters}
+                onEdit={handleEditEntry}
+                onSelectionChange={handleSelectionChange}
+              />
+            </PermissionMiddleware>
+          </div>
 
           {selectedIds.length > 0 && (
             <SelectionActionsBar
@@ -178,8 +202,9 @@ const CashFlow = () => {
                     await api.deleteEntry(selectedIds[0] as string);
                   }
 
-                  setCashflowKey((prev) => prev + 1);
-                  setKpiRefresh((k) => k + 1);
+                  bumpCashflow();
+                  bumpKpis();
+
                   setSelectedIds([]);
                   setSelectedEntries([]);
                   tableRef.current?.clearSelection();
@@ -211,8 +236,8 @@ const CashFlow = () => {
               onSave={() => {
                 setIsModalOpen(false);
                 setEditingEntry(null);
-                setCashflowKey((prev) => prev + 1);
-                setKpiRefresh((k) => k + 1);
+                bumpCashflow();
+                bumpKpis();
               }}
             />
           </PermissionMiddleware>
@@ -225,7 +250,7 @@ const CashFlow = () => {
               onClose={() => setIsTransferenceModalOpen(false)}
               onSave={() => {
                 setIsTransferenceModalOpen(false);
-                setBanksKey((k) => k + 1);
+                bumpBanks();
               }}
             />
           </PermissionMiddleware>
@@ -239,9 +264,7 @@ const CashFlow = () => {
           selectedEntries={selectedEntries}
           onSave={() => {
             setIsSettlementModalOpen(false);
-            setCashflowKey((k) => k + 1);
-            setBanksKey((k) => k + 1);
-            setKpiRefresh((k) => k + 1);
+            bumpAll();
             setSelectedIds([]);
           }}
           banksData={{

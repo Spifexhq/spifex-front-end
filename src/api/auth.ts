@@ -93,8 +93,6 @@ export const useAuth = () => {
       dispatch(setUser(res.data.user));
       dispatch(setUserOrganization(res.data.organization));
       dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
-
-      // Permissions are USER-scoped in this system:
       dispatch(setPermissions(res.data.permissions ?? []));
 
       const orgExt = res.data.organization?.organization?.external_id ?? null;
