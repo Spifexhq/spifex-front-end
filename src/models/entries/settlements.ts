@@ -1,7 +1,7 @@
 // src/models/entries/settlements.ts
-
-import { Entry } from "./entries";
-import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
+import type { Paginated } from "@/models/Api";
+import type { Entry } from "./entries";
+import type { BankAccount } from "src/models/settings/banking";
 
 /* ---------------------------------- Query ---------------------------------- */
 
@@ -28,19 +28,13 @@ export interface GetSettledEntryRequest {
   include_inactive?: boolean;
 }
 
-export interface SettledCursorLinks {
-  next: string | null;
-  previous: string | null;
-}
-
 /**
  * Matches settled entries list/table endpoints
  */
-export interface GetSettledEntryResponse extends SettledCursorLinks {
-  results: SettledEntry[];
+export type GetSettledEntryResponse = Paginated<SettledEntry> & {
   running_seed_minor?: number;
   running_seed?: string;
-}
+};
 
 /* ---------------------------------- Read ---------------------------------- */
 

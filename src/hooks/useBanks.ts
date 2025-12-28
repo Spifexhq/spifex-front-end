@@ -1,7 +1,7 @@
 // src/hooks/useBanks.ts
 import { useEffect, useMemo, useState } from "react";
 import { api } from "src/api/requests";
-import type { BankAccount } from "@/models/enterprise_structure/domain";
+import type { BankAccount } from "src/models/settings/banking";
 
 type State = {
   banks: BankAccount[];

@@ -28,6 +28,8 @@ import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest,
 import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, BulkSettleItem, BulkSettleResponse,
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from 'src/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
+import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
+  GetBanksBatchRequest, GetBanksBatchResponse, GetBanksResponse } from 'src/models/settings/banking';
 
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
@@ -39,7 +41,7 @@ import {
   GetEntityResponse, GetEntitiesResponse, AddEntityRequest, EditEntityRequest,
   GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
-import { BankAccount, GLAccount, Department,
+import { GLAccount, Department,
   Project, InventoryItem, Entity
 } from '@/models/enterprise_structure/domain';
 
@@ -314,30 +316,27 @@ export const api = {
   /* --- Banks --- */
   getBanks: (active?: boolean) => {
     const params = active == null ? undefined : { active: active ? "true" : "false" };
-    return request<Paginated<BankAccount>>(`banking/accounts/`, "GET", params);
+    return request<GetBanksResponse>(`banking/accounts/`, "GET", params);
   },
 
-  getBanksBatch: (ids: string[]) => {
-    return request<BankAccount[]>(`banking/accounts/batch/`, "POST", { ids });
-  },
+  getBanksBatch: (ids: string[]) =>
+    request<GetBanksBatchResponse[]>(`banking/accounts/batch/`, "POST", {
+      ids
+    } satisfies GetBanksBatchRequest),
 
-  getBank: (bankExternalId: string) => {
-    return request<BankAccount>(`banking/accounts/${bankExternalId}/`, "GET");
-  },
+  getBank: (bankId: string) =>
+    request<GetBankResponse>(`banking/accounts/${bankId}/`, "GET"),
 
-  addBank: (payload: Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">) => {
-    return request<BankAccount>(`banking/accounts/`, "POST", payload);
-  },
+  addBank: (payload: AddBankRequest) =>
+    request<AddBankResponse>(`banking/accounts/`, "POST", payload),
 
-  editBank: (bankExternalId: string, payload: Partial<Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">>) => {
-    return request<BankAccount>(`banking/accounts/${bankExternalId}/`, "PATCH", payload);
-  },
+  editBank: (bankId: string, payload: EditBankRequest) =>
+    request<EditBankResponse>(`banking/accounts/${bankId}/`, "PATCH", payload),
 
-  deleteBank: (bankExternalId: string) => {
-    return request<unknown>(`banking/accounts/${bankExternalId}/`, "DELETE");
-  },
+  deleteBank: (bankId: string) =>
+    request<void>(`banking/accounts/${bankId}/`, "DELETE"),
 
-  /* --- General Ledger Acccounts --- */
+  /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) => {
     return request<GetLedgerAccountsResponse>(
       `ledger/accounts/`,
@@ -440,7 +439,7 @@ export const api = {
 
   addLedgerAccountsBulk: (payload: AddGLAccountRequest[]) => {
     return request<GLAccount[]>(
-      `ledger/accounts/bulk/`,
+      `ledger/accounts/add/`,
       "POST",
       payload
     );
@@ -456,14 +455,14 @@ export const api = {
 
   deleteAllLedgerAccounts: () => {
     return request<{ message: string; deleted_count: number }>(
-      `ledger/accounts/bulk/delete/`,
+      `ledger/accounts/delete/`,
       "DELETE",
       { confirm_delete_all: true }
     );
   },
 
   deleteLedgerAccount: (glaId: string) => {
-    return request<unknown>(
+    return request<void>(
       `ledger/accounts/${glaId}/`,
       "DELETE"
     );

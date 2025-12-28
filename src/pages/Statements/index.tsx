@@ -19,7 +19,7 @@ import Input from "src/components/ui/Input";
 import { api } from "@/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
 
-import type { BankAccount } from "src/models/enterprise_structure/domain";
+import type { BankAccount } from "src/models/settings/banking";
 
 /* --------------------------------- Types ---------------------------------- */
 type StatementStatus = "uploaded" | "processing" | "ready" | "failed";

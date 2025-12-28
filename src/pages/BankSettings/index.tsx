@@ -11,7 +11,6 @@ import type { TFunction } from "i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
@@ -21,8 +20,9 @@ import ConfirmToast from "src/components/ui/ConfirmToast";
 import { AmountInput } from "src/components/ui/AmountInput";
 
 import { api } from "src/api/requests";
-import type { BankAccount } from "src/models/enterprise_structure/domain";
 import { useAuthContext } from "src/hooks/useAuth";
+
+import type { BankAccount } from "src/models/settings/banking";
 
 /* ----------------------------- Constants/Types ---------------------------- */
 

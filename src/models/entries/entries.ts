@@ -1,5 +1,5 @@
 // src/models/entries/entries.ts
-
+import type { Paginated } from "@/models/Api";
 import type {
   DepartmentAllocation,
   InventoryAllocation,
@@ -7,11 +7,6 @@ import type {
 
 /* ---------------------------------- List ---------------------------------- */
 
-export interface CursorLinks {
-  count: number;
-  next: string | null;
-  previous: string | null;
-}
 
 /** Matches /<org>/cashflow/entries/ query params */
 export interface GetEntryRequest {
@@ -40,9 +35,7 @@ export interface GetEntryRequest {
   running_seed?: string;
 }
 
-export interface GetEntryResponse extends CursorLinks {
-  results: Entry[];
-}
+export type GetEntryResponse = Paginated<Entry>;
 
 /* ---------------------------------- Read ---------------------------------- */
 /**

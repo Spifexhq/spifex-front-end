@@ -8,9 +8,10 @@ import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import { formatCurrency } from "src/lib";
-import type { BankAccount } from "@/models/enterprise_structure/domain";
 import { DateInput } from "../ui/DateInput";
 import AmountInput from "../ui/AmountInput/AmountInput";
+
+import type { BankAccount } from "src/models/settings/banking";
 
 interface TransferenceModalProps {
   isOpen: boolean;

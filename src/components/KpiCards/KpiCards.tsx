@@ -10,7 +10,7 @@ import BanksTable from "src/components/Table/BanksTable";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 import { PermissionMiddleware } from "src/middlewares";
 
-import type { BankAccount } from "@/models/enterprise_structure/domain";
+import type { BankAccount } from "src/models/settings/banking";
 import type { CashflowKpis, SettledKpis } from "src/models/components/cardKpis";
 import type { EntryFilters } from "src/models/components/filterBar";
 

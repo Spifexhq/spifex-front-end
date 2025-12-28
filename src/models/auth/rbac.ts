@@ -1,4 +1,5 @@
 // src/models/auth/rbac.ts
+import type { Paginated } from "@/models/Api";
 
 /* -------------------------------- Permissions -------------------------------- */
 
@@ -55,12 +56,7 @@ export interface GroupDetail {
   created_at: string; // ISO
 }
 
-export interface GetGroupsResponse {
-  results: GroupListItem[];
-  next?: string | null;
-  previous?: string | null;
-  count?: number;
-}
+export type GetGroupsResponse = Paginated<GroupListItem>;
 
 export type GetGroupResponse = GroupDetail;
 

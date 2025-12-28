@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
+import type { BankAccount } from "src/models/settings/banking";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
 import type { ChipKey, EntryFilters, LocalFilters, Visualization } from "src/models/components/filterBar";
 

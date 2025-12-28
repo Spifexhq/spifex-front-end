@@ -5,9 +5,9 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import Spinner from "src/components/ui/Loaders/Spinner";
-import type { BankAccount } from "@/models/enterprise_structure/domain";
-
 import { formatCurrency } from "src/lib";
+
+import type { BankAccount } from "src/models/settings/banking";
 
 interface BanksTableProps {
   banks: BankAccount[];

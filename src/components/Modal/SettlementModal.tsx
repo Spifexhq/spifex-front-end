@@ -12,7 +12,7 @@ import { formatCurrency } from "@/lib/currency/formatCurrency";
 
 import type { Entry } from "src/models/entries/entries";
 import type { BulkSettleItem, BulkSettleResponse } from "src/models/entries/settlements";
-import type { BankAccount } from "@/models/enterprise_structure/domain";
+import type { BankAccount } from "src/models/settings/banking";
 
 interface SettlementModalProps {
   isOpen: boolean;
