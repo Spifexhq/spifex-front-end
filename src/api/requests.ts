@@ -1,6 +1,7 @@
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
+import type { Paginated } from '@/models/Api';
 import type { SignInRequest, SignInResponse, SignOutResponse, SignUpRequest, SignUpResponse } from '@/models/auth/auth'
 import type { CookieConsentRequest, CookieConsentResponse } from 'src/models/auth/cookies';
 import type { ChangeEmailRequest, ChangeEmailResponse, ChangePasswordRequest, ChangePasswordResponse, ConfirmPasswordResetRequest,
@@ -18,19 +19,18 @@ import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, Ge
 import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersResponse } from 'src/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from 'src/models/components/cardKpis';
 import type { DashboardOverview } from 'src/models/components/dashboard';
+import type { ReportsSummaryParams, ReportsSummary } from 'src/models/components/reports';
+import type { AddViewPresetRequest, AddViewPresetResponse, EditViewPresetRequest, EditViewPresetResponse,
+  GetViewPresetsResponse } from 'src/models/components/viewPresets';
+import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest, GetEntriesBulkResponse,
+  GetEntryRequest, EditEntriesBulkResponse, EditEntryRequest, GetEntryResponse,
+  DeleteEntriesBulkRequest } from 'src/models/entries/entries';
+import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, BulkSettleItem, BulkSettleResponse,
+  EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from 'src/models/entries/settlements';
+import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
 
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
-import { Entry, SettledEntry, Transference,
-  BulkSettleItem,
-  BulkSettleResponse, ReportsSummary,
-  ReportsSummaryParams
-} from '@/models/entries/domain'
-import {
-  GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
-  GetSettledEntry, GetSettledEntryRequest, EditSettledEntryRequest,
-  AddTransferenceRequest
-} from '@/models/entries/dto'
 import {
   GetLedgerAccountsRequest, GetLedgerAccountsResponse, AddGLAccountRequest, EditGLAccountRequest,
   GetDocumentType, GetDocumentTypes,
@@ -42,7 +42,6 @@ import {
 import { BankAccount, GLAccount, Department,
   Project, InventoryItem, Entity
 } from '@/models/enterprise_structure/domain';
-import { Paginated } from '@/models/Api';
 
 
 export const api = {
@@ -194,7 +193,7 @@ export const api = {
   /* --- KPIs --- */
   getCashflowKpis: (params: KpiQueryParams) =>
     request<CashflowKpis>("cashflow/kpis/cashflow/", "GET", params),
-  
+
   getSettledKpis: (params: KpiQueryParams) =>
     request<SettledKpis>("cashflow/kpis/settled/", "GET", params),
 
@@ -225,175 +224,92 @@ export const api = {
   deleteTask: (ids: number[]) =>
     request<TaskDetail>(`companies/tasks/${ids.join(',')}`, 'DELETE'),
 
-  /* --- Entries: saved views --- */
-  getEntryViews: () => {
-    return request<Array<{
-      id: string;
-      name: string;
-      is_default: boolean;
-      filters: unknown;
-    }>>(`cashflow/entry-view-preset/`, "GET");
-  },
+  /* --- View Presets --- */
+  getViewPresets: () =>
+    request<GetViewPresetsResponse>("cashflow/view-preset/", "GET"),
 
-  addEntryView: (payload: {
-    name: string;
-    is_default?: boolean;
-    filters: unknown;
-  }) => {
-    return request<{
-      id: string;
-      name: string;
-      is_default: boolean;
-      filters: unknown;
-    }>(`cashflow/entry-view-preset/`, "POST", payload);
-  },
+  addViewPreset: (payload: AddViewPresetRequest) =>
+    request<AddViewPresetResponse>("cashflow/view-preset/", "POST", payload),
 
-  editEntryView: (viewId: string, payload: {
-    name?: string;
-    is_default?: boolean;
-    filters?: unknown;
-  }) => {
-    return request<{
-      id: string;
-      name: string;
-      is_default: boolean;
-      filters: unknown;
-    }>(`cashflow/entry-view-preset/${viewId}/`, "PATCH", payload);
-  },
+  editViewPreset: (viewId: string, payload: EditViewPresetRequest) =>
+    request<EditViewPresetResponse>(`cashflow/view-preset/${viewId}/`, "PATCH", payload),
 
-  deleteEntryView: (viewId: string) => {
-    return request<void>(`cashflow/entry-view-preset/${viewId}/`, "DELETE");
-  },
+  deleteViewPreset: (viewId: string) =>
+    request<void>(`cashflow/view-preset/${viewId}/`, "DELETE"),
   
   /* --- Cash-flow Entries --- */
-  getEntries: (payload: GetEntryRequest) => {
-    return request<GetEntryResponse>(`cashflow/entries/`, "GET", payload);
-  },
+  getEntries: (payload: GetEntryRequest) =>
+    request<GetEntryResponse>(`cashflow/entries/`, "GET", payload),
 
-  getEntriesTable: (payload: GetEntryRequest) => {
-    return request<GetEntryResponse>(`cashflow/entries/table/`, "GET", payload);
-  },
+  getEntriesTable: (payload: GetEntryRequest) =>
+    request<GetEntryResponse>(`cashflow/entries/table/`, "GET", payload),
 
-  getEntry: (externalId: string) => {
-    return request<Entry>(`cashflow/entries/${externalId}/`, "GET");
-  },
+  getEntry: (id: string) =>
+    request<Entry>(`cashflow/entries/${id}/`, "GET"),
 
-  getEntriesBatch: (ids: string[]) => {
-    return request<Entry[]>(
-      `cashflow/entries/batch/`,
-      "POST",
-      { ids }
-    );
-  },
+  getEntriesBulk: (ids: string[]) =>
+    request<GetEntriesBulkResponse>(`cashflow/entries/get/`, "POST", {
+      ids
+    } satisfies GetEntriesBulkRequest),
 
-  addEntry: (payload: AddEntryRequest) => {
-    return request<Entry | Entry[]>(
-      `cashflow/entries/`,
-      "POST",
-      payload
-    );
-  },
+  addEntry: (payload: AddEntryRequest) =>
+    request<EntryWriteResponse>(`cashflow/entries/`, "POST", payload),
 
-  editEntry: (externalId: string, payload: Partial<EditEntryRequest>) => {
-    return request<Entry | Entry[]>(
-      `cashflow/entries/${externalId}/`,
-      "PATCH",
-      payload
-    );
-  },
+  editEntry: (id: string, payload: Partial<EditEntryRequest>) =>
+    request<EntryWriteResponse>(`cashflow/entries/${id}/`, "PATCH", payload),
 
-  bulkUpdateEntries: (
-    ids: string[],
-    data: Partial<EditEntryRequest>,
-    atomic: boolean = true
-  ) => {
-    return request<{ updated: Entry[] } | { updated: Entry[]; errors: Array<{ id: string; error: string }> }>(
-      `cashflow/entries/bulk/update/`,
-      "PATCH",
-      { ids, data, atomic }
-    );
-  },
+  editEntriesBulk: (ids: string[], data: Partial<EditEntryRequest>, atomic: boolean = true) =>
+    request<EditEntriesBulkResponse>(`cashflow/entries/update/`, "PATCH",
+      { ids, data, atomic }),
 
-  deleteEntry: (externalId: string) => {
-    return request<void>(`cashflow/entries/${externalId}/`, "DELETE");
-  },
+  deleteEntry: (id: string) =>
+    request<void>(`cashflow/entries/${id}/`, "DELETE"),
 
-  bulkDeleteEntries: (ids: string[]) => {
-    return request<void>(`cashflow/entries/bulk/delete/`, "POST", { ids });
-  },
+  deleteEntriesBulk: (ids: string[]) =>
+    request<void>(`cashflow/entries/delete/`, "POST", { ids } satisfies DeleteEntriesBulkRequest),
 
   /* --- Settle Process --- */
-  bulkSettle: (items: BulkSettleItem[], atomic: boolean = true) => {
-    return request<BulkSettleResponse>(
-      `cashflow/settlements/bulk/settle/`,
-      "POST",
-      { items, atomic }
-    );
-  },
-
-  addSettlement: (
-    entryExternalId: string,
+  // * Analyze \/
+  ddSettlement: (
+    id: string,
     payload: { bank_id: string; amount_minor?: number; amount?: string; value_date: string }
   ) => {
     return request<Entry>(
-      `cashflow/entries/${entryExternalId}/settlements/`,
+      `cashflow/entries/${id}/settlements/`,
       "POST",
       payload
     );
   },
+  // ** Analyze /\
 
   /* --- Settled Entries --- */
   getSettledEntries: (payload: GetSettledEntryRequest) => {
     const params = { include_inactive: true, ...payload };
-    return request<GetSettledEntry>(
-      `cashflow/settlements/`,
-      "GET",
-      params
-    );
-  },
+    return request<GetSettledEntryResponse>(`cashflow/settlements/`, "GET", params)},
 
   getSettledEntriesTable: (payload: GetSettledEntryRequest) => {
     const params = { include_inactive: true, ...payload };
-    return request<GetSettledEntry>(
-      `cashflow/settlements/table/`,
-      "GET",
-      params
-    );
-  },
+    return request<GetSettledEntryResponse>(`cashflow/settlements/table/`, "GET", params)},
 
-  getSettledEntry: (ids: string[], payload?: GetSettledEntryRequest) => {
+  getSettledEntriesBulk: (ids: string[], payload?: GetSettledEntryRequest) => {
     const params = { include_inactive: true, ...(payload || {}), ids: ids.join(",") };
-    return request<SettledEntry[]>(
-      `cashflow/settlements/batch/`,
-      "GET",
-      params
-    );
-  },
+    return request<SettledEntry[]>(`cashflow/settlements/get/`, "POST", params)},
 
-  editSettledEntry: (id: string, payload: Partial<EditSettledEntryRequest>) => {
-    return request<SettledEntry>(
-      `cashflow/settlements/${id}/`,
-      "PATCH",
-      payload
-    );
-  },
+  addSettlementsBulk: (items: BulkSettleItem[], atomic: boolean = true) =>
+    request<BulkSettleResponse>(`cashflow/settlements/settle/`, "POST", { items, atomic }),
 
-  bulkDeleteSettledEntries: (ids: string[]) => {
-    return request<void>(
-      `cashflow/settlements/bulk/delete/`,
-      "POST",
-      { ids }
-    );
-  },
-
-  deleteSettledEntry: (id: string) => {
-    return request<Entry>(`cashflow/settlements/${id}/`, "DELETE");
-  },
+  editSettledEntry: (id: string, payload: Partial<EditSettledEntryRequest>) =>
+    request<SettledEntry>(`cashflow/settlements/${id}/`, "PATCH", payload),
+  
+  deleteSettledEntry: (id: string) =>
+    request<Entry>(`cashflow/settlements/${id}/`, "DELETE"),
+  
+  deleteSettledEntriesBulk: (ids: string[]) =>
+    request<void>(`cashflow/settlements/delete/`, "POST", { ids } satisfies DeleteSettledEntriesBulkRequest),
 
   /* --- Transferences --- */
-  addTransference: (payload: AddTransferenceRequest) => {
-    return request<Transference>(`cashflow/transfers/`, 'POST', payload);
-  },
+  addTransference: (payload: AddTransferenceRequest) =>
+    request<Transference>(`cashflow/transfers/`, 'POST', payload),
 
   /* --- Banks --- */
   getBanks: (active?: boolean) => {

@@ -8,11 +8,11 @@ import { DateInput } from "../ui/DateInput";
 import { AmountInput } from "../ui/AmountInput";
 
 import { api } from "src/api/requests";
-import type { Entry } from "src/models/entries/domain";
-import type { BankAccount } from "@/models/enterprise_structure/domain";
-import type { BulkSettleItem, BulkSettleResponse } from "@/models/entries/domain/SettleItem";
-
 import { formatCurrency } from "@/lib/currency/formatCurrency";
+
+import type { Entry } from "src/models/entries/entries";
+import type { BulkSettleItem, BulkSettleResponse } from "src/models/entries/settlements";
+import type { BankAccount } from "@/models/enterprise_structure/domain";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -257,7 +257,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
         // request<T>() ALWAYS resolves as ApiSuccess<T> (or throws),
         // so `res.data` is always the payload here.
-        const res = await api.bulkSettle(items, true);
+        const res = await api.addSettlementsBulk(items, true);
         const data: BulkSettleResponse = res.data;
 
         if (hasErrors(data) && data.errors.length) {

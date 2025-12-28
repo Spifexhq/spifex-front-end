@@ -14,7 +14,7 @@ import { api } from "src/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
 import { useBanks } from "@/hooks/useBanks";
 
-import type { SettledEntry } from "src/models/entries/domain";
+import type { SettledEntry } from "src/models/entries/settlements";
 import type { EntryFilters } from "src/models/components/filterBar";
 import { type ModalType } from "@/components/Modal/Modal.types";
 
@@ -138,7 +138,7 @@ const Settled = () => {
                 setIsReturning(true);
                 try {
                   if (selectedIds.length > 1) {
-                    await api.bulkDeleteSettledEntries(selectedIds as string[]);
+                    await api.deleteSettledEntriesBulk(selectedIds as string[]);
                   } else {
                     await api.deleteSettledEntry(selectedIds[0] as string);
                   }

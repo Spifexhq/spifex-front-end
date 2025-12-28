@@ -14,10 +14,10 @@ import { api } from "src/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
 import { useBanks } from "@/hooks/useBanks";
 
+import { Entry } from "src/models/entries/entries";
+import type { EntryFilters } from "src/models/components/filterBar";
 import { type ModalType } from "@/components/Modal/Modal.types";
 import type { ApiError } from "@/models/Api";
-import type { EntryFilters } from "src/models/components/filterBar";
-import type { Entry } from "src/models/entries";
 
 const DEFAULT_FILTERS: EntryFilters = {
   bank_id: [],
@@ -200,7 +200,7 @@ const CashFlow = () => {
                 setIsDeleting(true);
                 try {
                   if (selectedIds.length > 1) {
-                    await api.bulkDeleteEntries(selectedIds as string[]);
+                    await api.deleteEntriesBulk(selectedIds as string[]);
                   } else {
                     await api.deleteEntry(selectedIds[0] as string);
                   }

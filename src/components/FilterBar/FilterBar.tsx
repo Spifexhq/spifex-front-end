@@ -208,7 +208,7 @@ function useSavedViews() {
 
   const refresh = useCallback(async () => {
     try {
-      const { data } = await api.getEntryViews();
+      const { data } = await api.getViewPresets();
       setViews(extractArray<Visualization>(data));
     } catch (err) {
       console.error("Failed to load saved views", err);
@@ -462,13 +462,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
         setConfigBusy(true);
 
         if (view.is_default) {
-          await api.editEntryView(view.id, { is_default: false });
+          await api.editViewPreset(view.id, { is_default: false });
         } else {
-          await api.editEntryView(view.id, { is_default: true });
+          await api.editViewPreset(view.id, { is_default: true });
 
           const others = scopedViews.filter((o) => o.id !== view.id && o.is_default);
           if (others.length) {
-            await Promise.all(others.map((o) => api.editEntryView(o.id, { is_default: false })));
+            await Promise.all(others.map((o) => api.editViewPreset(o.id, { is_default: false })));
           }
         }
 
@@ -489,7 +489,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
     try {
       setConfigBusy(true);
-      await api.editEntryView(id, { name });
+      await api.editViewPreset(id, { name });
       await refreshViews();
     } catch (err) {
       console.error("Failed to rename view", err);
@@ -504,7 +504,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     async (id: string) => {
       try {
         setConfigBusy(true);
-        await api.deleteEntryView(id);
+        await api.deleteViewPreset(id);
         setSavedViews((prev) => prev.filter((x) => x.id !== id));
       } catch (err) {
         console.error("Failed to delete view", err);
@@ -530,7 +530,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       setSaveBusy(true);
 
       if (saveMode === "overwrite" && overwriteView) {
-        await api.editEntryView(overwriteView.id, payload);
+        await api.editViewPreset(overwriteView.id, payload);
       } else {
         const sameName = savedViews.find(
           (v) =>
@@ -538,8 +538,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
             v.settlement_status === !!localFilters.settlement_status
         );
 
-        if (sameName) await api.editEntryView(sameName.id, payload);
-        else await api.addEntryView(payload);
+        if (sameName) await api.editViewPreset(sameName.id, payload);
+        else await api.addViewPreset(payload);
       }
 
       await refreshViews();

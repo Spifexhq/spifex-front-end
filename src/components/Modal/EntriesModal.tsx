@@ -9,19 +9,14 @@ import Button from "src/components/ui/Button";
 import Input from "src/components/ui/Input";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import Spinner from "src/components/ui/Loaders/Spinner";
-
-import { fetchAllCursor } from "src/lib/list";
-import { formatCurrency, formatDateFromISO } from "src/lib";
+import { DateInput } from "../ui/DateInput";
+import { AmountInput } from "../ui/AmountInput";
 
 import { api } from "src/api/requests";
 import { ApiError } from "@/models/Api";
-import { AddEntryRequest, EditEntryRequest } from "@/models/entries/dto";
-
-import type { GLAccount, Department, Project, InventoryItem, Entity } from "@/models/enterprise_structure/domain";
-
+import { fetchAllCursor } from "src/lib/list";
+import { formatCurrency, formatDateFromISO } from "src/lib";
 import documentTypesData from "@/data/documentTypes.json";
-import { DateInput } from "../ui/DateInput";
-import { AmountInput } from "../ui/AmountInput";
 
 import type {
   FormData,
@@ -31,6 +26,8 @@ import type {
   Tab,
   IntervalMonths,
 } from "./Modal.types";
+import type { GLAccount, Department, Project, InventoryItem, Entity } from "@/models/enterprise_structure/domain";
+import type { AddEntryRequest, EditEntryRequest } from "src/models/entries/entries";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocTypeItem = { id: string; label: string };

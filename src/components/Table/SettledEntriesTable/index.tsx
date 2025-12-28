@@ -9,17 +9,16 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api } from "src/api/requests";
-import type { EntryFilters } from "src/models/components/filterBar";
-import type { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto";
+import Checkbox from "src/components/ui/Checkbox";
 
+import { api } from "src/api/requests";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { getCursorFromUrl } from "src/lib/list";
-
-import Checkbox from "src/components/ui/Checkbox";
 import { formatDateFromISO } from "src/lib";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
-import { SettledEntry } from "src/models";
+
+import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry } from "src/models/entries/settlements";
+import type { EntryFilters } from "src/models/components/filterBar";
 
 /* ------------------------------ Helpers ----------------------------------- */
 
@@ -450,7 +449,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
         const payload = buildPayload(reset);
 
         const res = await api.getSettledEntriesTable(payload);
-        const data = res.data as GetSettledEntry;
+        const data = res.data as GetSettledEntryResponse;
 
         const incoming: SettledEntry[] = Array.isArray(data?.results) ? data.results : [];
 
