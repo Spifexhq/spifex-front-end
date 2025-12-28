@@ -2,7 +2,7 @@
   "title": "Funcionários",
   "header": {
     "settings": "Definições",
-    "employees": "Funcionários"
+    "members": "Funcionários"
   },
   "section": {
     "list": "Lista de funcionários"
@@ -18,7 +18,7 @@
     "syncing": "A sincronizar…"
   },
   "btn": {
-    "addEmployee": "Adicionar funcionário",
+    "addMember": "Adicionar funcionário",
     "edit": "Editar",
     "delete": "Eliminar",
     "save": "Guardar",
@@ -38,7 +38,7 @@
   },
   "errors": {
     "fetchError": "Não foi possível obter os dados.",
-    "loadEmployeeError": "Não foi possível carregar os dados do funcionário.",
+    "loadMemberError": "Não foi possível carregar os dados do funcionário.",
     "saveError": "Não foi possível guardar o funcionário.",
     "deleteError": "Não foi possível eliminar o funcionário.",
     "confirmFailed": "Não foi possível confirmar a ação."

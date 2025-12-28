@@ -4,16 +4,19 @@ import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "src/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
-import SettledEntriesTable, { SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
-import { EntryFilters, SettledEntry } from "src/models/entries/domain";
-import { ModalType } from "@/components/Modal/Modal.types";
-import { api } from "src/api/requests";
+import SettledEntriesTable, { type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import FilterBar from "src/components/FilterBar";
 import KpiCards from "src/components/KpiCards";
-import SelectionActionsBar, { MinimalEntry } from "src/components/SelectionActionsBar";
-import { useBanks } from "@/hooks/useBanks";
+import SelectionActionsBar, { type MinimalEntry } from "src/components/SelectionActionsBar";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
+
+import { api } from "src/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
+import { useBanks } from "@/hooks/useBanks";
+
+import type { SettledEntry } from "src/models/entries/domain";
+import type { EntryFilters } from "src/models/components/filterBar";
+import { type ModalType } from "@/components/Modal/Modal.types";
 
 const Settled = () => {
   const { t } = useTranslation(["settled"]);

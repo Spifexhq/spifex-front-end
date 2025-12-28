@@ -137,21 +137,21 @@
       "label": "View bank accounts",
       "description": "Allows viewing bank accounts and balances."
     },
-    "add_employee": {
-      "label": "Add employee",
-      "description": "Allows creating employee records."
+    "add_member": {
+      "label": "Add member",
+      "description": "Allows creating member records."
     },
-    "change_employee": {
-      "label": "Edit employee",
-      "description": "Allows editing employee records."
+    "change_member": {
+      "label": "Edit member",
+      "description": "Allows editing member records."
     },
-    "delete_employee": {
-      "label": "Delete employee",
-      "description": "Allows deleting employee records."
+    "delete_member": {
+      "label": "Delete member",
+      "description": "Allows deleting member records."
     },
-    "view_employee": {
-      "label": "View employees",
-      "description": "Allows viewing the list of employees."
+    "view_member": {
+      "label": "View members",
+      "description": "Allows viewing the list of members."
     },
     "add_group": {
       "label": "Add group",

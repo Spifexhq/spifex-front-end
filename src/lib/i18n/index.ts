@@ -220,10 +220,10 @@ import frSecurityAndPrivacy from "./locales/fr/securityAndPrivacy.json";
 import deSecurityAndPrivacy from "./locales/de/securityAndPrivacy.json";
 
 /** Settings screens (tables/pages) */
-import ptEmployeeSettings from "./locales/pt/employeeSettings.json";
-import enEmployeeSettings from "./locales/en/employeeSettings.json";
-import frEmployeeSettings from "./locales/fr/employeeSettings.json";
-import deEmployeeSettings from "./locales/de/employeeSettings.json";
+import ptMemberSettings from "./locales/pt/memberSettings.json";
+import enMemberSettings from "./locales/en/memberSettings.json";
+import frMemberSettings from "./locales/fr/memberSettings.json";
+import deMemberSettings from "./locales/de/memberSettings.json";
 
 import ptBankSettings from "./locales/pt/bankSettings.json";
 import enBankSettings from "./locales/en/bankSettings.json";
@@ -350,7 +350,7 @@ const NAMESPACES = [
   "securityAndPrivacy",
 
   // Settings screens
-  "employeeSettings",
+  "memberSettings",
   "bankSettings",
   "departmentSettings",
   "projectSettings",
@@ -421,7 +421,7 @@ const resources: Resource = {
     currencySettings: ptCurrencySettings,
     securityAndPrivacy: ptSecurityAndPrivacy,
 
-    employeeSettings: ptEmployeeSettings,
+    memberSettings: ptMemberSettings,
     bankSettings: ptBankSettings,
     departmentSettings: ptDepartmentSettings,
     projectSettings: ptProjectSettings,
@@ -485,7 +485,7 @@ const resources: Resource = {
     currencySettings: enCurrencySettings,
     securityAndPrivacy: enSecurityAndPrivacy,
 
-    employeeSettings: enEmployeeSettings,
+    memberSettings: enMemberSettings,
     bankSettings: enBankSettings,
     departmentSettings: enDepartmentSettings,
     projectSettings: enProjectSettings,
@@ -549,7 +549,7 @@ const resources: Resource = {
     currencySettings: frCurrencySettings,
     securityAndPrivacy: frSecurityAndPrivacy,
 
-    employeeSettings: frEmployeeSettings,
+    memberSettings: frMemberSettings,
     bankSettings: frBankSettings,
     departmentSettings: frDepartmentSettings,
     projectSettings: frProjectSettings,
@@ -613,7 +613,7 @@ const resources: Resource = {
     currencySettings: deCurrencySettings,
     securityAndPrivacy: deSecurityAndPrivacy,
 
-    employeeSettings: deEmployeeSettings,
+    memberSettings: deMemberSettings,
     bankSettings: deBankSettings,
     departmentSettings: deDepartmentSettings,
     projectSettings: deProjectSettings,

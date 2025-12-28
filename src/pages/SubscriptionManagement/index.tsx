@@ -13,8 +13,7 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import Button from "@/components/ui/Button";
 import { api } from "@/api/requests";
-
-import type { GetSubscriptionStatusResponse } from "@/models/auth/dto/GetSubscription";
+import type { GetSubscriptionStatusResponse } from "src/models/auth/billing";
 
 /* ------------------------------ Helpers ------------------------------------ */
 const getInitials = (name?: string) => {

@@ -4,17 +4,20 @@ import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "src/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
-import CashFlowTable, { CashFlowTableHandle } from "src/components/Table/CashFlowTable";
+import CashFlowTable, { type CashFlowTableHandle } from "src/components/Table/CashFlowTable";
 import FilterBar from "src/components/FilterBar";
-import { Entry, EntryFilters } from "src/models/entries";
-import { ModalType } from "@/components/Modal/Modal.types";
-import { api } from "src/api/requests";
 import KpiCards from "src/components/KpiCards";
 import SelectionActionsBar from "src/components/SelectionActionsBar";
-import { useBanks } from "@/hooks/useBanks";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import { ApiError } from "@/models/Api";
+
+import { api } from "src/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
+import { useBanks } from "@/hooks/useBanks";
+
+import { type ModalType } from "@/components/Modal/Modal.types";
+import type { ApiError } from "@/models/Api";
+import type { EntryFilters } from "src/models/components/filterBar";
+import type { Entry } from "src/models/entries";
 
 const DEFAULT_FILTERS: EntryFilters = {
   bank_id: [],

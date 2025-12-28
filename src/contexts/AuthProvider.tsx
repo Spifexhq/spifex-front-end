@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { useAuth as useAuthHook } from "@/api/auth";
 import { AuthContext } from "@/contexts/AuthContext";
 import type { RootState } from "@/redux/store";
-import type { User, UserOrganizationDetail } from "src/models/auth";
+import type { User, UserOrganizationDetail } from "src/models/auth/user";
 import { LiveSyncBridge } from "src/lib/ws/LiveSyncBridge";
 
 interface UserInfo {
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [userInfo, handleInitUser, handleSignIn, handleSignOut, handlePermissionExists],
   );
 
-  const orgExternalId = userInfo.organization?.organization?.external_id ?? null;
+  const orgExternalId = userInfo.organization?.organization?.id ?? null;
 
   return (
     <AuthContext.Provider value={authContextValue}>

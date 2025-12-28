@@ -1,24 +1,30 @@
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
-import {
-  GetEmployeeResponse, GetEmployeesResponse, AddEmployeeRequest, EditEmployeeRequest,
-  GetUserResponse,
-  SignInRequest, SignInResponse, SignUpRequest, SignUpResponse,
-  GetSubscriptionStatusResponse,
-  GetPermission, GetPermissions,
-  GetGroupsResponse, GetGroupResponse, AddGroupRequest, EditGroupRequest,
-  GetEntitlementLimitsResponse,
-} from '@/models/auth/dto'
-import { User, Organization, Permission,
-  CounterUsage, IncrementCounterUsage, PersonalSettings,
-  NotificationPreference
-} from '@/models/auth/domain'
+import type { SignInRequest, SignInResponse, SignOutResponse, SignUpRequest, SignUpResponse } from '@/models/auth/auth'
+import type { CookieConsentRequest, CookieConsentResponse } from 'src/models/auth/cookies';
+import type { ChangeEmailRequest, ChangeEmailResponse, ChangePasswordRequest, ChangePasswordResponse, ConfirmPasswordResetRequest,
+  ConfirmPasswordResetResponse, RequestPasswordResetRequest, RequestPasswordResetResponse } from 'src/models/auth/security';
+import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from 'src/models/auth/user';
+import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from 'src/models/auth/organization';
+import type { GetEntitlementLimitsResponse } from 'src/models/auth/entitlements';
+import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, CreateCustomerPortalSessionRequest,
+  CreateCustomerPortalSessionResponse, 
+  GetSubscriptionStatusResponse} from 'src/models/auth/billing';
+import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesRequest,
+  UpdateNotificationPreferencesResponse } from 'src/models/auth/notifications';
+import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse, GetGroupsResponse,
+  GetPermissionsResponse, UpdateGroupPermissionsResponse } from 'src/models/auth/rbac';
+import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersResponse } from 'src/models/auth/members';
+import type { CashflowKpis, KpiQueryParams, SettledKpis } from 'src/models/components/cardKpis';
+import type { DashboardOverview } from 'src/models/components/dashboard';
+
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
 import { Entry, SettledEntry, Transference,
-  CashflowKpis, SettledKpis, BulkSettleItem,
-  BulkSettleResponse, ReportsSummary
+  BulkSettleItem,
+  BulkSettleResponse, ReportsSummary,
+  ReportsSummaryParams
 } from '@/models/entries/domain'
 import {
   GetEntryResponse, GetEntryRequest, AddEntryRequest, EditEntryRequest,
@@ -37,7 +43,6 @@ import { BankAccount, GLAccount, Department,
   Project, InventoryItem, Entity
 } from '@/models/enterprise_structure/domain';
 import { Paginated } from '@/models/Api';
-import { DashboardOverview } from '@/models/dashboard/domain';
 
 
 export const api = {
@@ -45,12 +50,16 @@ export const api = {
   signIn: (payload: SignInRequest) =>
     request<SignInResponse>('auth/signin/', 'POST', payload),
 
-  signOut: () =>
-    request<{ ok: true } | Record<string, never>>("auth/signout/", "POST"),
-
   signUp: (payload: SignUpRequest) =>
     request<SignUpResponse>('auth/signup/', 'POST', payload),
 
+  signOut: () =>
+    request<SignOutResponse>("auth/signout/", "POST"),
+
+  saveCookieConsent: (payload: CookieConsentRequest) =>
+    request<CookieConsentResponse>("cookies/consent/", "POST", payload),
+
+  /* --- Emails --- */
   checkEmailAvailability: (email: string) =>
     request<{ available: boolean }>("auth/emails/check/", "POST", { email }),
 
@@ -63,16 +72,23 @@ export const api = {
   cancelEmailChange: <T>(changeId: string, token: string) =>
     request<T>(`auth/emails/cancel-change/${changeId}/${token}/`, "GET"),
 
-  saveCookieConsent: (payload: {
-    functional: boolean;
-    analytics: boolean;
-    marketing: boolean;
-    personalization: boolean;
-  }) => request<{ status: string; preferences: unknown }>(
-    "cookies/consent/",
-    "POST",
-    payload
-  ),
+  /* --- Password / Email security --- */
+  changePassword: (payload: ChangePasswordRequest) =>
+    request<ChangePasswordResponse>("auth/password/change/", "PUT", payload),
+
+  changeEmail: (payload: ChangeEmailRequest) =>
+    request<ChangeEmailResponse>("auth/emails/change/", "POST", payload),
+
+  requestPasswordReset: (email: string) =>
+    request<RequestPasswordResetResponse>("auth/password/reset/", "POST", {
+      email
+    } satisfies RequestPasswordResetRequest),
+
+  confirmPasswordReset: (uidb64: string, token: string, password: string) =>
+    request<ConfirmPasswordResetResponse>(`auth/password/reset/${uidb64}/${token}/`, "POST", {
+      password,
+      password_confirm: password,
+    } satisfies ConfirmPasswordResetRequest),
 
   /* --- User --- */
   getUser: () =>
@@ -84,200 +100,111 @@ export const api = {
   getPersonalSettings: () =>
     request<PersonalSettings>("auth/profile/settings/", "GET"),
 
-  editPersonalSettings:(payload: Partial<Omit<PersonalSettings, "email">>) =>
+  editPersonalSettings:(payload: EditPersonalSettingsRequest) =>
     request<PersonalSettings>("auth/profile/settings/", "PATCH", payload),
+
+  /* --- Organization --- */
+  getOrganization: () =>
+    request<Organization>("organizations/current/", "GET"),
+
+  editOrganization: (payload: Partial<Organization>) =>
+    request<Organization>("organizations/current/", "PUT", payload),
+
+  getOrgCurrency: () =>
+    request<OrgCurrencyResponse>("organizations/current/currency/", "GET"),
+
+  updateOrgCurrency: (payload: UpdateOrgCurrencyRequest) =>
+    request<OrgCurrencyResponse>("organizations/current/currency/", "PUT", payload),
 
   /* --- Entitlements --- */
   getEntitlementLimits:() =>
-    request<GetEntitlementLimitsResponse>('entitlements/limits/', 'GET'),
-
-  /* --- Password / Email security --- */
-  changePassword: (payload: { current_password: string; new_password: string }) =>
-    request<unknown>("auth/password/change/", "PUT", payload),
-
-  changeEmail: (payload: {
-    current_email: string;
-    new_email: string;
-    current_password: string;
-  }) =>
-    request<{ status: string; message: string }>(
-      "auth/emails/change/",
-      "POST",
-      payload
-    ),
-
-  requestPasswordReset: (email: string) =>
-    request<void>("auth/password/reset/", "POST", { email }),
-
-  confirmPasswordReset: (uidb64: string, token: string, password: string) =>
-    request<void>(`auth/password/reset/${uidb64}/${token}/`, "POST", {
-      password,
-      password_confirm: password,
-    }),
+    request<GetEntitlementLimitsResponse>("entitlements/limits/", "GET"),
 
   /* --- Subscriptions --- */
-  getSubscriptionStatus: () => {
-    return request<GetSubscriptionStatusResponse>(`billing/subscription/`, 'GET');
-  },
-  createCheckoutSession: (price_id: string) => {
-    return request<{ url?: string; message?: string }>(
-      `billing/checkout-session/`,
-      'POST',
-      { price_id }
-    );
-  },
-  createCustomerPortalSession: () => {
-    return request<{ url?: string }>(
-      `billing/customer-portal-session/`,
-      'POST',
-      {}
-    );
-  },
+  getSubscriptionStatus: () =>
+    request<GetSubscriptionStatusResponse>("billing/subscription/", "GET"),
+
+  createCheckoutSession: (price_id: string) =>
+    request<CreateCheckoutSessionResponse>("billing/checkout-session/", "POST", {
+      price_id
+    } satisfies CreateCheckoutSessionRequest),
+
+  createCustomerPortalSession: () =>
+    request<CreateCustomerPortalSessionResponse>(`billing/customer-portal-session/`, 'POST',
+      {} satisfies CreateCustomerPortalSessionRequest),
 
   /* --- Notifications --- */
   getNotificationPreferences: () =>
-    request<NotificationPreference[]>(
-      "auth/notifications/preferences/",
-      "GET"
-    ),
+    request<GetNotificationPreferencesResponse>("auth/notifications/preferences/", "GET"),
 
-  updateNotificationPreferences: (
-    payload: { category: string; enabled: boolean }[]
-  ) =>
-    request<NotificationPreference[]>(
-      "auth/notifications/preferences/",
-      "PUT",
-      payload
-    ),
-
-  /* --- Counter --- */
-  getCounter: (codeName: string) =>
-    request<CounterUsage>(`companies/counter/${codeName}/`, 'GET'),
-  
-  incrementCounter: (codeName: string) =>
-    request<IncrementCounterUsage>(`companies/counter/${codeName}/`, 'PATCH'),
-
-  /* --- Organization --- */
-  getOrganization: () => {
-    return request<Organization>(`organizations/current/`, "GET");
-  },
-
-  editOrganization: (payload: Partial<Organization>) => {
-    return request<Organization>(`organizations/current/`, "PUT", payload);
-  },
-
-  getOrgCurrency: () => {
-    return request<{ currency: string | null }>(
-      `organizations/current/currency/`,
-      "GET"
-    );
-  },
-
-  updateOrgCurrency: (payload: { currency: string; current_password: string }) => {
-    return request<{ currency: string | null }>(
-      "organizations/current/currency/",
-      "PUT",
-      payload
-    );
-  },
-
-  /* --- KPIs --- */
-  getCashflowKpis(params: Record<string, string | number | undefined>) {
-    return request<CashflowKpis>(`cashflow/kpis/cashflow/`, 'GET', params);
-  },
-  getSettledKpis(params: Record<string, string | number | undefined>) {
-    return request<SettledKpis>(`cashflow/kpis/settled/`, 'GET', params);
-  },
-
-  /* --- Dashboard --- */
-  getCashflowDashboard: () => {
-    return request<DashboardOverview>(`cashflow/dashboard/`, "GET");
-  },
-
-  /* --- Reports --- */
-  getReportsSummary(
-    params?: {
-      description?: string;
-      observation?: string;
-      gl?: string;         // comma-separated external_ids
-      date_from?: string;  // YYYY-MM-DD
-      date_to?: string;    // YYYY-MM-DD
-    }
-  ) {
-    return request<ReportsSummary>(
-      `cashflow/reports/summary/`,
-      'GET',
-      params
-    );
-  },
+  updateNotificationPreferences: (payload: UpdateNotificationPreferencesRequest) =>
+    request<UpdateNotificationPreferencesResponse>("auth/notifications/preferences/", "PUT", payload),
 
   /* --- Permissions --- */
   getPermissions: () =>
-    request<GetPermissions>(`rbac/permissions/`, "GET"),
+    request<GetPermissionsResponse>("rbac/permissions/", "GET"),
 
   getPermission: (code: string) =>
-    request<GetPermission>(`rbac/permissions/${code}/`, "GET"),
+    request<GetPermissionsResponse>(`rbac/permissions/${code}/`, "GET"),
 
-  getGroupPermissions: (groupId: string) => {
-    return request<{ group: { external_id: string; name: string; slug: string }; permissions: Permission[] }>(
-      `rbac/groups/${groupId}/permissions/`,
-      "GET"
-    );
-  },
+  /* --- Group permissions --- */
+  getGroupPermissions: (groupId: string) =>
+    request<GetGroupPermissionsResponse>(`rbac/groups/${groupId}/permissions/`, "GET"),
 
-  updateGroupPermissions: (groupId: string, permission_codes: string[]) => {
-    return request<{ message: string; permissions: string[] }>(
-      `rbac/groups/${groupId}/permissions/`,
-      "POST",
-      { permission_codes }
-    );
-  },
+  updateGroupPermissions: (groupId: string, permission_codes: string[]) =>
+    request<UpdateGroupPermissionsResponse>(`rbac/groups/${groupId}/permissions/`, "POST", {
+      permission_codes
+    }),
   
   /* --- Groups --- */
-  getGroups: () => {
-    return request<GetGroupsResponse>(`rbac/groups/`, "GET");
-  },
+  getGroups: () =>
+    request<GetGroupsResponse>("rbac/groups/", "GET"),
 
-  getGroup: (groupId: string) => {
-    return request<GetGroupResponse>(`rbac/groups/${groupId}/`, "GET");
-  },
+  getGroup: (groupId: string) =>
+    request<GetGroupResponse>(`rbac/groups/${groupId}/`, "GET"),
 
-  addGroup: (payload: AddGroupRequest) => {
-    return request<GetGroupResponse>(`rbac/groups/`, "POST", payload);
-  },
+  addGroup: (payload: AddGroupRequest) =>
+    request<GetGroupResponse>("rbac/groups/", "POST", payload),
 
-  editGroup: (groupId: string, payload: Partial<EditGroupRequest>) => {
-    return request<GetGroupResponse>(`rbac/groups/${groupId}/`, "PATCH", payload);
-  },
+  editGroup: (groupId: string, payload: Partial<EditGroupRequest>) =>
+    request<GetGroupResponse>(`rbac/groups/${groupId}/`, "PATCH", payload),
 
-  deleteAllGroups: () => {
-    return request<void>(`rbac/groups/`, "DELETE");
-  },
+  deleteAllGroups: () =>
+    request<void>("rbac/groups/", "DELETE"),
 
-  deleteGroup: (groupId: string) => {
-    return request<void>(`rbac/groups/${groupId}/`, "DELETE");
-  },
+  deleteGroup: (groupId: string) =>
+    request<void>(`rbac/groups/${groupId}/`, "DELETE"),
 
-  /* --- Employees --- */
-  getEmployees: () => {
-    return request<GetEmployeesResponse>(`organizations/members/`, "GET");
-  },
+  /* --- Members --- */
+  getMembers: () =>
+    request<GetMembersResponse>("organizations/members/", "GET"),
 
-  getEmployee: (membershipExternalId: string) => {
-    return request<GetEmployeeResponse>(`organizations/members/${membershipExternalId}/`, "GET");
-  },
+  getMember: (memberId: string) =>
+    request<GetMemberResponse>(`organizations/members/${memberId}/`, "GET"),
 
-  addEmployee: (payload: AddEmployeeRequest) => {
-    return request<GetEmployeeResponse>(`organizations/members/`, "POST", payload);
-  },
+  addMember: (payload: AddMemberRequest) =>
+    request<GetMemberResponse>("organizations/members/", "POST", payload),
 
-  editEmployee: (membershipExternalId: string, payload: EditEmployeeRequest) => {
-    return request<GetEmployeeResponse>(`organizations/members/${membershipExternalId}/`, "PATCH", payload);
-  },
+  editMember: (memberId: string, payload: EditMemberRequest) =>
+    request<GetMemberResponse>(`organizations/members/${memberId}/`, "PATCH", payload),
 
-  deleteEmployee: (membershipExternalId: string) => {
-    return request<void>(`organizations/members/${membershipExternalId}/`, "DELETE");
-  },
+  deleteMember: (memberId: string) =>
+    request<void>(`organizations/members/${memberId}/`, "DELETE"),
+
+  /* --- KPIs --- */
+  getCashflowKpis: (params: KpiQueryParams) =>
+    request<CashflowKpis>("cashflow/kpis/cashflow/", "GET", params),
+  
+  getSettledKpis: (params: KpiQueryParams) =>
+    request<SettledKpis>("cashflow/kpis/settled/", "GET", params),
+
+  /* --- Dashboard --- */
+  getCashflowDashboard: () =>
+    request<DashboardOverview>(`cashflow/dashboard/`, "GET"),
+
+  /* --- Reports --- */
+  getReportsSummary: (params: ReportsSummaryParams) =>
+    request<ReportsSummary>("cashflow/reports/summary/", "GET", params),
   
   /* --- Tasks --- */
   getAllTasks: () =>

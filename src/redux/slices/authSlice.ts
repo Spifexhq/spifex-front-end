@@ -1,6 +1,6 @@
 // src/redux/slices/authSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { User, UserOrganizationDetail } from "@/models/auth/domain";
+import type { User, UserOrganizationDetail } from "src/models/auth/user";
 
 export interface AuthState {
   user: User | null;
@@ -29,7 +29,7 @@ const slice = createSlice({
 
     setUserOrganization: (s, a: PayloadAction<UserOrganizationDetail | null>) => {
       s.organization = a.payload;
-      s.orgExternalId = a.payload?.organization?.external_id ?? null;
+      s.orgExternalId = a.payload?.organization?.id ?? null;
     },
 
     setOrgExternalId: (s, a: PayloadAction<string | null>) => {

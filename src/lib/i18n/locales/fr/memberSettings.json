@@ -2,7 +2,7 @@
   "title": "Employés",
   "header": {
     "settings": "Paramètres",
-    "employees": "Employés"
+    "members": "Employés"
   },
   "section": {
     "list": "Liste des employés"
@@ -18,7 +18,7 @@
     "syncing": "Synchronisation…"
   },
   "btn": {
-    "addEmployee": "Ajouter un employé",
+    "addMember": "Ajouter un employé",
     "edit": "Modifier",
     "delete": "Supprimer",
     "save": "Enregistrer",
@@ -38,7 +38,7 @@
   },
   "errors": {
     "fetchError": "Impossible de récupérer les données.",
-    "loadEmployeeError": "Impossible de charger les données de l’employé.",
+    "loadMemberError": "Impossible de charger les données de l’employé.",
     "saveError": "Impossible d’enregistrer l’employé.",
     "deleteError": "Impossible de supprimer l’employé.",
     "confirmFailed": "Impossible de confirmer l’action."

@@ -14,11 +14,12 @@ import Checkbox from "src/components/ui/Checkbox";
 import { api } from "src/api/requests";
 import { getCursorFromUrl } from "src/lib/list";
 
-import type { EntryFilters, Entry } from "src/models/entries/domain";
+import type { EntryFilters } from "src/models/components/filterBar";
 import type { GetEntryRequest, GetEntryResponse } from "src/models/entries/dto/GetEntry";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { formatDateFromISO, formatCurrency } from "src/lib";
 import { PermissionMiddleware } from "src/middlewares";
+import { Entry } from "src/models";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers (strongly typed to backend EntryReadSerializer)                    */

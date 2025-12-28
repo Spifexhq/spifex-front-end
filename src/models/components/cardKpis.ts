@@ -1,8 +1,15 @@
-// src/models/entries/domain/kpis.ts
+// src/models/components/cardKpis.ts
 
 export type MoneyDecimal = string;
 
-// Cashflow KPIs (planned / due_date based)
+/**
+ * Generic query params used by KPI endpoints.
+ * Keep it permissive because you are building params dynamically.
+ */
+export type KpiQueryParams = Record<string, string | number | undefined>;
+
+/* ----------------------- Cashflow KPIs (planned / due) ----------------------- */
+
 export type CashflowKpis = {
   period: {
     current_month: { start: string; end: string };
@@ -22,7 +29,8 @@ export type CashflowKpis = {
   overdue: { rec: MoneyDecimal; pay: MoneyDecimal; net: MoneyDecimal };
 };
 
-// Settled KPIs (realized / value_date based)
+/* ----------------------- Settled KPIs (realized / value) ---------------------- */
+
 export type SettledKpis = {
   period: {
     current_month: { start: string; end: string };

@@ -12,16 +12,13 @@ import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import ConfirmToast from "src/components/ui/ConfirmToast";
+import GroupPermissionsTable from "./GroupPermissionsTable";
 
 import { api } from "src/api/requests";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "src/hooks/useAuth";
 
-import type { Permission } from "src/models/auth/domain/Permission";
-import type { GroupDetail, GroupListItem } from "src/models/auth/domain/Group";
-import type { AddGroupRequest } from "src/models/auth/dto/GetGroup";
-import { useTranslation } from "react-i18next";
-
-import GroupPermissionsTable from "./GroupPermissionsTable";
+import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "src/models/auth/rbac";
 
 /* ------------------------------ Snackbar type ----------------------------- */
 type Snack =
@@ -56,7 +53,7 @@ const GroupSettings: React.FC = () => {
   const [groups, setGroups] = useState<GroupListItem[]>([]);
 
   // Selection & edits
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null); // external_id
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null); // id
   const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
   const [originalCodes, setOriginalCodes] = useState<Set<string>>(new Set<string>());
@@ -203,7 +200,7 @@ const GroupSettings: React.FC = () => {
       const created = res.data;
       setNewGroupName("");
       await fetchAll({ background: true });
-      setSelectedGroupId(created.external_id);
+      setSelectedGroupId(created.id);
       setSnack({
         message: t("toast.createSuccess"),
         severity: "success",
@@ -247,7 +244,7 @@ const GroupSettings: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await api.editGroup(selectedGroupDetail.external_id, { name });
+      await api.editGroup(selectedGroupDetail.id, { name });
       await fetchAll({ background: true });
       setSelectedGroupDetail((prev) =>
         prev ? { ...prev, name } : prev
@@ -275,7 +272,7 @@ const GroupSettings: React.FC = () => {
     );
     setConfirmAction(() => async () => {
       try {
-        await api.deleteGroup(selectedGroupDetail.external_id);
+        await api.deleteGroup(selectedGroupDetail.id);
         await fetchAll({ background: true });
         setSelectedGroupId(null);
         setSnack({
@@ -301,7 +298,7 @@ const GroupSettings: React.FC = () => {
     setIsSubmitting(true);
     try {
       await api.updateGroupPermissions(
-        selectedGroupDetail.external_id,
+        selectedGroupDetail.id,
         Array.from(selectedCodes)
       );
       
@@ -309,7 +306,7 @@ const GroupSettings: React.FC = () => {
       setOriginalCodes(new Set<string>(selectedCodes));
       
       await fetchAll({ background: true });
-      const res = await api.getGroup(selectedGroupDetail.external_id);
+      const res = await api.getGroup(selectedGroupDetail.id);
       const detail = res.data;
       setSelectedGroupDetail(detail);
       setSnack({
@@ -409,15 +406,15 @@ const GroupSettings: React.FC = () => {
                 <div className="max-h-[380px] overflow-auto divide-y divide-gray-200">
                   {filteredGroups.map((g) => (
                     <button
-                      key={g.external_id}
+                      key={g.id}
                       onClick={() =>
                         !busy &&
                         setSelectedGroupId((prev) =>
-                          prev === g.external_id ? null : g.external_id
+                          prev === g.id ? null : g.id
                         )
                       }
                       className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 ${
-                        selectedGroupId === g.external_id ? "bg-gray-50" : ""
+                        selectedGroupId === g.id ? "bg-gray-50" : ""
                       } ${busy ? "pointer-events-none opacity-70" : ""}`}
                     >
                       <div className="text-[13px] font-medium text-gray-900 truncate">

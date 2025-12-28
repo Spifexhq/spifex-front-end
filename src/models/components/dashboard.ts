@@ -1,15 +1,14 @@
-// src/models/dashboard/domain.ts
+// src/models/components/dashboard.ts
+
 export type MoneyDecimal = string;
 
-// -----------------------------------------------------------------------------
-// List item previews
-// -----------------------------------------------------------------------------
+/* ------------------------------ List item previews ----------------------------- */
 
 export interface DashboardEntryPreview {
   id: string;
-  due_date: string;
-  amount: MoneyDecimal; // was amount_minor: number
-  tx_type: number; // 1 (credit / inflow) or -1 (debit / outflow)
+  due_date: string;          // ISO date
+  amount: MoneyDecimal;      // major decimal string
+  tx_type: number;           // 1 inflow, -1 outflow
   description: string;
   entity_name: string | null;
   project_name: string | null;
@@ -18,16 +17,14 @@ export interface DashboardEntryPreview {
 
 export interface DashboardSettlementPreview {
   id: string;
-  value_date: string;
-  amount: MoneyDecimal; // was amount_minor: number
+  value_date: string;        // ISO date
+  amount: MoneyDecimal;      // major decimal string
   tx_type: number;
   bank_label: string;
   entry_description: string;
 }
 
-// -----------------------------------------------------------------------------
-// Organization & stats
-// -----------------------------------------------------------------------------
+/* ----------------------------- Organization & stats ---------------------------- */
 
 export interface DashboardOrganization {
   external_id: string;
@@ -68,9 +65,7 @@ export interface DashboardStats {
   banking: DashboardBankingStats;
 }
 
-// -----------------------------------------------------------------------------
-// Full payload (data from API)
-// -----------------------------------------------------------------------------
+/* -------------------------------- Full payload -------------------------------- */
 
 export interface DashboardOverview {
   organization: DashboardOrganization;

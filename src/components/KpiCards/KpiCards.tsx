@@ -7,12 +7,12 @@ import { useTranslation } from "react-i18next";
 import { api } from "src/api/requests";
 import BanksTable from "src/components/Table/BanksTable";
 
-import type { EntryFilters } from "src/models/entries";
-import type { BankAccount } from "@/models/enterprise_structure/domain";
-import type { CashflowKpis, SettledKpis } from "@/models/entries";
-
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 import { PermissionMiddleware } from "src/middlewares";
+
+import type { BankAccount } from "@/models/enterprise_structure/domain";
+import type { CashflowKpis, SettledKpis } from "src/models/components/cardKpis";
+import type { EntryFilters } from "src/models/components/filterBar";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */

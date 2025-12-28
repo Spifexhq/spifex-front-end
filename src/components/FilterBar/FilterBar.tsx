@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { BankAccount } from "@/models/enterprise_structure/domain/Bank";
 import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
-import type { EntryFilters } from "src/models/entries/domain";
-import { ChipKey, LocalFilters, Visualization } from "src/models/entries/domain";
+import type { ChipKey, EntryFilters, LocalFilters, Visualization } from "src/models/components/filterBar";
 
 import { useBanks } from "@/hooks/useBanks";
 import { api } from "src/api/requests";

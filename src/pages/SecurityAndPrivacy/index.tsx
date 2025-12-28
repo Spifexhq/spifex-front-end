@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/SecurityAndPrivacy.tsx
- * Standardized flags + UX (matches Employee/Entity/Department/Inventory)
+ * Standardized flags + UX (matches Member/Entity/Department/Inventory)
  * - Flags: isInitialLoading, isSubmitting
  * - Initial: TopProgress + PageSkeleton
  * - Background: TopProgress while submitting (change password / email)
@@ -20,10 +20,10 @@ import Snackbar from "src/components/ui/Snackbar";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
-import type { User } from "src/models/auth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
 import type { ApiErrorBody } from "@/models/Api";
+import type { User } from "src/models/auth/user";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =

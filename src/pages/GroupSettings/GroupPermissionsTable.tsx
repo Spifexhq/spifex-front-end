@@ -18,7 +18,7 @@ type PermissionCategory =
   | "entries"
   | "users"
   | "banks"
-  | "employees"
+  | "members"
   | "groups"
   | "ledger_accounts"
   | "departments"
@@ -60,7 +60,7 @@ const TABS: PermissionTab[] = [
     categories: [
       "users",
       "banks",
-      "employees",
+      "members",
       "groups",
       "ledger_accounts",
       "departments",
@@ -108,11 +108,11 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "delete_bank", category: "banks" },
   { code: "view_bank", category: "banks" },
 
-  /* ------------------------------ EMPLOYEES ------------------------------- */
-  { code: "add_employee", category: "employees" },
-  { code: "change_employee", category: "employees" },
-  { code: "delete_employee", category: "employees" },
-  { code: "view_employee", category: "employees" },
+  /* ------------------------------ MEMBERS ------------------------------- */
+  { code: "add_member", category: "members" },
+  { code: "change_member", category: "members" },
+  { code: "delete_member", category: "members" },
+  { code: "view_member", category: "members" },
 
   /* -------------------------------- GROUPS -------------------------------- */
   { code: "add_group", category: "groups" },

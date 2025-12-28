@@ -21,9 +21,9 @@ import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
 
-import type { SignUpRequest } from "src/models/auth/dto/SignUp";
 import { getCountries, CountryOption } from "@/lib/location/countries";
 import { getCurrencies, CurrencyOption } from "@/lib/currency/currencies";
+import type { SignUpRequest } from "src/models/auth/auth";
 
 type Snack =
   | {

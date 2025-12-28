@@ -108,19 +108,19 @@
       "label": "Visualizar contas bancárias",
       "description": "Permite visualizar contas bancárias e saldos."
     },
-    "add_employee": {
+    "add_member": {
       "label": "Adicionar colaborador",
       "description": "Permite criar registros de colaboradores."
     },
-    "change_employee": {
+    "change_member": {
       "label": "Editar colaborador",
       "description": "Permite editar dados de colaboradores."
     },
-    "delete_employee": {
+    "delete_member": {
       "label": "Excluir colaborador",
       "description": "Permite excluir registros de colaboradores."
     },
-    "view_employee": {
+    "view_member": {
       "label": "Visualizar colaboradores",
       "description": "Permite visualizar a lista de colaboradores."
     },

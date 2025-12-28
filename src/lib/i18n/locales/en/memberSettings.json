@@ -2,7 +2,7 @@
   "title": "Employees",
   "header": {
     "settings": "Settings",
-    "employees": "Employees"
+    "members": "Employees"
   },
   "section": {
     "list": "Employee list"
@@ -18,7 +18,7 @@
     "syncing": "Syncing…"
   },
   "btn": {
-    "addEmployee": "Add employee",
+    "addMember": "Add member",
     "edit": "Edit",
     "delete": "Delete",
     "save": "Save",
@@ -28,25 +28,25 @@
     "groups": "Select groups"
   },
   "modal": {
-    "createTitle": "Add employee",
-    "editTitle": "Edit employee",
+    "createTitle": "Add member",
+    "editTitle": "Edit member",
     "close": "Close"
   },
-  "empty": "No employees found.",
+  "empty": "No members found.",
   "confirm": {
-    "delete": "Delete employee \"{{name}}\"?"
+    "delete": "Delete member \"{{name}}\"?"
   },
   "errors": {
     "fetchError": "Failed to fetch data.",
-    "loadEmployeeError": "Failed to load employee data.",
-    "saveError": "Failed to save employee.",
-    "deleteError": "Failed to delete employee.",
+    "loadMemberError": "Failed to load member data.",
+    "saveError": "Failed to save member.",
+    "deleteError": "Failed to delete member.",
     "confirmFailed": "Failed to confirm action."
   },
   "toast": {
     "passwordMismatch": "Passwords do not match.",
     "weakPassword": "The password does not meet the minimum requirements.",
-    "saveOk": "Saved employee.",
+    "saveOk": "Saved member.",
     "deleteOk": "Employee deleted."
   }
 }

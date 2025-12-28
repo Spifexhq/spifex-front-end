@@ -2,7 +2,7 @@
   "title": "Mitarbeiter",
   "header": {
     "settings": "Einstellungen",
-    "employees": "Mitarbeiter"
+    "members": "Mitarbeiter"
   },
   "section": {
     "list": "Mitarbeiterliste"
@@ -18,7 +18,7 @@
     "syncing": "Synchronisiere…"
   },
   "btn": {
-    "addEmployee": "Mitarbeiter hinzufügen",
+    "addMember": "Mitarbeiter hinzufügen",
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "save": "Speichern",
@@ -38,7 +38,7 @@
   },
   "errors": {
     "fetchError": "Daten konnten nicht geladen werden.",
-    "loadEmployeeError": "Mitarbeiterdaten konnten nicht geladen werden.",
+    "loadMemberError": "Mitarbeiterdaten konnten nicht geladen werden.",
     "saveError": "Mitarbeiter konnte nicht gespeichert werden.",
     "deleteError": "Mitarbeiter konnte nicht gelöscht werden.",
     "confirmFailed": "Aktion konnte nicht bestätigt werden."

@@ -22,10 +22,11 @@ import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
-import type { ReportsSummary } from "@/models/entries/domain";
 import { useTranslation } from "react-i18next";
 import { formatDateFromISO } from "src/lib";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
+
+import type { ReportsSummary } from "@/models/entries/domain";
 
 type TipDatum = {
   value?: number | string;

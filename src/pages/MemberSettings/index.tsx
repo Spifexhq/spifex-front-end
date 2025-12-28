@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------------
- * File: src/pages/EmployeeSettings.tsx
+ * File: src/pages/MemberSettings.tsx
  * Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>
  * -------------------------------------------------------------------------- */
 
@@ -22,12 +22,12 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 
 import { api } from "src/api/requests";
-import { Employee } from "src/models/auth/domain";
-import type { GroupListItem } from "src/models/auth/domain/Group";
 import { useAuthContext } from "src/hooks/useAuth";
 import { validatePassword } from "src/lib";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import type { GroupListItem } from "src/models/auth/rbac";
+import type { Member } from "src/models/auth/members";
 
 /* ---------------------------- Snackbar type ------------------------------ */
 type Snack =
@@ -68,33 +68,33 @@ const getInitials = () => "FN";
 
 /* ----------------------------- UI: Row ----------------------------------- */
 const Row = ({
-  emp,
+  member,
   onEdit,
   onDelete,
   canEdit,
   t,
   busy,
 }: {
-  emp: Employee;
-  onEdit: (e: Employee) => void;
-  onDelete: (e: Employee) => void;
+  member: Member;
+  onEdit: (e: Member) => void;
+  onDelete: (e: Member) => void;
   canEdit: boolean;
   t: TFunction;
   busy?: boolean;
 }) => (
   <div className="flex items-center justify-between px-4 py-2.5">
     <div className="min-w-0">
-      <p className="text-[13px] font-medium text-gray-900 truncate">{emp.name}</p>
-      <p className="text-[12px] text-gray-600 truncate">{emp.email}</p>
+      <p className="text-[13px] font-medium text-gray-900 truncate">{member.name}</p>
+      <p className="text-[12px] text-gray-600 truncate">{member.email}</p>
     </div>
     {canEdit && (
       <div className="flex gap-2 shrink-0">
-        <Button variant="outline" onClick={() => onEdit(emp)} disabled={busy}>
+        <Button variant="outline" onClick={() => onEdit(member)} disabled={busy}>
           {t("btn.edit")}
         </Button>
         <Button
           variant="outline"
-          onClick={() => onDelete(emp)}
+          onClick={() => onDelete(member)}
           disabled={busy}
           aria-busy={busy || undefined}
         >
@@ -106,14 +106,14 @@ const Row = ({
 );
 
 /* ----------------------------- Component --------------------------------- */
-const EmployeeSettings: React.FC = () => {
-  const { t, i18n } = useTranslation("employeeSettings");
+const MemberSettings: React.FC = () => {
+  const { t, i18n } = useTranslation("memberSettings");
   const { isOwner } = useAuthContext();
 
   useEffect(() => { document.title = t("title"); }, [t]);
   useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
 
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [groups, setGroups] = useState<GroupListItem[]>([]);
 
   // Standard flags
@@ -126,7 +126,7 @@ const EmployeeSettings: React.FC = () => {
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
 
   // Toast
@@ -147,10 +147,10 @@ const EmployeeSettings: React.FC = () => {
   }, []);
 
   /* ----------------------------- Fetchers --------------------------------- */
-  const normalizeAndSet = useCallback((empRes: Employee[], grpRes: GroupListItem[]) => {
+  const normalizeAndSet = useCallback((empRes: Member[], grpRes: GroupListItem[]) => {
     const onlyMembers = empRes.filter((e) => e.role === "member");
 
-    const normEmployees = [...onlyMembers].sort((a, b) => {
+    const normMembers = [...onlyMembers].sort((a, b) => {
       const an = (a.name || "").toLowerCase();
       const bn = (b.name || "").toLowerCase();
       if (an !== bn) return an.localeCompare(bn);
@@ -162,7 +162,7 @@ const EmployeeSettings: React.FC = () => {
     );
 
     startTransition(() => {
-      setEmployees(normEmployees);
+      setMembers(normMembers);
       setGroups(normGroups);
     });
   }, []);
@@ -177,17 +177,17 @@ const EmployeeSettings: React.FC = () => {
       else setIsInitialLoading(true);
 
       try {
-        const [empResp, grpResp] = await Promise.all([api.getEmployees(), api.getGroups()]);
+        const [empResp, grpResp] = await Promise.all([api.getMembers(), api.getGroups()]);
         if (seq !== fetchSeqRef.current || !mountedRef.current) return;
 
         // request() already unwraps data, so access .data.results directly
-        const empList = empResp.data.employees || [];
+        const empList = empResp.data.members || [];
         const grpList = grpResp.data.results || [];
         
         normalizeAndSet(empList, grpList);
       } catch (err: unknown) {
         if (mountedRef.current) {
-          console.error("Fetch employees/groups failed", err);
+          console.error("Fetch members/groups failed", err);
           setSnack({ message: t("errors.fetchError"), severity: "error" });
         }
       } finally {
@@ -209,21 +209,21 @@ const EmployeeSettings: React.FC = () => {
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
     setModalMode("create");
-    setEditingEmployee(null);
+    setEditingMember(null);
     setFormData(emptyForm);
     setModalOpen(true);
   };
 
-  const openEditModal = async (employee: Employee) => {
+  const openEditModal = async (member: Member) => {
     setModalMode("edit");
-    setEditingEmployee(employee);
+    setEditingMember(member);
     setFormData(emptyForm);
     setModalOpen(true);
     setIsDetailLoading(true);
 
     try {
-      const res = await api.getEmployee(employee.external_id);
-      const detail = res.data.employee;
+      const res = await api.getMember(member.id);
+      const detail = res.data.member;
 
       setFormData({
         name: detail.name,
@@ -234,9 +234,9 @@ const EmployeeSettings: React.FC = () => {
       });
     } catch (error: unknown) {
       console.error(error);
-      setSnack({ message: t("errors.loadEmployeeError"), severity: "error" });
+      setSnack({ message: t("errors.loadMemberError"), severity: "error" });
       setModalOpen(false);
-      setEditingEmployee(null);
+      setEditingMember(null);
     } finally {
       setIsDetailLoading(false);
     }
@@ -244,7 +244,7 @@ const EmployeeSettings: React.FC = () => {
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
-    setEditingEmployee(null);
+    setEditingMember(null);
     setFormData(emptyForm);
   }, []);
 
@@ -255,7 +255,7 @@ const EmployeeSettings: React.FC = () => {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  const submitEmployee = async (e: React.FormEvent) => {
+  const submitMember = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (modalMode === "create") {
@@ -273,17 +273,17 @@ const EmployeeSettings: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (modalMode === "create") {
-        await api.addEmployee({
+        await api.addMember({
           name: formData.name,
           email: formData.email,
           password: formData.password || undefined,
-          group_external_ids: formData.groups.map((g) => g.external_id),
+          group_ids: formData.groups.map((g) => g.id),
         });
-      } else if (editingEmployee) {
-        await api.editEmployee(editingEmployee.external_id, {
+      } else if (editingMember) {
+        await api.editMember(editingMember.id, {
           name: formData.name,
           email: formData.email,
-          group_external_ids: formData.groups.map((g) => g.external_id),
+          group_ids: formData.groups.map((g) => g.id),
         });
       }
 
@@ -299,12 +299,12 @@ const EmployeeSettings: React.FC = () => {
   };
 
   /* ---------- ConfirmToast delete ----------------- */
-  const requestDeleteEmployee = (emp: Employee) => {
-    setConfirmText(t("confirm.delete", { name: emp.name }));
+  const requestDeleteMember = (member: Member) => {
+    setConfirmText(t("confirm.delete", { name: member.name }));
     setConfirmAction(() => async () => {
-      setDeleteTargetId(emp.external_id);
+      setDeleteTargetId(member.id);
       try {
-        await api.deleteEmployee(emp.external_id);
+        await api.deleteMember(member.id);
         await fetchList({ background: true });
         setSnack({ message: t("toast.deleteOk"), severity: "info" });
       } catch (err: unknown) {
@@ -368,7 +368,7 @@ const EmployeeSettings: React.FC = () => {
                     {t("header.settings")}
                   </div>
                   <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.employees")}
+                    {t("header.members")}
                   </h1>
                 </div>
                 {headerBadge}
@@ -389,35 +389,35 @@ const EmployeeSettings: React.FC = () => {
                       className="!py-1.5"
                       disabled={isSubmitting || isBackgroundSync || confirmBusy}
                     >
-                      {t("btn.addEmployee")}
+                      {t("btn.addMember")}
                     </Button>
                   )}
                 </div>
               </div>
 
               <div className="divide-y divide-gray-200">
-                {employees.map((e) => {
+                {members.map((e) => {
                   const rowBusy =
                     isSubmitting ||
                     isDetailLoading ||
                     isBackgroundSync ||
                     confirmBusy ||
-                    deleteTargetId === e.external_id;
+                    deleteTargetId === e.id;
 
                   return (
                     <Row
-                      key={e.external_id}
-                      emp={e}
+                      key={e.id}
+                      member={e}
                       canEdit={canEdit}
                       onEdit={openEditModal}
-                      onDelete={requestDeleteEmployee}
+                      onDelete={requestDeleteMember}
                       t={t}
                       busy={rowBusy}
                     />
                   );
                 })}
 
-                {employees.length === 0 && !isBackgroundSync && (
+                {members.length === 0 && !isBackgroundSync && (
                   <p className="p-4 text-center text-sm text-gray-500">
                     {t("empty")}
                   </p>
@@ -451,7 +451,7 @@ const EmployeeSettings: React.FC = () => {
               {modalMode === "edit" && isDetailLoading ? (
                 <ModalSkeleton />
               ) : (
-                <form className="grid grid-cols-2 gap-4" onSubmit={submitEmployee}>
+                <form className="grid grid-cols-2 gap-4" onSubmit={submitMember}>
                   <Input
                     label={t("field.name")}
                     name="name"
@@ -502,7 +502,7 @@ const EmployeeSettings: React.FC = () => {
                         items={groups}
                         selected={formData.groups}
                         onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
-                        getItemKey={(g) => g.external_id}
+                        getItemKey={(g) => g.id}
                         getItemLabel={(g) => g.name}
                         buttonLabel={t("btnLabel.groups")}
                         hideCheckboxes={false}
@@ -567,4 +567,4 @@ const EmployeeSettings: React.FC = () => {
   );
 };
 
-export default EmployeeSettings;
+export default MemberSettings;

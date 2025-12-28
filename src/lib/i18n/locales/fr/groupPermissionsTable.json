@@ -108,19 +108,19 @@
       "label": "Voir les comptes bancaires",
       "description": "Permet de voir les comptes bancaires et leurs soldes."
     },
-    "add_employee": {
+    "add_member": {
       "label": "Ajouter un employé",
       "description": "Permet de créer des fiches employé."
     },
-    "change_employee": {
+    "change_member": {
       "label": "Modifier un employé",
       "description": "Permet de modifier les informations des employés."
     },
-    "delete_employee": {
+    "delete_member": {
       "label": "Supprimer un employé",
       "description": "Permet de supprimer des fiches employé."
     },
-    "view_employee": {
+    "view_member": {
       "label": "Voir les employés",
       "description": "Permet de voir la liste des employés."
     },

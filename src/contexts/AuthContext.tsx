@@ -1,7 +1,8 @@
 // contexts/AuthContext.tsx
 import { createContext } from "react";
 import type { ApiSuccess } from "src/models";
-import type { User, UserOrganizationDetail, SignInResponse } from "src/models/auth";
+import type { SignInResponse } from "src/models/auth/auth";
+import type { User, UserOrganizationDetail } from "src/models/auth/user";
 
 export interface AuthContextType {
   user: User | null;

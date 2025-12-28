@@ -1,5 +1,17 @@
-// src/models/entries/domain/FilterBar.ts
-import type { EntryFilters } from "./EntryFilters";
+// src/models/components/filterBar.ts
+
+export type EntryFilters = {
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+  observation?: string;
+  gla_id?: string[];
+  bank_id?: string[];
+  tx_type?: "credit" | "debit";
+  amount_min?: string;
+  amount_max?: string;
+  settlement_status?: boolean;
+};
 
 export type ChipKey =
   | "date"

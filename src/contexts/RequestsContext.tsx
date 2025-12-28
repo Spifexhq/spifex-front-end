@@ -1,5 +1,6 @@
 import { createContext } from "react";
-import { SignInRequest, SignInResponse, GetUserResponse } from "@/models/auth/dto";
+import type { SignInRequest, SignInResponse } from '@/models/auth/auth'
+import type { GetUserResponse } from '@/models/auth/user';
 
 export interface RequestsContextType {
   getUser: () => Promise<{ data?: GetUserResponse | null }>;

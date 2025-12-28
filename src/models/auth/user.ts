@@ -1,4 +1,6 @@
-// models/auth/User.ts
+// src/models/auth/user.ts
+import type { OrganizationSummary } from "./organization";
+
 export interface User {
   name: string;
   email: string;
@@ -14,11 +16,7 @@ export interface User {
 export interface UserOrganizationDetail {
   is_owner: boolean;
   role: string | null;
-  organization: {
-    external_id: string;
-    name: string;
-    currency: string;
-  } | null;
+  organization: OrganizationSummary | null;
 }
 
 export interface PersonalSettings {
@@ -29,4 +27,13 @@ export interface PersonalSettings {
   department?: string;
   timezone: string;
   country?: string;
+}
+
+export type EditPersonalSettingsRequest = Partial<Omit<PersonalSettings, "email">>;
+
+export interface GetUserResponse {
+  user: User;
+  organization: UserOrganizationDetail;
+  is_subscribed: boolean;
+  permissions: string[];
 }

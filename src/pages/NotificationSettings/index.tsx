@@ -18,11 +18,8 @@ import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
-import {
-  NotificationPreference,
-  NotificationCategory,
-} from "src/models/auth/domain/Notifications";
 import { useAuthContext } from "src/hooks/useAuth";
+import type { NotificationCategory, NotificationPreference } from "src/models/auth/notifications";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =

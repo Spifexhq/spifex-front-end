@@ -1,4 +1,5 @@
-// src/models/auth/domain/EntitlementLimits.ts
+// src/models/auth/entitlements.ts
+
 export type EntitlementPeriod = "daily" | "monthly" | "lifetime";
 
 export type PermissionLite = {
@@ -35,3 +36,8 @@ export type EntitlementLimitItem = {
   limits: EntitlementLimits;
   usage: EntitlementUsage;
 };
+
+export interface GetEntitlementLimitsResponse {
+  plan: PlanLite;
+  items: EntitlementLimitItem[];
+}

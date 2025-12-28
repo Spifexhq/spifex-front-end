@@ -137,19 +137,19 @@
       "label": "Bankkonten anzeigen",
       "description": "Erlaubt das Anzeigen von Bankkonten und deren Salden."
     },
-    "add_employee": {
+    "add_member": {
       "label": "Mitarbeiter hinzufügen",
       "description": "Erlaubt das Anlegen von Mitarbeiter-Datensätzen."
     },
-    "change_employee": {
+    "change_member": {
       "label": "Mitarbeiter bearbeiten",
       "description": "Erlaubt das Bearbeiten von Mitarbeiterdaten."
     },
-    "delete_employee": {
+    "delete_member": {
       "label": "Mitarbeiter löschen",
       "description": "Erlaubt das Löschen von Mitarbeiter-Datensätzen."
     },
-    "view_employee": {
+    "view_member": {
       "label": "Mitarbeiter anzeigen",
       "description": "Erlaubt das Anzeigen der Mitarbeiterliste."
     },

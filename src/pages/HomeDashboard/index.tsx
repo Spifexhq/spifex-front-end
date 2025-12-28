@@ -10,7 +10,7 @@ import type {
   DashboardOverview,
   DashboardEntryPreview,
   DashboardSettlementPreview,
-} from "@/models/dashboard/domain";
+} from "src/models/components/dashboard";
 
 import { formatDateFromISO } from "@/lib/date/formatDate";
 import { formatCurrency } from "@/lib/currency/formatCurrency";

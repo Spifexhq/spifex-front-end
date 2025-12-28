@@ -21,10 +21,10 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
-import type { Organization } from "src/models/auth/domain";
 
 import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 import { getCountries, type CountryOption } from "@/lib/location/countries";
+import type { Organization } from "src/models/auth/organization";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =

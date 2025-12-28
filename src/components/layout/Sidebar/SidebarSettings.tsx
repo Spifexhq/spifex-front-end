@@ -33,7 +33,7 @@ const Icons = {
   bell: svg("M18 16v-4a6 6 0 10-12 0v4l-2 2h16l-2-2z M13.73 21a2 2 0 01-3.46 0"),
   shield: svg("M12 3l7 3v6c0 4.5-3 8.5-7 9-4-.5-7-4.5-7-9V6l7-3z M9 12h6M12 9v6"),
   building: svg("M6 4h12v16H6V4z M10 8h1M13 8h1M10 11h1M13 11h1M10 14h1M13 14h1M8 20v-2h8v2"),
-  employees: svg("M8 8a3 3 0 110-6 3 3 0 010 6z M16 9a3 3 0 110-6 3 3 0 010 6z M4 19v-1a5 5 0 015-5h0 M12 19v-1a5 5 0 015-5h0"),
+  members: svg("M8 8a3 3 0 110-6 3 3 0 010 6z M16 9a3 3 0 110-6 3 3 0 010 6z M4 19v-1a5 5 0 015-5h0 M12 19v-1a5 5 0 015-5h0"),
   layers: svg("M12 3l9 5-9 5-9-5 9-5z M21 13l-9 5-9-5"),
   bank: svg("M3 9l9-5 9 5z M4 10h16 M6 10v7M10 10v7M14 10v7M18 10v7 M3 17h18M2 21h20"),
   card: svg("M3 5h18a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2z M3 10h18 M7 15h5"),
@@ -79,7 +79,7 @@ const SidebarSettings: React.FC<SidebarSettingsProps> = ({
           // keep id "organization-settings" if your route is /settings/organization-settings
           // label updated to Organization language
           { id: "organization-settings", icon: "building" as IconKey, label: t("items.organization-settings") },
-          { id: "employees", icon: "employees" as IconKey, label: t("items.employees") },
+          { id: "members", icon: "members" as IconKey, label: t("items.members") },
           { id: "groups", icon: "groups" as IconKey, label: t("items.groups") },
           { id: "subscription-management", icon: "layers" as IconKey, label: t("items.subscription-management") },
         ],

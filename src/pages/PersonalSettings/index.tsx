@@ -22,11 +22,12 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
-import { PersonalSettings as PersonalSettingsModel, Organization } from "src/models/auth";
-import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import type { PersonalSettings as PersonalSettingsModel } from "src/models/auth/user";
+import type { Organization } from "src/models/auth/organization";
 
+import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
 import { getCountries, CountryOption } from "@/lib/location/countries";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =
@@ -79,7 +80,7 @@ const PersonalSettings: React.FC = () => {
 
   const navigate = useNavigate();
   const { isOwner, organization: orgCtx } = useAuthContext();
-  const orgExternalId = orgCtx?.organization?.external_id ?? null;
+  const orgExternalId = orgCtx?.organization?.id ?? null;
 
   /* ------------------------------ Flags ------------------------------ */
   const [isInitialLoading, setIsInitialLoading] = useState(true);

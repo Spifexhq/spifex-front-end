@@ -127,11 +127,11 @@ function readOrgExternalId(): string | undefined {
   const s = store.getState() as unknown as {
     auth?: {
       orgExternalId?: string | null;
-      organization?: { organization?: { external_id?: string } } | null;
+      organization?: { organization?: { id?: string } } | null;
     };
   };
 
-  const fromRedux = s.auth?.orgExternalId || s.auth?.organization?.organization?.external_id;
+  const fromRedux = s.auth?.orgExternalId || s.auth?.organization?.organization?.id;
   const fromSession = getOrgExternalIdStored();
   return (fromRedux || fromSession || "").trim() || undefined;
 }

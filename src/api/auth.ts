@@ -95,7 +95,7 @@ export const useAuth = () => {
       dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
       dispatch(setPermissions(res.data.permissions ?? []));
 
-      const orgExt = res.data.organization?.organization?.external_id ?? null;
+      const orgExt = res.data.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
@@ -162,7 +162,7 @@ export const useAuth = () => {
       dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
       dispatch(setPermissions(res.data.permissions ?? []));
 
-      const orgExt = res.data.organization?.organization?.external_id ?? null;
+      const orgExt = res.data.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();

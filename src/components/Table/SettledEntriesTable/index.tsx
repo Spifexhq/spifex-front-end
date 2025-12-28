@@ -10,7 +10,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 
 import { api } from "src/api/requests";
-import type { EntryFilters, SettledEntry } from "src/models/entries/domain";
+import type { EntryFilters } from "src/models/components/filterBar";
 import type { GetSettledEntryRequest, GetSettledEntry } from "src/models/entries/dto";
 
 import { useShiftSelect } from "@/hooks/useShiftSelect";
@@ -19,6 +19,7 @@ import { getCursorFromUrl } from "src/lib/list";
 import Checkbox from "src/components/ui/Checkbox";
 import { formatDateFromISO } from "src/lib";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
+import { SettledEntry } from "src/models";
 
 /* ------------------------------ Helpers ----------------------------------- */
 
