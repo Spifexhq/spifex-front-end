@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Abonnement requis",
+    "title": "Abonnement requis",
+    "subtitle": "Cette page est réservée aux comptes abonnés. Veuillez mettre à niveau votre offre pour continuer.",
+    "btn": {
+      "refresh": "Actualiser"
+    }
+  }
+}

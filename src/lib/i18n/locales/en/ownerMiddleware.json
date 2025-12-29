@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Owner access required",
+    "title": "Owner access required",
+    "subtitle": "You need organization owner permissions to access this page.",
+    "btn": {
+      "goToSettings": "Go to Settings"
+    }
+  }
+}

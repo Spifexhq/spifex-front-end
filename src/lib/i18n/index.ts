@@ -260,11 +260,6 @@ import enEntitySettings from "./locales/en/entitySettings.json";
 import frEntitySettings from "./locales/fr/entitySettings.json";
 import deEntitySettings from "./locales/de/entitySettings.json";
 
-import ptPermissionMiddleware from "./locales/pt/permissionMiddleware.json";
-import enPermissionMiddleware from "./locales/en/permissionMiddleware.json";
-import frPermissionMiddleware from "./locales/fr/permissionMiddleware.json";
-import dePermissionMiddleware from "./locales/de/permissionMiddleware.json";
-
 /** Status */
 import ptStatusComingSoon from "./locales/pt/statusComingSoon.json";
 import enStatusComingSoon from "./locales/en/statusComingSoon.json";
@@ -286,6 +281,22 @@ import enStatus500 from "./locales/en/status500.json";
 import frStatus500 from "./locales/fr/status500.json";
 import deStatus500 from "./locales/de/status500.json";
 
+/** Middlewares */
+import ptPermissionMiddleware from "./locales/pt/permissionMiddleware.json";
+import enPermissionMiddleware from "./locales/en/permissionMiddleware.json";
+import frPermissionMiddleware from "./locales/fr/permissionMiddleware.json";
+import dePermissionMiddleware from "./locales/de/permissionMiddleware.json";
+
+import ptOwnerMiddleware from "./locales/pt/ownerMiddleware.json";
+import enOwnerMiddleware from "./locales/en/ownerMiddleware.json";
+import frOwnerMiddleware from "./locales/fr/ownerMiddleware.json";
+import deOwnerMiddleware from "./locales/de/ownerMiddleware.json";
+
+import ptSubscriptionMiddleware from "./locales/pt/subscriptionMiddleware.json";
+import enSubscriptionMiddleware from "./locales/en/subscriptionMiddleware.json";
+import frSubscriptionMiddleware from "./locales/fr/subscriptionMiddleware.json";
+import deSubscriptionMiddleware from "./locales/de/subscriptionMiddleware.json";
+
 /* -------------------------------------------------------------------------- */
 /* Namespaces                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -300,8 +311,6 @@ const NAMESPACES = [
   "forgotPassword",
   "resetPassword",
   "emailVerification",
-
-  "permissionMiddleware",
 
   // Layout
   "navbar",
@@ -364,6 +373,11 @@ const NAMESPACES = [
   "statusMaintenance",
   "status404",
   "status500",
+
+  // Middlewares
+  "permissionMiddleware",
+  "ownerMiddleware",
+  "subscriptionMiddleware",
 ] as const;
 
 /* -------------------------------------------------------------------------- */
@@ -379,8 +393,6 @@ const resources: Resource = {
     forgotPassword: ptForgotPassword,
     resetPassword: ptResetPassword,
     emailVerification: ptEmailVerification,
-
-    permissionMiddleware: ptPermissionMiddleware,
 
     navbar: ptNavbar,
     sidebar: ptSidebar,
@@ -434,6 +446,10 @@ const resources: Resource = {
     statusMaintenance: ptStatusMaintenance,
     status404: ptStatus404,
     status500: ptStatus500,
+
+    permissionMiddleware: ptPermissionMiddleware,
+    ownerMiddleware: ptOwnerMiddleware,
+    subscriptionMiddleware: ptSubscriptionMiddleware,
   },
   en: {
     common: enCommon,
@@ -443,8 +459,6 @@ const resources: Resource = {
     forgotPassword: enForgotPassword,
     resetPassword: enResetPassword,
     emailVerification: enEmailVerification,
-
-    permissionMiddleware: enPermissionMiddleware,
 
     navbar: enNavbar,
     sidebar: enSidebar,
@@ -498,6 +512,10 @@ const resources: Resource = {
     statusMaintenance: enStatusMaintenance,
     status404: enStatus404,
     status500: enStatus500,
+
+    permissionMiddleware: enPermissionMiddleware,
+    ownerMiddleware: enOwnerMiddleware,
+    subscriptionMiddleware: enSubscriptionMiddleware,
   },
   fr: {
     common: frCommon,
@@ -507,8 +525,6 @@ const resources: Resource = {
     forgotPassword: frForgotPassword,
     resetPassword: frResetPassword,
     emailVerification: frEmailVerification,
-
-    permissionMiddleware: frPermissionMiddleware,
 
     navbar: frNavbar,
     sidebar: frSidebar,
@@ -562,6 +578,10 @@ const resources: Resource = {
     statusMaintenance: frStatusMaintenance,
     status404: frStatus404,
     status500: frStatus500,
+
+    permissionMiddleware: frPermissionMiddleware,
+    ownerMiddleware: frOwnerMiddleware,
+    subscriptionMiddleware: frSubscriptionMiddleware,
   },
   de: {
     common: deCommon,
@@ -571,8 +591,6 @@ const resources: Resource = {
     forgotPassword: deForgotPassword,
     resetPassword: deResetPassword,
     emailVerification: deEmailVerification,
-
-    permissionMiddleware: dePermissionMiddleware,
 
     navbar: deNavbar,
     sidebar: deSidebar,
@@ -626,6 +644,10 @@ const resources: Resource = {
     statusMaintenance: deStatusMaintenance,
     status404: deStatus404,
     status500: deStatus500,
+
+    permissionMiddleware: dePermissionMiddleware,
+    ownerMiddleware: deOwnerMiddleware,
+    subscriptionMiddleware: deSubscriptionMiddleware,
   },
 };
 

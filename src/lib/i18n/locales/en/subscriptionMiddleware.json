@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Subscription required",
+    "title": "Subscription required",
+    "subtitle": "This page is available to subscribed accounts. Please upgrade your plan to continue.",
+    "btn": {
+      "refresh": "Refresh"
+    }
+  }
+}

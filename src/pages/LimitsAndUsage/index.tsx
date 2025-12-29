@@ -12,6 +12,9 @@ import { api } from "@/api/requests";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { formatDateTimeFromISO } from "@/lib/date/formatDate";
 
+// Reuse the same permission icons from GroupSettings
+import { PermissionIcon } from "@/pages/GroupSettings/permissionIcons";
+
 /* --------------------------------- Types ---------------------------------- */
 type LimitsPeriod = "daily" | "weekly" | "monthly" | "lifetime";
 
@@ -50,9 +53,7 @@ const ToneBadge: React.FC<{
     gray: "bg-gray-50 text-gray-700 border-gray-200",
   };
   return (
-    <span
-      className={`text-[11px] px-2 py-0.5 rounded-full border ${tones[tone]} inline-flex items-center`}
-    >
+    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${tones[tone]} inline-flex items-center`}>
       {children}
     </span>
   );
@@ -134,8 +135,8 @@ const LimitsAndUsage: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await api.getEntitlementLimits(); // typed on the API layer
-        setData(resp.data as EntitlementsPayload); // keep page resilient even if API is loosely typed
+        const resp = await api.getEntitlementLimits();
+        setData(resp.data as EntitlementsPayload);
       } finally {
         setLoading(false);
       }
@@ -145,6 +146,7 @@ const LimitsAndUsage: React.FC = () => {
   const filtered = useMemo(() => {
     if (!data?.items) return [];
     const qq = q.trim().toLowerCase();
+
     const base = !qq
       ? data.items
       : data.items.filter((it) => {
@@ -154,10 +156,7 @@ const LimitsAndUsage: React.FC = () => {
           return code.includes(qq) || name.includes(qq) || category.includes(qq);
         });
 
-    const enriched = base.map((it) => {
-      const percentage = pct(it.usage.used, it.limits.limit, it.limits.unmetered);
-      return { ...it, _pct: percentage };
-    });
+    const enriched = base.map((it) => ({ ...it, _pct: pct(it.usage.used, it.limits.limit, it.limits.unmetered) }));
 
     const dir = sortDir === "asc" ? 1 : -1;
     return enriched.sort((a, b) => {
@@ -171,6 +170,7 @@ const LimitsAndUsage: React.FC = () => {
           : sortKey === "used"
           ? a.usage.used
           : a._pct;
+
       const B =
         sortKey === "permission"
           ? b.permission.code
@@ -196,6 +196,7 @@ const LimitsAndUsage: React.FC = () => {
   };
 
   if (!isLogged) return null;
+
   if (loading)
     return (
       <>
@@ -210,16 +211,13 @@ const LimitsAndUsage: React.FC = () => {
         {/* Header */}
         <header className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">
-              {t("header.kicker")}
-            </div>
-            <h1 className="text-[16px] font-semibold text-gray-900">
-              {t("header.title")}
-            </h1>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kicker")}</div>
+            <h1 className="text-[16px] font-semibold text-gray-900">{t("header.title")}</h1>
             <p className="text-[12px] text-gray-600">
               {t("header.subtitle")}{" "}
               <span className="font-medium">{data?.plan?.name ?? t("header.planUnknown")}</span>
             </p>
+
             {/* Legend */}
             <div className="mt-2 flex flex-wrap gap-2">
               <ToneBadge tone="green">{t("legend.ok")}</ToneBadge>
@@ -229,6 +227,7 @@ const LimitsAndUsage: React.FC = () => {
               <ToneBadge tone="lime">{t("legend.unmetered")}</ToneBadge>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             <input
               value={q}
@@ -242,34 +241,19 @@ const LimitsAndUsage: React.FC = () => {
         {/* Table */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="grid grid-cols-12 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-[11px] font-medium text-gray-700 uppercase tracking-wide">
-            <button
-              className="text-left col-span-4 hover:underline"
-              onClick={() => toggleSort("permission")}
-            >
+            <button className="text-left col-span-4 hover:underline" onClick={() => toggleSort("permission")}>
               {t("th.permission")}
             </button>
-            <button
-              className="text-left col-span-2 hover:underline"
-              onClick={() => toggleSort("period")}
-            >
+            <button className="text-left col-span-2 hover:underline" onClick={() => toggleSort("period")}>
               {t("th.period")}
             </button>
-            <button
-              className="text-left col-span-2 hover:underline"
-              onClick={() => toggleSort("limit")}
-            >
+            <button className="text-left col-span-2 hover:underline" onClick={() => toggleSort("limit")}>
               {t("th.limit")}
             </button>
-            <button
-              className="text-left col-span-2 hover:underline"
-              onClick={() => toggleSort("used")}
-            >
+            <button className="text-left col-span-2 hover:underline" onClick={() => toggleSort("used")}>
               {t("th.used")}
             </button>
-            <button
-              className="text-left col-span-2 hover:underline"
-              onClick={() => toggleSort("pct")}
-            >
+            <button className="text-left col-span-2 hover:underline" onClick={() => toggleSort("pct")}>
               {t("th.percent")}
             </button>
           </div>
@@ -283,13 +267,12 @@ const LimitsAndUsage: React.FC = () => {
               const label = t(`perms.${permission.code}.label`, {
                 defaultValue: permission.name ?? permission.code,
               });
+
               const description = t(`perms.${permission.code}.description`, {
                 defaultValue: permission.description ?? "",
               });
 
-              const periodLabel = t(`periods.${limits.period}`, {
-                defaultValue: limits.period,
-              });
+              const periodLabel = t(`periods.${limits.period}`, { defaultValue: limits.period });
 
               const statusText =
                 limits.unmetered
@@ -308,40 +291,53 @@ const LimitsAndUsage: React.FC = () => {
                   : "";
 
               return (
-                <div
-                  key={`${permission.code}-${limits.period}`}
-                  className="grid grid-cols-12 items-center px-4 py-3"
-                >
+                <div key={`${permission.code}-${limits.period}`} className="grid grid-cols-12 items-center px-4 py-3">
                   {/* Permission */}
                   <div className="col-span-4">
-                    <div className="flex items-center gap-2">
-                      <div className="text-[13px] font-medium text-gray-900">{label}</div>
-                      <ToneBadge tone={st.tone}>{statusText}</ToneBadge>
-                    </div>
-                    <div className="text-[12px] text-gray-600">{permission.code}</div>
-                    {description && (
-                      <div className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">
-                        {description}
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div
+                        className={`mt-0.5 h-9 w-9 rounded-lg border flex items-center justify-center ${
+                          st.tone === "red"
+                            ? "border-rose-200 bg-rose-50"
+                            : st.tone === "orange"
+                            ? "border-orange-200 bg-orange-50"
+                            : st.tone === "amber"
+                            ? "border-amber-200 bg-amber-50"
+                            : st.tone === "lime"
+                            ? "border-lime-200 bg-lime-50"
+                            : st.tone === "green"
+                            ? "border-emerald-200 bg-emerald-50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        <PermissionIcon code={permission.code} className="h-5 w-5 text-gray-700" />
                       </div>
-                    )}
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div className="text-[13px] font-medium text-gray-900">{label}</div>
+                          <ToneBadge tone={st.tone}>{statusText}</ToneBadge>
+                        </div>
+                        <div className="text-[12px] text-gray-600">{permission.code}</div>
+                        {description && (
+                          <div className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">{description}</div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Period */}
                   <div className="col-span-2 text-[13px] text-gray-800">
                     {periodLabel}
-                    {resetsLabel && (
-                      <div className="text-[11px] text-gray-500">
-                        {resetsLabel}
-                      </div>
-                    )}
+                    {resetsLabel && <div className="text-[11px] text-gray-500">{resetsLabel}</div>}
                   </div>
 
                   {/* Limit */}
                   <div className="col-span-2 text-[13px] text-gray-800">
                     {limits.unmetered ? t("unmetered") : limits.limit ?? 0}
-                    {limits.enforce === false && (
-                      <div className="text-[11px] text-gray-500">{t("notEnforced")}</div>
-                    )}
+                    {limits.enforce === false && <div className="text-[11px] text-gray-500">{t("notEnforced")}</div>}
                   </div>
 
                   {/* Used */}
@@ -361,9 +357,7 @@ const LimitsAndUsage: React.FC = () => {
 
                   {/* % + progress */}
                   <div className="col-span-2">
-                    <div className="mb-1 text-[13px] text-gray-800 tabular-nums">
-                      {percentage}%
-                    </div>
+                    <div className="mb-1 text-[13px] text-gray-800 tabular-nums">{percentage}%</div>
                     <Progress pct={percentage} tone={st.tone} />
                   </div>
                 </div>
@@ -371,9 +365,7 @@ const LimitsAndUsage: React.FC = () => {
             })}
 
             {!filtered.length && (
-              <div className="px-4 py-6 text-[13px] text-gray-600">
-                {t("empty")}
-              </div>
+              <div className="px-4 py-6 text-[13px] text-gray-600">{t("empty")}</div>
             )}
           </div>
         </div>

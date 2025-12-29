@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Assinatura necessária",
+    "title": "Assinatura necessária",
+    "subtitle": "Esta página está disponível apenas para contas com assinatura ativa. Faça upgrade do seu plano para continuar.",
+    "btn": {
+      "refresh": "Atualizar"
+    }
+  }
+}

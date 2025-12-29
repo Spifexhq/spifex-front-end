@@ -1,7 +1,7 @@
-import React from 'react';
-import { PermissionMiddleware } from '@/middlewares';
+import React from "react";
+import { PermissionMiddleware } from "@/middlewares";
 import { ModalType } from "@/components/Modal/Modal.types";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,48 +18,78 @@ const Sidebar: React.FC<SidebarProps> = ({
   toggleSidebar,
   mode,
 }) => {
-  const { t } = useTranslation(['sidebar']);
+  const { t } = useTranslation(["sidebar"]);
 
   return (
     <nav
-      aria-label={t('sidebar:sidebar.aria.nav')}
+      aria-label={t("sidebar:sidebar.aria.nav")}
       className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-50 bg-white flex flex-col transition-all duration-300 border-r border-gray-200
-        ${isOpen ? 'w-60' : 'w-16'}`}
+        ${isOpen ? "w-60" : "w-16"}`}
     >
       <div className="flex flex-col flex-grow p-3 space-y-1 select-none">
-        {mode !== 'settled' && (
+        {mode !== "settled" && (
           <>
             <PermissionMiddleware codeName={["view_credit_modal_button"]} requireAll>
               <button
-                onClick={() => handleOpenModal('credit')}
+                onClick={() => handleOpenModal("credit")}
                 className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"
-                aria-label={t('sidebar:sidebar.items.credit')}
+                aria-label={t("sidebar:sidebar.items.credit")}
               >
                 <div className="flex items-center justify-center w-10 h-10">
-                  {/* decorative icon */}
-                  <img src="src/assets/Icons/buttons/credit.svg" alt="" className="w-4 h-4" />
+                  {/* Plus in rounded-square (inline SVG) */}
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" />
+                    <path strokeWidth="1.75" strokeLinecap="round" d="M12 8.5v7" />
+                    <path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" />
+                  </svg>
                 </div>
+
                 <span
-                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 max-w-40' : 'opacity-0 max-w-0 pointer-events-none'}`}
+                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${
+                    isOpen ? "opacity-100 max-w-40" : "opacity-0 max-w-0 pointer-events-none"
+                  }`}
                 >
-                  {t('sidebar:sidebar.items.credit')}
+                  {t("sidebar:sidebar.items.credit")}
                 </span>
               </button>
             </PermissionMiddleware>
 
             <PermissionMiddleware codeName={["view_debit_modal_button"]} requireAll>
               <button
-                onClick={() => handleOpenModal('debit')}
+                onClick={() => handleOpenModal("debit")}
                 className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"
-                aria-label={t('sidebar:sidebar.items.debit')}
+                aria-label={t("sidebar:sidebar.items.debit")}
               >
                 <div className="flex items-center justify-center w-10 h-10">
-                  <img src="src/assets/Icons/buttons/debit.svg" alt="" className="w-4 h-4" />
+                  {/* Minus in rounded-square (inline SVG) */}
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" />
+                    <path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" />
+                  </svg>
                 </div>
+
                 <span
-                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 max-w-40' : 'opacity-0 max-w-0 pointer-events-none'}`}
+                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${
+                    isOpen ? "opacity-100 max-w-40" : "opacity-0 max-w-0 pointer-events-none"
+                  }`}
                 >
-                  {t('sidebar:sidebar.items.debit')}
+                  {t("sidebar:sidebar.items.debit")}
                 </span>
               </button>
             </PermissionMiddleware>
@@ -68,15 +98,53 @@ const Sidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={handleOpenTransferenceModal}
                 className="flex items-center relative h-10 bg-white rounded-lg transition-colors duration-200 hover:bg-gray-100 w-full"
-                aria-label={t('sidebar:sidebar.items.transfer')}
+                aria-label={t("sidebar:sidebar.items.transfer")}
               >
                 <div className="flex items-center justify-center w-10 h-10">
-                  <img src="src/assets/Icons/buttons/transference.svg" alt="" className="w-4 h-4" />
+                  {/* Swap arrows (inline SVG) */}
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M5 9h14"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M17 7l2 2-2 2"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                    <path
+                      d="M19 15H5"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M7 13l-2 2 2 2"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
+
                 <span
-                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 max-w-40' : 'opacity-0 max-w-0 pointer-events-none'}`}
+                  className={`absolute left-10 text-[14px] whitespace-nowrap transition-all duration-300 ${
+                    isOpen ? "opacity-100 max-w-40" : "opacity-0 max-w-0 pointer-events-none"
+                  }`}
                 >
-                  {t('sidebar:sidebar.items.transfer')}
+                  {t("sidebar:sidebar.items.transfer")}
                 </span>
               </button>
             </PermissionMiddleware>
@@ -87,16 +155,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex justify-end items-center w-full p-3">
         <button
           onClick={toggleSidebar}
-          aria-label={isOpen ? t('sidebar:sidebar.aria.toggleClose') : t('sidebar:sidebar.aria.toggleOpen')}
+          aria-label={isOpen ? t("sidebar:sidebar.aria.toggleClose") : t("sidebar:sidebar.aria.toggleOpen")}
           className="border border-gray-300 hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-300"
         >
           <svg
-            className={`w-5 h-5 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            className={`w-5 h-5 transform transition-transform duration-300 ${
+              isOpen ? "rotate-180" : "rotate-0"
+            }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
+            focusable="false"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5l7 7-7 7" />
           </svg>

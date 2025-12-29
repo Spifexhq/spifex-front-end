@@ -1,5 +1,4 @@
-// src/middlewares/auth/PermissionMiddleware.tsx
-import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { type ReactElement, useEffect, useRef } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -7,15 +6,14 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { getAccess } from "@/lib/tokens";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-type PermissionBehavior = "hide" | "redirect" | "lock";
+type OwnerBehavior = "hide" | "redirect" | "lock";
 
-type Props = {
-  children: ReactNode;
-  codeName: string | string[];
-  behavior?: PermissionBehavior;
+interface OwnerMiddlewareProps {
+  children: ReactElement;
+  behavior?: OwnerBehavior;
   redirectTo?: string;
-  requireAll?: boolean;
-};
+  loginRedirectTo?: string;
+}
 
 const LockIcon: React.FC<{ className?: string; title?: string }> = ({ className, title }) => (
   <svg
@@ -48,23 +46,22 @@ const LockIcon: React.FC<{ className?: string; title?: string }> = ({ className,
   </svg>
 );
 
-export const PermissionMiddleware = ({
+export const OwnerMiddleware = ({
   children,
-  codeName,
-  behavior = "hide",
+  behavior = "redirect",
   redirectTo,
-  requireAll = false,
-}: Props) => {
-  const { t } = useTranslation(["permissionMiddleware"]);
+  loginRedirectTo,
+}: OwnerMiddlewareProps) => {
+  const { t } = useTranslation(["ownerMiddleware"]);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, isOwner, permissions, handleInitUser } = useAuthContext();
+  const { user, isOwner, handleInitUser } = useAuthContext();
 
   const accessToken = getAccess();
   const authReady = !accessToken || !!user;
-  const didInit = useRef(false);
 
+  const didInit = useRef(false);
   useEffect(() => {
     if (authReady) return;
     if (didInit.current) return;
@@ -74,51 +71,58 @@ export const PermissionMiddleware = ({
     });
   }, [authReady, handleInitUser]);
 
-  const hasPermission = useMemo(() => {
-    if (!authReady || !user) return false;
-    if (isOwner) return true;
-
-    const required = Array.isArray(codeName) ? codeName : [codeName];
-    return requireAll
-      ? required.every((cn) => permissions.includes(cn))
-      : required.some((cn) => permissions.includes(cn));
-  }, [authReady, user, isOwner, codeName, requireAll, permissions]);
-
   if (!authReady) return <TopProgress active variant="center" />;
 
-  if (!hasPermission) {
+  if (!accessToken || !user) {
+    return (
+      <Navigate
+        to={loginRedirectTo ?? "/signin"}
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  }
+
+  if (!isOwner) {
     if (behavior === "redirect") {
-      const target = redirectTo ?? "/";
-      if (location.pathname === target) return null;
-      return <Navigate to={target} replace state={{ from: location.pathname }} />;
+      return (
+        <Navigate
+          to={redirectTo ?? "/settings/personal"}
+          replace
+          state={{ from: location.pathname }}
+        />
+      );
     }
 
     if (behavior === "lock") {
+      const target = redirectTo ?? "/settings/personal";
+
       return (
         <div className="flex h-full w-full items-center justify-center">
           <div className="flex flex-col items-center justify-center text-center">
             <LockIcon
-              title={t("permissionMiddleware:lock.alt")}
+              title={t("lock.alt")}
               className="my-6 h-56 w-56 text-gray-900"
             />
 
-            <h1 className="text-lg font-semibold">{t("permissionMiddleware:lock.title")}</h1>
-            <h2 className="mb-6 text-sm font-medium">{t("permissionMiddleware:lock.subtitle")}</h2>
+            <h1 className="text-lg font-semibold">{t("lock.title")}</h1>
+            <h2 className="mb-6 text-sm font-medium">{t("lock.subtitle")}</h2>
 
             <button
               type="button"
-              onClick={() => navigate(0)}
+              onClick={() => navigate(target, { replace: true })}
               className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow-sm border border-gray-200 bg-gray-900 text-white hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
             >
-              {t("permissionMiddleware:lock.btn.refresh")}
+              {t("lock.btn.goToSettings")}
             </button>
           </div>
         </div>
       );
     }
 
+    // hide
     return null;
   }
 
-  return <>{children}</>;
+  return children;
 };

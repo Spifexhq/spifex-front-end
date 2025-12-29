@@ -10,6 +10,7 @@ import React, { useMemo, useState } from "react";
 import Checkbox from "@/components/ui/Checkbox";
 import Button from "@/components/ui/Button";
 import { useTranslation } from "react-i18next";
+import { PermissionIcon } from "./permissionIcons";
 
 type PermissionCategory =
   | "navbar"
@@ -39,22 +40,10 @@ type PermissionTab = {
 };
 
 const TABS: PermissionTab[] = [
-  {
-    id: "navbar",
-    categories: ["navbar"],
-  },
-  {
-    id: "sidebar",
-    categories: ["sidebar"],
-  },
-  {
-    id: "page_components",
-    categories: ["page_components"],
-  },
-  {
-    id: "entries",
-    categories: ["entries"],
-  },
+  { id: "navbar", categories: ["navbar"] },
+  { id: "sidebar", categories: ["sidebar"] },
+  { id: "page_components", categories: ["page_components"] },
+  { id: "entries", categories: ["entries"] },
   {
     id: "settings",
     categories: [
@@ -108,7 +97,7 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "delete_bank", category: "banks" },
   { code: "view_bank", category: "banks" },
 
-  /* ------------------------------ MEMBERS ------------------------------- */
+  /* ------------------------------ MEMBERS --------------------------------- */
   { code: "add_member", category: "members" },
   { code: "change_member", category: "members" },
   { code: "delete_member", category: "members" },
@@ -172,7 +161,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
   const [activeTab, setActiveTab] = useState<PermissionTabId>("navbar");
 
   const rowsForActiveTab = useMemo(() => {
-    const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+    const tab = TABS.find((x) => x.id === activeTab) ?? TABS[0];
     return PERMISSION_ROWS.filter((row) => tab.categories.includes(row.category));
   }, [activeTab]);
 
@@ -180,7 +169,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
     <div className="border-t border-gray-200">
       {/* Header with tabs */}
       <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-center gap-3">
-        <nav className="flex gap-2" aria-label="Permission tabs">
+        <nav className="flex gap-2" aria-label={t("aria.tabs", { defaultValue: "Permission tabs" })}>
           {TABS.map((tab) => {
             const isActive = tab.id === activeTab;
             return (
@@ -202,15 +191,9 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
       </div>
 
       {/* Rows */}
-      <div
-        className={`divide-y divide-gray-200 ${
-          disabled ? "opacity-70 pointer-events-none" : ""
-        }`}
-      >
+      <div className={`divide-y divide-gray-200 ${disabled ? "opacity-70 pointer-events-none" : ""}`}>
         {rowsForActiveTab.length === 0 && (
-          <div className="px-4 py-3 text-[12px] text-gray-500">
-            {t("noItems")}
-          </div>
+          <div className="px-4 py-3 text-[12px] text-gray-500">{t("noItems")}</div>
         )}
 
         {rowsForActiveTab.map((row) => {
@@ -221,27 +204,46 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
           return (
             <div
               key={row.code}
-              className="flex items-start justify-between px-4 py-3 cursor-pointer"
+              className={`flex items-start justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                disabled ? "" : ""
+              }`}
               onClick={() => {
                 if (disabled) return;
                 onToggle(row.code, !checked);
               }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (disabled) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onToggle(row.code, !checked);
+                }
+              }}
+              aria-label={label}
             >
-              <div className="pr-3">
-                <p className="text-[13px] font-medium text-gray-900">
-                  {label}
-                </p>
-                <p className="mt-1 text-[12px] text-gray-600">
-                  {description}
-                </p>
-                <p className="mt-1 text-[10px] text-gray-400">
-                  {row.code}
-                </p>
+              <div className="pr-3 flex gap-3">
+                <div className="mt-0.5">
+                  <div
+                    className={`h-9 w-9 rounded-lg border flex items-center justify-center ${
+                      checked ? "border-gray-300 bg-white" : "border-gray-200 bg-gray-50"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <PermissionIcon code={row.code} className="h-5 w-5 text-gray-600" />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[13px] font-medium text-gray-900">{label}</p>
+                  <p className="mt-1 text-[12px] text-gray-600">{description}</p>
+                  <p className="mt-1 text-[10px] text-gray-400">{row.code}</p>
+                </div>
               </div>
+
               <div
                 className="mt-1"
                 onClick={(e) => {
-                  // prevent row onClick from firing when clicking the checkbox
                   e.stopPropagation();
                 }}
               >
@@ -260,19 +262,10 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
 
       {/* Footer actions (Undo / Save) */}
       <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
-        <Button
-          variant="cancel"
-          type="button"
-          onClick={onUndo}
-          disabled={!dirty || !!disabled}
-        >
+        <Button variant="cancel" type="button" onClick={onUndo} disabled={!dirty || !!disabled}>
           {t("buttons.undo")}
         </Button>
-        <Button
-          type="button"
-          onClick={onSave}
-          disabled={!dirty || !!disabled}
-        >
+        <Button type="button" onClick={onSave} disabled={!dirty || !!disabled}>
           {t("buttons.save")}
         </Button>
       </div>

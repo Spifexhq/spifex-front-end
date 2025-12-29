@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Abonnement erforderlich",
+    "title": "Abonnement erforderlich",
+    "subtitle": "Diese Seite ist nur für abonnierte Konten verfügbar. Bitte aktualisiere deinen Tarif, um fortzufahren.",
+    "btn": {
+      "refresh": "Aktualisieren"
+    }
+  }
+}

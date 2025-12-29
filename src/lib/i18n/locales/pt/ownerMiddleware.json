@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Acesso de proprietário necessário",
+    "title": "Acesso de proprietário necessário",
+    "subtitle": "Você precisa ser o proprietário da organização para acessar esta página.",
+    "btn": {
+      "goToSettings": "Ir para Configurações"
+    }
+  }
+}

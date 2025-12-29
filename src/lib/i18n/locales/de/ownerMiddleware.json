@@ -1,0 +1,10 @@
+{
+  "lock": {
+    "alt": "Inhaberzugriff erforderlich",
+    "title": "Inhaberzugriff erforderlich",
+    "subtitle": "Du musst Organisationsinhaber sein, um auf diese Seite zuzugreifen.",
+    "btn": {
+      "goToSettings": "Zu den Einstellungen"
+    }
+  }
+}
