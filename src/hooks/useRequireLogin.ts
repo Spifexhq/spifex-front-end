@@ -4,54 +4,105 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/hooks/useAuth";
 
 const AUTH_HINT_KEY = "auth_status";
+const AUTH_BOOTSTRAP_FAILED_KEY = "spifex:auth_bootstrap_failed";
 
 type Options = {
   redirectTo?: string;
 };
 
-export function useRequireLogin(opts?: Options): boolean {
+function readHintActive(): boolean {
+  try {
+    return typeof window !== "undefined" && localStorage.getItem(AUTH_HINT_KEY) === "active";
+  } catch {
+    return false;
+  }
+}
+
+function readBootstrapFailed(): boolean {
+  try {
+    return typeof window !== "undefined" && sessionStorage.getItem(AUTH_BOOTSTRAP_FAILED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markBootstrapFailed(): void {
+  try {
+    sessionStorage.setItem(AUTH_BOOTSTRAP_FAILED_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
+function clearBootstrapFailed(): void {
+  try {
+    sessionStorage.removeItem(AUTH_BOOTSTRAP_FAILED_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+export function useRequireLogin(opts?: Options): { isLogged: boolean; checking: boolean } {
   const redirectTo = opts?.redirectTo ?? "/signin";
 
   const { user, handleInitUser } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [checked, setChecked] = useState(false);
+  const [checking, setChecking] = useState(true);
   const initStarted = useRef(false);
 
-  useEffect(() => {
-    const hintActive = localStorage.getItem(AUTH_HINT_KEY) === "active";
+  const hintActive = readHintActive();
+  const bootstrapFailed = readBootstrapFailed();
 
-    // No hint => not logged; redirect to login
-    if (!hintActive) {
-      setChecked(true);
+  // If we ever get a user, clear any tab-local “bootstrap failed” marker.
+  useEffect(() => {
+    if (user) clearBootstrapFailed();
+  }, [user]);
+
+  useEffect(() => {
+    // If no hint (or this tab already failed to restore), treat as logged out.
+    if (!hintActive || bootstrapFailed) {
+      setChecking(false);
       if (location.pathname !== redirectTo) {
         navigate(redirectTo, { replace: true, state: { from: location.pathname } });
       }
       return;
     }
 
-    // Already hydrated
+    // Hint is active:
+    // - if user already loaded -> ok
     if (user) {
-      setChecked(true);
+      setChecking(false);
       return;
     }
 
-    // Hint is active but user not loaded yet => hydrate once, do not sign out
-    if (!initStarted.current) {
-      initStarted.current = true;
-      void (async () => {
-        try {
-          await handleInitUser();
-        } finally {
-          setChecked(true);
-        }
-      })();
-    }
-  }, [user, handleInitUser, navigate, location.pathname, redirectTo]);
+    // - else hydrate once
+    if (initStarted.current) return;
 
-  // “Logged” means user is present.
-  // While not checked yet, we return false to avoid rendering protected UI prematurely.
-  if (!checked) return false;
-  return user != null;
+    initStarted.current = true;
+    setChecking(true);
+
+    void (async () => {
+      try {
+        await handleInitUser();
+      } finally {
+        setChecking(false);
+      }
+    })();
+  }, [hintActive, bootstrapFailed, user, handleInitUser, navigate, location.pathname, redirectTo]);
+
+  // If we attempted hydration (hintActive) and still have no user after checking, redirect and prevent loops in this tab.
+  useEffect(() => {
+    if (checking) return;
+    if (!hintActive) return;
+    if (user) return;
+
+    markBootstrapFailed();
+    if (location.pathname !== redirectTo) {
+      navigate(redirectTo, { replace: true, state: { from: location.pathname } });
+    }
+  }, [checking, hintActive, user, navigate, location.pathname, redirectTo]);
+
+  return { isLogged: user != null, checking };
 }

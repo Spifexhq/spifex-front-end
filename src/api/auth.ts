@@ -1,6 +1,7 @@
 // src/api/auth.ts
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import type { RootState } from "@/redux/store";
 import { api } from "@/api/requests";
 
@@ -25,22 +26,25 @@ import { clearHttpCaches, AUTH_SYNC_EVENT, SUBSCRIPTION_BLOCKED_EVENT } from "@/
 import type { ApiErrorBody } from "@/models/Api";
 
 const AUTH_HINT_KEY = "auth_status";
+const AUTH_BOOTSTRAP_FAILED_KEY = "spifex:auth_bootstrap_failed";
+
+// Cross-tab token bridge (kept local to auth.ts)
+const AUTH_BC_NAME = "spifex:auth";
+const TAB_ID_KEY = "spifex:tab-id";
+
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
 
+// Helps in React strict-mode / remounts: ensure we only run bootstrap once per tab session.
 let AUTH_BOOTSTRAP_STARTED = false;
 
 export const handleGetAccessToken = () => getAccess();
-
-function emitAuthSync(reason: string) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: { reason } }));
-}
 
 function isApiErrorBody(err: unknown): err is ApiErrorBody {
   return typeof err === "object" && err != null && typeof (err as Record<string, unknown>).code === "string";
 }
 
 function shouldHardSignOut(err: unknown): boolean {
+  // Hard sign-out only for clearly-invalid auth states.
   if (isApiErrorBody(err)) {
     if (err.status === 401) return true;
     if (err.code === "token_not_valid" || err.code === "authentication_failed") return true;
@@ -55,6 +59,173 @@ function shouldHardSignOut(err: unknown): boolean {
   return false;
 }
 
+function getAuthHintActive(): boolean {
+  try {
+    return localStorage.getItem(AUTH_HINT_KEY) === "active";
+  } catch {
+    return false;
+  }
+}
+
+function setAuthHintActive(): void {
+  try {
+    localStorage.setItem(AUTH_HINT_KEY, "active");
+  } catch {
+    // ignore
+  }
+}
+
+function clearAuthHint(): void {
+  try {
+    localStorage.removeItem(AUTH_HINT_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+function clearBootstrapFailedFlag(): void {
+  try {
+    sessionStorage.removeItem(AUTH_BOOTSTRAP_FAILED_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+function emitAuthSync(reason: string) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: { reason } }));
+}
+
+/* -----------------------------------------------------------------------------
+ * Cross-tab token bridge (BroadcastChannel)
+ * - Used only to "hand off" a short-lived access token from an existing tab
+ *   to a new tab, without persisting it in localStorage.
+ * - If the browser does not support BroadcastChannel, this becomes a no-op.
+ * -------------------------------------------------------------------------- */
+
+type AuthBCReq = { type: "REQ_TOKENS"; from: string };
+type AuthBCTok = { type: "TOKENS"; to: string; access: string; orgExternalId?: string };
+type AuthBCMsg = AuthBCReq | AuthBCTok;
+
+function getTabId(): string {
+  try {
+    const existing = sessionStorage.getItem(TAB_ID_KEY);
+    if (existing) return existing;
+
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    sessionStorage.setItem(TAB_ID_KEY, id);
+    return id;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+}
+
+function openAuthChannel(): BroadcastChannel | null {
+  if (typeof window === "undefined") return null;
+  if (typeof BroadcastChannel === "undefined") return null;
+  return new BroadcastChannel(AUTH_BC_NAME);
+}
+
+function startAuthTokenResponder(): () => void {
+  const ch = openAuthChannel();
+  if (!ch) return () => {};
+
+  const channel: BroadcastChannel = ch; // <- non-null alias
+
+  const onMessage = (ev: MessageEvent<AuthBCMsg>) => {
+    const msg = ev.data;
+    if (!msg || typeof msg !== "object") return;
+
+    if (msg.type === "REQ_TOKENS") {
+      const access = getAccess();
+      if (!access) return;
+
+      const orgExternalId = (() => {
+        try {
+          const v = sessionStorage.getItem("spifex:org-external-id") || "";
+          return v.trim() || undefined;
+        } catch {
+          return undefined;
+        }
+      })();
+
+      const reply: AuthBCTok = { type: "TOKENS", to: msg.from, access, orgExternalId };
+      channel.postMessage(reply);
+      return;
+    }
+
+    if (msg.type === "TOKENS" && msg.to === getTabId()) {
+      if (msg.access) setTokens(msg.access);
+      if (msg.orgExternalId) setOrgExternalIdStored(msg.orgExternalId);
+    }
+  };
+
+  channel.addEventListener("message", onMessage as EventListener);
+
+  return () => {
+    channel.removeEventListener("message", onMessage as EventListener);
+    channel.close();
+  };
+}
+
+let tokenRequestInFlight: Promise<boolean> | null = null;
+
+async function requestTokensFromOtherTabs(timeoutMs = 800): Promise<boolean> {
+  if (getAccess()) return true;
+  if (tokenRequestInFlight) return tokenRequestInFlight;
+
+  tokenRequestInFlight = (async () => {
+    const ch = openAuthChannel();
+    if (!ch) return false;
+
+    const channel: BroadcastChannel = ch; // <- non-null alias
+    const me = getTabId();
+
+    return await new Promise<boolean>((resolve) => {
+      let done = false;
+
+      const timer = window.setTimeout(() => {
+        if (done) return;
+        done = true;
+        cleanup();
+        resolve(Boolean(getAccess()));
+      }, timeoutMs);
+
+      const onMessage = (ev: MessageEvent<AuthBCMsg>) => {
+        const msg = ev.data;
+        if (!msg || typeof msg !== "object") return;
+
+        if (msg.type === "TOKENS" && msg.to === me && typeof msg.access === "string" && msg.access) {
+          setTokens(msg.access);
+          if (msg.orgExternalId) setOrgExternalIdStored(msg.orgExternalId);
+
+          if (done) return;
+          done = true;
+          cleanup();
+          resolve(true);
+        }
+      };
+
+      function cleanup() {
+        window.clearTimeout(timer);
+        channel.removeEventListener("message", onMessage as EventListener);
+        channel.close();
+      }
+
+      channel.addEventListener("message", onMessage as EventListener);
+      channel.postMessage({ type: "REQ_TOKENS", from: me } satisfies AuthBCReq);
+    });
+  })().finally(() => {
+    tokenRequestInFlight = null;
+  });
+
+  return tokenRequestInFlight;
+}
+
 export const useAuth = () => {
   const auth = useSelector((s: RootState) => s.auth);
   const dispatch = useDispatch();
@@ -67,12 +238,30 @@ export const useAuth = () => {
   const syncInFlight = useRef<Promise<void> | null>(null);
   const lastSyncAt = useRef<number>(0);
 
+  const applyUserSnapshot = useCallback(
+    (payload: Awaited<ReturnType<typeof api.getUser>>["data"]) => {
+      dispatch(setUser(payload.user));
+      dispatch(setUserOrganization(payload.organization));
+      dispatch(setIsSubscribed(Boolean(payload.is_subscribed)));
+      dispatch(setPermissions(payload.permissions ?? []));
+
+      const orgExt = payload.organization?.organization?.id ?? null;
+      dispatch(setOrgExternalId(orgExt));
+      if (orgExt) setOrgExternalIdStored(orgExt);
+      else clearOrgExternalIdStored();
+
+      setAuthHintActive();
+      clearBootstrapFailedFlag();
+    },
+    [dispatch],
+  );
+
   const clearClientSession = useCallback(() => {
     dispatch(resetAuth());
     clearTokens();
     clearOrgExternalIdStored();
     clearHttpCaches();
-    localStorage.removeItem(AUTH_HINT_KEY);
+    clearAuthHint();
 
     AUTH_BOOTSTRAP_STARTED = false;
     emitAuthSync("signed_out");
@@ -88,30 +277,10 @@ export const useAuth = () => {
     }
   }, [clearClientSession]);
 
-  const applyGetUserResponse = useCallback(
-    (res: Awaited<ReturnType<typeof api.getUser>>) => {
-      dispatch(setUser(res.data.user));
-      dispatch(setUserOrganization(res.data.organization));
-      dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
-      dispatch(setPermissions(res.data.permissions ?? []));
-
-      const orgExt = res.data.organization?.organization?.id ?? null;
-      dispatch(setOrgExternalId(orgExt));
-      if (orgExt) setOrgExternalIdStored(orgExt);
-      else clearOrgExternalIdStored();
-
-      localStorage.setItem(AUTH_HINT_KEY, "active");
-    },
-    [dispatch],
-  );
-
   const syncAuth = useCallback(
     async (opts?: { force?: boolean; reason?: string }) => {
-      const shouldBeLoggedIn = localStorage.getItem(AUTH_HINT_KEY) === "active";
-      if (!shouldBeLoggedIn) return;
-
-      const token = getAccess();
-      if (!token) return;
+      // Only attempt hydration if another tab (or this tab) previously marked session as active.
+      if (!getAuthHintActive()) return;
 
       const mustFetch = Boolean(opts?.force) || authUserRef.current == null;
       if (!mustFetch) return;
@@ -120,27 +289,33 @@ export const useAuth = () => {
       if (!opts?.force && now - lastSyncAt.current < AUTH_SYNC_MIN_GAP_MS) return;
       lastSyncAt.current = now;
 
-      if (!syncInFlight.current) {
-        syncInFlight.current = (async () => {
-          try {
-            const res = await api.getUser();
-            applyGetUserResponse(res);
-          } catch (err) {
-            console.warn("Auth sync failed:", opts?.reason || "unknown", err);
+      if (syncInFlight.current) return syncInFlight.current;
 
-            if (shouldHardSignOut(err)) {
-              localStorage.removeItem(AUTH_HINT_KEY);
-              await handleSignOut();
-            }
-          } finally {
-            syncInFlight.current = null;
+      syncInFlight.current = (async () => {
+        try {
+          // If this tab has no access token, try to obtain it from another open tab.
+          // If it fails, proceed anyway: http.ts may refresh via cookie.
+          if (!getAccess()) {
+            await requestTokensFromOtherTabs(800);
           }
-        })();
-      }
+
+          const res = await api.getUser();
+          applyUserSnapshot(res.data);
+        } catch (err) {
+          console.warn("Auth sync failed:", opts?.reason || "unknown", err);
+
+          if (shouldHardSignOut(err)) {
+            clearAuthHint();
+            await handleSignOut();
+          }
+        } finally {
+          syncInFlight.current = null;
+        }
+      })();
 
       return syncInFlight.current;
     },
-    [applyGetUserResponse, handleSignOut],
+    [applyUserSnapshot, handleSignOut],
   );
 
   const handleInitUser = useCallback(async () => {
@@ -155,7 +330,8 @@ export const useAuth = () => {
       if (!access) throw new Error("Missing access token");
 
       setTokens(access);
-      localStorage.setItem(AUTH_HINT_KEY, "active");
+      setAuthHintActive();
+      clearBootstrapFailedFlag();
 
       dispatch(setUser(res.data.user));
       dispatch(setUserOrganization(res.data.organization));
@@ -181,6 +357,35 @@ export const useAuth = () => {
     [auth.organization?.is_owner, auth.permissions],
   );
 
+  // Start the token responder (cross-tab) once per mount.
+  useEffect(() => startAuthTokenResponder(), []);
+
+  // Cross-tab sign-in/sign-out via localStorage key changes
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== AUTH_HINT_KEY) return;
+
+      // Another tab signed in
+      if (e.newValue === "active") {
+        void syncAuth({ force: true, reason: "storage_active" });
+        return;
+      }
+
+      // Another tab signed out
+      if (e.oldValue === "active" && e.newValue !== "active") {
+        // local-only cleanup; do NOT call api.signOut() here
+        dispatch(resetAuth());
+        clearTokens();
+        clearOrgExternalIdStored();
+        clearHttpCaches();
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [dispatch, syncAuth]);
+
+  // Bootstrap this tab once
   useEffect(() => {
     if (AUTH_BOOTSTRAP_STARTED) return;
     AUTH_BOOTSTRAP_STARTED = true;
@@ -190,6 +395,7 @@ export const useAuth = () => {
     });
   }, [handleInitUser]);
 
+  // In-tab events (refresh_failed and subscription blocked)
   useEffect(() => {
     const onAuthSync = (e: Event) => {
       const ce = e as CustomEvent;
@@ -213,18 +419,33 @@ export const useAuth = () => {
     };
   }, [dispatch, handleSignOut]);
 
-  return {
-    user: auth.user,
-    organization: auth.organization,
-    isSubscribed: auth.isSubscribed,
-    isLogged: auth.user != null,
+  const accessToken = getAccess();
 
-    handleInitUser,
-    handlePermissionExists,
-    handleSignIn,
-    handleSignOut,
+  return useMemo(
+    () => ({
+      user: auth.user,
+      organization: auth.organization,
+      isSubscribed: auth.isSubscribed,
+      isLogged: auth.user != null,
 
-    syncAuth,
-    accessToken: getAccess(),
-  };
+      handleInitUser,
+      handlePermissionExists,
+      handleSignIn,
+      handleSignOut,
+
+      syncAuth,
+      accessToken,
+    }),
+    [
+      auth.user,
+      auth.organization,
+      auth.isSubscribed,
+      handleInitUser,
+      handlePermissionExists,
+      handleSignIn,
+      handleSignOut,
+      syncAuth,
+      accessToken,
+    ],
+  );
 };

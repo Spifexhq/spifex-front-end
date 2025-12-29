@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { useSpifexWebSocket } from "@/lib/ws/useSpifexWebSocket";
 import type { LiveSyncEnvelope } from "@/lib/ws/types";
 import { getAccess } from "@/lib/tokens";
-import { setAuthGate, clearAuthGate } from "@/lib/authGate";
+import { setAuthGate, clearAuthGate } from "@/lib/http";
 import { setIsSubscribed } from "@/redux";
 
 type Props = {

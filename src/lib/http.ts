@@ -12,7 +12,6 @@ import axios, {
 import { type ApiErrorBody, type ApiSuccess } from "@/models/Api";
 import { getAccess, setTokens, clearTokens, getOrgExternalIdStored } from "@/lib/tokens";
 import "@/lib/netReport";
-import { waitAuthGate } from "@/lib/authGate";
 import { store } from "@/redux/store";
 
 export const AUTH_SYNC_EVENT = "spifex:auth-sync";
@@ -28,6 +27,8 @@ const rawBaseURL = import.meta.env.DEV
   : import.meta.env.VITE_SPIFEX_URL_API || "https://spifex-backend.onrender.com/api/v1";
 
 export const baseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
+
+/* ------------------------------ Global scheduling --------------------------- */
 
 let pauseUntil = 0;
 function setGlobalPause(ms: number) {
@@ -63,6 +64,8 @@ async function scheduleByScope(method: Method, url: string) {
   lastByScope.set(scope, Date.now());
 }
 
+/* --------------------------------- URL log -------------------------------- */
+
 const SENSITIVE_PARAMS = ["token", "password", "old_password", "new_password", "refresh", "access", "uidb64"];
 
 function sanitizeUrl(fullUrl: string): string {
@@ -82,6 +85,44 @@ function sanitizeUrl(fullUrl: string): string {
     return hasProtocol ? urlObj.toString() : urlObj.pathname + urlObj.search;
   } catch {
     return fullUrl.split("?")[0] || fullUrl;
+  }
+}
+
+/* ---------------------------------- Axios --------------------------------- */
+
+// -----------------------------------------------------------------------------
+// Auth Gate (inlined)
+// Blocks non-auth requests while a critical auth sync is running in this tab.
+// -----------------------------------------------------------------------------
+let gate: Promise<void> | null = null;
+
+export function setAuthGate(p: Promise<void>) {
+  gate = p;
+}
+
+export function clearAuthGate() {
+  gate = null;
+}
+
+export async function waitAuthGate(timeoutMs = 4000): Promise<void> {
+  if (!gate) return;
+
+  // SSR-safe: if no window, just await the gate (no timeout)
+  if (typeof window === "undefined") {
+    await gate.catch(() => undefined);
+    return;
+  }
+
+  let t: number | null = null;
+  try {
+    await Promise.race([
+      gate.catch(() => undefined),
+      new Promise<void>((resolve) => {
+        t = window.setTimeout(resolve, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (t) window.clearTimeout(t);
   }
 }
 
@@ -148,6 +189,8 @@ http.interceptors.request.use((cfg) => {
 
   return cfg;
 });
+
+/* --------------------------------- Helpers -------------------------------- */
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
@@ -249,6 +292,8 @@ function finishLog(cfg: AxiosRequestConfig, res?: AxiosResponse, err?: AxiosErro
   });
 }
 
+/* ------------------------------- Token refresh ------------------------------ */
+
 let refreshingPromise: Promise<void> | null = null;
 const refreshSubscribers: Array<() => void> = [];
 
@@ -272,6 +317,30 @@ async function doRefresh(): Promise<void> {
 }
 
 type RetriableConfig = AxiosRequestConfig & { _retry?: boolean; _retried429?: number };
+
+function isAuthProfileUrl(url: string): boolean {
+  // Accept both "/auth/profile/" and "auth/profile" (in case cfg.url has no leading slash).
+  return url.includes("/auth/profile/") || url.includes("auth/profile");
+}
+
+function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig): boolean {
+  if (cfg._retry) return false;
+
+  if (status === 401) return true;
+
+  // Some backends use 403 for "missing credentials" on profile.
+  // Only attempt refresh if:
+  // - request is auth/profile
+  // - we currently have no access token
+  if (status === 403) {
+    const url = String(cfg.url || "");
+    if (!isAuthProfileUrl(url)) return false;
+    if (getAccess()) return false;
+    return true;
+  }
+
+  return false;
+}
 
 http.interceptors.response.use(
   (r) => {
@@ -310,7 +379,7 @@ http.interceptors.response.use(
       }
     }
 
-    if (status === 401 && !original._retry) {
+    if (shouldTryRefreshOnce(status, original)) {
       original._retry = true;
 
       if (!refreshingPromise) {
@@ -343,6 +412,8 @@ http.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+/* ------------------------------ Request cache ------------------------------- */
 
 const inflight = new Map<string, Promise<AxiosResponse<unknown>>>();
 const responseCache = new Map<string, { t: number; res: AxiosResponse<unknown> }>();
@@ -407,7 +478,8 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
           } else {
             const refreshKey = `REFRESH ${k}`;
             const ts = Date.now();
-            const baseParams = (cfg.params && typeof cfg.params === "object" ? (cfg.params as Record<string, unknown>) : {});
+            const baseParams =
+              cfg.params && typeof cfg.params === "object" ? (cfg.params as Record<string, unknown>) : {};
             const forceCfg: AxiosRequestConfig = { ...cfg, params: { ...baseParams, _r: ts } };
 
             if (!inflight.has(refreshKey)) {
