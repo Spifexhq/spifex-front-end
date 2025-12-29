@@ -5,24 +5,24 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import ConfirmToast from "src/components/ui/ConfirmToast";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import ConfirmToast from "@/components/ui/ConfirmToast";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
-import Checkbox from "src/components/ui/Checkbox";
+import Checkbox from "@/components/ui/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
-import { getCursorFromUrl } from "src/lib/list";
+import { getCursorFromUrl } from "@/lib/list";
 import { useTranslation } from "react-i18next";
 
-import type { Entity } from "src/models/settings/entities";
+import type { Entity } from "@/models/settings/entities";
 
 /* ---------------------------- Snackbar type ------------------------------ */
 type Snack =

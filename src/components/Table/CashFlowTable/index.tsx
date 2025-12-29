@@ -9,17 +9,17 @@ import React, {
   forwardRef,
 } from "react";
 import { useTranslation } from "react-i18next";
-import Button from "src/components/ui/Button";
-import Checkbox from "src/components/ui/Checkbox";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
 
-import { api } from "src/api/requests";
-import { getCursorFromUrl } from "src/lib/list";
+import { api } from "@/api/requests";
+import { getCursorFromUrl } from "@/lib/list";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
-import { formatDateFromISO, formatCurrency } from "src/lib";
-import { PermissionMiddleware } from "src/middlewares";
+import { formatDateFromISO, formatCurrency } from "@/lib";
+import { PermissionMiddleware } from "@/middlewares";
 
-import type { EntryFilters } from "src/models/components/filterBar";
-import type { Entry, GetEntryRequest, GetEntryResponse } from "src/models/entries/entries";
+import type { EntryFilters } from "@/models/components/filterBar";
+import type { Entry, GetEntryRequest, GetEntryResponse } from "@/models/entries/entries";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers (strongly typed to backend EntryReadSerializer)                    */

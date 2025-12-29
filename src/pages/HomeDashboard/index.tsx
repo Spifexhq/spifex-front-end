@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 
 import type {
   DashboardOverview,
   DashboardEntryPreview,
   DashboardSettlementPreview,
-} from "src/models/components/dashboard";
+} from "@/models/components/dashboard";
 
 import { formatDateFromISO } from "@/lib/date/formatDate";
 import { formatCurrency } from "@/lib/currency/formatCurrency";

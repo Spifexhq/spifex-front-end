@@ -8,10 +8,10 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
-import { validatePassword } from "src/lib";
-import Snackbar from "src/components/ui/Snackbar";
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
+import { validatePassword } from "@/lib";
+import Snackbar from "@/components/ui/Snackbar";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 type Snack =
   | {

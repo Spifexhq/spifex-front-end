@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import type { ApiErrorBody } from "@/models/Api";
 
 import { useAuth } from "@/api";
-import Snackbar from "src/components/ui/Snackbar";
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Checkbox from "src/components/ui/Checkbox";
+import Snackbar from "@/components/ui/Snackbar";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Checkbox from "@/components/ui/Checkbox";
 
 import signInBackground from "@/assets/Images/background/signin-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";

@@ -9,16 +9,16 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import Checkbox from "src/components/ui/Checkbox";
+import Checkbox from "@/components/ui/Checkbox";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
-import { getCursorFromUrl } from "src/lib/list";
-import { formatDateFromISO } from "src/lib";
+import { getCursorFromUrl } from "@/lib/list";
+import { formatDateFromISO } from "@/lib";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
-import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry } from "src/models/entries/settlements";
-import type { EntryFilters } from "src/models/components/filterBar";
+import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry } from "@/models/entries/settlements";
+import type { EntryFilters } from "@/models/components/filterBar";
 
 /* ------------------------------ Helpers ----------------------------------- */
 

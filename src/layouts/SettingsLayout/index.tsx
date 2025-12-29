@@ -1,7 +1,7 @@
 // src/layouts/SettingsLayout.tsx
 import { FC, useMemo } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import SidebarSettings from "src/components/layout/Sidebar/SidebarSettings";
+import SidebarSettings from "@/components/layout/Sidebar/SidebarSettings";
 
 export const SettingsLayout: FC = () => {
   const location = useLocation();

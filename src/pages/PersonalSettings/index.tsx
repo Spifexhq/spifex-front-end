@@ -11,21 +11,21 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import Checkbox from "src/components/ui/Checkbox";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import Checkbox from "@/components/ui/Checkbox";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
-import type { PersonalSettings as PersonalSettingsModel } from "src/models/auth/user";
-import type { Organization } from "src/models/auth/organization";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
+import type { PersonalSettings as PersonalSettingsModel } from "@/models/auth/user";
+import type { Organization } from "@/models/auth/organization";
 
-import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
+import { TIMEZONES, formatTimezoneLabel } from "@/lib/location";
 import { getCountries, CountryOption } from "@/lib/location/countries";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 

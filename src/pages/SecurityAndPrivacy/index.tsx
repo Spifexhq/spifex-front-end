@@ -14,16 +14,16 @@ import { ptBR, enUS, fr, de } from "date-fns/locale";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
-import { validatePassword } from "src/lib";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
+import { validatePassword } from "@/lib";
 import { useTranslation } from "react-i18next";
 import type { ApiErrorBody } from "@/models/Api";
-import type { User } from "src/models/auth/user";
+import type { User } from "@/models/auth/user";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =

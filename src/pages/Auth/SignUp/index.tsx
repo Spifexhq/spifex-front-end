@@ -9,21 +9,21 @@ import {
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "src/api/requests";
-import { validatePassword, useAutoCountry } from "src/lib";
+import { api } from "@/api/requests";
+import { validatePassword, useAutoCountry } from "@/lib";
 
-import Snackbar from "src/components/ui/Snackbar";
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Checkbox from "src/components/ui/Checkbox";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import Snackbar from "@/components/ui/Snackbar";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Checkbox from "@/components/ui/Checkbox";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
 
 import { getCountries, CountryOption } from "@/lib/location/countries";
 import { getCurrencies, CurrencyOption } from "@/lib/currency/currencies";
-import type { SignUpRequest } from "src/models/auth/auth";
+import type { SignUpRequest } from "@/models/auth/auth";
 
 type Snack =
   | {

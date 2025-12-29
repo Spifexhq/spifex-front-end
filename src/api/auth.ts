@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 
 import {
   setUser,

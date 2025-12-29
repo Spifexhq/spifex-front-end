@@ -6,11 +6,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Snackbar from "src/components/ui/Snackbar";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Snackbar from "@/components/ui/Snackbar";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 import { useTranslation } from "react-i18next";
 
 /* --- Snackbar type --- */

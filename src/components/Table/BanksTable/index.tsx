@@ -4,10 +4,10 @@
  * -------------------------------------------------------------------------- */
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import Spinner from "src/components/ui/Loaders/Spinner";
-import { formatCurrency } from "src/lib";
+import Spinner from "@/components/ui/Loaders/Spinner";
+import { formatCurrency } from "@/lib";
 
-import type { BankAccount } from "src/models/settings/banking";
+import type { BankAccount } from "@/models/settings/banking";
 
 interface BanksTableProps {
   banks: BankAccount[];

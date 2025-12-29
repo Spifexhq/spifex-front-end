@@ -4,15 +4,15 @@ import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "src/api/requests";
-import BanksTable from "src/components/Table/BanksTable";
+import { api } from "@/api/requests";
+import BanksTable from "@/components/Table/BanksTable";
 
 import { formatCurrency } from "@/lib/currency/formatCurrency";
-import { PermissionMiddleware } from "src/middlewares";
+import { PermissionMiddleware } from "@/middlewares";
 
-import type { BankAccount } from "src/models/settings/banking";
-import type { CashflowKpis, SettledKpis } from "src/models/components/cardKpis";
-import type { EntryFilters } from "src/models/components/filterBar";
+import type { BankAccount } from "@/models/settings/banking";
+import type { CashflowKpis, SettledKpis } from "@/models/components/cardKpis";
+import type { EntryFilters } from "@/models/components/filterBar";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                       */

@@ -3,15 +3,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 
-import { api } from "src/api/requests";
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import { formatCurrency } from "src/lib";
+import { api } from "@/api/requests";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import { formatCurrency } from "@/lib";
 import { DateInput } from "../ui/DateInput";
 import AmountInput from "../ui/AmountInput/AmountInput";
 
-import type { BankAccount } from "src/models/settings/banking";
+import type { BankAccount } from "@/models/settings/banking";
 
 interface TransferenceModalProps {
   isOpen: boolean;

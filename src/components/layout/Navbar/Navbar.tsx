@@ -4,7 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { PermissionMiddleware } from "@/middlewares";
-import { useAuthContext } from "src/hooks/useAuth";
+import { useAuthContext } from "@/hooks/useAuth";
 
 import UserMenu from "@/components/UserMenu";
 import SimulatedAI from "@/components/SimulatedAI";

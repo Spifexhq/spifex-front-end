@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "src/api/requests";
-import Button from "src/components/ui/Button";
+import { api } from "@/api/requests";
+import Button from "@/components/ui/Button";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 const EmailVerification = () => {

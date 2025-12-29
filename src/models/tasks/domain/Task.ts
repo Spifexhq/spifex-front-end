@@ -1,4 +1,4 @@
-import { Employee } from "src/models/auth";
+import { Employee } from "@/models/auth";
 
 export type Task = {
   id: number;

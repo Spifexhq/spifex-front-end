@@ -8,23 +8,23 @@ import { useNavigate } from "react-router-dom";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import ConfirmToast from "src/components/ui/ConfirmToast";
-import Checkbox from "src/components/ui/Checkbox";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import ConfirmToast from "@/components/ui/ConfirmToast";
+import Checkbox from "@/components/ui/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { useCursorPager } from "@/hooks/useCursorPager";
-import { getCursorFromUrl } from "src/lib/list";
+import { getCursorFromUrl } from "@/lib/list";
 import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
 
 import type { AddLedgerAccountRequest, EditLedgerAccountRequest, GetLedgerAccountsResponse,
-  LedgerAccount } from "src/models/settings/ledgerAccounts";
+  LedgerAccount } from "@/models/settings/ledgerAccounts";
 
 /* ----------------------------- Snackbar type ------------------------------ */
 type Snack =

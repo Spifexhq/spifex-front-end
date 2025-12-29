@@ -5,17 +5,17 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import Spinner from "src/components/ui/Loaders/Spinner";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Spinner from "@/components/ui/Loaders/Spinner";
 import { DateInput } from "../ui/DateInput";
 import { AmountInput } from "../ui/AmountInput";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 import { ApiError } from "@/models/Api";
-import { fetchAllCursor } from "src/lib/list";
-import { formatCurrency, formatDateFromISO } from "src/lib";
+import { fetchAllCursor } from "@/lib/list";
+import { formatCurrency, formatDateFromISO } from "@/lib";
 import documentTypesData from "@/data/documentTypes.json";
 
 import type {
@@ -26,12 +26,12 @@ import type {
   Tab,
   IntervalMonths,
 } from "./Modal.types";
-import type { AddEntryRequest, EditEntryRequest } from "src/models/entries/entries";
-import type { LedgerAccount } from "src/models/settings/ledgerAccounts";
-import type { Department } from "src/models/settings/departments";
-import type { Project } from "src/models/settings/projects";
-import type { InventoryItem } from "src/models/settings/inventory";
-import type { Entity } from "src/models/settings/entities";
+import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
+import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type { Department } from "@/models/settings/departments";
+import type { Project } from "@/models/settings/projects";
+import type { InventoryItem } from "@/models/settings/inventory";
+import type { Entity } from "@/models/settings/entities";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocTypeItem = { id: string; label: string };

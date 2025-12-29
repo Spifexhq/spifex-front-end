@@ -2,8 +2,8 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
-import { useAuthContext } from "src/hooks/useAuth";
-import TopProgress from "src/components/ui/Loaders/TopProgress";
+import { useAuthContext } from "@/hooks/useAuth";
+import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 type Props = {
   children: ReactNode;

@@ -2,17 +2,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Button from "src/components/ui/Button";
-import Checkbox from "src/components/ui/Checkbox";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
 import { DateInput } from "../ui/DateInput";
 import { AmountInput } from "../ui/AmountInput";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
-import type { Entry } from "src/models/entries/entries";
-import type { BulkSettleItem, BulkSettleResponse } from "src/models/entries/settlements";
-import type { BankAccount } from "src/models/settings/banking";
+import type { Entry } from "@/models/entries/entries";
+import type { BulkSettleItem, BulkSettleResponse } from "@/models/entries/settlements";
+import type { BankAccount } from "@/models/settings/banking";
 
 interface SettlementModalProps {
   isOpen: boolean;

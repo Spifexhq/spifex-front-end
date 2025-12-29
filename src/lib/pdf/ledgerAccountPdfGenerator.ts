@@ -6,10 +6,10 @@ import { jsPDF } from "jspdf";
 import autoTable, { RowInput } from "jspdf-autotable";
 import i18next from "i18next";
 
-import { api } from "src/api/requests";
-import { fetchAllCursor } from "src/lib/list";
+import { api } from "@/api/requests";
+import { fetchAllCursor } from "@/lib/list";
 
-import type { LedgerAccount } from "src/models/settings/ledgerAccounts";
+import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
 
 /* --------------------------------- Types --------------------------------- */
 interface PDFGeneratorOptions {

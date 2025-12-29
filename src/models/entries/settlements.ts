@@ -1,7 +1,7 @@
 // src/models/entries/settlements.ts
 import type { Paginated } from "@/models/Api";
 import type { Entry } from "./entries";
-import type { BankAccount } from "src/models/settings/banking";
+import type { BankAccount } from "@/models/settings/banking";
 
 /* ---------------------------------- Query ---------------------------------- */
 

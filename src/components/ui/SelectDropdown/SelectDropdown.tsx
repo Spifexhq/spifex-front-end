@@ -5,7 +5,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
-import Checkbox from "src/components/ui/Checkbox";
+import Checkbox from "@/components/ui/Checkbox";
 
 /**
  * SelectDropdown — Minimal & Fluid

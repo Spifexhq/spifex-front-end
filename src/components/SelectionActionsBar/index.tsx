@@ -1,8 +1,8 @@
 // src/components/SelectionActionsBar.tsx
 import React, { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Button from "src/components/ui/Button";
-import { formatDateFromISO } from "src/lib";
+import Button from "@/components/ui/Button";
+import { formatDateFromISO } from "@/lib";
 
 /* ------------------------------ Types ------------------------------ */
 export type MinimalEntry = {

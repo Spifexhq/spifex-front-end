@@ -4,8 +4,8 @@ import { useSelector } from "react-redux";
 import { useAuth as useAuthHook } from "@/api/auth";
 import { AuthContext } from "@/contexts/AuthContext";
 import type { RootState } from "@/redux/store";
-import type { User, UserOrganizationDetail } from "src/models/auth/user";
-import { LiveSyncBridge } from "src/lib/ws/LiveSyncBridge";
+import type { User, UserOrganizationDetail } from "@/models/auth/user";
+import { LiveSyncBridge } from "@/lib/ws/LiveSyncBridge";
 
 interface UserInfo {
   user: User | null;

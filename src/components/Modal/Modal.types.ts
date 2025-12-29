@@ -1,6 +1,6 @@
 // src/components/Modal/Modal.types.ts
 
-import type { Entry } from "src/models/entries/entries";
+import type { Entry } from "@/models/entries/entries";
 
 export interface FormData {
     details: {

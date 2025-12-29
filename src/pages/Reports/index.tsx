@@ -16,17 +16,18 @@ import {
   Pie,
 } from "recharts";
 
-import Button from "src/components/ui/Button";
+import Button from "@/components/ui/Button";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
 import { useTranslation } from "react-i18next";
-import { formatDateFromISO } from "src/lib";
+import { formatDateFromISO } from "@/lib";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
-import type { ReportsSummary } from "@/models/entries/domain";
+import type { ReportsSummary } from "@/models/components/reports";
+
 
 type TipDatum = {
   value?: number | string;

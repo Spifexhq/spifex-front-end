@@ -10,16 +10,16 @@ import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import ConfirmToast from "src/components/ui/ConfirmToast";
-import Input from "src/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import ConfirmToast from "@/components/ui/ConfirmToast";
+import Input from "@/components/ui/Input";
 
 import { api } from "@/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
+import { useAuthContext } from "@/hooks/useAuth";
 
-import type { BankAccount } from "src/models/settings/banking";
+import type { BankAccount } from "@/models/settings/banking";
 
 /* --------------------------------- Types ---------------------------------- */
 type StatementStatus = "uploaded" | "processing" | "ready" | "failed";

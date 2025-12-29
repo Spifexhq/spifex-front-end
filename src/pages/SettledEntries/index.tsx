@@ -2,20 +2,20 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Sidebar } from "src/components/layout/Sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
-import FilterBar from "src/components/FilterBar";
-import KpiCards from "src/components/KpiCards";
-import SelectionActionsBar, { type MinimalEntry } from "src/components/SelectionActionsBar";
+import FilterBar from "@/components/FilterBar";
+import KpiCards from "@/components/KpiCards";
+import SelectionActionsBar, { type MinimalEntry } from "@/components/SelectionActionsBar";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import { api } from "src/api/requests";
-import { PermissionMiddleware } from "src/middlewares";
+import { api } from "@/api/requests";
+import { PermissionMiddleware } from "@/middlewares";
 import { useBanks } from "@/hooks/useBanks";
 
-import type { SettledEntry } from "src/models/entries/settlements";
-import type { EntryFilters } from "src/models/components/filterBar";
+import type { SettledEntry } from "@/models/entries/settlements";
+import type { EntryFilters } from "@/models/components/filterBar";
 import { type ModalType } from "@/components/Modal/Modal.types";
 
 const Settled = () => {

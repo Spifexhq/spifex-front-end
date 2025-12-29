@@ -11,23 +11,23 @@ import React, {
   startTransition,
 } from "react";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import ConfirmToast from "src/components/ui/ConfirmToast";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import ConfirmToast from "@/components/ui/ConfirmToast";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
-import { validatePassword } from "src/lib";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
+import { validatePassword } from "@/lib";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import type { GroupListItem } from "src/models/auth/rbac";
-import type { Member } from "src/models/auth/members";
+import type { GroupListItem } from "@/models/auth/rbac";
+import type { Member } from "@/models/auth/members";
 
 /* ---------------------------- Snackbar type ------------------------------ */
 type Snack =

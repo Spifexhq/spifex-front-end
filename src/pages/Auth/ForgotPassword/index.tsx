@@ -8,9 +8,9 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
-import Snackbar from "src/components/ui/Snackbar";
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
+import Snackbar from "@/components/ui/Snackbar";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 type Snack =
   | {

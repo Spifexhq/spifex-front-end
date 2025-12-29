@@ -7,8 +7,8 @@
  * -------------------------------------------------------------------------- */
 
 import React, { useMemo, useState } from "react";
-import Checkbox from "src/components/ui/Checkbox";
-import Button from "src/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
+import Button from "@/components/ui/Button";
 import { useTranslation } from "react-i18next";
 
 type PermissionCategory =

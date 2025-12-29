@@ -14,10 +14,10 @@ import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
 
-import { useAuthContext } from "src/hooks/useAuth";
+import { useAuthContext } from "@/hooks/useAuth";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =

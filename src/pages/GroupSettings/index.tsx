@@ -8,17 +8,17 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import ConfirmToast from "src/components/ui/ConfirmToast";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import ConfirmToast from "@/components/ui/ConfirmToast";
 import GroupPermissionsTable from "./GroupPermissionsTable";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 import { useTranslation } from "react-i18next";
-import { useAuthContext } from "src/hooks/useAuth";
+import { useAuthContext } from "@/hooks/useAuth";
 
-import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "src/models/auth/rbac";
+import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "@/models/auth/rbac";
 
 /* ------------------------------ Snackbar type ----------------------------- */
 type Snack =

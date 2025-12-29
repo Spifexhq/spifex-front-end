@@ -10,7 +10,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 
 import LedgerAccountsGate from "./LedgerAccountsGate";
 import LedgerAccountSettings from "./index";

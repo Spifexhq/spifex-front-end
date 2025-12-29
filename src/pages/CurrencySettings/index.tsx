@@ -15,16 +15,16 @@ import { useDispatch, useSelector } from "react-redux";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 
-import type { CurrencyOption } from "src/lib/currency/currencies";
-import { getCurrencies } from "src/lib/currency/currencies";
+import type { CurrencyOption } from "@/lib/currency/currencies";
+import { getCurrencies } from "@/lib/currency/currencies";
 
 import type { RootState } from "@/redux/store";
 import { setUserOrganization } from "@/redux";

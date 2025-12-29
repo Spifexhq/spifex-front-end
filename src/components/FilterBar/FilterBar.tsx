@@ -2,28 +2,28 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import SelectDropdown from "src/components/ui/SelectDropdown/SelectDropdown";
-import Button from "src/components/ui/Button";
-import Checkbox from "src/components/ui/Checkbox";
+import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
 import Input from "../ui/Input";
 import { DateInput } from "../ui/DateInput";
 import { AmountInput } from "../ui/AmountInput";
 
-import { api } from "src/api/requests";
+import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";
-import { fetchAllCursor } from "src/lib/list";
-import { formatCurrency } from "src/lib/currency";
+import { fetchAllCursor } from "@/lib/list";
+import { formatCurrency } from "@/lib/currency";
 import { formatDateFromISO } from "@/lib/date";
 
 import type { ApiResponse, ApiError as ApiErrorResponse } from "@/models/Api";
-import type { LedgerAccount } from "src/models/settings/ledgerAccounts";
-import type { BankAccount } from "src/models/settings/banking";
+import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type { BankAccount } from "@/models/settings/banking";
 import type {
   ChipKey,
   EntryFilters,
   LocalFilters,
   Visualization,
-} from "src/models/components/filterBar";
+} from "@/models/components/filterBar";
 
 /* --------------------------------- Helpers -------------------------------- */
 

@@ -2,7 +2,7 @@
 import { useState, useEffect, FC } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { useAuthContext } from "src/hooks/useAuth";
+import { useAuthContext } from "@/hooks/useAuth";
 import { AuthMiddleware, LocaleProfileMiddleware } from '@/middlewares';
 import TopProgress from 'src/components/ui/Loaders/TopProgress';
 import Navbar from 'src/components/layout/Navbar';

@@ -10,16 +10,16 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import Checkbox from "src/components/ui/Checkbox";
-import Button from "src/components/ui/Button";
-import Snackbar from "src/components/ui/Snackbar";
+import Checkbox from "@/components/ui/Checkbox";
+import Button from "@/components/ui/Button";
+import Snackbar from "@/components/ui/Snackbar";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
-import type { NotificationCategory, NotificationPreference } from "src/models/auth/notifications";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
+import type { NotificationCategory, NotificationPreference } from "@/models/auth/notifications";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =

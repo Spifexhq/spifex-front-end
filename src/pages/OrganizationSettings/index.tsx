@@ -10,21 +10,21 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import Button from "src/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Snackbar from "src/components/ui/Snackbar";
-import Checkbox from "src/components/ui/Checkbox";
-import { SelectDropdown } from "src/components/ui/SelectDropdown";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Snackbar from "@/components/ui/Snackbar";
+import Checkbox from "@/components/ui/Checkbox";
+import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import { api } from "src/api/requests";
-import { useAuthContext } from "src/hooks/useAuth";
+import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 
-import { TIMEZONES, formatTimezoneLabel } from "src/lib/location";
+import { TIMEZONES, formatTimezoneLabel } from "@/lib/location";
 import { getCountries, type CountryOption } from "@/lib/location/countries";
-import type { Organization } from "src/models/auth/organization";
+import type { Organization } from "@/models/auth/organization";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =

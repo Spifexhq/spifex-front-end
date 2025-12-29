@@ -2,20 +2,20 @@
 import { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Sidebar } from "src/components/layout/Sidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
-import CashFlowTable, { type CashFlowTableHandle } from "src/components/Table/CashFlowTable";
-import FilterBar from "src/components/FilterBar";
-import KpiCards from "src/components/KpiCards";
-import SelectionActionsBar from "src/components/SelectionActionsBar";
+import CashFlowTable, { type CashFlowTableHandle } from "@/components/Table/CashFlowTable";
+import FilterBar from "@/components/FilterBar";
+import KpiCards from "@/components/KpiCards";
+import SelectionActionsBar from "@/components/SelectionActionsBar";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import { api } from "src/api/requests";
-import { PermissionMiddleware } from "src/middlewares";
+import { api } from "@/api/requests";
+import { PermissionMiddleware } from "@/middlewares";
 import { useBanks } from "@/hooks/useBanks";
 
-import { Entry } from "src/models/entries/entries";
-import type { EntryFilters } from "src/models/components/filterBar";
+import { Entry } from "@/models/entries/entries";
+import type { EntryFilters } from "@/models/components/filterBar";
 import { type ModalType } from "@/components/Modal/Modal.types";
 import type { ApiError } from "@/models/Api";
 

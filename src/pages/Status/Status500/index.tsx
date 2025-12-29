@@ -8,7 +8,7 @@ import facebook from "@/assets/Images/status/facebook.svg";
 import x from "@/assets/Images/status/x.svg";
 import instagram from "@/assets/Images/status/instagram.svg";
 
-import Button from "src/components/ui/Button";
+import Button from "@/components/ui/Button";
 
 const Status500: React.FC = () => {
   const { t } = useTranslation(["status500"]);

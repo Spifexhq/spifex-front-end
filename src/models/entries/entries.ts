@@ -2,7 +2,7 @@
 import type { Paginated } from "@/models/Api";
 
 import type { DepartmentAllocation } from "../settings/departments";
-import type { InventoryAllocation } from "src/models/settings/inventory";
+import type { InventoryAllocation } from "@/models/settings/inventory";
 
 /* ---------------------------------- List ---------------------------------- */
 

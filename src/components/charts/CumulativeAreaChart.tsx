@@ -9,7 +9,7 @@ import {
   ReferenceArea,
 } from "recharts";
 
-import { formatCurrency } from "src/lib";
+import { formatCurrency } from "@/lib";
 
 type Datum = { month: string | number; cumulative: number };
 

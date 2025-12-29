@@ -18,24 +18,24 @@ const ForgotPassword = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
 
 // Main Pages
-const HomeDashboard = lazy(() => import("src/pages/HomeDashboard"));
-const CashFlow = lazy(() => import("src/pages/CashFlow"));
-const SettledEntries = lazy(() => import("src/pages/SettledEntries"));
+const HomeDashboard = lazy(() => import("@/pages/HomeDashboard"));
+const CashFlow = lazy(() => import("@/pages/CashFlow"));
+const SettledEntries = lazy(() => import("@/pages/SettledEntries"));
 const Reports = lazy(() => import("@/pages/Reports"));
 const PersonalLocaleSetup = lazy(() => import("@/pages/PersonalLocaleSetup"));
 
 // Settings
-const Personal = lazy(() => import("src/pages/PersonalSettings"));
+const Personal = lazy(() => import("@/pages/PersonalSettings"));
 const SubscriptionManagement = lazy(() => import("@/pages/SubscriptionManagement"));
 const LimitsAndUsage = lazy(() => import("@/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/pages/SecurityAndPrivacy"));
-const OrganizationSettings = lazy(() => import("src/pages/OrganizationSettings"));
+const OrganizationSettings = lazy(() => import("@/pages/OrganizationSettings"));
 const DepartmentSettings = lazy(() => import("@/pages/DepartmentSettings"));
 const BankSettings = lazy(() => import("@/pages/BankSettings"));
 const EntitySettings = lazy(() => import("@/pages/EntitySettings"));
 const InventorySettings = lazy(() => import("@/pages/InventorySettings"));
 const ProjectSettings = lazy(() => import("@/pages/ProjectSettings"));
-const MemberSettings = lazy(() => import("src/pages/MemberSettings"));
+const MemberSettings = lazy(() => import("@/pages/MemberSettings"));
 const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
 const LedgerAccountsRouter = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsRouter"));
 const Statements = lazy(() => import("@/pages/Statements"));
