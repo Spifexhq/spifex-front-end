@@ -26,8 +26,9 @@ import type {
   Tab,
   IntervalMonths,
 } from "./Modal.types";
-import type { GLAccount, Department, Project, InventoryItem, Entity } from "@/models/enterprise_structure/domain";
+import type { Department, Project, InventoryItem, Entity } from "@/models/enterprise_structure/domain";
 import type { AddEntryRequest, EditEntryRequest } from "src/models/entries/entries";
+import type { LedgerAccount } from "src/models/settings/ledgerAccounts";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocTypeItem = { id: string; label: string };
@@ -224,14 +225,14 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
 
   // sources
-  const [ledgerAccounts, setLedgerAccounts] = useState<GLAccount[]>([]);
+  const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
 
   // selected objects (dropdowns use objects)
-  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<GLAccount[]>([]);
+  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<LedgerAccount[]>([]);
   const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocTypeItem[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project[]>([]);
@@ -332,7 +333,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   /* --------------------------- Fetch helpers --------------------------- */
   const fetchAllLedgerAccounts = useCallback(async () => {
-    const all = await fetchAllCursor<GLAccount>(api.getLedgerAccounts);
+    const all = await fetchAllCursor<LedgerAccount>(api.getLedgerAccounts);
     const wanted = type === "credit" ? "credit" : "debit";
     return all.filter((a) => (a?.default_tx || "").toLowerCase() === wanted);
   }, [type]);
@@ -591,7 +592,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   /* ------------------------------ Handlers ------------------------------ */
   const handleLedgerAccountChange = useCallback(
-    (updated: GLAccount[]) => {
+    (updated: LedgerAccount[]) => {
       if (isFinancialLocked) return;
       setSelectedLedgerAccount(updated);
       const id = updated.length ? String(updated[0].id) : "";
@@ -989,14 +990,14 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             />
 
             <div id={IDS.ledgerWrap}>
-              <SelectDropdown<GLAccount>
-                label={t("entriesModal:details.glAccount")}
+              <SelectDropdown<LedgerAccount>
+                label={t("entriesModal:details.ledgerAccount")}
                 items={ledgerAccounts}
                 selected={selectedLedgerAccounts}
                 onChange={handleLedgerAccountChange}
                 getItemKey={(i) => i.id}
                 getItemLabel={(i) => (i.code ? `${i.code} — ${i.account}` : i.account)}
-                buttonLabel={t("entriesModal:details.glAccountBtn")}
+                buttonLabel={t("entriesModal:details.ledgerAccountBtn")}
                 singleSelect
                 customStyles={{ maxHeight: "200px" }}
                 groupBy={(i) =>

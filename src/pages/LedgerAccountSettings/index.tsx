@@ -13,24 +13,19 @@ import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
-import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
 import ConfirmToast from "src/components/ui/ConfirmToast";
 import Checkbox from "src/components/ui/Checkbox";
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
 import { api } from "src/api/requests";
 import { useAuthContext } from "src/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-
-import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
-import type {
-  GetLedgerAccountsResponse,
-  AddGLAccountRequest,
-  EditGLAccountRequest,
-} from "src/models/enterprise_structure/dto";
-
-import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
+import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
+
+import type { AddLedgerAccountRequest, EditLedgerAccountRequest, GetLedgerAccountsResponse,
+  LedgerAccount } from "src/models/settings/ledgerAccounts";
 
 /* ----------------------------- Snackbar type ------------------------------ */
 type Snack =
@@ -112,8 +107,8 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-/** GLAccount tolerant for reading */
-type GLX = GLAccount & {
+/** LedgerAccount tolerant for reading */
+type GLX = LedgerAccount & {
   category?: number | string | null;
   default_tx?: TxType | string | null;
   external_id?: string;
@@ -141,8 +136,8 @@ function getDefaultTx(acc: GLX): TxType | "" {
   return v ? CATEGORY_DEFAULT_TX[v] : "";
 }
 
-function getGlaId(acc: GLAccount): string {
-  const a = acc as GLAccount & { id?: string; external_id?: string };
+function getGlaId(acc: LedgerAccount): string {
+  const a = acc as LedgerAccount & { id?: string; external_id?: string };
   return a.id ?? a.external_id ?? "";
 }
 
@@ -179,7 +174,7 @@ const LedgerAccountSettings: React.FC = () => {
   /* ----------------------------- Modal & form ----------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editing, setEditing] = useState<GLAccount | null>(null);
+  const [editing, setEditing] = useState<LedgerAccount | null>(null);
   const [formData, setFormData] = useState<FormState>(EMPTY_FORM);
   const [addingNewSubgroup, setAddingNewSubgroup] = useState(false);
 
@@ -202,7 +197,7 @@ const LedgerAccountSettings: React.FC = () => {
   }, [menuOpen]);
 
   /* ----------------------------- Overlay (optimistic) --------------------- */
-  const [added, setAdded] = useState<GLAccount[]>([]);
+  const [added, setAdded] = useState<LedgerAccount[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   /* ----------------------------- Pager (cursor) --------------------------- */
@@ -214,7 +209,7 @@ const LedgerAccountSettings: React.FC = () => {
 
   const fetchAccountsPage = useCallback(async (cursor?: string) => {
     if (INFLIGHT_FETCH) {
-      return { items: [] as GLAccount[], nextCursor: undefined as string | undefined };
+      return { items: [] as LedgerAccount[], nextCursor: undefined as string | undefined };
     }
     INFLIGHT_FETCH = true;
     try {
@@ -222,7 +217,7 @@ const LedgerAccountSettings: React.FC = () => {
         cursor,
       })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
 
-      const items = ((data?.results ?? []) as GLAccount[]).slice().sort((a, b) => {
+      const items = ((data?.results ?? []) as LedgerAccount[]).slice().sort((a, b) => {
         const ca = (a.code || "").toString();
         const cb = (b.code || "").toString();
         if (ca && cb && ca !== cb) return ca.localeCompare(cb, undefined, { numeric: true });
@@ -237,7 +232,7 @@ const LedgerAccountSettings: React.FC = () => {
     }
   }, []);
 
-  const pager = useCursorPager<GLAccount>(fetchAccountsPage, {
+  const pager = useCursorPager<LedgerAccount>(fetchAccountsPage, {
     autoLoadFirst: true,
     deps: [qKey],
   });
@@ -272,7 +267,7 @@ const LedgerAccountSettings: React.FC = () => {
   const accountsFiltered = useMemo(() => {
     const searchNormalized = search.trim().toLowerCase();
 
-    const matchesSearchAndGroup = (a: GLAccount): boolean => {
+    const matchesSearchAndGroup = (a: LedgerAccount): boolean => {
       const key = getCategoryKeyFromAccount(a as GLX);
       const matchesGroup = !filterGroup || key === filterGroup;
 
@@ -336,7 +331,7 @@ const LedgerAccountSettings: React.FC = () => {
     setModalOpen(true);
   };
 
-  const openEditModal = (acc: GLAccount) => {
+  const openEditModal = (acc: LedgerAccount) => {
     setMode("edit");
     setEditing(acc);
     setAddingNewSubgroup(false);
@@ -399,12 +394,12 @@ const LedgerAccountSettings: React.FC = () => {
       };
 
       if (mode === "create") {
-        const payload: AddGLAccountRequest = basePayload;
+        const payload: AddLedgerAccountRequest = basePayload;
         const { data: created } = await api.addLedgerAccount(payload);
-        setAdded((prev) => [created as GLAccount, ...prev]);
+        setAdded((prev) => [created as LedgerAccount, ...prev]);
       } else if (editing) {
         const glaId = getGlaId(editing);
-        const payload: EditGLAccountRequest = basePayload;
+        const payload: EditLedgerAccountRequest = basePayload;
         await api.editLedgerAccount(glaId, payload);
       }
 
@@ -419,7 +414,7 @@ const LedgerAccountSettings: React.FC = () => {
     }
   };
 
-  const requestDeleteAccount = (acc: GLAccount) => {
+  const requestDeleteAccount = (acc: LedgerAccount) => {
     setConfirmText(t("confirm.deleteOne", { account: acc.account ?? "" }));
 
     setConfirmAction(() => async () => {
@@ -552,7 +547,7 @@ const LedgerAccountSettings: React.FC = () => {
   const globalBusy = isSubmitting || isBackgroundSync || confirmBusy || deletingAll;
 
   /* ----------------------------- View utils ------------------------------- */
-  const RowAccountList = ({ a }: { a: GLAccount }) => {
+  const RowAccountList = ({ a }: { a: LedgerAccount }) => {
     const id = getGlaId(a);
     const label = resolveCategoryLabel(a as GLX);
     const tx = getDefaultTx(a as GLX);

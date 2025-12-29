@@ -30,20 +30,43 @@ import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, Bul
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
 import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
   GetBanksBatchRequest, GetBanksBatchResponse, GetBanksResponse } from 'src/models/settings/banking';
+import type { AddLedgerAccountRequest, DeleteAllLedgerAccountsRequest, DeleteAllLedgerAccountsResponse,
+  EditLedgerAccountRequest, GetLedgerAccountsRequest, GetLedgerAccountsResponse, ImportLedgerAccountsResponse,
+  ImportStandardLedgerAccountsRequest, ImportStandardLedgerAccountsResponse, LedgerAccount, LedgerAccountsBulkRequest,
+  LedgerAccountsBulkResponse, LedgerAccountsExistsResponse } from 'src/models/settings/ledgerAccounts';
 
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
 import {
-  GetLedgerAccountsRequest, GetLedgerAccountsResponse, AddGLAccountRequest, EditGLAccountRequest,
   GetDocumentType, GetDocumentTypes,
   GetDepartmentResponse, GetDepartmentsResponse, AddDepartmentRequest, EditDepartmentRequest,
   GetProjectsResponse, AddProjectRequest, EditProjectRequest,
   GetEntityResponse, GetEntitiesResponse, AddEntityRequest, EditEntityRequest,
   GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
 } from '@/models/enterprise_structure/dto';
-import { GLAccount, Department,
+import { Department,
   Project, InventoryItem, Entity
 } from '@/models/enterprise_structure/domain';
+
+
+async function downloadTemplate(path: string, filename: string) {
+  const res = await http.get(path, {
+    responseType: "blob",
+    validateStatus: (s: number) => s >= 200 && s < 300,
+  });
+
+  const blob = res.data as Blob;
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
 
 
 export const api = {
@@ -337,136 +360,50 @@ export const api = {
     request<void>(`banking/accounts/${bankId}/`, "DELETE"),
 
   /* --- Ledger Acccounts --- */
-  getLedgerAccounts: (params?: GetLedgerAccountsRequest) => {
-    return request<GetLedgerAccountsResponse>(
-      `ledger/accounts/`,
-      "GET",
-      params
-    );
-  },
+  getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>
+    request<GetLedgerAccountsResponse>(`ledger/accounts/`, "GET", params),
 
-  getLedgerAccountsBatch: (ids: string[]) => {
-    return request<GLAccount[]>(
-      `ledger/accounts/batch/`,
-      "POST",
-      { ids }
-    );
-  },
+  getLedgerAccountsBulk: (ids: string[]) =>
+    request<LedgerAccountsBulkResponse>(`ledger/accounts/batch/`, "POST", {
+      ids
+    } satisfies LedgerAccountsBulkRequest),
 
-  getLedgerAccount: (glaId: string) => {
-    return request<GLAccount>(
-      `ledger/accounts/${glaId}/`,
-      "GET"
-    );
-  },
+  getLedgerAccount: (ledgerAccountId: string) =>
+    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, "GET"),
 
-  getLedgerAccountsExists: () => {
-    return request<{ exists: boolean }>(
-      `ledger/accounts/exists/`,
-      "GET"
-    );
-  },
+  getLedgerAccountsExists: () =>
+    request<LedgerAccountsExistsResponse>(`ledger/accounts/exists/`, "GET"),
 
-  importLedgerAccounts: (formData: FormData) => {
-    return request<{
-      created_count: number;
-      accounts: GLAccount[];
-    }>(
-      `ledger/accounts/import/`,
-      "POST",
-      formData
-    );
-  },
+  importLedgerAccounts: (formData: FormData) =>
+    request<ImportLedgerAccountsResponse>(`ledger/accounts/import/`, "POST", formData),
 
-  importStandardLedgerAccounts: (plan: "personal" | "business") => {
-    return request<{
-      created_count: number;
-      accounts: GLAccount[];
-    }>(
-      `ledger/accounts/import-standard/`,
-      "POST",
-      { plan }
-    );
-  },
+  importStandardLedgerAccounts: (plan: "personal" | "business") =>
+    request<ImportStandardLedgerAccountsResponse>(`ledger/accounts/import-standard/`, "POST", {
+      plan
+    } satisfies ImportStandardLedgerAccountsRequest),
 
-  downloadLedgerCsvTemplate: async () => {
-    const res = await http.get(
-      `ledger/accounts/template/csv/`,
-      {
-        responseType: "blob",
-        validateStatus: (s: number) => s >= 200 && s < 300,
-      }
-    );
+  downloadLedgerCsvTemplate: () =>
+    downloadTemplate(`ledger/accounts/template/csv/`, "template_ledger_accounts.csv"),
 
-    const blob = res.data as Blob;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "template_ledger_accounts.csv";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  },
+  downloadLedgerXlsxTemplate: () =>
+    downloadTemplate(`ledger/accounts/template/xlsx/`, "template_ledger_accounts.xlsx"),
 
-  downloadLedgerXlsxTemplate: async () => {
-    const res = await http.get(
-      `ledger/accounts/template/xlsx/`,
-      {
-        responseType: "blob",
-        validateStatus: (s: number) => s >= 200 && s < 300,
-      }
-    );
+  addLedgerAccount: (payload: AddLedgerAccountRequest) =>
+    request<LedgerAccount>(`ledger/accounts/`, "POST", payload),
 
-    const blob = res.data as Blob;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "template_ledger_accounts.xlsx";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  },
+  addLedgerAccountsBulk: (payload: AddLedgerAccountRequest[]) =>
+    request<LedgerAccount[]>(`ledger/accounts/add/`, "POST", payload),
 
-  addLedgerAccount: (payload: AddGLAccountRequest) => {
-    return request<GLAccount>(
-      `ledger/accounts/`,
-      "POST",
-      payload
-    );
-  },
+  editLedgerAccount: (ledgerAccountId: string, payload: EditLedgerAccountRequest) =>
+    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, "PATCH", payload),
 
-  addLedgerAccountsBulk: (payload: AddGLAccountRequest[]) => {
-    return request<GLAccount[]>(
-      `ledger/accounts/add/`,
-      "POST",
-      payload
-    );
-  },
+  deleteAllLedgerAccounts: () =>
+    request<DeleteAllLedgerAccountsResponse>(`ledger/accounts/delete/`, "DELETE", {
+      confirm_delete_all: true
+    } satisfies DeleteAllLedgerAccountsRequest),
 
-  editLedgerAccount: (glaId: string, payload: EditGLAccountRequest) => {
-    return request<GLAccount>(
-      `ledger/accounts/${glaId}/`,
-      "PATCH",
-      payload
-    );
-  },
-
-  deleteAllLedgerAccounts: () => {
-    return request<{ message: string; deleted_count: number }>(
-      `ledger/accounts/delete/`,
-      "DELETE",
-      { confirm_delete_all: true }
-    );
-  },
-
-  deleteLedgerAccount: (glaId: string) => {
-    return request<void>(
-      `ledger/accounts/${glaId}/`,
-      "DELETE"
-    );
-  },
+  deleteLedgerAccount: (ledgerAccountId: string) =>
+    request<void>(`ledger/accounts/${ledgerAccountId}/`, "DELETE"),
 
   /* --- Document Types --- */
   getAllDocumentTypes: () =>

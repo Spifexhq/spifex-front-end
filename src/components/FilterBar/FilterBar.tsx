@@ -1,12 +1,6 @@
+// src/components/FilterBar/index.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-
-import type { BankAccount } from "src/models/settings/banking";
-import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
-import type { ChipKey, EntryFilters, LocalFilters, Visualization } from "src/models/components/filterBar";
-
-import { useBanks } from "@/hooks/useBanks";
-import { api } from "src/api/requests";
 
 import SelectDropdown from "src/components/ui/SelectDropdown/SelectDropdown";
 import Button from "src/components/ui/Button";
@@ -15,20 +9,26 @@ import Input from "../ui/Input";
 import { DateInput } from "../ui/DateInput";
 import { AmountInput } from "../ui/AmountInput";
 
+import { api } from "src/api/requests";
+import { useBanks } from "@/hooks/useBanks";
+import { fetchAllCursor } from "src/lib/list";
 import { formatCurrency } from "src/lib/currency";
 import { formatDateFromISO } from "@/lib/date";
 
+import type { ApiResponse, ApiError as ApiErrorResponse } from "@/models/Api";
+import type { LedgerAccount } from "src/models/settings/ledgerAccounts";
+import type { BankAccount } from "src/models/settings/banking";
+import type {
+  ChipKey,
+  EntryFilters,
+  LocalFilters,
+  Visualization,
+} from "src/models/components/filterBar";
+
 /* --------------------------------- Helpers -------------------------------- */
 
-type GLAccountLike = GLAccount & { id?: string; external_id?: string };
-
-type CursorPage<T> = {
-  results?: T[];
-  next?: string | null;
-};
-
-function getAccountId(account: GLAccountLike): string {
-  return String(account.id ?? account.external_id ?? "");
+function isApiError<T>(res: ApiResponse<T>): res is ApiErrorResponse {
+  return "error" in res;
 }
 
 function normalizeStringArray(value: unknown): string[] {
@@ -169,33 +169,25 @@ function toEntryFilters(local: LocalFilters): EntryFilters {
 }
 
 function useLedgerAccounts() {
-  const [accounts, setAccounts] = useState<GLAccountLike[]>([]);
+  const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
 
   useEffect(() => {
-    let cancelled = false;
+    let alive = true;
 
-    const fetchAll = async () => {
+    (async () => {
       try {
-        const all: GLAccountLike[] = [];
-        let cursor: string | undefined;
-
-        do {
-          const res = await api.getLedgerAccounts({ cursor });
-          const page = (res?.data as CursorPage<GLAccountLike> | undefined) ?? {};
-          all.push(...(page.results ?? []));
-          cursor = page.next ? String(page.next) : undefined;
-        } while (cursor);
-
-        if (!cancelled) setAccounts(all);
+        const all = await fetchAllCursor<LedgerAccount>(api.getLedgerAccounts);
+        if (!alive) return;
+        setAccounts(all);
       } catch (err) {
         console.error("Failed to load GL Accounts", err);
-        if (!cancelled) setAccounts([]);
+        if (!alive) return;
+        setAccounts([]);
       }
-    };
+    })();
 
-    void fetchAll();
     return () => {
-      cancelled = true;
+      alive = false;
     };
   }, []);
 
@@ -208,10 +200,16 @@ function useSavedViews() {
 
   const refresh = useCallback(async () => {
     try {
-      const { data } = await api.getViewPresets();
-      setViews(extractArray<Visualization>(data));
+      const res: ApiResponse<unknown> = await api.getViewPresets();
+      if (isApiError(res)) {
+        console.error("Failed to load saved views", res.error);
+        setViews([]);
+        return;
+      }
+      setViews(extractArray<Visualization>(res.data));
     } catch (err) {
       console.error("Failed to load saved views", err);
+      setViews([]);
     } finally {
       setLoaded(true);
     }
@@ -233,11 +231,6 @@ interface FilterBarProps {
   initial?: EntryFilters;
   bankActive?: boolean;
   contextSettlement: boolean;
-
-  /**
-   * If false, FilterBar won't register global keyboard shortcuts.
-   * Use this to prevent conflicts when modals are open (EntriesModal, etc.).
-   */
   shortcutsEnabled?: boolean;
 }
 
@@ -255,7 +248,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const { banks: rawBanks } = useBanks(undefined, 0, bankActive);
   const bankOptions = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
 
-  const ledgerAccounts = useLedgerAccounts();
+  const allLedgerAccounts = useLedgerAccounts();
   const { views: savedViews, setViews: setSavedViews, loaded: viewsLoaded, refresh: refreshViews } =
     useSavedViews();
 
@@ -361,8 +354,23 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   const selectedAccounts = useMemo(() => {
     const selected = new Set(localFilters.gla_id.map(String));
-    return ledgerAccounts.filter((a) => selected.has(getAccountId(a)));
-  }, [ledgerAccounts, localFilters.gla_id]);
+    return allLedgerAccounts.filter((a) => selected.has(String(a.id)));
+  }, [allLedgerAccounts, localFilters.gla_id]);
+
+  const ledgerAccountsForPicker = useMemo(() => {
+    const selectedIds = new Set(localFilters.gla_id.map(String));
+    const selected = allLedgerAccounts.filter((a) => selectedIds.has(String(a.id)));
+
+    const wanted = localFilters.tx_type;
+    if (!wanted) return allLedgerAccounts;
+
+    const filtered = allLedgerAccounts.filter(
+      (a) => String(a.default_tx || "").toLowerCase() === wanted
+    );
+
+    const merged = [...selected, ...filtered.filter((a) => !selectedIds.has(String(a.id)))];
+    return merged;
+  }, [allLedgerAccounts, localFilters.gla_id, localFilters.tx_type]);
 
   const hasAmountMin = isPositiveMajor(localFilters.amount_min);
   const hasAmountMax = isPositiveMajor(localFilters.amount_max);
@@ -417,58 +425,47 @@ const FilterBar: React.FC<FilterBarProps> = ({
     const defaultView = scopedViews.find((v) => v.is_default);
 
     if (defaultView) {
-      const nextLocal: LocalFilters = {
-        ...defaultView.filters,
-        settlement_status: !!defaultView.settlement_status,
-        gla_id: normalizeStringArray(defaultView.filters?.gla_id),
-        bank_id: normalizeStringArray(defaultView.filters?.bank_id),
-        amount_min: defaultView.filters?.amount_min ?? "",
-        amount_max: defaultView.filters?.amount_max ?? "",
-        description: defaultView.filters?.description ?? "",
-        observation: defaultView.filters?.observation ?? "",
-        start_date: defaultView.filters?.start_date ?? "",
-        end_date: defaultView.filters?.end_date ?? "",
-      };
+      const nextLocal = buildInitialLocalFilters(defaultView.filters, contextSettlement);
+      nextLocal.settlement_status = !!defaultView.settlement_status;
 
-      setLocalFilters((prev) => ({ ...prev, ...nextLocal }));
+      setLocalFilters(nextLocal);
       onApply({ filters: toEntryFilters(nextLocal) });
     } else {
       onApply({ filters: toEntryFilters(localFilters) });
     }
 
     bootstrappedRef.current = true;
-  }, [viewsLoaded, scopedViews, onApply, localFilters]);
+  }, [viewsLoaded, scopedViews, onApply, localFilters, contextSettlement]);
 
   /* View actions */
-  const applyViewToForm = useCallback((view: Visualization) => {
-    const next: LocalFilters = {
-      ...view.filters,
-      settlement_status: !!view.settlement_status,
-      gla_id: normalizeStringArray(view.filters?.gla_id),
-      bank_id: normalizeStringArray(view.filters?.bank_id),
-      amount_min: view.filters?.amount_min ?? "",
-      amount_max: view.filters?.amount_max ?? "",
-      description: view.filters?.description ?? "",
-      observation: view.filters?.observation ?? "",
-      start_date: view.filters?.start_date ?? "",
-      end_date: view.filters?.end_date ?? "",
-    };
-    setLocalFilters(next);
-  }, []);
+  const applyViewToForm = useCallback(
+    (view: Visualization) => {
+      const next = buildInitialLocalFilters(view.filters, contextSettlement);
+      next.settlement_status = !!view.settlement_status;
+      setLocalFilters(next);
+    },
+    [contextSettlement]
+  );
 
   const toggleDefaultView = useCallback(
     async (view: Visualization) => {
       try {
         setConfigBusy(true);
 
-        if (view.is_default) {
-          await api.editViewPreset(view.id, { is_default: false });
-        } else {
-          await api.editViewPreset(view.id, { is_default: true });
+        const r1: ApiResponse<unknown> = await api.editViewPreset(view.id, {
+          is_default: !view.is_default,
+        });
+        if (isApiError(r1)) throw r1.error;
 
+        if (!view.is_default) {
           const others = scopedViews.filter((o) => o.id !== view.id && o.is_default);
           if (others.length) {
-            await Promise.all(others.map((o) => api.editViewPreset(o.id, { is_default: false })));
+            await Promise.all(
+              others.map(async (o) => {
+                const r: ApiResponse<unknown> = await api.editViewPreset(o.id, { is_default: false });
+                if (isApiError(r)) throw r.error;
+              })
+            );
           }
         }
 
@@ -489,7 +486,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
     try {
       setConfigBusy(true);
-      await api.editViewPreset(id, { name });
+      const r: ApiResponse<unknown> = await api.editViewPreset(id, { name });
+      if (isApiError(r)) throw r.error;
       await refreshViews();
     } catch (err) {
       console.error("Failed to rename view", err);
@@ -504,7 +502,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
     async (id: string) => {
       try {
         setConfigBusy(true);
-        await api.deleteViewPreset(id);
+        const r: ApiResponse<unknown> = await api.deleteViewPreset(id);
+        if (isApiError(r)) throw r.error;
         setSavedViews((prev) => prev.filter((x) => x.id !== id));
       } catch (err) {
         console.error("Failed to delete view", err);
@@ -523,14 +522,15 @@ const FilterBar: React.FC<FilterBarProps> = ({
       name,
       is_default: saveDefault,
       settlement_status: !!localFilters.settlement_status,
-      filters: localFilters,
+      filters: toEntryFilters(localFilters),
     };
 
     try {
       setSaveBusy(true);
 
       if (saveMode === "overwrite" && overwriteView) {
-        await api.editViewPreset(overwriteView.id, payload);
+        const r: ApiResponse<unknown> = await api.editViewPreset(overwriteView.id, payload);
+        if (isApiError(r)) throw r.error;
       } else {
         const sameName = savedViews.find(
           (v) =>
@@ -538,8 +538,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
             v.settlement_status === !!localFilters.settlement_status
         );
 
-        if (sameName) await api.editViewPreset(sameName.id, payload);
-        else await api.addViewPreset(payload);
+        if (sameName) {
+          const r: ApiResponse<unknown> = await api.editViewPreset(sameName.id, payload);
+          if (isApiError(r)) throw r.error;
+        } else {
+          const r: ApiResponse<unknown> = await api.addViewPreset(payload);
+          if (isApiError(r)) throw r.error;
+        }
       }
 
       await refreshViews();
@@ -732,37 +737,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
               roleLabel={t("filterBar:menu.aria")}
               align="left"
               items={[
-                {
-                  key: "date",
-                  label: t("filterBar:menu.date"),
-                  onAction: () => setOpenEditor("date"),
-                },
-                {
-                  key: "banks",
-                  label: t("filterBar:menu.bank"),
-                  onAction: () => setOpenEditor("banks"),
-                },
-                {
-                  key: "accounts",
-                  label: t("filterBar:menu.accounts"),
-                  onAction: () => setOpenEditor("accounts"),
-                },
+                { key: "date", label: t("filterBar:menu.date"), onAction: () => setOpenEditor("date") },
+                { key: "banks", label: t("filterBar:menu.bank"), onAction: () => setOpenEditor("banks") },
+                { key: "accounts", label: t("filterBar:menu.accounts"), onAction: () => setOpenEditor("accounts") },
                 { sep: true },
                 {
                   key: "observation",
                   label: t("filterBar:menu.observation"),
                   onAction: () => setOpenEditor("observation"),
                 },
-                {
-                  key: "tx_type",
-                  label: t("filterBar:menu.txType"),
-                  onAction: () => setOpenEditor("tx_type"),
-                },
-                {
-                  key: "amount",
-                  label: t("filterBar:menu.amount"),
-                  onAction: () => setOpenEditor("amount"),
-                },
+                { key: "tx_type", label: t("filterBar:menu.txType"), onAction: () => setOpenEditor("tx_type") },
+                { key: "amount", label: t("filterBar:menu.amount"), onAction: () => setOpenEditor("amount") },
               ]}
               onClose={() => setAddFilterMenuOpen(false)}
               onAfterAction={() => setAddFilterMenuOpen(false)}
@@ -940,18 +925,23 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
         {openEditor === "accounts" && (
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
-            <SelectDropdown<GLAccountLike>
+            <SelectDropdown<LedgerAccount>
               label={t("filterBar:editors.accounts.label")}
-              items={ledgerAccounts}
+              items={ledgerAccountsForPicker}
               selected={selectedAccounts}
               onChange={(list) =>
-                setLocalFilters((prev) => ({ ...prev, gla_id: list.map(getAccountId) }))
+                setLocalFilters((prev) => ({ ...prev, gla_id: list.map((x) => String(x.id)) }))
               }
-              getItemKey={getAccountId}
-              getItemLabel={(item) => item.account}
+              getItemKey={(item) => item.id}
+              getItemLabel={(item) => (item.code ? `${item.code} — ${item.account}` : item.account)}
               buttonLabel={t("filterBar:editors.accounts.button")}
               customStyles={{ maxHeight: "240px" }}
-              groupBy={(item) => item.subcategory || ""}
+              groupBy={(i) =>
+                i.subcategory ? `${i.category} / ${i.subcategory}` : String(i.category || "")
+              }
+              virtualize
+              virtualRowHeight={32}
+              virtualThreshold={300}
             />
 
             <div className="flex justify-end gap-2 mt-3">
@@ -1055,9 +1045,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <AmountInput
                   display="currency"
                   value={localFilters.amount_min || ""}
-                  onValueChange={(next) =>
-                    setLocalFilters((prev) => ({ ...prev, amount_min: next }))
-                  }
+                  onValueChange={(next) => setLocalFilters((prev) => ({ ...prev, amount_min: next }))}
                   zeroAsEmpty
                 />
               </label>
@@ -1067,9 +1055,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <AmountInput
                   display="currency"
                   value={localFilters.amount_max || ""}
-                  onValueChange={(next) =>
-                    setLocalFilters((prev) => ({ ...prev, amount_max: next }))
-                  }
+                  onValueChange={(next) => setLocalFilters((prev) => ({ ...prev, amount_max: next }))}
                   zeroAsEmpty
                 />
               </label>
@@ -1099,11 +1085,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* CONFIG MODAL (views only) */}
       {configModalOpen && (
-        <ModalShell busy={configBusy} title={t("filterBar:configModal.title")} onClose={() => setConfigModalOpen(false)}>
+        <ModalShell
+          busy={configBusy}
+          title={t("filterBar:configModal.title")}
+          onClose={() => setConfigModalOpen(false)}
+        >
           <div className={configBusy ? "pointer-events-none opacity-60" : ""}>
             <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
               {scopedViews.length === 0 && (
-                <div className="px-3 py-2 text-xs text-gray-500">{t("filterBar:configModal.empty")}</div>
+                <div className="px-3 py-2 text-xs text-gray-500">
+                  {t("filterBar:configModal.empty")}
+                </div>
               )}
 
               {scopedViews.map((v) => {
@@ -1296,7 +1288,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       hideCheckboxes
                       customStyles={{ maxHeight: "240px" }}
                     />
-                    <p className="text-[11px] text-gray-500">{t("filterBar:saveModal.overwriteHint")}</p>
+                    <p className="text-[11px] text-gray-500">
+                      {t("filterBar:saveModal.overwriteHint")}
+                    </p>
                   </div>
                 )}
               </div>
@@ -1319,7 +1313,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   variant="outline"
                   size="sm"
                   className="bg-white hover:bg-gray-50"
-                  disabled={saveBusy || !saveName.trim() || (saveMode === "overwrite" && !overwriteView)}
+                  disabled={
+                    saveBusy ||
+                    !saveName.trim() ||
+                    (saveMode === "overwrite" && !overwriteView)
+                  }
                   onClick={() => void saveView()}
                 >
                   {t("filterBar:saveModal.save")}
@@ -1418,7 +1416,11 @@ const MenuItemBtn = React.forwardRef<
   <button
     ref={ref}
     className={`w-full text-left px-3 py-2 rounded-md text-sm
-      ${danger ? "text-red-600 hover:bg-rose-50 focus-visible:ring-rose-200" : "text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-300"}
+      ${
+        danger
+          ? "text-red-600 hover:bg-rose-50 focus-visible:ring-rose-200"
+          : "text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-300"
+      }
       focus:outline-none focus-visible:ring-2 ${active ? "bg-gray-50" : ""}`}
     onClick={onClick}
   >
@@ -1454,7 +1456,8 @@ const Menu: React.FC<{
       if (!actionableIndexes.length) return;
       const curr = actionableIndexes.indexOf(activeIndex);
       const base = curr === -1 ? (dir === 1 ? -1 : 1) : curr;
-      const next = actionableIndexes[(base + dir + actionableIndexes.length) % actionableIndexes.length];
+      const next =
+        actionableIndexes[(base + dir + actionableIndexes.length) % actionableIndexes.length];
       setActiveIndex(next);
     },
     [actionableIndexes, activeIndex]
@@ -1546,7 +1549,9 @@ const ModalShell: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-      <div className={`bg-white border border-gray-200 rounded-lg p-5 w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto relative`}>
+      <div
+        className={`bg-white border border-gray-200 rounded-lg p-5 w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto relative`}
+      >
         {busy && <BusyOverlay label={t("filterBar:configModal.loading")} />}
 
         <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">

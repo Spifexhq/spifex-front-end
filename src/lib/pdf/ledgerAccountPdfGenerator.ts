@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /*  File: src/lib/pdf/ledgerAccountPdfGenerator.ts                           */
-/*  Refactor: usa API org-scoped + novo modelo GLAccount (id externo string) */
+/*  Refactor: usa API org-scoped + novo modelo LedgerAccount (id externo string) */
 /*            paginação completa, grupos por `category` e subgrupos por       */
 /*            `subcategory`, e exibe `default_tx` (crédito/débito).           */
 /* -------------------------------------------------------------------------- */
@@ -8,8 +8,7 @@
 import { jsPDF } from "jspdf";
 import autoTable, { RowInput } from "jspdf-autotable";
 import { api } from "src/api/requests";
-import type { GetLedgerAccountsResponse } from "src/models/enterprise_structure/dto/GetLedgerAccount";
-import type { GLAccount } from "src/models/enterprise_structure/domain/GLAccount";
+import type { GetLedgerAccountsResponse, LedgerAccount } from "src/models/settings/ledgerAccounts";
 
 /* ------------------------------- Types locais ------------------------------ */
 interface PDFGeneratorOptions {
@@ -70,7 +69,7 @@ function safeStr(v: unknown): string {
   return v == null ? "" : String(v);
 }
 
-function sortByCodeThenName(a: GLAccount, b: GLAccount) {
+function sortByCodeThenName(a: LedgerAccount, b: LedgerAccount) {
   // Ordena por code (string), depois por account
   const ca = safeStr(a.code);
   const cb = safeStr(b.code);
@@ -138,9 +137,9 @@ export class LedgerAccountPdfGenerator {
   /* --------------------------------- API ---------------------------------- */
 
   /** Busca todas as páginas de contas contábeis */
-  private async fetchAllLedgerAccounts(): Promise<GLAccount[]> {
+  private async fetchAllLedgerAccounts(): Promise<LedgerAccount[]> {
     let cursor: string | undefined;
-    const all: GLAccount[] = [];
+    const all: LedgerAccount[] = [];
 
     do {
       const { data } = (await api.getLedgerAccounts({
@@ -188,7 +187,7 @@ export class LedgerAccountPdfGenerator {
     this.doc.line(15, 32, this.pageWidth - 15, 32);
   }
 
-  private async renderCategory(category: string, accountsInCategory: GLAccount[], startY: number) {
+  private async renderCategory(category: string, accountsInCategory: LedgerAccount[], startY: number) {
     let y = startY;
 
     // quebra de página se necessário
@@ -219,7 +218,7 @@ export class LedgerAccountPdfGenerator {
     return y + 6;
   }
 
-  private async renderSubgroup(subgroup: string, accounts: GLAccount[], startY: number) {
+  private async renderSubgroup(subgroup: string, accounts: LedgerAccount[], startY: number) {
     let y = startY;
 
     if (y > this.pageHeight - 60) {
