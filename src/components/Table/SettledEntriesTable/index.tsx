@@ -408,8 +408,8 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
     const bank =
       Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
 
-    const gl =
-      Array.isArray(f?.gla_id) && f.gla_id.length ? f.gla_id.map(String).join(",") : undefined;
+    const ledger_account =
+      Array.isArray(f?.ledger_account_id) && f.ledger_account_id.length ? f.ledger_account_id.map(String).join(",") : undefined;
 
     const tx_type =
       f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
@@ -421,7 +421,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
       q,
       description: f?.description || undefined,
       observation: f?.observation || undefined,
-      gl,
+      ledger_account,
       tx_type,
       amount_min: parseOptionalAmount(f?.amount_min),
       amount_max: parseOptionalAmount(f?.amount_max),
@@ -498,7 +498,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
     filters?.description,
     filters?.observation,
     filters?.bank_id,
-    filters?.gla_id,
+    filters?.ledger_account_id,
     filters?.tx_type,
     filters?.amount_min,
     filters?.amount_max,

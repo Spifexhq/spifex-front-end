@@ -141,7 +141,7 @@ function buildInitialLocalFilters(
     end_date: initial?.end_date ?? "",
     description: initial?.description ?? "",
     observation: initial?.observation ?? "",
-    gla_id: normalizeStringArray(initial?.gla_id),
+    ledger_account_id: normalizeStringArray(initial?.ledger_account_id),
     bank_id: normalizeStringArray(initial?.bank_id),
     tx_type: initial?.tx_type,
     amount_min: initial?.amount_min ? String(initial.amount_min) : "",
@@ -159,7 +159,7 @@ function toEntryFilters(local: LocalFilters): EntryFilters {
     end_date: local.end_date || undefined,
     description: local.description || undefined,
     observation: local.observation || undefined,
-    gla_id: local.gla_id.length ? local.gla_id : undefined,
+    ledger_account_id: local.ledger_account_id.length ? local.ledger_account_id : undefined,
     bank_id: local.bank_id.length ? local.bank_id : undefined,
     tx_type: local.tx_type,
     amount_min: min,
@@ -315,7 +315,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         case "banks":
           return { ...prev, bank_id: [] };
         case "accounts":
-          return { ...prev, gla_id: [] };
+          return { ...prev, ledger_account_id: [] };
         case "observation":
           return { ...prev, observation: "" };
         case "tx_type":
@@ -334,7 +334,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       end_date: "",
       description: "",
       observation: "",
-      gla_id: [],
+      ledger_account_id: [],
       bank_id: [],
       tx_type: undefined,
       amount_min: "",
@@ -353,12 +353,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
   }, [bankOptions, localFilters.bank_id]);
 
   const selectedAccounts = useMemo(() => {
-    const selected = new Set(localFilters.gla_id.map(String));
+    const selected = new Set(localFilters.ledger_account_id.map(String));
     return allLedgerAccounts.filter((a) => selected.has(String(a.id)));
-  }, [allLedgerAccounts, localFilters.gla_id]);
+  }, [allLedgerAccounts, localFilters.ledger_account_id]);
 
   const ledgerAccountsForPicker = useMemo(() => {
-    const selectedIds = new Set(localFilters.gla_id.map(String));
+    const selectedIds = new Set(localFilters.ledger_account_id.map(String));
     const selected = allLedgerAccounts.filter((a) => selectedIds.has(String(a.id)));
 
     const wanted = localFilters.tx_type;
@@ -370,7 +370,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
     const merged = [...selected, ...filtered.filter((a) => !selectedIds.has(String(a.id)))];
     return merged;
-  }, [allLedgerAccounts, localFilters.gla_id, localFilters.tx_type]);
+  }, [allLedgerAccounts, localFilters.ledger_account_id, localFilters.tx_type]);
 
   const hasAmountMin = isPositiveMajor(localFilters.amount_min);
   const hasAmountMax = isPositiveMajor(localFilters.amount_max);
@@ -380,7 +380,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     !!localFilters.start_date ||
     !!localFilters.end_date ||
     localFilters.bank_id.length > 0 ||
-    localFilters.gla_id.length > 0 ||
+    localFilters.ledger_account_id.length > 0 ||
     !!localFilters.observation ||
     !!localFilters.description ||
     !!localFilters.tx_type ||
@@ -596,7 +596,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             />
           )}
 
-          {localFilters.gla_id.length > 0 && (
+          {localFilters.ledger_account_id.length > 0 && (
             <Chip
               icon="accounts"
               label={`${t("filterBar:chips.accounts")}  ${selectedAccounts
@@ -888,7 +888,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         )}
 
         {openEditor === "banks" && (
-          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[360px] max-w-[360px]">
             <SelectDropdown<BankAccount>
               label={t("filterBar:editors.banks.label")}
               items={bankOptions}
@@ -924,13 +924,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
         )}
 
         {openEditor === "accounts" && (
-          <Popover onClose={() => setOpenEditor(null)} className="min-w-[260px] max-w-[360px]">
+          <Popover onClose={() => setOpenEditor(null)} className="min-w-[360px] max-w-[360px]">
             <SelectDropdown<LedgerAccount>
               label={t("filterBar:editors.accounts.label")}
               items={ledgerAccountsForPicker}
               selected={selectedAccounts}
               onChange={(list) =>
-                setLocalFilters((prev) => ({ ...prev, gla_id: list.map((x) => String(x.id)) }))
+                setLocalFilters((prev) => ({ ...prev, ledger_account_id: list.map((x) => String(x.id)) }))
               }
               getItemKey={(item) => item.id}
               getItemLabel={(item) => (item.code ? `${item.code} — ${item.account}` : item.account)}

@@ -458,7 +458,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const gl = f?.gla_id && f.gla_id.length ? f.gla_id[0] : undefined;
+      const ledger_account = f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
       const tx_type =
         f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
 
@@ -473,7 +473,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         description: f?.description || undefined,
         observation: f?.observation || undefined,
         q,
-        gl,
+        ledger_account,
         tx_type,
         amount_min: parseOptionalAmount(f?.amount_min),
         amount_max: parseOptionalAmount(f?.amount_max),

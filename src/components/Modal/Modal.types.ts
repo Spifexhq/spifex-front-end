@@ -8,7 +8,7 @@ export interface FormData {
       description: string;
       observation: string;
       amount: string;
-      accountingAccount: string;
+      ledgerAccount: string;
       documentType: string;
       notes: string;
     };

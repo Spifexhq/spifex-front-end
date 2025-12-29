@@ -1,7 +1,0 @@
-export * from "./Bank"
-export * from "./GLAccount"
-export * from "./DocumentType"
-export * from "./Department"
-export * from "./Project"
-export * from "./InventoryItem"
-export * from "./Entity"

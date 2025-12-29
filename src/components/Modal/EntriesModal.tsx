@@ -26,9 +26,12 @@ import type {
   Tab,
   IntervalMonths,
 } from "./Modal.types";
-import type { Department, Project, InventoryItem, Entity } from "@/models/enterprise_structure/domain";
 import type { AddEntryRequest, EditEntryRequest } from "src/models/entries/entries";
 import type { LedgerAccount } from "src/models/settings/ledgerAccounts";
+import type { Department } from "src/models/settings/departments";
+import type { Project } from "src/models/settings/projects";
+import type { InventoryItem } from "src/models/settings/inventory";
+import type { Entity } from "src/models/settings/entities";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocTypeItem = { id: string; label: string };
@@ -41,7 +44,7 @@ type EntryDiffable = {
   notes?: string | null;
   amount: number | string;
   tx_type: "credit" | "debit";
-  gl_account?: string | null;
+  ledger_account?: string | null;
   project?: string | null;
   entity?: string | null;
   installment_count?: number | null;
@@ -91,7 +94,7 @@ function getEmptyFormData(): FormData {
       description: "",
       observation: "",
       amount: "",
-      accountingAccount: "",
+      ledgerAccount: "",
       documentType: "",
       notes: "",
     },
@@ -279,7 +282,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       d.description.trim() ||
       d.observation.trim() ||
       d.notes.trim() ||
-      d.accountingAccount ||
+      d.ledgerAccount ||
       d.documentType
     ) return true;
 
@@ -415,7 +418,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         description: ie.description ?? "",
         observation: ie.observation ?? "",
         amount: normalizeMajorAmount(ie.amount),
-        accountingAccount: ie.gl_account || "",
+        ledgerAccount: ie.ledger_account || "",
         documentType: "",
         notes: ie.notes ?? "",
       },
@@ -445,8 +448,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     const ie = initialEntry as unknown as EntryDiffable;
 
     // ledger
-    const glaId = ie.gl_account || "";
-    const la = ledgerAccounts.find((a) => a.id === glaId);
+    const ledger_account_id = ie.ledger_account || "";
+    const la = ledgerAccounts.find((a) => a.id === ledger_account_id);
     setSelectedLedgerAccount(la ? [la] : []);
 
     // project
@@ -513,13 +516,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       };
     }
 
-    if (!formData.details.accountingAccount) {
+    if (!formData.details.ledgerAccount) {
       return {
         ok: false,
         tab: "details",
         focusId: IDS.ledgerWrap,
-        title: t("entriesModal:errors.gl.title"),
-        message: t("entriesModal:errors.gl.message"),
+        title: t("entriesModal:errors.ledger_account.title"),
+        message: t("entriesModal:errors.ledger_account.message"),
       };
     }
 
@@ -596,7 +599,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       if (isFinancialLocked) return;
       setSelectedLedgerAccount(updated);
       const id = updated.length ? String(updated[0].id) : "";
-      setFormData((p) => ({ ...p, details: { ...p.details, accountingAccount: id } }));
+      setFormData((p) => ({ ...p, details: { ...p.details, ledgerAccount: id } }));
     },
     [isFinancialLocked]
   );
@@ -790,7 +793,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             amount: normalizeMajorAmount(formData.details.amount),
             tx_type: type,
 
-            gl_account: formData.details.accountingAccount,
+            ledger_account: formData.details.ledgerAccount,
             document_type: formData.details.documentType || "",
 
             ...(formData.costCenters.projects ? { project: formData.costCenters.projects } : {}),
@@ -827,9 +830,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             changes.amount = newAmountStr;
           }
 
-          const initialGl = ie.gl_account || "";
-          if (!isFinancialLocked && formData.details.accountingAccount && formData.details.accountingAccount !== initialGl) {
-            changes.gl_account = formData.details.accountingAccount;
+          const initialGl = ie.ledger_account || "";
+          if (!isFinancialLocked && formData.details.ledgerAccount && formData.details.ledgerAccount !== initialGl) {
+            changes.ledger_account = formData.details.ledgerAccount;
           }
 
           if (formData.details.documentType) {
@@ -913,7 +916,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   /* ---------------------------- UI derivations ------------------------- */
   const isAmountValid = amountMajorNum > 0;
-  const isLedgerValid = !!formData.details.accountingAccount;
+  const isLedgerValid = !!formData.details.ledgerAccount;
 
   const isRecurrenceValid =
     isRecurrenceLocked ||

@@ -19,14 +19,14 @@
     "aria": "Menu des filtres disponibles"
   },
   "chips": {
-    "date": "Dates",
-    "bank": "Banque",
-    "accounts": "Compte du grand livre",
-    "type": "Type",
+    "date": "Dates:",
+    "bank": "Banque:",
+    "accounts": "Compte:",
+    "type": "Type:",
     "credit": "Revenu",
     "debit": "Dépense",
     "value": "Montant",
-    "observation": "Observation"
+    "observation": "Observation:"
   },
   "editors": {
     "date": {

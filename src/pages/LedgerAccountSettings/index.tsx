@@ -1,6 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings.tsx
- * i18n: namespace "ledgerAccounts"
  * -------------------------------------------------------------------------- */
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
@@ -136,7 +135,7 @@ function getDefaultTx(acc: GLX): TxType | "" {
   return v ? CATEGORY_DEFAULT_TX[v] : "";
 }
 
-function getGlaId(acc: LedgerAccount): string {
+function getLedgerAccountId(acc: LedgerAccount): string {
   const a = acc as LedgerAccount & { id?: string; external_id?: string };
   return a.id ?? a.external_id ?? "";
 }
@@ -289,9 +288,9 @@ const LedgerAccountSettings: React.FC = () => {
 
     const addedFiltered = added.filter(matchesSearchAndGroup);
 
-    const addedIdsSet = new Set(addedFiltered.map((a) => getGlaId(a)));
+    const addedIdsSet = new Set(addedFiltered.map((a) => getLedgerAccountId(a)));
     const base = pager.items.filter(
-      (a) => !deletedIds.has(getGlaId(a)) && !addedIdsSet.has(getGlaId(a)) && matchesSearchAndGroup(a)
+      (a) => !deletedIds.has(getLedgerAccountId(a)) && !addedIdsSet.has(getLedgerAccountId(a)) && matchesSearchAndGroup(a)
     );
 
     return [...addedFiltered, ...base];
@@ -398,9 +397,9 @@ const LedgerAccountSettings: React.FC = () => {
         const { data: created } = await api.addLedgerAccount(payload);
         setAdded((prev) => [created as LedgerAccount, ...prev]);
       } else if (editing) {
-        const glaId = getGlaId(editing);
+        const ledger_account_id = getLedgerAccountId(editing);
         const payload: EditLedgerAccountRequest = basePayload;
-        await api.editLedgerAccount(glaId, payload);
+        await api.editLedgerAccount(ledger_account_id, payload);
       }
 
       await pager.refresh();
@@ -418,7 +417,7 @@ const LedgerAccountSettings: React.FC = () => {
     setConfirmText(t("confirm.deleteOne", { account: acc.account ?? "" }));
 
     setConfirmAction(() => async () => {
-      const id = getGlaId(acc);
+      const id = getLedgerAccountId(acc);
       setDeleteTargetId(id);
 
       try {
@@ -442,7 +441,7 @@ const LedgerAccountSettings: React.FC = () => {
         }
 
         await pager.refresh();
-        setAdded((prev) => prev.filter((a) => getGlaId(a) !== id));
+        setAdded((prev) => prev.filter((a) => getLedgerAccountId(a) !== id));
 
         setSnack({ message: t("toast.deleteSuccess"), severity: "info" });
       } catch {
@@ -548,7 +547,7 @@ const LedgerAccountSettings: React.FC = () => {
 
   /* ----------------------------- View utils ------------------------------- */
   const RowAccountList = ({ a }: { a: LedgerAccount }) => {
-    const id = getGlaId(a);
+    const id = getLedgerAccountId(a);
     const label = resolveCategoryLabel(a as GLX);
     const tx = getDefaultTx(a as GLX);
     const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
@@ -609,7 +608,7 @@ const LedgerAccountSettings: React.FC = () => {
           <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("list.all")}</span>
         </div>
         <div className="divide-y divide-gray-200">
-          {sorted.map((a) => <RowAccountList key={getGlaId(a)} a={a} />)}
+          {sorted.map((a) => <RowAccountList key={getLedgerAccountId(a)} a={a} />)}
           {sorted.length === 0 && (
             <p className="p-4 text-center text-sm text-gray-500">{t("list.empty")}</p>
           )}
@@ -804,7 +803,7 @@ const LedgerAccountSettings: React.FC = () => {
                                     {accInGroup
                                       .filter((a) => (a.subcategory || t("tags.noSubgroup")) === sg)
                                       .map((a) => {
-                                        const id = getGlaId(a);
+                                        const id = getLedgerAccountId(a);
                                         const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
                                         const tx = getDefaultTx(a as GLX);
 

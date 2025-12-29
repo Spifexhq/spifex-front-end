@@ -75,7 +75,7 @@ export interface ReportsSummaryResponse {
 export interface ReportsSummaryParams {
   description?: string;
   observation?: string;
-  gl?: string;        // comma-separated external_ids
+  ledger_account?: string;        // comma-separated external_ids
   date_from?: string; // YYYY-MM-DD
   date_to?: string;   // YYYY-MM-DD
 }

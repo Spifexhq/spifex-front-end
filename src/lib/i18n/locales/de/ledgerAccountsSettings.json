@@ -76,5 +76,44 @@
     "pdfError": "Unerwarteter Fehler beim Erstellen des PDFs.",
     "confirmFailed": "Bestätigung fehlgeschlagen."
   },
-  "pdf": { "company": "Spifex", "title": "Kontenplan" }
+  "pdf": {
+    "company": "Spifex",
+    "title": "Kontenplan",
+    "generatedAt": "Erstellt am: {{date}}",
+
+    "placeholders": {
+      "noCategory": "(Keine Kategorie)",
+      "noSubgroup": "(Keine Untergruppe)"
+    },
+
+    "tx": {
+      "credit": "Haben",
+      "debit": "Soll",
+      "none": "-"
+    },
+
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+
+    "table": {
+      "code": "Code",
+      "account": "Sachkonto",
+      "defaultType": "Standardtyp",
+      "status": "Status"
+    },
+
+    "footer": {
+      "page": "Seite {{current}} von {{total}}"
+    },
+
+    "messages": {
+      "empty": "Keine Konten gefunden.",
+      "ok": "PDF erfolgreich erstellt!",
+      "error": "Fehler beim Erstellen des PDFs. Bitte erneut versuchen."
+    },
+
+    "filenamePrefix": "kontenplan"
+  }
 }

@@ -17,7 +17,7 @@ export interface GetSettledEntryRequest {
   description?: string;
   observation?: string;
 
-  gl?: string;
+  ledger_account?: string;
   project?: string;
   entity?: string;
 
@@ -60,7 +60,7 @@ export interface SettledEntry {
   interval_months: number;
   weekend_action: number;
 
-  gl_account: string | null;
+  ledger_account: string | null;
   project: string | null;
   entity: string | null;
   transfer_id: string | null;

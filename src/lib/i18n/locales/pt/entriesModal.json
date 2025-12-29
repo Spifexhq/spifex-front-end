@@ -91,7 +91,7 @@
       "title": "Valor inválido",
       "message": "O campo Valor é obrigatório e deve ser maior que 0."
     },
-    "gl": {
+    "ledger_account": {
       "title": "Conta contábil obrigatória",
       "message": "Selecione uma conta contábil antes de salvar."
     },

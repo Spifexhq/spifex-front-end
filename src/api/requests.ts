@@ -1,7 +1,6 @@
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
-import type { Paginated } from '@/models/Api';
 import type { SignInRequest, SignInResponse, SignOutResponse, SignUpRequest, SignUpResponse } from '@/models/auth/auth'
 import type { CookieConsentRequest, CookieConsentResponse } from 'src/models/auth/cookies';
 import type { ChangeEmailRequest, ChangeEmailResponse, ChangePasswordRequest, ChangePasswordResponse, ConfirmPasswordResetRequest,
@@ -29,24 +28,23 @@ import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, Bul
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from 'src/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
 import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
-  GetBanksBatchRequest, GetBanksBatchResponse, GetBanksResponse } from 'src/models/settings/banking';
+  GetBanksBulkRequest, GetBanksBulkResponse, GetBanksResponse } from 'src/models/settings/banking';
 import type { AddLedgerAccountRequest, DeleteAllLedgerAccountsRequest, DeleteAllLedgerAccountsResponse,
   EditLedgerAccountRequest, GetLedgerAccountsRequest, GetLedgerAccountsResponse, ImportLedgerAccountsResponse,
   ImportStandardLedgerAccountsRequest, ImportStandardLedgerAccountsResponse, LedgerAccount, LedgerAccountsBulkRequest,
   LedgerAccountsBulkResponse, LedgerAccountsExistsResponse } from 'src/models/settings/ledgerAccounts';
+import type { AddDepartmentRequest, Department, DepartmentsBulkRequest, DepartmentsBulkResponse, EditDepartmentRequest,
+  GetDepartmentResponse, GetDepartmentsParams, GetDepartmentsResponse } from 'src/models/settings/departments';
+import type { AddProjectRequest, EditProjectRequest, GetProjectsParams, GetProjectsResponse, Project,
+  ProjectsBulkRequest, ProjectsBulkResponse } from 'src/models/settings/projects';
+import type { AddInventoryItemRequest, EditInventoryItemRequest, GetInventoryItemsParams, GetInventoryItemsResponse,
+  InventoryItem, InventoryItemsBulkRequest, InventoryItemsBulkResponse } from 'src/models/settings/inventory';
+import type { AddEntityRequest, EditEntityRequest, EntitiesBulkRequest, EntitiesBulkResponse, Entity,
+  GetEntitiesParams, GetEntitiesResponse, GetEntityResponse } from 'src/models/settings/entities';
 
 import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
 import { TaskDetail } from '@/models/tasks/domain';
-import {
-  GetDocumentType, GetDocumentTypes,
-  GetDepartmentResponse, GetDepartmentsResponse, AddDepartmentRequest, EditDepartmentRequest,
-  GetProjectsResponse, AddProjectRequest, EditProjectRequest,
-  GetEntityResponse, GetEntitiesResponse, AddEntityRequest, EditEntityRequest,
-  GetInventoryItemsResponse, AddInventoryItemRequest, EditInventoryItemRequest
-} from '@/models/enterprise_structure/dto';
-import { Department,
-  Project, InventoryItem, Entity
-} from '@/models/enterprise_structure/domain';
+import { GetStatementsParams, GetStatementsResponse, TriggerStatementAnalysisResponse, UploadStatementResponse } from 'src/models/settings/statements';
 
 
 async function downloadTemplate(path: string, filename: string) {
@@ -66,6 +64,27 @@ async function downloadTemplate(path: string, filename: string) {
   a.remove();
 
   URL.revokeObjectURL(url);
+}
+
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+
+function filenameFromContentDisposition(
+  contentDisposition: string | undefined,
+  fallback: string
+) {
+  const match = contentDisposition?.match(/filename="([^"]+)"/i);
+  return match?.[1] ?? fallback;
 }
 
 
@@ -273,7 +292,7 @@ export const api = {
     request<Entry>(`cashflow/entries/${id}/`, "GET"),
 
   getEntriesBulk: (ids: string[]) =>
-    request<GetEntriesBulkResponse>(`cashflow/entries/get/`, "POST", {
+    request<GetEntriesBulkResponse>(`cashflow/entries/bulk/get/`, "POST", {
       ids
     } satisfies GetEntriesBulkRequest),
 
@@ -284,14 +303,14 @@ export const api = {
     request<EntryWriteResponse>(`cashflow/entries/${id}/`, "PATCH", payload),
 
   editEntriesBulk: (ids: string[], data: Partial<EditEntryRequest>, atomic: boolean = true) =>
-    request<EditEntriesBulkResponse>(`cashflow/entries/update/`, "PATCH",
+    request<EditEntriesBulkResponse>(`cashflow/entries/bulk/update/`, "PATCH",
       { ids, data, atomic }),
 
   deleteEntry: (id: string) =>
     request<void>(`cashflow/entries/${id}/`, "DELETE"),
 
   deleteEntriesBulk: (ids: string[]) =>
-    request<void>(`cashflow/entries/delete/`, "POST", { ids } satisfies DeleteEntriesBulkRequest),
+    request<void>(`cashflow/entries/bulk/delete/`, "POST", { ids } satisfies DeleteEntriesBulkRequest),
 
   /* --- Settle Process --- */
   // * Analyze \/
@@ -318,10 +337,10 @@ export const api = {
 
   getSettledEntriesBulk: (ids: string[], payload?: GetSettledEntryRequest) => {
     const params = { include_inactive: true, ...(payload || {}), ids: ids.join(",") };
-    return request<SettledEntry[]>(`cashflow/settlements/get/`, "POST", params)},
+    return request<SettledEntry[]>(`cashflow/settlements/bulk/get/`, "POST", params)},
 
   addSettlementsBulk: (items: BulkSettleItem[], atomic: boolean = true) =>
-    request<BulkSettleResponse>(`cashflow/settlements/settle/`, "POST", { items, atomic }),
+    request<BulkSettleResponse>(`cashflow/settlements/bulk/settle/`, "POST", { items, atomic }),
 
   editSettledEntry: (id: string, payload: Partial<EditSettledEntryRequest>) =>
     request<SettledEntry>(`cashflow/settlements/${id}/`, "PATCH", payload),
@@ -330,7 +349,7 @@ export const api = {
     request<Entry>(`cashflow/settlements/${id}/`, "DELETE"),
   
   deleteSettledEntriesBulk: (ids: string[]) =>
-    request<void>(`cashflow/settlements/delete/`, "POST", { ids } satisfies DeleteSettledEntriesBulkRequest),
+    request<void>(`cashflow/settlements/bulk/delete/`, "POST", { ids } satisfies DeleteSettledEntriesBulkRequest),
 
   /* --- Transferences --- */
   addTransference: (payload: AddTransferenceRequest) =>
@@ -342,10 +361,10 @@ export const api = {
     return request<GetBanksResponse>(`banking/accounts/`, "GET", params);
   },
 
-  getBanksBatch: (ids: string[]) =>
-    request<GetBanksBatchResponse[]>(`banking/accounts/batch/`, "POST", {
+  getBanksBulk: (ids: string[]) =>
+    request<GetBanksBulkResponse[]>(`banking/accounts/bulk/get/`, "POST", {
       ids
-    } satisfies GetBanksBatchRequest),
+    } satisfies GetBanksBulkRequest),
 
   getBank: (bankId: string) =>
     request<GetBankResponse>(`banking/accounts/${bankId}/`, "GET"),
@@ -364,7 +383,7 @@ export const api = {
     request<GetLedgerAccountsResponse>(`ledger/accounts/`, "GET", params),
 
   getLedgerAccountsBulk: (ids: string[]) =>
-    request<LedgerAccountsBulkResponse>(`ledger/accounts/batch/`, "POST", {
+    request<LedgerAccountsBulkResponse>(`ledger/accounts/bulk/get/`, "POST", {
       ids
     } satisfies LedgerAccountsBulkRequest),
 
@@ -392,361 +411,159 @@ export const api = {
     request<LedgerAccount>(`ledger/accounts/`, "POST", payload),
 
   addLedgerAccountsBulk: (payload: AddLedgerAccountRequest[]) =>
-    request<LedgerAccount[]>(`ledger/accounts/add/`, "POST", payload),
+    request<LedgerAccount[]>(`ledger/accounts/bulk/create/`, "POST", payload),
 
   editLedgerAccount: (ledgerAccountId: string, payload: EditLedgerAccountRequest) =>
     request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, "PATCH", payload),
 
   deleteAllLedgerAccounts: () =>
-    request<DeleteAllLedgerAccountsResponse>(`ledger/accounts/delete/`, "DELETE", {
+    request<DeleteAllLedgerAccountsResponse>(`ledger/accounts/delete/all/`, "DELETE", {
       confirm_delete_all: true
     } satisfies DeleteAllLedgerAccountsRequest),
 
   deleteLedgerAccount: (ledgerAccountId: string) =>
     request<void>(`ledger/accounts/${ledgerAccountId}/`, "DELETE"),
 
-  /* --- Document Types --- */
-  getAllDocumentTypes: () =>
-    request<GetDocumentTypes>("enterprise_structure/document-types", "GET"),
-
-  getDocumentType: (ids: number[]) =>
-    request<GetDocumentType>(`enterprise_structure/document-types/${ids.join(',')}`, "GET"),
-
   /* --- Departments --- */
-  getDepartments: (params?: { cursor?: string; q?: string; active?: "true" | "false" }) => {
-    return request<GetDepartmentsResponse>(
-      `departments/`,
-      "GET",
-      params
-    );
-  },
+  getDepartments: (params?: GetDepartmentsParams) =>
+    request<GetDepartmentsResponse>(`departments/`, "GET", params),
 
-  getDepartmentsOptions: (params?: { cursor?: string; q?: string; active?: "true" | "false" }) => {
-    return request<GetDepartmentsResponse>(
-      `departments/options/`,
-      "GET",
-      params
-    );
-  },
+  getDepartmentsOptions: (params?: GetDepartmentsParams) =>
+    request<GetDepartmentsResponse>(`departments/options/`, "GET", params),
 
-  getDepartment: (departmentId: string) => {
-    return request<GetDepartmentResponse>(
-      `departments/${departmentId}/`,
-      "GET"
-    );
-  },
+  getDepartment: (departmentId: string) =>
+    request<GetDepartmentResponse>(`departments/${departmentId}/`, "GET"),
 
-  getDepartmentsBatch: (ids: string[]) => {
-    return request<Department[]>(
-      `departments/batch/`,
-      "POST",
-      { ids }
-    );
-  },
+  getDepartmentsBulk: (ids: string[]) =>
+    request<DepartmentsBulkResponse>(`departments/bulk/get/`, "POST", {
+      ids
+    } satisfies DepartmentsBulkRequest),
 
-  addDepartment: (payload: AddDepartmentRequest) => {
-    return request<Department>(
-      `departments/`,
-      "POST",
-      payload
-    );
-  },
+  addDepartment: (payload: AddDepartmentRequest) =>
+    request<Department>(`departments/`, "POST", payload),
 
-  editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>) => {
-    return request<Department>(
-      `departments/${departmentId}/`,
-      "PATCH",
-      payload
-    );
-  },
+  editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>) =>
+    request<Department>(`departments/${departmentId}/`, "PATCH", payload),
 
-  deleteDepartment: (departmentId: string) => {
-    return request<void>(
-      `departments/${departmentId}/`,
-      "DELETE"
-    );
-  },
+  deleteDepartment: (departmentId: string) =>
+    request<void>(`departments/${departmentId}/`, "DELETE"),
 
   /* --- Projects --- */
-  getProjects: (params?: { cursor?: string; active?: "true" | "false"; type?: string; q?: string }) => {
-    return request<GetProjectsResponse>(`projects/`, "GET", params);
-  },
+  getProjects: (params?: GetProjectsParams) =>
+    request<GetProjectsResponse>(`projects/`, "GET", params),
 
-  getProjectsOptions: (params?: { cursor?: string; active?: "true" | "false"; type?: string; q?: string }) => {
-    return request<GetProjectsResponse>(`projects/options/`, "GET", params);
-  },
+  getProjectsOptions: (params?: GetProjectsParams) =>
+    request<GetProjectsResponse>(`projects/options/`, "GET", params),
 
-  getProjectsBatch: (ids: string[]) => {
-    return request<Project[]>(
-      `projects/batch/`,
-      "POST",
-      { ids }
-    );
-  },
+  getProjectsBulk: (ids: string[]) =>
+    request<ProjectsBulkResponse>(`projects/bulk/get/`, "POST", {
+      ids
+    } satisfies ProjectsBulkRequest),
 
-  getProject: (projectId: string) => {
-    return request<Project>(
-      `projects/${projectId}/`,
-      "GET"
-    );
-  },
+  getProject: (projectId: string) =>
+    request<Project>(`projects/${projectId}/`, "GET"),
 
-  addProject: (payload: AddProjectRequest) => {
-    return request<Project>(
-      `projects/`,
-      "POST",
-      payload
-    );
-  },
+  addProject: (payload: AddProjectRequest) =>
+    request<Project>(`projects/`, "POST", payload),
 
-  editProject: (projectId: string, payload: EditProjectRequest) => {
-    return request<Project>(
-      `projects/${projectId}/`,
-      "PATCH",
-      payload
-    );
-  },
+  editProject: (projectId: string, payload: EditProjectRequest) =>
+    request<Project>(`projects/${projectId}/`, "PATCH", payload),
 
-  deleteProject: (projectId: string) => {
-    return request<void>(
-      `projects/${projectId}/`,
-      "DELETE"
-    );
-  },
+  deleteProject: (projectId: string) =>
+    request<void>(`projects/${projectId}/`, "DELETE"),
 
   /* --- Inventory --- */
-  getInventoryItems: (params?: {
-    cursor?: string;
-    active?: "true" | "false";
-    q?: string;
-  }) => {
-    return request<GetInventoryItemsResponse>(
-      `inventory/items/`,
-      "GET",
-      params
-    );
-  },
+  getInventoryItems: (params?: GetInventoryItemsParams) =>
+    request<GetInventoryItemsResponse>(`inventory/items/`, "GET", params),
 
-  getInventoryOptions: (params?: {
-    cursor?: string;
-    active?: "true" | "false";
-    q?: string;
-  }) => {
-    return request<GetInventoryItemsResponse>(
-      `inventory/items/options/`,
-      "GET",
-      params
-    );
-  },
+  getInventoryOptions: (params?: GetInventoryItemsParams) =>
+    request<GetInventoryItemsResponse>(`inventory/items/options/`, "GET", params),
 
-  getInventoryItemsBatch: (ids: string[]) => {
-    return request<InventoryItem[]>(
-      `inventory/items/batch/`,
-      "POST",
-      { ids }
-    );
-  },
+  getInventoryItemsBulk: (ids: string[]) =>
+    request<InventoryItemsBulkResponse>(`inventory/items/bulk/get/`, "POST", {
+      ids
+    } satisfies InventoryItemsBulkRequest),
 
-  getInventoryItem: (id: string) => {
-    return request<InventoryItem>(
-      `inventory/items/${id}/`,
-      "GET"
-    );
-  },
+  getInventoryItem: (id: string) =>
+    request<InventoryItem>(`inventory/items/${id}/`, "GET"),
 
-  addInventoryItem: (payload: AddInventoryItemRequest) => {
-    return request<InventoryItem>(
-      `inventory/items/`,
-      "POST",
-      payload
-    );
-  },
+  addInventoryItem: (payload: AddInventoryItemRequest) =>
+    request<InventoryItem>(`inventory/items/`, "POST", payload),
 
-  editInventoryItem: (id: string, payload: EditInventoryItemRequest) => {
-    return request<InventoryItem>(
-      `inventory/items/${id}/`,
-      "PATCH",
-      payload
-    );
-  },
+  editInventoryItem: (id: string, payload: EditInventoryItemRequest) =>
+    request<InventoryItem>(`inventory/items/${id}/`, "PATCH", payload),
 
-  deleteInventoryItem: (id: string) => {
-    return request<void>(
-      `inventory/items/${id}/`,
-      "DELETE"
-    );
-  },
+  deleteInventoryItem: (id: string) =>
+    request<void>(`inventory/items/${id}/`, "DELETE"),
 
   /* --- Entities --- */
-  getEntities: (params?: {
-    cursor?: string;
-    active?: "true" | "false";
-    type?: string; // client | supplier | employee ...
-    q?: string;
-  }) => {
-    return request<GetEntitiesResponse>(
-      `crm/entities/`,
-      "GET",
-      params
-    );
-  },
+  getEntities: (params?: GetEntitiesParams) =>
+    request<GetEntitiesResponse>(`crm/entities/`, "GET", params),
 
-  getEntitiesTable: (params?: {
-    cursor?: string;
-    active?: "true" | "false";
-    type?: string;
-    q?: string;
-  }) => {
-    return request<GetEntitiesResponse>(
-      `crm/entities/table/`,
-      "GET",
-      params
-    );
-  },
+  getEntitiesTable: (params?: GetEntitiesParams) =>
+    request<GetEntitiesResponse>(`crm/entities/table/`, "GET", params),
 
-  getEntitiesOptions: (params?: {
-    cursor?: string;
-    active?: "true" | "false";
-    type?: string;
-    q?: string;
-  }) => {
-    return request<GetEntitiesResponse>(
-      `crm/entities/options/`,
-      "GET",
-      params
-    );
-  },
+  getEntitiesOptions: (params?: GetEntitiesParams) =>
+    request<GetEntitiesResponse>(`crm/entities/options/`, "GET", params),
   
-  getEntity: (id: string) => {
-    return request<GetEntityResponse>(
-      `crm/entities/${id}/`,
-      "GET"
-    );
-  },
+  getEntity: (id: string) =>
+    request<GetEntityResponse>(`crm/entities/${id}/`, "GET"),
 
-  getEntitiesBatch: (ids: string[]) => {
-    return request<Entity[]>(
-      `crm/entities/batch/`,
-      "POST",
-      { ids }
-    );
-  },
+  getEntitiesBulk: (ids: string[]) =>
+    request<EntitiesBulkResponse>(`crm/entities/bulk/get/`, "POST", {
+      ids
+    } satisfies EntitiesBulkRequest),
 
-  addEntity: (payload: AddEntityRequest) => {
-    return request<Entity>(
-      `crm/entities/`,
-      "POST",
-      payload
-    );
-  },
+  addEntity: (payload: AddEntityRequest) =>
+    request<Entity>(`crm/entities/`, "POST", payload),
 
-  editEntity: (id: string, payload: EditEntityRequest) => {
-    return request<Entity>(
-      `crm/entities/${id}/`,
-      "PATCH",
-      payload
-    );
-  },
+  editEntity: (id: string, payload: EditEntityRequest) =>
+    request<Entity>(`crm/entities/${id}/`, "PATCH", payload),
 
-  deleteEntity: (id: string) => {
-    return request<void>(
-      `crm/entities/${id}/`,
-      "DELETE"
-    );
-  },
+  deleteEntity: (id: string) =>
+    request<void>(`crm/entities/${id}/`, "DELETE"),
 
   // -------------- Statements (PDF) --------------
+  getStatements: (params?: GetStatementsParams) =>
+    request<GetStatementsResponse>(`banking/statements/`, "GET", params),
 
-  // list with filters { q?, status?, bank? }
-  getStatements: (params?: { q?: string; status?: string; bank?: string }) => {
-    return request<Paginated<{
-      id: string;
-      bank_account_id: string | null;
-      bank_account_label: string | null;
-      original_filename: string;
-      content_type: string;
-      size_bytes: number;
-      pages: number | null;
-      status: "uploaded" | "processing" | "ready" | "failed";
-      created_at: string;
-      json_ready: boolean; // <-- add this
-    }>>(
-      `banking/statements/`,
-      "GET",
-      params
-    );
-  },
-
-  // upload with progress (FormData: file, optional bank_account_id)
   uploadStatement: (form: FormData, onProgress?: (pct: number) => void) => {
-    return http.post(
-      `banking/statements/`,
-      form,
+    return http.post(`banking/statements/`, form,
       {
         onUploadProgress: (evt: AxiosProgressEvent) => {
           if (!onProgress || !evt.total) return;
           onProgress(Math.round((evt.loaded * 100) / evt.total));
         },
       }
-    ).then((r: AxiosResponse) => r.data);
+    )
+    .then((r: AxiosResponse) => r.data as UploadStatementResponse);
   },
 
-  deleteStatement: (statementId: string) => {
-    return request<void>(
-      `banking/statements/${statementId}/`,
-      "DELETE"
-    );
-  },
+  deleteStatement: (statementId: string) =>
+    request<void>(`banking/statements/${statementId}/`, "DELETE"),
 
-  triggerStatementAnalysis: (statementId: string) => {
-    return request<{
-      id: string;
-      status: "processing" | "ready" | "failed" | "uploaded";
-      started_at: string;
-      finished_at: string | null;
-      error_message: string;
-    }>(
-      `banking/statements/${statementId}/analyze/`,
-      "POST",
-      {}
-    );
-  },
+  triggerStatementAnalysis: (statementId: string) =>
+    request<TriggerStatementAnalysisResponse>(`banking/statements/${statementId}/analyze/`, "POST", {}),
 
-  // download binary (Blob) via axios responseType: 'blob'
   downloadStatement: async (statementId: string) => {
-    const res = await http.get(
-      `banking/statements/${statementId}/download/`,
-      { responseType: "blob", validateStatus: (s: number) => s >= 200 && s < 300 }
-    );
-    const blob = res.data as Blob;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "extrato.pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    const res = await http.get(`banking/statements/${statementId}/download/`, {
+      responseType: "blob",
+      validateStatus: (s: number) => s >= 200 && s < 300
+    });
+
+    downloadBlob(res.data as Blob, "extrato.pdf");
   },
 
   downloadStatementJson: async (statementId: string) => {
-    const res = await http.get(`banking/statements/${statementId}/download-json/`, { responseType: "blob" });
+    const res = await http.get(`banking/statements/${statementId}/download-json/`, {
+      responseType: "blob",
+      validateStatus: (s: number) => s >= 200 && s < 300
+    });
 
     const cd = res.headers?.["content-disposition"] as string | undefined;
-    const match = cd?.match(/filename="([^"]+)"/i);
-    const fallbackName = `statement_${statementId}.json`;
-    const filename = match?.[1] ?? fallbackName;
+    const filename = filenameFromContentDisposition(cd, `statement_${statementId}.json`);
 
-    const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/json" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.setAttribute("download", filename);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+    downloadBlob(new Blob([res.data], { type: "application/json" }), filename);
   },
-
-
-
-
 
 }

@@ -91,7 +91,7 @@
       "title": "Ungültiger Betrag",
       "message": "Der Betrag ist erforderlich und muss größer als 0 sein."
     },
-    "gl": {
+    "ledger_account": {
       "title": "Hauptbuchkonto erforderlich",
       "message": "Wählen Sie ein Hauptbuchkonto aus, bevor Sie speichern."
     },

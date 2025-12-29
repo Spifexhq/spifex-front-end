@@ -76,5 +76,44 @@
     "pdfError": "Erro inesperado ao gerar o PDF.",
     "confirmFailed": "Falha ao confirmar."
   },
-  "pdf": { "company": "Spifex", "title": "Plano de Contas" }
+  "pdf": {
+    "company": "Spifex",
+    "title": "Plano de Contas",
+    "generatedAt": "Gerado em: {{date}}",
+
+    "placeholders": {
+      "noCategory": "(Sem categoria)",
+      "noSubgroup": "(Sem subgrupo)"
+    },
+
+    "tx": {
+      "credit": "Crédito",
+      "debit": "Débito",
+      "none": "-"
+    },
+
+    "status": {
+      "active": "Ativa",
+      "inactive": "Inativa"
+    },
+
+    "table": {
+      "code": "Código",
+      "account": "Conta contábil",
+      "defaultType": "Tipo padrão",
+      "status": "Status"
+    },
+
+    "footer": {
+      "page": "Página {{current}} de {{total}}"
+    },
+
+    "messages": {
+      "empty": "Nenhuma conta contábil encontrada.",
+      "ok": "PDF gerado com sucesso!",
+      "error": "Erro ao gerar o PDF. Tente novamente."
+    },
+
+    "filenamePrefix": "plano-de-contas"
+  }
 }

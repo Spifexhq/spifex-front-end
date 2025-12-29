@@ -10,20 +10,19 @@ import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import { SelectDropdown } from "src/components/ui/SelectDropdown";
 import ConfirmToast from "src/components/ui/ConfirmToast";
-
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
+import Checkbox from "src/components/ui/Checkbox";
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
 import { api } from "src/api/requests";
-import type { Entity } from "src/models/enterprise_structure/domain/Entity";
 import { useAuthContext } from "src/hooks/useAuth";
-import Checkbox from "src/components/ui/Checkbox";
-
-import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import { useTranslation } from "react-i18next";
+
+import type { Entity } from "src/models/settings/entities";
 
 /* ---------------------------- Snackbar type ------------------------------ */
 type Snack =

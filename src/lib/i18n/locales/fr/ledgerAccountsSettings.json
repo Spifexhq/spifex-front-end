@@ -76,5 +76,44 @@
     "pdfError": "Erreur inattendue lors de la génération du PDF.",
     "confirmFailed": "Échec de la confirmation."
   },
-  "pdf": { "company": "Spifex", "title": "Plan de comptes" }
+  "pdf": {
+    "company": "Spifex",
+    "title": "Plan comptable",
+    "generatedAt": "Généré le : {{date}}",
+
+    "placeholders": {
+      "noCategory": "(Sans catégorie)",
+      "noSubgroup": "(Sans sous-groupe)"
+    },
+
+    "tx": {
+      "credit": "Crédit",
+      "debit": "Débit",
+      "none": "-"
+    },
+
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif"
+    },
+
+    "table": {
+      "code": "Code",
+      "account": "Compte comptable",
+      "defaultType": "Type par défaut",
+      "status": "Statut"
+    },
+
+    "footer": {
+      "page": "Page {{current}} sur {{total}}"
+    },
+
+    "messages": {
+      "empty": "Aucun compte comptable trouvé.",
+      "ok": "PDF généré avec succès !",
+      "error": "Erreur lors de la génération du PDF. Veuillez réessayer."
+    },
+
+    "filenamePrefix": "plan-comptable"
+  }
 }

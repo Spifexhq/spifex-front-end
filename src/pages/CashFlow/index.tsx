@@ -21,7 +21,7 @@ import type { ApiError } from "@/models/Api";
 
 const DEFAULT_FILTERS: EntryFilters = {
   bank_id: [],
-  gla_id: [],
+  ledger_account_id: [],
   tx_type: undefined,
   start_date: undefined,
   end_date: undefined,

@@ -171,15 +171,15 @@
     },
     "add_ledger_account": {
       "label": "Add ledger account",
-      "description": "Allows creating general ledger accounts."
+      "description": "Allows creating ledger accounts."
     },
     "change_ledger_account": {
       "label": "Edit ledger account",
-      "description": "Allows editing general ledger accounts."
+      "description": "Allows editing ledger accounts."
     },
     "delete_ledger_account": {
       "label": "Delete ledger account",
-      "description": "Allows deleting general ledger accounts."
+      "description": "Allows deleting ledger accounts."
     },
     "view_ledger_account": {
       "label": "View ledger accounts",

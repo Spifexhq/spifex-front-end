@@ -91,7 +91,7 @@
       "title": "Invalid amount",
       "message": "Amount is required and must be greater than 0."
     },
-    "gl": {
+    "ledger_account": {
       "title": "G/L account required",
       "message": "Select a G/L account before saving."
     },

@@ -19,10 +19,10 @@ export interface BankAccount {
 
 export type GetBanksResponse = Paginated<BankAccount>;
 
-export interface GetBanksBatchRequest {
+export interface GetBanksBulkRequest {
   ids: string[];
 }
-export type GetBanksBatchResponse = BankAccount[];
+export type GetBanksBulkResponse = BankAccount[];
 
 export type AddBankRequest = Omit<BankAccount, "id" | "current_balance" | "consolidated_balance">;
 export type EditBankRequest = Partial<AddBankRequest>;

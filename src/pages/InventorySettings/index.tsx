@@ -6,21 +6,20 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-
 import Input from "src/components/ui/Input";
 import Button from "src/components/ui/Button";
 import Snackbar from "src/components/ui/Snackbar";
 import ConfirmToast from "src/components/ui/ConfirmToast";
 import Checkbox from "src/components/ui/Checkbox";
+import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
 import { api } from "src/api/requests";
-import type { InventoryItem } from "src/models/enterprise_structure/domain/InventoryItem";
 import { useAuthContext } from "src/hooks/useAuth";
-
-import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "src/lib/list";
 import { useTranslation } from "react-i18next";
+
+import type { InventoryItem } from "src/models/settings/inventory";
 
 /* Snackbar type */
 type Snack =

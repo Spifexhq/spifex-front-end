@@ -19,14 +19,14 @@
     "aria": "Menü der verfügbaren Filter"
   },
   "chips": {
-    "date": "Daten",
-    "bank": "Bank",
-    "accounts": "Hauptbuchkonto",
-    "type": "Typ",
+    "date": "Daten:",
+    "bank": "Bank:",
+    "accounts": "Hauptbuchkonto:",
+    "type": "Typ:",
     "credit": "Einnahme",
     "debit": "Ausgabe",
     "value": "Betrag",
-    "observation": "Bemerkung"
+    "observation": "Bemerkung:"
   },
   "editors": {
     "date": {

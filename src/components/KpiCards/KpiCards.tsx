@@ -115,9 +115,9 @@ const KpiCards: React.FC<KpiCardsProps> = ({
   );
 
   /* ---------------------- Build query params from filters ------------------- */
-  const glParam = useMemo(
-    () => (filters?.gla_id?.length ? filters.gla_id.join(",") : undefined),
-    [filters?.gla_id]
+  const ledgerAccountParam = useMemo(
+    () => (filters?.ledger_account_id?.length ? filters.ledger_account_id.join(",") : undefined),
+    [filters?.ledger_account_id]
   );
 
   const bankParam = useMemo(
@@ -136,7 +136,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           const { data } = await api.getSettledKpis({
             description: filters?.description,
             observation: filters?.observation,
-            gl: glParam,
+            ledger_account: ledgerAccountParam,
             bank_id: bankParam,
           });
           if (mounted) {
@@ -147,7 +147,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           const { data } = await api.getCashflowKpis({
             description: filters?.description,
             observation: filters?.observation,
-            gl: glParam,
+            ledger_account: ledgerAccountParam,
           });
           if (mounted) {
             setCf(data);
@@ -168,7 +168,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     return () => {
       mounted = false;
     };
-  }, [context, glParam, bankParam, filters?.description, filters?.observation, refreshToken]);
+  }, [context, ledgerAccountParam, bankParam, filters?.description, filters?.observation, refreshToken]);
 
   /* ------------------------ Map server KPIs to UI cards --------------------- */
   const cashflowKpis: KpiItem[] = useMemo(() => {

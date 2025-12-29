@@ -19,14 +19,14 @@
     "aria": "Menu de filtros disponíveis"
   },
   "chips": {
-    "date": "Datas",
-    "bank": "Banco",
-    "accounts": "Conta contábil",
-    "type": "Tipo",
+    "date": "Datas:",
+    "bank": "Banco:",
+    "accounts": "Conta:",
+    "type": "Tipo:",
     "credit": "Receita",
     "debit": "Despesa",
     "value": "Valor",
-    "observation": "Observação"
+    "observation": "Observação:"
   },
   "editors": {
     "date": {

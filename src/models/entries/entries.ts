@@ -1,9 +1,8 @@
 // src/models/entries/entries.ts
 import type { Paginated } from "@/models/Api";
-import type {
-  DepartmentAllocation,
-  InventoryAllocation,
-} from "@/models/enterprise_structure/domain";
+
+import type { DepartmentAllocation } from "../settings/departments";
+import type { InventoryAllocation } from "src/models/settings/inventory";
 
 /* ---------------------------------- List ---------------------------------- */
 
@@ -20,7 +19,7 @@ export interface GetEntryRequest {
   description?: string; // backend supports icontains on description
   observation?: string; // backend supports icontains on observation
 
-  gl?: string;       // GL external_id (CSV if multiple)
+  ledger_account?: string;       // GL external_id (CSV if multiple)
   project?: string;  // Project external_id
   entity?: string;   // Entity external_id
 
@@ -65,7 +64,7 @@ export interface Entry {
   settlement_value_date: string | null; // YYYY-MM-DD or null
   is_settled: boolean;
 
-  gl_account: string | null; // GL external_id
+  ledger_account: string | null; // GL external_id
   project: string | null;    // Project external_id
   entity: string | null;     // Entity external_id
   transfer_id: string | null; // Transfer external_id
@@ -96,7 +95,7 @@ export interface EntryPayloadBase {
   interval_months?: number; // int choice
   weekend_action?: number;  // int choice
 
-  gl_account: string;        // GL external_id (required on create)
+  ledger_account: string;        // GL external_id (required on create)
   document_type?: string | null;
   project?: string | null;   // Project external_id
   entity?: string | null;    // Entity external_id

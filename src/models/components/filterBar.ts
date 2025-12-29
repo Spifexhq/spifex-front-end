@@ -5,7 +5,7 @@ export type EntryFilters = {
   end_date?: string;
   description?: string;
   observation?: string;
-  gla_id?: string[];
+  ledger_account_id?: string[];
   bank_id?: string[];
   tx_type?: "credit" | "debit";
   amount_min?: string;
@@ -22,8 +22,8 @@ export type ChipKey =
   | "amount";
 
 export type LocalFilters =
-  Omit<EntryFilters, "gla_id" | "bank_id" | "amount_min" | "amount_max"> & {
-    gla_id: string[];
+  Omit<EntryFilters, "ledger_account_id" | "bank_id" | "amount_min" | "amount_max"> & {
+    ledger_account_id: string[];
     bank_id: string[];
     amount_min?: string;
     amount_max?: string;

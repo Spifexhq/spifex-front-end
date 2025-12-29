@@ -19,14 +19,14 @@
     "aria": "Available filters menu"
   },
   "chips": {
-    "date": "Dates",
-    "bank": "Bank",
-    "accounts": "Ledger account",
-    "type": "Type",
+    "date": "Dates:",
+    "bank": "Bank:",
+    "accounts": "Accounts:",
+    "type": "Type:",
     "credit": "Income",
     "debit": "Expense",
     "value": "Amount",
-    "observation": "Observation"
+    "observation": "Observation:"
   },
   "editors": {
     "date": {
