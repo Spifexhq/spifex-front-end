@@ -1,12 +1,20 @@
 {
-  "title": "Mitarbeiter",
-  "header": {
-    "settings": "Einstellungen",
-    "members": "Mitarbeiter"
+  "title": "Teammitglieder",
+  "header": { "settings": "Einstellungen", "members": "Teammitglieder" },
+  "section": { "list": "Mitgliederliste" },
+  "empty": "Keine Mitglieder gefunden.",
+  "badge": { "syncing": "Synchronisierung…" },
+
+  "btn": {
+    "addMember": "Mitglied hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
   },
-  "section": {
-    "list": "Mitarbeiterliste"
-  },
+
+  "btnLabel": { "groups": "Gruppen auswählen" },
+
   "field": {
     "name": "Name",
     "email": "E-Mail",
@@ -14,39 +22,39 @@
     "confirmPassword": "Passwort bestätigen",
     "groups": "Gruppen"
   },
-  "badge": {
-    "syncing": "Synchronisiere…"
-  },
-  "btn": {
-    "addMember": "Mitarbeiter hinzufügen",
-    "edit": "Bearbeiten",
-    "delete": "Löschen",
-    "save": "Speichern",
-    "cancel": "Abbrechen"
-  },
-  "btnLabel": {
-    "groups": "Gruppen auswählen"
-  },
+
   "modal": {
-    "createTitle": "Mitarbeiter hinzufügen",
-    "editTitle": "Mitarbeiter bearbeiten",
+    "createTitle": "Mitglied hinzufügen",
+    "editTitle": "Mitglied bearbeiten",
     "close": "Schließen"
   },
-  "empty": "Keine Mitarbeiter gefunden.",
-  "confirm": {
-    "delete": "Mitarbeiter „{{name}}“ löschen?"
+
+  "footer": { "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern" },
+
+  "actions": { "ok": "OK", "discard": "Verwerfen" },
+
+  "confirmDiscard": {
+    "title": "Änderungen verwerfen?",
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
   },
+
+  "confirm": { "delete": "Mitglied \"{{name}}\" löschen?" },
+
   "errors": {
     "fetchError": "Daten konnten nicht geladen werden.",
-    "loadMemberError": "Mitarbeiterdaten konnten nicht geladen werden.",
-    "saveError": "Mitarbeiter konnte nicht gespeichert werden.",
-    "deleteError": "Mitarbeiter konnte nicht gelöscht werden.",
-    "confirmFailed": "Aktion konnte nicht bestätigt werden."
+    "loadMemberError": "Mitgliedsdaten konnten nicht geladen werden.",
+    "saveErrorTitle": "Speichern fehlgeschlagen",
+    "saveError": "Mitglied konnte nicht gespeichert werden.",
+    "deleteError": "Mitglied konnte nicht gelöscht werden.",
+    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "validationTitle": "Fehlende Angaben",
+    "validationRequired": "Name und E-Mail sind erforderlich."
   },
+
   "toast": {
-    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
-    "weakPassword": "Das Passwort erfüllt nicht die Mindestanforderungen.",
-    "saveOk": "Mitarbeiter gespeichert.",
-    "deleteOk": "Mitarbeiter gelöscht."
+    "passwordMismatch": "Passwörter stimmen nicht überein.",
+    "weakPassword": "Das Passwort erfüllt die Mindestanforderungen nicht.",
+    "saveOk": "Mitglied gespeichert.",
+    "deleteOk": "Mitglied gelöscht."
   }
 }

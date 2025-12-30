@@ -1,12 +1,8 @@
 {
-  "title": "Berechtigungen pro Gruppe",
-  "header": {
-    "settings": "Einstellungen",
-    "title": "Gruppen und Zugriffe"
-  },
-  "badge": {
-    "syncing": "Daten werden synchronisiert…"
-  },
+  "title": "Gruppenberechtigungen",
+  "header": { "settings": "Einstellungen", "title": "Gruppen & Zugriff" },
+  "badge": { "syncing": "Daten werden synchronisiert…" },
+
   "left": {
     "groups": "Gruppen",
     "create": "Gruppe hinzufügen",
@@ -14,43 +10,54 @@
     "meta": "{{perms}} Berechtigungen • {{members}} Mitglieder",
     "empty": "Keine Gruppen gefunden."
   },
+
   "right": {
-    "selectPrompt": "Wähle links eine Gruppe aus, um ihre Berechtigungen zu verwalten.",
+    "selectPrompt": "Wählen Sie links eine Gruppe aus, um deren Berechtigungen zu verwalten.",
     "nameLabel": "Gruppenname",
     "rename": "Umbenennen",
     "delete": "Löschen",
     "closePanel": "Panel schließen"
   },
-  "createModal": {
-    "title": "Neue Gruppe erstellen",
+
+  "btn": { "cancel": "Abbrechen", "save": "Speichern" },
+
+  "modal": {
+    "createTitle": "Neue Gruppe erstellen",
+    "renameTitle": "Gruppe umbenennen",
     "close": "Schließen",
-    "nameLabel": "Gruppenname",
-    "cancel": "Abbrechen",
-    "save": "Speichern"
+    "nameLabelCreate": "Gruppenname",
+    "nameLabelRename": "Neuer Gruppenname",
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
   },
-  "renameModal": {
-    "title": "Gruppe umbenennen",
-    "close": "Schließen",
-    "nameLabel": "Neuer Gruppenname",
-    "cancel": "Abbrechen",
-    "save": "Speichern"
+
+  "actions": { "ok": "OK", "discard": "Verwerfen" },
+
+  "confirmDiscard": {
+    "title": "Änderungen verwerfen?",
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
   },
+
+  "errors": {
+    "validationTitle": "Fehlende Angaben",
+    "validationNameRequired": "Bitte geben Sie einen Gruppennamen ein.",
+    "submitFailed": "Änderungen konnten nicht gespeichert werden. Bitte erneut versuchen."
+  },
+
   "toast": {
-    "loadAllError": "Gruppen konnten nicht geladen werden. Bitte versuche es erneut.",
+    "loadAllError": "Gruppen konnten nicht geladen werden. Bitte erneut versuchen.",
     "detailError": "Details dieser Gruppe konnten nicht geladen werden.",
-    "createNameRequired": "Bitte gib einen Namen für die Gruppe ein.",
     "createSuccess": "Gruppe erfolgreich erstellt.",
-    "createError": "Gruppe konnte nicht erstellt werden. Bitte versuche es erneut.",
-    "renameEmpty": "Der Gruppenname darf nicht leer sein.",
-    "renameSuccess": "Gruppenname wurde aktualisiert.",
-    "renameError": "Die Gruppe konnte nicht umbenannt werden.",
+    "createError": "Gruppe konnte nicht erstellt werden. Bitte erneut versuchen.",
+    "renameSuccess": "Gruppenname aktualisiert.",
+    "renameError": "Gruppe konnte nicht umbenannt werden.",
     "deleteSuccess": "Gruppe gelöscht.",
-    "deleteError": "Die Gruppe konnte nicht gelöscht werden.",
-    "saveSuccess": "Berechtigungen für diese Gruppe wurden aktualisiert.",
-    "saveError": "Berechtigungen konnten nicht aktualisiert werden. Bitte versuche es erneut."
+    "deleteError": "Gruppe konnte nicht gelöscht werden.",
+    "saveSuccess": "Berechtigungen für diese Gruppe aktualisiert.",
+    "saveError": "Berechtigungen konnten nicht aktualisiert werden. Bitte erneut versuchen."
   },
+
   "confirm": {
-    "deleteText": "Möchtest du die Gruppe „{{name}}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteText": "Möchten Sie die Gruppe \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmLabel": "Gruppe löschen",
     "cancelLabel": "Abbrechen",
     "fail": "Beim Bestätigen der Aktion ist ein Fehler aufgetreten."

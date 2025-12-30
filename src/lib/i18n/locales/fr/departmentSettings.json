@@ -2,6 +2,7 @@
   "title": "Départements",
   "card": { "settings": "Paramètres", "departments": "Départements" },
   "list": { "title": "Liste des départements" },
+
   "buttons": {
     "search": "Rechercher",
     "searchPlaceholder": "Rechercher par nom ou code…",
@@ -13,30 +14,52 @@
     "cancel": "Annuler",
     "save": "Enregistrer"
   },
-  "confirm": { "deleteTitle": "Supprimer « {{name}} » ?" },
+
   "tags": {
     "code": "Code",
     "inactive": "Inactif",
     "noName": "(sans nom)"
   },
+
   "modal": {
-    "addTitle": "Ajouter un département",
+    "createTitle": "Ajouter un département",
     "editTitle": "Modifier le département",
-    "name": "Nom",
-    "code": "Code",
-    "active": "Département actif"
+    "close": "Fermer",
+    "fields": {
+      "name": "Nom",
+      "code": "Code",
+      "is_active": "Département actif"
+    }
   },
+
+  "footer": {
+    "department": "Département :",
+    "enterName": "Saisissez un nom de département pour continuer.",
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
+  },
+
+  "actions": { "ok": "OK", "discard": "Ignorer" },
+
+  "confirmDiscard": {
+    "title": "Ignorer les modifications ?",
+    "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
+  },
+
+  "confirm": { "deleteTitle": "Supprimer « {{name}} » ?" },
+
   "errors": {
     "fetchError": "Échec du chargement.",
     "saveFailed": "Impossible d’enregistrer le département.",
     "deleteFailed": "Impossible de supprimer le département.",
-    "confirmFailed": "Impossible de confirmer l’action."
+    "confirmFailed": "Échec de la confirmation.",
+    "validationTitle": "Informations manquantes",
+    "validationName": "Le nom du département est obligatoire."
   },
+
   "toast": {
     "saveOk": "Département enregistré.",
     "deleteOk": "Département supprimé."
   },
-  "alerts": {
-    "noData": "Aucun département trouvé sur cette page."
-  }
+
+  "alerts": { "noData": "Aucun département trouvé sur cette page." }
 }

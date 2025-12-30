@@ -9,11 +9,12 @@ import { useTranslation } from "react-i18next";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
-import Checkbox from "@/components/ui/Checkbox";
 import ConfirmToast from "@/components/ui/ConfirmToast";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+
+import DepartmentModal from "./DepartmentModal";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -27,18 +28,6 @@ import type { Department } from "@/models/settings/departments";
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
-
-/* ------------------------------ Modal skeleton ---------------------------- */
-const ModalSkeleton: React.FC = () => (
-  <div className="space-y-3 py-1">
-    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
-    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
-    <div className="flex justify-end gap-2 pt-1">
-      <div className="h-9 w-24 rounded-md bg-gray-100 animate-pulse" />
-      <div className="h-9 w-28 rounded-md bg-gray-100 animate-pulse" />
-    </div>
-  </div>
-);
 
 /* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
@@ -74,15 +63,13 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className="flex items-center justify-between px-4 py-2.5">
+  <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
         {dept.code ? `${t("tags.code")}: ${dept.code}` : "—"}
         {dept.is_active === false ? ` • ${t("tags.inactive")}` : ""}
       </p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">
-        {dept.name || t("tags.noName")}
-      </p>
+      <p className="text-[13px] font-medium text-gray-900 truncate">{dept.name || t("tags.noName")}</p>
     </div>
 
     {canEdit && (
@@ -90,12 +77,7 @@ const Row = ({
         <Button variant="outline" onClick={() => onEdit(dept)} disabled={busy}>
           {t("buttons.edit")}
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => onDelete(dept)}
-          disabled={busy}
-          aria-busy={busy || undefined}
-        >
+        <Button variant="outline" onClick={() => onDelete(dept)} disabled={busy} aria-busy={busy || undefined}>
           {t("buttons.delete")}
         </Button>
       </div>
@@ -104,9 +86,6 @@ const Row = ({
 );
 
 /* -------------------------------------------------------------------------- */
-
-type FormState = { name: string; code?: string; is_active: boolean };
-const emptyForm: FormState = { name: "", code: "", is_active: true };
 
 const DepartmentSettings: React.FC = () => {
   const { t, i18n } = useTranslation("departmentSettings");
@@ -124,12 +103,6 @@ const DepartmentSettings: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingDept, setEditingDept] = useState<Department | null>(null);
-  const [formData, setFormData] = useState<FormState>(emptyForm);
-
-  /* Standard flags */
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   /* Snackbar */
   const [snack, setSnack] = useState<Snack>(null);
@@ -139,6 +112,9 @@ const DepartmentSettings: React.FC = () => {
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+  /* Standard flags */
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   /* Overlay dinâmico */
   const [added, setAdded] = useState<Department[]>([]);
@@ -220,82 +196,18 @@ const DepartmentSettings: React.FC = () => {
   const openCreateModal = () => {
     setModalMode("create");
     setEditingDept(null);
-    setFormData(emptyForm);
     setModalOpen(true);
   };
 
-  const openEditModal = async (dept: Department) => {
+  const openEditModal = (dept: Department) => {
     setModalMode("edit");
     setEditingDept(dept);
     setModalOpen(true);
-    setIsDetailLoading(true);
-
-    try {
-      const res = await api.getDepartment(dept.id);
-      const detail = res.data as Department;
-
-      setFormData({
-        name: detail.name ?? "",
-        code: detail.code ?? "",
-        is_active: detail.is_active ?? true,
-      });
-    } catch {
-      setFormData({
-        name: dept.name ?? "",
-        code: dept.code ?? "",
-        is_active: dept.is_active ?? true,
-      });
-
-      setSnack({ message: t("errors.fetchError"), severity: "error" });
-    } finally {
-      setIsDetailLoading(false);
-    }
   };
 
-  const closeModal = useCallback(() => {
+  const closeModal = () => {
     setModalOpen(false);
     setEditingDept(null);
-    setFormData(emptyForm);
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-  };
-
-  const handleActive = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((p) => ({ ...p, is_active: e.target.checked }));
-  };
-
-  const submitDepartment = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const payload = {
-      name: formData.name.trim(),
-      code: formData.code,
-      is_active: formData.is_active,
-    };
-
-    setIsSubmitting(true);
-    try {
-      if (modalMode === "create") {
-        const { data: created } = await api.addDepartment(payload);
-        setAdded((prev) => [created as Department, ...prev]);
-      } else if (editingDept) {
-        await api.editDepartment(editingDept.id, payload);
-      }
-
-      await pager.refresh();
-      closeModal();
-      setSnack({ message: t("toast.saveOk"), severity: "success" });
-    } catch (err) {
-      setSnack({
-        message: err instanceof Error ? err.message : t("errors.saveFailed"),
-        severity: "error",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   /* ---------- ConfirmToast delete ----------------------------------------- */
@@ -335,20 +247,6 @@ const DepartmentSettings: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  /* ------------------------------- UX hooks -------------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
-
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalOpen]);
-
   /* ------------------------------- Loading UI ------------------------------ */
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
@@ -364,6 +262,7 @@ const DepartmentSettings: React.FC = () => {
 
   /* --------------------------------- UI ----------------------------------- */
   const canEdit = !!isOwner;
+  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   return (
     <>
@@ -377,12 +276,8 @@ const DepartmentSettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("card.settings")}
-                </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("card.departments")}
-                </h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("card.settings")}</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("card.departments")}</h1>
               </div>
             </div>
           </header>
@@ -391,9 +286,7 @@ const DepartmentSettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("list.title")}
-                  </span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("list.title")}</span>
 
                   <div className="flex items-center gap-2">
                     <Input
@@ -403,22 +296,14 @@ const DepartmentSettings: React.FC = () => {
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                       placeholder={t("buttons.searchPlaceholder")}
                       aria-label={t("buttons.runSearchAria")}
+                      disabled={globalBusy}
                     />
-                    <Button
-                      onClick={onSearch}
-                      variant="outline"
-                      aria-label={t("buttons.runSearchAria")}
-                      disabled={isBackgroundSync || confirmBusy}
-                    >
+                    <Button onClick={onSearch} variant="outline" aria-label={t("buttons.runSearchAria")} disabled={globalBusy}>
                       {t("buttons.search")}
                     </Button>
 
                     {canEdit && (
-                      <Button
-                        onClick={openCreateModal}
-                        className="!py-1.5"
-                        disabled={isSubmitting || isBackgroundSync || confirmBusy}
-                      >
+                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("buttons.add")}
                       </Button>
                     )}
@@ -428,11 +313,9 @@ const DepartmentSettings: React.FC = () => {
 
               {pager.error ? (
                 <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">
-                    {t("errors.fetchError")}
-                  </p>
+                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.fetchError")}</p>
                   <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={isBackgroundSync}>
+                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
                     {t("buttons.tryAgain")}
                   </Button>
                 </div>
@@ -440,15 +323,11 @@ const DepartmentSettings: React.FC = () => {
                 <>
                   <div className="divide-y divide-gray-200">
                     {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">
-                        {t("alerts.noData")}
-                      </p>
+                      <p className="p-4 text-center text-sm text-gray-500">{t("alerts.noData")}</p>
                     ) : (
                       visibleItems.map((d) => {
                         const rowBusy =
-                          isSubmitting ||
-                          isBackgroundSync ||
-                          confirmBusy ||
+                          globalBusy ||
                           deleteTargetId === d.id ||
                           deletedIds.has(d.id);
 
@@ -470,8 +349,8 @@ const DepartmentSettings: React.FC = () => {
                   <PaginationArrows
                     onPrev={pager.prev}
                     onNext={pager.next}
-                    disabledPrev={!pager.canPrev || isBackgroundSync}
-                    disabledNext={!pager.canNext || isBackgroundSync}
+                    disabledPrev={!pager.canPrev || globalBusy}
+                    disabledNext={!pager.canNext || globalBusy}
                   />
                 </>
               )}
@@ -479,70 +358,25 @@ const DepartmentSettings: React.FC = () => {
           </section>
         </div>
 
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-2xl"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {modalMode === "create" ? t("modal.addTitle") : t("modal.editTitle")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("buttons.cancel")}
-                  disabled={isSubmitting || isDetailLoading}
-                >
-                  &times;
-                </button>
-              </header>
-
-              {modalMode === "edit" && isDetailLoading ? (
-                <ModalSkeleton />
-              ) : (
-                <form className="space-y-3" onSubmit={submitDepartment}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input
-                      label={t("modal.name")}
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      disabled={isSubmitting || isDetailLoading}
-                    />
-                    <Input
-                      label={t("modal.code")}
-                      name="code"
-                      value={formData.code}
-                      onChange={handleChange}
-                      disabled={isSubmitting || isDetailLoading}
-                    />
-                    <label className="flex items-center gap-2 text-sm pt-5">
-                      <Checkbox
-                        checked={formData.is_active}
-                        onChange={handleActive}
-                        disabled={isSubmitting || isDetailLoading}
-                      />
-                      {t("modal.active")}
-                    </label>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-1">
-                    <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting || isDetailLoading}>
-                      {t("buttons.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting || isDetailLoading}>
-                      {t("buttons.save")}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
+        <DepartmentModal
+          isOpen={modalOpen}
+          mode={modalMode}
+          department={editingDept}
+          canEdit={canEdit}
+          onClose={closeModal}
+          onNotify={(s) => setSnack(s)}
+          onSaved={async (res) => {
+            try {
+              if (res.mode === "create" && res.created) {
+                setAdded((prev) => [res.created!, ...prev]);
+              }
+              await pager.refresh();
+              // modal already notifies saveOk; keep this silent to avoid duplicate toasts
+            } catch {
+              setSnack({ message: t("errors.fetchError"), severity: "error" });
+            }
+          }}
+        />
       </main>
 
       <ConfirmToast

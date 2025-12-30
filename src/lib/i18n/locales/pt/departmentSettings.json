@@ -1,42 +1,65 @@
 {
   "title": "Departamentos",
-  "card": { "settings": "Definições", "departments": "Departamentos" },
+  "card": { "settings": "Configurações", "departments": "Departamentos" },
   "list": { "title": "Lista de departamentos" },
+
   "buttons": {
-    "search": "Pesquisar",
-    "searchPlaceholder": "Pesquisar por nome ou código…",
-    "runSearchAria": "Executar pesquisa",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar por nome ou código…",
+    "runSearchAria": "Executar busca",
     "add": "Adicionar departamento",
     "edit": "Editar",
-    "delete": "Eliminar",
+    "delete": "Excluir",
     "tryAgain": "Tentar novamente",
     "cancel": "Cancelar",
-    "save": "Guardar"
+    "save": "Salvar"
   },
-  "confirm": { "deleteTitle": "Eliminar “{{name}}”?" },
+
   "tags": {
     "code": "Código",
     "inactive": "Inativo",
     "noName": "(sem nome)"
   },
+
   "modal": {
-    "addTitle": "Adicionar departamento",
+    "createTitle": "Adicionar departamento",
     "editTitle": "Editar departamento",
-    "name": "Nome",
-    "code": "Código",
-    "active": "Departamento ativo"
+    "close": "Fechar",
+    "fields": {
+      "name": "Nome",
+      "code": "Código",
+      "is_active": "Departamento ativo"
+    }
   },
+
+  "footer": {
+    "department": "Departamento:",
+    "enterName": "Informe o nome do departamento para continuar.",
+    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
+  },
+
+  "actions": { "ok": "OK", "discard": "Descartar" },
+
+  "confirmDiscard": {
+    "title": "Descartar alterações?",
+    "message": "Você tem alterações não salvas. Deseja descartá-las?"
+  },
+
+  "confirm": { "deleteTitle": "Excluir “{{name}}”?" },
+
   "errors": {
     "fetchError": "Falha ao carregar.",
-    "saveFailed": "Falha ao guardar o departamento.",
-    "deleteFailed": "Falha ao eliminar o departamento.",
-    "confirmFailed": "Falha ao confirmar a ação."
+    "saveFailed": "Falha ao salvar o departamento.",
+    "deleteFailed": "Falha ao excluir o departamento.",
+    "confirmFailed": "Falha ao confirmar a ação.",
+    "validationTitle": "Informações obrigatórias",
+    "validationName": "O nome do departamento é obrigatório."
   },
+
   "toast": {
-    "saveOk": "Departamento guardado.",
-    "deleteOk": "Departamento eliminado."
+    "saveOk": "Departamento salvo.",
+    "deleteOk": "Departamento excluído."
   },
-  "alerts": {
-    "noData": "Nenhum departamento encontrado nesta página."
-  }
+
+  "alerts": { "noData": "Nenhum departamento encontrado nesta página." }
 }

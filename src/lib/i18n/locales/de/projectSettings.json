@@ -1,30 +1,34 @@
 {
   "title": "Projekte",
   "header": { "settings": "Einstellungen", "projects": "Projekte" },
-  "badge": { "syncing": "Synchronisiere…" },
+  "badge": { "syncing": "Synchronisiert…" },
+
   "section": { "list": "Projektliste" },
   "search": {
     "placeholder": "Nach Name oder Code suchen…",
-    "aria": "Projekte durchsuchen",
+    "aria": "Projekte suchen",
     "button": "Suchen"
   },
+
   "row": {
     "codePrefix": "CODE:",
     "active": "Aktiv",
     "inactive": "Inaktiv",
     "untitled": "(ohne Titel)"
   },
+
   "types": {
     "internal": "Intern",
     "client": "Kunde",
     "research": "Forschung",
-    "operational": "Operativ",
+    "operational": "Betrieb",
     "marketing": "Marketing",
     "product": "Produkt",
     "it": "IT",
     "event": "Event",
     "capex": "CapEx"
   },
+
   "btn": {
     "addProject": "Projekt hinzufügen",
     "edit": "Bearbeiten",
@@ -33,7 +37,9 @@
     "cancel": "Abbrechen",
     "retry": "Erneut versuchen"
   },
+
   "btnLabel": { "type": "Typ auswählen" },
+
   "field": {
     "name": "Projektname",
     "code": "Code",
@@ -41,20 +47,41 @@
     "description": "Beschreibung",
     "isActive": "Aktives Projekt"
   },
+
   "modal": {
     "createTitle": "Projekt hinzufügen",
     "editTitle": "Projekt bearbeiten",
     "close": "Schließen"
   },
+
+  "footer": {
+    "project": "Projekt:",
+    "enterName": "Geben Sie einen Projektnamen ein, um fortzufahren.",
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+  },
+
+  "actions": { "ok": "OK", "discard": "Verwerfen" },
+
+  "confirmDiscard": {
+    "title": "Änderungen verwerfen?",
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+  },
+
   "confirm": { "deleteTitle": "Projekt \"{{name}}\" löschen?" },
+
   "empty": "Keine Projekte gefunden.",
+
   "errors": {
     "loadFailedTitle": "Laden fehlgeschlagen",
     "saveError": "Projekt konnte nicht gespeichert werden.",
     "detailError": "Details konnten nicht geladen werden.",
     "deleteError": "Projekt konnte nicht gelöscht werden.",
-    "confirmFailed": "Bestätigung fehlgeschlagen."
+    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "validationTitle": "Fehlende Angaben",
+    "validationName": "Der Projektname ist erforderlich.",
+    "validationType": "Bitte einen gültigen Projekttyp auswählen."
   },
+
   "toast": {
     "saved": "Projekt gespeichert.",
     "deleted": "Projekt gelöscht."

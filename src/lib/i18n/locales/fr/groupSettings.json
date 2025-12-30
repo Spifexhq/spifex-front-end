@@ -1,58 +1,65 @@
 {
-  "title": "Permissions par Groupe",
-  "header": {
-    "settings": "Paramètres",
-    "title": "Groupes et accès"
-  },
-  "badge": {
-    "syncing": "Synchronisation des données…"
-  },
+  "title": "Autorisations de groupe",
+  "header": { "settings": "Paramètres", "title": "Groupes & accès" },
+  "badge": { "syncing": "Synchronisation des données…" },
+
   "left": {
     "groups": "Groupes",
     "create": "Ajouter un groupe",
     "searchPlaceholder": "Rechercher des groupes…",
-    "meta": "{{perms}} permissions • {{members}} membres",
+    "meta": "{{perms}} autorisations • {{members}} membres",
     "empty": "Aucun groupe trouvé."
   },
+
   "right": {
-    "selectPrompt": "Sélectionnez un groupe à gauche pour gérer ses permissions.",
+    "selectPrompt": "Sélectionnez un groupe à gauche pour gérer ses autorisations.",
     "nameLabel": "Nom du groupe",
     "rename": "Renommer",
     "delete": "Supprimer",
     "closePanel": "Fermer le panneau"
   },
-  "createModal": {
-    "title": "Créer un nouveau groupe",
+
+  "btn": { "cancel": "Annuler", "save": "Enregistrer" },
+
+  "modal": {
+    "createTitle": "Créer un nouveau groupe",
+    "renameTitle": "Renommer le groupe",
     "close": "Fermer",
-    "nameLabel": "Nom du groupe",
-    "cancel": "Annuler",
-    "save": "Enregistrer"
+    "nameLabelCreate": "Nom du groupe",
+    "nameLabelRename": "Nouveau nom du groupe",
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
   },
-  "renameModal": {
-    "title": "Renommer le groupe",
-    "close": "Fermer",
-    "nameLabel": "Nouveau nom du groupe",
-    "cancel": "Annuler",
-    "save": "Enregistrer"
+
+  "actions": { "ok": "OK", "discard": "Ignorer" },
+
+  "confirmDiscard": {
+    "title": "Ignorer les modifications ?",
+    "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
   },
+
+  "errors": {
+    "validationTitle": "Informations manquantes",
+    "validationNameRequired": "Veuillez saisir un nom de groupe.",
+    "submitFailed": "Impossible d’enregistrer les modifications. Veuillez réessayer."
+  },
+
   "toast": {
     "loadAllError": "Impossible de charger les groupes. Veuillez réessayer.",
     "detailError": "Impossible de charger les détails de ce groupe.",
-    "createNameRequired": "Veuillez saisir un nom pour le groupe.",
     "createSuccess": "Groupe créé avec succès.",
     "createError": "Impossible de créer le groupe. Veuillez réessayer.",
-    "renameEmpty": "Le nom du groupe ne peut pas être vide.",
     "renameSuccess": "Nom du groupe mis à jour.",
     "renameError": "Impossible de renommer le groupe.",
     "deleteSuccess": "Groupe supprimé.",
     "deleteError": "Impossible de supprimer le groupe.",
-    "saveSuccess": "Permissions mises à jour pour ce groupe.",
-    "saveError": "Impossible de mettre à jour les permissions. Veuillez réessayer."
+    "saveSuccess": "Autorisations mises à jour pour ce groupe.",
+    "saveError": "Impossible de mettre à jour les autorisations. Veuillez réessayer."
   },
+
   "confirm": {
-    "deleteText": "Voulez-vous vraiment supprimer le groupe « {{name}} » ? Cette action est irréversible.",
+    "deleteText": "Voulez-vous vraiment supprimer le groupe \"{{name}}\" ? Cette action est irréversible.",
     "confirmLabel": "Supprimer le groupe",
     "cancelLabel": "Annuler",
-    "fail": "Une erreur s'est produite lors de la confirmation de l'action."
+    "fail": "Une erreur s’est produite lors de la confirmation de l’action."
   }
 }

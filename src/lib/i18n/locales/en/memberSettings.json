@@ -1,22 +1,10 @@
 {
-  "title": "Employees",
-  "header": {
-    "settings": "Settings",
-    "members": "Employees"
-  },
-  "section": {
-    "list": "Employee list"
-  },
-  "field": {
-    "name": "Name",
-    "email": "Email",
-    "tempPassword": "Temporary password",
-    "confirmPassword": "Confirm password",
-    "groups": "Groups"
-  },
-  "badge": {
-    "syncing": "Syncing…"
-  },
+  "title": "Team members",
+  "header": { "settings": "Settings", "members": "Team members" },
+  "section": { "list": "Member list" },
+  "empty": "No members found.",
+  "badge": { "syncing": "Syncing…" },
+
   "btn": {
     "addMember": "Add member",
     "edit": "Edit",
@@ -24,29 +12,49 @@
     "save": "Save",
     "cancel": "Cancel"
   },
-  "btnLabel": {
-    "groups": "Select groups"
+
+  "btnLabel": { "groups": "Select groups" },
+
+  "field": {
+    "name": "Name",
+    "email": "Email",
+    "tempPassword": "Temporary password",
+    "confirmPassword": "Confirm password",
+    "groups": "Groups"
   },
+
   "modal": {
     "createTitle": "Add member",
     "editTitle": "Edit member",
     "close": "Close"
   },
-  "empty": "No members found.",
-  "confirm": {
-    "delete": "Delete member \"{{name}}\"?"
+
+  "footer": { "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save" },
+
+  "actions": { "ok": "OK", "discard": "Discard" },
+
+  "confirmDiscard": {
+    "title": "Discard changes?",
+    "message": "You have unsaved changes. Do you want to discard them?"
   },
+
+  "confirm": { "delete": "Delete member \"{{name}}\"?" },
+
   "errors": {
     "fetchError": "Failed to fetch data.",
     "loadMemberError": "Failed to load member data.",
+    "saveErrorTitle": "Save failed",
     "saveError": "Failed to save member.",
     "deleteError": "Failed to delete member.",
-    "confirmFailed": "Failed to confirm action."
+    "confirmFailed": "Failed to confirm action.",
+    "validationTitle": "Missing information",
+    "validationRequired": "Name and email are required."
   },
+
   "toast": {
     "passwordMismatch": "Passwords do not match.",
     "weakPassword": "The password does not meet the minimum requirements.",
-    "saveOk": "Saved member.",
-    "deleteOk": "Employee deleted."
+    "saveOk": "Member saved.",
+    "deleteOk": "Member deleted."
   }
 }

@@ -1,9 +1,11 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/GroupSettings/index.tsx
  * Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>
+ * Refactor: separate GroupModal (create/rename), no inline modals
  * -------------------------------------------------------------------------- */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
@@ -12,10 +14,11 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
+
 import GroupPermissionsTable from "./GroupPermissionsTable";
+import GroupModal from "./GroupModal";
 
 import { api } from "@/api/requests";
-import { useTranslation } from "react-i18next";
 import { useAuthContext } from "@/hooks/useAuth";
 
 import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "@/models/auth/rbac";
@@ -25,15 +28,18 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* ------------------------------ INFLIGHT guard ---------------------------- */
-let INFLIGHT_FETCH = false;
+type ModalState =
+  | { open: false; mode: "create" | "rename"; initialName: string }
+  | { open: true; mode: "create" | "rename"; initialName: string };
 
 /* --------------------------- Page Component -------------------------------- */
 const GroupSettings: React.FC = () => {
   const { t, i18n } = useTranslation("groupSettings");
+
   useEffect(() => {
     document.title = t("title");
   }, [t]);
+
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
@@ -53,7 +59,7 @@ const GroupSettings: React.FC = () => {
   const [groups, setGroups] = useState<GroupListItem[]>([]);
 
   // Selection & edits
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null); // id
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
   const [originalCodes, setOriginalCodes] = useState<Set<string>>(new Set<string>());
@@ -61,13 +67,8 @@ const GroupSettings: React.FC = () => {
   // Group search
   const [groupSearch, setGroupSearch] = useState("");
 
-  // Create group modal
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
-
-  // Rename group modal
-  const [renameModalOpen, setRenameModalOpen] = useState(false);
-  const [renameValue, setRenameValue] = useState("");
+  // Modal (create/rename)
+  const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", initialName: "" });
 
   // Confirm Toast
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -78,10 +79,12 @@ const GroupSettings: React.FC = () => {
   const busy = isSubmitting || isDetailLoading || isBackgroundSync || confirmBusy;
 
   /* ----------------------------- Bootstrap -------------------------------- */
+  const inflightRef = useRef(false);
+
   const fetchAll = useCallback(
     async (opts: { background?: boolean } = {}) => {
-      if (INFLIGHT_FETCH) return;
-      INFLIGHT_FETCH = true;
+      if (inflightRef.current) return;
+      inflightRef.current = true;
 
       if (opts.background) setIsBackgroundSync(true);
       else setIsInitialLoading(true);
@@ -92,14 +95,11 @@ const GroupSettings: React.FC = () => {
         setGroups([...groupList].sort((a, b) => (a.name || "").localeCompare(b.name || "", "en")));
       } catch (e) {
         console.error(e);
-        setSnack({
-          message: t("toast.loadAllError"),
-          severity: "error",
-        });
+        setSnack({ message: t("toast.loadAllError"), severity: "error" });
       } finally {
         if (opts.background) setIsBackgroundSync(false);
         else setIsInitialLoading(false);
-        INFLIGHT_FETCH = false;
+        inflightRef.current = false;
       }
     },
     [t]
@@ -117,6 +117,7 @@ const GroupSettings: React.FC = () => {
       setOriginalCodes(new Set<string>());
       return;
     }
+
     const load = async () => {
       setIsDetailLoading(true);
       try {
@@ -124,25 +125,22 @@ const GroupSettings: React.FC = () => {
           api.getGroup(selectedGroupId),
           api.getGroupPermissions(selectedGroupId),
         ]);
-        
+
         const detail = detailRes.data;
         setSelectedGroupDetail(detail);
 
         const perms = permRes.data.permissions || [];
-        
         const activeCodes = new Set<string>(perms.map((p: Permission) => p.code));
         setSelectedCodes(activeCodes);
         setOriginalCodes(new Set<string>(activeCodes));
       } catch (e) {
         console.error(e);
-        setSnack({
-          message: t("toast.detailError"),
-          severity: "error",
-        });
+        setSnack({ message: t("toast.detailError"), severity: "error" });
       } finally {
         setIsDetailLoading(false);
       }
     };
+
     void load();
   }, [selectedGroupId, t]);
 
@@ -155,9 +153,7 @@ const GroupSettings: React.FC = () => {
 
   const dirty = useMemo(() => {
     if (originalCodes.size !== selectedCodes.size) return true;
-    for (const c of selectedCodes) {
-      if (!originalCodes.has(c)) return true;
-    }
+    for (const c of selectedCodes) if (!originalCodes.has(c)) return true;
     return false;
   }, [originalCodes, selectedCodes]);
 
@@ -171,95 +167,53 @@ const GroupSettings: React.FC = () => {
     });
   };
 
-  const openCreateModal = () => {
-    setNewGroupName("");
-    setCreateModalOpen(true);
+  const openCreateModal = () => setModal({ open: true, mode: "create", initialName: "" });
+
+  const openRenameModal = () => {
+    if (!selectedGroupDetail) return;
+    setModal({ open: true, mode: "rename", initialName: selectedGroupDetail.name || "" });
   };
 
-  const closeCreateModal = () => {
+  const closeModal = () => {
     if (busy) return;
-    setCreateModalOpen(false);
-    setNewGroupName("");
+    setModal((p) => ({ ...p, open: false }));
   };
 
-  const handleCreateGroup = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
-    const name = newGroupName.trim();
-    if (!name) {
-      setSnack({
-        message: t("toast.createNameRequired"),
-        severity: "warning",
-      });
-      return;
-    }
+  const handleCreateGroup = async (name: string) => {
     setIsSubmitting(true);
     try {
       const payload: AddGroupRequest = { name, permission_codes: [] };
       const res = await api.addGroup(payload);
       const created = res.data;
-      setNewGroupName("");
+
       await fetchAll({ background: true });
       setSelectedGroupId(created.id);
-      setSnack({
-        message: t("toast.createSuccess"),
-        severity: "success",
-      });
-      setCreateModalOpen(false);
+
+      setSnack({ message: t("toast.createSuccess"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnack({
-        message: t("toast.createError"),
-        severity: "error",
-      });
+      setSnack({ message: t("toast.createError"), severity: "error" });
+      throw e;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const openRenameModal = () => {
+  const handleRenameGroup = async (name: string) => {
     if (!selectedGroupDetail) return;
-    setRenameValue(selectedGroupDetail.name || "");
-    setRenameModalOpen(true);
-  };
-
-  const closeRenameModal = () => {
-    if (busy) return;
-    setRenameModalOpen(false);
-    setRenameValue("");
-  };
-
-  const handleRenameSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!selectedGroupDetail) return;
-
-    const name = renameValue.trim();
-    if (!name) {
-      setSnack({
-        message: t("toast.renameEmpty"),
-        severity: "warning",
-      });
-      return;
-    }
 
     setIsSubmitting(true);
     try {
       await api.editGroup(selectedGroupDetail.id, { name });
+
       await fetchAll({ background: true });
-      setSelectedGroupDetail((prev) =>
-        prev ? { ...prev, name } : prev
-      );
-      setSnack({
-        message: t("toast.renameSuccess"),
-        severity: "success",
-      });
-      setRenameModalOpen(false);
+      setSelectedGroupDetail((prev) => (prev ? { ...prev, name } : prev));
+
+      setSnack({ message: t("toast.renameSuccess"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnack({
-        message: t("toast.renameError"),
-        severity: "error",
-      });
+      setSnack({ message: t("toast.renameError"), severity: "error" });
+      throw e;
     } finally {
       setIsSubmitting(false);
     }
@@ -267,66 +221,49 @@ const GroupSettings: React.FC = () => {
 
   const requestDeleteGroup = () => {
     if (!selectedGroupDetail) return;
-    setConfirmText(
-      t("confirm.deleteText", { name: selectedGroupDetail.name })
-    );
+
+    setConfirmText(t("confirm.deleteText", { name: selectedGroupDetail.name }));
     setConfirmAction(() => async () => {
       try {
         await api.deleteGroup(selectedGroupDetail.id);
         await fetchAll({ background: true });
         setSelectedGroupId(null);
-        setSnack({
-          message: t("toast.deleteSuccess"),
-          severity: "info",
-        });
+        setSnack({ message: t("toast.deleteSuccess"), severity: "info" });
       } catch (e) {
         console.error(e);
-        setSnack({
-          message: t("toast.deleteError"),
-          severity: "error",
-        });
+        setSnack({ message: t("toast.deleteError"), severity: "error" });
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
       }
     });
+
     setConfirmOpen(true);
   };
 
   const handleSavePermissions = async () => {
     if (!selectedGroupDetail) return;
+
     setIsSubmitting(true);
     try {
-      await api.updateGroupPermissions(
-        selectedGroupDetail.id,
-        Array.from(selectedCodes)
-      );
-      
-      // Update original codes to match saved state
+      await api.updateGroupPermissions(selectedGroupDetail.id, Array.from(selectedCodes));
+
       setOriginalCodes(new Set<string>(selectedCodes));
-      
+
       await fetchAll({ background: true });
       const res = await api.getGroup(selectedGroupDetail.id);
-      const detail = res.data;
-      setSelectedGroupDetail(detail);
-      setSnack({
-        message: t("toast.saveSuccess"),
-        severity: "success",
-      });
+      setSelectedGroupDetail(res.data);
+
+      setSnack({ message: t("toast.saveSuccess"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnack({
-        message: t("toast.saveError"),
-        severity: "error",
-      });
+      setSnack({ message: t("toast.saveError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDiscard = () => {
-    setSelectedCodes(new Set<string>(originalCodes));
-  };
+  const handleDiscard = () => setSelectedCodes(new Set<string>(originalCodes));
 
   /* -------------------------------- Render -------------------------------- */
 
@@ -340,10 +277,7 @@ const GroupSettings: React.FC = () => {
   }
 
   const headerBadge = isBackgroundSync ? (
-    <span
-      aria-live="polite"
-      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
-    >
+    <span aria-live="polite" className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
       {t("badge.syncing")}
     </span>
   ) : null;
@@ -362,12 +296,8 @@ const GroupSettings: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.title")}
-                  </h1>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
                 </div>
                 {headerBadge}
               </div>
@@ -379,15 +309,9 @@ const GroupSettings: React.FC = () => {
             <aside className="col-span-12 lg:col-span-4">
               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-                  <div className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("left.groups")}
-                  </div>
+                  <div className="text-[11px] uppercase tracking-wide text-gray-700">{t("left.groups")}</div>
                   {isOwner && (
-                    <Button
-                      className="!py-1.5 !px-3"
-                      onClick={openCreateModal}
-                      disabled={busy}
-                    >
+                    <Button className="!py-1.5 !px-3" onClick={openCreateModal} disabled={busy}>
                       {t("left.create")}
                     </Button>
                   )}
@@ -407,31 +331,20 @@ const GroupSettings: React.FC = () => {
                   {filteredGroups.map((g) => (
                     <button
                       key={g.id}
-                      onClick={() =>
-                        !busy &&
-                        setSelectedGroupId((prev) =>
-                          prev === g.id ? null : g.id
-                        )
-                      }
+                      onClick={() => !busy && setSelectedGroupId((prev) => (prev === g.id ? null : g.id))}
                       className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 ${
                         selectedGroupId === g.id ? "bg-gray-50" : ""
                       } ${busy ? "pointer-events-none opacity-70" : ""}`}
                     >
-                      <div className="text-[13px] font-medium text-gray-900 truncate">
-                        {g.name}
-                      </div>
+                      <div className="text-[13px] font-medium text-gray-900 truncate">{g.name}</div>
                       <div className="text-[11px] text-gray-500">
-                        {t("left.meta", {
-                          perms: g.permissions_count,
-                          members: g.members_count,
-                        })}
+                        {t("left.meta", { perms: g.permissions_count, members: g.members_count })}
                       </div>
                     </button>
                   ))}
+
                   {filteredGroups.length === 0 && (
-                    <p className="p-4 text-center text-sm text-gray-500">
-                      {t("left.empty")}
-                    </p>
+                    <p className="p-4 text-center text-sm text-gray-500">{t("left.empty")}</p>
                   )}
                 </div>
               </div>
@@ -445,25 +358,16 @@ const GroupSettings: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  {/* group header / actions */}
                   <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
                     <div className="flex flex-col max-w-[70%]">
-                      <label className="text-[11px] uppercase tracking-wide text-gray-700">
-                        {t("right.nameLabel")}
-                      </label>
-                      <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">
-                        {selectedGroupDetail.name}
-                      </p>
+                      <label className="text-[11px] uppercase tracking-wide text-gray-700">{t("right.nameLabel")}</label>
+                      <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">{selectedGroupDetail.name}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                       {isOwner && (
                         <>
-                          <Button
-                            variant="outline"
-                            onClick={openRenameModal}
-                            disabled={busy}
-                          >
+                          <Button variant="outline" onClick={openRenameModal} disabled={busy}>
                             {t("right.rename")}
                           </Button>
                           {!selectedGroupDetail.is_system && (
@@ -478,7 +382,6 @@ const GroupSettings: React.FC = () => {
                           )}
                         </>
                       )}
-                      {/* Close panel */}
                       <button
                         type="button"
                         aria-label={t("right.closePanel")}
@@ -491,7 +394,6 @@ const GroupSettings: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Permissions table with tabs + footer Save/Undo */}
                   <GroupPermissionsTable
                     selectedCodes={selectedCodes}
                     disabled={busy || !isOwner}
@@ -506,105 +408,18 @@ const GroupSettings: React.FC = () => {
           </section>
         </div>
 
-        {/* ------------------------------ Create Group Modal ------------------- */}
-        {createModalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {t("createModal.title")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeCreateModal}
-                  aria-label={t("createModal.close")}
-                  disabled={busy}
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form className="space-y-3" onSubmit={handleCreateGroup}>
-                <Input
-                  label={t("createModal.nameLabel")}
-                  name="newGroupName"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  disabled={busy}
-                  required
-                />
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button
-                    variant="cancel"
-                    type="button"
-                    onClick={closeCreateModal}
-                    disabled={busy}
-                  >
-                    {t("createModal.cancel")}
-                  </Button>
-                  <Button type="submit" disabled={busy}>
-                    {t("createModal.save")}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* ------------------------------ Rename Group Modal ------------------- */}
-        {renameModalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {t("renameModal.title")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeRenameModal}
-                  aria-label={t("renameModal.close")}
-                  disabled={busy}
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form className="space-y-3" onSubmit={handleRenameSubmit}>
-                <Input
-                  label={t("renameModal.nameLabel")}
-                  name="renameGroupName"
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  disabled={busy}
-                  required
-                />
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button
-                    variant="cancel"
-                    type="button"
-                    onClick={closeRenameModal}
-                    disabled={busy}
-                  >
-                    {t("renameModal.cancel")}
-                  </Button>
-                  <Button type="submit" disabled={busy}>
-                    {t("renameModal.save")}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* Create/Rename modal (single component) */}
+        <GroupModal
+          isOpen={modal.open}
+          mode={modal.mode}
+          initialName={modal.initialName}
+          busy={busy}
+          onClose={closeModal}
+          onSubmit={async (name) => {
+            if (modal.mode === "create") return handleCreateGroup(name);
+            return handleRenameGroup(name);
+          }}
+        />
       </main>
 
       {/* Confirm Toast */}
@@ -621,14 +436,10 @@ const GroupSettings: React.FC = () => {
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
-          confirmAction
-            ?.()
+          confirmAction()
             .catch((err) => {
               console.error(err);
-              setSnack({
-                message: t("confirm.fail"),
-                severity: "error",
-              });
+              setSnack({ message: t("confirm.fail"), severity: "error" });
             })
             .finally(() => setConfirmBusy(false));
         }}

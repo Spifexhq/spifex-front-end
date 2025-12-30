@@ -2,6 +2,7 @@
   "title": "Departments",
   "card": { "settings": "Settings", "departments": "Departments" },
   "list": { "title": "Department list" },
+
   "buttons": {
     "search": "Search",
     "searchPlaceholder": "Search by name or code…",
@@ -13,30 +14,52 @@
     "cancel": "Cancel",
     "save": "Save"
   },
-  "confirm": { "deleteTitle": "Delete “{{name}}”?" },
+
   "tags": {
     "code": "Code",
     "inactive": "Inactive",
     "noName": "(no name)"
   },
+
   "modal": {
-    "addTitle": "Add department",
+    "createTitle": "Add department",
     "editTitle": "Edit department",
-    "name": "Name",
-    "code": "Code",
-    "active": "Active department"
+    "close": "Close",
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "is_active": "Active department"
+    }
   },
+
+  "footer": {
+    "department": "Department:",
+    "enterName": "Enter a department name to continue.",
+    "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
+  },
+
+  "actions": { "ok": "OK", "discard": "Discard" },
+
+  "confirmDiscard": {
+    "title": "Discard changes?",
+    "message": "You have unsaved changes. Do you want to discard them?"
+  },
+
+  "confirm": { "deleteTitle": "Delete “{{name}}”?" },
+
   "errors": {
     "fetchError": "Failed to load.",
     "saveFailed": "Failed to save department.",
     "deleteFailed": "Failed to delete department.",
-    "confirmFailed": "Failed to confirm action."
+    "confirmFailed": "Failed to confirm action.",
+    "validationTitle": "Missing information",
+    "validationName": "Department name is required."
   },
+
   "toast": {
     "saveOk": "Saved department.",
     "deleteOk": "Department deleted."
   },
-  "alerts": {
-    "noData": "No departments found on this page."
-  }
+
+  "alerts": { "noData": "No departments found on this page." }
 }

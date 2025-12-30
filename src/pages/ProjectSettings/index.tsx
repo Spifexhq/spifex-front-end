@@ -1,8 +1,10 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/ProjectSettings.tsx
- * -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/ProjectSettings.tsx                                         */
+/* i18n: namespace "projectSettings"                                          */
+/* -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
@@ -10,44 +12,21 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
-import Checkbox from "@/components/ui/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+
+import ProjectModal from "./ProjectModal";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
-import { useTranslation } from "react-i18next";
 
-import type { TFunction } from "i18next";
 import type { Project } from "@/models/settings/projects";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
-
-/* ----------------------- In-memory guard for fetches ---------------------- */
-let INFLIGHT_FETCH = false;
-
-/* ------------------------------ Modal skeleton ---------------------------- */
-const ModalSkeleton: React.FC = () => (
-  <div className="space-y-3 py-1">
-    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
-    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
-    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
-    <div className="h-10 rounded-md bg-gray-100 animate-pulse" />
-    <div className="flex items-center gap-2 pt-2">
-      <div className="h-5 w-5 rounded bg-gray-100 animate-pulse" />
-      <div className="h-3 w-24 rounded bg-gray-100 animate-pulse" />
-    </div>
-    <div className="flex justify-end gap-2 pt-1">
-      <div className="h-9 w-24 rounded-md bg-gray-100 animate-pulse" />
-      <div className="h-9 w-28 rounded-md bg-gray-100 animate-pulse" />
-    </div>
-  </div>
-);
 
 /* ------------------------- Types / constants ----------------------------- */
 const PROJECT_TYPE_VALUES = [
@@ -63,7 +42,6 @@ const PROJECT_TYPE_VALUES = [
 ] as const;
 
 type ProjectType = (typeof PROJECT_TYPE_VALUES)[number];
-type TypeOption = { label: string; value: ProjectType };
 
 function isProjectType(v: unknown): v is ProjectType {
   return PROJECT_TYPE_VALUES.includes(v as ProjectType);
@@ -73,24 +51,18 @@ function getInitials() {
   return "PJ";
 }
 
-const emptyForm = {
-  name: "",
-  code: "",
-  type: "internal" as ProjectType,
-  description: "",
-  is_active: true,
-};
-type FormState = typeof emptyForm;
-
-/* stable sort by code then name */
-function sortByCodeThenName(a: Project, b: Project) {
+/**
+ * Cursor pagination relies on backend ordering.
+ * Avoid re-sorting server pages on the client, or you risk perceived "jumps".
+ * Only sort local overlay items if needed.
+ */
+function sortOverlayByCodeThenName(a: Project, b: Project) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
   if (ca && cb && ca !== cb) return ca.localeCompare(cb, "en", { numeric: true });
   return (a.name || "").localeCompare(b.name || "", "en");
 }
 
-/* Row */
 const Row = ({
   project,
   onEdit,
@@ -104,7 +76,7 @@ const Row = ({
   onEdit: (p: Project) => void;
   onDelete: (p: Project) => void;
   canEdit: boolean;
-  t: TFunction;
+  t: (key: string, options?: Record<string, unknown>) => string;
   busy?: boolean;
   typeLabel: string;
 }) => (
@@ -125,14 +97,14 @@ const Row = ({
       </span>
 
       {canEdit && (
-        <>
+        <div className="flex gap-2">
           <Button variant="outline" onClick={() => onEdit(project)} disabled={busy}>
             {t("btn.edit")}
           </Button>
           <Button variant="outline" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
             {t("btn.delete")}
           </Button>
-        </>
+        </div>
       )}
     </div>
   </div>
@@ -142,20 +114,21 @@ const ProjectSettings: React.FC = () => {
   const { t, i18n } = useTranslation("projectSettings");
   const { isOwner } = useAuthContext();
 
-  useEffect(() => { document.title = t("title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
 
-  /* ----------------------------- Flags ------------------------------------ */
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
-  /* ----------------------------- State ------------------------------------ */
-  const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState<FormState>(emptyForm);
+  /* Snackbar */
   const [snack, setSnack] = useState<Snack>(null);
+
+  /* Modal state */
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   /* ConfirmToast */
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -163,30 +136,40 @@ const ProjectSettings: React.FC = () => {
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   /* Overlay */
   const [added, setAdded] = useState<Project[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
-  /* ----------------------------- Search (click-to-search) ------------------ */
+  /* Search */
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
 
   /* ----------------------------- Cursor pagination ------------------------- */
+  const inflightRef = useRef(false);
+
   const fetchProjectsPage = useCallback(
     async (cursor?: string) => {
-      if (INFLIGHT_FETCH) return { items: [] as Project[], nextCursor: undefined as string | undefined };
-      INFLIGHT_FETCH = true;
+      if (inflightRef.current) {
+        return { items: [] as Project[], nextCursor: undefined as string | undefined };
+      }
+
+      inflightRef.current = true;
       try {
         const { data, meta } = await api.getProjects({
           cursor,
           q: appliedQuery || undefined,
         });
-        const items = ((data?.results ?? []) as Project[]).slice().sort(sortByCodeThenName);
-        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+
+        const items = (data?.results ?? []) as Project[];
+
+        const nextUrl = meta?.pagination?.next ?? (data as unknown as { next?: string | null }).next ?? null;
         const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+
         return { items, nextCursor };
       } finally {
-        INFLIGHT_FETCH = false;
+        inflightRef.current = false;
       }
     },
     [appliedQuery]
@@ -201,6 +184,7 @@ const ProjectSettings: React.FC = () => {
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
   const { refresh } = pager;
+
   const onSearch = useCallback(() => {
     const trimmed = query.trim();
     if (trimmed === appliedQuery) refresh();
@@ -223,117 +207,48 @@ const ProjectSettings: React.FC = () => {
   }, [appliedQuery, matchesQuery]);
 
   const visibleItems = useMemo(() => {
-    const addedFiltered = added.filter((p) => matchesQuery(p, appliedQuery));
+    const addedFiltered = added
+      .filter((p) => matchesQuery(p, appliedQuery))
+      .slice()
+      .sort(sortOverlayByCodeThenName);
+
     const addedIdsSet = new Set(addedFiltered.map((p) => p.id));
     const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIdsSet.has(p.id));
+
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
-  /* ------------------------------ Type options (i18n) ---------------------- */
-  const typeOptions = useMemo<TypeOption[]>(
-    () =>
-      PROJECT_TYPE_VALUES.map((value) => ({
-        value,
-        label: t(`types.${value}`),
-      })),
-    [t]
-  );
+  /* ------------------------------ Type label helper ------------------------ */
+  const typeLabelMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const v of PROJECT_TYPE_VALUES) m.set(v, t(`types.${v}`));
+    return m;
+  }, [t]);
 
   const getTypeLabel = useCallback(
     (value: unknown) => {
       if (!isProjectType(value)) return (value as string | undefined) ?? "—";
-      return typeOptions.find((o) => o.value === value)?.label ?? "—";
+      return typeLabelMap.get(value) ?? "—";
     },
-    [typeOptions]
+    [typeLabelMap]
   );
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
-    setMode("create");
+    setModalMode("create");
     setEditingProject(null);
-    setFormData(emptyForm);
     setModalOpen(true);
   };
 
-  const openEditModal = async (project: Project) => {
-    setMode("edit");
+  const openEditModal = (project: Project) => {
+    setModalMode("edit");
     setEditingProject(project);
     setModalOpen(true);
-    setIsDetailLoading(true);
-
-    try {
-      const res = await api.getProject(project.id);
-      const detail = res.data as Project;
-
-      setFormData({
-        name: detail.name || "",
-        code: detail.code || "",
-        type: isProjectType(detail.type) ? detail.type : "internal",
-        description: detail.description || "",
-        is_active: detail.is_active ?? true,
-      });
-    } catch {
-      setFormData({
-        name: project.name || "",
-        code: project.code || "",
-        type: isProjectType(project.type) ? project.type : "internal",
-        description: project.description || "",
-        is_active: project.is_active ?? true,
-      });
-      setSnack({ message: t("errors.detailError"), severity: "error" });
-    } finally {
-      setIsDetailLoading(false);
-    }
   };
 
-  const closeModal = useCallback(() => {
+  const closeModal = () => {
     setModalOpen(false);
     setEditingProject(null);
-    setFormData(emptyForm);
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-  };
-
-  const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((p) => ({ ...p, is_active: e.target.checked }));
-  };
-
-  const submitProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (mode === "create") {
-        const { data: created } = await api.addProject({
-          name: formData.name,
-          code: formData.code || "",
-          type: formData.type,
-          description: formData.description || "",
-          is_active: formData.is_active,
-        });
-        setAdded((prev) => [created, ...prev]);
-        setSnack({ message: t("toast.saved"), severity: "success" });
-      } else if (editingProject) {
-        await api.editProject(editingProject.id, {
-          name: formData.name,
-          code: formData.code,
-          type: formData.type,
-          description: formData.description,
-          is_active: formData.is_active,
-        });
-        setSnack({ message: t("toast.saved"), severity: "success" });
-      }
-
-      await pager.refresh();
-      closeModal();
-    } catch (err) {
-      setSnack({ message: err instanceof Error ? err.message : t("errors.saveError"), severity: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const requestDeleteProject = (project: Project) => {
@@ -346,8 +261,10 @@ const ProjectSettings: React.FC = () => {
       try {
         setDeletedIds((prev) => new Set(prev).add(project.id));
         await api.deleteProject(project.id);
+
         await pager.refresh();
         setAdded((prev) => prev.filter((p) => p.id !== project.id));
+
         setSnack({ message: t("toast.deleted"), severity: "info" });
       } catch (err) {
         setDeletedIds((prev) => {
@@ -355,6 +272,7 @@ const ProjectSettings: React.FC = () => {
           next.delete(project.id);
           return next;
         });
+
         setSnack({ message: err instanceof Error ? err.message : t("errors.deleteError"), severity: "error" });
       } finally {
         setDeleteTargetId(null);
@@ -366,18 +284,6 @@ const ProjectSettings: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  /* ------------------------------ UX hooks -------------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
-
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [modalOpen]);
-
   /* ------------------------------ Loading --------------------------------- */
   if (isInitialLoading) {
     return (
@@ -388,19 +294,9 @@ const ProjectSettings: React.FC = () => {
     );
   }
 
-  const headerBadge = isBackgroundSync ? (
-    <span
-      aria-live="polite"
-      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
-    >
-      {t("badge.syncing")}
-    </span>
-  ) : null;
-
   const canEdit = !!isOwner;
-  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy;
+  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
-  /* -------------------------------- UI ------------------------------------ */
   return (
     <>
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
@@ -412,16 +308,18 @@ const ProjectSettings: React.FC = () => {
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
                 {getInitials()}
               </div>
+
               <div className="flex items-center gap-3">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.projects")}
-                  </h1>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.projects")}</h1>
                 </div>
-                {headerBadge}
+
+                {isBackgroundSync && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
+                    {t("badge.syncing")}
+                  </span>
+                )}
               </div>
             </div>
           </header>
@@ -430,9 +328,7 @@ const ProjectSettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("section.list")}
-                  </span>
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.list")}</span>
 
                   <div className="flex items-center gap-2">
                     <Input
@@ -492,8 +388,8 @@ const ProjectSettings: React.FC = () => {
                   <PaginationArrows
                     onPrev={pager.prev}
                     onNext={pager.next}
-                    disabledPrev={!pager.canPrev || isBackgroundSync}
-                    disabledNext={!pager.canNext || isBackgroundSync}
+                    disabledPrev={!pager.canPrev || globalBusy}
+                    disabledNext={!pager.canNext || globalBusy}
                   />
                 </>
               )}
@@ -501,82 +397,24 @@ const ProjectSettings: React.FC = () => {
           </section>
         </div>
 
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("modal.close")}
-                  disabled={isSubmitting}
-                >
-                  &times;
-                </button>
-              </header>
-
-              {mode === "edit" && isDetailLoading ? (
-                <ModalSkeleton />
-              ) : (
-                <form className="space-y-3" onSubmit={submitProject}>
-                  <Input
-                    label={t("field.name")}
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    disabled={isSubmitting}
-                  />
-                  <Input
-                    label={t("field.code")}
-                    name="code"
-                    value={formData.code}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                  />
-
-                  <SelectDropdown<TypeOption>
-                    label={t("field.type")}
-                    items={typeOptions}
-                    selected={typeOptions.filter((opt) => opt.value === formData.type)}
-                    onChange={(items) => items[0] && setFormData((p) => ({ ...p, type: items[0].value }))}
-                    getItemKey={(i) => i.value}
-                    getItemLabel={(i) => i.label}
-                    singleSelect
-                    hideCheckboxes
-                    buttonLabel={t("btnLabel.type")}
-                    customStyles={{ maxHeight: "240px" }}
-                  />
-
-                  <Input
-                    label={t("field.description")}
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                  />
-
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={formData.is_active} onChange={handleActiveChange} disabled={isSubmitting} />
-                    {t("field.isActive")}
-                  </label>
-
-                  <div className="flex justify-end gap-2 pt-1">
-                    <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                      {t("btn.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {t("btn.save")}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
+        <ProjectModal
+          isOpen={modalOpen}
+          mode={modalMode}
+          project={editingProject}
+          canEdit={canEdit}
+          onClose={closeModal}
+          onNotify={(s) => setSnack(s)}
+          onSaved={async (res) => {
+            try {
+              if (res.mode === "create" && res.created) {
+                setAdded((prev) => [res.created!, ...prev]);
+              }
+              await pager.refresh();
+            } catch {
+              setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
+            }
+          }}
+        />
       </main>
 
       <ConfirmToast
@@ -602,7 +440,7 @@ const ProjectSettings: React.FC = () => {
       <Snackbar
         open={!!snack}
         onClose={() => setSnack(null)}
-        autoHideDuration={5000}
+        autoHideDuration={6000}
         message={snack?.message}
         severity={snack?.severity}
         anchor={{ vertical: "bottom", horizontal: "center" }}

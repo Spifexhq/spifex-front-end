@@ -1,48 +1,74 @@
 {
   "title": "Banques",
-  "header": { "settings": "Paramètres", "title": "Banques" },
+  "header": { "settings": "Paramètres", "title": "Comptes bancaires" },
+  "badge": { "syncing": "Synchronisation…" },
+
   "section": { "list": "Comptes bancaires" },
-  "empty": "Aucun compte bancaire pour le moment.",
+  "empty": "Aucun compte bancaire trouvé.",
+
   "btn": {
-    "addBank": "Ajouter une banque",
+    "addBank": "Ajouter un compte bancaire",
     "edit": "Modifier",
     "delete": "Supprimer",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "selectAccountType": "Sélectionner le type de compte"
   },
+
   "field": {
-    "institution": "Banque",
+    "institution": "Banque / établissement",
     "accountType": "Type de compte",
     "branch": "Agence",
-    "accountNumber": "Compte",
+    "accountNumber": "Numéro de compte",
     "iban": "IBAN",
     "initialBalance": "Solde initial",
     "isActive": "Compte actif"
   },
+
   "accountType": {
     "checking": "Courant",
     "savings": "Épargne",
     "investment": "Investissement",
-    "cash": "Espèces"
+    "cash": "Caisse"
   },
+
   "modal": {
-    "createTitle": "Ajouter une banque",
-    "editTitle": "Modifier la banque",
+    "createTitle": "Ajouter un compte bancaire",
+    "editTitle": "Modifier le compte bancaire",
     "close": "Fermer"
   },
+
+  "footer": {
+    "account": "Compte :",
+    "enterInstitution": "Saisissez le nom de la banque pour continuer.",
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
+  },
+
+  "actions": { "ok": "OK", "discard": "Ignorer" },
+
+  "confirmDiscard": {
+    "title": "Ignorer les modifications ?",
+    "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
+  },
+
   "confirm": {
-    "delete": "Supprimer le compte « {{name}} » ?",
+    "delete": "Supprimer le compte \"{{name}}\" ?",
     "confirmLabel": "Supprimer",
     "cancelLabel": "Annuler"
   },
+
   "errors": {
-    "fetchError": "Impossible de récupérer les banques.",
-    "saveError": "Impossible d’enregistrer la banque.",
-    "deleteError": "Impossible de supprimer la banque.",
+    "fetchError": "Impossible de charger les comptes bancaires.",
+    "saveErrorTitle": "Échec de l’enregistrement",
+    "saveError": "Impossible d’enregistrer le compte bancaire.",
+    "deleteError": "Impossible de supprimer le compte bancaire.",
     "detailError": "Impossible de charger les détails.",
-    "confirmFailed": "Impossible de confirmer l’action."
+    "confirmFailed": "Échec de la confirmation.",
+    "validationTitle": "Informations manquantes",
+    "validationInstitution": "Le nom de la banque / de l’établissement est obligatoire.",
+    "validationAccountType": "Veuillez sélectionner un type de compte valide."
   },
+
   "toast": {
     "saveOk": "Compte bancaire enregistré.",
     "deleteOk": "Compte bancaire supprimé."

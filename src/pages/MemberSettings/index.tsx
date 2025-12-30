@@ -1,31 +1,26 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/MemberSettings.tsx
- * Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>
- * -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/MemberSettings.tsx                                          */
+/* Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>  */
+/* - No tabs                                                                   */
+/* - Page owns: list fetch + delete confirm + snackbar                         */
+/* - Modal owns: detail fetch + create/edit submit + validation                */
+/* -------------------------------------------------------------------------- */
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  startTransition,
-} from "react";
+import React, { useEffect, useRef, useState, useCallback, startTransition } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
-import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import ConfirmToast from "@/components/ui/ConfirmToast";
-
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import Shimmer from "@/components/ui/Loaders/Shimmer";
+
+import MemberModal from "./MemberModal";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
-import { validatePassword } from "@/lib";
-import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
+
 import type { GroupListItem } from "@/models/auth/rbac";
 import type { Member } from "@/models/auth/members";
 
@@ -34,35 +29,8 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* ---------------------------- Form template ------------------------------ */
-const emptyForm = {
-  name: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  groups: [] as GroupListItem[],
-};
-type FormState = typeof emptyForm;
-
 /* ---------------------------- In-memory guards --------------------------- */
 let INFLIGHT_FETCH = false;
-
-/* ------------------------------ Modal skeleton ---------------------------- */
-const ModalSkeleton: React.FC = () => (
-  <div className="py-1 grid grid-cols-2 gap-4">
-    <Shimmer className="h-10 rounded-md" />
-    <Shimmer className="h-10 rounded-md" />
-    <Shimmer className="h-10 rounded-md" />
-    <Shimmer className="h-10 rounded-md" />
-    <div className="col-span-2">
-      <Shimmer className="h-10 rounded-md" />
-    </div>
-    <div className="col-span-2 flex justify-end gap-3 pt-1">
-      <Shimmer className="h-9 w-24 rounded-md" />
-      <Shimmer className="h-9 w-28 rounded-md" />
-    </div>
-  </div>
-);
 
 const getInitials = () => "FN";
 
@@ -82,7 +50,7 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className="flex items-center justify-between px-4 py-2.5">
+  <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">{member.name}</p>
       <p className="text-[12px] text-gray-600 truncate">{member.email}</p>
@@ -117,17 +85,14 @@ const MemberSettings: React.FC = () => {
   const [groups, setGroups] = useState<GroupListItem[]>([]);
 
   // Standard flags
-  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
-  const [isBackgroundSync, setIsBackgroundSync] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isDetailLoading, setIsDetailLoading] = useState<boolean>(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const [formData, setFormData] = useState<FormState>(emptyForm);
 
   // Toast
   const [snack, setSnack] = useState<Snack>(null);
@@ -147,8 +112,8 @@ const MemberSettings: React.FC = () => {
   }, []);
 
   /* ----------------------------- Fetchers --------------------------------- */
-  const normalizeAndSet = useCallback((empRes: Member[], grpRes: GroupListItem[]) => {
-    const onlyMembers = empRes.filter((e) => e.role === "member");
+  const normalizeAndSet = useCallback((memRes: Member[], grpRes: GroupListItem[]) => {
+    const onlyMembers = memRes.filter((e) => e.role === "member");
 
     const normMembers = [...onlyMembers].sort((a, b) => {
       const an = (a.name || "").toLowerCase();
@@ -157,9 +122,7 @@ const MemberSettings: React.FC = () => {
       return (a.email || "").toLowerCase().localeCompare((b.email || "").toLowerCase());
     });
 
-    const normGroups = [...grpRes].sort((a, b) => 
-      (a.name || "").localeCompare(b.name || "", "en")
-    );
+    const normGroups = [...grpRes].sort((a, b) => (a.name || "").localeCompare(b.name || "", "en"));
 
     startTransition(() => {
       setMembers(normMembers);
@@ -167,42 +130,38 @@ const MemberSettings: React.FC = () => {
     });
   }, []);
 
-  const fetchList = useCallback(
-    async (opts: { background?: boolean } = {}) => {
-      if (INFLIGHT_FETCH) return;
-      INFLIGHT_FETCH = true;
-      const seq = ++fetchSeqRef.current;
+  const fetchList = useCallback(async (opts: { background?: boolean } = {}) => {
+    if (INFLIGHT_FETCH) return;
+    INFLIGHT_FETCH = true;
+    const seq = ++fetchSeqRef.current;
 
-      if (opts.background) setIsBackgroundSync(true);
-      else setIsInitialLoading(true);
+    if (opts.background) setIsBackgroundSync(true);
+    else setIsInitialLoading(true);
 
-      try {
-        const [empResp, grpResp] = await Promise.all([api.getMembers(), api.getGroups()]);
-        if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+    try {
+      const [memResp, grpResp] = await Promise.all([api.getMembers(), api.getGroups()]);
+      if (seq !== fetchSeqRef.current || !mountedRef.current) return;
 
-        // request() already unwraps data, so access .data.results directly
-        const empList = empResp.data.members || [];
-        const grpList = grpResp.data.results || [];
-        
-        normalizeAndSet(empList, grpList);
-      } catch (err: unknown) {
-        if (mountedRef.current) {
-          console.error("Fetch members/groups failed", err);
-          setSnack({ message: t("errors.fetchError"), severity: "error" });
-        }
-      } finally {
-        if (mountedRef.current) {
-          if (opts.background) setIsBackgroundSync(false);
-          else setIsInitialLoading(false);
-        }
-        INFLIGHT_FETCH = false;
+      const memList = memResp.data.members || [];
+      const grpList = grpResp.data.results || [];
+
+      normalizeAndSet(memList, grpList);
+    } catch (err: unknown) {
+      if (mountedRef.current) {
+        console.error("Fetch members/groups failed", err);
+        setSnack({ message: t("errors.fetchError"), severity: "error" });
       }
-    },
-    [normalizeAndSet, t]
-  );
+    } finally {
+      if (mountedRef.current) {
+        if (opts.background) setIsBackgroundSync(false);
+        else setIsInitialLoading(false);
+      }
+      INFLIGHT_FETCH = false;
+    }
+  }, [normalizeAndSet, t]);
 
   useEffect(() => {
-    fetchList();
+    void fetchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -210,99 +169,26 @@ const MemberSettings: React.FC = () => {
   const openCreateModal = () => {
     setModalMode("create");
     setEditingMember(null);
-    setFormData(emptyForm);
     setModalOpen(true);
   };
 
-  const openEditModal = async (member: Member) => {
+  const openEditModal = (member: Member) => {
     setModalMode("edit");
     setEditingMember(member);
-    setFormData(emptyForm);
     setModalOpen(true);
-    setIsDetailLoading(true);
-
-    try {
-      const res = await api.getMember(member.id);
-      const detail = res.data.member;
-
-      setFormData({
-        name: detail.name,
-        email: detail.email,
-        password: "",
-        confirmPassword: "",
-        groups: (detail.groups as GroupListItem[]) || [],
-      });
-    } catch (error: unknown) {
-      console.error(error);
-      setSnack({ message: t("errors.loadMemberError"), severity: "error" });
-      setModalOpen(false);
-      setEditingMember(null);
-    } finally {
-      setIsDetailLoading(false);
-    }
   };
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingMember(null);
-    setFormData(emptyForm);
   }, []);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-  };
-
-  const submitMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (modalMode === "create") {
-      if (formData.password !== formData.confirmPassword) {
-        setSnack({ message: t("toast.passwordMismatch"), severity: "warning" });
-        return;
-      }
-      const { isValid, message } = validatePassword(formData.password);
-      if (!isValid) {
-        setSnack({ message: message || t("toast.weakPassword"), severity: "warning" });
-        return;
-      }
-    }
-
-    setIsSubmitting(true);
-    try {
-      if (modalMode === "create") {
-        await api.addMember({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password || undefined,
-          group_ids: formData.groups.map((g) => g.id),
-        });
-      } else if (editingMember) {
-        await api.editMember(editingMember.id, {
-          name: formData.name,
-          email: formData.email,
-          group_ids: formData.groups.map((g) => g.id),
-        });
-      }
-
-      await fetchList();
-      closeModal();
-      setSnack({ message: t("toast.saveOk"), severity: "success" });
-    } catch (err: unknown) {
-      console.error(err);
-      setSnack({ message: t("errors.saveError"), severity: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   /* ---------- ConfirmToast delete ----------------- */
   const requestDeleteMember = (member: Member) => {
     setConfirmText(t("confirm.delete", { name: member.name }));
     setConfirmAction(() => async () => {
       setDeleteTargetId(member.id);
+
       try {
         await api.deleteMember(member.id);
         await fetchList({ background: true });
@@ -316,20 +202,9 @@ const MemberSettings: React.FC = () => {
         setConfirmBusy(false);
       }
     });
+
     setConfirmOpen(true);
   };
-
-  /* ------------------------------ Esc / Scroll ---------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (ev: KeyboardEvent) => ev.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
-
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [modalOpen]);
 
   /* ------------------------------ Render ---------------------------------- */
   if (isInitialLoading) {
@@ -350,6 +225,8 @@ const MemberSettings: React.FC = () => {
       {t("badge.syncing")}
     </span>
   ) : null;
+
+  const globalBusy = isBackgroundSync || confirmBusy;
 
   return (
     <>
@@ -387,7 +264,7 @@ const MemberSettings: React.FC = () => {
                     <Button
                       onClick={openCreateModal}
                       className="!py-1.5"
-                      disabled={isSubmitting || isBackgroundSync || confirmBusy}
+                      disabled={globalBusy}
                     >
                       {t("btn.addMember")}
                     </Button>
@@ -396,139 +273,41 @@ const MemberSettings: React.FC = () => {
               </div>
 
               <div className="divide-y divide-gray-200">
-                {members.map((e) => {
-                  const rowBusy =
-                    isSubmitting ||
-                    isDetailLoading ||
-                    isBackgroundSync ||
-                    confirmBusy ||
-                    deleteTargetId === e.id;
-
-                  return (
-                    <Row
-                      key={e.id}
-                      member={e}
-                      canEdit={canEdit}
-                      onEdit={openEditModal}
-                      onDelete={requestDeleteMember}
-                      t={t}
-                      busy={rowBusy}
-                    />
-                  );
-                })}
-
-                {members.length === 0 && !isBackgroundSync && (
-                  <p className="p-4 text-center text-sm text-gray-500">
-                    {t("empty")}
-                  </p>
+                {members.length === 0 ? (
+                  <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
+                ) : (
+                  members.map((m) => {
+                    const rowBusy = globalBusy || deleteTargetId === m.id;
+                    return (
+                      <Row
+                        key={m.id}
+                        member={m}
+                        canEdit={canEdit}
+                        onEdit={openEditModal}
+                        onDelete={requestDeleteMember}
+                        t={t}
+                        busy={rowBusy}
+                      />
+                    );
+                  })
                 )}
               </div>
             </div>
           </section>
         </div>
 
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg max-h-[90vh]"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {modalMode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("modal.close")}
-                  disabled={isSubmitting || isDetailLoading}
-                >
-                  &times;
-                </button>
-              </header>
-
-              {modalMode === "edit" && isDetailLoading ? (
-                <ModalSkeleton />
-              ) : (
-                <form className="grid grid-cols-2 gap-4" onSubmit={submitMember}>
-                  <Input
-                    label={t("field.name")}
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    disabled={isSubmitting || isDetailLoading}
-                  />
-                  <Input
-                    label={t("field.email")}
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    disabled={isSubmitting || isDetailLoading}
-                  />
-
-                  {modalMode === "create" && (
-                    <>
-                      <Input
-                        label={t("field.tempPassword")}
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        showTogglePassword
-                        required
-                        disabled={isSubmitting}
-                      />
-                      <Input
-                        label={t("field.confirmPassword")}
-                        name="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        showTogglePassword
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </>
-                  )}
-
-                  <div className="col-span-2">
-                    <div className={(isSubmitting || isDetailLoading) ? "pointer-events-none opacity-70" : ""}>
-                      <SelectDropdown<GroupListItem>
-                        label={t("field.groups")}
-                        items={groups}
-                        selected={formData.groups}
-                        onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
-                        getItemKey={(g) => g.id}
-                        getItemLabel={(g) => g.name}
-                        buttonLabel={t("btnLabel.groups")}
-                        hideCheckboxes={false}
-                        clearOnClickOutside={false}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-span-2 flex justify-end gap-3 pt-1">
-                    <Button
-                      variant="cancel"
-                      type="button"
-                      onClick={closeModal}
-                      disabled={isSubmitting || isDetailLoading}
-                    >
-                      {t("btn.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting || isDetailLoading}>
-                      {t("btn.save")}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
+        <MemberModal
+          isOpen={modalOpen}
+          mode={modalMode}
+          member={editingMember}
+          allGroups={groups}
+          canEdit={canEdit}
+          onClose={closeModal}
+          onNotify={(s) => setSnack(s)}
+          onSaved={async () => {
+            await fetchList({ background: true });
+          }}
+        />
       </main>
 
       <ConfirmToast
@@ -545,9 +324,7 @@ const MemberSettings: React.FC = () => {
           if (confirmBusy || !confirmAction) return;
           setConfirmBusy(true);
           confirmAction()
-            .catch(() => {
-              setSnack({ message: t("errors.confirmFailed"), severity: "error" });
-            })
+            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
             .finally(() => setConfirmBusy(false));
         }}
         busy={confirmBusy}

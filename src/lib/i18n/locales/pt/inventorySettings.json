@@ -1,52 +1,77 @@
 {
   "title": "Inventário",
-  "header": { "settings": "Definições", "inventory": "Inventário" },
-  "badge": { "syncing": "A sincronizar…" },
-  "section": { "list": "Itens de inventário" },
+  "header": { "settings": "Configurações", "inventory": "Inventário" },
+  "badge": { "syncing": "Sincronizando…" },
+
+  "section": { "list": "Itens do inventário" },
   "search": {
-    "placeholder": "Pesquisar por nome ou SKU…",
-    "aria": "Pesquisar itens",
-    "button": "Pesquisar"
+    "placeholder": "Buscar por nome ou SKU…",
+    "aria": "Buscar itens",
+    "button": "Buscar"
   },
+
   "row": {
     "skuPrefix": "SKU:",
     "qtyPrefix": "Qtd:",
     "untitled": "(sem título)"
   },
+
   "btn": {
     "addItem": "Adicionar item",
     "edit": "Editar",
-    "delete": "Eliminar",
-    "save": "Guardar",
+    "delete": "Excluir",
+    "save": "Salvar",
     "cancel": "Cancelar",
     "retry": "Tentar novamente"
   },
+
   "field": {
     "sku": "SKU",
     "name": "Nome",
     "description": "Descrição",
     "uom": "Unidade (UoM)",
     "uomPlaceholder": "ex.: un, cx, kg, l…",
-    "qty": "Quantidade em stock",
+    "qty": "Quantidade em estoque",
     "isActive": "Item ativo"
   },
+
   "modal": {
     "createTitle": "Adicionar item",
     "editTitle": "Editar item",
     "close": "Fechar"
   },
-  "confirm": { "deleteTitle": "Eliminar o item \"{{name}}\"?" },
+
+  "footer": {
+    "item": "Item:",
+    "enterName": "Informe o nome do item para continuar.",
+    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
+  },
+
+  "actions": { "ok": "OK", "discard": "Descartar" },
+
+  "confirmDiscard": {
+    "title": "Descartar alterações?",
+    "message": "Você tem alterações não salvas. Deseja descartá-las?"
+  },
+
+  "confirm": { "deleteTitle": "Excluir item \"{{name}}\"?" },
+
   "empty": "Nenhum item encontrado.",
+
   "errors": {
     "loadFailedTitle": "Falha ao carregar",
-    "saveError": "Falha ao guardar o item.",
-    "deleteError": "Falha ao eliminar o item.",
-    "detailError": "Falha ao carregar os detalhes.",
-    "confirmFailed": "Falha ao confirmar."
+    "saveError": "Falha ao salvar o item.",
+    "deleteError": "Falha ao excluir o item.",
+    "detailError": "Falha ao carregar detalhes.",
+    "confirmFailed": "Falha ao confirmar.",
+    "validationTitle": "Informações obrigatórias",
+    "validationSkuName": "SKU e nome são obrigatórios.",
+    "validationQty": "A quantidade deve ser um número inteiro maior ou igual a 0."
   },
+
   "toast": {
     "saveOk": "Item criado.",
     "updateOk": "Item atualizado.",
-    "deleteOk": "Item eliminado."
+    "deleteOk": "Item excluído."
   }
 }

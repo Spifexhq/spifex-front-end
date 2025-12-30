@@ -1,121 +1,34 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/EntitySettings.tsx
- * i18n: namespace "entity"
- * -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/EntitySettings.tsx                                          */
+/* Refactor: modal extracted (EntityModal) + simplified create/edit flows      */
+/* i18n: namespace "entitySettings"                                            */
+/* -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import ConfirmToast from "@/components/ui/ConfirmToast";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
-import Shimmer from "@/components/ui/Loaders/Shimmer";
-import Checkbox from "@/components/ui/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+
+import EntityModal from "./EntityModal";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
-import { useTranslation } from "react-i18next";
 
 import type { Entity } from "@/models/settings/entities";
 
-/* ---------------------------- Snackbar type ------------------------------ */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* ------------------------- Entity type constants -------------------------- */
-const ENTITY_TYPE_VALUES = ["client", "supplier", "employee"] as const;
-type EntityTypeValue = (typeof ENTITY_TYPE_VALUES)[number];
-
-const ENTITY_TYPE_ITEMS: { value: EntityTypeValue }[] =
-  ENTITY_TYPE_VALUES.map((v) => ({ value: v }));
-
-/* ---------------------------- Form template ------------------------------ */
-const emptyForm = {
-  full_name: "",
-  alias_name: "",
-  entity_type: "client" as EntityTypeValue,
-  is_active: true,
-
-  ssn_tax_id: "",
-  ein_tax_id: "",
-  email: "",
-  phone: "",
-
-  street: "",
-  street_number: "",
-  city: "",
-  state: "",
-  postal_code: "",
-  country: "",
-
-  bank_name: "",
-  bank_branch: "",
-  checking_account: "",
-  account_holder_tax_id: "",
-  account_holder_name: "",
-};
-type FormState = typeof emptyForm;
-
-/* ---------------------------- In-memory guards --------------------------- */
-let INFLIGHT_FETCH = false;
-
-/* ------------------------------ Modal skeleton ---------------------------- */
-const ModalSkeleton: React.FC = () => (
-  <div className="space-y-5 py-1">
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Shimmer className="h-10 rounded-md lg:col-span-2" />
-      <Shimmer className="h-10 rounded-md" />
-      <Shimmer className="h-10 rounded-md" />
-      <Shimmer className="h-10 rounded-md" />
-      <Shimmer className="h-10 rounded-md" />
-      <Shimmer className="h-10 rounded-md" />
-      <Shimmer className="h-10 rounded-md" />
-      <div className="flex items-center gap-2 pt-2">
-        <Shimmer className="h-5 w-5 rounded-sm" />
-        <Shimmer className="h-3 w-24 rounded-md" />
-      </div>
-    </div>
-
-    <div className="space-y-3">
-      <Shimmer className="h-3 w-32 rounded-md" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Shimmer className="h-10 rounded-md lg:col-span-2" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-      </div>
-    </div>
-
-    <div className="space-y-3">
-      <Shimmer className="h-3 w-40 rounded-md" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md lg:col-span-2" />
-      </div>
-    </div>
-
-    <div className="flex justify-end gap-2 pt-1">
-      <Shimmer className="h-9 w-24 rounded-md" />
-      <Shimmer className="h-9 w-28 rounded-md" />
-    </div>
-  </div>
-);
-
-function getInitials() {
-  return "EN";
-}
+type EntityTypeValue = "client" | "supplier" | "employee";
 
 function sortByName(a: Entity, b: Entity) {
   const an = (a.full_name || "").trim();
@@ -123,22 +36,18 @@ function sortByName(a: Entity, b: Entity) {
   return an.localeCompare(bn, "pt-BR");
 }
 
-/* ------------------------------- Row ------------------------------------- */
-const Row = ({
-  entity,
-  onEdit,
-  onDelete,
-  canEdit,
-  t,
-  busy,
-}: {
+function getInitials() {
+  return "EN";
+}
+
+const Row: React.FC<{
   entity: Entity;
   onEdit: (e: Entity) => void;
   onDelete: (e: Entity) => void;
   canEdit: boolean;
   t: (key: string, opts?: Record<string, unknown>) => string;
   busy?: boolean;
-}) => {
+}> = ({ entity, onEdit, onDelete, canEdit, t, busy }) => {
   const type = (entity.entity_type || "client") as EntityTypeValue;
   const typeLabel = t(`types.${type}`);
 
@@ -168,59 +77,66 @@ const Row = ({
   );
 };
 
-/* ----------------------------- Component --------------------------------- */
 const EntitySettings: React.FC = () => {
   const { t, i18n } = useTranslation("entitySettings");
 
-  useEffect(() => { document.title = t("title"); }, [t]);
-  useEffect(() => { document.documentElement.lang = i18n.language; }, [i18n.language]);
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   const { isOwner } = useAuthContext();
 
-  /* ------------------------------- Modal state ----------------------------- */
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
-  const [formData, setFormData] = useState<FormState>(emptyForm);
-
-  /* ------------------------------- Flags ----------------------------------- */
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-
-  /* Snackbar */
+  /* ------------------------------ Snackbar ------------------------------ */
   const [snack, setSnack] = useState<Snack>(null);
 
-  /* Overlay dinâmico */
-  const [added, setAdded] = useState<Entity[]>([]);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-
-  /* Filtro */
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
-
-  /* Confirm Toast */
+  /* ------------------------------ Confirm delete ------------------------------ */
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-  /* ------------------------------- Pager ----------------------------------- */
+  /* ------------------------------ Deletion optimistic UI ------------------------------ */
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
+  /* ------------------------------ Added overlay ------------------------------ */
+  const [added, setAdded] = useState<Entity[]>([]);
+
+  /* ------------------------------ Filter ------------------------------ */
+  const [query, setQuery] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
+
+  const matchesQuery = useCallback((e: Entity, q: string) => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (e.full_name || "").toLowerCase().includes(s) || (e.alias_name || "").toLowerCase().includes(s);
+  }, []);
+
+  /* ------------------------------ Pager ------------------------------ */
+  const inflightRef = useRef(false);
+
   const fetchEntitiesPage = useCallback(
     async (cursor?: string) => {
-      if (INFLIGHT_FETCH) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
-      INFLIGHT_FETCH = true;
+      if (inflightRef.current) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
+      inflightRef.current = true;
+
       try {
         const { data, meta } = await api.getEntitiesTable({
           cursor,
           q: appliedQuery || undefined,
         });
+
         const items = ((data?.results ?? []) as Entity[]).slice().sort(sortByName);
         const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
+
         return { items, nextCursor };
       } finally {
-        INFLIGHT_FETCH = false;
+        inflightRef.current = false;
       }
     },
     [appliedQuery]
@@ -231,204 +147,90 @@ const EntitySettings: React.FC = () => {
     deps: [appliedQuery],
   });
 
-  const { refresh } = pager;
-
   const onSearch = useCallback(() => {
     const trimmed = query.trim();
-    if (trimmed === appliedQuery) refresh();
+    if (trimmed === appliedQuery) pager.refresh();
     else setAppliedQuery(trimmed);
-  }, [query, appliedQuery, refresh]);
+  }, [query, appliedQuery, pager]);
 
-  /* ------------------------------ Handlers --------------------------------- */
-  const openCreateModal = () => {
+  const visibleItems = useMemo(() => {
+    const addedFiltered = added.filter((e) => !deletedIds.has(e.id) && matchesQuery(e, appliedQuery)).slice().sort(sortByName);
+    const addedIds = new Set(addedFiltered.map((e) => e.id));
+
+    const base = pager.items
+      .filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id))
+      .slice()
+      .sort(sortByName);
+
+    return [...addedFiltered, ...base];
+  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
+
+  /* ------------------------------ Modal state ------------------------------ */
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
+
+  const openCreateModal = useCallback(() => {
     setModalMode("create");
     setEditingEntity(null);
-    setFormData(emptyForm);
     setModalOpen(true);
-  };
+  }, []);
 
-  const openEditModal = async (entity: Entity) => {
+  const openEditModal = useCallback((entity: Entity) => {
     setModalMode("edit");
     setEditingEntity(entity);
     setModalOpen(true);
-    setIsDetailLoading(true);
-
-    try {
-      const res = await api.getEntity(entity.id);
-      const detail = res.data as Entity;
-
-      setFormData({
-        full_name: detail.full_name ?? "",
-        alias_name: detail.alias_name ?? "",
-        entity_type: (detail.entity_type as EntityTypeValue) ?? "client",
-        is_active: detail.is_active ?? true,
-
-        ssn_tax_id: detail.ssn_tax_id ?? "",
-        ein_tax_id: detail.ein_tax_id ?? "",
-        email: detail.email ?? "",
-        phone: detail.phone ?? "",
-
-        street: detail.street ?? "",
-        street_number: detail.street_number ?? "",
-        city: detail.city ?? "",
-        state: detail.state ?? "",
-        postal_code: detail.postal_code ?? "",
-        country: detail.country ?? "",
-
-        bank_name: detail.bank_name ?? "",
-        bank_branch: detail.bank_branch ?? "",
-        checking_account: detail.checking_account ?? "",
-        account_holder_tax_id: detail.account_holder_tax_id ?? "",
-        account_holder_name: detail.account_holder_name ?? "",
-      });
-    } catch {
-      setFormData({
-        full_name: entity.full_name ?? "",
-        alias_name: entity.alias_name ?? "",
-        entity_type: (entity.entity_type as EntityTypeValue) ?? "client",
-        is_active: entity.is_active ?? true,
-
-        ssn_tax_id: entity.ssn_tax_id ?? "",
-        ein_tax_id: entity.ein_tax_id ?? "",
-        email: entity.email ?? "",
-        phone: entity.phone ?? "",
-
-        street: entity.street ?? "",
-        street_number: entity.street_number ?? "",
-        city: entity.city ?? "",
-        state: entity.state ?? "",
-        postal_code: entity.postal_code ?? "",
-        country: entity.country ?? "",
-
-        bank_name: entity.bank_name ?? "",
-        bank_branch: entity.bank_branch ?? "",
-        checking_account: entity.checking_account ?? "",
-        account_holder_tax_id: entity.account_holder_tax_id ?? "",
-        account_holder_name: entity.account_holder_name ?? "",
-      });
-      setSnack({ message: t("errors.detailError"), severity: "error" });
-    } finally {
-      setIsDetailLoading(false);
-    }
-  };
+  }, []);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEditingEntity(null);
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-  };
-
-  /* ------------------------------ Overlay helpers -------------------------- */
-  const matchesQuery = useCallback((e: Entity, q: string) => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (
-      (e.full_name || "").toLowerCase().includes(s) ||
-      (e.alias_name || "").toLowerCase().includes(s)
-    );
-  }, []);
-
-  const [, forceTick] = useState(0);
-  useEffect(() => {
-    setAdded((prev) => prev.filter((e) => matchesQuery(e, appliedQuery)));
-    forceTick((x) => x + 1);
-  }, [appliedQuery, matchesQuery]);
-
-  const visibleItems = useMemo(() => {
-    const addedFiltered = added.filter((e) => matchesQuery(e, appliedQuery));
-    const addedIds = new Set(addedFiltered.map((e) => e.id));
-    const base = pager.items.filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id));
-    return [...addedFiltered, ...base];
-  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
-
-  /* ------------------------------ Submit/Create/Edit ----------------------- */
-  const submitEntity = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const payload = {
-      ...formData,
-      ssn_tax_id: formData.ssn_tax_id.trim() || null,
-      ein_tax_id: formData.ein_tax_id.trim() || null,
-      email: formData.email.trim(),
-      phone: formData.phone.trim(),
-      bank_name: formData.bank_name.trim(),
-      bank_branch: formData.bank_branch.trim(),
-      checking_account: formData.checking_account.trim(),
-      account_holder_tax_id: formData.account_holder_tax_id.trim(),
-      account_holder_name: formData.account_holder_name.trim(),
-    };
-
-    setIsSubmitting(true);
-    try {
-      if (modalMode === "create") {
-        const { data: created } = await api.addEntity(payload);
-        setAdded((prev) => [created, ...prev]);
-      } else if (editingEntity) {
-        await api.editEntity(editingEntity.id, payload);
-      }
-
-      await pager.refresh();
-      closeModal();
-      setSnack({ message: t("toast.saveOk"), severity: "success" });
-    } catch (err) {
-      setSnack({ message: err instanceof Error ? err.message : t("errors.saveError"), severity: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   /* ------------------------------ Delete flow ------------------------------ */
-  const requestDeleteEntity = (entity: Entity) => {
-    const name = entity.full_name ?? "";
-    setDeleteTargetId(entity.id);
-    setConfirmText(t("confirm.deleteTitle", { name }));
-    setConfirmAction(() => async () => {
-      try {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.add(entity.id);
-          return next;
-        });
+  const requestDeleteEntity = useCallback(
+    (entity: Entity) => {
+      const name = entity.full_name ?? "";
+      setDeleteTargetId(entity.id);
 
-        await api.deleteEntity(entity.id);
-        await pager.refresh();
-        setAdded((prev) => prev.filter((e) => e.id !== entity.id));
-        setSnack({ message: t("toast.deleteOk"), severity: "info" });
-      } catch (err) {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(entity.id);
-          return next;
-        });
-        setSnack({ message: err instanceof Error ? err.message : t("errors.deleteError"), severity: "error" });
-      } finally {
-        setConfirmOpen(false);
-        setConfirmBusy(false);
-        setDeleteTargetId(null);
-      }
-    });
-    setConfirmOpen(true);
-  };
+      setConfirmText(t("confirm.deleteTitle", { name }));
+      setConfirmAction(() => async () => {
+        try {
+          setDeletedIds((prev) => {
+            const next = new Set(prev);
+            next.add(entity.id);
+            return next;
+          });
 
-  /* ------------------------------- UX hooks -------------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
+          await api.deleteEntity(entity.id);
+          await pager.refresh();
 
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [modalOpen]);
+          setAdded((prev) => prev.filter((e) => e.id !== entity.id));
+          setSnack({ message: t("toast.deleteOk"), severity: "info" });
+        } catch (err) {
+          setDeletedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(entity.id);
+            return next;
+          });
 
-  /* ------------------------------- Loading UI ------------------------------ */
+          setSnack({
+            message: err instanceof Error ? err.message : t("errors.deleteError"),
+            severity: "error",
+          });
+        } finally {
+          setConfirmOpen(false);
+          setConfirmBusy(false);
+          setDeleteTargetId(null);
+        }
+      });
+
+      setConfirmOpen(true);
+    },
+    [pager, t]
+  );
+
+  /* ------------------------------ Loading UI ------------------------------ */
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
@@ -441,7 +243,7 @@ const EntitySettings: React.FC = () => {
     );
   }
 
-  const globalBusy = isSubmitting || isDetailLoading || isBackgroundSync || confirmBusy;
+  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   return (
     <>
@@ -477,9 +279,11 @@ const EntitySettings: React.FC = () => {
                       aria-label={t("search.aria")}
                       disabled={globalBusy}
                     />
+
                     <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
                       {t("search.button")}
                     </Button>
+
                     {isOwner && (
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.add")}
@@ -529,91 +333,20 @@ const EntitySettings: React.FC = () => {
           </section>
         </div>
 
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-4xl overflow-y-auto max-h-[90vh]" role="dialog" aria-modal="true">
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {modalMode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("modal.close")}
-                  disabled={isSubmitting || isDetailLoading}
-                >
-                  &times;
-                </button>
-              </header>
-
-              {modalMode === "edit" && isDetailLoading ? (
-                <ModalSkeleton />
-              ) : (
-                <form className="space-y-5" onSubmit={submitEntity}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="lg:col-span-2">
-                      <Input label={t("field.full_name")} name="full_name" value={formData.full_name} onChange={handleChange} disabled={isSubmitting} />
-                    </div>
-                    <div>
-                      <Input label={t("field.alias_name")} name="alias_name" value={formData.alias_name} onChange={handleChange} disabled={isSubmitting} />
-                    </div>
-                    <div>
-                      <SelectDropdown<{ value: EntityTypeValue }>
-                        label={t("field.entity_type")}
-                        items={ENTITY_TYPE_ITEMS}
-                        selected={ENTITY_TYPE_ITEMS.filter((it) => it.value === formData.entity_type)}
-                        onChange={(items) => items[0] && setFormData((p) => ({ ...p, entity_type: items[0].value }))}
-                        getItemKey={(item) => item.value}
-                        getItemLabel={(item) => t(`types.${item.value}`)}
-                        singleSelect
-                        hideCheckboxes
-                        buttonLabel={t("field.entity_type")}
-                      />
-                    </div>
-
-                    <div><Input label={t("field.ssn_tax_id")} name="ssn_tax_id" value={formData.ssn_tax_id} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.ein_tax_id")} name="ein_tax_id" value={formData.ein_tax_id} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.email")} name="email" value={formData.email} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.phone")} name="phone" value={formData.phone} onChange={handleChange} disabled={isSubmitting} /></div>
-
-                    <label className="col-span-1 flex items-center gap-2 text-sm pt-5">
-                      <Checkbox checked={formData.is_active} onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))} disabled={isSubmitting} />
-                      {t("field.is_active")}
-                    </label>
-                  </div>
-
-                  <h4 className="text-[12px] font-semibold text-gray-800">{t("sections.address")}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="lg:col-span-2"><Input label={t("field.street")} name="street" value={formData.street} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.street_number")} name="street_number" value={formData.street_number} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.city")} name="city" value={formData.city} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.state")} name="state" value={formData.state} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.postal_code")} name="postal_code" value={formData.postal_code} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.country")} name="country" value={formData.country} onChange={handleChange} disabled={isSubmitting} /></div>
-                  </div>
-
-                  <h4 className="text-[12px] font-semibold text-gray-800">{t("sections.bank")}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div><Input label={t("field.bank_name")} name="bank_name" value={formData.bank_name} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.bank_branch")} name="bank_branch" value={formData.bank_branch} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.checking_account")} name="checking_account" value={formData.checking_account} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div><Input label={t("field.account_holder_tax_id")} name="account_holder_tax_id" value={formData.account_holder_tax_id} onChange={handleChange} disabled={isSubmitting} /></div>
-                    <div className="lg:col-span-2"><Input label={t("field.account_holder_name")} name="account_holder_name" value={formData.account_holder_name} onChange={handleChange} disabled={isSubmitting} /></div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-1">
-                    <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                      {t("btn.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {t("btn.save")}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
+        <EntityModal
+          isOpen={modalOpen}
+          mode={modalMode}
+          entity={editingEntity}
+          onClose={closeModal}
+          canEdit={!!isOwner}
+          onNotify={setSnack}
+          onSaved={async ({ mode, created }) => {
+            if (mode === "create" && created) {
+              setAdded((prev) => [created, ...prev]);
+            }
+            await pager.refresh();
+          }}
+        />
       </main>
 
       <ConfirmToast

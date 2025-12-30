@@ -1,52 +1,60 @@
 {
-  "title": "Funcionários",
-  "header": {
-    "settings": "Definições",
-    "members": "Funcionários"
+  "title": "Membros da equipe",
+  "header": { "settings": "Configurações", "members": "Membros da equipe" },
+  "section": { "list": "Lista de membros" },
+  "empty": "Nenhum membro encontrado.",
+  "badge": { "syncing": "Sincronizando…" },
+
+  "btn": {
+    "addMember": "Adicionar membro",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "save": "Salvar",
+    "cancel": "Cancelar"
   },
-  "section": {
-    "list": "Lista de funcionários"
-  },
+
+  "btnLabel": { "groups": "Selecionar grupos" },
+
   "field": {
     "name": "Nome",
     "email": "E-mail",
-    "tempPassword": "Palavra-passe temporária",
-    "confirmPassword": "Confirmar palavra-passe",
+    "tempPassword": "Senha temporária",
+    "confirmPassword": "Confirmar senha",
     "groups": "Grupos"
   },
-  "badge": {
-    "syncing": "A sincronizar…"
-  },
-  "btn": {
-    "addMember": "Adicionar funcionário",
-    "edit": "Editar",
-    "delete": "Eliminar",
-    "save": "Guardar",
-    "cancel": "Cancelar"
-  },
-  "btnLabel": {
-    "groups": "Selecionar grupos"
-  },
+
   "modal": {
-    "createTitle": "Adicionar funcionário",
-    "editTitle": "Editar funcionário",
+    "createTitle": "Adicionar membro",
+    "editTitle": "Editar membro",
     "close": "Fechar"
   },
-  "empty": "Não foram encontrados funcionários.",
-  "confirm": {
-    "delete": "Eliminar o funcionário \"{{name}}\"?"
+
+  "footer": { "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar" },
+
+  "actions": { "ok": "OK", "discard": "Descartar" },
+
+  "confirmDiscard": {
+    "title": "Descartar alterações?",
+    "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
+
+  "confirm": { "delete": "Excluir o membro \"{{name}}\"?" },
+
   "errors": {
-    "fetchError": "Não foi possível obter os dados.",
-    "loadMemberError": "Não foi possível carregar os dados do funcionário.",
-    "saveError": "Não foi possível guardar o funcionário.",
-    "deleteError": "Não foi possível eliminar o funcionário.",
-    "confirmFailed": "Não foi possível confirmar a ação."
+    "fetchError": "Falha ao buscar os dados.",
+    "loadMemberError": "Falha ao carregar os dados do membro.",
+    "saveErrorTitle": "Falha ao salvar",
+    "saveError": "Falha ao salvar o membro.",
+    "deleteError": "Falha ao excluir o membro.",
+    "confirmFailed": "Falha ao confirmar a ação.",
+    "validationTitle": "Informações obrigatórias",
+    "validationRequired": "Nome e e-mail são obrigatórios."
   },
+
   "toast": {
-    "passwordMismatch": "As palavras-passe não coincidem.",
-    "weakPassword": "A palavra-passe não cumpre os requisitos mínimos.",
-    "saveOk": "Funcionário guardado.",
-    "deleteOk": "Funcionário eliminado."
+    "passwordMismatch": "As senhas não coincidem.",
+    "weakPassword": "A senha não atende aos requisitos mínimos.",
+    "saveOk": "Membro salvo.",
+    "deleteOk": "Membro excluído."
   }
 }

@@ -8,41 +8,74 @@
     "button": "Rechercher"
   },
   "types": { "client": "Client", "supplier": "Fournisseur", "employee": "Employé" },
-  "row": { "inactive": "• Inactif", "untitled": "(sans nom)" },
+  "row": { "inactive": "• Inactive", "untitled": "(sans titre)" },
+
+  "tabs": {
+    "general": "Général",
+    "tax": "Fiscal",
+    "address": "Adresse",
+    "bank": "Banque"
+  },
+
+  "footer": {
+    "entity": "Entité :",
+    "enterName": "Saisissez un nom d’entité pour continuer.",
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer • Ctrl+Alt+←/→ onglets"
+  },
+
+  "actions": {
+    "ok": "OK",
+    "discard": "Ignorer"
+  },
+
+  "confirmDiscard": {
+    "title": "Ignorer les modifications ?",
+    "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
+  },
+
   "btn": {
     "add": "Ajouter une entité",
     "edit": "Modifier",
     "delete": "Supprimer",
     "save": "Enregistrer",
+    "saving": "Enregistrement…",
     "cancel": "Annuler",
     "retry": "Réessayer",
     "confirmDelete": "Supprimer"
   },
+
   "sections": { "address": "Adresse", "bank": "Coordonnées bancaires" },
+
   "field": {
     "full_name": "Nom complet",
     "alias_name": "Nom commercial / alias",
     "entity_type": "Type d’entité",
     "is_active": "Entité active",
-    "ssn_tax_id": "CPF",
-    "ein_tax_id": "CNPJ",
-    "email": "Email",
+
+    "ssn_tax_id": "Identifiant fiscal (CPF)",
+    "ein_tax_id": "Identifiant fiscal (CNPJ)",
+
+    "email": "E-mail",
     "phone": "Téléphone",
+
     "street": "Rue",
     "street_number": "Numéro",
     "city": "Ville",
     "state": "Région",
     "postal_code": "Code postal",
     "country": "Pays",
+
     "bank_name": "Banque",
     "bank_branch": "Agence",
-    "checking_account": "Compte",
+    "checking_account": "Compte courant",
     "account_holder_tax_id": "Titulaire (CPF/CNPJ)",
     "account_holder_name": "Nom du titulaire"
   },
+
   "modal": { "createTitle": "Ajouter une entité", "editTitle": "Modifier l’entité", "close": "Fermer" },
   "empty": "Aucune entité trouvée.",
   "confirm": { "deleteTitle": "Supprimer l’entité \"{{name}}\" ?" },
+
   "errors": {
     "loadFailedTitle": "Échec du chargement",
     "saveError": "Impossible d’enregistrer l’entité.",
@@ -50,5 +83,6 @@
     "detailError": "Impossible de charger les détails.",
     "confirmFailed": "Échec de la confirmation."
   },
+
   "toast": { "saveOk": "Entité enregistrée.", "deleteOk": "Entité supprimée." }
 }

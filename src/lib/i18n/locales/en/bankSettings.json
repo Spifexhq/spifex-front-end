@@ -1,50 +1,76 @@
 {
   "title": "Banks",
-  "header": { "settings": "Settings", "title": "Banks" },
+  "header": { "settings": "Settings", "title": "Bank accounts" },
+  "badge": { "syncing": "Syncing…" },
+
   "section": { "list": "Bank accounts" },
-  "empty": "No bank accounts yet.",
+  "empty": "No bank accounts found.",
+
   "btn": {
-    "addBank": "Add bank",
+    "addBank": "Add bank account",
     "edit": "Edit",
     "delete": "Delete",
     "cancel": "Cancel",
     "save": "Save",
     "selectAccountType": "Select account type"
   },
+
   "field": {
-    "institution": "Bank institution",
+    "institution": "Bank / institution",
     "accountType": "Account type",
     "branch": "Branch",
-    "accountNumber": "Account",
+    "accountNumber": "Account number",
     "iban": "IBAN",
     "initialBalance": "Initial balance",
     "isActive": "Active account"
   },
+
   "accountType": {
     "checking": "Checking",
     "savings": "Savings",
     "investment": "Investment",
     "cash": "Cash"
   },
+
   "modal": {
-    "createTitle": "Add bank",
-    "editTitle": "Edit bank",
+    "createTitle": "Add bank account",
+    "editTitle": "Edit bank account",
     "close": "Close"
   },
+
+  "footer": {
+    "account": "Account:",
+    "enterInstitution": "Enter a bank name to continue.",
+    "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
+  },
+
+  "actions": { "ok": "OK", "discard": "Discard" },
+
+  "confirmDiscard": {
+    "title": "Discard changes?",
+    "message": "You have unsaved changes. Do you want to discard them?"
+  },
+
   "confirm": {
     "delete": "Delete account \"{{name}}\"?",
     "confirmLabel": "Delete",
     "cancelLabel": "Cancel"
   },
+
   "errors": {
-    "fetchError": "Failed to fetch banks.",
-    "saveError": "Failed to save bank.",
-    "deleteError": "Failed to delete bank.",
+    "fetchError": "Failed to fetch bank accounts.",
+    "saveErrorTitle": "Save failed",
+    "saveError": "Failed to save bank account.",
+    "deleteError": "Failed to delete bank account.",
     "detailError": "Failed to load details.",
-    "confirmFailed": "Failed to confirm action."
+    "confirmFailed": "Failed to confirm action.",
+    "validationTitle": "Missing information",
+    "validationInstitution": "Bank / institution name is required.",
+    "validationAccountType": "Please select a valid account type."
   },
+
   "toast": {
-    "saveOk": "Saved bank account.",
+    "saveOk": "Bank account saved.",
     "deleteOk": "Bank account deleted."
   }
 }

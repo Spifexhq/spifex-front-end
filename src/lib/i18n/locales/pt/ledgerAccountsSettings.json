@@ -1,6 +1,6 @@
 {
-  "title": "Plano de contas",
-  "header": { "section": "Definições", "title": "Plano de contas" },
+  "title": "Contas contábeis",
+  "header": { "section": "Configurações", "title": "Contas contábeis" },
   "categories": {
     "operationalRevenue": "Receita operacional",
     "nonOperationalRevenue": "Receita não operacional",
@@ -10,29 +10,29 @@
   "buttons": {
     "add": "Adicionar conta",
     "options": "Opções",
-    "downloadPdf": "Descarregar plano de contas (PDF)",
-    "downloadPdfDisabled": "Sem contas disponíveis",
-    "resetAll": "Repor plano de contas",
-    "deletingAll": "A eliminar…",
+    "downloadPdf": "Baixar contas contábeis (PDF)",
+    "downloadPdfDisabled": "Nenhuma conta disponível",
+    "resetAll": "Resetar contas contábeis",
+    "deletingAll": "Excluindo…",
     "expandAll": "Expandir tudo",
-    "collapseAll": "Colapsar tudo",
+    "collapseAll": "Recolher tudo",
     "viewList": "Ver como lista",
     "viewAccordion": "Ver como acordeão",
     "clear": "Limpar",
-    "search": "Pesquisar",
+    "search": "Buscar",
     "filterCategory": "Filtrar por categoria",
-    "selectCategory": "Selecionar categoria",
-    "selectSubcategory": "Selecionar subcategoria",
+    "selectCategory": "Selecionar uma categoria",
+    "selectSubcategory": "Selecionar um subgrupo",
     "toggleNewSub": "+",
     "toggleNewSubCancel": "Cancelar",
     "cancel": "Cancelar",
-    "save": "Guardar",
+    "save": "Salvar",
     "edit": "Editar",
-    "delete": "Eliminar",
-    "runSearchAria": "Pesquisar"
+    "delete": "Excluir",
+    "runSearchAria": "Buscar"
   },
   "filters": {
-    "placeholder": "Pesquisar por conta, código, categoria ou subcategoria…",
+    "placeholder": "Buscar por conta, código, categoria ou subgrupo...",
     "category": "Categoria"
   },
   "list": {
@@ -44,76 +44,69 @@
     "code": "Código",
     "credit": "Crédito",
     "debit": "Débito",
-    "inactive": "Inativo",
+    "inactive": "Inativa",
     "noAccount": "(sem nome)",
     "noGroup": "(Sem categoria)",
-    "noSubgroup": "(Sem subcategoria)"
+    "noSubgroup": "(Sem subgrupo)"
   },
   "modal": {
     "createTitle": "Adicionar conta",
     "editTitle": "Editar conta",
-    "account": "Conta contabilística",
+    "account": "Conta contábil",
     "code": "Código (opcional)",
     "codePlaceholder": "ex.: 3-0001",
-    "subcategory": "Subcategoria",
-    "subcategoryNew": "Nova subcategoria",
+    "subcategory": "Subgrupo",
+    "subcategoryNew": "Novo subgrupo",
     "active": "Conta ativa",
-    "defaultTxLabel": "Tipo de transação padrão:",
-    "defaultTxHint": "Selecione uma categoria para definir o tipo de transação padrão."
+    "defaultTxLabel": "Tipo padrão de transação:",
+    "defaultTxHint": "Selecione uma categoria para definir o tipo padrão de transação."
   },
   "confirm": {
-    "deleteOne": "Eliminar a conta \"{{account}}\"?",
-    "deleteAll": "Tem a certeza que pretende eliminar TODAS as contas do plano de contas? Esta ação não pode ser anulada."
+    "deleteOne": "Excluir a conta \"{{account}}\"?",
+    "deleteAll": "Tem certeza que deseja excluir TODAS as contas contábeis? Esta ação não pode ser desfeita."
   },
   "toast": {
-    "saved": "Conta guardada com sucesso.",
-    "saveError": "Falha ao guardar a conta.",
-    "deleteSuccess": "Conta eliminada.",
-    "deleteError": "Falha ao eliminar a conta.",
-    "deleteAllSuccess": "Plano de contas reposto.",
-    "deleteAllError": "Falha ao eliminar todas as contas.",
+    "saved": "Conta salva com sucesso.",
+    "saveError": "Falha ao salvar a conta.",
+    "deleteSuccess": "Conta excluída.",
+    "deleteError": "Falha ao excluir a conta.",
+    "deleteAllSuccess": "Plano de contas resetado.",
+    "deleteAllError": "Falha ao excluir todas as contas.",
     "pdfOk": "PDF gerado.",
     "pdfError": "Erro inesperado ao gerar o PDF.",
     "confirmFailed": "Falha ao confirmar."
   },
   "pdf": {
     "company": "Spifex",
-    "title": "Plano de Contas",
+    "title": "Plano de contas",
     "generatedAt": "Gerado em: {{date}}",
-
     "placeholders": {
       "noCategory": "(Sem categoria)",
       "noSubgroup": "(Sem subgrupo)"
     },
-
     "tx": {
       "credit": "Crédito",
       "debit": "Débito",
       "none": "-"
     },
-
     "status": {
       "active": "Ativa",
       "inactive": "Inativa"
     },
-
     "table": {
       "code": "Código",
       "account": "Conta contábil",
       "defaultType": "Tipo padrão",
       "status": "Status"
     },
-
     "footer": {
       "page": "Página {{current}} de {{total}}"
     },
-
     "messages": {
       "empty": "Nenhuma conta contábil encontrada.",
       "ok": "PDF gerado com sucesso!",
       "error": "Erro ao gerar o PDF. Tente novamente."
     },
-
-    "filenamePrefix": "plano-de-contas"
+    "filenamePrefix": "chart-of-accounts"
   }
 }

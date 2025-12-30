@@ -1,18 +1,21 @@
 {
   "title": "Inventar",
   "header": { "settings": "Einstellungen", "inventory": "Inventar" },
-  "badge": { "syncing": "Synchronisiere…" },
+  "badge": { "syncing": "Synchronisiert…" },
+
   "section": { "list": "Inventarartikel" },
   "search": {
     "placeholder": "Nach Name oder SKU suchen…",
     "aria": "Artikel suchen",
     "button": "Suchen"
   },
+
   "row": {
     "skuPrefix": "SKU:",
     "qtyPrefix": "Menge:",
     "untitled": "(ohne Titel)"
   },
+
   "btn": {
     "addItem": "Artikel hinzufügen",
     "edit": "Bearbeiten",
@@ -21,29 +24,51 @@
     "cancel": "Abbrechen",
     "retry": "Erneut versuchen"
   },
+
   "field": {
     "sku": "SKU",
     "name": "Name",
     "description": "Beschreibung",
     "uom": "Einheit (UoM)",
-    "uomPlaceholder": "z. B.: Stk, Kiste, kg, l…",
+    "uomPlaceholder": "z. B.: Stk, Karton, kg, l…",
     "qty": "Bestand",
     "isActive": "Aktiver Artikel"
   },
+
   "modal": {
     "createTitle": "Artikel hinzufügen",
     "editTitle": "Artikel bearbeiten",
     "close": "Schließen"
   },
+
+  "footer": {
+    "item": "Artikel:",
+    "enterName": "Geben Sie einen Artikelnamen ein, um fortzufahren.",
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+  },
+
+  "actions": { "ok": "OK", "discard": "Verwerfen" },
+
+  "confirmDiscard": {
+    "title": "Änderungen verwerfen?",
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+  },
+
   "confirm": { "deleteTitle": "Artikel \"{{name}}\" löschen?" },
+
   "empty": "Keine Artikel gefunden.",
+
   "errors": {
     "loadFailedTitle": "Laden fehlgeschlagen",
     "saveError": "Artikel konnte nicht gespeichert werden.",
     "deleteError": "Artikel konnte nicht gelöscht werden.",
     "detailError": "Details konnten nicht geladen werden.",
-    "confirmFailed": "Bestätigung fehlgeschlagen."
+    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "validationTitle": "Fehlende Angaben",
+    "validationSkuName": "SKU und Name sind erforderlich.",
+    "validationQty": "Die Menge muss eine ganze Zahl größer oder gleich 0 sein."
   },
+
   "toast": {
     "saveOk": "Artikel erstellt.",
     "updateOk": "Artikel aktualisiert.",

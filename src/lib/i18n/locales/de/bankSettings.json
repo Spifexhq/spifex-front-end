@@ -1,48 +1,74 @@
 {
   "title": "Banken",
-  "header": { "settings": "Einstellungen", "title": "Banken" },
+  "header": { "settings": "Einstellungen", "title": "Bankkonten" },
+  "badge": { "syncing": "Synchronisierung…" },
+
   "section": { "list": "Bankkonten" },
-  "empty": "Noch keine Bankkonten.",
+  "empty": "Keine Bankkonten gefunden.",
+
   "btn": {
-    "addBank": "Bank hinzufügen",
+    "addBank": "Bankkonto hinzufügen",
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "selectAccountType": "Kontotyp auswählen"
   },
+
   "field": {
-    "institution": "Bankinstitut",
+    "institution": "Bank / Institut",
     "accountType": "Kontotyp",
     "branch": "Filiale",
-    "accountNumber": "Konto",
+    "accountNumber": "Kontonummer",
     "iban": "IBAN",
     "initialBalance": "Anfangssaldo",
     "isActive": "Aktives Konto"
   },
+
   "accountType": {
     "checking": "Girokonto",
     "savings": "Sparkonto",
     "investment": "Investment",
-    "cash": "Bar"
+    "cash": "Kasse"
   },
+
   "modal": {
-    "createTitle": "Bank hinzufügen",
-    "editTitle": "Bank bearbeiten",
+    "createTitle": "Bankkonto hinzufügen",
+    "editTitle": "Bankkonto bearbeiten",
     "close": "Schließen"
   },
+
+  "footer": {
+    "account": "Konto:",
+    "enterInstitution": "Geben Sie eine Bank ein, um fortzufahren.",
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+  },
+
+  "actions": { "ok": "OK", "discard": "Verwerfen" },
+
+  "confirmDiscard": {
+    "title": "Änderungen verwerfen?",
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+  },
+
   "confirm": {
-    "delete": "Konto „{{name}}“ löschen?",
+    "delete": "Konto \"{{name}}\" löschen?",
     "confirmLabel": "Löschen",
     "cancelLabel": "Abbrechen"
   },
+
   "errors": {
-    "fetchError": "Banken konnten nicht geladen werden.",
-    "saveError": "Bank konnte nicht gespeichert werden.",
-    "deleteError": "Bank konnte nicht gelöscht werden.",
+    "fetchError": "Bankkonten konnten nicht geladen werden.",
+    "saveErrorTitle": "Speichern fehlgeschlagen",
+    "saveError": "Bankkonto konnte nicht gespeichert werden.",
+    "deleteError": "Bankkonto konnte nicht gelöscht werden.",
     "detailError": "Details konnten nicht geladen werden.",
-    "confirmFailed": "Aktion konnte nicht bestätigt werden."
+    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "validationTitle": "Fehlende Angaben",
+    "validationInstitution": "Der Name der Bank / des Instituts ist erforderlich.",
+    "validationAccountType": "Bitte einen gültigen Kontotyp auswählen."
   },
+
   "toast": {
     "saveOk": "Bankkonto gespeichert.",
     "deleteOk": "Bankkonto gelöscht."

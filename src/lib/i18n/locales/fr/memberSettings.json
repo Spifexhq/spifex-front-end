@@ -1,12 +1,20 @@
 {
-  "title": "Employés",
-  "header": {
-    "settings": "Paramètres",
-    "members": "Employés"
+  "title": "Membres de l’équipe",
+  "header": { "settings": "Paramètres", "members": "Membres de l’équipe" },
+  "section": { "list": "Liste des membres" },
+  "empty": "Aucun membre trouvé.",
+  "badge": { "syncing": "Synchronisation…" },
+
+  "btn": {
+    "addMember": "Ajouter un membre",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
   },
-  "section": {
-    "list": "Liste des employés"
-  },
+
+  "btnLabel": { "groups": "Sélectionner des groupes" },
+
   "field": {
     "name": "Nom",
     "email": "E-mail",
@@ -14,39 +22,39 @@
     "confirmPassword": "Confirmer le mot de passe",
     "groups": "Groupes"
   },
-  "badge": {
-    "syncing": "Synchronisation…"
-  },
-  "btn": {
-    "addMember": "Ajouter un employé",
-    "edit": "Modifier",
-    "delete": "Supprimer",
-    "save": "Enregistrer",
-    "cancel": "Annuler"
-  },
-  "btnLabel": {
-    "groups": "Sélectionner des groupes"
-  },
+
   "modal": {
-    "createTitle": "Ajouter un employé",
-    "editTitle": "Modifier l’employé",
+    "createTitle": "Ajouter un membre",
+    "editTitle": "Modifier le membre",
     "close": "Fermer"
   },
-  "empty": "Aucun employé trouvé.",
-  "confirm": {
-    "delete": "Supprimer l’employé « {{name}} » ?"
+
+  "footer": { "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer" },
+
+  "actions": { "ok": "OK", "discard": "Ignorer" },
+
+  "confirmDiscard": {
+    "title": "Ignorer les modifications ?",
+    "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
   },
+
+  "confirm": { "delete": "Supprimer le membre \"{{name}}\" ?" },
+
   "errors": {
-    "fetchError": "Impossible de récupérer les données.",
-    "loadMemberError": "Impossible de charger les données de l’employé.",
-    "saveError": "Impossible d’enregistrer l’employé.",
-    "deleteError": "Impossible de supprimer l’employé.",
-    "confirmFailed": "Impossible de confirmer l’action."
+    "fetchError": "Impossible de charger les données.",
+    "loadMemberError": "Impossible de charger les données du membre.",
+    "saveErrorTitle": "Échec de l’enregistrement",
+    "saveError": "Impossible d’enregistrer le membre.",
+    "deleteError": "Impossible de supprimer le membre.",
+    "confirmFailed": "Échec de la confirmation.",
+    "validationTitle": "Informations manquantes",
+    "validationRequired": "Le nom et l’e-mail sont obligatoires."
   },
+
   "toast": {
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
     "weakPassword": "Le mot de passe ne respecte pas les exigences minimales.",
-    "saveOk": "Employé enregistré.",
-    "deleteOk": "Employé supprimé."
+    "saveOk": "Membre enregistré.",
+    "deleteOk": "Membre supprimé."
   }
 }

@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings.tsx
+ * Refactor: extracted create/edit modal into LedgerAccountModal
  * -------------------------------------------------------------------------- */
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
@@ -13,7 +14,6 @@ import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import ConfirmToast from "@/components/ui/ConfirmToast";
-import Checkbox from "@/components/ui/Checkbox";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
 import { api } from "@/api/requests";
@@ -23,8 +23,14 @@ import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 import { generateLedgerAccountsPDF } from "@/lib/pdf/ledgerAccountPdfGenerator";
 
-import type { AddLedgerAccountRequest, EditLedgerAccountRequest, GetLedgerAccountsResponse,
-  LedgerAccount } from "@/models/settings/ledgerAccounts";
+import LedgerAccountModal from "./LedgerAccountModal";
+
+import type {
+  AddLedgerAccountRequest,
+  EditLedgerAccountRequest,
+  GetLedgerAccountsResponse,
+  LedgerAccount,
+} from "@/models/settings/ledgerAccounts";
 
 /* ----------------------------- Snackbar type ------------------------------ */
 type Snack =
@@ -170,12 +176,17 @@ const LedgerAccountSettings: React.FC = () => {
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-  /* ----------------------------- Modal & form ----------------------------- */
-  const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editing, setEditing] = useState<LedgerAccount | null>(null);
-  const [formData, setFormData] = useState<FormState>(EMPTY_FORM);
-  const [addingNewSubgroup, setAddingNewSubgroup] = useState(false);
+  /* ----------------------------- Modal state ------------------------------ */
+  type ModalState =
+    | { open: false; mode: "create" | "edit"; editing: LedgerAccount | null; initial: FormState }
+    | { open: true; mode: "create" | "edit"; editing: LedgerAccount | null; initial: FormState };
+
+  const [modal, setModal] = useState<ModalState>({
+    open: false,
+    mode: "create",
+    editing: null,
+    initial: EMPTY_FORM,
+  });
 
   /* ----------------------------- Filters / View --------------------------- */
   const [search, setSearch] = useState("");
@@ -290,7 +301,10 @@ const LedgerAccountSettings: React.FC = () => {
 
     const addedIdsSet = new Set(addedFiltered.map((a) => getLedgerAccountId(a)));
     const base = pager.items.filter(
-      (a) => !deletedIds.has(getLedgerAccountId(a)) && !addedIdsSet.has(getLedgerAccountId(a)) && matchesSearchAndGroup(a)
+      (a) =>
+        !deletedIds.has(getLedgerAccountId(a)) &&
+        !addedIdsSet.has(getLedgerAccountId(a)) &&
+        matchesSearchAndGroup(a)
     );
 
     return [...addedFiltered, ...base];
@@ -302,6 +316,36 @@ const LedgerAccountSettings: React.FC = () => {
       .filter((k): k is CategoryKey => !!k);
     return Array.from(new Set(keys));
   }, [accountsFiltered]);
+
+  /* ----------------------------- All accounts for subgroup options -------- */
+  const accountsForSubgroupOptions = useMemo(() => {
+    const union = [...added, ...pager.items];
+    const seen = new Set<string>();
+    const out: LedgerAccount[] = [];
+
+    for (const a of union) {
+      const id = getLedgerAccountId(a);
+      if (!id) continue;
+      if (deletedIds.has(id)) continue;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push(a);
+    }
+    return out;
+  }, [added, pager.items, deletedIds]);
+
+  const getSubgroupOptionsForCategory = useCallback(
+    (category: CategoryKey) => {
+      const list = accountsForSubgroupOptions
+        .filter((a) => getCategoryKeyFromAccount(a as GLX) === category)
+        .map((a) => a.subcategory || "")
+        .filter(Boolean);
+
+      const unique = Array.from(new Set(list)).sort((a, b) => a.localeCompare(b));
+      return unique.map((sg) => ({ label: sg, value: sg }));
+    },
+    [accountsForSubgroupOptions]
+  );
 
   /* ----------------------------- View helpers ----------------------------- */
   const [openAccordions, setOpenAccordions] = useState<Set<CategoryKey>>(new Set());
@@ -323,81 +367,57 @@ const LedgerAccountSettings: React.FC = () => {
   }, [search, filterGroup, pager]);
 
   const openCreateModal = () => {
-    setMode("create");
-    setEditing(null);
-    setFormData(EMPTY_FORM);
-    setAddingNewSubgroup(false);
-    setModalOpen(true);
+    setModal({ open: true, mode: "create", editing: null, initial: EMPTY_FORM });
   };
 
   const openEditModal = (acc: LedgerAccount) => {
-    setMode("edit");
-    setEditing(acc);
-    setAddingNewSubgroup(false);
-
     const key = getCategoryKeyFromAccount(acc as GLX);
 
-    setFormData({
-      account: acc.account || "",
-      category: key ?? "",
-      subcategory: acc.subcategory || "",
-      code: acc.code || "",
-      is_active: acc.is_active ?? true,
+    setModal({
+      open: true,
+      mode: "edit",
+      editing: acc,
+      initial: {
+        account: acc.account || "",
+        category: key ?? "",
+        subcategory: acc.subcategory || "",
+        code: acc.code || "",
+        is_active: acc.is_active ?? true,
+      },
     });
-    setModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
-    setModalOpen(false);
-    setEditing(null);
-    setAddingNewSubgroup(false);
-    setFormData(EMPTY_FORM);
-  }, []);
-
-  const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFormData((p) => ({ ...p, is_active: e.target.checked }));
-
-  const handleGroupChange = (items: { label: string; value: CategoryKey }[]) => {
-    const sel = items[0];
-    if (!sel) {
-      setFormData((p) => ({ ...p, category: "", subcategory: "" }));
-      return;
-    }
-    setFormData((p) => ({ ...p, category: sel.value, subcategory: "" }));
-    setAddingNewSubgroup(false);
-  };
+    if (isSubmitting) return;
+    setModal((p) => ({ ...p, open: false }));
+  }, [isSubmitting]);
 
   const handleFilterGroupChange = (items: { label: string; value: CategoryKey }[]) => {
     const sel = items[0];
     setFilterGroup(sel ? sel.value : null);
   };
 
-  const handleSubgroupChange = (items: { label: string; value: string }[]) => {
-    const sel = items[0];
-    setFormData((p) => ({ ...p, subcategory: sel ? sel.value : "" }));
-  };
-
-  const submitAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitAccount = async (data: FormState) => {
     setIsSubmitting(true);
     try {
-      if (!formData.category) throw new Error("required");
-      const categoryValue: CategoryValue = CATEGORY_KEY_TO_VALUE[formData.category as CategoryKey];
+      if (!data.category) throw new Error("required");
+
+      const categoryValue: CategoryValue = CATEGORY_KEY_TO_VALUE[data.category as CategoryKey];
 
       const basePayload = {
-        account: formData.account.trim(),
+        account: data.account.trim(),
         category: categoryValue, // 1..4
-        subcategory: formData.subcategory || undefined,
-        code: formData.code?.trim() ? formData.code.trim() : undefined,
-        is_active: typeof formData.is_active === "boolean" ? formData.is_active : undefined,
+        subcategory: data.subcategory.trim() || undefined,
+        code: data.code?.trim() ? data.code.trim() : undefined,
+        is_active: typeof data.is_active === "boolean" ? data.is_active : undefined,
       };
 
-      if (mode === "create") {
+      if (modal.mode === "create") {
         const payload: AddLedgerAccountRequest = basePayload;
         const { data: created } = await api.addLedgerAccount(payload);
         setAdded((prev) => [created as LedgerAccount, ...prev]);
-      } else if (editing) {
-        const ledger_account_id = getLedgerAccountId(editing);
+      } else if (modal.mode === "edit" && modal.editing) {
+        const ledger_account_id = getLedgerAccountId(modal.editing);
         const payload: EditLedgerAccountRequest = basePayload;
         await api.editLedgerAccount(ledger_account_id, payload);
       }
@@ -408,6 +428,7 @@ const LedgerAccountSettings: React.FC = () => {
     } catch (err) {
       console.error(err);
       setSnack({ message: t("toast.saveError"), severity: "error" });
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -497,41 +518,6 @@ const LedgerAccountSettings: React.FC = () => {
     }
   };
 
-  /* ----------------------------- Subgroup options ------------------------- */
-  const subgroupOptions = useMemo(() => {
-    if (!formData.category) return [] as { label: string; value: string }[];
-
-    const list = accountsFiltered
-      .filter((a) => getCategoryKeyFromAccount(a as GLX) === formData.category)
-      .map((a) => a.subcategory || "")
-      .filter(Boolean);
-
-    const unique = Array.from(new Set(list));
-    return unique.map((sg) => ({ label: sg, value: sg }));
-  }, [accountsFiltered, formData.category]);
-
-  /* ----------------------------- Body scroll lock ------------------------- */
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalOpen]);
-
-  /* ----------------------------- ESC closes modal ------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!modalOpen) return;
-      if (e.key === "Escape") {
-        e.preventDefault();
-        if (!isSubmitting) closeModal();
-      }
-    };
-
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, isSubmitting, closeModal]);
-
   /* ----------------------------- Loading UI ------------------------------- */
   if (isInitialLoading) {
     return (
@@ -608,7 +594,9 @@ const LedgerAccountSettings: React.FC = () => {
           <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("list.all")}</span>
         </div>
         <div className="divide-y divide-gray-200">
-          {sorted.map((a) => <RowAccountList key={getLedgerAccountId(a)} a={a} />)}
+          {sorted.map((a) => (
+            <RowAccountList key={getLedgerAccountId(a)} a={a} />
+          ))}
           {sorted.length === 0 && (
             <p className="p-4 text-center text-sm text-gray-500">{t("list.empty")}</p>
           )}
@@ -639,6 +627,7 @@ const LedgerAccountSettings: React.FC = () => {
                   <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                     {t("buttons.add")}
                   </Button>
+
                   <div className="relative" ref={menuRef}>
                     <Button
                       variant="outline"
@@ -650,6 +639,7 @@ const LedgerAccountSettings: React.FC = () => {
                     >
                       ⋯
                     </Button>
+
                     {menuOpen && (
                       <div
                         role="menu"
@@ -660,10 +650,15 @@ const LedgerAccountSettings: React.FC = () => {
                           className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 border-b border-gray-100 transition-colors"
                           onClick={handleDownloadPDF}
                           disabled={globalBusy || pager.items.length + added.length === 0}
-                          title={pager.items.length + added.length === 0 ? t("buttons.downloadPdfDisabled") : t("buttons.downloadPdf")}
+                          title={
+                            pager.items.length + added.length === 0
+                              ? t("buttons.downloadPdfDisabled")
+                              : t("buttons.downloadPdf")
+                          }
                         >
                           {t("buttons.downloadPdf")}
                         </button>
+
                         <button
                           role="menuitem"
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
@@ -741,7 +736,9 @@ const LedgerAccountSettings: React.FC = () => {
                     {viewMode === "accordion" && groups.length > 0 && (
                       <Button
                         variant="outline"
-                        onClick={() => (openAccordions.size === groups.length ? collapseAll() : expandAll(groups))}
+                        onClick={() =>
+                          openAccordions.size === groups.length ? collapseAll() : expandAll(groups)
+                        }
                         disabled={globalBusy}
                       >
                         {openAccordions.size === groups.length ? t("buttons.collapseAll") : t("buttons.expandAll")}
@@ -820,10 +817,15 @@ const LedgerAccountSettings: React.FC = () => {
                                               </p>
                                               <div className="mt-1 flex gap-2 flex-wrap">
                                                 {a.code ? <Badge>{t("tags.code")}: {a.code}</Badge> : null}
-                                                {tx ? <Badge>{tx === "credit" ? t("tags.credit") : t("tags.debit")}</Badge> : null}
+                                                {tx ? (
+                                                  <Badge>
+                                                    {tx === "credit" ? t("tags.credit") : t("tags.debit")}
+                                                  </Badge>
+                                                ) : null}
                                                 {a.is_active === false ? <Badge>{t("tags.inactive")}</Badge> : null}
                                               </div>
                                             </div>
+
                                             {canEdit && (
                                               <div className="flex gap-2 shrink-0">
                                                 <Button variant="outline" onClick={() => openEditModal(a)} disabled={rowBusy}>
@@ -868,132 +870,17 @@ const LedgerAccountSettings: React.FC = () => {
           </section>
         </div>
 
-        {/* Modal */}
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-lg max-h-[90vh]" role="dialog" aria-modal="true">
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("buttons.cancel")}
-                  disabled={isSubmitting}
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form className="space-y-3" onSubmit={submitAccount}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input
-                    label={t("modal.account")}
-                    name="account"
-                    value={formData.account}
-                    onChange={(e) => setFormData((p) => ({ ...p, account: e.target.value }))}
-                    required
-                    disabled={isSubmitting}
-                  />
-
-                  <Input
-                    label={t("modal.code")}
-                    name="code"
-                    value={formData.code || ""}
-                    onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value }))}
-                    placeholder={t("modal.codePlaceholder")}
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <SelectDropdown<{ label: string; value: CategoryKey }>
-                  label={t("filters.category")}
-                  items={groupOptions.map((g) => ({ label: g.label, value: g.key }))}
-                  selected={
-                    formData.category
-                      ? [{ label: t(`categories.${formData.category}`), value: formData.category }]
-                      : []
-                  }
-                  onChange={handleGroupChange}
-                  getItemKey={(i) => i.value}
-                  getItemLabel={(i) => i.label}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel={t("buttons.selectCategory")}
-                  disabled={isSubmitting || !formData.account}
-                />
-
-                <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
-                  {addingNewSubgroup ? (
-                    <Input
-                      label={t("modal.subcategoryNew")}
-                      name="subcategory"
-                      value={formData.subcategory}
-                      onChange={(e) => setFormData((p) => ({ ...p, subcategory: e.target.value }))}
-                      disabled={isSubmitting || !formData.category}
-                      required
-                    />
-                  ) : (
-                    <SelectDropdown<{ label: string; value: string }>
-                      label={t("modal.subcategory")}
-                      items={subgroupOptions}
-                      selected={formData.subcategory ? [{ label: formData.subcategory, value: formData.subcategory }] : []}
-                      onChange={handleSubgroupChange}
-                      getItemKey={(i) => i.value}
-                      getItemLabel={(i) => i.label}
-                      singleSelect
-                      hideCheckboxes
-                      buttonLabel={t("buttons.selectSubcategory")}
-                      disabled={isSubmitting || !formData.category}
-                    />
-                  )}
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setAddingNewSubgroup((v) => !v);
-                      setFormData((p) => ({ ...p, subcategory: "" }));
-                    }}
-                    disabled={isSubmitting || !formData.category}
-                  >
-                    {addingNewSubgroup ? t("buttons.toggleNewSubCancel") : t("buttons.toggleNewSub")}
-                  </Button>
-                </div>
-
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={formData.is_active ?? true} onChange={handleActiveChange} disabled={isSubmitting} />
-                  {t("modal.active")}
-                </label>
-
-                <p className="text-[12px] text-gray-600">
-                  {formData.category ? (
-                    <>
-                      {t("modal.defaultTxLabel")}{" "}
-                      <b>
-                        {CATEGORY_DEFAULT_TX[CATEGORY_KEY_TO_VALUE[formData.category as CategoryKey]] === "credit"
-                          ? t("tags.credit")
-                          : t("tags.debit")}
-                      </b>
-                    </>
-                  ) : (
-                    t("modal.defaultTxHint")
-                  )}
-                </p>
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                    {t("buttons.cancel")}
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting || !formData.account || !formData.category || !formData.subcategory}>
-                    {t("buttons.save")}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* Modal (separate component) */}
+        <LedgerAccountModal
+          open={modal.open}
+          mode={modal.mode}
+          initial={modal.initial}
+          busy={globalBusy}
+          categoryOptions={groupOptions}
+          getSubgroupOptions={getSubgroupOptionsForCategory}
+          onClose={closeModal}
+          onSubmit={submitAccount}
+        />
       </main>
 
       <ConfirmToast

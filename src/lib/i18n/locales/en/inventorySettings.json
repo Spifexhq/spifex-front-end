@@ -2,17 +2,20 @@
   "title": "Inventory",
   "header": { "settings": "Settings", "inventory": "Inventory" },
   "badge": { "syncing": "Syncing…" },
+
   "section": { "list": "Inventory items" },
   "search": {
     "placeholder": "Search by name or SKU…",
     "aria": "Search items",
     "button": "Search"
   },
+
   "row": {
     "skuPrefix": "SKU:",
     "qtyPrefix": "Qty:",
     "untitled": "(untitled)"
   },
+
   "btn": {
     "addItem": "Add item",
     "edit": "Edit",
@@ -21,6 +24,7 @@
     "cancel": "Cancel",
     "retry": "Try again"
   },
+
   "field": {
     "sku": "SKU",
     "name": "Name",
@@ -30,20 +34,41 @@
     "qty": "Quantity on hand",
     "isActive": "Active item"
   },
+
   "modal": {
     "createTitle": "Add item",
     "editTitle": "Edit item",
     "close": "Close"
   },
+
+  "footer": {
+    "item": "Item:",
+    "enterName": "Enter an item name to continue.",
+    "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
+  },
+
+  "actions": { "ok": "OK", "discard": "Discard" },
+
+  "confirmDiscard": {
+    "title": "Discard changes?",
+    "message": "You have unsaved changes. Do you want to discard them?"
+  },
+
   "confirm": { "deleteTitle": "Delete item \"{{name}}\"?" },
+
   "empty": "No items found.",
+
   "errors": {
     "loadFailedTitle": "Failed to load",
     "saveError": "Failed to save item.",
     "deleteError": "Failed to delete item.",
     "detailError": "Failed to load details.",
-    "confirmFailed": "Failed to confirm."
+    "confirmFailed": "Failed to confirm.",
+    "validationTitle": "Missing information",
+    "validationSkuName": "SKU and name are required.",
+    "validationQty": "Quantity must be an integer equal to or greater than 0."
   },
+
   "toast": {
     "saveOk": "Item created.",
     "updateOk": "Item updated.",

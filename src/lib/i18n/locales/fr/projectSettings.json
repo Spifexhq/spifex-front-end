@@ -2,18 +2,21 @@
   "title": "Projets",
   "header": { "settings": "Paramètres", "projects": "Projets" },
   "badge": { "syncing": "Synchronisation…" },
+
   "section": { "list": "Liste des projets" },
   "search": {
     "placeholder": "Rechercher par nom ou code…",
     "aria": "Rechercher des projets",
     "button": "Rechercher"
   },
+
   "row": {
     "codePrefix": "CODE :",
     "active": "Actif",
     "inactive": "Inactif",
     "untitled": "(sans titre)"
   },
+
   "types": {
     "internal": "Interne",
     "client": "Client",
@@ -21,10 +24,11 @@
     "operational": "Opérationnel",
     "marketing": "Marketing",
     "product": "Produit",
-    "it": "Informatique",
+    "it": "IT",
     "event": "Événement",
     "capex": "CapEx"
   },
+
   "btn": {
     "addProject": "Ajouter un projet",
     "edit": "Modifier",
@@ -33,7 +37,9 @@
     "cancel": "Annuler",
     "retry": "Réessayer"
   },
-  "btnLabel": { "type": "Choisir un type" },
+
+  "btnLabel": { "type": "Sélectionner un type" },
+
   "field": {
     "name": "Nom du projet",
     "code": "Code",
@@ -41,20 +47,41 @@
     "description": "Description",
     "isActive": "Projet actif"
   },
+
   "modal": {
     "createTitle": "Ajouter un projet",
     "editTitle": "Modifier le projet",
     "close": "Fermer"
   },
+
+  "footer": {
+    "project": "Projet :",
+    "enterName": "Saisissez un nom de projet pour continuer.",
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
+  },
+
+  "actions": { "ok": "OK", "discard": "Ignorer" },
+
+  "confirmDiscard": {
+    "title": "Ignorer les modifications ?",
+    "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
+  },
+
   "confirm": { "deleteTitle": "Supprimer le projet \"{{name}}\" ?" },
+
   "empty": "Aucun projet trouvé.",
+
   "errors": {
     "loadFailedTitle": "Échec du chargement",
     "saveError": "Impossible d’enregistrer le projet.",
     "detailError": "Impossible de charger les détails.",
     "deleteError": "Impossible de supprimer le projet.",
-    "confirmFailed": "Impossible de confirmer."
+    "confirmFailed": "Échec de la confirmation.",
+    "validationTitle": "Informations manquantes",
+    "validationName": "Le nom du projet est obligatoire.",
+    "validationType": "Veuillez sélectionner un type de projet valide."
   },
+
   "toast": {
     "saved": "Projet enregistré.",
     "deleted": "Projet supprimé."

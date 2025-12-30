@@ -1,18 +1,22 @@
 {
   "title": "Bancos",
-  "header": { "settings": "Definições", "title": "Bancos" },
+  "header": { "settings": "Configurações", "title": "Contas bancárias" },
+  "badge": { "syncing": "Sincronizando…" },
+
   "section": { "list": "Contas bancárias" },
-  "empty": "Ainda não existem contas bancárias.",
+  "empty": "Nenhuma conta bancária encontrada.",
+
   "btn": {
-    "addBank": "Adicionar banco",
+    "addBank": "Adicionar conta bancária",
     "edit": "Editar",
-    "delete": "Eliminar",
+    "delete": "Excluir",
     "cancel": "Cancelar",
-    "save": "Guardar",
+    "save": "Salvar",
     "selectAccountType": "Selecionar tipo de conta"
   },
+
   "field": {
-    "institution": "Instituição bancária",
+    "institution": "Banco / instituição",
     "accountType": "Tipo de conta",
     "branch": "Agência",
     "accountNumber": "Conta",
@@ -20,31 +24,53 @@
     "initialBalance": "Saldo inicial",
     "isActive": "Conta ativa"
   },
+
   "accountType": {
-    "checking": "À ordem",
+    "checking": "Corrente",
     "savings": "Poupança",
     "investment": "Investimento",
     "cash": "Caixa"
   },
+
   "modal": {
-    "createTitle": "Adicionar banco",
-    "editTitle": "Editar banco",
+    "createTitle": "Adicionar conta bancária",
+    "editTitle": "Editar conta bancária",
     "close": "Fechar"
   },
+
+  "footer": {
+    "account": "Conta:",
+    "enterInstitution": "Informe o banco para continuar.",
+    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
+  },
+
+  "actions": { "ok": "OK", "discard": "Descartar" },
+
+  "confirmDiscard": {
+    "title": "Descartar alterações?",
+    "message": "Você tem alterações não salvas. Deseja descartá-las?"
+  },
+
   "confirm": {
-    "delete": "Eliminar a conta \"{{name}}\"?",
-    "confirmLabel": "Eliminar",
+    "delete": "Excluir a conta \"{{name}}\"?",
+    "confirmLabel": "Excluir",
     "cancelLabel": "Cancelar"
   },
+
   "errors": {
-    "fetchError": "Não foi possível obter os bancos.",
-    "saveError": "Não foi possível guardar o banco.",
-    "deleteError": "Não foi possível eliminar o banco.",
-    "detailError": "Não foi possível carregar os detalhes.",
-    "confirmFailed": "Não foi possível confirmar a ação."
+    "fetchError": "Falha ao buscar contas bancárias.",
+    "saveErrorTitle": "Falha ao salvar",
+    "saveError": "Falha ao salvar a conta bancária.",
+    "deleteError": "Falha ao excluir a conta bancária.",
+    "detailError": "Falha ao carregar detalhes.",
+    "confirmFailed": "Falha ao confirmar a ação.",
+    "validationTitle": "Informações obrigatórias",
+    "validationInstitution": "O nome do banco / instituição é obrigatório.",
+    "validationAccountType": "Selecione um tipo de conta válido."
   },
+
   "toast": {
-    "saveOk": "Conta bancária guardada.",
-    "deleteOk": "Conta bancária eliminada."
+    "saveOk": "Conta bancária salva.",
+    "deleteOk": "Conta bancária excluída."
   }
 }

@@ -1,23 +1,23 @@
 {
-  "title": "Comptes du grand livre",
-  "header": { "section": "Paramètres", "title": "Comptes du grand livre" },
+  "title": "Plan comptable",
+  "header": { "section": "Paramètres", "title": "Plan comptable" },
   "categories": {
-    "operationalRevenue": "Produits d’exploitation",
+    "operationalRevenue": "Produits d'exploitation",
     "nonOperationalRevenue": "Produits hors exploitation",
-    "operationalExpense": "Charges d’exploitation",
+    "operationalExpense": "Charges d'exploitation",
     "nonOperationalExpense": "Charges hors exploitation"
   },
   "buttons": {
     "add": "Ajouter un compte",
     "options": "Options",
-    "downloadPdf": "Télécharger les comptes (PDF)",
+    "downloadPdf": "Télécharger le plan comptable (PDF)",
     "downloadPdfDisabled": "Aucun compte disponible",
-    "resetAll": "Réinitialiser les comptes",
+    "resetAll": "Réinitialiser le plan comptable",
     "deletingAll": "Suppression…",
     "expandAll": "Tout développer",
     "collapseAll": "Tout réduire",
-    "viewList": "Voir en liste",
-    "viewAccordion": "Voir en accordéon",
+    "viewList": "Afficher en liste",
+    "viewAccordion": "Afficher en accordéon",
     "clear": "Effacer",
     "search": "Rechercher",
     "filterCategory": "Filtrer par catégorie",
@@ -32,7 +32,7 @@
     "runSearchAria": "Rechercher"
   },
   "filters": {
-    "placeholder": "Rechercher par compte, code, catégorie ou sous-catégorie…",
+    "placeholder": "Rechercher par compte, code, catégorie ou sous-catégorie...",
     "category": "Catégorie"
   },
   "list": {
@@ -47,13 +47,13 @@
     "inactive": "Inactif",
     "noAccount": "(sans nom)",
     "noGroup": "(Sans catégorie)",
-    "noSubgroup": "(Sans sous-groupe)"
+    "noSubgroup": "(Sans sous-catégorie)"
   },
   "modal": {
     "createTitle": "Ajouter un compte",
     "editTitle": "Modifier le compte",
-    "account": "Compte",
-    "code": "Code (optionnel)",
+    "account": "Compte du grand livre",
+    "code": "Code (facultatif)",
     "codePlaceholder": "ex. : 3-0001",
     "subcategory": "Sous-catégorie",
     "subcategoryNew": "Nouvelle sous-catégorie",
@@ -63,15 +63,15 @@
   },
   "confirm": {
     "deleteOne": "Supprimer le compte \"{{account}}\" ?",
-    "deleteAll": "Voulez-vous supprimer TOUS les comptes ? Cette action est irréversible."
+    "deleteAll": "Voulez-vous vraiment supprimer TOUS les comptes ? Cette action est irréversible."
   },
   "toast": {
-    "saved": "Compte enregistré.",
-    "saveError": "Échec de l’enregistrement du compte.",
+    "saved": "Compte enregistré avec succès.",
+    "saveError": "Impossible d’enregistrer le compte.",
     "deleteSuccess": "Compte supprimé.",
-    "deleteError": "Échec de la suppression du compte.",
-    "deleteAllSuccess": "Plan de comptes réinitialisé.",
-    "deleteAllError": "Échec de la suppression de tous les comptes.",
+    "deleteError": "Impossible de supprimer le compte.",
+    "deleteAllSuccess": "Plan comptable réinitialisé.",
+    "deleteAllError": "Impossible de supprimer tous les comptes.",
     "pdfOk": "PDF généré.",
     "pdfError": "Erreur inattendue lors de la génération du PDF.",
     "confirmFailed": "Échec de la confirmation."
@@ -80,40 +80,33 @@
     "company": "Spifex",
     "title": "Plan comptable",
     "generatedAt": "Généré le : {{date}}",
-
     "placeholders": {
       "noCategory": "(Sans catégorie)",
-      "noSubgroup": "(Sans sous-groupe)"
+      "noSubgroup": "(Sans sous-catégorie)"
     },
-
     "tx": {
       "credit": "Crédit",
       "debit": "Débit",
       "none": "-"
     },
-
     "status": {
       "active": "Actif",
       "inactive": "Inactif"
     },
-
     "table": {
       "code": "Code",
-      "account": "Compte comptable",
+      "account": "Compte du grand livre",
       "defaultType": "Type par défaut",
       "status": "Statut"
     },
-
     "footer": {
       "page": "Page {{current}} sur {{total}}"
     },
-
     "messages": {
-      "empty": "Aucun compte comptable trouvé.",
+      "empty": "Aucun compte trouvé.",
       "ok": "PDF généré avec succès !",
       "error": "Erreur lors de la génération du PDF. Veuillez réessayer."
     },
-
-    "filenamePrefix": "plan-comptable"
+    "filenamePrefix": "chart-of-accounts"
   }
 }

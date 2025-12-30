@@ -1,12 +1,8 @@
 {
-  "title": "Permissões por Grupo",
-  "header": {
-    "settings": "Configurações",
-    "title": "Grupos e acessos"
-  },
-  "badge": {
-    "syncing": "Sincronizando dados…"
-  },
+  "title": "Permissões de grupo",
+  "header": { "settings": "Configurações", "title": "Grupos e acesso" },
+  "badge": { "syncing": "Sincronizando dados…" },
+
   "left": {
     "groups": "Grupos",
     "create": "Adicionar grupo",
@@ -14,6 +10,7 @@
     "meta": "{{perms}} permissões • {{members}} membros",
     "empty": "Nenhum grupo encontrado."
   },
+
   "right": {
     "selectPrompt": "Selecione um grupo à esquerda para gerenciar as permissões.",
     "nameLabel": "Nome do grupo",
@@ -21,27 +18,36 @@
     "delete": "Excluir",
     "closePanel": "Fechar painel"
   },
-  "createModal": {
-    "title": "Criar novo grupo",
+
+  "btn": { "cancel": "Cancelar", "save": "Salvar" },
+
+  "modal": {
+    "createTitle": "Criar novo grupo",
+    "renameTitle": "Renomear grupo",
     "close": "Fechar",
-    "nameLabel": "Nome do grupo",
-    "cancel": "Cancelar",
-    "save": "Salvar"
+    "nameLabelCreate": "Nome do grupo",
+    "nameLabelRename": "Novo nome do grupo",
+    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
   },
-  "renameModal": {
-    "title": "Renomear grupo",
-    "close": "Fechar",
-    "nameLabel": "Novo nome do grupo",
-    "cancel": "Cancelar",
-    "save": "Salvar"
+
+  "actions": { "ok": "OK", "discard": "Descartar" },
+
+  "confirmDiscard": {
+    "title": "Descartar alterações?",
+    "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
+
+  "errors": {
+    "validationTitle": "Informações obrigatórias",
+    "validationNameRequired": "Informe o nome do grupo.",
+    "submitFailed": "Não foi possível salvar. Tente novamente."
+  },
+
   "toast": {
     "loadAllError": "Não foi possível carregar os grupos. Tente novamente.",
     "detailError": "Não foi possível carregar os detalhes deste grupo.",
-    "createNameRequired": "Informe um nome para o grupo.",
     "createSuccess": "Grupo criado com sucesso.",
     "createError": "Não foi possível criar o grupo. Tente novamente.",
-    "renameEmpty": "O nome do grupo não pode ficar em branco.",
     "renameSuccess": "Nome do grupo atualizado.",
     "renameError": "Não foi possível renomear o grupo.",
     "deleteSuccess": "Grupo excluído.",
@@ -49,10 +55,11 @@
     "saveSuccess": "Permissões atualizadas para este grupo.",
     "saveError": "Não foi possível atualizar as permissões. Tente novamente."
   },
+
   "confirm": {
-    "deleteText": "Tem certeza de que deseja excluir o grupo \"{{name}}\"? Essa ação não pode ser desfeita.",
+    "deleteText": "Tem certeza que deseja excluir o grupo \"{{name}}\"? Esta ação não pode ser desfeita.",
     "confirmLabel": "Excluir grupo",
     "cancelLabel": "Cancelar",
-    "fail": "Ocorreu um erro ao confirmar a ação."
+    "fail": "Algo deu errado ao confirmar a ação."
   }
 }

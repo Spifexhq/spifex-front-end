@@ -80,40 +80,33 @@
     "company": "Spifex",
     "title": "Chart of Accounts",
     "generatedAt": "Generated at: {{date}}",
-
     "placeholders": {
       "noCategory": "(No category)",
       "noSubgroup": "(No subgroup)"
     },
-
     "tx": {
       "credit": "Credit",
       "debit": "Debit",
       "none": "-"
     },
-
     "status": {
       "active": "Active",
       "inactive": "Inactive"
     },
-
     "table": {
       "code": "Code",
       "account": "Ledger account",
       "defaultType": "Default type",
       "status": "Status"
     },
-
     "footer": {
       "page": "Page {{current}} of {{total}}"
     },
-
     "messages": {
       "empty": "No ledger accounts found.",
       "ok": "PDF generated successfully!",
       "error": "Error generating the PDF. Please try again."
     },
-
     "filenamePrefix": "chart-of-accounts"
   }
 }

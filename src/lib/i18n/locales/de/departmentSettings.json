@@ -2,6 +2,7 @@
   "title": "Abteilungen",
   "card": { "settings": "Einstellungen", "departments": "Abteilungen" },
   "list": { "title": "Abteilungsliste" },
+
   "buttons": {
     "search": "Suchen",
     "searchPlaceholder": "Nach Name oder Code suchen…",
@@ -13,30 +14,52 @@
     "cancel": "Abbrechen",
     "save": "Speichern"
   },
-  "confirm": { "deleteTitle": "„{{name}}“ löschen?" },
+
   "tags": {
     "code": "Code",
     "inactive": "Inaktiv",
     "noName": "(ohne Namen)"
   },
+
   "modal": {
-    "addTitle": "Abteilung hinzufügen",
+    "createTitle": "Abteilung hinzufügen",
     "editTitle": "Abteilung bearbeiten",
-    "name": "Name",
-    "code": "Code",
-    "active": "Aktive Abteilung"
+    "close": "Schließen",
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "is_active": "Aktive Abteilung"
+    }
   },
+
+  "footer": {
+    "department": "Abteilung:",
+    "enterName": "Geben Sie einen Abteilungsnamen ein, um fortzufahren.",
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+  },
+
+  "actions": { "ok": "OK", "discard": "Verwerfen" },
+
+  "confirmDiscard": {
+    "title": "Änderungen verwerfen?",
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+  },
+
+  "confirm": { "deleteTitle": "„{{name}}“ löschen?" },
+
   "errors": {
     "fetchError": "Laden fehlgeschlagen.",
     "saveFailed": "Abteilung konnte nicht gespeichert werden.",
     "deleteFailed": "Abteilung konnte nicht gelöscht werden.",
-    "confirmFailed": "Aktion konnte nicht bestätigt werden."
+    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "validationTitle": "Fehlende Angaben",
+    "validationName": "Der Abteilungsname ist erforderlich."
   },
+
   "toast": {
     "saveOk": "Abteilung gespeichert.",
     "deleteOk": "Abteilung gelöscht."
   },
-  "alerts": {
-    "noData": "Keine Abteilungen auf dieser Seite gefunden."
-  }
+
+  "alerts": { "noData": "Auf dieser Seite wurden keine Abteilungen gefunden." }
 }
