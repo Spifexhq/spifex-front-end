@@ -1,7 +1,5 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/MemberSettings.tsx                                          */
-/* - Filters: name, email, role, group (chips + anchored popovers)             */
-/* - Server-side: query params to /organizations/members/                      */
 /* -------------------------------------------------------------------------- */
 
 import React, {
