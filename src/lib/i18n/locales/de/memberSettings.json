@@ -5,6 +5,33 @@
   "empty": "Keine Mitglieder gefunden.",
   "badge": { "syncing": "Synchronisierung…" },
 
+  "filters": {
+    "nameLabel": "Name",
+    "emailLabel": "E-Mail",
+    "roleLabel": "Rolle",
+    "groupLabel": "Gruppe",
+    "clearAll": "Filter löschen",
+
+    "apply": "Anwenden",
+    "clear": "Löschen",
+
+    "byNameTitle": "Nach Name filtern",
+    "namePlaceholder": "Name eingeben…",
+
+    "byEmailTitle": "Nach E-Mail filtern",
+    "emailPlaceholder": "E-Mail eingeben…",
+
+    "byRoleTitle": "Nach Rolle filtern",
+    "roleAll": "Alle",
+    "multi": "Mehrere",
+    "roleHint": "Tipp: Wähle eine Rolle zum Filtern; mehrere bedeutet alle Rollen.",
+    "roles": { "admin": "Admin", "member": "Mitglied" },
+
+    "byGroupTitle": "Nach Gruppe filtern",
+    "groupAll": "Alle",
+    "groupHint": "Tipp: Wähle eine Gruppe zum Filtern; mehrere bedeutet alle Gruppen."
+  },
+
   "btn": {
     "addMember": "Mitglied hinzufügen",
     "edit": "Bearbeiten",
@@ -29,13 +56,13 @@
     "close": "Schließen"
   },
 
-  "footer": { "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern" },
+  "footer": { "shortcuts": "Tastenkürzel: Esc schließen • Ctrl/⌘+S speichern" },
 
   "actions": { "ok": "OK", "discard": "Verwerfen" },
 
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
-    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+    "message": "Du hast nicht gespeicherte Änderungen. Möchtest du sie verwerfen?"
   },
 
   "confirm": { "delete": "Mitglied \"{{name}}\" löschen?" },
@@ -46,14 +73,14 @@
     "saveErrorTitle": "Speichern fehlgeschlagen",
     "saveError": "Mitglied konnte nicht gespeichert werden.",
     "deleteError": "Mitglied konnte nicht gelöscht werden.",
-    "confirmFailed": "Bestätigung fehlgeschlagen.",
-    "validationTitle": "Fehlende Angaben",
+    "confirmFailed": "Aktion konnte nicht bestätigt werden.",
+    "validationTitle": "Fehlende Informationen",
     "validationRequired": "Name und E-Mail sind erforderlich."
   },
 
   "toast": {
-    "passwordMismatch": "Passwörter stimmen nicht überein.",
-    "weakPassword": "Das Passwort erfüllt die Mindestanforderungen nicht.",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "weakPassword": "Das Passwort erfüllt nicht die Mindestanforderungen.",
     "saveOk": "Mitglied gespeichert.",
     "deleteOk": "Mitglied gelöscht."
   }

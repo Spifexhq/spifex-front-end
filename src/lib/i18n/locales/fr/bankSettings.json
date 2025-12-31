@@ -6,12 +6,48 @@
   "section": { "list": "Comptes bancaires" },
   "empty": "Aucun compte bancaire trouvé.",
 
+  "tags": { "type": "Type", "inactive": "Inactif" },
+
+  "filters": {
+    "institutionLabel": "Établissement",
+    "accountTypeLabel": "Type de compte",
+    "branchLabel": "Agence",
+    "accountNumberLabel": "Numéro de compte",
+    "ibanLabel": "IBAN",
+    "statusLabel": "Statut",
+    "clearAll": "Effacer les filtres",
+
+    "apply": "Appliquer",
+    "clear": "Effacer",
+
+    "byInstitutionTitle": "Filtrer par établissement",
+    "institutionPlaceholder": "Saisir un établissement…",
+
+    "byAccountTypeTitle": "Filtrer par type de compte",
+    "typeAll": "Tous",
+    "multi": "Multiples",
+    "typeHint": "Conseil : sélectionnez un type pour filtrer ; plusieurs signifie tous les types.",
+
+    "byBranchTitle": "Filtrer par agence",
+    "branchPlaceholder": "Saisir une agence…",
+
+    "byAccountNumberTitle": "Filtrer par numéro de compte",
+    "accountNumberPlaceholder": "Saisir un numéro de compte…",
+
+    "byIbanTitle": "Filtrer par IBAN",
+    "ibanPlaceholder": "Saisir un IBAN…",
+
+    "byStatusTitle": "Filtrer par statut",
+    "status": { "all": "Tous", "active": "Actif", "inactive": "Inactif" }
+  },
+
   "btn": {
     "addBank": "Ajouter un compte bancaire",
     "edit": "Modifier",
     "delete": "Supprimer",
     "cancel": "Annuler",
     "save": "Enregistrer",
+    "retry": "Réessayer",
     "selectAccountType": "Sélectionner le type de compte"
   },
 
@@ -29,7 +65,9 @@
     "checking": "Courant",
     "savings": "Épargne",
     "investment": "Investissement",
-    "cash": "Caisse"
+    "cash": "Espèces",
+    "petty_cash": "Petite caisse",
+    "card": "Carte"
   },
 
   "modal": {
@@ -40,7 +78,7 @@
 
   "footer": {
     "account": "Compte :",
-    "enterInstitution": "Saisissez le nom de la banque pour continuer.",
+    "enterInstitution": "Saisissez un nom de banque pour continuer.",
     "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
   },
 
@@ -58,14 +96,15 @@
   },
 
   "errors": {
-    "fetchError": "Impossible de charger les comptes bancaires.",
+    "loadFailedTitle": "Échec du chargement",
+    "fetchError": "Impossible de récupérer les comptes bancaires.",
     "saveErrorTitle": "Échec de l’enregistrement",
     "saveError": "Impossible d’enregistrer le compte bancaire.",
     "deleteError": "Impossible de supprimer le compte bancaire.",
     "detailError": "Impossible de charger les détails.",
-    "confirmFailed": "Échec de la confirmation.",
+    "confirmFailed": "Impossible de confirmer l’action.",
     "validationTitle": "Informations manquantes",
-    "validationInstitution": "Le nom de la banque / de l’établissement est obligatoire.",
+    "validationInstitution": "Le nom de la banque / établissement est requis.",
     "validationAccountType": "Veuillez sélectionner un type de compte valide."
   },
 

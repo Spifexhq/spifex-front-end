@@ -15,6 +15,16 @@ export interface BankAccount {
   is_active: boolean;
 }
 
+export interface GetBanksParams {
+  cursor?: string;
+  institution?: string;
+  account_type?: string;
+  branch?: string;
+  account_number?: string;
+  iban?: string;
+  active?: "true" | "false";
+}
+
 /* ----------------------------- Requests / Responses ---------------------------- */
 
 export type GetBanksResponse = Paginated<BankAccount>;

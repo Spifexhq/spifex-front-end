@@ -5,6 +5,33 @@
   "empty": "Nenhum membro encontrado.",
   "badge": { "syncing": "Sincronizando…" },
 
+  "filters": {
+    "nameLabel": "Nome",
+    "emailLabel": "E-mail",
+    "roleLabel": "Função",
+    "groupLabel": "Grupo",
+    "clearAll": "Limpar filtros",
+
+    "apply": "Aplicar",
+    "clear": "Limpar",
+
+    "byNameTitle": "Filtrar por nome",
+    "namePlaceholder": "Digite um nome…",
+
+    "byEmailTitle": "Filtrar por e-mail",
+    "emailPlaceholder": "Digite um e-mail…",
+
+    "byRoleTitle": "Filtrar por função",
+    "roleAll": "Todos",
+    "multi": "Múltiplos",
+    "roleHint": "Dica: selecione uma função para filtrar; múltiplos significa todas as funções.",
+    "roles": { "admin": "Administrador", "member": "Membro" },
+
+    "byGroupTitle": "Filtrar por grupo",
+    "groupAll": "Todos",
+    "groupHint": "Dica: selecione um grupo para filtrar; múltiplos significa todos os grupos."
+  },
+
   "btn": {
     "addMember": "Adicionar membro",
     "edit": "Editar",
@@ -35,19 +62,19 @@
 
   "confirmDiscard": {
     "title": "Descartar alterações?",
-    "message": "Você tem alterações não salvas. Deseja descartá-las?"
+    "message": "Você tem alterações não salvas. Deseja descartar?"
   },
 
-  "confirm": { "delete": "Excluir o membro \"{{name}}\"?" },
+  "confirm": { "delete": "Excluir membro \"{{name}}\"?" },
 
   "errors": {
-    "fetchError": "Falha ao buscar os dados.",
+    "fetchError": "Falha ao carregar os dados.",
     "loadMemberError": "Falha ao carregar os dados do membro.",
     "saveErrorTitle": "Falha ao salvar",
     "saveError": "Falha ao salvar o membro.",
     "deleteError": "Falha ao excluir o membro.",
     "confirmFailed": "Falha ao confirmar a ação.",
-    "validationTitle": "Informações obrigatórias",
+    "validationTitle": "Informações ausentes",
     "validationRequired": "Nome e e-mail são obrigatórios."
   },
 

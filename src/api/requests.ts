@@ -15,7 +15,7 @@ import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesR
   UpdateNotificationPreferencesResponse } from 'src/models/auth/notifications';
 import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse, GetGroupsResponse,
   GetPermissionsResponse, UpdateGroupPermissionsResponse } from 'src/models/auth/rbac';
-import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersResponse } from 'src/models/auth/members';
+import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse } from 'src/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from 'src/models/components/cardKpis';
 import type { DashboardOverview } from 'src/models/components/dashboard';
 import type { ReportsSummaryParams, ReportsSummary } from 'src/models/components/reports';
@@ -28,7 +28,7 @@ import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, Bul
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from 'src/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
 import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
-  GetBanksBulkRequest, GetBanksBulkResponse, GetBanksResponse } from 'src/models/settings/banking';
+  GetBanksBulkRequest, GetBanksBulkResponse, GetBanksParams, GetBanksResponse } from 'src/models/settings/banking';
 import type { AddLedgerAccountRequest, DeleteAllLedgerAccountsRequest, DeleteAllLedgerAccountsResponse,
   EditLedgerAccountRequest, GetLedgerAccountsRequest, GetLedgerAccountsResponse, ImportLedgerAccountsResponse,
   ImportStandardLedgerAccountsRequest, ImportStandardLedgerAccountsResponse, LedgerAccount, LedgerAccountsBulkRequest,
@@ -219,8 +219,8 @@ export const api = {
     request<void>(`rbac/groups/${groupId}/`, "DELETE"),
 
   /* --- Members --- */
-  getMembers: () =>
-    request<GetMembersResponse>("organizations/members/", "GET"),
+  getMembers: (params?: GetMembersParams) =>
+    request<GetMembersResponse>("organizations/members/", "GET", params),
 
   getMember: (memberId: string) =>
     request<GetMemberResponse>(`organizations/members/${memberId}/`, "GET"),
@@ -356,8 +356,7 @@ export const api = {
     request<Transference>(`cashflow/transfers/`, 'POST', payload),
 
   /* --- Banks --- */
-  getBanks: (active?: boolean) => {
-    const params = active == null ? undefined : { active: active ? "true" : "false" };
+  getBanks: (params?: GetBanksParams) => {
     return request<GetBanksResponse>(`banking/accounts/`, "GET", params);
   },
 

@@ -5,6 +5,33 @@
   "empty": "Aucun membre trouvé.",
   "badge": { "syncing": "Synchronisation…" },
 
+  "filters": {
+    "nameLabel": "Nom",
+    "emailLabel": "E-mail",
+    "roleLabel": "Rôle",
+    "groupLabel": "Groupe",
+    "clearAll": "Effacer les filtres",
+
+    "apply": "Appliquer",
+    "clear": "Effacer",
+
+    "byNameTitle": "Filtrer par nom",
+    "namePlaceholder": "Saisir un nom…",
+
+    "byEmailTitle": "Filtrer par e-mail",
+    "emailPlaceholder": "Saisir un e-mail…",
+
+    "byRoleTitle": "Filtrer par rôle",
+    "roleAll": "Tous",
+    "multi": "Multiple",
+    "roleHint": "Astuce : sélectionnez un rôle pour filtrer ; plusieurs signifie tous les rôles.",
+    "roles": { "admin": "Admin", "member": "Membre" },
+
+    "byGroupTitle": "Filtrer par groupe",
+    "groupAll": "Tous",
+    "groupHint": "Astuce : sélectionnez un groupe pour filtrer ; plusieurs signifie tous les groupes."
+  },
+
   "btn": {
     "addMember": "Ajouter un membre",
     "edit": "Modifier",
@@ -41,14 +68,14 @@
   "confirm": { "delete": "Supprimer le membre \"{{name}}\" ?" },
 
   "errors": {
-    "fetchError": "Impossible de charger les données.",
-    "loadMemberError": "Impossible de charger les données du membre.",
+    "fetchError": "Échec du chargement des données.",
+    "loadMemberError": "Échec du chargement des données du membre.",
     "saveErrorTitle": "Échec de l’enregistrement",
-    "saveError": "Impossible d’enregistrer le membre.",
-    "deleteError": "Impossible de supprimer le membre.",
-    "confirmFailed": "Échec de la confirmation.",
+    "saveError": "Échec de l’enregistrement du membre.",
+    "deleteError": "Échec de la suppression du membre.",
+    "confirmFailed": "Échec de la confirmation de l’action.",
     "validationTitle": "Informations manquantes",
-    "validationRequired": "Le nom et l’e-mail sont obligatoires."
+    "validationRequired": "Le nom et l’e-mail sont requis."
   },
 
   "toast": {

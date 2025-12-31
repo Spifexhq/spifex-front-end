@@ -6,12 +6,48 @@
   "section": { "list": "Bank accounts" },
   "empty": "No bank accounts found.",
 
+  "tags": { "type": "Type", "inactive": "Inactive" },
+
+  "filters": {
+    "institutionLabel": "Institution",
+    "accountTypeLabel": "Account type",
+    "branchLabel": "Branch",
+    "accountNumberLabel": "Account number",
+    "ibanLabel": "IBAN",
+    "statusLabel": "Status",
+    "clearAll": "Clear filters",
+
+    "apply": "Apply",
+    "clear": "Clear",
+
+    "byInstitutionTitle": "Filter by institution",
+    "institutionPlaceholder": "Type an institution…",
+
+    "byAccountTypeTitle": "Filter by account type",
+    "typeAll": "All",
+    "multi": "Multiple",
+    "typeHint": "Tip: select one type to filter; multiple means all types.",
+
+    "byBranchTitle": "Filter by branch",
+    "branchPlaceholder": "Type a branch…",
+
+    "byAccountNumberTitle": "Filter by account number",
+    "accountNumberPlaceholder": "Type an account number…",
+
+    "byIbanTitle": "Filter by IBAN",
+    "ibanPlaceholder": "Type an IBAN…",
+
+    "byStatusTitle": "Filter by status",
+    "status": { "all": "All", "active": "Active", "inactive": "Inactive" }
+  },
+
   "btn": {
     "addBank": "Add bank account",
     "edit": "Edit",
     "delete": "Delete",
     "cancel": "Cancel",
     "save": "Save",
+    "retry": "Try again",
     "selectAccountType": "Select account type"
   },
 
@@ -29,7 +65,9 @@
     "checking": "Checking",
     "savings": "Savings",
     "investment": "Investment",
-    "cash": "Cash"
+    "cash": "Cash",
+    "petty_cash": "Petty cash",
+    "card": "Card"
   },
 
   "modal": {
@@ -58,6 +96,7 @@
   },
 
   "errors": {
+    "loadFailedTitle": "Failed to load",
     "fetchError": "Failed to fetch bank accounts.",
     "saveErrorTitle": "Save failed",
     "saveError": "Failed to save bank account.",

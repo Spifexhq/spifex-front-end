@@ -13,6 +13,13 @@ export interface Member {
   groups: GroupListItem[];
 }
 
+export interface GetMembersParams {
+  name?: string;
+  email?: string;
+  role?: Role;      // backend accepts owner/admin/member (UI will typically exclude owner)
+  group?: string;   // group slug (single)
+}
+
 export interface GetMembersResponse {
   members: Member[];
 }

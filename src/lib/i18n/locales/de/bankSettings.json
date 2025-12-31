@@ -1,10 +1,45 @@
 {
   "title": "Banken",
   "header": { "settings": "Einstellungen", "title": "Bankkonten" },
-  "badge": { "syncing": "Synchronisierung…" },
+  "badge": { "syncing": "Synchronisiere…" },
 
   "section": { "list": "Bankkonten" },
   "empty": "Keine Bankkonten gefunden.",
+
+  "tags": { "type": "Typ", "inactive": "Inaktiv" },
+
+  "filters": {
+    "institutionLabel": "Institut",
+    "accountTypeLabel": "Kontotyp",
+    "branchLabel": "Filiale",
+    "accountNumberLabel": "Kontonummer",
+    "ibanLabel": "IBAN",
+    "statusLabel": "Status",
+    "clearAll": "Filter zurücksetzen",
+
+    "apply": "Anwenden",
+    "clear": "Leeren",
+
+    "byInstitutionTitle": "Nach Institut filtern",
+    "institutionPlaceholder": "Institut eingeben…",
+
+    "byAccountTypeTitle": "Nach Kontotyp filtern",
+    "typeAll": "Alle",
+    "multi": "Mehrere",
+    "typeHint": "Tipp: Wähle einen Typ zum Filtern; mehrere bedeutet alle Typen.",
+
+    "byBranchTitle": "Nach Filiale filtern",
+    "branchPlaceholder": "Filiale eingeben…",
+
+    "byAccountNumberTitle": "Nach Kontonummer filtern",
+    "accountNumberPlaceholder": "Kontonummer eingeben…",
+
+    "byIbanTitle": "Nach IBAN filtern",
+    "ibanPlaceholder": "IBAN eingeben…",
+
+    "byStatusTitle": "Nach Status filtern",
+    "status": { "all": "Alle", "active": "Aktiv", "inactive": "Inaktiv" }
+  },
 
   "btn": {
     "addBank": "Bankkonto hinzufügen",
@@ -12,6 +47,7 @@
     "delete": "Löschen",
     "cancel": "Abbrechen",
     "save": "Speichern",
+    "retry": "Erneut versuchen",
     "selectAccountType": "Kontotyp auswählen"
   },
 
@@ -29,7 +65,9 @@
     "checking": "Girokonto",
     "savings": "Sparkonto",
     "investment": "Investment",
-    "cash": "Kasse"
+    "cash": "Bargeld",
+    "petty_cash": "Kasse",
+    "card": "Karte"
   },
 
   "modal": {
@@ -40,7 +78,7 @@
 
   "footer": {
     "account": "Konto:",
-    "enterInstitution": "Geben Sie eine Bank ein, um fortzufahren.",
+    "enterInstitution": "Gib einen Banknamen ein, um fortzufahren.",
     "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
   },
 
@@ -48,7 +86,7 @@
 
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
-    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+    "message": "Du hast ungespeicherte Änderungen. Möchtest du sie verwerfen?"
   },
 
   "confirm": {
@@ -58,14 +96,15 @@
   },
 
   "errors": {
+    "loadFailedTitle": "Laden fehlgeschlagen",
     "fetchError": "Bankkonten konnten nicht geladen werden.",
     "saveErrorTitle": "Speichern fehlgeschlagen",
     "saveError": "Bankkonto konnte nicht gespeichert werden.",
     "deleteError": "Bankkonto konnte nicht gelöscht werden.",
     "detailError": "Details konnten nicht geladen werden.",
-    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "confirmFailed": "Aktion konnte nicht bestätigt werden.",
     "validationTitle": "Fehlende Angaben",
-    "validationInstitution": "Der Name der Bank / des Instituts ist erforderlich.",
+    "validationInstitution": "Bank / Institutsname ist erforderlich.",
     "validationAccountType": "Bitte einen gültigen Kontotyp auswählen."
   },
 

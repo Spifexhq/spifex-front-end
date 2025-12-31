@@ -5,6 +5,33 @@
   "empty": "No members found.",
   "badge": { "syncing": "Syncing…" },
 
+  "filters": {
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "roleLabel": "Role",
+    "groupLabel": "Group",
+    "clearAll": "Clear filters",
+
+    "apply": "Apply",
+    "clear": "Clear",
+
+    "byNameTitle": "Filter by name",
+    "namePlaceholder": "Type a name…",
+
+    "byEmailTitle": "Filter by email",
+    "emailPlaceholder": "Type an email…",
+
+    "byRoleTitle": "Filter by role",
+    "roleAll": "All",
+    "multi": "Multiple",
+    "roleHint": "Tip: select one role to filter; multiple means all roles.",
+    "roles": { "admin": "Admin", "member": "Member" },
+
+    "byGroupTitle": "Filter by group",
+    "groupAll": "All",
+    "groupHint": "Tip: select one group to filter; multiple means all groups."
+  },
+
   "btn": {
     "addMember": "Add member",
     "edit": "Edit",
