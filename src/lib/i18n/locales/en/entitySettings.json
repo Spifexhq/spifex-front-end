@@ -72,6 +72,32 @@
     "account_holder_name": "Holder name"
   },
 
+  "filters": {
+    "nameLabel": "Name",
+    "aliasLabel": "Alias",
+    "typeLabel": "Type",
+    "statusLabel": "Status",
+    "clearAll": "Clear filters",
+    "apply": "Apply",
+    "clear": "Clear",
+
+    "byNameTitle": "Filter by name",
+    "byAliasTitle": "Filter by alias",
+    "byTypeTitle": "Filter by type",
+    "byStatusTitle": "Filter by status",
+
+    "namePlaceholder": "Type a name…",
+    "aliasPlaceholder": "Type an alias…",
+
+    "typeAny": "Any",
+
+    "status": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+
   "modal": { "createTitle": "Add entity", "editTitle": "Edit entity", "close": "Close" },
   "empty": "No entities found.",
   "confirm": { "deleteTitle": "Delete entity \"{{name}}\"?" },

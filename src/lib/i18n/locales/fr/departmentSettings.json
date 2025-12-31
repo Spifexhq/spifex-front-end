@@ -21,6 +21,25 @@
     "noName": "(sans nom)"
   },
 
+  "filters": {
+    "codeLabel": "Code",
+    "nameLabel": "Nom",
+    "statusLabel": "Statut",
+    "byCodeTitle": "Filtrer par code",
+    "byNameTitle": "Filtrer par nom",
+    "byStatusTitle": "Filtrer par statut",
+    "codePlaceholder": "Saisissez un code…",
+    "namePlaceholder": "Saisissez un nom…",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "clearAll": "Effacer les filtres",
+    "status": {
+      "all": "Tous",
+      "active": "Actif",
+      "inactive": "Inactif"
+    }
+  },
+
   "modal": {
     "createTitle": "Ajouter un département",
     "editTitle": "Modifier le département",
@@ -49,10 +68,10 @@
 
   "errors": {
     "fetchError": "Échec du chargement.",
-    "saveFailed": "Impossible d’enregistrer le département.",
-    "deleteFailed": "Impossible de supprimer le département.",
-    "confirmFailed": "Échec de la confirmation.",
-    "validationTitle": "Informations manquantes",
+    "saveFailed": "Échec de l’enregistrement du département.",
+    "deleteFailed": "Échec de la suppression du département.",
+    "confirmFailed": "Échec de la confirmation de l’action.",
+    "validationTitle": "Information manquante",
     "validationName": "Le nom du département est obligatoire."
   },
 

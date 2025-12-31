@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
-import FilterBar from "@/components/FilterBar";
+import FilterBar from "@/components/Filters/FilterBar";
 import KpiCards from "@/components/KpiCards";
 import SelectionActionsBar, { type MinimalEntry } from "@/components/SelectionActionsBar";
 import TopProgress from "@/components/ui/Loaders/TopProgress";

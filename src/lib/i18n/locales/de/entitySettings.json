@@ -20,7 +20,7 @@
   "footer": {
     "entity": "Entität:",
     "enterName": "Geben Sie einen Entitätsnamen ein, um fortzufahren.",
-    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern • Ctrl+Alt+←/→ Tabs"
+    "shortcuts": "Kurzbefehle: Esc schließen • Strg/⌘+S speichern • Strg+Alt+←/→ Tabs"
   },
 
   "actions": {
@@ -30,7 +30,7 @@
 
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
-    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie sie verwerfen?"
   },
 
   "btn": {
@@ -38,7 +38,7 @@
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "save": "Speichern",
-    "saving": "Speichert…",
+    "saving": "Wird gespeichert…",
     "cancel": "Abbrechen",
     "retry": "Erneut versuchen",
     "confirmDelete": "Löschen"
@@ -50,10 +50,10 @@
     "full_name": "Vollständiger Name",
     "alias_name": "Handelsname / Alias",
     "entity_type": "Entitätstyp",
-    "is_active": "Aktive Entität",
+    "is_active": "Entität aktiv",
 
-    "ssn_tax_id": "Steuer-ID (CPF)",
-    "ein_tax_id": "Unternehmens-ID (CNPJ)",
+    "ssn_tax_id": "SSN (CPF)",
+    "ein_tax_id": "EIN (CNPJ)",
 
     "email": "E-Mail",
     "phone": "Telefon",
@@ -70,6 +70,32 @@
     "checking_account": "Girokonto",
     "account_holder_tax_id": "Kontoinhaber (CPF/CNPJ)",
     "account_holder_name": "Name des Kontoinhabers"
+  },
+
+  "filters": {
+    "nameLabel": "Name",
+    "aliasLabel": "Alias",
+    "typeLabel": "Typ",
+    "statusLabel": "Status",
+    "clearAll": "Filter löschen",
+    "apply": "Anwenden",
+    "clear": "Löschen",
+
+    "byNameTitle": "Nach Name filtern",
+    "byAliasTitle": "Nach Alias filtern",
+    "byTypeTitle": "Nach Typ filtern",
+    "byStatusTitle": "Nach Status filtern",
+
+    "namePlaceholder": "Name eingeben…",
+    "aliasPlaceholder": "Alias eingeben…",
+
+    "typeAny": "Beliebig",
+
+    "status": {
+      "all": "Alle",
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    }
   },
 
   "modal": { "createTitle": "Entität hinzufügen", "editTitle": "Entität bearbeiten", "close": "Schließen" },

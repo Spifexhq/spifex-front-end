@@ -8,7 +8,7 @@
     "button": "Buscar"
   },
   "types": { "client": "Cliente", "supplier": "Fornecedor", "employee": "Funcionário" },
-  "row": { "inactive": "• Inativa", "untitled": "(sem título)" },
+  "row": { "inactive": "• Inativo", "untitled": "(sem título)" },
 
   "tabs": {
     "general": "Geral",
@@ -55,7 +55,7 @@
     "ssn_tax_id": "CPF",
     "ein_tax_id": "CNPJ",
 
-    "email": "Email",
+    "email": "E-mail",
     "phone": "Telefone",
 
     "street": "Rua",
@@ -72,9 +72,35 @@
     "account_holder_name": "Nome do titular"
   },
 
+  "filters": {
+    "nameLabel": "Nome",
+    "aliasLabel": "Apelido",
+    "typeLabel": "Tipo",
+    "statusLabel": "Status",
+    "clearAll": "Limpar filtros",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+
+    "byNameTitle": "Filtrar por nome",
+    "byAliasTitle": "Filtrar por apelido",
+    "byTypeTitle": "Filtrar por tipo",
+    "byStatusTitle": "Filtrar por status",
+
+    "namePlaceholder": "Digite um nome…",
+    "aliasPlaceholder": "Digite um apelido…",
+
+    "typeAny": "Qualquer",
+
+    "status": {
+      "all": "Todos",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    }
+  },
+
   "modal": { "createTitle": "Adicionar entidade", "editTitle": "Editar entidade", "close": "Fechar" },
   "empty": "Nenhuma entidade encontrada.",
-  "confirm": { "deleteTitle": "Excluir a entidade \"{{name}}\"?" },
+  "confirm": { "deleteTitle": "Excluir entidade \"{{name}}\"?" },
 
   "errors": {
     "loadFailedTitle": "Falha ao carregar",

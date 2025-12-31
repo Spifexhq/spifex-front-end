@@ -39,7 +39,19 @@ export interface EntityType {
 export interface GetEntitiesParams {
   cursor?: string;
   active?: "true" | "false";
-  type?: string; // client | supplier | employee ...
+
+  /**
+   * Backwards-compatible:
+   * - single type: "client"
+   * - multi-type: "client,supplier"
+   */
+  type?: string;
+
+  /** Separated filters (new) */
+  name?: string;  // full_name filter
+  alias?: string; // alias_name filter
+
+  /** Back-compat generic search */
   q?: string;
 }
 

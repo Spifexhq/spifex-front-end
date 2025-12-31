@@ -4,7 +4,7 @@ import type { Paginated } from "@/models/Api";
 /* --------------------------------- Read model -------------------------------- */
 
 export interface Department {
-  id: string;        // external_id from the API
+  id: string; // external_id from the API
   name: string;
   code?: string;
   is_active: boolean;
@@ -21,7 +21,18 @@ export interface DepartmentAllocation {
 
 export interface GetDepartmentsParams {
   cursor?: string;
+
+  /**
+   * Legacy broad query (kept for backward compatibility).
+   * Backend supports q -> OR across code/name (and now code/name separated too).
+   */
   q?: string;
+
+  /** New separated filters */
+  code?: string;
+  name?: string;
+
+  /** Status filter (string form expected by backend parse_bool) */
   active?: "true" | "false";
 }
 

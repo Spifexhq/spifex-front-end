@@ -1,14 +1,7 @@
 {
-  "title": "Inventário",
-  "header": { "settings": "Configurações", "inventory": "Inventário" },
+  "title": "Estoque",
+  "header": { "settings": "Configurações", "inventory": "Estoque" },
   "badge": { "syncing": "Sincronizando…" },
-
-  "section": { "list": "Itens do inventário" },
-  "search": {
-    "placeholder": "Buscar por nome ou SKU…",
-    "aria": "Buscar itens",
-    "button": "Buscar"
-  },
 
   "row": {
     "skuPrefix": "SKU:",
@@ -20,19 +13,42 @@
     "addItem": "Adicionar item",
     "edit": "Editar",
     "delete": "Excluir",
-    "save": "Salvar",
     "cancel": "Cancelar",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "save": "Salvar"
   },
 
-  "field": {
-    "sku": "SKU",
-    "name": "Nome",
-    "description": "Descrição",
-    "uom": "Unidade (UoM)",
+  "filters": {
+    "skuLabel": "SKU",
+    "nameLabel": "Nome",
+    "descriptionLabel": "Descrição",
+    "uomLabel": "Unid.",
+    "qtyLabel": "Qtd",
+    "statusLabel": "Status",
+
+    "clearAll": "Limpar filtros",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+
+    "bySkuTitle": "Filtrar por SKU",
+    "byNameTitle": "Filtrar por nome",
+    "byDescriptionTitle": "Filtrar por descrição",
+    "byUomTitle": "Filtrar por unidade",
+    "byQtyTitle": "Filtrar por quantidade em estoque",
+    "byStatusTitle": "Filtrar por status",
+
+    "skuPlaceholder": "Digite um SKU…",
+    "namePlaceholder": "Digite um nome…",
+    "descriptionPlaceholder": "Digite uma descrição…",
     "uomPlaceholder": "ex.: un, cx, kg, l…",
-    "qty": "Quantidade em estoque",
-    "isActive": "Item ativo"
+
+    "qtyMin": "Mín",
+    "qtyMax": "Máx",
+    "qtyMinPlaceholder": "0",
+    "qtyMaxPlaceholder": "0",
+
+    "statusHint": "Selecione nenhum ou ambos para mostrar tudo.",
+    "status": { "all": "Todos", "active": "Ativo", "inactive": "Inativo" }
   },
 
   "modal": {
@@ -54,7 +70,7 @@
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
 
-  "confirm": { "deleteTitle": "Excluir item \"{{name}}\"?" },
+  "confirm": { "deleteTitle": "Excluir o item \"{{name}}\"?" },
 
   "empty": "Nenhum item encontrado.",
 
@@ -62,11 +78,11 @@
     "loadFailedTitle": "Falha ao carregar",
     "saveError": "Falha ao salvar o item.",
     "deleteError": "Falha ao excluir o item.",
-    "detailError": "Falha ao carregar detalhes.",
+    "detailError": "Falha ao carregar os detalhes.",
     "confirmFailed": "Falha ao confirmar.",
-    "validationTitle": "Informações obrigatórias",
+    "validationTitle": "Informações ausentes",
     "validationSkuName": "SKU e nome são obrigatórios.",
-    "validationQty": "A quantidade deve ser um número inteiro maior ou igual a 0."
+    "validationQty": "A quantidade deve ser um inteiro maior ou igual a 0."
   },
 
   "toast": {

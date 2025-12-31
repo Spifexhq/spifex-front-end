@@ -1,9 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/ProjectSettings.tsx                                         */
-/* i18n: namespace "projectSettings"                                          */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
@@ -13,6 +13,7 @@ import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
 
 import ProjectModal from "./ProjectModal";
 
@@ -21,7 +22,8 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
-import type { Project } from "@/models/settings/projects";
+import type { TFunction } from "i18next";
+import type { Project, GetProjectsParams } from "@/models/settings/projects";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =
@@ -47,21 +49,252 @@ function isProjectType(v: unknown): v is ProjectType {
   return PROJECT_TYPE_VALUES.includes(v as ProjectType);
 }
 
+type FilterKey = "code" | "search" | "type" | "status" | null;
+
+type StatusKey = "active" | "inactive";
+type StatusOption = { key: StatusKey; label: string };
+
+type TypeOption = { key: ProjectType; label: string };
+
+/* --------------------------------- Helpers -------------------------------- */
 function getInitials() {
   return "PJ";
 }
 
-/**
- * Cursor pagination relies on backend ordering.
- * Avoid re-sorting server pages on the client, or you risk perceived "jumps".
- * Only sort local overlay items if needed.
- */
 function sortOverlayByCodeThenName(a: Project, b: Project) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
   if (ca && cb && ca !== cb) return ca.localeCompare(cb, "en", { numeric: true });
   return (a.name || "").localeCompare(b.name || "", "en");
 }
+
+function uniq<T>(arr: T[]) {
+  return Array.from(new Set(arr));
+}
+
+function truncate(s: string, max = 24) {
+  const v = (s || "").trim();
+  if (v.length <= max) return v;
+  return `${v.slice(0, max - 1)}…`;
+}
+
+function computeStatusMode(keys: StatusKey[]): "all" | "active" | "inactive" {
+  const hasA = keys.includes("active");
+  const hasI = keys.includes("inactive");
+  if (hasA && !hasI) return "active";
+  if (!hasA && hasI) return "inactive";
+  return "all";
+}
+
+function toActiveParamFromStatusKeys(keys: StatusKey[]): GetProjectsParams["active"] | undefined {
+  const mode = computeStatusMode(keys);
+  if (mode === "active") return "true";
+  if (mode === "inactive") return "false";
+  return undefined;
+}
+
+function selectedTypeParamFromKeys(keys: ProjectType[]): GetProjectsParams["type"] | undefined {
+  const uniqKeys = uniq(keys.filter((x) => isProjectType(x)));
+  return uniqKeys.length === 1 ? uniqKeys[0] : undefined;
+}
+
+/* ------------------------------- Chip UI ---------------------------------- */
+
+const Chip = ({
+  label,
+  value,
+  active,
+  onClick,
+  onClear,
+  disabled,
+}: {
+  label: string;
+  value?: string;
+  active: boolean;
+  onClick: () => void;
+  onClear?: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] transition",
+        disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50",
+        active ? "border-gray-300 bg-white" : "border-gray-200 bg-white",
+      ].join(" ")}
+    >
+      {!active ? (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
+          +
+        </span>
+      ) : (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
+          ✓
+        </span>
+      )}
+
+      <span className="text-gray-800 font-medium">{label}</span>
+
+      {active && value ? <span className="text-gray-700 font-normal">{value}</span> : null}
+
+      {active && onClear ? (
+        <span
+          role="button"
+          aria-label="Clear"
+          className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+        >
+          ×
+        </span>
+      ) : null}
+    </button>
+  );
+};
+
+const ClearFiltersChip = ({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition",
+        "border-red-200 text-red-600 bg-white",
+        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50",
+      ].join(" ")}
+    >
+      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-red-200 text-red-600 text-[12px] leading-none">
+        ×
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+};
+
+/* -------------------------- Portal anchored popover ------------------------ */
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+const AnchoredPopover: React.FC<{
+  open: boolean;
+  anchorRef: React.RefObject<HTMLElement>;
+  onClose: () => void;
+  width?: number;
+  scroll?: boolean;
+  children: React.ReactNode;
+}> = ({ open, anchorRef, onClose, width = 360, scroll = true, children }) => {
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const a = anchorRef.current;
+    if (!a) return;
+
+    const r = a.getBoundingClientRect();
+    const padding = 12;
+    const top = r.bottom + 8;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const desiredLeft = r.left;
+    const maxLeft = vw - width - padding;
+    const left = clamp(desiredLeft, padding, Math.max(padding, maxLeft));
+
+    const maxHeight = Math.max(160, vh - top - padding);
+
+    setPos({ top, left, maxHeight });
+  }, [anchorRef, width]);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+
+    const onResize = () => updatePosition();
+    const onScroll = () => updatePosition();
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      const pop = popRef.current;
+      const anc = anchorRef.current;
+      const target = e.target as Node;
+
+      if (pop && pop.contains(target)) return;
+      if (anc && anc.contains(target)) return;
+      onClose();
+    };
+
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [open, onClose, anchorRef]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  if (typeof document === "undefined") return null;
+  if (!pos) return null;
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: pos.top,
+        left: pos.left,
+        width,
+        zIndex: 99,
+      }}
+    >
+      <div ref={popRef} className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
+        {scroll ? (
+          <div style={{ maxHeight: pos.maxHeight, overflowY: "auto" }}>{children}</div>
+        ) : (
+          children
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+/* --------------------------------- Row ------------------------------------ */
 
 const Row = ({
   project,
@@ -76,7 +309,7 @@ const Row = ({
   onEdit: (p: Project) => void;
   onDelete: (p: Project) => void;
   canEdit: boolean;
-  t: (key: string, options?: Record<string, unknown>) => string;
+  t: TFunction;
   busy?: boolean;
   typeLabel: string;
 }) => (
@@ -92,9 +325,7 @@ const Row = ({
     </div>
 
     <div className="flex items-center gap-3 shrink-0">
-      <span className="text-[12px] text-gray-700">
-        {project.is_active ? t("row.active") : t("row.inactive")}
-      </span>
+      <span className="text-[12px] text-gray-700">{project.is_active ? t("row.active") : t("row.inactive")}</span>
 
       {canEdit && (
         <div className="flex gap-2">
@@ -109,6 +340,8 @@ const Row = ({
     </div>
   </div>
 );
+
+/* -------------------------------------------------------------------------- */
 
 const ProjectSettings: React.FC = () => {
   const { t, i18n } = useTranslation("projectSettings");
@@ -142,11 +375,94 @@ const ProjectSettings: React.FC = () => {
   const [added, setAdded] = useState<Project[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
-  /* Search */
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
+  /* ------------------------------- Applied filters ------------------------- */
+  const [appliedCode, setAppliedCode] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [appliedTypes, setAppliedTypes] = useState<ProjectType[]>([]);
+  const [appliedStatuses, setAppliedStatuses] = useState<StatusKey[]>([]);
 
-  /* ----------------------------- Cursor pagination ------------------------- */
+  const appliedStatusMode = useMemo(() => computeStatusMode(appliedStatuses), [appliedStatuses]);
+  const appliedTypeParam = useMemo(() => selectedTypeParamFromKeys(appliedTypes), [appliedTypes]);
+
+  const hasAppliedFilters = useMemo(() => {
+    return (
+      appliedCode.trim() !== "" ||
+      appliedSearch.trim() !== "" ||
+      appliedTypes.length > 0 ||
+      appliedStatuses.length > 0
+    );
+  }, [appliedCode, appliedSearch, appliedTypes, appliedStatuses]);
+
+  /* ------------------------------- Popover state --------------------------- */
+  const [openFilter, setOpenFilter] = useState<FilterKey>(null);
+
+  const [draftCode, setDraftCode] = useState("");
+  const [draftSearch, setDraftSearch] = useState("");
+  const [draftTypes, setDraftTypes] = useState<ProjectType[]>([]);
+  const [draftStatuses, setDraftStatuses] = useState<StatusKey[]>([]);
+
+  /* ------------------------------- Anchors --------------------------------- */
+  const codeAnchorRef = useRef<HTMLDivElement | null>(null);
+  const searchAnchorRef = useRef<HTMLDivElement | null>(null);
+  const typeAnchorRef = useRef<HTMLDivElement | null>(null);
+  const statusAnchorRef = useRef<HTMLDivElement | null>(null);
+
+  /* ------------------------------- Options --------------------------------- */
+  const typeOptions: TypeOption[] = useMemo(() => {
+    return PROJECT_TYPE_VALUES.map((k) => ({ key: k, label: t(`types.${k}`) }));
+  }, [t]);
+
+  const statusOptions: StatusOption[] = useMemo(() => {
+    return [
+      { key: "active", label: t("filters.status.active", { defaultValue: "Active" }) },
+      { key: "inactive", label: t("filters.status.inactive", { defaultValue: "Inactive" }) },
+    ];
+  }, [t]);
+
+  /* ------------------------------ Labels (chips) --------------------------- */
+  const allLabel = t("filters.status.all", { defaultValue: "All" });
+  const activeLabel = t("filters.status.active", { defaultValue: "Active" });
+  const inactiveLabel = t("filters.status.inactive", { defaultValue: "Inactive" });
+
+  const appliedStatusValue = useMemo(() => {
+    if (appliedStatusMode === "active") return activeLabel;
+    if (appliedStatusMode === "inactive") return inactiveLabel;
+    return allLabel;
+  }, [appliedStatusMode, activeLabel, inactiveLabel, allLabel]);
+
+  const draftStatusMode = useMemo(() => computeStatusMode(draftStatuses), [draftStatuses]);
+
+  const draftStatusButtonLabel = useMemo(() => {
+    if (draftStatusMode === "active") return activeLabel;
+    if (draftStatusMode === "inactive") return inactiveLabel;
+    return allLabel;
+  }, [draftStatusMode, activeLabel, inactiveLabel, allLabel]);
+
+  const selectedDraftStatusOptions = useMemo(() => {
+    const selected = new Set(draftStatuses);
+    return statusOptions.filter((o) => selected.has(o.key));
+  }, [draftStatuses, statusOptions]);
+
+  const selectedDraftTypeOptions = useMemo(() => {
+    const selected = new Set(draftTypes);
+    return typeOptions.filter((o) => selected.has(o.key));
+  }, [draftTypes, typeOptions]);
+
+  const draftTypeButtonLabel = useMemo(() => {
+    const one = selectedTypeParamFromKeys(draftTypes);
+    if (one) return typeOptions.find((x) => x.key === one)?.label ?? t("filters.typeAll", { defaultValue: "All" });
+    if (draftTypes.length > 1) return t("filters.multi", { defaultValue: "Multiple" });
+    return t("filters.typeAll", { defaultValue: "All" });
+  }, [draftTypes, typeOptions, t]);
+
+  const appliedTypeChipValue = useMemo(() => {
+    if (!appliedTypes.length) return "";
+    const one = selectedTypeParamFromKeys(appliedTypes);
+    if (one) return typeOptions.find((x) => x.key === one)?.label ?? "";
+    return t("filters.multi", { defaultValue: "Multiple" });
+  }, [appliedTypes, typeOptions, t]);
+
+  /* --------------------------- Pagination (reusable) ----------------------- */
   const inflightRef = useRef(false);
 
   const fetchProjectsPage = useCallback(
@@ -157,10 +473,15 @@ const ProjectSettings: React.FC = () => {
 
       inflightRef.current = true;
       try {
-        const { data, meta } = await api.getProjects({
+        const params: GetProjectsParams = {
           cursor,
-          q: appliedQuery || undefined,
-        });
+          code: appliedCode.trim() || undefined,
+          q: appliedSearch.trim() || undefined,
+          active: toActiveParamFromStatusKeys(appliedStatuses),
+          type: appliedTypeParam,
+        };
+
+        const { data, meta } = await api.getProjects(params);
 
         const items = (data?.results ?? []) as Project[];
 
@@ -172,12 +493,12 @@ const ProjectSettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [appliedQuery]
+    [appliedCode, appliedSearch, appliedStatuses, appliedTypeParam]
   );
 
   const pager = useCursorPager<Project>(fetchProjectsPage, {
     autoLoadFirst: true,
-    deps: [appliedQuery],
+    deps: [appliedCode, appliedSearch, appliedStatuses, appliedTypeParam],
   });
 
   const isInitialLoading = pager.loading && pager.items.length === 0;
@@ -185,38 +506,153 @@ const ProjectSettings: React.FC = () => {
 
   const { refresh } = pager;
 
-  const onSearch = useCallback(() => {
-    const trimmed = query.trim();
-    if (trimmed === appliedQuery) refresh();
-    else setAppliedQuery(trimmed);
-  }, [query, appliedQuery, refresh]);
-
-  /* ------------------------------ Overlay helpers -------------------------- */
-  const matchesQuery = useCallback((p: Project, q: string) => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (
-      (p.code || "").toLowerCase().includes(s) ||
-      (p.name || "").toLowerCase().includes(s) ||
-      (p.description || "").toLowerCase().includes(s)
-    );
+  /* ------------------------------ Filter apply/clear ------------------------ */
+  const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
+    setOpenFilter((prev) => (prev === key ? null : key));
   }, []);
 
+  const applyFromDraft = useCallback(
+    (key: Exclude<FilterKey, null>) => {
+      if (key === "code") {
+        const next = draftCode.trim();
+        if (next === appliedCode.trim()) refresh();
+        else setAppliedCode(next);
+      }
+
+      if (key === "search") {
+        const next = draftSearch.trim();
+        if (next === appliedSearch.trim()) refresh();
+        else setAppliedSearch(next);
+      }
+
+      if (key === "type") {
+        const next = uniq(draftTypes);
+        const same =
+          next.length === appliedTypes.length &&
+          next.every((x) => appliedTypes.includes(x)) &&
+          appliedTypes.every((x) => next.includes(x));
+
+        if (same) refresh();
+        else setAppliedTypes(next);
+      }
+
+      if (key === "status") {
+        const next = uniq(draftStatuses);
+        const same =
+          next.length === appliedStatuses.length &&
+          next.every((x) => appliedStatuses.includes(x)) &&
+          appliedStatuses.every((x) => next.includes(x));
+
+        if (same) refresh();
+        else setAppliedStatuses(next);
+      }
+
+      setOpenFilter(null);
+    },
+    [
+      draftCode,
+      draftSearch,
+      draftTypes,
+      draftStatuses,
+      appliedCode,
+      appliedSearch,
+      appliedTypes,
+      appliedStatuses,
+      refresh,
+    ]
+  );
+
+  const clearOne = useCallback((key: Exclude<FilterKey, null>) => {
+    if (key === "code") setAppliedCode("");
+    if (key === "search") setAppliedSearch("");
+    if (key === "type") setAppliedTypes([]);
+    if (key === "status") setAppliedStatuses([]);
+    setOpenFilter(null);
+  }, []);
+
+  const clearAll = useCallback(() => {
+    if (!hasAppliedFilters) {
+      refresh();
+      return;
+    }
+    setAppliedCode("");
+    setAppliedSearch("");
+    setAppliedTypes([]);
+    setAppliedStatuses([]);
+    setOpenFilter(null);
+  }, [hasAppliedFilters, refresh]);
+
+  /* ------------------------------ Draft sync on open ------------------------ */
   useEffect(() => {
-    setAdded((prev) => prev.filter((p) => matchesQuery(p, appliedQuery)));
-  }, [appliedQuery, matchesQuery]);
+    if (openFilter === "code") setDraftCode(appliedCode);
+    if (openFilter === "search") setDraftSearch(appliedSearch);
+    if (openFilter === "type") setDraftTypes(appliedTypes);
+    if (openFilter === "status") setDraftStatuses(appliedStatuses);
+  }, [openFilter, appliedCode, appliedSearch, appliedTypes, appliedStatuses]);
+
+  /* ------------------------------ Focus on open ----------------------------- */
+  useEffect(() => {
+    if (openFilter === "code") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("project-filter-code-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+    if (openFilter === "search") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("project-filter-search-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+  }, [openFilter]);
+
+  /* ------------------------------ Overlay helpers -------------------------- */
+  const matchesFilters = useCallback(
+    (p: Project) => {
+      // status
+      if (appliedStatusMode === "active" && p.is_active === false) return false;
+      if (appliedStatusMode === "inactive" && p.is_active !== false) return false;
+
+      // type (only enforce when backend param is a single type)
+      if (appliedTypeParam) {
+        if ((p.type || "").toLowerCase() !== appliedTypeParam.toLowerCase()) return false;
+      }
+
+      // code filter
+      const c = appliedCode.trim().toLowerCase();
+      if (c) {
+        if (!((p.code || "").toLowerCase().includes(c))) return false;
+      }
+
+      // search q
+      const q = appliedSearch.trim().toLowerCase();
+      if (q) {
+        const hay = `${p.code || ""} ${p.name || ""} ${p.description || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+
+      return true;
+    },
+    [appliedStatusMode, appliedTypeParam, appliedCode, appliedSearch]
+  );
+
+  useEffect(() => {
+    setAdded((prev) => prev.filter((p) => matchesFilters(p)));
+  }, [matchesFilters]);
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added
-      .filter((p) => matchesQuery(p, appliedQuery))
+      .filter((p) => matchesFilters(p))
       .slice()
       .sort(sortOverlayByCodeThenName);
 
     const addedIdsSet = new Set(addedFiltered.map((p) => p.id));
-    const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIdsSet.has(p.id));
+    const base = pager.items.filter((p) => !deletedIds.has(p.id) && !addedIdsSet.has(p.id)).filter(matchesFilters);
 
     return [...addedFiltered, ...base];
-  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
+  }, [added, deletedIds, pager.items, matchesFilters]);
 
   /* ------------------------------ Type label helper ------------------------ */
   const typeLabelMap = useMemo(() => {
@@ -297,6 +733,11 @@ const ProjectSettings: React.FC = () => {
   const canEdit = !!isOwner;
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
+  const codeChipValue = appliedCode.trim() ? truncate(appliedCode.trim(), 22) : "";
+  const searchChipValue = appliedSearch.trim() ? truncate(appliedSearch.trim(), 22) : "";
+  const statusChipValue = appliedStatuses.length ? appliedStatusValue : "";
+  const typeChipValue = appliedTypes.length ? appliedTypeChipValue : "";
+
   return (
     <>
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
@@ -326,24 +767,65 @@ const ProjectSettings: React.FC = () => {
 
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.list")}</span>
+                  {/* LEFT: chips */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div ref={codeAnchorRef}>
+                      <Chip
+                        label={t("filters.codeLabel", { defaultValue: "Code" })}
+                        value={codeChipValue ? `• ${codeChipValue}` : undefined}
+                        active={!!appliedCode.trim()}
+                        onClick={() => togglePopover("code")}
+                        onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder={t("search.placeholder")}
-                      aria-label={t("search.aria")}
-                      disabled={globalBusy}
-                    />
-                    <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
-                      {t("search.button")}
-                    </Button>
+                    <div ref={searchAnchorRef}>
+                      <Chip
+                        label={t("filters.searchLabel", { defaultValue: "Search" })}
+                        value={searchChipValue ? `• ${searchChipValue}` : undefined}
+                        active={!!appliedSearch.trim()}
+                        onClick={() => togglePopover("search")}
+                        onClear={appliedSearch.trim() ? () => clearOne("search") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
+                    <div ref={typeAnchorRef}>
+                      <Chip
+                        label={t("filters.typeLabel", { defaultValue: "Type" })}
+                        value={typeChipValue ? `• ${typeChipValue}` : undefined}
+                        active={appliedTypes.length > 0}
+                        onClick={() => togglePopover("type")}
+                        onClear={appliedTypes.length ? () => clearOne("type") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
+
+                    <div ref={statusAnchorRef}>
+                      <Chip
+                        label={t("filters.statusLabel", { defaultValue: "Status" })}
+                        value={statusChipValue ? `• ${statusChipValue}` : undefined}
+                        active={appliedStatuses.length > 0}
+                        onClick={() => togglePopover("status")}
+                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
+
+                    {hasAppliedFilters && (
+                      <ClearFiltersChip
+                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                        onClick={clearAll}
+                        disabled={globalBusy}
+                      />
+                    )}
+                  </div>
+
+                  {/* RIGHT: add button */}
+                  <div className="shrink-0">
                     {canEdit && (
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.addProject")}
@@ -416,6 +898,197 @@ const ProjectSettings: React.FC = () => {
           }}
         />
       </main>
+
+      {/* CODE POPOVER */}
+      <AnchoredPopover open={openFilter === "code"} anchorRef={codeAnchorRef} onClose={() => setOpenFilter(null)} scroll>
+        <div className="p-4">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byCodeTitle", { defaultValue: "Filter by code" })}
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="project-filter-code-input"
+              type="text"
+              value={draftCode}
+              onChange={(e) => setDraftCode(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("code");
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setOpenFilter(null);
+                }
+              }}
+              placeholder={t("filters.codePlaceholder", { defaultValue: "Type a code…" })}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftCode("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("code")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* SEARCH POPOVER */}
+      <AnchoredPopover
+        open={openFilter === "search"}
+        anchorRef={searchAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll
+      >
+        <div className="p-4">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.bySearchTitle", { defaultValue: "Search projects" })}
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="project-filter-search-input"
+              type="text"
+              value={draftSearch}
+              onChange={(e) => setDraftSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("search");
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setOpenFilter(null);
+                }
+              }}
+              placeholder={t("filters.searchPlaceholder", { defaultValue: "Search by name, code…" })}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftSearch("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("search")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* TYPE POPOVER */}
+      <AnchoredPopover
+        open={openFilter === "type"}
+        anchorRef={typeAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll={false}
+        width={420}
+      >
+        <div className="p-4 overflow-visible">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byTypeTitle", { defaultValue: "Filter by type" })}
+          </div>
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <SelectDropdown<TypeOption>
+                label={t("filters.typeLabel", { defaultValue: "Type" })}
+                items={typeOptions}
+                selected={selectedDraftTypeOptions}
+                onChange={(list) => setDraftTypes(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={draftTypeButtonLabel}
+                customStyles={{ maxHeight: "260px" }}
+                hideFilter
+              />
+            </div>
+
+            <div className="mt-2 text-[11px] text-gray-500">
+              {t("filters.typeHint", { defaultValue: "Tip: select one type to filter; multiple means all types." })}
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftTypes([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("type")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* STATUS POPOVER */}
+      <AnchoredPopover
+        open={openFilter === "status"}
+        anchorRef={statusAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll={false}
+        width={420}
+      >
+        <div className="p-4 overflow-visible">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byStatusTitle", { defaultValue: "Filter by status" })}
+          </div>
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <SelectDropdown<StatusOption>
+                label={t("filters.statusLabel", { defaultValue: "Status" })}
+                items={statusOptions}
+                selected={selectedDraftStatusOptions}
+                onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={draftStatusButtonLabel}
+                customStyles={{ maxHeight: "240px" }}
+                hideFilter
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftStatuses([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("status")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
 
       <ConfirmToast
         open={confirmOpen}

@@ -1,10 +1,9 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/pages/EntitySettings.tsx                                          */
-/* Refactor: modal extracted (EntityModal) + simplified create/edit flows      */
-/* i18n: namespace "entitySettings"                                            */
+/* File: src/pages/EntitySettings/index.tsx                                   */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import Input from "@/components/ui/Input";
@@ -14,6 +13,7 @@ import ConfirmToast from "@/components/ui/ConfirmToast";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
 
 import EntityModal from "./EntityModal";
 
@@ -22,23 +22,253 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
-import type { Entity } from "@/models/settings/entities";
+import type { Entity, GetEntitiesParams } from "@/models/settings/entities";
 
+/* ------------------------------ Snackbar type ----------------------------- */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
 type EntityTypeValue = "client" | "supplier" | "employee";
+type FilterKey = "name" | "alias" | "type" | "status" | null;
 
-function sortByName(a: Entity, b: Entity) {
-  const an = (a.full_name || "").trim();
-  const bn = (b.full_name || "").trim();
-  return an.localeCompare(bn, "pt-BR");
-}
+type StatusKey = "active" | "inactive";
+type StatusOption = { key: StatusKey; label: string };
+
+type EntityTypeOption = { key: EntityTypeValue; label: string };
+
+/* --------------------------------- Helpers -------------------------------- */
 
 function getInitials() {
   return "EN";
 }
+
+function uniq<T>(arr: T[]) {
+  return Array.from(new Set(arr));
+}
+
+function truncate(s: string, max = 24) {
+  const v = (s || "").trim();
+  if (v.length <= max) return v;
+  return `${v.slice(0, max - 1)}…`;
+}
+
+function computeStatusMode(keys: StatusKey[]): "all" | "active" | "inactive" {
+  const hasA = keys.includes("active");
+  const hasI = keys.includes("inactive");
+  if (hasA && !hasI) return "active";
+  if (!hasA && hasI) return "inactive";
+  return "all";
+}
+
+function toActiveParamFromStatusKeys(keys: StatusKey[]): GetEntitiesParams["active"] | undefined {
+  const mode = computeStatusMode(keys);
+  if (mode === "active") return "true";
+  if (mode === "inactive") return "false";
+  return undefined;
+}
+
+function normalizeEntityType(v: string | null | undefined) {
+  return String(v || "").trim().toLowerCase();
+}
+
+/* ------------------------------- Chip UI ---------------------------------- */
+
+const Chip = ({
+  label,
+  value,
+  active,
+  onClick,
+  onClear,
+  disabled,
+}: {
+  label: string;
+  value?: string;
+  active: boolean;
+  onClick: () => void;
+  onClear?: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] transition",
+        disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50",
+        active ? "border-gray-300 bg-white" : "border-gray-200 bg-white",
+      ].join(" ")}
+    >
+      {!active ? (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
+          +
+        </span>
+      ) : (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
+          ✓
+        </span>
+      )}
+
+      <span className="text-gray-800 font-medium">{label}</span>
+
+      {active && value ? <span className="text-gray-700 font-normal">{value}</span> : null}
+
+      {active && onClear ? (
+        <span
+          role="button"
+          aria-label="Clear"
+          className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+        >
+          ×
+        </span>
+      ) : null}
+    </button>
+  );
+};
+
+const ClearFiltersChip = ({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition",
+        "border-red-200 text-red-600 bg-white",
+        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50",
+      ].join(" ")}
+    >
+      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-red-200 text-red-600 text-[12px] leading-none">
+        ×
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+};
+
+/* -------------------------- Portal anchored popover ------------------------ */
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+const AnchoredPopover: React.FC<{
+  open: boolean;
+  anchorRef: React.RefObject<HTMLElement>;
+  onClose: () => void;
+  width?: number;
+  scroll?: boolean;
+  children: React.ReactNode;
+}> = ({ open, anchorRef, onClose, width = 380, scroll = true, children }) => {
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const a = anchorRef.current;
+    if (!a) return;
+
+    const r = a.getBoundingClientRect();
+    const padding = 12;
+    const top = r.bottom + 8;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const desiredLeft = r.left;
+    const maxLeft = vw - width - padding;
+    const left = clamp(desiredLeft, padding, Math.max(padding, maxLeft));
+
+    const maxHeight = Math.max(160, vh - top - padding);
+
+    setPos({ top, left, maxHeight });
+  }, [anchorRef, width]);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+
+    const onResize = () => updatePosition();
+    const onScroll = () => updatePosition();
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      const pop = popRef.current;
+      const anc = anchorRef.current;
+      const target = e.target as Node;
+
+      if (pop && pop.contains(target)) return;
+      if (anc && anc.contains(target)) return;
+      onClose();
+    };
+
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [open, onClose, anchorRef]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  if (typeof document === "undefined") return null;
+  if (!pos) return null;
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: pos.top,
+        left: pos.left,
+        width,
+        zIndex: 99,
+      }}
+    >
+      <div ref={popRef} className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
+        {scroll ? (
+          <div style={{ maxHeight: pos.maxHeight, overflowY: "auto" }}>{children}</div>
+        ) : (
+          children
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+/* ------------------------------ Row component ------------------------------ */
 
 const Row: React.FC<{
   entity: Entity;
@@ -48,7 +278,7 @@ const Row: React.FC<{
   t: (key: string, opts?: Record<string, unknown>) => string;
   busy?: boolean;
 }> = ({ entity, onEdit, onDelete, canEdit, t, busy }) => {
-  const type = (entity.entity_type || "client") as EntityTypeValue;
+  const type = (normalizeEntityType(entity.entity_type) || "client") as EntityTypeValue;
   const typeLabel = t(`types.${type}`);
 
   return (
@@ -77,8 +307,11 @@ const Row: React.FC<{
   );
 };
 
+/* -------------------------------------------------------------------------- */
+
 const EntitySettings: React.FC = () => {
   const { t, i18n } = useTranslation("entitySettings");
+  const { isOwner } = useAuthContext();
 
   useEffect(() => {
     document.title = t("title");
@@ -87,8 +320,6 @@ const EntitySettings: React.FC = () => {
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
-
-  const { isOwner } = useAuthContext();
 
   /* ------------------------------ Snackbar ------------------------------ */
   const [snack, setSnack] = useState<Snack>(null);
@@ -105,65 +336,6 @@ const EntitySettings: React.FC = () => {
 
   /* ------------------------------ Added overlay ------------------------------ */
   const [added, setAdded] = useState<Entity[]>([]);
-
-  /* ------------------------------ Filter ------------------------------ */
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
-
-  const matchesQuery = useCallback((e: Entity, q: string) => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (e.full_name || "").toLowerCase().includes(s) || (e.alias_name || "").toLowerCase().includes(s);
-  }, []);
-
-  /* ------------------------------ Pager ------------------------------ */
-  const inflightRef = useRef(false);
-
-  const fetchEntitiesPage = useCallback(
-    async (cursor?: string) => {
-      if (inflightRef.current) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
-      inflightRef.current = true;
-
-      try {
-        const { data, meta } = await api.getEntitiesTable({
-          cursor,
-          q: appliedQuery || undefined,
-        });
-
-        const items = ((data?.results ?? []) as Entity[]).slice().sort(sortByName);
-        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-        const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
-
-        return { items, nextCursor };
-      } finally {
-        inflightRef.current = false;
-      }
-    },
-    [appliedQuery]
-  );
-
-  const pager = useCursorPager<Entity>(fetchEntitiesPage, {
-    autoLoadFirst: true,
-    deps: [appliedQuery],
-  });
-
-  const onSearch = useCallback(() => {
-    const trimmed = query.trim();
-    if (trimmed === appliedQuery) pager.refresh();
-    else setAppliedQuery(trimmed);
-  }, [query, appliedQuery, pager]);
-
-  const visibleItems = useMemo(() => {
-    const addedFiltered = added.filter((e) => !deletedIds.has(e.id) && matchesQuery(e, appliedQuery)).slice().sort(sortByName);
-    const addedIds = new Set(addedFiltered.map((e) => e.id));
-
-    const base = pager.items
-      .filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id))
-      .slice()
-      .sort(sortByName);
-
-    return [...addedFiltered, ...base];
-  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
 
   /* ------------------------------ Modal state ------------------------------ */
   const [modalOpen, setModalOpen] = useState(false);
@@ -187,20 +359,243 @@ const EntitySettings: React.FC = () => {
     setEditingEntity(null);
   }, []);
 
+  /* ------------------------------- Applied filters ------------------------- */
+  const [appliedName, setAppliedName] = useState("");
+  const [appliedAlias, setAppliedAlias] = useState("");
+  const [appliedTypes, setAppliedTypes] = useState<EntityTypeValue[]>([]);
+  const [appliedStatuses, setAppliedStatuses] = useState<StatusKey[]>([]);
+
+  const appliedStatusMode = useMemo(() => computeStatusMode(appliedStatuses), [appliedStatuses]);
+
+  const hasAppliedFilters = useMemo(() => {
+    return (
+      appliedName.trim() !== "" ||
+      appliedAlias.trim() !== "" ||
+      appliedTypes.length > 0 ||
+      appliedStatuses.length > 0
+    );
+  }, [appliedName, appliedAlias, appliedTypes, appliedStatuses]);
+
+  /* ------------------------------- Popover state --------------------------- */
+  const [openFilter, setOpenFilter] = useState<FilterKey>(null);
+
+  // Draft values
+  const [draftName, setDraftName] = useState("");
+  const [draftAlias, setDraftAlias] = useState("");
+  const [draftTypes, setDraftTypes] = useState<EntityTypeValue[]>([]);
+  const [draftStatuses, setDraftStatuses] = useState<StatusKey[]>([]);
+
+  /* ------------------------------- Anchors --------------------------------- */
+  const nameAnchorRef = useRef<HTMLDivElement | null>(null);
+  const aliasAnchorRef = useRef<HTMLDivElement | null>(null);
+  const typeAnchorRef = useRef<HTMLDivElement | null>(null);
+  const statusAnchorRef = useRef<HTMLDivElement | null>(null);
+
+  const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
+    setOpenFilter((prev) => (prev === key ? null : key));
+  }, []);
+
+  /* ------------------------------- Options --------------------------------- */
+  const statusAllLabel = t("filters.status.all", { defaultValue: "All" });
+  const statusActiveLabel = t("filters.status.active", { defaultValue: "Active" });
+  const statusInactiveLabel = t("filters.status.inactive", { defaultValue: "Inactive" });
+
+  const statusOptions: StatusOption[] = useMemo(
+    () => [
+      { key: "active", label: statusActiveLabel },
+      { key: "inactive", label: statusInactiveLabel },
+    ],
+    [statusActiveLabel, statusInactiveLabel]
+  );
+
+  const appliedStatusValue = useMemo(() => {
+    if (appliedStatusMode === "active") return statusActiveLabel;
+    if (appliedStatusMode === "inactive") return statusInactiveLabel;
+    return statusAllLabel;
+  }, [appliedStatusMode, statusActiveLabel, statusInactiveLabel, statusAllLabel]);
+
+  const draftStatusMode = useMemo(() => computeStatusMode(draftStatuses), [draftStatuses]);
+
+  const draftStatusButtonLabel = useMemo(() => {
+    if (draftStatusMode === "active") return statusActiveLabel;
+    if (draftStatusMode === "inactive") return statusInactiveLabel;
+    return statusAllLabel;
+  }, [draftStatusMode, statusActiveLabel, statusInactiveLabel, statusAllLabel]);
+
+  const selectedDraftStatusOptions = useMemo(() => {
+    const selected = new Set(draftStatuses);
+    return statusOptions.filter((o) => selected.has(o.key));
+  }, [draftStatuses, statusOptions]);
+
+  const typeOptions: EntityTypeOption[] = useMemo(
+    () => [
+      { key: "client", label: t("types.client") },
+      { key: "supplier", label: t("types.supplier") },
+      { key: "employee", label: t("types.employee") },
+    ],
+    [t]
+  );
+
+  const selectedDraftTypeOptions = useMemo(() => {
+    const selected = new Set(draftTypes);
+    return typeOptions.filter((o) => selected.has(o.key));
+  }, [draftTypes, typeOptions]);
+
+  const appliedTypeLabel = useMemo(() => {
+    if (!appliedTypes.length) return "";
+    const labels = appliedTypes.map((k) => typeOptions.find((x) => x.key === k)?.label || k);
+    const head = labels.slice(0, 2).join(", ");
+    return labels.length > 2 ? `${head} +${labels.length - 2}` : head;
+  }, [appliedTypes, typeOptions]);
+
+  /* ------------------------------ Draft sync on open ------------------------ */
+  useEffect(() => {
+    if (openFilter === "name") setDraftName(appliedName);
+    if (openFilter === "alias") setDraftAlias(appliedAlias);
+    if (openFilter === "type") setDraftTypes(appliedTypes);
+    if (openFilter === "status") setDraftStatuses(appliedStatuses);
+  }, [openFilter, appliedName, appliedAlias, appliedTypes, appliedStatuses]);
+
+  /* ------------------------------ Focus on open ----------------------------- */
+  useEffect(() => {
+    if (openFilter === "name") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("entity-filter-name-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+    if (openFilter === "alias") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("entity-filter-alias-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+  }, [openFilter]);
+
+  /* ------------------------------ Apply/Clear ------------------------------- */
+  const applyFromDraft = useCallback(
+    (key: Exclude<FilterKey, null>) => {
+      if (key === "name") setAppliedName(draftName.trim());
+      if (key === "alias") setAppliedAlias(draftAlias.trim());
+      if (key === "type") setAppliedTypes(uniq(draftTypes));
+      if (key === "status") setAppliedStatuses(uniq(draftStatuses));
+      setOpenFilter(null);
+    },
+    [draftName, draftAlias, draftTypes, draftStatuses]
+  );
+
+  const clearOne = useCallback((key: Exclude<FilterKey, null>) => {
+    if (key === "name") setAppliedName("");
+    if (key === "alias") setAppliedAlias("");
+    if (key === "type") setAppliedTypes([]);
+    if (key === "status") setAppliedStatuses([]);
+    setOpenFilter(null);
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setAppliedName("");
+    setAppliedAlias("");
+    setAppliedTypes([]);
+    setAppliedStatuses([]);
+    setOpenFilter(null);
+  }, []);
+
+  /* ------------------------------ Pager ------------------------------------ */
+  const inflightRef = useRef(false);
+
+  const fetchEntitiesPage = useCallback(
+    async (cursor?: string) => {
+      if (inflightRef.current) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
+      inflightRef.current = true;
+
+      try {
+        const typeParam =
+          appliedTypes.length === 0 ? undefined : uniq(appliedTypes).slice().sort().join(",");
+
+        const params: GetEntitiesParams = {
+          cursor,
+          name: appliedName.trim() || undefined,
+          alias: appliedAlias.trim() || undefined,
+          type: typeParam,
+          active: toActiveParamFromStatusKeys(appliedStatuses),
+        };
+
+        const { data, meta } = await api.getEntitiesTable(params);
+
+        const items = (data?.results ?? []) as Entity[];
+
+        const nextUrl = meta?.pagination?.next ?? (data as unknown as { next?: string | null }).next ?? null;
+        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+
+        return { items, nextCursor };
+      } finally {
+        inflightRef.current = false;
+      }
+    },
+    [appliedName, appliedAlias, appliedTypes, appliedStatuses]
+  );
+
+  const pager = useCursorPager<Entity>(fetchEntitiesPage, {
+    autoLoadFirst: true,
+    deps: [appliedName, appliedAlias, appliedTypes, appliedStatuses],
+  });
+
+  /* ------------------------------ Overlay filtering ------------------------- */
+  const matchesFilters = useCallback(
+    (e: Entity) => {
+      // status
+      if (appliedStatusMode === "active" && e.is_active === false) return false;
+      if (appliedStatusMode === "inactive" && e.is_active !== false) return false;
+
+      // type
+      if (appliedTypes.length) {
+        const v = normalizeEntityType(e.entity_type);
+        const wanted = new Set(appliedTypes.map((x) => x.toLowerCase()));
+        if (!wanted.has(v)) return false;
+      }
+
+      // name
+      if (appliedName.trim()) {
+        const s = appliedName.trim().toLowerCase();
+        if (!(e.full_name || "").toLowerCase().includes(s)) return false;
+      }
+
+      // alias
+      if (appliedAlias.trim()) {
+        const s = appliedAlias.trim().toLowerCase();
+        if (!(e.alias_name || "").toLowerCase().includes(s)) return false;
+      }
+
+      return true;
+    },
+    [appliedName, appliedAlias, appliedTypes, appliedStatusMode]
+  );
+
+  useEffect(() => {
+    setAdded((prev) => prev.filter((x) => !deletedIds.has(x.id) && matchesFilters(x)));
+  }, [deletedIds, matchesFilters]);
+
+  const visibleItems = useMemo(() => {
+    const addedFiltered = added.filter((e) => !deletedIds.has(e.id) && matchesFilters(e));
+    const addedIds = new Set(addedFiltered.map((e) => e.id));
+    const base = pager.items.filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id));
+
+    return [...addedFiltered, ...base];
+  }, [added, deletedIds, pager.items, matchesFilters]);
+
   /* ------------------------------ Delete flow ------------------------------ */
   const requestDeleteEntity = useCallback(
     (entity: Entity) => {
       const name = entity.full_name ?? "";
-      setDeleteTargetId(entity.id);
 
       setConfirmText(t("confirm.deleteTitle", { name }));
       setConfirmAction(() => async () => {
+        setDeleteTargetId(entity.id);
+
         try {
-          setDeletedIds((prev) => {
-            const next = new Set(prev);
-            next.add(entity.id);
-            return next;
-          });
+          setDeletedIds((prev) => new Set(prev).add(entity.id));
 
           await api.deleteEntity(entity.id);
           await pager.refresh();
@@ -234,6 +629,14 @@ const EntitySettings: React.FC = () => {
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
+  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+  const canEdit = !!isOwner;
+
+  const nameChipValue = appliedName.trim() ? `• ${truncate(appliedName.trim(), 22)}` : "";
+  const aliasChipValue = appliedAlias.trim() ? `• ${truncate(appliedAlias.trim(), 22)}` : "";
+  const typeChipValue = appliedTypes.length ? `• ${truncate(appliedTypeLabel, 26)}` : "";
+  const statusChipValue = appliedStatuses.length ? `• ${appliedStatusValue}` : "";
+
   if (isInitialLoading) {
     return (
       <>
@@ -242,8 +645,6 @@ const EntitySettings: React.FC = () => {
       </>
     );
   }
-
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   return (
     <>
@@ -257,34 +658,78 @@ const EntitySettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.entities")}</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("header.settings")}
+                </div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                  {t("header.entities")}
+                </h1>
               </div>
             </div>
           </header>
 
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.list")}</span>
+                  {/* LEFT: chips */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div ref={nameAnchorRef}>
+                      <Chip
+                        label={t("filters.nameLabel", { defaultValue: "Name" })}
+                        value={nameChipValue || undefined}
+                        active={!!appliedName.trim()}
+                        onClick={() => togglePopover("name")}
+                        onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder={t("search.placeholder")}
-                      aria-label={t("search.aria")}
-                      disabled={globalBusy}
-                    />
+                    <div ref={aliasAnchorRef}>
+                      <Chip
+                        label={t("filters.aliasLabel", { defaultValue: "Alias" })}
+                        value={aliasChipValue || undefined}
+                        active={!!appliedAlias.trim()}
+                        onClick={() => togglePopover("alias")}
+                        onClear={appliedAlias.trim() ? () => clearOne("alias") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
-                    <Button onClick={onSearch} variant="outline" disabled={globalBusy}>
-                      {t("search.button")}
-                    </Button>
+                    <div ref={typeAnchorRef}>
+                      <Chip
+                        label={t("filters.typeLabel", { defaultValue: "Type" })}
+                        value={typeChipValue || undefined}
+                        active={appliedTypes.length > 0}
+                        onClick={() => togglePopover("type")}
+                        onClear={appliedTypes.length ? () => clearOne("type") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
-                    {isOwner && (
+                    <div ref={statusAnchorRef}>
+                      <Chip
+                        label={t("filters.statusLabel", { defaultValue: "Status" })}
+                        value={statusChipValue || undefined}
+                        active={appliedStatuses.length > 0}
+                        onClick={() => togglePopover("status")}
+                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
+
+                    {hasAppliedFilters && (
+                      <ClearFiltersChip
+                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                        onClick={clearAll}
+                        disabled={globalBusy}
+                      />
+                    )}
+                  </div>
+
+                  {/* RIGHT: add button */}
+                  <div className="shrink-0">
+                    {canEdit && (
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.add")}
                       </Button>
@@ -311,7 +756,7 @@ const EntitySettings: React.FC = () => {
                         <Row
                           key={e.id}
                           entity={e}
-                          canEdit={!!isOwner}
+                          canEdit={canEdit}
                           onEdit={openEditModal}
                           onDelete={requestDeleteEntity}
                           t={t}
@@ -338,16 +783,208 @@ const EntitySettings: React.FC = () => {
           mode={modalMode}
           entity={editingEntity}
           onClose={closeModal}
-          canEdit={!!isOwner}
+          canEdit={canEdit}
           onNotify={setSnack}
           onSaved={async ({ mode, created }) => {
-            if (mode === "create" && created) {
-              setAdded((prev) => [created, ...prev]);
+            try {
+              if (mode === "create" && created) setAdded((prev) => [created, ...prev]);
+              await pager.refresh();
+            } catch {
+              setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
             }
-            await pager.refresh();
           }}
         />
       </main>
+
+      {/* NAME POPOVER */}
+      <AnchoredPopover open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} scroll>
+        <div className="p-4">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byNameTitle", { defaultValue: "Filter by name" })}
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="entity-filter-name-input"
+              type="text"
+              value={draftName}
+              onChange={(e) => setDraftName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("name");
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setOpenFilter(null);
+                }
+              }}
+              placeholder={t("filters.namePlaceholder", { defaultValue: "Type a name…" })}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftName("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("name")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* ALIAS POPOVER */}
+      <AnchoredPopover open={openFilter === "alias"} anchorRef={aliasAnchorRef} onClose={() => setOpenFilter(null)} scroll>
+        <div className="p-4">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byAliasTitle", { defaultValue: "Filter by alias" })}
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="entity-filter-alias-input"
+              type="text"
+              value={draftAlias}
+              onChange={(e) => setDraftAlias(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("alias");
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setOpenFilter(null);
+                }
+              }}
+              placeholder={t("filters.aliasPlaceholder", { defaultValue: "Type an alias…" })}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftAlias("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("alias")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* TYPE POPOVER (SelectDropdown; allow overflow) */}
+      <AnchoredPopover
+        open={openFilter === "type"}
+        anchorRef={typeAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll={false}
+        width={420}
+      >
+        <div className="p-4 overflow-visible">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byTypeTitle", { defaultValue: "Filter by type" })}
+          </div>
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            {/* Hide SelectDropdown internal text filter but keep checkboxes */}
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <SelectDropdown<EntityTypeOption>
+                label={t("filters.typeLabel", { defaultValue: "Type" })}
+                items={typeOptions}
+                selected={selectedDraftTypeOptions}
+                onChange={(list) => setDraftTypes(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={
+                  draftTypes.length
+                    ? selectedDraftTypeOptions
+                        .map((x) => x.label)
+                        .slice(0, 2)
+                        .join(", ") + (draftTypes.length > 2 ? ` +${draftTypes.length - 2}` : "")
+                    : t("filters.typeAny", { defaultValue: "Any" })
+                }
+                customStyles={{ maxHeight: "240px" }}
+                hideFilter
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftTypes([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("type")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* STATUS POPOVER (SelectDropdown; allow overflow) */}
+      <AnchoredPopover
+        open={openFilter === "status"}
+        anchorRef={statusAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll={false}
+        width={420}
+      >
+        <div className="p-4 overflow-visible">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byStatusTitle", { defaultValue: "Filter by status" })}
+          </div>
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <SelectDropdown<StatusOption>
+                label={t("filters.statusLabel", { defaultValue: "Status" })}
+                items={statusOptions}
+                selected={selectedDraftStatusOptions}
+                onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={draftStatusButtonLabel}
+                customStyles={{ maxHeight: "240px" }}
+                hideFilter
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftStatuses([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("status")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
 
       <ConfirmToast
         open={confirmOpen}
@@ -358,7 +995,6 @@ const EntitySettings: React.FC = () => {
         onCancel={() => {
           if (confirmBusy) return;
           setConfirmOpen(false);
-          setDeleteTargetId(null);
         }}
         onConfirm={() => {
           if (confirmBusy || !confirmAction) return;

@@ -2,21 +2,27 @@
   "title": "Projetos",
   "header": { "settings": "Configurações", "projects": "Projetos" },
   "badge": { "syncing": "Sincronizando…" },
-
   "section": { "list": "Lista de projetos" },
-  "search": {
-    "placeholder": "Buscar por nome ou código…",
-    "aria": "Buscar projetos",
-    "button": "Buscar"
+  "filters": {
+    "codeLabel": "Código",
+    "searchLabel": "Buscar",
+    "typeLabel": "Tipo",
+    "statusLabel": "Status",
+    "clearAll": "Limpar filtros",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+    "byCodeTitle": "Filtrar por código",
+    "codePlaceholder": "Digite um código…",
+    "bySearchTitle": "Buscar projetos",
+    "searchPlaceholder": "Buscar por nome, código…",
+    "byTypeTitle": "Filtrar por tipo",
+    "typeAll": "Todos",
+    "multi": "Múltiplos",
+    "typeHint": "Dica: selecione um tipo para filtrar; múltiplos significa todos os tipos.",
+    "byStatusTitle": "Filtrar por status",
+    "status": { "all": "Todos", "active": "Ativo", "inactive": "Inativo" }
   },
-
-  "row": {
-    "codePrefix": "CÓDIGO:",
-    "active": "Ativo",
-    "inactive": "Inativo",
-    "untitled": "(sem título)"
-  },
-
+  "row": { "codePrefix": "CÓDIGO:", "active": "Ativo", "inactive": "Inativo", "untitled": "(sem título)" },
   "types": {
     "internal": "Interno",
     "client": "Cliente",
@@ -28,7 +34,6 @@
     "event": "Evento",
     "capex": "CapEx"
   },
-
   "btn": {
     "addProject": "Adicionar projeto",
     "edit": "Editar",
@@ -37,9 +42,7 @@
     "cancel": "Cancelar",
     "retry": "Tentar novamente"
   },
-
   "btnLabel": { "type": "Selecione um tipo" },
-
   "field": {
     "name": "Nome do projeto",
     "code": "Código",
@@ -47,43 +50,28 @@
     "description": "Descrição",
     "isActive": "Projeto ativo"
   },
-
-  "modal": {
-    "createTitle": "Adicionar projeto",
-    "editTitle": "Editar projeto",
-    "close": "Fechar"
-  },
-
+  "modal": { "createTitle": "Adicionar projeto", "editTitle": "Editar projeto", "close": "Fechar" },
   "footer": {
     "project": "Projeto:",
     "enterName": "Informe o nome do projeto para continuar.",
-    "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
+    "shortcuts": "Atalhos: Esc fecha • Ctrl/⌘+S salva"
   },
-
   "actions": { "ok": "OK", "discard": "Descartar" },
-
   "confirmDiscard": {
     "title": "Descartar alterações?",
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
-
-  "confirm": { "deleteTitle": "Excluir projeto \"{{name}}\"?" },
-
+  "confirm": { "deleteTitle": "Excluir o projeto \"{{name}}\"?" },
   "empty": "Nenhum projeto encontrado.",
-
   "errors": {
     "loadFailedTitle": "Falha ao carregar",
     "saveError": "Falha ao salvar o projeto.",
-    "detailError": "Falha ao carregar detalhes.",
+    "detailError": "Falha ao carregar os detalhes.",
     "deleteError": "Falha ao excluir o projeto.",
     "confirmFailed": "Falha ao confirmar.",
-    "validationTitle": "Informações obrigatórias",
+    "validationTitle": "Informações ausentes",
     "validationName": "O nome do projeto é obrigatório.",
     "validationType": "Selecione um tipo de projeto válido."
   },
-
-  "toast": {
-    "saved": "Projeto salvo.",
-    "deleted": "Projeto excluído."
-  }
+  "toast": { "saved": "Projeto salvo.", "deleted": "Projeto excluído." }
 }

@@ -21,6 +21,25 @@
     "noName": "(sem nome)"
   },
 
+  "filters": {
+    "codeLabel": "Código",
+    "nameLabel": "Nome",
+    "statusLabel": "Status",
+    "byCodeTitle": "Filtrar por código",
+    "byNameTitle": "Filtrar por nome",
+    "byStatusTitle": "Filtrar por status",
+    "codePlaceholder": "Digite um código…",
+    "namePlaceholder": "Digite um nome…",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+    "clearAll": "Limpar filtros",
+    "status": {
+      "all": "Todos",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    }
+  },
+
   "modal": {
     "createTitle": "Adicionar departamento",
     "editTitle": "Editar departamento",
@@ -34,7 +53,7 @@
 
   "footer": {
     "department": "Departamento:",
-    "enterName": "Informe o nome do departamento para continuar.",
+    "enterName": "Informe um nome de departamento para continuar.",
     "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
   },
 
@@ -52,7 +71,7 @@
     "saveFailed": "Falha ao salvar o departamento.",
     "deleteFailed": "Falha ao excluir o departamento.",
     "confirmFailed": "Falha ao confirmar a ação.",
-    "validationTitle": "Informações obrigatórias",
+    "validationTitle": "Informação ausente",
     "validationName": "O nome do departamento é obrigatório."
   },
 

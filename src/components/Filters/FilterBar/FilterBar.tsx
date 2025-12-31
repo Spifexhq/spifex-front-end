@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import Input from "../ui/Input";
-import { DateInput } from "../ui/DateInput";
-import { AmountInput } from "../ui/AmountInput";
+import Input from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DateInput";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 import { api } from "@/api/requests";
 import { useBanks } from "@/hooks/useBanks";

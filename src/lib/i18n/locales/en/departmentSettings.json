@@ -21,6 +21,25 @@
     "noName": "(no name)"
   },
 
+  "filters": {
+    "codeLabel": "Code",
+    "nameLabel": "Name",
+    "statusLabel": "Status",
+    "byCodeTitle": "Filter by code",
+    "byNameTitle": "Filter by name",
+    "byStatusTitle": "Filter by status",
+    "codePlaceholder": "Type a code…",
+    "namePlaceholder": "Type a name…",
+    "apply": "Apply",
+    "clear": "Clear",
+    "clearAll": "Clear filters",
+    "status": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+
   "modal": {
     "createTitle": "Add department",
     "editTitle": "Edit department",

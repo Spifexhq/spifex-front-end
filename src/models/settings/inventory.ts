@@ -4,7 +4,7 @@ import type { Paginated } from "@/models/Api";
 /* --------------------------------- Read model -------------------------------- */
 
 export interface InventoryItem {
-  id: string;        // external_id from the API
+  id: string; // external_id from the API
   sku: string;
   name: string;
   description: string | null;
@@ -24,7 +24,21 @@ export interface InventoryAllocation {
 
 export interface GetInventoryItemsParams {
   cursor?: string;
+
+  // chips (separated)
+  sku?: string;
+  name?: string;
+  description?: string;
+  uom?: string;
+
+  // status
   active?: "true" | "false";
+
+  // qty range
+  min_qoh?: string; // keep string to match API style
+  max_qoh?: string; // keep string to match API style
+
+  // legacy fallback (optional)
   q?: string;
 }
 

@@ -18,7 +18,26 @@
   "tags": {
     "code": "Code",
     "inactive": "Inaktiv",
-    "noName": "(ohne Namen)"
+    "noName": "(kein Name)"
+  },
+
+  "filters": {
+    "codeLabel": "Code",
+    "nameLabel": "Name",
+    "statusLabel": "Status",
+    "byCodeTitle": "Nach Code filtern",
+    "byNameTitle": "Nach Name filtern",
+    "byStatusTitle": "Nach Status filtern",
+    "codePlaceholder": "Code eingeben…",
+    "namePlaceholder": "Name eingeben…",
+    "apply": "Anwenden",
+    "clear": "Leeren",
+    "clearAll": "Filter löschen",
+    "status": {
+      "all": "Alle",
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    }
   },
 
   "modal": {
@@ -28,13 +47,13 @@
     "fields": {
       "name": "Name",
       "code": "Code",
-      "is_active": "Aktive Abteilung"
+      "is_active": "Abteilung aktiv"
     }
   },
 
   "footer": {
     "department": "Abteilung:",
-    "enterName": "Geben Sie einen Abteilungsnamen ein, um fortzufahren.",
+    "enterName": "Bitte einen Abteilungsnamen eingeben, um fortzufahren.",
     "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
   },
 
@@ -42,7 +61,7 @@
 
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
-    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+    "message": "Sie haben nicht gespeicherte Änderungen. Möchten Sie diese verwerfen?"
   },
 
   "confirm": { "deleteTitle": "„{{name}}“ löschen?" },
@@ -51,7 +70,7 @@
     "fetchError": "Laden fehlgeschlagen.",
     "saveFailed": "Abteilung konnte nicht gespeichert werden.",
     "deleteFailed": "Abteilung konnte nicht gelöscht werden.",
-    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "confirmFailed": "Aktion konnte nicht bestätigt werden.",
     "validationTitle": "Fehlende Angaben",
     "validationName": "Der Abteilungsname ist erforderlich."
   },

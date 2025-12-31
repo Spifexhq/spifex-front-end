@@ -3,13 +3,6 @@
   "header": { "settings": "Paramètres", "inventory": "Inventaire" },
   "badge": { "syncing": "Synchronisation…" },
 
-  "section": { "list": "Articles d’inventaire" },
-  "search": {
-    "placeholder": "Rechercher par nom ou SKU…",
-    "aria": "Rechercher des articles",
-    "button": "Rechercher"
-  },
-
   "row": {
     "skuPrefix": "SKU :",
     "qtyPrefix": "Qté :",
@@ -20,19 +13,42 @@
     "addItem": "Ajouter un article",
     "edit": "Modifier",
     "delete": "Supprimer",
-    "save": "Enregistrer",
     "cancel": "Annuler",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "save": "Enregistrer"
   },
 
-  "field": {
-    "sku": "SKU",
-    "name": "Nom",
-    "description": "Description",
-    "uom": "Unité (UoM)",
-    "uomPlaceholder": "ex. : pce, boîte, kg, l…",
-    "qty": "Quantité en stock",
-    "isActive": "Article actif"
+  "filters": {
+    "skuLabel": "SKU",
+    "nameLabel": "Nom",
+    "descriptionLabel": "Description",
+    "uomLabel": "UdM",
+    "qtyLabel": "Qté",
+    "statusLabel": "Statut",
+
+    "clearAll": "Effacer les filtres",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+
+    "bySkuTitle": "Filtrer par SKU",
+    "byNameTitle": "Filtrer par nom",
+    "byDescriptionTitle": "Filtrer par description",
+    "byUomTitle": "Filtrer par unité",
+    "byQtyTitle": "Filtrer par stock disponible",
+    "byStatusTitle": "Filtrer par statut",
+
+    "skuPlaceholder": "Saisir un SKU…",
+    "namePlaceholder": "Saisir un nom…",
+    "descriptionPlaceholder": "Saisir une description…",
+    "uomPlaceholder": "ex. : u, boîte, kg, l…",
+
+    "qtyMin": "Min",
+    "qtyMax": "Max",
+    "qtyMinPlaceholder": "0",
+    "qtyMaxPlaceholder": "0",
+
+    "statusHint": "Sélectionnez aucun ou les deux pour tout afficher.",
+    "status": { "all": "Tous", "active": "Actif", "inactive": "Inactif" }
   },
 
   "modal": {
@@ -60,12 +76,12 @@
 
   "errors": {
     "loadFailedTitle": "Échec du chargement",
-    "saveError": "Impossible d’enregistrer l’article.",
-    "deleteError": "Impossible de supprimer l’article.",
-    "detailError": "Impossible de charger les détails.",
+    "saveError": "Échec de l’enregistrement de l’article.",
+    "deleteError": "Échec de la suppression de l’article.",
+    "detailError": "Échec du chargement des détails.",
     "confirmFailed": "Échec de la confirmation.",
     "validationTitle": "Informations manquantes",
-    "validationSkuName": "Le SKU et le nom sont obligatoires.",
+    "validationSkuName": "Le SKU et le nom sont requis.",
     "validationQty": "La quantité doit être un entier supérieur ou égal à 0."
   },
 

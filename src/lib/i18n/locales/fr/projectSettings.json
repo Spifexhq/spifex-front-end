@@ -2,21 +2,27 @@
   "title": "Projets",
   "header": { "settings": "Paramètres", "projects": "Projets" },
   "badge": { "syncing": "Synchronisation…" },
-
   "section": { "list": "Liste des projets" },
-  "search": {
-    "placeholder": "Rechercher par nom ou code…",
-    "aria": "Rechercher des projets",
-    "button": "Rechercher"
+  "filters": {
+    "codeLabel": "Code",
+    "searchLabel": "Rechercher",
+    "typeLabel": "Type",
+    "statusLabel": "Statut",
+    "clearAll": "Effacer les filtres",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "byCodeTitle": "Filtrer par code",
+    "codePlaceholder": "Saisissez un code…",
+    "bySearchTitle": "Rechercher des projets",
+    "searchPlaceholder": "Rechercher par nom, code…",
+    "byTypeTitle": "Filtrer par type",
+    "typeAll": "Tous",
+    "multi": "Multiples",
+    "typeHint": "Astuce : sélectionnez un type pour filtrer ; plusieurs signifie tous les types.",
+    "byStatusTitle": "Filtrer par statut",
+    "status": { "all": "Tous", "active": "Actif", "inactive": "Inactif" }
   },
-
-  "row": {
-    "codePrefix": "CODE :",
-    "active": "Actif",
-    "inactive": "Inactif",
-    "untitled": "(sans titre)"
-  },
-
+  "row": { "codePrefix": "CODE :", "active": "Actif", "inactive": "Inactif", "untitled": "(sans titre)" },
   "types": {
     "internal": "Interne",
     "client": "Client",
@@ -24,11 +30,10 @@
     "operational": "Opérationnel",
     "marketing": "Marketing",
     "product": "Produit",
-    "it": "IT",
+    "it": "Informatique",
     "event": "Événement",
     "capex": "CapEx"
   },
-
   "btn": {
     "addProject": "Ajouter un projet",
     "edit": "Modifier",
@@ -37,9 +42,7 @@
     "cancel": "Annuler",
     "retry": "Réessayer"
   },
-
   "btnLabel": { "type": "Sélectionner un type" },
-
   "field": {
     "name": "Nom du projet",
     "code": "Code",
@@ -47,30 +50,19 @@
     "description": "Description",
     "isActive": "Projet actif"
   },
-
-  "modal": {
-    "createTitle": "Ajouter un projet",
-    "editTitle": "Modifier le projet",
-    "close": "Fermer"
-  },
-
+  "modal": { "createTitle": "Ajouter un projet", "editTitle": "Modifier le projet", "close": "Fermer" },
   "footer": {
     "project": "Projet :",
     "enterName": "Saisissez un nom de projet pour continuer.",
-    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
+    "shortcuts": "Raccourcis : Esc fermer • Ctrl/⌘+S enregistrer"
   },
-
   "actions": { "ok": "OK", "discard": "Ignorer" },
-
   "confirmDiscard": {
     "title": "Ignorer les modifications ?",
     "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
   },
-
   "confirm": { "deleteTitle": "Supprimer le projet \"{{name}}\" ?" },
-
   "empty": "Aucun projet trouvé.",
-
   "errors": {
     "loadFailedTitle": "Échec du chargement",
     "saveError": "Impossible d’enregistrer le projet.",
@@ -78,12 +70,8 @@
     "deleteError": "Impossible de supprimer le projet.",
     "confirmFailed": "Échec de la confirmation.",
     "validationTitle": "Informations manquantes",
-    "validationName": "Le nom du projet est obligatoire.",
+    "validationName": "Le nom du projet est requis.",
     "validationType": "Veuillez sélectionner un type de projet valide."
   },
-
-  "toast": {
-    "saved": "Projet enregistré.",
-    "deleted": "Projet supprimé."
-  }
+  "toast": { "saved": "Projet enregistré.", "deleted": "Projet supprimé." }
 }

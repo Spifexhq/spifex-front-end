@@ -1,34 +1,39 @@
 {
   "title": "Projekte",
   "header": { "settings": "Einstellungen", "projects": "Projekte" },
-  "badge": { "syncing": "Synchronisiert…" },
-
+  "badge": { "syncing": "Synchronisieren…" },
   "section": { "list": "Projektliste" },
-  "search": {
-    "placeholder": "Nach Name oder Code suchen…",
-    "aria": "Projekte suchen",
-    "button": "Suchen"
+  "filters": {
+    "codeLabel": "Code",
+    "searchLabel": "Suchen",
+    "typeLabel": "Typ",
+    "statusLabel": "Status",
+    "clearAll": "Filter löschen",
+    "apply": "Anwenden",
+    "clear": "Leeren",
+    "byCodeTitle": "Nach Code filtern",
+    "codePlaceholder": "Code eingeben…",
+    "bySearchTitle": "Projekte suchen",
+    "searchPlaceholder": "Nach Name, Code suchen…",
+    "byTypeTitle": "Nach Typ filtern",
+    "typeAll": "Alle",
+    "multi": "Mehrere",
+    "typeHint": "Tipp: Wählen Sie einen Typ zum Filtern; mehrere bedeutet alle Typen.",
+    "byStatusTitle": "Nach Status filtern",
+    "status": { "all": "Alle", "active": "Aktiv", "inactive": "Inaktiv" }
   },
-
-  "row": {
-    "codePrefix": "CODE:",
-    "active": "Aktiv",
-    "inactive": "Inaktiv",
-    "untitled": "(ohne Titel)"
-  },
-
+  "row": { "codePrefix": "CODE:", "active": "Aktiv", "inactive": "Inaktiv", "untitled": "(ohne Titel)" },
   "types": {
     "internal": "Intern",
     "client": "Kunde",
     "research": "Forschung",
-    "operational": "Betrieb",
+    "operational": "Operativ",
     "marketing": "Marketing",
     "product": "Produkt",
     "it": "IT",
     "event": "Event",
     "capex": "CapEx"
   },
-
   "btn": {
     "addProject": "Projekt hinzufügen",
     "edit": "Bearbeiten",
@@ -37,53 +42,36 @@
     "cancel": "Abbrechen",
     "retry": "Erneut versuchen"
   },
-
   "btnLabel": { "type": "Typ auswählen" },
-
   "field": {
     "name": "Projektname",
     "code": "Code",
     "type": "Projekttyp",
     "description": "Beschreibung",
-    "isActive": "Aktives Projekt"
+    "isActive": "Projekt aktiv"
   },
-
-  "modal": {
-    "createTitle": "Projekt hinzufügen",
-    "editTitle": "Projekt bearbeiten",
-    "close": "Schließen"
-  },
-
+  "modal": { "createTitle": "Projekt hinzufügen", "editTitle": "Projekt bearbeiten", "close": "Schließen" },
   "footer": {
     "project": "Projekt:",
     "enterName": "Geben Sie einen Projektnamen ein, um fortzufahren.",
-    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+    "shortcuts": "Tastenkürzel: Esc schließen • Ctrl/⌘+S speichern"
   },
-
   "actions": { "ok": "OK", "discard": "Verwerfen" },
-
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
-    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie sie verwerfen?"
   },
-
   "confirm": { "deleteTitle": "Projekt \"{{name}}\" löschen?" },
-
   "empty": "Keine Projekte gefunden.",
-
   "errors": {
     "loadFailedTitle": "Laden fehlgeschlagen",
     "saveError": "Projekt konnte nicht gespeichert werden.",
     "detailError": "Details konnten nicht geladen werden.",
     "deleteError": "Projekt konnte nicht gelöscht werden.",
     "confirmFailed": "Bestätigung fehlgeschlagen.",
-    "validationTitle": "Fehlende Angaben",
+    "validationTitle": "Fehlende Informationen",
     "validationName": "Der Projektname ist erforderlich.",
-    "validationType": "Bitte einen gültigen Projekttyp auswählen."
+    "validationType": "Bitte wählen Sie einen gültigen Projekttyp aus."
   },
-
-  "toast": {
-    "saved": "Projekt gespeichert.",
-    "deleted": "Projekt gelöscht."
-  }
+  "toast": { "saved": "Projekt gespeichert.", "deleted": "Projekt gelöscht." }
 }

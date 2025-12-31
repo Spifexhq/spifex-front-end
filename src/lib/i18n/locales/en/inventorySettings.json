@@ -3,13 +3,6 @@
   "header": { "settings": "Settings", "inventory": "Inventory" },
   "badge": { "syncing": "Syncing…" },
 
-  "section": { "list": "Inventory items" },
-  "search": {
-    "placeholder": "Search by name or SKU…",
-    "aria": "Search items",
-    "button": "Search"
-  },
-
   "row": {
     "skuPrefix": "SKU:",
     "qtyPrefix": "Qty:",
@@ -20,19 +13,42 @@
     "addItem": "Add item",
     "edit": "Edit",
     "delete": "Delete",
-    "save": "Save",
     "cancel": "Cancel",
-    "retry": "Try again"
+    "retry": "Try again",
+    "save": "Save"
   },
 
-  "field": {
-    "sku": "SKU",
-    "name": "Name",
-    "description": "Description",
-    "uom": "Unit (UoM)",
+  "filters": {
+    "skuLabel": "SKU",
+    "nameLabel": "Name",
+    "descriptionLabel": "Description",
+    "uomLabel": "UoM",
+    "qtyLabel": "Qty",
+    "statusLabel": "Status",
+
+    "clearAll": "Clear filters",
+    "apply": "Apply",
+    "clear": "Clear",
+
+    "bySkuTitle": "Filter by SKU",
+    "byNameTitle": "Filter by name",
+    "byDescriptionTitle": "Filter by description",
+    "byUomTitle": "Filter by unit (UoM)",
+    "byQtyTitle": "Filter by quantity on hand",
+    "byStatusTitle": "Filter by status",
+
+    "skuPlaceholder": "Type a SKU…",
+    "namePlaceholder": "Type a name…",
+    "descriptionPlaceholder": "Type a description…",
     "uomPlaceholder": "e.g.: ea, box, kg, l…",
-    "qty": "Quantity on hand",
-    "isActive": "Active item"
+
+    "qtyMin": "Min",
+    "qtyMax": "Max",
+    "qtyMinPlaceholder": "0",
+    "qtyMaxPlaceholder": "0",
+
+    "statusHint": "Select none or both to show all.",
+    "status": { "all": "All", "active": "Active", "inactive": "Inactive" }
   },
 
   "modal": {

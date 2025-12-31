@@ -18,6 +18,7 @@ export interface GetProjectsParams {
   cursor?: string;
   active?: "true" | "false";
   type?: string;
+  code?: string; // NEW
   q?: string;
 }
 
@@ -25,6 +26,7 @@ export interface GetProjectsParams {
  * Use shared Paginated model; count is intentionally discarded.
  */
 export type GetProjectsResponse = Paginated<Project>;
+export type GetProjectResponse = Project;
 
 /* --------------------------------- Write DTOs -------------------------------- */
 

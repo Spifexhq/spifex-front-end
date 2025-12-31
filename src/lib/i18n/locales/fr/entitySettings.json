@@ -8,7 +8,7 @@
     "button": "Rechercher"
   },
   "types": { "client": "Client", "supplier": "Fournisseur", "employee": "Employé" },
-  "row": { "inactive": "• Inactive", "untitled": "(sans titre)" },
+  "row": { "inactive": "• Inactif", "untitled": "(sans titre)" },
 
   "tabs": {
     "general": "Général",
@@ -52,8 +52,8 @@
     "entity_type": "Type d’entité",
     "is_active": "Entité active",
 
-    "ssn_tax_id": "Identifiant fiscal (CPF)",
-    "ein_tax_id": "Identifiant fiscal (CNPJ)",
+    "ssn_tax_id": "SSN (CPF)",
+    "ein_tax_id": "EIN (CNPJ)",
 
     "email": "E-mail",
     "phone": "Téléphone",
@@ -72,15 +72,41 @@
     "account_holder_name": "Nom du titulaire"
   },
 
+  "filters": {
+    "nameLabel": "Nom",
+    "aliasLabel": "Alias",
+    "typeLabel": "Type",
+    "statusLabel": "Statut",
+    "clearAll": "Effacer les filtres",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+
+    "byNameTitle": "Filtrer par nom",
+    "byAliasTitle": "Filtrer par alias",
+    "byTypeTitle": "Filtrer par type",
+    "byStatusTitle": "Filtrer par statut",
+
+    "namePlaceholder": "Saisir un nom…",
+    "aliasPlaceholder": "Saisir un alias…",
+
+    "typeAny": "Tous",
+
+    "status": {
+      "all": "Tous",
+      "active": "Actif",
+      "inactive": "Inactif"
+    }
+  },
+
   "modal": { "createTitle": "Ajouter une entité", "editTitle": "Modifier l’entité", "close": "Fermer" },
   "empty": "Aucune entité trouvée.",
   "confirm": { "deleteTitle": "Supprimer l’entité \"{{name}}\" ?" },
 
   "errors": {
     "loadFailedTitle": "Échec du chargement",
-    "saveError": "Impossible d’enregistrer l’entité.",
-    "deleteError": "Impossible de supprimer l’entité.",
-    "detailError": "Impossible de charger les détails.",
+    "saveError": "Échec de l’enregistrement de l’entité.",
+    "deleteError": "Échec de la suppression de l’entité.",
+    "detailError": "Échec du chargement des détails.",
     "confirmFailed": "Échec de la confirmation."
   },
 

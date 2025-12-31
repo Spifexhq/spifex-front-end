@@ -1,14 +1,7 @@
 {
   "title": "Inventar",
   "header": { "settings": "Einstellungen", "inventory": "Inventar" },
-  "badge": { "syncing": "Synchronisiert…" },
-
-  "section": { "list": "Inventarartikel" },
-  "search": {
-    "placeholder": "Nach Name oder SKU suchen…",
-    "aria": "Artikel suchen",
-    "button": "Suchen"
-  },
+  "badge": { "syncing": "Synchronisierung…" },
 
   "row": {
     "skuPrefix": "SKU:",
@@ -20,19 +13,42 @@
     "addItem": "Artikel hinzufügen",
     "edit": "Bearbeiten",
     "delete": "Löschen",
-    "save": "Speichern",
     "cancel": "Abbrechen",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "save": "Speichern"
   },
 
-  "field": {
-    "sku": "SKU",
-    "name": "Name",
-    "description": "Beschreibung",
-    "uom": "Einheit (UoM)",
-    "uomPlaceholder": "z. B.: Stk, Karton, kg, l…",
-    "qty": "Bestand",
-    "isActive": "Aktiver Artikel"
+  "filters": {
+    "skuLabel": "SKU",
+    "nameLabel": "Name",
+    "descriptionLabel": "Beschreibung",
+    "uomLabel": "ME",
+    "qtyLabel": "Menge",
+    "statusLabel": "Status",
+
+    "clearAll": "Filter löschen",
+    "apply": "Anwenden",
+    "clear": "Löschen",
+
+    "bySkuTitle": "Nach SKU filtern",
+    "byNameTitle": "Nach Name filtern",
+    "byDescriptionTitle": "Nach Beschreibung filtern",
+    "byUomTitle": "Nach Maßeinheit filtern",
+    "byQtyTitle": "Nach Lagerbestand filtern",
+    "byStatusTitle": "Nach Status filtern",
+
+    "skuPlaceholder": "SKU eingeben…",
+    "namePlaceholder": "Name eingeben…",
+    "descriptionPlaceholder": "Beschreibung eingeben…",
+    "uomPlaceholder": "z. B.: Stk, Kt, kg, l…",
+
+    "qtyMin": "Min",
+    "qtyMax": "Max",
+    "qtyMinPlaceholder": "0",
+    "qtyMaxPlaceholder": "0",
+
+    "statusHint": "Nichts oder beides auswählen, um alle anzuzeigen.",
+    "status": { "all": "Alle", "active": "Aktiv", "inactive": "Inaktiv" }
   },
 
   "modal": {
@@ -44,14 +60,14 @@
   "footer": {
     "item": "Artikel:",
     "enterName": "Geben Sie einen Artikelnamen ein, um fortzufahren.",
-    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+    "shortcuts": "Kurzbefehle: Esc schließen • Strg/⌘+S speichern"
   },
 
   "actions": { "ok": "OK", "discard": "Verwerfen" },
 
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
-    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie diese verwerfen?"
+    "message": "Sie haben ungespeicherte Änderungen. Möchten Sie sie verwerfen?"
   },
 
   "confirm": { "deleteTitle": "Artikel \"{{name}}\" löschen?" },

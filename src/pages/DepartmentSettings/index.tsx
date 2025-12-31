@@ -1,9 +1,9 @@
 /* --------------------------------------------------------------------------
- * File: src/pages/DepartmentSettings.tsx
- * - i18n: namespace "departmentSettings"
+ * File: src/pages/DepartmentSettings/index.tsx
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import Input from "@/components/ui/Input";
@@ -14,6 +14,8 @@ import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
+import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
+
 import DepartmentModal from "./DepartmentModal";
 
 import { api } from "@/api/requests";
@@ -22,7 +24,7 @@ import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
 import type { TFunction } from "i18next";
-import type { Department } from "@/models/settings/departments";
+import type { Department, GetDepartmentsParams } from "@/models/settings/departments";
 
 /* ------------------------------ Snackbar type ----------------------------- */
 type Snack =
@@ -34,12 +36,6 @@ function getInitials() {
   return "DP";
 }
 
-/**
- * IMPORTANT:
- * Cursor pagination relies on backend ordering.
- * Avoid re-sorting server pages on the client, or you risk perceived "jumps".
- * Only sort local overlay items if needed.
- */
 function sortOverlayByCodeThenName(a: Department, b: Department) {
   const ca = (a.code || "").toString();
   const cb = (b.code || "").toString();
@@ -47,7 +43,232 @@ function sortOverlayByCodeThenName(a: Department, b: Department) {
   return (a.name || "").localeCompare(b.name || "", "en");
 }
 
-/* Row without its own borders; container uses divide-y */
+type FilterKey = "code" | "name" | "status" | null;
+
+type StatusKey = "active" | "inactive";
+type StatusOption = { key: StatusKey; label: string };
+
+function uniq<T>(arr: T[]) {
+  return Array.from(new Set(arr));
+}
+
+function truncate(s: string, max = 24) {
+  const v = (s || "").trim();
+  if (v.length <= max) return v;
+  return `${v.slice(0, max - 1)}…`;
+}
+
+function computeStatusMode(keys: StatusKey[]): "all" | "active" | "inactive" {
+  const hasA = keys.includes("active");
+  const hasI = keys.includes("inactive");
+  if (hasA && !hasI) return "active";
+  if (!hasA && hasI) return "inactive";
+  return "all";
+}
+
+function toActiveParamFromStatusKeys(keys: StatusKey[]): GetDepartmentsParams["active"] | undefined {
+  const mode = computeStatusMode(keys);
+  if (mode === "active") return "true";
+  if (mode === "inactive") return "false";
+  return undefined;
+}
+
+/* ------------------------------- Chip UI ---------------------------------- */
+
+const Chip = ({
+  label,
+  value,
+  active,
+  onClick,
+  onClear,
+  disabled,
+}: {
+  label: string;
+  value?: string;
+  active: boolean;
+  onClick: () => void;
+  onClear?: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] transition",
+        disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50",
+        active ? "border-gray-300 bg-white" : "border-gray-200 bg-white",
+      ].join(" ")}
+    >
+      {!active ? (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
+          +
+        </span>
+      ) : (
+        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
+          ✓
+        </span>
+      )}
+
+      <span className="text-gray-800 font-medium">{label}</span>
+
+      {active && value ? <span className="text-gray-700 font-normal">{value}</span> : null}
+
+      {active && onClear ? (
+        <span
+          role="button"
+          aria-label="Clear"
+          className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+        >
+          ×
+        </span>
+      ) : null}
+    </button>
+  );
+};
+
+const ClearFiltersChip = ({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition",
+        "border-red-200 text-red-600 bg-white",
+        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50",
+      ].join(" ")}
+    >
+      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-red-200 text-red-600 text-[12px] leading-none">
+        ×
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+};
+
+/* -------------------------- Portal anchored popover ------------------------ */
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+const AnchoredPopover: React.FC<{
+  open: boolean;
+  anchorRef: React.RefObject<HTMLElement>;
+  onClose: () => void;
+  width?: number;
+  scroll?: boolean;
+  children: React.ReactNode;
+}> = ({ open, anchorRef, onClose, width = 360, scroll = true, children }) => {
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const a = anchorRef.current;
+    if (!a) return;
+
+    const r = a.getBoundingClientRect();
+    const padding = 12;
+    const top = r.bottom + 8;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const desiredLeft = r.left;
+    const maxLeft = vw - width - padding;
+    const left = clamp(desiredLeft, padding, Math.max(padding, maxLeft));
+
+    const maxHeight = Math.max(160, vh - top - padding);
+
+    setPos({ top, left, maxHeight });
+  }, [anchorRef, width]);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+
+    const onResize = () => updatePosition();
+    const onScroll = () => updatePosition();
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      const pop = popRef.current;
+      const anc = anchorRef.current;
+      const target = e.target as Node;
+
+      if (pop && pop.contains(target)) return;
+      if (anc && anc.contains(target)) return;
+      onClose();
+    };
+
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [open, onClose, anchorRef]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  if (typeof document === "undefined") return null;
+  if (!pos) return null;
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: pos.top,
+        left: pos.left,
+        width,
+        zIndex: 99,
+      }}
+    >
+      <div ref={popRef} className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
+        {scroll ? (
+          <div style={{ maxHeight: pos.maxHeight, overflowY: "auto" }}>{children}</div>
+        ) : (
+          children
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const Row = ({
   dept,
   onEdit,
@@ -116,13 +337,63 @@ const DepartmentSettings: React.FC = () => {
   /* Standard flags */
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  /* Overlay dinâmico */
+  /* Overlay */
   const [added, setAdded] = useState<Department[]>([]);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
-  /* ------------------------------- Filter state ---------------------------- */
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
+  /* ------------------------------- Applied filters ------------------------- */
+  const [appliedCode, setAppliedCode] = useState("");
+  const [appliedName, setAppliedName] = useState("");
+  const [appliedStatuses, setAppliedStatuses] = useState<StatusKey[]>([]); // multi-select
+
+  const appliedStatusMode = useMemo(() => computeStatusMode(appliedStatuses), [appliedStatuses]);
+
+  const hasAppliedFilters = useMemo(() => {
+    return appliedCode.trim() !== "" || appliedName.trim() !== "" || appliedStatuses.length > 0;
+  }, [appliedCode, appliedName, appliedStatuses]);
+
+  /* ------------------------------- Popover state --------------------------- */
+  const [openFilter, setOpenFilter] = useState<FilterKey>(null);
+  const [draftCode, setDraftCode] = useState("");
+  const [draftName, setDraftName] = useState("");
+  const [draftStatuses, setDraftStatuses] = useState<StatusKey[]>([]);
+
+  /* ------------------------------- Anchors --------------------------------- */
+  const codeAnchorRef = useRef<HTMLDivElement | null>(null);
+  const nameAnchorRef = useRef<HTMLDivElement | null>(null);
+  const statusAnchorRef = useRef<HTMLDivElement | null>(null);
+
+  /* ------------------------------- Status options -------------------------- */
+  const activeLabel = t("filters.status.active", { defaultValue: "Active" });
+  const inactiveLabel = t("filters.status.inactive", { defaultValue: "Inactive" });
+  const allLabel = t("filters.status.all", { defaultValue: "All" });
+
+  const statusOptions: StatusOption[] = useMemo(
+    () => [
+      { key: "active", label: activeLabel },
+      { key: "inactive", label: inactiveLabel },
+    ],
+    [activeLabel, inactiveLabel]
+  );
+
+  const appliedStatusValue = useMemo(() => {
+    if (appliedStatusMode === "active") return activeLabel;
+    if (appliedStatusMode === "inactive") return inactiveLabel;
+    return allLabel;
+  }, [appliedStatusMode, activeLabel, inactiveLabel, allLabel]);
+
+  const draftStatusMode = useMemo(() => computeStatusMode(draftStatuses), [draftStatuses]);
+
+  const draftButtonLabel = useMemo(() => {
+    if (draftStatusMode === "active") return activeLabel;
+    if (draftStatusMode === "inactive") return inactiveLabel;
+    return allLabel;
+  }, [draftStatusMode, activeLabel, inactiveLabel, allLabel]);
+
+  const selectedDraftStatusOptions = useMemo(() => {
+    const selected = new Set(draftStatuses);
+    return statusOptions.filter((o) => selected.has(o.key));
+  }, [draftStatuses, statusOptions]);
 
   /* --------------------------- Pagination (reusable) ----------------------- */
   const inflightRef = useRef(false);
@@ -135,10 +406,14 @@ const DepartmentSettings: React.FC = () => {
 
       inflightRef.current = true;
       try {
-        const { data, meta } = await api.getDepartments({
+        const params: GetDepartmentsParams = {
           cursor,
-          q: appliedQuery || undefined,
-        });
+          code: appliedCode.trim() || undefined,
+          name: appliedName.trim() || undefined,
+          active: toActiveParamFromStatusKeys(appliedStatuses),
+        };
+
+        const { data, meta } = await api.getDepartments(params);
 
         const items = (data.results ?? []) as Department[];
 
@@ -150,47 +425,128 @@ const DepartmentSettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [appliedQuery]
+    [appliedCode, appliedName, appliedStatuses]
   );
 
   const pager = useCursorPager<Department>(fetchDepartmentsPage, {
     autoLoadFirst: true,
-    deps: [appliedQuery],
+    deps: [appliedCode, appliedName, appliedStatuses],
   });
 
   const { refresh } = pager;
 
-  const onSearch = useCallback(() => {
-    const trimmed = query.trim();
-    if (trimmed === appliedQuery) refresh();
-    else setAppliedQuery(trimmed);
-  }, [query, appliedQuery, refresh]);
+  /* ------------------------------ Filter apply/clear ------------------------ */
+  const applyFromDraft = useCallback(
+    (key: Exclude<FilterKey, null>) => {
+      if (key === "code") {
+        const next = draftCode.trim();
+        if (next === appliedCode.trim()) refresh();
+        else setAppliedCode(next);
+      }
 
-  /* ------------------------------ Overlay helpers -------------------------- */
-  const matchesQuery = useCallback((d: Department, q: string) => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (d.code || "").toLowerCase().includes(s) || (d.name || "").toLowerCase().includes(s);
+      if (key === "name") {
+        const next = draftName.trim();
+        if (next === appliedName.trim()) refresh();
+        else setAppliedName(next);
+      }
+
+      if (key === "status") {
+        const next = uniq(draftStatuses);
+        const same =
+          next.length === appliedStatuses.length &&
+          next.every((x) => appliedStatuses.includes(x)) &&
+          appliedStatuses.every((x) => next.includes(x));
+
+        if (same) refresh();
+        else setAppliedStatuses(next);
+      }
+
+      setOpenFilter(null);
+    },
+    [draftCode, draftName, draftStatuses, appliedCode, appliedName, appliedStatuses, refresh]
+  );
+
+  const clearOne = useCallback((key: Exclude<FilterKey, null>) => {
+    if (key === "code") setAppliedCode("");
+    if (key === "name") setAppliedName("");
+    if (key === "status") setAppliedStatuses([]);
+    setOpenFilter(null);
   }, []);
 
+  const clearAll = useCallback(() => {
+    if (!hasAppliedFilters) {
+      refresh();
+      return;
+    }
+    setAppliedCode("");
+    setAppliedName("");
+    setAppliedStatuses([]);
+    setOpenFilter(null);
+  }, [hasAppliedFilters, refresh]);
+
+  /* ------------------------------ Draft sync on open ------------------------ */
   useEffect(() => {
-    // keep overlay consistent with current query
-    setAdded((prev) => prev.filter((d) => matchesQuery(d, appliedQuery)));
-  }, [appliedQuery, matchesQuery]);
+    if (openFilter === "code") setDraftCode(appliedCode);
+    if (openFilter === "name") setDraftName(appliedName);
+    if (openFilter === "status") setDraftStatuses(appliedStatuses);
+  }, [openFilter, appliedCode, appliedName, appliedStatuses]);
+
+  /* ------------------------------ Focus on open ----------------------------- */
+  useEffect(() => {
+    if (openFilter === "code") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("dept-filter-code-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+    if (openFilter === "name") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("dept-filter-name-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+  }, [openFilter]);
+
+  /* ------------------------------ Overlay helpers -------------------------- */
+  const matchesFilters = useCallback(
+    (d: Department) => {
+      const mode = appliedStatusMode;
+      if (mode === "active" && d.is_active === false) return false;
+      if (mode === "inactive" && d.is_active !== false) return false;
+
+      if (appliedCode.trim()) {
+        if (!(d.code || "").toLowerCase().includes(appliedCode.trim().toLowerCase())) return false;
+      }
+
+      if (appliedName.trim()) {
+        if (!(d.name || "").toLowerCase().includes(appliedName.trim().toLowerCase())) return false;
+      }
+
+      return true;
+    },
+    [appliedCode, appliedName, appliedStatusMode]
+  );
+
+  useEffect(() => {
+    setAdded((prev) => prev.filter((d) => matchesFilters(d)));
+  }, [matchesFilters]);
 
   const visibleItems = useMemo(() => {
     const addedFiltered = added
-      .filter((d) => matchesQuery(d, appliedQuery))
+      .filter((d) => matchesFilters(d))
       .slice()
       .sort(sortOverlayByCodeThenName);
 
     const addedIds = new Set(addedFiltered.map((d) => d.id));
 
-    // pager.items is already server-ordered; do NOT sort it again
-    const base = pager.items.filter((d) => !deletedIds.has(d.id) && !addedIds.has(d.id));
+    const base = pager.items
+      .filter((d) => !deletedIds.has(d.id) && !addedIds.has(d.id))
+      .filter((d) => matchesFilters(d));
 
     return [...addedFiltered, ...base];
-  }, [added, deletedIds, pager.items, appliedQuery, matchesQuery]);
+  }, [added, deletedIds, pager.items, matchesFilters]);
 
   /* ------------------------------ Handlers --------------------------------- */
   const openCreateModal = () => {
@@ -209,6 +565,10 @@ const DepartmentSettings: React.FC = () => {
     setModalOpen(false);
     setEditingDept(null);
   };
+
+  const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
+    setOpenFilter((prev) => (prev === key ? null : key));
+  }, []);
 
   /* ---------- ConfirmToast delete ----------------------------------------- */
   const requestDeleteDepartment = (dept: Department) => {
@@ -251,6 +611,14 @@ const DepartmentSettings: React.FC = () => {
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
+  /* -------------------------------- Derived UI ---------------------------- */
+  const canEdit = !!isOwner;
+  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+
+  const codeChipValue = appliedCode.trim() ? truncate(appliedCode.trim(), 22) : "";
+  const nameChipValue = appliedName.trim() ? truncate(appliedName.trim(), 22) : "";
+  const statusChipValue = appliedStatuses.length ? appliedStatusValue : "";
+
   if (isInitialLoading) {
     return (
       <>
@@ -259,10 +627,6 @@ const DepartmentSettings: React.FC = () => {
       </>
     );
   }
-
-  /* --------------------------------- UI ----------------------------------- */
-  const canEdit = !!isOwner;
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   return (
     <>
@@ -284,24 +648,54 @@ const DepartmentSettings: React.FC = () => {
 
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("list.title")}</span>
+                  {/* LEFT: chips */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div ref={codeAnchorRef}>
+                      <Chip
+                        label={t("filters.codeLabel", { defaultValue: "Code" })}
+                        value={codeChipValue ? `• ${codeChipValue}` : undefined}
+                        active={!!appliedCode.trim()}
+                        onClick={() => togglePopover("code")}
+                        onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      placeholder={t("buttons.searchPlaceholder")}
-                      aria-label={t("buttons.runSearchAria")}
-                      disabled={globalBusy}
-                    />
-                    <Button onClick={onSearch} variant="outline" aria-label={t("buttons.runSearchAria")} disabled={globalBusy}>
-                      {t("buttons.search")}
-                    </Button>
+                    <div ref={nameAnchorRef}>
+                      <Chip
+                        label={t("filters.nameLabel", { defaultValue: "Name" })}
+                        value={nameChipValue ? `• ${nameChipValue}` : undefined}
+                        active={!!appliedName.trim()}
+                        onClick={() => togglePopover("name")}
+                        onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
 
+                    <div ref={statusAnchorRef}>
+                      <Chip
+                        label={t("filters.statusLabel", { defaultValue: "Status" })}
+                        value={statusChipValue ? `• ${statusChipValue}` : undefined}
+                        active={appliedStatuses.length > 0}
+                        onClick={() => togglePopover("status")}
+                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                        disabled={globalBusy}
+                      />
+                    </div>
+
+                    {hasAppliedFilters && (
+                      <ClearFiltersChip
+                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                        onClick={clearAll}
+                        disabled={globalBusy}
+                      />
+                    )}
+                  </div>
+
+                  {/* RIGHT: add button */}
+                  <div className="shrink-0">
                     {canEdit && (
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("buttons.add")}
@@ -326,10 +720,7 @@ const DepartmentSettings: React.FC = () => {
                       <p className="p-4 text-center text-sm text-gray-500">{t("alerts.noData")}</p>
                     ) : (
                       visibleItems.map((d) => {
-                        const rowBusy =
-                          globalBusy ||
-                          deleteTargetId === d.id ||
-                          deletedIds.has(d.id);
+                        const rowBusy = globalBusy || deleteTargetId === d.id || deletedIds.has(d.id);
 
                         return (
                           <Row
@@ -371,13 +762,158 @@ const DepartmentSettings: React.FC = () => {
                 setAdded((prev) => [res.created!, ...prev]);
               }
               await pager.refresh();
-              // modal already notifies saveOk; keep this silent to avoid duplicate toasts
             } catch {
               setSnack({ message: t("errors.fetchError"), severity: "error" });
             }
           }}
         />
       </main>
+
+      {/* CODE POPOVER (PORTAL) */}
+      <AnchoredPopover
+        open={openFilter === "code"}
+        anchorRef={codeAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll
+      >
+        <div className="p-4">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byCodeTitle", { defaultValue: "Filter by code" })}
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="dept-filter-code-input"
+              type="text"
+              value={draftCode}
+              onChange={(e) => setDraftCode(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("code");
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setOpenFilter(null);
+                }
+              }}
+              placeholder={t("filters.codePlaceholder", { defaultValue: "Type a code…" })}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftCode("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("code")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* NAME POPOVER (PORTAL) */}
+      <AnchoredPopover
+        open={openFilter === "name"}
+        anchorRef={nameAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll
+      >
+        <div className="p-4">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byNameTitle", { defaultValue: "Filter by name" })}
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="dept-filter-name-input"
+              type="text"
+              value={draftName}
+              onChange={(e) => setDraftName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("name");
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setOpenFilter(null);
+                }
+              }}
+              placeholder={t("filters.namePlaceholder", { defaultValue: "Type a name…" })}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftName("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("name")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
+
+      {/* STATUS POPOVER (PORTAL) */}
+      <AnchoredPopover
+        open={openFilter === "status"}
+        anchorRef={statusAnchorRef}
+        onClose={() => setOpenFilter(null)}
+        scroll={false}
+        width={420}
+      >
+        <div className="p-4 overflow-visible">
+          <div className="text-[14px] font-semibold text-gray-900">
+            {t("filters.byStatusTitle", { defaultValue: "Filter by status" })}
+          </div>
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <SelectDropdown<StatusOption>
+                label={t("filters.statusLabel", { defaultValue: "Status" })}
+                items={statusOptions}
+                selected={selectedDraftStatusOptions}
+                onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={draftButtonLabel}
+                customStyles={{ maxHeight: "240px" }}
+                hideFilter
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftStatuses([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear", { defaultValue: "Clear" })}
+            </button>
+
+            <Button onClick={() => applyFromDraft("status")} disabled={globalBusy}>
+              {t("filters.apply", { defaultValue: "Apply" })}
+            </Button>
+          </div>
+        </div>
+      </AnchoredPopover>
 
       <ConfirmToast
         open={confirmOpen}
