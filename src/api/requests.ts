@@ -28,7 +28,9 @@ import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, Bul
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from 'src/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
 import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
-  GetBanksBulkRequest, GetBanksBulkResponse, GetBanksParams, GetBanksResponse } from 'src/models/settings/banking';
+  GetBanksBulkRequest, GetBanksBulkResponse, GetBanksParams, GetBanksResponse, 
+  GetBanksTableParams,
+  GetBanksTableResponse} from 'src/models/settings/banking';
 import type { AddLedgerAccountRequest, DeleteAllLedgerAccountsRequest, DeleteAllLedgerAccountsResponse,
   EditLedgerAccountRequest, GetLedgerAccountsRequest, GetLedgerAccountsResponse, ImportLedgerAccountsResponse,
   ImportStandardLedgerAccountsRequest, ImportStandardLedgerAccountsResponse, LedgerAccount, LedgerAccountsBulkRequest,
@@ -361,9 +363,12 @@ export const api = {
   },
 
   getBanksBulk: (ids: string[]) =>
-    request<GetBanksBulkResponse[]>(`banking/accounts/bulk/get/`, "POST", {
+    request<GetBanksBulkResponse>(`banking/accounts/bulk/get/`, "POST", {
       ids
     } satisfies GetBanksBulkRequest),
+
+  getBanksTable: (payload?: GetBanksTableParams) =>
+    request<GetBanksTableResponse>("banking/accounts/table/", "POST", payload ?? {}),
 
   getBank: (bankId: string) =>
     request<GetBankResponse>(`banking/accounts/${bankId}/`, "GET"),

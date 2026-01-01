@@ -1,4 +1,6 @@
-// src/pages/Reports/index.tsx
+/* --------------------------------------------------------------------------
+ * File: src/pages/Reports/index.tsx
+ * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
@@ -21,13 +23,16 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
 
 import { api } from "@/api/requests";
-import { useBanks } from "@/hooks/useBanks";
 import { useTranslation } from "react-i18next";
 import { formatDateFromISO } from "@/lib";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 
 import type { ReportsSummary } from "@/models/components/reports";
+import type { GetBanksTableResponse } from "@/models/settings/banking";
 
+/* -------------------------------------------------------------------------- */
+/* Types                                                                        */
+/* -------------------------------------------------------------------------- */
 
 type TipDatum = {
   value?: number | string;
@@ -76,8 +81,7 @@ const fmtMoney = (v: unknown) => {
   return n === null ? "—" : formatCurrency(n);
 };
 
-const asPct = (v: number) =>
-  `${(v * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
+const asPct = (v: number) => `${(v * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
 
 /* -------------------------------------------------------------------------- */
 /* Tooltip                                                                      */
@@ -99,9 +103,7 @@ const MinimalTip: React.FC<MinimalTipProps> = ({ active, payload = [], label, ti
       aria-live="polite"
     >
       {title ? <div style={{ fontWeight: 600, marginBottom: 2 }}>{title}</div> : null}
-      {label !== undefined ? (
-        <div style={{ color: "#6B7280", marginBottom: 4 }}>{label}</div>
-      ) : null}
+      {label !== undefined ? <div style={{ color: "#6B7280", marginBottom: 4 }}>{label}</div> : null}
 
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -135,10 +137,14 @@ const ReportsPage: React.FC = () => {
   }, [t]);
 
   const [data, setData] = useState<ReportsSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const { totalConsolidatedBalance, loading: loadingBanks } = useBanks();
+  const [loading, setLoading] = useState(true);
+  const [loadingBanks, setLoadingBanks] = useState(true);
+
+  const [error, setError] = useState<string | null>(null);
+  const [banksError, setBanksError] = useState<string | null>(null);
+
+  const [totalConsolidatedBalance, setTotalConsolidatedBalance] = useState<number>(0);
 
   const params = useMemo(() => ({ date_from: START_DATE, date_to: END_DATE }), []);
   const periodLabel = useMemo(
@@ -146,19 +152,40 @@ const ReportsPage: React.FC = () => {
     []
   );
 
-  const fetchData = useCallback(async () => {
+  const fetchBanksTotal = useCallback(async () => {
+    setBanksError(null);
+    setLoadingBanks(true);
+
     try {
-      setError(null);
-      setLoading(true);
-      const res = await api.getReportsSummary(params);
-      setData(res.data);
+      // POST payload; ids omitted/[] => backend returns all banks (subject to active)
+      const res = await api.getBanksTable({ active: true, ids: [] });
+      const payload = res.data as GetBanksTableResponse;
+
+      const total = parseMoney(payload?.total_consolidated_balance) ?? 0;
+      setTotalConsolidatedBalance(total);
+    } catch (e) {
+      console.error(e);
+      setTotalConsolidatedBalance(0);
+      setBanksError(t("errors.fetchBanksTotal"));
+    } finally {
+      setLoadingBanks(false);
+    }
+  }, [t]);
+
+  const fetchData = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const [reportsRes] = await Promise.all([api.getReportsSummary(params), fetchBanksTotal()]);
+      setData(reportsRes.data);
     } catch (e) {
       console.error(e);
       setError(t("errors.fetch"));
     } finally {
       setLoading(false);
     }
-  }, [params, t]);
+  }, [params, t, fetchBanksTotal]);
 
   useEffect(() => {
     void fetchData();
@@ -224,9 +251,7 @@ const ReportsPage: React.FC = () => {
         : monthlyBars.reduce((acc, x) => acc + Math.abs(x.outflow), 0) / monthlyBars.length;
 
     const runwayMonths =
-      avgMonthlyOutflowAbs > 0
-        ? toNum0(totalConsolidatedBalance ?? 0) / avgMonthlyOutflowAbs
-        : Infinity;
+      avgMonthlyOutflowAbs > 0 ? toNum0(totalConsolidatedBalance) / avgMonthlyOutflowAbs : Infinity;
 
     return {
       totalsIn,
@@ -294,6 +319,7 @@ const ReportsPage: React.FC = () => {
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
+          {!error && banksError && <p className="text-sm text-red-600">{banksError}</p>}
 
           {isBusy && !error && !data && <p className="text-sm text-gray-600">{t("loading")}</p>}
 
@@ -302,11 +328,9 @@ const ReportsPage: React.FC = () => {
               {/* KPI Cards */}
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className={cardCls}>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-600">
-                    {t("kpis.consolidatedBalance")}
-                  </p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-600">{t("kpis.consolidatedBalance")}</p>
                   <p className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-                    {fmtMoney(totalConsolidatedBalance ?? 0)}
+                    {fmtMoney(totalConsolidatedBalance)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-gray-500">{t("kpis.bankSum")}</p>
                 </div>
@@ -569,11 +593,7 @@ const ReportsPage: React.FC = () => {
                                   }`}
                                   title={String(it.tx_type)}
                                 >
-                                  {isPay
-                                    ? t("tables.payLabel")
-                                    : isReceive
-                                      ? t("tables.receiveLabel")
-                                      : String(it.tx_type)}
+                                  {isPay ? t("tables.payLabel") : isReceive ? t("tables.receiveLabel") : String(it.tx_type)}
                                 </span>
                               </td>
                               <td className="px-3 py-2 text-right tabular-nums">{fmtMoney(it.amount)}</td>

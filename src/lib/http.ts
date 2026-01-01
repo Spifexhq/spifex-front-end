@@ -430,13 +430,29 @@ function keyFrom(cfg: AxiosRequestConfig) {
 
 function pruneParams(p: unknown) {
   if (!p || typeof p !== "object") return p;
+
   const src = p as Record<string, unknown>;
   const out: Record<string, unknown> = {};
+
   for (const k of Object.keys(src)) {
     const v = src[k];
+
     if (v === "" || v === undefined || v === null) continue;
+
+    if (Array.isArray(v)) {
+      const joined = v
+        .flatMap((x) => (x === "" || x === undefined || x === null ? [] : [String(x)]))
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(",");
+
+      if (joined) out[k] = joined;
+      continue;
+    }
+
     out[k] = v;
   }
+
   return out;
 }
 

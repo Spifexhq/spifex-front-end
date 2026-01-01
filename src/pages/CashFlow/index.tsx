@@ -1,4 +1,7 @@
-// src/pages/CashFlow/index.tsx
+/* --------------------------------------------------------------------------
+ * File: src/pages/CashFlow/index.tsx
+ * -------------------------------------------------------------------------- */
+
 import { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -12,12 +15,27 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
 import { PermissionMiddleware } from "@/middlewares";
-import { useBanks } from "@/hooks/useBanks";
+import { fetchAllCursor } from "@/lib/list";
 
 import { Entry } from "@/models/entries/entries";
 import type { EntryFilters } from "@/models/components/filterBar";
 import { type ModalType } from "@/components/Modal/Modal.types";
-import type { ApiError } from "@/models/Api";
+import type { BankAccount } from "@/models/settings/banking";
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function getErrorMessage(err: unknown, fallback: string) {
+  if (err instanceof Error && typeof err.message === "string") return err.message;
+  if (isRecord(err)) {
+    const msg = err["message"];
+    if (typeof msg === "string") return msg;
+    const detail = err["detail"];
+    if (typeof detail === "string") return detail;
+  }
+  return fallback;
+}
 
 const DEFAULT_FILTERS: EntryFilters = {
   bank_id: [],
@@ -75,11 +93,39 @@ const CashFlow = () => {
     [isModalOpen, isTransferenceModalOpen, isSettlementModalOpen],
   );
 
-  const { banks, totalConsolidatedBalance, loading: banksLoading, error: banksError } = useBanks(
-    undefined,
-    banksKey,
-    true,
-  );
+  /* ---------------------------------------------------------------------- */
+  /* Full banks list for SettlementModal (uses getBanks, not getBanksTable)  */
+  /* ---------------------------------------------------------------------- */
+  const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [banksLoading, setBanksLoading] = useState(false);
+  const [banksError, setBanksError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      setBanksLoading(true);
+      setBanksError(null);
+
+      try {
+        const all = await fetchAllCursor<BankAccount>((p?: { cursor?: string }) =>
+          api.getBanks({ cursor: p?.cursor, active: "true" })
+        );
+        if (!alive) return;
+        setBanks(all);
+      } catch (err) {
+        if (!alive) return;
+        setBanks([]);
+        setBanksError(getErrorMessage(err, t("cashFlow:errors.loadBanksUnexpected")));
+      } finally {
+        if (alive) setBanksLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [banksKey, t]);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -97,21 +143,13 @@ const CashFlow = () => {
 
       try {
         const res = await api.getEntry(entry.id);
+        const fullEntry = res.data as Entry;
 
-        if ("data" in res) {
-          const fullEntry = res.data as Entry;
-          setEditingEntry(fullEntry);
-          setModalType(fullEntry.tx_type as ModalType);
-        } else {
-          const apiError = res as ApiError;
-          console.error("Error fetching entry:", apiError.error);
-          alert(apiError.error?.message ?? t("cashFlow:errors.loadEntryDetails"));
-          setIsModalOpen(false);
-          setEditingEntry(null);
-        }
+        setEditingEntry(fullEntry);
+        setModalType(fullEntry.tx_type as ModalType);
       } catch (err) {
-        console.error("Erro ao carregar detalhes do lançamento:", err);
-        alert(t("cashFlow:errors.loadEntryDetailsUnexpected"));
+        console.error("Error fetching entry:", err);
+        alert(getErrorMessage(err, t("cashFlow:errors.loadEntryDetailsUnexpected")));
         setIsModalOpen(false);
         setEditingEntry(null);
       } finally {
@@ -143,11 +181,7 @@ const CashFlow = () => {
         mode="default"
       />
 
-      <div
-        className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${
-          isSidebarOpen ? "ml-60" : "ml-16"
-        }`}
-      >
+      <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
         <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
           <PermissionMiddleware codeName={["view_filters"]} requireAll>
             <FilterBar
@@ -164,12 +198,6 @@ const CashFlow = () => {
             context="cashflow"
             refreshToken={kpiRefresh}
             banksRefreshKey={banksKey}
-            banksData={{
-              banks,
-              totalConsolidatedBalance,
-              loading: banksLoading,
-              error: banksError,
-            }}
           />
 
           <div className="min-h-0 h-full">
@@ -190,20 +218,15 @@ const CashFlow = () => {
               selectedIds={selectedIds}
               selectedEntries={selectedEntries}
               isProcessing={isDeleting}
-              onCancel={() => {
-                tableRef.current?.clearSelection();
-              }}
+              onCancel={() => tableRef.current?.clearSelection()}
               onLiquidate={() => setIsSettlementModalOpen(true)}
               onDelete={async () => {
                 if (!selectedIds.length) return;
 
                 setIsDeleting(true);
                 try {
-                  if (selectedIds.length > 1) {
-                    await api.deleteEntriesBulk(selectedIds as string[]);
-                  } else {
-                    await api.deleteEntry(selectedIds[0] as string);
-                  }
+                  if (selectedIds.length > 1) await api.deleteEntriesBulk(selectedIds as string[]);
+                  else await api.deleteEntry(selectedIds[0] as string);
 
                   bumpCashflow();
                   bumpKpis();
@@ -223,10 +246,7 @@ const CashFlow = () => {
         </div>
 
         {modalType && (
-          <PermissionMiddleware
-            codeName={["add_cash_flow_entries", "view_credit_modal_button", "view_debit_modal_button"]}
-            requireAll
-          >
+          <PermissionMiddleware codeName={["add_cash_flow_entries", "view_credit_modal_button", "view_debit_modal_button"]} requireAll>
             <EntriesModal
               isOpen={isModalOpen}
               onClose={() => {

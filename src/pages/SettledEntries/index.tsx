@@ -1,5 +1,8 @@
-// src/pages/Settled/index.tsx
-import { useEffect, useState, useRef, useCallback } from "react";
+/* --------------------------------------------------------------------------
+ * File: src/pages/Settled/index.tsx
+ * -------------------------------------------------------------------------- */
+
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -12,7 +15,6 @@ import TopProgress from "@/components/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
 import { PermissionMiddleware } from "@/middlewares";
-import { useBanks } from "@/hooks/useBanks";
 
 import type { SettledEntry } from "@/models/entries/settlements";
 import type { EntryFilters } from "@/models/components/filterBar";
@@ -26,6 +28,7 @@ const Settled = () => {
   }, [t]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
@@ -34,21 +37,23 @@ const Settled = () => {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
+
   const [kpiRefresh, setKpiRefresh] = useState(0);
   const [tableKey, setTableKey] = useState(0);
+
   const [banksKey, setBanksKey] = useState(0);
+
   const [isReturning, setIsReturning] = useState(false);
 
   const tableRef = useRef<SettledEntriesTableHandle>(null);
 
-  const {
-    banks,
-    totalConsolidatedBalance,
-    loading: banksLoading,
-    error: banksError,
-  } = useBanks(undefined, banksKey);
+  const filterBarHotkeysEnabled = useMemo(
+    () => !isModalOpen && !isTransferenceModalOpen,
+    [isModalOpen, isTransferenceModalOpen]
+  );
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+
   const handleOpenModal = (type: ModalType) => {
     setModalType(type);
     setIsModalOpen(true);
@@ -75,7 +80,8 @@ const Settled = () => {
 
   return (
     <div className="flex">
-      <TopProgress active={banksLoading} variant="top" topOffset={64} />
+      <TopProgress active={isReturning} variant="top" topOffset={64} />
+
       <Sidebar
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
@@ -93,7 +99,10 @@ const Settled = () => {
           <PermissionMiddleware codeName={["view_filters"]} requireAll>
             <FilterBar
               onApply={handleApplyFilters}
-              contextSettlement={true} />
+              bankActive={true}
+              contextSettlement={true}
+              shortcutsEnabled={filterBarHotkeysEnabled}
+            />
           </PermissionMiddleware>
 
           {filters && (
@@ -104,12 +113,6 @@ const Settled = () => {
                 selectedBankIds={filters.bank_id}
                 refreshToken={kpiRefresh}
                 banksRefreshKey={banksKey}
-                banksData={{
-                  banks,
-                  totalConsolidatedBalance,
-                  loading: banksLoading,
-                  error: banksError,
-                }}
               />
 
               <div className="min-h-0 h-full">

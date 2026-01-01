@@ -1,4 +1,7 @@
-// src/components/FilterBar/index.tsx
+/* --------------------------------------------------------------------------
+ * File: src/components/FilterBar/index.tsx
+ * -------------------------------------------------------------------------- */
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,14 +13,13 @@ import { DateInput } from "@/components/ui/DateInput";
 import { AmountInput } from "@/components/ui/AmountInput";
 
 import { api } from "@/api/requests";
-import { useBanks } from "@/hooks/useBanks";
 import { fetchAllCursor } from "@/lib/list";
 import { formatCurrency } from "@/lib/currency";
 import { formatDateFromISO } from "@/lib/date";
 
 import type { ApiResponse, ApiError as ApiErrorResponse } from "@/models/Api";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
-import type { BankAccount } from "@/models/settings/banking";
+import type { BankAccountTableRow, GetBanksTableParams } from "@/models/settings/banking";
 import type {
   ChipKey,
   EntryFilters,
@@ -55,8 +57,8 @@ function toISODateLocal(d: Date): string {
 }
 
 function startOfWeekISO(d = new Date()): string {
-  const day = d.getDay(); // 0..6 (Sun..Sat)
-  const diff = (day + 6) % 7; // Monday as start
+  const day = d.getDay();
+  const diff = (day + 6) % 7;
   const start = new Date(d);
   start.setDate(d.getDate() - diff);
   return toISODateLocal(start);
@@ -75,11 +77,7 @@ function startOfYearISO(d = new Date()): string {
   return toISODateLocal(new Date(d.getFullYear(), 0, 1));
 }
 
-function amountChipLabel(
-  minMajor?: string,
-  maxMajor?: string,
-  t?: (k: string) => string
-): string {
+function amountChipLabel(minMajor?: string, maxMajor?: string, t?: (k: string) => string): string {
   const parts: string[] = [];
   if (minMajor && isPositiveMajor(minMajor)) parts.push(`≥ ${formatCurrency(minMajor)}`);
   if (maxMajor && isPositiveMajor(maxMajor)) parts.push(`≤ ${formatCurrency(maxMajor)}`);
@@ -105,11 +103,7 @@ function useLatestRef<T>(value: T) {
   return ref;
 }
 
-function useOnClickOutside(
-  ref: React.RefObject<HTMLElement>,
-  onOutside: () => void,
-  enabled = true
-) {
+function useOnClickOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void, enabled = true) {
   const handlerRef = useLatestRef(onOutside);
 
   useEffect(() => {
@@ -132,10 +126,7 @@ const DefaultStarIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-function buildInitialLocalFilters(
-  initial: EntryFilters | undefined,
-  contextSettlement: boolean
-): LocalFilters {
+function buildInitialLocalFilters(initial: EntryFilters | undefined, contextSettlement: boolean): LocalFilters {
   return {
     start_date: initial?.start_date ?? "",
     end_date: initial?.end_date ?? "",
@@ -222,6 +213,36 @@ function useSavedViews() {
   return { views, setViews, loaded, refresh };
 }
 
+function useBankOptions(bankActive?: boolean) {
+  const [banks, setBanks] = useState<BankAccountTableRow[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const payload: GetBanksTableParams = {};
+        if (bankActive !== undefined) payload.active = bankActive;
+
+        const { data } = await api.getBanksTable(payload);
+        if (!alive) return;
+
+        setBanks(Array.isArray(data?.banks) ? data.banks : []);
+      } catch (err) {
+        console.error("Failed to load banks options:", err);
+        if (!alive) return;
+        setBanks([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [bankActive]);
+
+  return banks;
+}
+
 /* ---------------------------------- Types --------------------------------- */
 
 type FilterBarApplyPayload = { filters: EntryFilters };
@@ -245,8 +266,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const { t } = useTranslation(["filterBar"]);
 
-  const { banks: rawBanks } = useBanks(undefined, 0, bankActive);
-  const bankOptions = useMemo(() => (Array.isArray(rawBanks) ? rawBanks : []), [rawBanks]);
+  const bankOptions = useBankOptions(bankActive);
 
   const allLedgerAccounts = useLedgerAccounts();
   const { views: savedViews, setViews: setSavedViews, loaded: viewsLoaded, refresh: refreshViews } =
@@ -889,7 +909,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
         {openEditor === "banks" && (
           <Popover onClose={() => setOpenEditor(null)} className="min-w-[360px] max-w-[360px]">
-            <SelectDropdown<BankAccount>
+            <SelectDropdown<BankAccountTableRow>
               label={t("filterBar:editors.banks.label")}
               items={bankOptions}
               selected={selectedBanks}
