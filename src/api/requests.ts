@@ -367,8 +367,23 @@ export const api = {
       ids
     } satisfies GetBanksBulkRequest),
 
-  getBanksTable: (payload?: GetBanksTableParams) =>
-    request<GetBanksTableResponse>("banking/accounts/table/", "POST", payload ?? {}),
+  getBanksTable: (payload?: GetBanksTableParams) => {
+    const ids = (payload?.ids ?? []).map(String).map((s) => s.trim()).filter(Boolean);
+
+    // If ids are provided => POST (no HTTP caching)
+    if (ids.length > 0) {
+      return request<GetBanksTableResponse>("banking/accounts/table/", "POST", {
+        ...(payload?.active !== undefined ? { active: payload.active } : {}),
+        ids,
+      });
+    }
+
+    // No ids => GET (HTTP cache + ETag/304 possible)
+    const params =
+      payload?.active !== undefined ? { active: payload.active } : undefined;
+
+    return request<GetBanksTableResponse>("banking/accounts/table/", "GET", params);
+  },
 
   getBank: (bankId: string) =>
     request<GetBankResponse>(`banking/accounts/${bankId}/`, "GET"),

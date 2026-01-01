@@ -259,7 +259,7 @@ const AnchoredPopover: React.FC<{
   if (!pos) return null;
 
   return createPortal(
-    <div style={{ position: "fixed", top: pos.top, left: pos.left, width, zIndex: 999999 }}>
+    <div style={{ position: "fixed", top: pos.top, left: pos.left, width, zIndex: 99 }}>
       <div ref={popRef} className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
         {scroll ? (
           <div style={{ maxHeight: pos.maxHeight, overflowY: "auto" }}>{children}</div>
