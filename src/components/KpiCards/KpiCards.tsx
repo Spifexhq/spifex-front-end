@@ -1,12 +1,11 @@
 /* --------------------------------------------------------------------------
  * File: src/components/KpiCards/KpiCards.tsx
- * Refactor (typing fixes):
- * - Ensure all i18n outputs used in KpiItem are strings (no TFunctionResult unions)
- * - Fix settled last7: use `.out` (not `.pay`)
- * - Remove `as any`
+ * Updates requested:
+ * - Mobile KPI strip: scrolls but scrollbar is hidden/invisible
+ * (BanksTable scrollbar hiding is handled inside BanksTable)
  * -------------------------------------------------------------------------- */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -64,8 +63,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
 }) => {
   const { t } = useTranslation(["kpiCards"]);
 
-  // Force translation results into plain strings for KpiItem typing.
-  const tr = React.useCallback(
+  const tr = useCallback(
     (key: string, options?: Record<string, unknown>) => String(t(key as never, options as never)),
     [t],
   );
@@ -74,8 +72,32 @@ const KpiCards: React.FC<KpiCardsProps> = ({
   const [st, setSt] = useState<SettledKpis | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 639px)");
+    const apply = () => setIsMobile(mql.matches);
+
+    apply();
+
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", apply);
+      return () => mql.removeEventListener("change", apply);
+    }
+
+    const legacy = mql as unknown as {
+      addListener?: (cb: () => void) => void;
+      removeListener?: (cb: () => void) => void;
+    };
+
+    if (typeof legacy.addListener === "function") legacy.addListener(apply);
+    return () => {
+      if (typeof legacy.removeListener === "function") legacy.removeListener(apply);
+    };
+  }, []);
+
   const navigate = useNavigate();
-  const goToBanks = React.useCallback(() => {
+  const goToBanks = useCallback(() => {
     navigate("/settings/banks");
   }, [navigate]);
 
@@ -245,7 +267,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
         value: signedCurrencyFromDecimal(st.last7.net),
         hint: tr("kpiCards:settled.hints.last7", {
           recAmt: currencyFromDecimal(st.last7.in),
-          payAmt: currencyFromDecimal(st.last7.out), // FIX: settled KPIs use out, not pay
+          payAmt: currencyFromDecimal(st.last7.out),
         }),
       },
     ];
@@ -263,14 +285,67 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     return "lg:col-span-3 lg:col-start-7";
   };
 
+  if (isMobile) {
+    return (
+      <section className="relative w-full max-w-full overflow-x-hidden
+                          [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="grid grid-cols-12 gap-2 w-full max-w-full px-1">
+          <PermissionMiddleware codeName={["view_banks_table"]} requireAll>
+            <BanksTable
+              expanded={expanded}
+              onExpandedChange={setExpanded}
+              selectedBankIds={selectedBankIds}
+              active
+              refreshKey={banksRefreshKey}
+              onGoToBanks={goToBanks}
+            />
+          </PermissionMiddleware>
+        </div>
+
+        <div className="mt-2 w-full max-w-full px-1">
+          <div
+            className="flex w-full max-w-full items-stretch gap-2 overflow-x-auto overflow-y-hidden pb-1
+                       [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {autoKpis.map((kpi) => (
+              <div
+                key={kpi.key}
+                title={kpi.hint && !loading ? kpi.hint : undefined}
+                className="w-[78vw] max-w-[220px] flex-shrink-0 rounded-md border border-gray-300 bg-white px-3 py-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-gray-600">
+                    {kpi.label}
+                  </span>
+                  {kpi.delta && (
+                    <span
+                      className={`shrink-0 whitespace-nowrap text-[10px] ${
+                        kpi.delta.positive ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {kpi.delta.value}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-0.5 text-base font-semibold leading-5 text-gray-800 tabular-nums">
+                  {loading ? "—" : kpi.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative max-h-[35vh]">
       <LayoutGroup>
         <motion.div
           layout
-          className={`grid grid-cols-12 gap-3 w-full ${
-            expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""
-          }`}
+          className={`grid grid-cols-12 gap-3 w-full ${expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""}`}
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
         >
           <PermissionMiddleware codeName={["view_banks_table"]} requireAll>
@@ -300,14 +375,10 @@ const KpiCards: React.FC<KpiCardsProps> = ({
                 )}
               </div>
 
-              <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-                {loading ? "—" : kpi.value}
-              </div>
+              <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">{loading ? "—" : kpi.value}</div>
 
               {kpi.hint && (
-                <div className="mt-0.5 text-[11px] text-gray-500">
-                  {loading ? tr("kpiCards:loading") : kpi.hint}
-                </div>
+                <div className="mt-0.5 text-[11px] text-gray-500">{loading ? tr("kpiCards:loading") : kpi.hint}</div>
               )}
             </motion.div>
           ))}

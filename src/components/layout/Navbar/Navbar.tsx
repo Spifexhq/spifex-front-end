@@ -258,7 +258,7 @@ const Navbar: React.FC = () => {
           <div
             id={drawerId}
             className={[
-              "fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-gray-200 z-40",
+              "fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-gray-200 z-99",
               "transform transition-transform duration-300",
               drawerOpen ? "translate-x-0" : "-translate-x-full",
             ].join(" ")}

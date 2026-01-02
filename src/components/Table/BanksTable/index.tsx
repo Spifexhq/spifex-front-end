@@ -1,10 +1,9 @@
 /* --------------------------------------------------------------------------
  * File: src/components/Table/BanksTable/index.tsx
- * Refactor:
- * - Uses banking/accounts/table/ (api.getBanksTable)
- * - Works with BankAccountTableRow (not BankAccount)
- * - Uses ApiSuccess return type (no ApiResponse union)
- * - No any, no unused eslint disables
+ * Updates requested:
+ * - Collapsed card on mobile (xs): show ONLY consolidated balance (no accounts count, no top bank)
+ * - Mobile: hide scrollbars (banks list scroll still works, but scrollbar invisible)
+ * - Desktop: unchanged behavior/layout
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -78,6 +77,35 @@ const BanksTable: React.FC<BanksTableProps> = ({
 }) => {
   const { t } = useTranslation(["banksTable", "kpiCards"]);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 639px)");
+    const apply = () => setIsMobile(mql.matches);
+
+    apply();
+
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", apply);
+      return () => mql.removeEventListener("change", apply);
+    }
+
+    const legacy = mql as unknown as {
+      addListener?: (cb: () => void) => void;
+      removeListener?: (cb: () => void) => void;
+    };
+
+    if (typeof legacy.addListener === "function") legacy.addListener(apply);
+    return () => {
+      if (typeof legacy.removeListener === "function") legacy.removeListener(apply);
+    };
+  }, []);
+
+  const hideScrollbarCls = useMemo(() => {
+    if (!isMobile) return "";
+    return "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+  }, [isMobile]);
+
   const ids = useMemo(() => {
     const raw = Array.isArray(selectedBankIds) ? selectedBankIds : [];
     return raw.map(toKey).filter(Boolean).sort();
@@ -141,7 +169,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
 
   const sorted = useMemo(
     () => state.banks.slice().sort((a, b) => a.institution.localeCompare(b.institution)),
-    [state.banks]
+    [state.banks],
   );
 
   const totalFmt = useMemo(() => formatCurrency(Number(state.total || 0)), [state.total]);
@@ -149,7 +177,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
   const topBank = useMemo(() => {
     if (!sorted.length) return null;
     return [...sorted].sort((a, b) =>
-      Number(a.consolidated_balance || 0) < Number(b.consolidated_balance || 0) ? 1 : -1
+      Number(a.consolidated_balance || 0) < Number(b.consolidated_balance || 0) ? 1 : -1,
     )[0];
   }, [sorted]);
 
@@ -166,13 +194,15 @@ const BanksTable: React.FC<BanksTableProps> = ({
           layout
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
           onClick={() => onExpandedChange(true)}
-          className="col-span-12 sm:col-span-6 lg:col-span-3 h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300"
+          className="col-span-12 sm:col-span-6 lg:col-span-3 w-full max-w-full h-[70px] sm:h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 overflow-hidden"
         >
           <div className="flex items-start justify-between gap-2">
             <span className="text-[11px] uppercase tracking-wide text-gray-600">
               {t("kpiCards:panel.consolidatedBalance")}
             </span>
-            <span className="text-[11px] text-gray-500">
+
+            {/* Desktop only: accounts count */}
+            <span className="hidden sm:inline text-[11px] text-gray-500">
               {t("kpiCards:panel.accountsCount", { count: state.loading ? 0 : state.count || 0 })}
             </span>
           </div>
@@ -181,8 +211,9 @@ const BanksTable: React.FC<BanksTableProps> = ({
             {state.loading ? "—" : totalFmt}
           </div>
 
+          {/* Desktop only: top bank preview */}
           {!state.loading && topBank && (
-            <div className="mt-1 flex items-center gap-2 min-w-0">
+            <div className="hidden sm:flex mt-1 items-center gap-2 min-w-0">
               <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
                 {getInitials(topBank.institution)}
               </div>
@@ -201,9 +232,9 @@ const BanksTable: React.FC<BanksTableProps> = ({
           key="banks-panel"
           layout
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
-          className="col-span-12 lg:col-span-6 lg:col-start-1 row-span-2"
+          className="col-span-12 lg:col-span-6 lg:col-start-1 row-span-2 w-full max-w-full h-[35vh] sm:h-full"
         >
-          <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full">
+          <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full w-full max-w-full">
             <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
               <div className="text-[12px] text-gray-700">
                 {t("kpiCards:panel.header")}{" "}
@@ -226,9 +257,15 @@ const BanksTable: React.FC<BanksTableProps> = ({
               </button>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            {/* Hide scrollbar on mobile; keep scroll */}
+            <div className={`flex-1 min-h-0 overflow-y-auto ${hideScrollbarCls}`}>
               {state.loading ? (
-                <div className="flex justify-center py-3" role="status" aria-live="polite" aria-label={t("banksTable:aria.loading")}>
+                <div
+                  className="flex justify-center py-3"
+                  role="status"
+                  aria-live="polite"
+                  aria-label={t("banksTable:aria.loading")}
+                >
                   <Spinner />
                 </div>
               ) : state.error ? (
@@ -250,7 +287,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200">
+                  <div className={`flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 ${hideScrollbarCls}`}>
                     {sorted.length === 0 ? (
                       <div className="px-4 py-3 text-xs text-gray-600 text-center">{t("banksTable:empty")}</div>
                     ) : (
@@ -273,9 +310,16 @@ const BanksTable: React.FC<BanksTableProps> = ({
                                 {getInitials(bank.institution)}
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[13px] text-gray-800 truncate leading-tight">{bank.institution}</span>
-                                <span className="text-[10px] text-gray-500 truncate leading-tight">
-                                  {t("banksTable:labels.branchAccount", { branch: bank.branch, account: bank.account_number })}
+                                <span className="text-[13px] text-gray-800 truncate leading-tight">
+                                  {bank.institution}
+                                </span>
+
+                                {/* Desktop only: branch/account line */}
+                                <span className="hidden sm:block text-[10px] text-gray-500 truncate leading-tight">
+                                  {t("banksTable:labels.branchAccount", {
+                                    branch: bank.branch,
+                                    account: bank.account_number,
+                                  })}
                                 </span>
                               </div>
                             </div>
