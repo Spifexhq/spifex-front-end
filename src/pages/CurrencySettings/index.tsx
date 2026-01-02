@@ -272,7 +272,7 @@ const CurrencySettings: React.FC = () => {
                 </span>
               </div>
 
-              <div className="divide-y divide-gray-200">
+              <div className="flex flex-col">
                 <Row
                   label={t("currencySettings:field.current")}
                   value={currentCurrencyLabel}

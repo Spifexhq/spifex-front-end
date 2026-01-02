@@ -36,7 +36,8 @@ const PageSkeleton: React.FC<{ rows?: number }> = ({ rows = 6 }) => (
           <Line w="w-24" />
           <Shimmer className="h-8 w-28 rounded-md" />
         </div>
-        <div className="divide-y divide-gray-200">
+        {/* </div><div className="divide-y divide-gray-200"> */}
+        <div className="flex flex-col">
           {Array.from({ length: rows }).map((_, i) => (
             <RowSkeleton key={i} />
           ))}

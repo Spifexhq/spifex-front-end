@@ -323,7 +323,7 @@ const FormatSettings: React.FC = () => {
                 </span>
               </div>
 
-              <div className="divide-y divide-gray-200">
+              <div className="flex flex-col">
                 {/* Date row */}
                 <Row
                   label={t("field.date")}

@@ -17,7 +17,7 @@ const base =
 const sizes: Record<ButtonSize, string> = {
   xs: "h-7 px-2.5 text-[11px]",
   sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 text-sm",
+  md: "h-8 px-4 text-[13px]",
   lg: "h-11 px-6 text-base",
   xl: "h-12 px-7 text-[17px]",
   iconSm: "h-8 w-8 p-0",

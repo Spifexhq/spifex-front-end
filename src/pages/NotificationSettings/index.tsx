@@ -259,7 +259,7 @@ const NotificationSettings: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="divide-y divide-gray-200">
+                <div className="flex flex-col">
                   {(Object.keys(CATEGORY_META) as NotificationCategory[]).map(
                     (category) => (
                       <CategoryRow

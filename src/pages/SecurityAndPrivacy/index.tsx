@@ -394,7 +394,7 @@ const SecurityAndPrivacy: React.FC = () => {
                 </span>
               </div>
 
-              <div className="divide-y divide-gray-200">
+              <div className="flex flex-col">
                 {/* Email change row */}
                 <Row
                   label={t("field.primaryEmail")}

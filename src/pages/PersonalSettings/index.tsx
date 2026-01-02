@@ -53,7 +53,6 @@ function pickField<T, K extends keyof T>(obj: T, key: K): Pick<T, K> {
   return { [key]: obj[key] } as Pick<T, K>;
 }
 
-/* Linha sem bordas próprias; o container usa divide-y */
 const Row = ({
   label,
   value,
@@ -329,7 +328,7 @@ const PersonalSettings: React.FC = () => {
                       {t("section.company")}
                     </span>
                   </div>
-                  <div className="divide-y divide-gray-200">
+                  <div className="flex flex-col">
                     <Row label={t("field.companyName")} value={orgProfile.name || "—"} />
                   </div>
                 </div>
@@ -342,7 +341,7 @@ const PersonalSettings: React.FC = () => {
                     {t("section.personalData")}
                   </span>
                 </div>
-                <div className="divide-y divide-gray-200">
+                <div className="flex flex-col">
                   {/* Email FIRST, read-only */}
                   <Row
                     label={t("field.primaryEmail")}

@@ -54,7 +54,6 @@ function getInitials(name?: string) {
   return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 }
 
-/* Linha sem bordas próprias; o container usa divide-y */
 const Row = ({
   label,
   value,
@@ -307,7 +306,7 @@ const OrganizationSettings: React.FC = () => {
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.orgInfo")}</span>
                 </div>
-                <div className="divide-y divide-gray-200">
+                <div className="flex flex-col">
                   <Row
                     label={t("field.name")}
                     value={org?.name ?? ""}
@@ -324,7 +323,7 @@ const OrganizationSettings: React.FC = () => {
                 <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.address")}</span>
                 </div>
-                <div className="divide-y divide-gray-200">
+                <div className="flex flex-col">
                   <Row
                     label={t("field.address1")}
                     value={org?.line1 ?? ""}
