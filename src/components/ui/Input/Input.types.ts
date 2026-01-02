@@ -20,12 +20,15 @@
  */
 
 export type InputVariant = 'default' | 'outlined' | 'filled';
+export type InputSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   variant?: InputVariant;
   label?: string;
   errorMessage?: string;
   style?: React.CSSProperties;
   showTogglePassword?: boolean;
   isLoading?: boolean;
+  size?: InputSize;
 }

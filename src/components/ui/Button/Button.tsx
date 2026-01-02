@@ -1,3 +1,4 @@
+// src/components/ui/Button.tsx
 import * as React from "react";
 import { ButtonProps, ButtonSize, ButtonVariant } from "./Button.types";
 
@@ -18,8 +19,8 @@ const sizes: Record<ButtonSize, string> = {
   xs: "h-7 px-2.5 text-[11px]",
   sm: "h-8 px-3 text-xs",
   md: "h-8 px-4 text-[13px]",
-  lg: "h-11 px-6 text-base",
-  xl: "h-12 px-7 text-[17px]",
+  lg: "h-10 px-6 text-base",
+  xl: "h-11 px-7 text-[17px]",
   iconSm: "h-8 w-8 p-0",
   iconMd: "h-10 w-10 p-0",
   iconLg: "h-12 w-12 p-0",

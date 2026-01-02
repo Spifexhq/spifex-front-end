@@ -7,6 +7,13 @@ import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
 import Checkbox from "@/components/ui/Checkbox";
 
+/** Helper simples sem dependências externas */
+function cn(...classes: Array<string | undefined | false | null>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+type SelectDropdownSize = "xs" | "sm" | "md" | "lg" | "xl";
+
 /**
  * SelectDropdown — Minimal & Fluid
  * - Compact visual language, no heavy shadows, light borders only.
@@ -31,13 +38,83 @@ function SelectDropdown<T>({
   groupBy,
   hideCheckboxes = false,
   hideFilter = false,
+  size = "md",
 
   // Virtualization
   virtualize = true,
   virtualThreshold = 300,
-  virtualRowHeight = 36,
-}: SelectDropdownProps<T>) {
+  virtualRowHeight,
+}: SelectDropdownProps<T> & { size?: SelectDropdownSize }) {
   const { t } = useTranslation("selectDropdown");
+
+  // ---------------------------------------------------------------------------
+  // Size tokens (Button-like keys, SelectDropdown-specific mapping)
+  // Notes:
+  // - Your current trigger is h-10 + text-xs + px-3. We keep that as "md"
+  //   to avoid shrinking existing pages when you start using size props.
+  // - You can tweak these later without touching component logic.
+  // ---------------------------------------------------------------------------
+  const SIZE: Record<
+    SelectDropdownSize,
+    {
+      trigger: string;
+      chevron: string;
+      badge: string;
+      actionBtn: string;
+      filterInput: string;
+      item: string;
+      rowHeight: number;
+    }
+  > = {
+    xs: {
+      trigger: "h-7 px-2.5 text-[11px]",
+      chevron: "w-3.5 h-3.5",
+      badge: "min-w-[1.25rem] h-4 px-1 text-[10px]",
+      actionBtn: "h-6 px-2 text-[10px]",
+      filterInput: "h-7 pl-7 pr-2 text-[11px]",
+      item: "px-2.5 py-2 text-[11px]",
+      rowHeight: 32,
+    },
+    sm: {
+      trigger: "h-8 px-3 text-xs",
+      chevron: "w-4 h-4",
+      badge: "min-w-[1.5rem] h-5 px-1.5 text-[10px]",
+      actionBtn: "h-6.5 px-2 text-[11px]",
+      filterInput: "h-7.5 pl-7 pr-2 text-[12px]",
+      item: "px-3 py-2 text-xs",
+      rowHeight: 34,
+    },
+    md: {
+      // ✅ keep your current look by default
+      trigger: "h-10 px-3 text-xs",
+      chevron: "w-4 h-4",
+      badge: "min-w-[1.5rem] h-5 px-1.5 text-[10px]",
+      actionBtn: "h-7 px-2 text-[11px]",
+      filterInput: "h-8 pl-7 pr-2 text-[12px]",
+      item: "px-3 py-2.5 text-xs",
+      rowHeight: 36,
+    },
+    lg: {
+      trigger: "h-11 px-4 text-[13px]",
+      chevron: "w-4 h-4",
+      badge: "min-w-[1.75rem] h-6 px-2 text-[11px]",
+      actionBtn: "h-8 px-3 text-[12px]",
+      filterInput: "h-9 pl-8 pr-3 text-[13px]",
+      item: "px-4 py-3 text-[13px]",
+      rowHeight: 40,
+    },
+    xl: {
+      trigger: "h-12 px-5 text-[15px]",
+      chevron: "w-5 h-5",
+      badge: "min-w-[2rem] h-7 px-2.5 text-[12px]",
+      actionBtn: "h-9 px-3.5 text-[13px]",
+      filterInput: "h-10 pl-9 pr-3 text-[14px]",
+      item: "px-5 py-3.5 text-[14px]",
+      rowHeight: 44,
+    },
+  };
+
+  const effectiveRowHeight = virtualRowHeight ?? SIZE[size].rowHeight;
 
   // ---------------------------------------------------------------------------
   // State & refs
@@ -201,7 +278,7 @@ function SelectDropdown<T>({
     const panel = panelRef.current;
     if (!panel) return;
 
-    const rowH = virtualRowHeight ?? 36;
+    const rowH = effectiveRowHeight;
     const hasGroup = !!groupBy;
     const shouldVirtualize =
       virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
@@ -225,7 +302,7 @@ function SelectDropdown<T>({
     if (elRect.top < panelRect.top || elRect.bottom > panelRect.bottom) {
       el.scrollIntoView({ block: "nearest" });
     }
-  }, [activeIndex, isOpen, flatItems.length, virtualRowHeight, virtualize, virtualThreshold, groupBy]);
+  }, [activeIndex, isOpen, flatItems.length, effectiveRowHeight, virtualize, virtualThreshold, groupBy]);
 
   // Clamp activeIndex when list length changes
   useEffect(() => {
@@ -346,7 +423,10 @@ function SelectDropdown<T>({
     if (flatItems.length === 0) return;
 
     const lastIdx = flatItems.length - 1;
-    const page = Math.max(1, Math.floor((panelRef.current?.clientHeight || 240) / (virtualRowHeight || 36)));
+    const page = Math.max(
+      1,
+      Math.floor((panelRef.current?.clientHeight || 240) / effectiveRowHeight)
+    );
 
     if (e.key === "Home") { setActiveFrom(0, "keyboard"); return; }
     if (e.key === "End") { setActiveFrom(lastIdx, "keyboard"); return; }
@@ -398,17 +478,17 @@ function SelectDropdown<T>({
         onClick={() => handleCheckboxChange(item)}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
-        className={[
-          "flex items-center gap-2 px-3 py-2.5 text-xs cursor-pointer select-none transition-colors",
-          "focus:outline-none",
+        className={cn(
+          "flex items-center gap-2 cursor-pointer select-none transition-colors focus:outline-none",
+          SIZE[size].item,
           isActive ? "bg-gray-100" : "hover:bg-gray-50",
-          hideCheckboxes && isChecked ? "bg-gray-100 font-medium" : "",
-        ].join(" ")}
+          hideCheckboxes && isChecked ? "bg-gray-100 font-medium" : ""
+        )}
         role="option"
         aria-selected={isChecked}
         tabIndex={-1}
         data-active={isActive ? "true" : undefined}
-        style={{ height: virtualRowHeight }}
+        style={{ height: effectiveRowHeight }}
       >
         {!hideCheckboxes && (
           <Checkbox
@@ -465,7 +545,11 @@ function SelectDropdown<T>({
         </label>
       )}
 
-      <div ref={dropdownRef} className="relative w-full select-none" data-select-open={isOpen ? "true" : undefined}>
+      <div
+        ref={dropdownRef}
+        className="relative w-full select-none"
+        data-select-open={isOpen ? "true" : undefined}
+      >
         {/* Trigger */}
         <button
           ref={buttonRef}
@@ -479,57 +563,65 @@ function SelectDropdown<T>({
           aria-expanded={isOpen}
           aria-controls={panelId}
           aria-label={t("aria.trigger")}
-          className={[
-            "group flex items-center justify-between w-full h-10 rounded-md border text-xs px-3",
-            "transition-colors outline-none",
+          className={cn(
+            "group flex items-center justify-between w-full rounded-md border transition-colors outline-none",
+            SIZE[size].trigger,
             disabled
               ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-              : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300",
-          ].join(" ")}
+              : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300"
+          )}
         >
-<span
-  className={[
-    "truncate text-left",
-    disabled
-      ? "text-gray-400"                    // 🔹 force gray-400 when disabled
-      : hasSelection
-      ? "text-gray-800"
-      : "text-gray-400",
-  ].join(" ")}
->
-  {selectedLabel}
-</span>
+          <span
+            className={cn(
+              "truncate text-left",
+              disabled ? "text-gray-400" : hasSelection ? "text-gray-800" : "text-gray-400"
+            )}
+          >
+            {selectedLabel}
+          </span>
 
           <span className="ml-2 flex items-center gap-2">
             {!effectiveSingleSelect && selected.length > 0 && (
               <span
-                className="min-w-[1.5rem] h-5 px-1.5 inline-flex items-center justify-center text-[10px] rounded-full bg-gray-100 text-gray-700"
+                className={cn(
+                  "inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-700",
+                  SIZE[size].badge
+                )}
                 aria-hidden="true"
               >
                 {selected.length}
               </span>
             )}
             <svg
-              className={[
-                "w-4 h-4 transition-transform duration-200 ease-out",
-                isOpen ? "rotate-180" : "rotate-0",
-              ].join(" ")}
-              aria-hidden="true" viewBox="0 0 24 24" fill="none"
+              className={cn(
+                "transition-transform duration-200 ease-out",
+                SIZE[size].chevron,
+                isOpen ? "rotate-180" : "rotate-0"
+              )}
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
             >
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </span>
         </button>
 
         {/* Panel */}
         <div
-          className={[
+          className={cn(
             "absolute left-0 right-0 top-full origin-top rounded-md border border-gray-200 bg-white z-[60]",
             "transition-all duration-150 ease-out",
             isOpen
               ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 -translate-y-1 pointer-events-none",
-          ].join(" ")}
+              : "opacity-0 -translate-y-1 pointer-events-none"
+          )}
           style={{ maxWidth: 360 }}
         >
           <div
@@ -545,10 +637,7 @@ function SelectDropdown<T>({
             tabIndex={isOpen ? 0 : -1}
             onKeyDown={handlePanelKeyDown}
             onScroll={onPanelScroll}
-            className={[
-              // Panel body box (scroll region)
-              "max-h-[44vh] overflow-y-auto outline-none",
-            ].join(" ")}
+            className="max-h-[44vh] overflow-y-auto outline-none"
             style={panelStyle}
           >
             {/* Sticky controls */}
@@ -558,7 +647,10 @@ function SelectDropdown<T>({
                   <button
                     type="button"
                     onClick={selectAll}
-                    className="h-7 px-2 rounded border border-gray-200 text-[11px] font-medium hover:bg-gray-50"
+                    className={cn(
+                      "rounded border border-gray-200 font-medium hover:bg-gray-50",
+                      SIZE[size].actionBtn
+                    )}
                     tabIndex={-1}
                     aria-label={t("actions.selectAll")}
                   >
@@ -567,7 +659,10 @@ function SelectDropdown<T>({
                   <button
                     type="button"
                     onClick={deselectAll}
-                    className="h-7 px-2 rounded border border-gray-200 text-[11px] font-medium hover:bg-gray-50"
+                    className={cn(
+                      "rounded border border-gray-200 font-medium hover:bg-gray-50",
+                      SIZE[size].actionBtn
+                    )}
                     tabIndex={-1}
                     aria-label={t("actions.clearAll")}
                   >
@@ -586,18 +681,29 @@ function SelectDropdown<T>({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     ref={searchInputRef}
-                    className="w-full h-8 pl-7 pr-2 rounded border border-gray-200 text-[12px] outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
+                    className={cn(
+                      "w-full rounded border border-gray-200 outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300",
+                      SIZE[size].filterInput
+                    )}
                     onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                     aria-label={t("filter.aria")}
                   />
                   <svg
                     aria-hidden="true"
                     viewBox="0 0 24 24"
-                    className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                    className={cn(
+                      "absolute left-2 top-1/2 -translate-y-1/2 text-gray-400",
+                      size === "xl" ? "w-5 h-5" : "w-4 h-4"
+                    )}
                     fill="none"
                   >
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -612,7 +718,7 @@ function SelectDropdown<T>({
               ) : shouldVirtualize ? (
                 (() => {
                   const panelH = panelRef.current?.clientHeight || 320;
-                  const rowH = virtualRowHeight || 36;
+                  const rowH = effectiveRowHeight;
                   const overscan = 8;
 
                   const total = flatItems.length;
@@ -636,11 +742,11 @@ function SelectDropdown<T>({
                 Object.entries(groupedItems).map(([groupName, groupItems]) => (
                   <div key={groupName}>
                     <div
-                      className={[
-                        "px-3 py-2 text-[11px] text-gray-600",
-                        !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : "",
-                        "font-semibold",
-                      ].join(" ")}
+                      className={cn(
+                        "font-semibold text-gray-600",
+                        size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]",
+                        !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : ""
+                      )}
                       onClick={() => handleGroupToggle(groupItems)}
                     >
                       {groupName}

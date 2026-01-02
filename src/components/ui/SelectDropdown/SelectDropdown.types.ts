@@ -18,4 +18,5 @@ export interface SelectDropdownProps<T> {
     virtualize?: boolean;
     virtualThreshold?: number;
     virtualRowHeight?: number; 
+    size?: string;
 }

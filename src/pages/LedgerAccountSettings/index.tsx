@@ -623,7 +623,7 @@ const LedgerAccountSettings: React.FC = () => {
               </div>
 
               {isOwner && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-end gap-2">
                   <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                     {t("buttons.add")}
                   </Button>
@@ -680,12 +680,13 @@ const LedgerAccountSettings: React.FC = () => {
             <div className="rounded-lg border border-gray-200 bg-white">
               <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-end gap-2">
                     <div className="w-72">
                       <Input
                         label={t("buttons.search")}
                         placeholder={t("filters.placeholder")}
                         name="search"
+                        size="sm"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         disabled={globalBusy}
@@ -694,6 +695,7 @@ const LedgerAccountSettings: React.FC = () => {
 
                     <SelectDropdown<{ label: string; value: CategoryKey }>
                       label={t("filters.category")}
+                      size="sm"
                       items={groupOptions.map((g) => ({ label: g.label, value: g.key }))}
                       selected={
                         filterGroup
@@ -732,7 +734,7 @@ const LedgerAccountSettings: React.FC = () => {
                     </Button>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-end gap-2">
                     {viewMode === "accordion" && groups.length > 0 && (
                       <Button
                         variant="outline"
