@@ -27,17 +27,19 @@ import { getEffectiveDateFormat } from "@/lib/date";
 type EffectiveDateCode = "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
 
 export type DateInputVariant = "default" | "outlined" | "filled";
+export type DateInputSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface DateInputProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "type" | "value" | "onChange"
+    "type" | "value" | "onChange" | "size"
   > {
   value?: string;
   onChange?: (valueIso: string) => void;
   label?: string;
   errorMessage?: string;
   variant?: DateInputVariant;
+  size?: DateInputSize;
 }
 
 /* --------------------------- Segment helpers --------------------------- */
@@ -60,6 +62,116 @@ const getSegmentValue = (
   type: keyof SegmentBag,
 ): string => segments[type] || "";
 
+/* ------------------------------ Sizing -------------------------------- */
+
+const SIZE: Record<
+  DateInputSize,
+  {
+    label: string;
+    error: string;
+
+    container: string; // h + px/py + gap + font + radius
+    slot: string;      // slot input text + placeholder size
+    sep: string;       // separator size
+
+    calBtn: string;    // calendar button size
+    calIcon: string;   // calendar icon size
+
+    popover: string;   // calendar popover padding/text/min width
+    navBtn: string;    // prev/next button size
+    title: string;     // month title size
+    weekday: string;   // weekday label cell
+    dayCell: string;   // day button
+  }
+> = {
+  xs: {
+    label: "text-[10px]",
+    error: "text-[10px]",
+
+    container: "h-7 px-2 py-1 gap-0.5 text-[11px] rounded-md",
+    slot: "text-[11px] placeholder:text-[11px]",
+    sep: "text-[11px]",
+
+    calBtn: "h-5 w-5",
+    calIcon: "h-3 w-3",
+
+    popover: "p-2 text-[11px] min-w-[190px]",
+    navBtn: "h-5 w-5 text-[12px]",
+    title: "text-[11px]",
+    weekday: "h-4 text-[9px]",
+    dayCell: "h-6 w-6 text-[11px]",
+  },
+  sm: {
+    label: "text-[10.5px]",
+    error: "text-[11px]",
+
+    container: "h-8 px-2.5 py-1 gap-0.5 text-xs rounded-md",
+    slot: "text-xs placeholder:text-xs",
+    sep: "text-xs",
+
+    calBtn: "h-6 w-6",
+    calIcon: "h-3.5 w-3.5",
+
+    popover: "p-2 text-xs min-w-[200px]",
+    navBtn: "h-6 w-6 text-xs",
+    title: "text-xs",
+    weekday: "h-5 text-[10px]",
+    dayCell: "h-7 w-7 text-xs",
+  },
+  md: {
+    // ✅ keeps your current visuals as default
+    label: "text-[10.5px]",
+    error: "text-[11px]",
+
+    container: "h-10 px-2.5 py-1.5 gap-1 text-xs rounded-lg",
+    slot: "text-xs placeholder:text-xs",
+    sep: "text-xs",
+
+    calBtn: "h-6 w-6",
+    calIcon: "h-3.5 w-3.5",
+
+    popover: "p-2 text-xs min-w-[210px]",
+    navBtn: "h-6 w-6 text-xs",
+    title: "text-xs",
+    weekday: "h-5 text-[10px]",
+    dayCell: "h-7 w-7 text-xs",
+  },
+  lg: {
+    label: "text-[11px]",
+    error: "text-[12px]",
+
+    container: "h-11 px-3 py-2 gap-1.5 text-[13px] rounded-lg",
+    slot: "text-[13px] placeholder:text-[13px]",
+    sep: "text-[13px]",
+
+    calBtn: "h-7 w-7",
+    calIcon: "h-4 w-4",
+
+    popover: "p-3 text-[13px] min-w-[230px]",
+    navBtn: "h-7 w-7 text-[14px]",
+    title: "text-[13px]",
+    weekday: "h-6 text-[11px]",
+    dayCell: "h-8 w-8 text-[13px]",
+  },
+  xl: {
+    label: "text-[12px]",
+    error: "text-[12.5px]",
+
+    container: "h-12 px-4 py-2.5 gap-2 text-[15px] rounded-xl",
+    slot: "text-[15px] placeholder:text-[15px]",
+    sep: "text-[15px]",
+
+    calBtn: "h-8 w-8",
+    calIcon: "h-5 w-5",
+
+    popover: "p-3.5 text-[15px] min-w-[250px]",
+    navBtn: "h-8 w-8 text-[16px]",
+    title: "text-[15px]",
+    weekday: "h-7 text-[12px]",
+    dayCell: "h-9 w-9 text-[15px]",
+  },
+};
+
 /* ------------------------------ Component ------------------------------ */
 
 const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
@@ -70,6 +182,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       label,
       errorMessage,
       variant = "default",
+      size = "md",
       disabled,
       className,
       style,
@@ -87,6 +200,8 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 
     const { code } = getEffectiveDateFormat();
     const effectiveCode: EffectiveDateCode = code;
+
+    const sz = SIZE[size];
 
     /* ---------------------- Slot / format configuration ---------------------- */
 
@@ -385,7 +500,8 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => handleDateSelect(current)}
             className={classNames(
-              "h-7 w-7 rounded-full text-xs flex items-center justify-center",
+              "rounded-full flex items-center justify-center",
+              sz.dayCell,
               !isCurrentMonth && "text-gray-400",
               isSelected && "bg-gray-900 text-white",
               !isSelected && "hover:bg-gray-100",
@@ -407,7 +523,8 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             // position
             "absolute left-0 top-full origin-top z-[60]",
             // box
-            "rounded-md border border-gray-200 bg-white shadow-lg p-2 text-xs min-w-[210px]",
+            "rounded-md border border-gray-200 bg-white shadow-lg",
+            sz.popover,
             // animation (same style as SelectDropdown)
             "transition-all duration-150 ease-out will-change-transform",
             isCalendarOpen
@@ -421,13 +538,16 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
-              className="h-6 w-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 text-xs"
+              className={classNames(
+                "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
+                sz.navBtn
+              )}
               tabIndex={isCalendarOpen ? 0 : -1}
             >
               ‹
             </button>
 
-            <span className="font-medium text-gray-800 text-xs">
+            <span className={classNames("font-medium text-gray-800", sz.title)}>
               {format(calendarMonth, "MMM yyyy")}
             </span>
 
@@ -435,7 +555,10 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
-              className="h-6 w-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 text-xs"
+              className={classNames(
+                "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
+                sz.navBtn
+              )}
               tabIndex={isCalendarOpen ? 0 : -1}
             >
               ›
@@ -446,7 +569,10 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             {weekdayLabels.map((w) => (
               <div
                 key={w}
-                className="h-5 flex items-center justify-center text-[10px] text-gray-500"
+                className={classNames(
+                  "flex items-center justify-center text-gray-500",
+                  sz.weekday
+                )}
               >
                 {w}
               </div>
@@ -463,12 +589,10 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const errorId = errorMessage ? `${id}-err` : undefined;
 
     const baseContainer =
-      "w-full h-10 text-xs text-gray-900 rounded-lg outline-none transition-colors duration-150 " +
+      "w-full outline-none transition-colors duration-150 " +
       "border bg-white hover:bg-gray-50 focus-within:bg-gray-50 " +
       "focus-within:ring-1 focus-within:ring-gray-300 " +
-      "disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed " +
-      "disabled:hover:bg-gray-100 disabled:focus-within:bg-gray-100 disabled:focus-within:ring-0 " +
-      "px-2.5 py-1.5 flex items-center justify-between gap-1";
+      "flex items-center justify-between";
 
     const variantClasses: Record<DateInputVariant, string> = {
       default: "border-gray-300",
@@ -479,15 +603,17 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 
     const containerClasses = classNames(
       baseContainer,
+      sz.container,
       variantClasses[variant] ?? variantClasses.default,
       errorMessage &&
         "border-red-500 focus-within:border-red-500 focus-within:ring-red-200",
       className,
     );
 
-    const slotClasses =
-      "bg-transparent outline-none text-center min-w-0 flex-shrink-0 " +
-      "text-xs leading-none placeholder:text-xs placeholder:text-gray-400";
+    const slotClasses = classNames(
+      "bg-transparent outline-none text-center min-w-0 flex-shrink-0 leading-none placeholder:text-gray-400",
+      sz.slot
+    );
 
     /* -------------------------------- Render --------------------------------- */
 
@@ -501,7 +627,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         {label && (
           <label
             htmlFor={id}
-            className="text-[10.5px] font-semibold text-gray-700 select-none"
+            className={classNames("font-semibold text-gray-700 select-none", sz.label)}
           >
             {label}
           </label>
@@ -534,7 +660,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 onFocus={handleFocus}
               />
 
-              <span className="text-gray-400 text-xs">
+              <span className={classNames("text-gray-400", sz.sep)}>
                 {slotConfig.separator}
               </span>
 
@@ -561,7 +687,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 onFocus={handleFocus}
               />
 
-              <span className="text-gray-400 text-xs">
+              <span className={classNames("text-gray-400", sz.sep)}>
                 {slotConfig.separator}
               </span>
 
@@ -590,7 +716,10 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 
             <button
               type="button"
-              className="flex-shrink-0 h-6 w-6 rounded-full flex items-center justify-center hover:bg-gray-100"
+              className={classNames(
+                "flex-shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100",
+                sz.calBtn
+              )}
               onMouseDown={(e) => e.preventDefault()}
               onClick={handleCalendarClick}
               aria-label="Open date picker"
@@ -599,7 +728,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             >
               <svg
                 viewBox="0 0 24 24"
-                className="h-3.5 w-3.5 text-gray-400"
+                className={classNames("text-gray-400", sz.calIcon)}
                 fill="none"
               >
                 <rect
@@ -627,7 +756,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         {errorMessage && (
           <span
             id={errorId}
-            className="text-red-600 text-[11px] leading-tight"
+            className={classNames("text-red-600 leading-tight", sz.error)}
           >
             {errorMessage}
           </span>

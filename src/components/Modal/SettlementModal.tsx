@@ -32,9 +32,11 @@ type LocalEntryState = {
   id: string;
   value_date: string;
   description: string;
+  /** Stored as display/input major string (we normalize initial values to abs "0.00") */
   amount: string;
   tx_type: TxType;
   isPartial: boolean;
+  /** User input major string (may be locale formatted). */
   partial_amount: string;
   server_error?: string | null;
 };
@@ -60,13 +62,104 @@ function isFutureISO(iso: string): boolean {
   return Number.isFinite(d) && d > t;
 }
 
-function toMajorNumber(v: unknown): number {
-  const n = Number(String(v ?? "").trim());
-  return Number.isFinite(n) ? n : 0;
+/**
+ * Robust money parser for "major" values:
+ * - supports: 1234.56, 1,234.56, 1.234,56, "€ 1 234,56", "-1.234,56"
+ * - returns a finite number or 0
+ */
+function parseMajorAmount(raw: unknown): number {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
+
+  const s0 = String(raw ?? "").trim();
+  if (!s0) return 0;
+
+  // keep digits, dot, comma, minus
+  const cleaned = s0.replace(/[^\d.,-]/g, "");
+  if (!cleaned) return 0;
+
+  const negative = cleaned.startsWith("-");
+  const body = cleaned.replace(/-/g, "");
+
+  const lastDot = body.lastIndexOf(".");
+  const lastComma = body.lastIndexOf(",");
+
+  let normalized = body;
+
+  // both present => last occurrence is decimal separator
+  if (lastDot !== -1 && lastComma !== -1) {
+    const decSep = lastDot > lastComma ? "." : ",";
+    const thouSep = decSep === "." ? "," : ".";
+    normalized = body.replace(new RegExp(`\\${thouSep}`, "g"), "");
+    normalized = normalized.replace(decSep, ".");
+  } else if (lastComma !== -1) {
+    // only comma present
+    const digitsAfter = body.length - lastComma - 1;
+    if (digitsAfter > 0 && digitsAfter <= 2) {
+      // comma as decimal sep; remove dots as thousands
+      normalized = body.replace(/\./g, "").replace(",", ".");
+    } else {
+      // comma as thousands sep
+      normalized = body.replace(/,/g, "");
+    }
+  } else if (lastDot !== -1) {
+    // only dot present
+    const digitsAfter = body.length - lastDot - 1;
+    if (digitsAfter > 0 && digitsAfter <= 2) {
+      // dot as decimal sep; remove commas as thousands
+      normalized = body.replace(/,/g, "");
+    } else {
+      // dot as thousands sep
+      normalized = body.replace(/\./g, "");
+    }
+  }
+
+  const n = Number(normalized);
+  if (!Number.isFinite(n)) return 0;
+  return negative ? -n : n;
 }
 
-function signedAmount(tx: TxType, major: number): number {
-  return tx === "debit" ? -major : major;
+function majorAbs(raw: unknown): number {
+  return Math.abs(parseMajorAmount(raw));
+}
+
+function toAbsMajorString(raw: unknown): string {
+  const n = majorAbs(raw);
+  return n.toFixed(2);
+}
+
+function inferTxType(raw: unknown): "credit" | "debit" | null {
+  const v = String(raw ?? "").toLowerCase();
+  if (!v) return null;
+  if (v.includes("credit")) return "credit";
+  if (v.includes("debit")) return "debit";
+  return null;
+}
+
+/**
+ * Resolve tx type:
+ * - prefer explicit tx field
+ * - if missing, infer from sign (negative -> debit, positive -> credit)
+ */
+function resolveTxType(txRaw: unknown, amountRaw: unknown): TxType {
+  const byText = inferTxType(txRaw);
+  if (byText) return byText;
+
+  const n = parseMajorAmount(amountRaw);
+  if (n < 0) return "debit";
+  if (n > 0) return "credit";
+  return undefined;
+}
+
+/**
+ * Signed effect on bank balance:
+ * - credit increases (+abs)
+ * - debit decreases (-abs)
+ * We use abs() to avoid double-sign bugs when upstream data already carries signs.
+ */
+function signedEffect(tx: TxType, amountRaw: unknown): number {
+  const abs = majorAbs(amountRaw);
+  if (!tx) return 0;
+  return tx === "debit" ? -abs : abs;
 }
 
 type BulkSettleErrorItem = { id?: string; entry_id?: string; error: string };
@@ -82,23 +175,12 @@ function hasErrors(data: BulkSettleResponse): data is BulkSettleWithErrors {
 }
 
 function hasStringProp<K extends string>(obj: unknown, key: K): obj is Record<K, string> {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    key in obj &&
-    typeof (obj as Record<string, unknown>)[key] === "string"
-  );
+  return typeof obj === "object" && obj !== null && key in obj && typeof (obj as Record<string, unknown>)[key] === "string";
 }
 
 /* ------------------------------ component ------------------------------ */
 
-const SettlementModal: React.FC<SettlementModalProps> = ({
-  isOpen,
-  onClose,
-  selectedEntries,
-  onSave,
-  banksData,
-}) => {
+const SettlementModal: React.FC<SettlementModalProps> = ({ isOpen, onClose, selectedEntries, onSave, banksData }) => {
   const { t } = useTranslation("settlementModal");
   const { banks, loading: loadingBanks, error: banksError } = banksData;
 
@@ -111,37 +193,42 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
   /* ----------------------------- derived data ----------------------------- */
 
-  const sortedBanks = useMemo(
-    () => [...banks].sort((a, b) => a.institution.localeCompare(b.institution)),
-    [banks]
-  );
+  const sortedBanks = useMemo(() => [...banks].sort((a, b) => a.institution.localeCompare(b.institution)), [banks]);
 
-  const chosenBank = useMemo(
-    () => sortedBanks.find((b) => b.id === selectedBankId) || null,
-    [sortedBanks, selectedBankId]
-  );
+  const chosenBank = useMemo(() => sortedBanks.find((b) => b.id === selectedBankId) || null, [sortedBanks, selectedBankId]);
 
   const rowHasError = useCallback((row: LocalEntryState) => {
     if (!row.isPartial) return false;
-    const partial = toMajorNumber(row.partial_amount);
-    const full = toMajorNumber(row.amount);
+
+    const partial = majorAbs(row.partial_amount);
+    const full = majorAbs(row.amount);
+
+    // must be > 0 and <= full (both compared as absolute magnitudes)
     return partial <= 0 || partial > full;
   }, []);
 
   const somePartialInvalid = useMemo(() => entriesState.some(rowHasError), [entriesState, rowHasError]);
 
+  /**
+   * ORIGINAL = net effect of full selected entries:
+   * ΣCredits(abs) - ΣDebits(abs)
+   */
   const totalOriginalSigned = useMemo(() => {
     return selectedEntries.reduce((sum, e) => {
-      const tx = e.tx_type as TxType;
-      const amt = toMajorNumber(e.amount);
-      return sum + signedAmount(tx, amt);
+      const tx = resolveTxType(e.tx_type, e.amount) as TxType;
+      return sum + signedEffect(tx, e.amount);
     }, 0);
   }, [selectedEntries]);
 
+  /**
+   * TO SETTLE = net effect of the settlement amounts (partial or full):
+   * ΣCredits(abs(settleAmt)) - ΣDebits(abs(settleAmt))
+   */
   const totalToSettleSigned = useMemo(() => {
     return entriesState.reduce((sum, row) => {
-      const amt = row.isPartial ? toMajorNumber(row.partial_amount) : toMajorNumber(row.amount);
-      return sum + signedAmount(row.tx_type, amt);
+      const tx = row.tx_type;
+      const raw = row.isPartial ? row.partial_amount : row.amount;
+      return sum + signedEffect(tx, raw);
     }, 0);
   }, [entriesState]);
 
@@ -165,12 +252,17 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       const due = toISODate(e.due_date, today);
       const valueDate = isFutureISO(due) ? today : due;
 
+      // Normalize initial amount to an absolute canonical major string (avoid sign/locale issues)
+      const normalizedAmount = toAbsMajorString(e.amount ?? "0.00");
+
+      const tx = resolveTxType(e.tx_type, e.amount) as TxType;
+
       return {
         id: e.id,
         value_date: valueDate,
         description: e.description ?? "",
-        amount: String(e.amount ?? "0.00"),
-        tx_type: e.tx_type as TxType,
+        amount: normalizedAmount,
+        tx_type: tx,
         isPartial: false,
         partial_amount: "",
         server_error: null,
@@ -214,9 +306,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
   const togglePartial = useCallback((id: string) => {
     setEntriesState((prev) =>
-      prev.map((row) =>
-        row.id === id ? { ...row, isPartial: !row.isPartial, partial_amount: "", server_error: null } : row
-      )
+      prev.map((row) => (row.id === id ? { ...row, isPartial: !row.isPartial, partial_amount: "", server_error: null } : row))
     );
   }, []);
 
@@ -247,16 +337,20 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       setEntriesState((prev) => prev.map((r) => ({ ...r, server_error: null })));
 
       try {
-        const items: BulkSettleItem[] = entriesState.map((row) => ({
-          entry_id: row.id,
-          bank_id: selectedBankId,
-          // Money rule: keep major strings
-          amount: row.isPartial ? (row.partial_amount || "0.00") : (row.amount || "0.00"),
-          value_date: row.value_date,
-        }));
+        const items: BulkSettleItem[] = entriesState.map((row) => {
+          const raw = row.isPartial ? row.partial_amount : row.amount;
 
-        // request<T>() ALWAYS resolves as ApiSuccess<T> (or throws),
-        // so `res.data` is always the payload here.
+          // API should receive positive major strings; server already knows entry type.
+          const amountAbsMajor = toAbsMajorString(raw || "0");
+
+          return {
+            entry_id: row.id,
+            bank_id: selectedBankId,
+            amount: amountAbsMajor,
+            value_date: row.value_date,
+          };
+        });
+
         const res = await api.addSettlementsBulk(items, true);
         const data: BulkSettleResponse = res.data;
 
@@ -267,7 +361,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               return hit ? { ...r, server_error: hit.error } : r;
             })
           );
-          console.error("Erros no bulk settle:", data.errors);
+          console.error("Errors in bulk settle:", data.errors);
           return;
         }
 
@@ -287,8 +381,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   if (!isOpen) return null;
 
   const selectedCount = selectedEntries.length;
-  const headerTitle =
-    selectedCount === 1 ? t("header.title.one") : t("header.title.many", { n: selectedCount });
+  const headerTitle = selectedCount === 1 ? t("header.title.one") : t("header.title.many", { n: selectedCount });
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
@@ -332,10 +425,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           className="flex-1 min-h-0 px-5 py-4 grid grid-cols-1 lg:grid-cols-[35%_65%] gap-4 min-w-0"
         >
           {/* ----------------- Banks Pane (35%) ----------------- */}
-          <section
-            aria-label={t("banks.aria")}
-            className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
-          >
+          <section aria-label={t("banks.aria")} className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden">
             <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase tracking-wide text-gray-600">{t("banks.title")}</span>
@@ -394,10 +484,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           </section>
 
           {/* ----------------- Entries Pane (65%) ----------------- */}
-          <section
-            aria-label={t("entries.aria")}
-            className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden"
-          >
+          <section aria-label={t("entries.aria")} className="min-w-0 flex flex-col border border-gray-300 rounded-md overflow-hidden">
             <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -408,18 +495,13 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap min-w-0">
                   <DateInput
                     value={bulkDate}
+                    size="sm"
                     onChange={(iso) => setBulkDate(iso)}
                     variant="default"
                     aria-label={t("actions.bulkDate")}
                     className="w-[130px]"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="!h-8 !px-2 text-[12px]"
-                    onClick={applyDateToAll}
-                    disabled={!bulkDate}
-                  >
+                  <Button type="button" variant="outline" className="!h-8 !px-2 text-[12px]" onClick={applyDateToAll} disabled={!bulkDate}>
                     {t("actions.applyDateAll")}
                   </Button>
 
@@ -458,6 +540,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                         <div className="text-center">
                           <DateInput
                             value={row.value_date}
+                            size="sm"
                             onChange={(iso) => updateEntryDate(row.id, iso)}
                             aria-label={t("table.due")}
                             variant="default"
@@ -479,6 +562,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
                           {row.isPartial ? (
                             <AmountInput
                               value={row.partial_amount || ""}
+                              size="sm"
                               onValueChange={(val) => updatePartialAmount(row.id, val)}
                               display="currency"
                               zeroAsEmpty
@@ -507,20 +591,19 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
           <div className="text-[12px] text-gray-600">
             <span className="mr-3">
               {t("footer.original")}&nbsp;
-              <b className="text-gray-900 tabular-nums">{formatCurrency(String(totalOriginalSigned))}</b>
+              <b className="text-gray-900 tabular-nums">{formatCurrency(totalOriginalSigned.toFixed(2))}</b>
             </span>
 
             <span className="mr-3">
               {t("footer.toSettle")}&nbsp;
-              <b className="text-gray-900 tabular-nums">{formatCurrency(String(totalToSettleSigned))}</b>
+              <b className="text-gray-900 tabular-nums">{formatCurrency(totalToSettleSigned.toFixed(2))}</b>
             </span>
 
             {chosenBank ? (
               <span className="text-gray-600">
                 {t("footer.bankLabel")}&nbsp;
                 <b className="text-gray-900">
-                  {chosenBank.institution} • {t("banks.agency")} {chosenBank.branch} • {t("banks.account")}{" "}
-                  {chosenBank.account_number}
+                  {chosenBank.institution} • {t("banks.agency")} {chosenBank.branch} • {t("banks.account")} {chosenBank.account_number}
                 </b>
               </span>
             ) : (

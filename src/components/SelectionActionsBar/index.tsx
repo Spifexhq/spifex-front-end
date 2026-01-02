@@ -1,312 +1,412 @@
-// src/components/SelectionActionsBar.tsx
-import React, { useMemo, useEffect, useState } from "react";
+/* -------------------------------------------------------------------------- */
+/* File: src/components/SelectionActionsBar/index.tsx                          */
+/* Design: keep current sticky/blur bar                                        */
+/* Fixes:                                                                     */
+/* - Net balance calculation: NET = ΣCredits - ΣDebits (uses absolute sums)    */
+/* - Restores previous info: credits/debits counts, ΣCredits, ΣDebits, Net, Due*/
+/* - Restores previous button colors + symbols (no emojis)                     */
+/* - Adds minimize/expand + ESC-to-cancel behavior + proper i18n keys          */
+/* - Currency resolution matches BankSettings (safeCurrency + org currency)    */
+/* -------------------------------------------------------------------------- */
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
 import Button from "@/components/ui/Button";
-import { formatDateFromISO } from "@/lib";
+import { useAuthContext } from "@/hooks/useAuth";
 
-/* ------------------------------ Types ------------------------------ */
-export type MinimalEntry = {
-  amount: string | number;
-  /** legacy */
-  transaction_type?: "credit" | "debit" | string;
-  /** new api label via get_tx_type_display */
-  tx_type?: "credit" | "debit" | string;
-  /** planned/forecast date */
-  due_date?: string | null;
-  /** realized date (settlement value date) */
-  settlement_due_date?: string | null;
-};
-
-type Props = {
-  context?: "cashflow" | "settled";
-  selectedIds: Array<number | string>;
-  selectedEntries: MinimalEntry[];
-  onLiquidate?: () => void;
-  onDelete?: () => void | Promise<void>;
-  onReturn?: () => void | Promise<void>;
-  onCancel?: () => void;
-  isProcessing?: boolean;
-};
-
-/* ------------------------------ Utils ------------------------------ */
-function fmtBRL(n: number) {
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+/* -------------------------------- Helpers --------------------------------- */
+function safeCurrency(raw: unknown) {
+  const v = String(raw ?? "").trim().toUpperCase();
+  return v || "USD";
 }
 
-/** Parses "1234.56" or 1234.56. (Backend already sends dot-decimal.) */
-function parseAmount(a: string | number | null | undefined): number {
-  if (a == null) return 0;
-  if (typeof a === "number") return Number.isFinite(a) ? a : 0;
-  const trimmed = a.trim();
-  if (!trimmed) return 0;
-  const normalized = trimmed.replace(/[^\d.-]/g, "");
-  const n = parseFloat(normalized);
+function toFiniteNumber(raw: unknown): number {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
+  const s = String(raw ?? "").trim();
+  if (!s) return 0;
+  const n = Number(s.replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Normalizes transaction type to "credit" | "debit" */
-function normalizeTxType(e: MinimalEntry): "credit" | "debit" {
-  const raw = String(e.transaction_type ?? e.tx_type ?? "").toLowerCase();
-  return raw === "credit" ? "credit" : "debit";
+function inferTxType(raw: unknown): "credit" | "debit" | null {
+  const v = String(raw ?? "").toLowerCase();
+  if (!v) return null;
+  if (v.includes("credit")) return "credit";
+  if (v.includes("debit")) return "debit";
+  return null;
 }
 
-/** Picks the most relevant date for context */
-function pickDate(e: MinimalEntry, context: "cashflow" | "settled"): string | null | undefined {
-  if (context === "settled") return e.settlement_due_date ?? e.due_date;
-  return e.due_date ?? e.settlement_due_date;
+function formatMoney(amount: number, locale: string, currency: string): string {
+  const ccy = safeCurrency(currency);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: ccy,
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${ccy}`;
+  }
 }
 
-/* ------------------------------ Icons ------------------------------ */
-const IconMinimize = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" {...p}>
-    <path d="M4 10.5h12" strokeWidth={1.6} strokeLinecap="round" />
-  </svg>
-);
-const IconCancel = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" {...p}>
-    <path d="M5 5l10 10M15 5L5 15" strokeWidth={1.6} strokeLinecap="round" />
-  </svg>
-);
-const IconLiquidate = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" {...p}>
-    <circle cx="10" cy="10" r="7.2" strokeWidth={1.4} />
-    <path d="M6.5 10l2.2 2.2L13.5 7.8" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-const IconDelete = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" {...p}>
-    <path d="M3.5 6h13" strokeWidth={1.6} strokeLinecap="round" />
-    <path d="M7.5 6V4.8c0-.44.36-.8.8-.8h3.4c.44 0 .8.36.8.8V6" strokeWidth={1.4} />
-    <path d="M6.2 6.8l.7 9c.04.48.45.86.93.86h4.34c.48 0 .89-.38.93-.86l.7-9" strokeWidth={1.2} />
-  </svg>
-);
-const IconReturn = (p: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...p}>
-    <path d="M9 14L4 9l5-5" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M20 20v-7a4 4 0 0 0-4-4H4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+function parseDateSafe(raw: unknown): Date | null {
+  const s = String(raw ?? "").trim();
+  if (!s) return null;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
-/* ------------------------------ Component ------------------------------ */
+function formatDateShort(d: Date, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "2-digit" }).format(d);
+  } catch {
+    return d.toISOString().slice(0, 10);
+  }
+}
 
-const SelectionActionsBar: React.FC<Props> = ({
-  context = "cashflow",
+/* --------------------------------- Types ---------------------------------- */
+export type MinimalEntry = {
+  amount?: number | string | null;
+
+  // Settled mapping uses this
+  transaction_type?: string | null;
+
+  // CashFlow Entry model uses this
+  tx_type?: string | null;
+
+  due_date?: string | null;
+  settlement_due_date?: string | null;
+  value_date?: string | null;
+};
+
+export type SelectionActionsContext = "cashflow" | "settled" | (string & {});
+
+export type SelectionActionsBarProps = {
+  context: SelectionActionsContext;
+
+  selectedIds: string[];
+  selectedEntries: MinimalEntry[];
+
+  isProcessing?: boolean;
+
+  onCancel: () => void;
+
+  // CashFlow actions
+  onLiquidate?: () => void;
+  onDelete?: () => Promise<void> | void;
+
+  // Settled actions
+  onReturn?: () => Promise<void> | void;
+
+  /**
+   * Optional currency override.
+   * If omitted/empty, uses org currency (BankSettings pattern), then "USD".
+   */
+  currency?: string | null;
+
+  className?: string;
+};
+
+/* ------------------------------- Component -------------------------------- */
+const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
+  context,
   selectedIds,
   selectedEntries,
+  isProcessing = false,
+  onCancel,
   onLiquidate,
   onDelete,
   onReturn,
-  onCancel,
-  isProcessing = false,
+  currency,
+  className = "",
 }) => {
-  const { t } = useTranslation("selectionActionsBar");
-  const [collapsed, setCollapsed] = useState(false);
+  const { t, i18n } = useTranslation("selectionActionsBar");
+  const { organization: authOrg } = useAuthContext();
 
-  const { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue } = useMemo(() => {
-    const count = selectedIds.length;
+  /* Currency (BankSettings logic) */
+  const orgCurrency = useMemo(() => safeCurrency(authOrg?.organization?.currency), [authOrg]);
+  const resolvedCurrency = useMemo(() => safeCurrency(currency ?? orgCurrency), [currency, orgCurrency]);
 
-    let sumCredits = 0;
-    let sumDebits = 0;
-    let credits = 0;
-    let debits = 0;
+  const hasSelection = (selectedIds?.length ?? 0) > 0;
+  const disableAll = !!isProcessing;
 
-    const dates: Date[] = [];
+  /* Minimize / Expand */
+  const [minimized, setMinimized] = useState(false);
+  const prevCountRef = useRef<number>(0);
 
-    for (const e of selectedEntries) {
-      const amt = parseAmount(e.amount);
-      if (normalizeTxType(e) === "credit") {
-        credits += 1;
-        sumCredits += amt;
-      } else {
-        debits += 1;
-        sumDebits += amt;
+  useEffect(() => {
+    const prev = prevCountRef.current;
+    const next = selectedIds.length;
+
+    // When a new selection starts, default to expanded (matches typical previous behavior)
+    if (prev === 0 && next > 0) setMinimized(false);
+
+    prevCountRef.current = next;
+  }, [selectedIds.length]);
+
+  /* ESC to cancel selection */
+  useEffect(() => {
+    if (!hasSelection) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCancel();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [hasSelection, onCancel]);
+
+  /* Compute stats (restoring previous info + fixing net) */
+  const stats = useMemo(() => {
+    let creditAbsSum = 0;
+    let debitAbsSum = 0;
+    let creditCount = 0;
+    let debitCount = 0;
+
+    let earliestDue: Date | null = null;
+
+    for (const e of selectedEntries ?? []) {
+      const amt = toFiniteNumber(e?.amount);
+      const tx = inferTxType(e?.transaction_type) ?? inferTxType(e?.tx_type);
+
+      // Use absolute sums to make NET correct regardless of sign conventions upstream
+      if (tx === "credit") {
+        creditAbsSum += Math.abs(amt);
+        creditCount += 1;
+      } else if (tx === "debit") {
+        debitAbsSum += Math.abs(amt);
+        debitCount += 1;
       }
 
-      const rawDate = pickDate(e, context);
-      if (rawDate) {
-        const d = new Date(rawDate);
-        if (!isNaN(d.getTime())) dates.push(d);
+      const dueCandidate =
+        parseDateSafe(e?.settlement_due_date) ??
+        parseDateSafe(e?.due_date) ??
+        parseDateSafe(e?.value_date);
+
+      if (dueCandidate) {
+        if (!earliestDue || dueCandidate.getTime() < earliestDue.getTime()) {
+          earliestDue = dueCandidate;
+        }
       }
     }
 
-    const net = sumCredits - sumDebits;
-    const minDue = dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))) : null;
-    const maxDue = dates.length ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+    const net = creditAbsSum - debitAbsSum;
 
-    return { count, credits, debits, sumCredits, sumDebits, net, minDue, maxDue };
-  }, [selectedIds, selectedEntries, context]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && onCancel) onCancel();
+    return {
+      creditAbsSum,
+      debitAbsSum,
+      net,
+      creditCount,
+      debitCount,
+      earliestDue,
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCancel]);
+  }, [selectedEntries]);
 
-  if (selectedIds.length === 0) return null;
+  const creditLabel = useMemo(
+    () => formatMoney(stats.creditAbsSum, i18n.language, resolvedCurrency),
+    [stats.creditAbsSum, i18n.language, resolvedCurrency]
+  );
 
-  // Collapsed pill
-  if (collapsed) {
-    return (
-      <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none">
-        <button
-          type="button"
-          onClick={() => setCollapsed(false)}
-          aria-expanded="false"
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 shadow-lg backdrop-blur px-3 py-2 hover:bg-white transition"
-          title={t("actions.expand")}
-          aria-label={t("actions.expand")}
-        >
-          <span className="text-[12px] text-gray-700">
-            {t("labels.selected", { count })}
-          </span>
-          <span
-            className={`text-[12px] ${net >= 0 ? "text-emerald-700" : "text-rose-700"} font-medium`}
-            aria-label={t("labels.net")}
-            title={t("labels.net")}
-          >
-            {fmtBRL(net)}
-          </span>
-          <svg viewBox="0 0 20 20" className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" aria-hidden>
-            <path d="M5 12l5-5 5 5" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-    );
-  }
+  const debitLabel = useMemo(
+    () => formatMoney(stats.debitAbsSum, i18n.language, resolvedCurrency),
+    [stats.debitAbsSum, i18n.language, resolvedCurrency]
+  );
+
+  const netLabel = useMemo(
+    () => formatMoney(stats.net, i18n.language, resolvedCurrency),
+    [stats.net, i18n.language, resolvedCurrency]
+  );
+
+  const dueLabel = useMemo(() => {
+    if (!stats.earliestDue) return "";
+    return formatDateShort(stats.earliestDue, i18n.language);
+  }, [stats.earliestDue, i18n.language]);
+
+  /* Context actions */
+  const showLiquidate = context === "cashflow" && typeof onLiquidate === "function";
+  const showDelete = context === "cashflow" && typeof onDelete === "function";
+  const showReturn = context === "settled" && typeof onReturn === "function";
+
+  const toggleMinimize = useCallback(() => setMinimized((p) => !p), []);
+
+  if (!hasSelection) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none">
-      <div
-        className="
-          pointer-events-auto relative
-          rounded-xl border border-gray-200 bg-white/95 shadow-xl backdrop-blur
-          p-3 md:p-4 transition-all
-          max-w-[60vw] w-[min(560px,60vw)]
-        "
-        role="region"
-        aria-live="polite"
-        aria-label={t("aria.bar")}
-      >
-        {/* Minimize */}
-        <button
-          type="button"
-          onClick={() => setCollapsed(true)}
-          aria-label={t("actions.minimize")}
-          title={t("actions.minimize")}
-          className="absolute -top-2 -right-2 h-7 w-7 grid place-items-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 shadow"
-        >
-          <IconMinimize className="w-3.5 h-3.5" />
-        </button>
+    <div
+      className={[
+        "sticky bottom-0 z-40",
+        "border-t border-gray-200 bg-white/95 backdrop-blur",
+        "px-4 py-3",
+        className,
+      ].join(" ")}
+      role="region"
+      aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
+    >
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+        {/* LEFT: info */}
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="text-[12px] font-semibold text-gray-900">
+              {t("labels.selected", {
+                defaultValue: "{{count}} selected",
+                count: selectedIds.length,
+              })}
+            </div>
 
-        <div className="grid grid-cols-[1fr_auto] gap-5">
-          {/* Info */}
-          <div>
-            <div className="text-[13px] text-gray-800">
-              <b>{count}</b> {t("labels.selectedShort", { count })}
-            </div>
-            <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-600">
-              <div>
-                {t("labels.credits")}: <b className="text-emerald-700">{credits}</b>
+            {dueLabel ? (
+              <div className="text-[11px] text-gray-600 truncate">
+                <span className="text-gray-500">{t("labels.dueShort", { defaultValue: "Due:" })}</span>{" "}
+                <span className="font-medium text-gray-800">{dueLabel}</span>
               </div>
-              <div>
-                {t("labels.debits")}: <b className="text-rose-700">{debits}</b>
-              </div>
-              <div>
-                {t("labels.sumCredits")}: <b className="text-emerald-700">{fmtBRL(sumCredits)}</b>
-              </div>
-              <div>
-                {t("labels.sumDebits")}: <b className="text-rose-700">{fmtBRL(sumDebits)}</b>
-              </div>
-              <div className="col-span-2">
-                {t("labels.net")}{" "}
-                <b className={net >= 0 ? "text-emerald-700" : "text-rose-700"}>{fmtBRL(net)}</b>
-              </div>
-              {minDue && maxDue && (
-                <div className="col-span-2">
-                  {t("labels.dueShort")}{" "}
-                  <b>
-                    {formatDateFromISO(minDue.toISOString().slice(0, 10))} –{" "}
-                    {formatDateFromISO(maxDue.toISOString().slice(0, 10))}
-                  </b>
-                </div>
-              )}
-            </div>
-            <div className="mt-2 text-[10.5px] text-gray-500">
-              {t("hints.escToCancel")}{" "}
-              <kbd className="px-1 py-0.5 border rounded">Esc</kbd>
-            </div>
+            ) : null}
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-2 min-w-[200px]">
-            {context === "settled" ? (
-              <>
-                <Button
-                  variant="danger"
-                  onClick={onReturn}
-                  disabled={isProcessing}
-                  className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title={t("actions.return")}
-                  aria-label={t("actions.return")}
-                >
-                  <IconReturn className="w-4 h-4" />
-                  <span>{t("actions.return")}</span>
-                </Button>
+          {!minimized && (
+            <div className="mt-1.5 text-[11px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+              {/* Credits */}
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
+                <span className="font-medium text-gray-800">{stats.creditCount}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-gray-500">{t("labels.sumCredits", { defaultValue: "Σ Credits" })}:</span>
+                <span className="font-medium text-gray-800">{creditLabel}</span>
+              </span>
 
-                <Button
-                  variant="outline"
-                  className="!border-gray-300 !text-gray-700 hover:!bg-gray-50 !px-3 !py-2 flex items-center justify-center gap-2"
-                  onClick={onCancel}
-                  disabled={isProcessing}
-                  title={t("actions.cancelSelection")}
-                  aria-label={t("actions.cancelSelection")}
-                >
-                  <IconCancel className="w-4 h-4" />
-                  <span>{t("actions.cancel")}</span>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="primary"
-                  onClick={onLiquidate}
-                  disabled={isProcessing}
-                  className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title={t("actions.liquidateSelected")}
-                  aria-label={t("actions.liquidateSelected")}
-                >
-                  <IconLiquidate className="w-4 h-4" />
-                  <span>{t("actions.liquidate")}</span>
-                </Button>
+              <span className="text-gray-300">|</span>
 
-                <Button
-                  variant="danger"
-                  onClick={onDelete}
-                  disabled={isProcessing}
-                  className="!px-3 !py-2 flex items-center justify-center gap-2"
-                  title={t("actions.deleteSelected")}
-                  aria-label={t("actions.deleteSelected")}
-                >
-                  <IconDelete className="w-4 h-4" />
-                  <span>{t("actions.delete")}</span>
-                </Button>
+              {/* Debits */}
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
+                <span className="font-medium text-gray-800">{stats.debitCount}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-gray-500">{t("labels.sumDebits", { defaultValue: "Σ Debits" })}:</span>
+                <span className="font-medium text-gray-800">{debitLabel}</span>
+              </span>
 
-                <Button
-                  variant="outline"
-                  className="!border-gray-300 !text-gray-700 hover:!bg-gray-50 !px-3 !py-2 flex items-center justify-center gap-2"
-                  onClick={onCancel}
-                  disabled={isProcessing}
-                  title={t("actions.cancelSelection")}
-                  aria-label={t("actions.cancelSelection")}
-                >
-                  <IconCancel className="w-4 h-4" />
-                  <span>{t("actions.cancel")}</span>
-                </Button>
-              </>
-            )}
-          </div>
+              <span className="text-gray-300">|</span>
+
+              {/* Net */}
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>
+                <span className="font-semibold text-gray-900">{netLabel}</span>
+              </span>
+
+              {/* ESC hint */}
+              <span className="text-gray-400">
+                {t("hints.escToCancel", { defaultValue: "Tip: press" })}{" "}
+                <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
+                  Esc
+                </kbd>{" "}
+                {t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" }).replace("(Esc)", "").trim()}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: actions (previous colors + symbols) */}
+        <div className="shrink-0 flex items-center gap-2">
+          {/* Minimize / Expand */}
+          <Button
+            variant="outline"
+            onClick={toggleMinimize}
+            disabled={disableAll}
+            aria-busy={disableAll || undefined}
+            title={minimized ? t("actions.expand", { defaultValue: "Expand" }) : t("actions.minimize", { defaultValue: "Minimize" })}
+            className="!py-1.5"
+          >
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true" className="text-[14px] leading-none">
+                {minimized ? "+" : "–"}
+              </span>
+              <span>{minimized ? t("actions.expand", { defaultValue: "Expand" }) : t("actions.minimize", { defaultValue: "Minimize" })}</span>
+            </span>
+          </Button>
+
+          {/* Cancel */}
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={disableAll}
+            aria-busy={disableAll || undefined}
+            title={t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })}
+            className="!py-1.5"
+          >
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden="true" className="text-[14px] leading-none">
+                ✕
+              </span>
+              <span>{t("actions.cancel", { defaultValue: "Cancel" })}</span>
+            </span>
+          </Button>
+
+          {/* Context action: Settle */}
+          {showLiquidate && (
+            <Button
+              onClick={onLiquidate}
+              disabled={disableAll}
+              aria-busy={disableAll || undefined}
+              title={t("actions.liquidateSelected", { defaultValue: "Settle selected" })}
+              className={[
+                "!py-1.5",
+                "bg-emerald-600 border border-emerald-600 text-white",
+                "hover:bg-emerald-700 hover:border-emerald-700",
+                "active:bg-emerald-800 active:border-emerald-800",
+              ].join(" ")}
+            >
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" className="text-[14px] leading-none">
+                  ✓
+                </span>
+                <span>{t("actions.liquidate", { defaultValue: "Settle" })}</span>
+              </span>
+            </Button>
+          )}
+
+          {/* Context action: Revert */}
+          {showReturn && (
+            <Button
+              onClick={onReturn}
+              disabled={disableAll}
+              aria-busy={disableAll || undefined}
+              title={t("actions.return", { defaultValue: "Revert" })}
+              className={[
+                "!py-1.5",
+                "bg-amber-500 border border-amber-500 text-white",
+                "hover:bg-amber-600 hover:border-amber-600",
+              ].join(" ")}
+            >
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" className="text-[14px] leading-none">
+                  ↩
+                </span>
+                <span>{t("actions.return", { defaultValue: "Revert" })}</span>
+              </span>
+            </Button>
+          )}
+
+          {/* Context action: Delete */}
+          {showDelete && (
+            <Button
+              variant="outline"
+              onClick={onDelete}
+              disabled={disableAll}
+              aria-busy={disableAll || undefined}
+              title={t("actions.deleteSelected", { defaultValue: "Delete selected" })}
+              className="!py-1.5 border-red-200 text-red-600 hover:bg-red-50"
+            >
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true" className="text-[14px] leading-none">
+                  ⌫
+                </span>
+                <span>{t("actions.delete", { defaultValue: "Delete" })}</span>
+              </span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

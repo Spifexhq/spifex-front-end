@@ -1,31 +1,31 @@
-/**
- * AmountInput.types.ts
- * 
- * This file defines the types for the AmountInput component.
- * 
- * Features:
- * - Supports multiple input variants: "default", "outlined", "filled", "error"
- * - Allows an optional label for better accessibility
- * - Displays an error message when validation fails
- * - Supports a toggle button for password visibility
- * - Handles loading state to disable input interaction
- * - Extends `React.InputHTMLAttributes<HTMLInputElement>` for full HTML input functionality
- * 
- * Usage:
- * ```tsx
- * <AmountInput variant="outlined" label="Username" placeholder="Enter your name" />
- * <AmountInput type="password" label="Password" showTogglePassword />
- * <AmountInput variant="error" errorMessage="This field is required" />
- * ```
- */
+import type React from "react";
 
-export type AmountInputVariant = 'default' | 'outlined' | 'filled';
+export type AmountInputVariant = "default" | "outlined" | "filled";
+export type AmountInputSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-export interface AmountInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export type AmountInputBaseProps = Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "type" | "value" | "defaultValue" | "onChange" | "onKeyDown" | "inputMode" | "pattern" | "size"
+>;
+
+export interface AmountInputProps extends AmountInputBaseProps {
   variant?: AmountInputVariant;
+  size?: AmountInputSize;
+
   label?: string;
   errorMessage?: string;
   style?: React.CSSProperties;
+
+  /** kept for compatibility with Input-like props; ignored */
   showTogglePassword?: boolean;
+
   isLoading?: boolean;
+
+  value: string;
+  onValueChange: (nextMajor: string) => void;
+
+  display?: "currency" | "amount";
+  zeroAsEmpty?: boolean;
+  currency?: string;
+  allowNegative?: boolean;
 }
