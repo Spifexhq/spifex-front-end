@@ -5,10 +5,10 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 
-import Button from "@/components/ui/Button";
-import Input from "src/components/ui/Input";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
-import Spinner from "@/components/ui/Loaders/Spinner";
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import Spinner from "@/shared/ui/Loaders/Spinner";
 
 import { api } from "@/api/requests";
 import { ApiError } from "@/models/Api";
@@ -981,7 +981,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
             <Input
               kind="amount"
-              size="sm"
               ref={amountRef}
               id="amount-input"
               label={t("entriesModal:details.amount")}

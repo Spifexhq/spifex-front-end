@@ -5,12 +5,12 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import Button from "@/components/ui/Button";
-import Checkbox from "@/components/ui/Checkbox";
-import Snackbar from "@/components/ui/Snackbar";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import Button from "@/shared/ui/Button";
+import Checkbox from "@/shared/ui/Checkbox";
+import Snackbar from "@/shared/ui/Snackbar";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 import { useAuth } from "@/api";

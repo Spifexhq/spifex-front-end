@@ -1,7 +1,7 @@
 // src/middlewares/auth/AuthMiddleware.tsx
 import { type ReactNode } from "react";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 export const AuthMiddleware = ({ children }: { children: ReactNode }) => {
   const { isLogged, checking } = useRequireLogin();

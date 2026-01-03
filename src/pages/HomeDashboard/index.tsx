@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import { api } from "@/api/requests";
 
 import type {

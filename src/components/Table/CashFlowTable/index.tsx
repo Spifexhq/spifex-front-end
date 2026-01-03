@@ -10,8 +10,8 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import Button from "@/components/ui/Button";
-import Checkbox from "@/components/ui/Checkbox";
+import Button from "@/shared/ui/Button";
+import Checkbox from "@/shared/ui/Checkbox";
 
 import { api } from "@/api/requests";
 import { getCursorFromUrl } from "@/lib/list";

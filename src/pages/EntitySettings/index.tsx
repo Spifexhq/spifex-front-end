@@ -6,14 +6,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
-import ConfirmToast from "@/components/ui/ConfirmToast";
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import ConfirmToast from "@/shared/ui/ConfirmToast";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
-import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
+import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
 
 import EntityModal from "./EntityModal";
 

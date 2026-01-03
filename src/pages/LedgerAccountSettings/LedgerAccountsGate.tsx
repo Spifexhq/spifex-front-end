@@ -6,9 +6,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Button from "@/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Snackbar from "@/components/ui/Snackbar";
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import Snackbar from "@/shared/ui/Snackbar";
 
 import { api } from "@/api/requests";
 import { useTranslation } from "react-i18next";

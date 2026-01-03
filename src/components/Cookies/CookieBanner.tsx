@@ -1,9 +1,9 @@
 // src/components/CookieBanner.tsx
 import { useContext, useState, useEffect } from "react";
 import { CookieContext } from "@/contexts/CookieContext";
-import Checkbox from "@/components/ui/Checkbox";
+import Checkbox from "@/shared/ui/Checkbox";
 import { useTranslation } from "react-i18next";
-import Button from "../ui/Button";
+import Button from "@/shared/ui/Button";
 
 export const CookieBanner = () => {
   const { ready, consent, setConsent } = useContext(CookieContext);

@@ -8,9 +8,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Shimmer from "@/components/ui/Loaders/Shimmer";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Shimmer from "@/shared/ui/Loaders/Shimmer";
 
 type Mode = "create" | "rename";
 

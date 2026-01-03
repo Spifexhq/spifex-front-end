@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Checkbox from "@/components/ui/Checkbox";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Checkbox from "@/shared/ui/Checkbox";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 

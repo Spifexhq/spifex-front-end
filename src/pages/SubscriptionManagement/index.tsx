@@ -9,9 +9,9 @@ import { useTranslation } from "react-i18next";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuthContext } from "@/hooks/useAuth";
 
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import Button from "@/components/ui/Button";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import Button from "@/shared/ui/Button";
 import { api } from "@/api/requests";
 import type { GetSubscriptionStatusResponse } from "@/models/auth/billing";
 

@@ -7,11 +7,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Button from "@/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Checkbox from "@/components/ui/Checkbox";
-import Shimmer from "@/components/ui/Loaders/Shimmer";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import Checkbox from "@/shared/ui/Checkbox";
+import Shimmer from "@/shared/ui/Loaders/Shimmer";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 

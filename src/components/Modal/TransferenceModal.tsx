@@ -4,9 +4,9 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 import { formatCurrency } from "@/lib";
 
 import type { BankAccount } from "@/models/settings/banking";

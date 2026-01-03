@@ -6,14 +6,14 @@
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
-import ConfirmToast from "@/components/ui/ConfirmToast";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
 import { api } from "@/api/requests";

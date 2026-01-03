@@ -5,7 +5,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
-import Checkbox from "@/components/ui/Checkbox";
+import Checkbox from "@/shared/ui/Checkbox";
 
 /** Helper simples sem dependências externas */
 function cn(...classes: Array<string | undefined | false | null>) {

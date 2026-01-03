@@ -6,8 +6,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { api } from "@/api/requests";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { formatDateTimeFromISO } from "@/lib/date/formatDate";

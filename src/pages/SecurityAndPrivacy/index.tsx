@@ -11,12 +11,12 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";

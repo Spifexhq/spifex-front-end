@@ -18,9 +18,9 @@ import {
   Pie,
 } from "recharts";
 
-import Button from "@/components/ui/Button";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import CumulativeAreaChart from "@/components/charts/CumulativeAreaChart";
+import Button from "@/shared/ui/Button";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import CumulativeAreaChart from "src/components/Charts";
 
 import { api } from "@/api/requests";
 import { useTranslation } from "react-i18next";

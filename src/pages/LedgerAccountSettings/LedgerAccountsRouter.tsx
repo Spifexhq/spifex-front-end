@@ -7,8 +7,8 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom";
 
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 
 import { api } from "@/api/requests";
 

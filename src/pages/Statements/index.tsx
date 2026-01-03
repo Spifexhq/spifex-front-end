@@ -8,13 +8,13 @@ import axios from "axios";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
-import ConfirmToast from "@/components/ui/ConfirmToast";
-import Input from "src/components/ui/Input";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import ConfirmToast from "@/shared/ui/ConfirmToast";
+import Input from "@/shared/ui/Input";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";

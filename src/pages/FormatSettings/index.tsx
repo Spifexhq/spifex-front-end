@@ -12,10 +12,10 @@ import type { Locale } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
 
 import { useAuthContext } from "@/hooks/useAuth";
 

@@ -11,14 +11,14 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
-import Checkbox from "@/components/ui/Checkbox";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import Checkbox from "@/shared/ui/Checkbox";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";

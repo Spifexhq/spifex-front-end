@@ -14,7 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import Input from "src/components/ui/Input";
+import Input from "@/shared/ui/Input";
 
 export interface SimulatedAIProps {
   isOpen: boolean;

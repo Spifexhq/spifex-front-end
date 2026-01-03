@@ -1,7 +1,7 @@
 // src/layouts/SettingsLayout/index.tsx
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import SidebarSettings from "@/components/layout/Sidebar/SidebarSettings";
+import { SidebarSettings } from "@/shared/layout/Sidebar";
 
 function useMediaQuery(query: string): boolean {
   const getMatch = () => {

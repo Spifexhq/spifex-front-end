@@ -2,7 +2,7 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { LANGS } from "@/lib/i18n";
-import { SelectDropdown } from "../ui/SelectDropdown";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 type AppLang = (typeof LANGS)[number];
 

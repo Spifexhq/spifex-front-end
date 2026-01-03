@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Button from "@/components/ui/Button";
+import Button from "@/shared/ui/Button";
 import { useAuthContext } from "@/hooks/useAuth";
 
 /* -------------------------------- Helpers --------------------------------- */

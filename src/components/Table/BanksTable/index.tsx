@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 
-import Spinner from "@/components/ui/Loaders/Spinner";
+import Spinner from "@/shared/ui/Loaders/Spinner";
 import { formatCurrency } from "@/lib";
 import { api } from "@/api/requests";
 

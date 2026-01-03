@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { useAuthContext } from "@/hooks/useAuth";
 import { getAccess } from "@/lib/tokens";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 type OwnerBehavior = "hide" | "redirect" | "lock";
 

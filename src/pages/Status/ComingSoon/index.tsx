@@ -7,7 +7,7 @@ import comingSoon from "@/assets/Images/status/coming-soon.svg";
 import facebook from "@/assets/Images/status/facebook.svg";
 import x from "@/assets/Images/status/x.svg";
 import instagram from "@/assets/Images/status/instagram.svg";
-import Button from "@/components/ui/Button";
+import Button from "@/shared/ui/Button";
 
 interface TimeLeft {
   days?: number;

@@ -6,7 +6,7 @@
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useRef } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/shared/ui/Button";
 
 export type ConfirmToastProps = {
   open: boolean;

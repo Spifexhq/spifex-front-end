@@ -10,12 +10,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import Checkbox from "@/components/ui/Checkbox";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
+import Checkbox from "@/shared/ui/Checkbox";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";

@@ -9,9 +9,9 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
 import { validatePassword } from "@/lib";
-import Snackbar from "@/components/ui/Snackbar";
-import Button from "@/components/ui/Button";
-import Input from "src/components/ui/Input";
+import Snackbar from "@/shared/ui/Snackbar";
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
 
 type Snack =
   | {

@@ -12,11 +12,11 @@ import { useTranslation } from "react-i18next";
 import { api } from "@/api/requests";
 import { validatePassword, useAutoCountry } from "@/lib";
 
-import Snackbar from "@/components/ui/Snackbar";
-import Button from "@/components/ui/Button";
-import Input from "src/components/ui/Input";
-import Checkbox from "@/components/ui/Checkbox";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Snackbar from "@/shared/ui/Snackbar";
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import Checkbox from "@/shared/ui/Checkbox";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
 import logoBlack from "@/assets/Icons/Logo/logo-black.svg";

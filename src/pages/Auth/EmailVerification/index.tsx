@@ -3,8 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
-import Button from "@/components/ui/Button";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import Button from "@/shared/ui/Button";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 const EmailVerification = () => {
   const { t } = useTranslation("emailVerification");

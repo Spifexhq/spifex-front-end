@@ -1,7 +1,7 @@
 // src/middlewares/LocaleProfileMiddleware.tsx
 import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import { api } from "@/api/requests";
 import { isSupportedCountryAlpha2 } from "@/lib/location/countries";
 import { isSupportedTimezone } from "@/lib/location/timezonesList";

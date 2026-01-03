@@ -12,13 +12,13 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 
-import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
-import TopProgress from "@/components/ui/Loaders/TopProgress";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
-import Input from "src/components/ui/Input";
-import Button from "@/components/ui/Button";
-import Snackbar from "@/components/ui/Snackbar";
-import { SelectDropdown } from "@/components/ui/SelectDropdown";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";

@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import Checkbox from "@/components/ui/Checkbox";
+import Checkbox from "@/shared/ui/Checkbox";
 
 import { api } from "@/api/requests";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
