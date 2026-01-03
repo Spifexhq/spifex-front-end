@@ -9,6 +9,7 @@ import React, {
   forwardRef,
 } from "react";
 import { useTranslation } from "react-i18next";
+
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
 
@@ -106,10 +107,7 @@ const getMonthYear = (dateStr: string): string => {
   return `${month}/${year}`;
 };
 
-const formatMonthYearSummary = (
-  isoDate: string,
-  monthsShort: string[]
-): string => {
+const formatMonthYearSummary = (isoDate: string, monthsShort: string[]): string => {
   const d = new Date(isoDate);
   const m = d.getMonth();
   return `${monthsShort[m]}, ${d.getFullYear()}`;
@@ -133,14 +131,14 @@ const TableHeader: React.FC<{
   const { t } = useTranslation("cashFlowTable");
   return (
     <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <Checkbox
           checked={totalCount > 0 && selectedCount === totalCount}
           onChange={onSelectAll}
           size="sm"
           aria-label={t("aria.selectAll")}
         />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span className="text-[10px] uppercase tracking-wide text-gray-600">
             {t("labels.entries")}
           </span>
@@ -152,10 +150,14 @@ const TableHeader: React.FC<{
           )}
         </div>
       </div>
+
+      {/* Desktop-only column headers */}
       <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
         <div className="w-[150px] text-center">{t("columns.amount")}</div>
         <div className="w-[150px] text-center">{t("columns.balance")}</div>
-        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll><div className="w-[32px]" /></PermissionMiddleware>
+        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
+          <div className="w-[32px]" />
+        </PermissionMiddleware>
       </div>
     </div>
   );
@@ -167,12 +169,95 @@ const EntryRow: React.FC<{
   isSelected: boolean;
   onSelect: (id: string, event: React.MouseEvent) => void;
   onEdit: (entry: Entry) => void;
-}> = ({ entry, runningBalance, isSelected, onSelect, onEdit }) => {
+  isMobile: boolean;
+}> = ({ entry, runningBalance, isSelected, onSelect, onEdit, isMobile }) => {
   const { t } = useTranslation("cashFlowTable");
   const transactionValue = getTransactionValue(entry);
   const isPositive = transactionValue >= 0;
   const installments = getInstallments(entry);
 
+  const due = formatDateFromISO(getDueDate(entry));
+  const installmentsLabel =
+    installments.index || installments.count
+      ? `${installments.index ?? "-"}${installments.count ? `/${installments.count}` : ""}`
+      : "";
+
+  const editBtn = (
+    <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
+      <div className="w-6 flex justify-center shrink-0">
+        <Button
+          variant="outline"
+          size="sm"
+          className={[
+            "!h-7 !w-7 !p-0 grid place-items-center rounded-md",
+            isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100 transition-opacity duration-150",
+          ].join(" ")}
+          onClick={() => onEdit(entry)}
+          aria-label={t("actions.edit")}
+          title={t("actions.edit")}
+        >
+          <svg
+            className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            <path d="M15 5l3 3" />
+          </svg>
+        </Button>
+      </div>
+    </PermissionMiddleware>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="group flex items-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+          <Checkbox
+            checked={isSelected}
+            onClick={(e) => onSelect(entry.id, e)}
+            size="sm"
+            aria-label={t("aria.selectRow")}
+          />
+
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="text-[12px] text-gray-800 font-medium truncate leading-tight">
+              {getDescription(entry)}
+            </div>
+            <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
+              {due}
+              {installmentsLabel ? <span className="ml-2">• {installmentsLabel}</span> : null}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="text-right">
+              <div
+                className={`text-[12px] leading-none font-semibold tabular-nums ${
+                  isPositive ? "text-green-900" : "text-red-900"
+                }`}
+              >
+                {formatCurrency(transactionValue)}
+              </div>
+              <div className="text-[10px] leading-none font-semibold tabular-nums text-gray-700 mt-0.5">
+                {formatCurrency(runningBalance)}
+              </div>
+            </div>
+
+            {editBtn}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop (original layout)
   return (
     <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -191,14 +276,9 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                {t("labels.due")}: {formatDateFromISO(getDueDate(entry))}
+                {t("labels.due")}: {due}
                 {(installments.index || installments.count) && (
-                  <span className="ml-2">
-                    {t("labels.installmentXofY", {
-                      x: installments.index ?? "-",
-                      y: installments.count ?? "-",
-                    })}
-                  </span>
+                  <span className="ml-2">{installmentsLabel}</span>
                 )}
               </div>
             </div>
@@ -219,33 +299,8 @@ const EntryRow: React.FC<{
                   {formatCurrency(runningBalance)}
                 </div>
               </div>
-              <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
-                <div className="w-8 flex justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 !h-8 !w-8 !p-0 grid place-items-center rounded-md"
-                    onClick={() => onEdit(entry)}
-                    aria-label={t("actions.edit")}
-                    title={t("actions.edit")}
-                  >
-                    <svg
-                      className="w-4 h-4 text-gray-300 group-hover:text-gray-500"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.75}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 20h9" />
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                      <path d="M15 5l3 3" />
-                    </svg>
-                  </Button>
-                </div>
-              </PermissionMiddleware>
+
+              {editBtn}
             </div>
           </div>
         </div>
@@ -258,7 +313,8 @@ const SummaryRow: React.FC<{
   displayMonth: string;
   monthlySum: number;
   runningBalance: number;
-}> = ({ displayMonth, monthlySum, runningBalance }) => {
+  isMobile: boolean;
+}> = ({ displayMonth, monthlySum, runningBalance, isMobile }) => {
   const { t } = useTranslation("cashFlowTable");
   const monthsShort =
     (t("months.short", { returnObjects: true }) as string[]) ??
@@ -268,13 +324,44 @@ const SummaryRow: React.FC<{
   const iso = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1).toISOString();
   const label = formatMonthYearSummary(iso, monthsShort);
 
+  if (isMobile) {
+    return (
+      <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-1.5 w-1.5 bg-gray-500 rounded-full shrink-0" />
+          <span className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide truncate">
+            {label}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="text-right">
+            <div
+              className={`text-[10px] font-semibold tabular-nums ${
+                monthlySum >= 0 ? "text-green-900" : "text-red-900"
+              }`}
+            >
+              {formatCurrency(monthlySum)}
+            </div>
+            <div className="text-[10px] font-semibold tabular-nums text-gray-700 mt-0.5">
+              {formatCurrency(runningBalance)}
+            </div>
+          </div>
+
+          <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
+            <div className="w-8" />
+          </PermissionMiddleware>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop (original layout)
   return (
     <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
       <div className="flex items-center gap-2">
         <div className="h-1.5 w-1.5 bg-gray-500 rounded-full" />
-        <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">
-          {label}
-        </span>
+        <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">{label}</span>
       </div>
 
       <div className="flex items-center">
@@ -294,7 +381,9 @@ const SummaryRow: React.FC<{
           </div>
         </div>
 
-        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll><div className="w-[32px]" /></PermissionMiddleware>
+        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
+          <div className="w-[32px]" />
+        </PermissionMiddleware>
       </div>
     </div>
   );
@@ -306,18 +395,17 @@ const EmptyState: React.FC = () => {
     <div className="flex flex-col items-center justify-center py-8 px-4">
       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
       </div>
       <div className="text-center">
-        <p className="text-[13px] font-medium text-gray-800 mb-1">
-          {t("empty.title")}
-        </p>
-        <p className="text-[11px] text-gray-500">
-          {t("empty.subtitle")}
-        </p>
+        <p className="text-[13px] font-medium text-gray-800 mb-1">{t("empty.title")}</p>
+        <p className="text-[11px] text-gray-500">{t("empty.subtitle")}</p>
       </div>
     </div>
   );
@@ -325,31 +413,34 @@ const EmptyState: React.FC = () => {
 
 /* ------------------------------ Skeletons --------------------------------- */
 
-const SkeletonDot = ({ className = "" }: { className?: string }) => (
-  <div className={`bg-gray-200 rounded ${className} animate-pulse`} />
-);
-
 const SkeletonEntryRow: React.FC = () => (
-  <div className="flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 border-b border-gray-200">
-    <div className="flex items-center gap-3 min-w-0 flex-1">
-      <SkeletonDot className="h-4 w-4 rounded border border-gray-300" />
-      <div className="flex flex-col min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
-            <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-1" />
-          </div>
-          <div className="flex items-center shrink-0">
-            <div className="w-[150px] text-center">
-              <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="w-[150px] text-center">
-              <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="w-8 flex justify-center">
-              <div className="h-6 w-6 rounded-md bg-gray-200 animate-pulse" />
-            </div>
-          </div>
+  <div className="flex items-center h-10.5 max-h-10.5 px-3 py-1.5 border-b border-gray-200 overflow-hidden">
+    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+      <div className="h-4 w-4 rounded border border-gray-300 bg-gray-200 animate-pulse shrink-0" />
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
+        <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-1" />
+      </div>
+
+      {/* Mobile skeleton: stacked values + edit */}
+      <div className="flex sm:hidden items-center gap-2 shrink-0">
+        <div className="text-right">
+          <div className="h-3 w-14 rounded bg-gray-200 animate-pulse ml-auto" />
+          <div className="h-2 w-12 rounded bg-gray-200 animate-pulse mt-1 ml-auto" />
+        </div>
+        <div className="h-6 w-6 rounded-md bg-gray-200 animate-pulse" />
+      </div>
+
+      {/* Desktop skeleton: two wide columns + edit */}
+      <div className="hidden sm:flex items-center shrink-0">
+        <div className="w-[150px] text-center">
+          <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+        </div>
+        <div className="w-[150px] text-center">
+          <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+        </div>
+        <div className="w-8 flex justify-center">
+          <div className="h-6 w-6 rounded-md bg-gray-200 animate-pulse" />
         </div>
       </div>
     </div>
@@ -357,12 +448,23 @@ const SkeletonEntryRow: React.FC = () => (
 );
 
 const SkeletonSummaryRow: React.FC = () => (
-  <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-1.5 bg-gray-300 rounded-full" />
+  <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300 overflow-hidden">
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="h-1.5 w-1.5 bg-gray-300 rounded-full shrink-0" />
       <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
     </div>
-    <div className="flex items-center">
+
+    {/* Mobile */}
+    <div className="flex sm:hidden items-center gap-2 shrink-0">
+      <div className="text-right">
+        <div className="h-2 w-12 rounded bg-gray-200 animate-pulse ml-auto" />
+        <div className="h-2 w-12 rounded bg-gray-200 animate-pulse mt-1 ml-auto" />
+      </div>
+      <div className="w-8" />
+    </div>
+
+    {/* Desktop */}
+    <div className="hidden sm:flex items-center">
       <div className="w-[150px] text-center">
         <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
       </div>
@@ -421,6 +523,34 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
   ({ filters, onEdit, onSelectionChange }, ref) => {
     const { t } = useTranslation("cashFlowTable");
 
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+      const mql = window.matchMedia("(max-width: 639px)");
+      const apply = () => setIsMobile(mql.matches);
+
+      apply();
+
+      if (typeof mql.addEventListener === "function") {
+        mql.addEventListener("change", apply);
+        return () => mql.removeEventListener("change", apply);
+      }
+
+      const legacy = mql as unknown as {
+        addListener?: (cb: () => void) => void;
+        removeListener?: (cb: () => void) => void;
+      };
+
+      if (typeof legacy.addListener === "function") legacy.addListener(apply);
+      return () => {
+        if (typeof legacy.removeListener === "function") legacy.removeListener(apply);
+      };
+    }, []);
+
+    const hideScrollbarCls = useMemo(() => {
+      if (!isMobile) return "";
+      return "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+    }, [isMobile]);
+
     // Data
     const [entries, setEntries] = useState<Entry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -431,15 +561,22 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
     // Selection
-    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } =
-      useShiftSelect<Entry, string>(entries, getId);
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<Entry, string>(
+      entries,
+      getId,
+    );
 
     // Latest for fetch
-    const latest = useRef<{ filters: EntryFilters | undefined; nextCursor: string | null; isFetching: boolean; }>({
+    const latest = useRef<{
+      filters: EntryFilters | undefined;
+      nextCursor: string | null;
+      isFetching: boolean;
+    }>({
       filters,
       nextCursor,
       isFetching,
     });
+
     useEffect(() => {
       latest.current = { filters, nextCursor, isFetching };
     }, [filters, nextCursor, isFetching]);
@@ -459,13 +596,9 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       const q = qCombined.trim() || undefined;
 
       const ledger_account = f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
-      const tx_type =
-        f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
+      const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
 
-      const bank =
-        Array.isArray(f?.bank_id) && f!.bank_id!.length
-          ? f!.bank_id!.join(",")
-          : undefined;
+      const bank = Array.isArray(f?.bank_id) && f!.bank_id!.length ? f!.bank_id!.join(",") : undefined;
 
       const base: GetEntryRequest = {
         date_from: f?.start_date || undefined,
@@ -484,64 +617,48 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       return base;
     }, []);
 
-    const fetchEntries = useCallback(async (reset = false) => {
-      if (latest.current.isFetching) return;
+    const fetchEntries = useCallback(
+      async (reset = false) => {
+        if (latest.current.isFetching) return;
 
-      const payload = buildPayload(reset);
-      setIsFetching(true);
-      if (reset) setLoading(true);
-      else setLoadingMore(true);
+        const payload = buildPayload(reset);
+        setIsFetching(true);
+        if (reset) setLoading(true);
+        else setLoadingMore(true);
 
-      try {
-        const { data } = await api.getEntriesTable(payload);
-        const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
+        try {
+          const { data } = await api.getEntriesTable(payload);
+          const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
 
-        setEntries((prev) => {
-          const map = new Map<string, Entry>(reset ? [] : prev.map((e) => [getId(e), e]));
-          for (const e of incoming) map.set(getId(e), e);
-          const merged = Array.from(map.values());
+          setEntries((prev) => {
+            const map = new Map<string, Entry>(reset ? [] : prev.map((e) => [getId(e), e]));
+            for (const e of incoming) map.set(getId(e), e);
+            const merged = Array.from(map.values());
 
-          if (reset) {
-            merged.sort((a, b) => {
-              const ad = new Date(getDueDate(a)).getTime();
-              const bd = new Date(getDueDate(b)).getTime();
-              if (ad !== bd) return ad - bd;
-              return getId(a).localeCompare(getId(b));
-            });
-          }
-          return merged;
-        });
+            if (reset) {
+              merged.sort((a, b) => {
+                const ad = new Date(getDueDate(a)).getTime();
+                const bd = new Date(getDueDate(b)).getTime();
+                if (ad !== bd) return ad - bd;
+                return getId(a).localeCompare(getId(b));
+              });
+            }
+            return merged;
+          });
 
-        setNextCursor(getCursorFromUrl((data as GetEntryResponse).next) ?? null);
-        setHasMore(Boolean((data as GetEntryResponse).next));
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t("errors.fetch"));
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-        setIsFetching(false);
-      }
-    }, [buildPayload, t]);
-
-    useImperativeHandle(ref, () => ({
-      clearSelection,
-      refresh: () => {
-        clearSelection();
-        scrollerRef.current?.scrollTo?.({ top: 0 });
-        setEntries([]);
-        setNextCursor(null);
-        setHasMore(true);
-        setError(null);
-        setLoading(true);
-        fetchEntries(true);
+          setNextCursor(getCursorFromUrl((data as GetEntryResponse).next) ?? null);
+          setHasMore(Boolean((data as GetEntryResponse).next));
+          setError(null);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : t("errors.fetch"));
+        } finally {
+          setLoading(false);
+          setLoadingMore(false);
+          setIsFetching(false);
+        }
       },
-    }), [clearSelection, fetchEntries]);
-
-    useEffect(() => {
-      setNextCursor(null);
-      fetchEntries(true);
-    }, [filters, fetchEntries]);
+      [buildPayload, t],
+    );
 
     /* ----------------------- Infinite inner scroll ------------------------- */
     const scrollerRef = useRef<HTMLDivElement>(null);
@@ -633,7 +750,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
     const rowHeights = useMemo(
       () => tableRows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
-      [tableRows]
+      [tableRows],
     );
 
     const rowOffsets = useMemo(() => {
@@ -647,7 +764,8 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
 
     const findStartIndex = useCallback(
       (st: number) => {
-        let lo = 0, hi = rowOffsets.length - 1;
+        let lo = 0,
+          hi = rowOffsets.length - 1;
         while (lo < hi) {
           const mid = Math.floor((lo + hi) / 2);
           if (rowOffsets[mid] <= st) lo = mid + 1;
@@ -655,7 +773,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         }
         return Math.max(0, lo - 1);
       },
-      [rowOffsets]
+      [rowOffsets],
     );
 
     const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
@@ -667,6 +785,29 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       return Math.min(rowHeights.length - 1, i + OVERSCAN);
     }, [startIndex, scrollTop, viewportH, rowHeights.length, rowOffsets]);
 
+    useImperativeHandle(
+      ref,
+      () => ({
+        clearSelection,
+        refresh: () => {
+          clearSelection();
+          scrollerRef.current?.scrollTo?.({ top: 0 });
+          setEntries([]);
+          setNextCursor(null);
+          setHasMore(true);
+          setError(null);
+          setLoading(true);
+          fetchEntries(true);
+        },
+      }),
+      [clearSelection, fetchEntries],
+    );
+
+    useEffect(() => {
+      setNextCursor(null);
+      fetchEntries(true);
+    }, [filters, fetchEntries]);
+
     /* --------------------------------- UI ---------------------------------- */
     if (error) {
       return (
@@ -674,22 +815,18 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           <div className="flex flex-col items-center justify-center py-8 px-4">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-red-800 mb-1">
-                {t("errors.title")}
-              </p>
+              <p className="text-[13px] font-medium text-red-800 mb-1">{t("errors.title")}</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-[11px] font-semibold"
-                onClick={() => fetchEntries(true)}
-              >
+              <Button variant="outline" size="sm" className="text-[11px] font-semibold" onClick={() => fetchEntries(true)}>
                 {t("actions.retry")}
               </Button>
             </div>
@@ -701,13 +838,9 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     return (
       <section
         aria-label={t("aria.section")}
-        className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
+        className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col max-w-full"
       >
-        <TableHeader
-          selectedCount={selectedIds.length}
-          totalCount={entries.length}
-          onSelectAll={handleSelectAll}
-        />
+        <TableHeader selectedCount={selectedIds.length} totalCount={entries.length} onSelectAll={handleSelectAll} />
 
         <div
           ref={scrollerRef}
@@ -715,14 +848,18 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
             setScrollTop(e.currentTarget.scrollTop);
             handleInnerScroll();
           }}
-          className="flex-1 min-h-0 overflow-y-auto relative"
+          className={[
+            "flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative max-w-full",
+            hideScrollbarCls,
+          ].join(" ")}
+          style={isMobile ? { scrollbarWidth: "none", msOverflowStyle: "none" } : undefined}
         >
           {loading && !entries.length ? (
             <TableSkeleton rows={Math.max(10, Math.ceil((viewportH || 400) / 42))} />
           ) : tableRows.length === 0 ? (
             <EmptyState />
           ) : (
-            <div className="divide-y divide-gray-200 relative">
+            <div className={["divide-y divide-gray-200 relative max-w-full overflow-x-hidden", hideScrollbarCls,].join(" ")}>
               <div style={{ height: totalHeight, position: "relative" }}>
                 <div
                   style={{
@@ -743,6 +880,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                           isSelected={isSelected}
                           onSelect={handleSelectRow}
                           onEdit={onEdit}
+                          isMobile={isMobile}
                         />
                       );
                     }
@@ -753,6 +891,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                           displayMonth={row.displayMonth!}
                           monthlySum={row.monthlySum!}
                           runningBalance={row.runningBalance!}
+                          isMobile={isMobile}
                         />
                       );
                     }
@@ -767,7 +906,7 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         {loadingMore && <BottomLoader />}
       </section>
     );
-  }
+  },
 );
 
 export default CashFlowTable;

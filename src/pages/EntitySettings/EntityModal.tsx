@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
@@ -496,6 +496,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
           <div id={IDS.tabsGeneral} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-2">
               <Input
+                kind="text"
                 ref={fullNameRef}
                 label={t("field.full_name")}
                 name="full_name"
@@ -507,6 +508,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.alias_name")}
                 name="alias_name"
                 value={formData.alias_name}
@@ -536,6 +538,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.email")}
                 name="email"
                 value={formData.email}
@@ -546,6 +549,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.phone")}
                 name="phone"
                 value={formData.phone}
@@ -571,6 +575,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
           <div id={IDS.tabsTax} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Input
+                kind="text"
                 label={t("field.ssn_tax_id")}
                 name="ssn_tax_id"
                 value={formData.ssn_tax_id}
@@ -581,6 +586,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.ein_tax_id")}
                 name="ein_tax_id"
                 value={formData.ein_tax_id}
@@ -596,6 +602,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
           <div id={IDS.tabsAddress} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-2">
               <Input
+                kind="text"
                 label={t("field.street")}
                 name="street"
                 value={formData.street}
@@ -606,6 +613,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.street_number")}
                 name="street_number"
                 value={formData.street_number}
@@ -616,6 +624,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.city")}
                 name="city"
                 value={formData.city}
@@ -626,6 +635,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.state")}
                 name="state"
                 value={formData.state}
@@ -636,6 +646,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.postal_code")}
                 name="postal_code"
                 value={formData.postal_code}
@@ -646,6 +657,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.country")}
                 name="country"
                 value={formData.country}
@@ -661,6 +673,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
           <div id={IDS.tabsBank} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Input
+                kind="text"
                 label={t("field.bank_name")}
                 name="bank_name"
                 value={formData.bank_name}
@@ -671,6 +684,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.bank_branch")}
                 name="bank_branch"
                 value={formData.bank_branch}
@@ -681,6 +695,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.checking_account")}
                 name="checking_account"
                 value={formData.checking_account}
@@ -691,6 +706,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div>
               <Input
+                kind="text"
                 label={t("field.account_holder_tax_id")}
                 name="account_holder_tax_id"
                 value={formData.account_holder_tax_id}
@@ -701,6 +717,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <div className="lg:col-span-2">
               <Input
+                kind="text"
                 label={t("field.account_holder_name")}
                 name="account_holder_name"
                 value={formData.account_holder_name}

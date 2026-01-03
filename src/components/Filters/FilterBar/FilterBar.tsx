@@ -8,9 +8,7 @@ import { useTranslation } from "react-i18next";
 import SelectDropdown from "@/components/ui/SelectDropdown/SelectDropdown";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import Input from "@/components/ui/Input";
-import { DateInput } from "@/components/ui/DateInput";
-import { AmountInput } from "@/components/ui/AmountInput";
+import Input from "src/components/ui/Input";
 
 import { api } from "@/api/requests";
 import { fetchAllCursor } from "@/lib/list";
@@ -954,7 +952,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-end sm:ml-auto">
+            <div className="flex">
               <button
                 className={`text-xs font-semibold text-red-600 ${
                   hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"
@@ -979,17 +977,19 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                   <label className="text-xs text-gray-600 space-y-1 block">
                     <span className="block">{t("filterBar:editors.date.start")}</span>
-                    <DateInput
+                    <Input
+                      kind="date"
                       value={localFilters.start_date || ""}
-                      onChange={(iso) => setLocalFilters((prev) => ({ ...prev, start_date: iso }))}
+                      onValueChange={(iso) => setLocalFilters((prev) => ({ ...prev, start_date: iso }))}
                     />
                   </label>
 
                   <label className="text-xs text-gray-600 space-y-1 block">
                     <span className="block">{t("filterBar:editors.date.end")}</span>
-                    <DateInput
+                    <Input
+                      kind="date"
                       value={localFilters.end_date || ""}
-                      onChange={(iso) => setLocalFilters((prev) => ({ ...prev, end_date: iso }))}
+                      onValueChange={(iso) => setLocalFilters((prev) => ({ ...prev, end_date: iso }))}
                     />
                   </label>
                 </div>
@@ -1183,10 +1183,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 className="w-[calc(100vw-1rem)] sm:min-w-[260px] sm:max-w-[360px]"
               >
                 <Input
-                  type="text"
+                  kind="text"
                   placeholder={t("filterBar:editors.observation.placeholder")}
                   value={localFilters.observation || ""}
-                  onChange={(e) => setLocalFilters((prev) => ({ ...prev, observation: e.target.value }))}
+                  onChange={(e) => {
+                    const v = e.currentTarget.value;
+                    setLocalFilters((prev) => ({ ...prev, observation: v }));
+                  }}
                 />
 
                 <div className="flex justify-end gap-2 mt-3">
@@ -1267,7 +1270,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                   <label className="text-xs text-gray-600 space-y-1 block">
                     <span className="block">{t("filterBar:editors.amount.min")}</span>
-                    <AmountInput
+                    <Input
+                      kind="amount"
                       display="currency"
                       value={localFilters.amount_min || ""}
                       onValueChange={(next) => setLocalFilters((prev) => ({ ...prev, amount_min: next }))}
@@ -1277,7 +1281,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                   <label className="text-xs text-gray-600 space-y-1 block">
                     <span className="block">{t("filterBar:editors.amount.max")}</span>
-                    <AmountInput
+                    <Input
+                      kind="amount"
                       display="currency"
                       value={localFilters.amount_max || ""}
                       onValueChange={(next) => setLocalFilters((prev) => ({ ...prev, amount_max: next }))}
@@ -1451,9 +1456,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                   <label className="block space-y-1">
                     <Input
+                      kind="text"
                       label={t("filterBar:saveModal.name")}
                       value={saveName}
-                      onChange={(e) => setSaveName(e.target.value)}
+                      onChange={(e) => setSaveName(e.currentTarget.value)}
                       placeholder={t("filterBar:saveModal.namePlaceholder")}
                     />
                   </label>

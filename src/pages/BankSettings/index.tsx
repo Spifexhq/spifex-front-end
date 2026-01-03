@@ -14,7 +14,7 @@ import type { TFunction } from "i18next";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
@@ -945,6 +945,7 @@ const BankSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="bank-filter-institution-input"
               type="text"
               value={draftInstitution}
@@ -1034,6 +1035,7 @@ const BankSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="bank-filter-branch-input"
               type="text"
               value={draftBranch}
@@ -1082,6 +1084,7 @@ const BankSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="bank-filter-account-number-input"
               type="text"
               value={draftAccountNumber}
@@ -1125,6 +1128,7 @@ const BankSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="bank-filter-iban-input"
               type="text"
               value={draftIban}

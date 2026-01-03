@@ -4,12 +4,10 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import { formatCurrency } from "@/lib";
-import { DateInput } from "../ui/DateInput";
-import AmountInput from "../ui/AmountInput/AmountInput";
 
 import type { BankAccount } from "@/models/settings/banking";
 
@@ -153,7 +151,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     let alive = true;
     (async () => {
       try {
-        const { data } = await api.getBanks(true);
+        const { data } = await api.getBanks();
         const page = (data?.results ?? []) as BankAccount[];
         if (alive) setBanks(page);
       } catch (err) {
@@ -167,14 +165,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   }, [isOpen]);
 
   // ---------- Handlers ----------
-  const handleTextChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      if (name === "description") setField("description", value);
-    },
-    [setField]
-  );
-
   const handleBankChange = useCallback(
     (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
       // IMPORTANT: your BankAccount domain uses `id` as the external_id in the UI layer.
@@ -259,13 +249,15 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         <form ref={formRef} onSubmit={handleSubmit} className="relative z-10 flex-1 flex flex-col">
           <div className="px-5 py-4 overflow-visible">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <DateInput
+              <Input
+                kind="date"
                 label={t("fields.date")}
                 value={formData.date}
-                onChange={(iso) => setField("date", iso)}
+                onValueChange={(iso) => setField("date", iso)}
               />
 
-              <AmountInput
+              <Input
+                kind="amount"
                 ref={amountRef}
                 label={t("fields.amount")}
                 id="amount-input"
@@ -276,11 +268,12 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               />
 
               <Input
+                kind="text"
                 label={t("fields.note")}
                 name="description"
                 placeholder={t("placeholders.note")}
                 value={formData.description}
-                onChange={handleTextChange}
+                onChange={(e) => setField("description", e.target.value)}
               />
 
               <SelectDropdown<BankAccount>

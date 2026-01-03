@@ -14,7 +14,7 @@ import { validatePassword, useAutoCountry } from "@/lib";
 
 import Snackbar from "@/components/ui/Snackbar";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 
@@ -414,6 +414,7 @@ const SignUp = () => {
                       }`}
                     >
                       <Input
+                        kind="text"
                         label={t("nameLabel")}
                         placeholder={t("namePlaceholder")}
                         type="text"
@@ -424,6 +425,7 @@ const SignUp = () => {
                       />
 
                       <Input
+                        kind="text"
                         label={t("emailLabel")}
                         placeholder={t("emailPlaceholder")}
                         type="email"
@@ -437,6 +439,7 @@ const SignUp = () => {
                       <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
                         <div className="flex-1">
                           <Input
+                            kind="text"
                             label={t("passwordLabel")}
                             placeholder={t("passwordPlaceholder")}
                             type="password"
@@ -450,6 +453,7 @@ const SignUp = () => {
                         </div>
                         <div className="flex-1">
                           <Input
+                            kind="text"
                             label={t("confirmPasswordLabel")}
                             placeholder={t("confirmPasswordPlaceholder")}
                             type="password"

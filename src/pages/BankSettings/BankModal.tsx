@@ -1,19 +1,14 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/BankSettings/BankModal.tsx                                  */
-/* - No tabs                                                                    */
-/* - Currency: ALWAYS from auth org; fallback USD (never from bank/detail)     */
-/* - Money rule: initial_balance is a MAJOR decimal string "1234.56" (API-ready) */
-/* - i18n: namespace "bankSettings"                                           */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
-import { AmountInput } from "@/components/ui/AmountInput";
 
 import { api } from "@/api/requests";
 
@@ -363,6 +358,7 @@ const BankModal: React.FC<BankModalProps> = ({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
+                  kind="text"
                   label={t("field.institution")}
                   name="institution"
                   ref={institutionRef}
@@ -387,6 +383,7 @@ const BankModal: React.FC<BankModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.branch")}
                   name="branch"
                   value={formData.branch}
@@ -395,6 +392,7 @@ const BankModal: React.FC<BankModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.accountNumber")}
                   name="account_number"
                   value={formData.account_number}
@@ -403,6 +401,7 @@ const BankModal: React.FC<BankModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.iban")}
                   name="iban"
                   value={formData.iban}
@@ -410,12 +409,16 @@ const BankModal: React.FC<BankModalProps> = ({
                   disabled={isSubmitting || isDetailLoading || !canEdit}
                 />
 
-                <AmountInput
+                <Input
+                  kind="amount"
                   label={t("field.initialBalance")}
                   value={formData.initial_balance}
-                  onValueChange={(nextMajor) => setFormData((p) => ({ ...p, initial_balance: nextMajor || "0.00" }))}
+                  onValueChange={(nextMajor) =>
+                    setFormData((p) => ({ ...p, initial_balance: nextMajor || "0.00" }))
+                  }
                   display="currency"
                   currency={orgCurrency}
+                  disabled={isSubmitting || isDetailLoading || !canEdit}
                   zeroAsEmpty
                 />
 

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
@@ -805,6 +805,7 @@ const EntitySettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="entity-filter-name-input"
               type="text"
               value={draftName}
@@ -850,6 +851,7 @@ const EntitySettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="entity-filter-alias-input"
               type="text"
               value={draftAlias}

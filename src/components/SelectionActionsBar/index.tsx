@@ -1,13 +1,8 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/components/SelectionActionsBar/index.tsx                          */
-/* Design: keep current sticky/blur bar                                        */
-/* Fixes:                                                                     */
-/* - Net balance calculation: NET = ΣCredits - ΣDebits (uses absolute sums)    */
-/* - Restores previous info: credits/debits counts, ΣCredits, ΣDebits, Net, Due*/
-/* - Restores previous button colors + symbols (no emojis)                     */
-/* - Adds minimize/expand + ESC-to-cancel behavior + proper i18n keys          */
-/* - Currency resolution matches BankSettings (safeCurrency + org currency)    */
-/* -------------------------------------------------------------------------- */
+/* File: src/components/SelectionActionsBar/index.tsx
+ * Update requested:
+ * - Delete button uses a trash icon (inline SVG) instead of ⌫
+ * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -109,6 +104,28 @@ export type SelectionActionsBarProps = {
   className?: string;
 };
 
+/* ------------------------------- Icons ------------------------------------ */
+
+const TrashIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M6 6l1 16h10l1-16" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+  </svg>
+);
+
 /* ------------------------------- Component -------------------------------- */
 const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
   context,
@@ -140,7 +157,7 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
     const prev = prevCountRef.current;
     const next = selectedIds.length;
 
-    // When a new selection starts, default to expanded (matches typical previous behavior)
+    // When a new selection starts, default to expanded
     if (prev === 0 && next > 0) setMinimized(false);
 
     prevCountRef.current = next;
@@ -161,7 +178,7 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [hasSelection, onCancel]);
 
-  /* Compute stats (restoring previous info + fixing net) */
+  /* Compute stats */
   const stats = useMemo(() => {
     let creditAbsSum = 0;
     let debitAbsSum = 0;
@@ -174,7 +191,6 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
       const amt = toFiniteNumber(e?.amount);
       const tx = inferTxType(e?.transaction_type) ?? inferTxType(e?.tx_type);
 
-      // Use absolute sums to make NET correct regardless of sign conventions upstream
       if (tx === "credit") {
         creditAbsSum += Math.abs(amt);
         creditCount += 1;
@@ -184,9 +200,7 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
       }
 
       const dueCandidate =
-        parseDateSafe(e?.settlement_due_date) ??
-        parseDateSafe(e?.due_date) ??
-        parseDateSafe(e?.value_date);
+        parseDateSafe(e?.settlement_due_date) ?? parseDateSafe(e?.due_date) ?? parseDateSafe(e?.value_date);
 
       if (dueCandidate) {
         if (!earliestDue || dueCandidate.getTime() < earliestDue.getTime()) {
@@ -209,17 +223,17 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
 
   const creditLabel = useMemo(
     () => formatMoney(stats.creditAbsSum, i18n.language, resolvedCurrency),
-    [stats.creditAbsSum, i18n.language, resolvedCurrency]
+    [stats.creditAbsSum, i18n.language, resolvedCurrency],
   );
 
   const debitLabel = useMemo(
     () => formatMoney(stats.debitAbsSum, i18n.language, resolvedCurrency),
-    [stats.debitAbsSum, i18n.language, resolvedCurrency]
+    [stats.debitAbsSum, i18n.language, resolvedCurrency],
   );
 
   const netLabel = useMemo(
     () => formatMoney(stats.net, i18n.language, resolvedCurrency),
-    [stats.net, i18n.language, resolvedCurrency]
+    [stats.net, i18n.language, resolvedCurrency],
   );
 
   const dueLabel = useMemo(() => {
@@ -239,19 +253,19 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
   return (
     <div
       className={[
-        "sticky bottom-0 z-40",
+        "sticky bottom-0 z-40 w-full overflow-x-hidden",
         "border-t border-gray-200 bg-white/95 backdrop-blur",
-        "px-4 py-3",
+        "px-3 py-2 sm:px-4 sm:py-3",
         className,
       ].join(" ")}
       role="region"
       aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
     >
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-        {/* LEFT: info */}
-        <div className="min-w-0">
-          <div className="flex items-center gap-3">
-            <div className="text-[12px] font-semibold text-gray-900">
+      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+        {/* INFO */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+            <div className="text-[11px] sm:text-[12px] font-semibold text-gray-900">
               {t("labels.selected", {
                 defaultValue: "{{count}} selected",
                 count: selectedIds.length,
@@ -259,92 +273,120 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
             </div>
 
             {dueLabel ? (
-              <div className="text-[11px] text-gray-600 truncate">
+              <div className="text-[10px] sm:text-[11px] text-gray-600 truncate min-w-0">
                 <span className="text-gray-500">{t("labels.dueShort", { defaultValue: "Due:" })}</span>{" "}
                 <span className="font-medium text-gray-800">{dueLabel}</span>
               </div>
             ) : null}
+
+            <div className="sm:hidden text-[10px] text-gray-600 truncate min-w-0">
+              <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>{" "}
+              <span className="font-semibold text-gray-900">{netLabel}</span>
+            </div>
           </div>
 
           {!minimized && (
-            <div className="mt-1.5 text-[11px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1">
-              {/* Credits */}
-              <span className="inline-flex items-center gap-1.5">
-                <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
-                <span className="font-medium text-gray-800">{stats.creditCount}</span>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-500">{t("labels.sumCredits", { defaultValue: "Σ Credits" })}:</span>
-                <span className="font-medium text-gray-800">{creditLabel}</span>
-              </span>
+            <>
+              <div className="mt-1.5 hidden sm:flex text-[11px] text-gray-600 flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
+                  <span className="font-medium text-gray-800">{stats.creditCount}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-500">{t("labels.sumCredits", { defaultValue: "Σ Credits" })}:</span>
+                  <span className="font-medium text-gray-800">{creditLabel}</span>
+                </span>
 
-              <span className="text-gray-300">|</span>
+                <span className="text-gray-300">|</span>
 
-              {/* Debits */}
-              <span className="inline-flex items-center gap-1.5">
-                <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
-                <span className="font-medium text-gray-800">{stats.debitCount}</span>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-500">{t("labels.sumDebits", { defaultValue: "Σ Debits" })}:</span>
-                <span className="font-medium text-gray-800">{debitLabel}</span>
-              </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
+                  <span className="font-medium text-gray-800">{stats.debitCount}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-500">{t("labels.sumDebits", { defaultValue: "Σ Debits" })}:</span>
+                  <span className="font-medium text-gray-800">{debitLabel}</span>
+                </span>
 
-              <span className="text-gray-300">|</span>
+                <span className="text-gray-300">|</span>
 
-              {/* Net */}
-              <span className="inline-flex items-center gap-1.5">
-                <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>
-                <span className="font-semibold text-gray-900">{netLabel}</span>
-              </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>
+                  <span className="font-semibold text-gray-900">{netLabel}</span>
+                </span>
 
-              {/* ESC hint */}
-              <span className="text-gray-400">
-                {t("hints.escToCancel", { defaultValue: "Tip: press" })}{" "}
-                <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
-                  Esc
-                </kbd>{" "}
-                {t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" }).replace("(Esc)", "").trim()}
-              </span>
-            </div>
+                <span className="text-gray-400">
+                  {t("hints.escToCancel", { defaultValue: "Tip: press" })}{" "}
+                  <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
+                    Esc
+                  </kbd>{" "}
+                  {t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })
+                    .replace("(Esc)", "")
+                    .trim()}
+                </span>
+              </div>
+
+              <div className="mt-1.5 sm:hidden text-[10px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+                <span className="inline-flex items-center gap-1 min-w-0">
+                  <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
+                  <span className="font-medium text-gray-800">{stats.creditCount}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="font-medium text-gray-800 truncate">{creditLabel}</span>
+                </span>
+
+                <span className="text-gray-300">|</span>
+
+                <span className="inline-flex items-center gap-1 min-w-0">
+                  <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
+                  <span className="font-medium text-gray-800">{stats.debitCount}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="font-medium text-gray-800 truncate">{debitLabel}</span>
+                </span>
+              </div>
+            </>
           )}
         </div>
 
-        {/* RIGHT: actions (previous colors + symbols) */}
-        <div className="shrink-0 flex items-center gap-2">
-          {/* Minimize / Expand */}
+        {/* ACTIONS */}
+        <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 sm:gap-2 max-w-full">
           <Button
             variant="outline"
             onClick={toggleMinimize}
             disabled={disableAll}
             aria-busy={disableAll || undefined}
-            title={minimized ? t("actions.expand", { defaultValue: "Expand" }) : t("actions.minimize", { defaultValue: "Minimize" })}
-            className="!py-1.5"
+            title={
+              minimized
+                ? t("actions.expand", { defaultValue: "Expand" })
+                : t("actions.minimize", { defaultValue: "Minimize" })
+            }
+            className="!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]"
           >
-            <span className="inline-flex items-center gap-2">
-              <span aria-hidden="true" className="text-[14px] leading-none">
+            <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              <span aria-hidden="true" className="text-[13px] leading-none">
                 {minimized ? "+" : "–"}
               </span>
-              <span>{minimized ? t("actions.expand", { defaultValue: "Expand" }) : t("actions.minimize", { defaultValue: "Minimize" })}</span>
+              <span className="hidden sm:inline">
+                {minimized
+                  ? t("actions.expand", { defaultValue: "Expand" })
+                  : t("actions.minimize", { defaultValue: "Minimize" })}
+              </span>
             </span>
           </Button>
 
-          {/* Cancel */}
           <Button
             variant="outline"
             onClick={onCancel}
             disabled={disableAll}
             aria-busy={disableAll || undefined}
             title={t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })}
-            className="!py-1.5"
+            className="!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]"
           >
-            <span className="inline-flex items-center gap-2">
-              <span aria-hidden="true" className="text-[14px] leading-none">
+            <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              <span aria-hidden="true" className="text-[13px] leading-none">
                 ✕
               </span>
-              <span>{t("actions.cancel", { defaultValue: "Cancel" })}</span>
+              <span className="hidden sm:inline">{t("actions.cancel", { defaultValue: "Cancel" })}</span>
             </span>
           </Button>
 
-          {/* Context action: Settle */}
           {showLiquidate && (
             <Button
               onClick={onLiquidate}
@@ -352,14 +394,14 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
               aria-busy={disableAll || undefined}
               title={t("actions.liquidateSelected", { defaultValue: "Settle selected" })}
               className={[
-                "!py-1.5",
+                "!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]",
                 "bg-emerald-600 border border-emerald-600 text-white",
                 "hover:bg-emerald-700 hover:border-emerald-700",
                 "active:bg-emerald-800 active:border-emerald-800",
               ].join(" ")}
             >
-              <span className="inline-flex items-center gap-2">
-                <span aria-hidden="true" className="text-[14px] leading-none">
+              <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+                <span aria-hidden="true" className="text-[13px] leading-none">
                   ✓
                 </span>
                 <span>{t("actions.liquidate", { defaultValue: "Settle" })}</span>
@@ -367,7 +409,6 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
             </Button>
           )}
 
-          {/* Context action: Revert */}
           {showReturn && (
             <Button
               onClick={onReturn}
@@ -375,13 +416,13 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
               aria-busy={disableAll || undefined}
               title={t("actions.return", { defaultValue: "Revert" })}
               className={[
-                "!py-1.5",
+                "!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]",
                 "bg-amber-500 border border-amber-500 text-white",
                 "hover:bg-amber-600 hover:border-amber-600",
               ].join(" ")}
             >
-              <span className="inline-flex items-center gap-2">
-                <span aria-hidden="true" className="text-[14px] leading-none">
+              <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+                <span aria-hidden="true" className="text-[13px] leading-none">
                   ↩
                 </span>
                 <span>{t("actions.return", { defaultValue: "Revert" })}</span>
@@ -389,7 +430,7 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
             </Button>
           )}
 
-          {/* Context action: Delete */}
+          {/* Delete: Trash icon */}
           {showDelete && (
             <Button
               variant="outline"
@@ -397,12 +438,10 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
               disabled={disableAll}
               aria-busy={disableAll || undefined}
               title={t("actions.deleteSelected", { defaultValue: "Delete selected" })}
-              className="!py-1.5 border-red-200 text-red-600 hover:bg-red-50"
+              className="!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px] border-red-200 text-red-600 hover:bg-red-50"
             >
-              <span className="inline-flex items-center gap-2">
-                <span aria-hidden="true" className="text-[14px] leading-none">
-                  ⌫
-                </span>
+              <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+                <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>{t("actions.delete", { defaultValue: "Delete" })}</span>
               </span>
             </Button>

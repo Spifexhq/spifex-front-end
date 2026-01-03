@@ -14,7 +14,7 @@ import { ptBR, enUS, fr, de } from "date-fns/locale";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 
@@ -477,6 +477,7 @@ const SecurityAndPrivacy: React.FC = () => {
                 {modalMode === "password" ? (
                   <>
                     <Input
+                      kind="text"
                       label={t("field.current")}
                       name="current_password"
                       type="password"
@@ -487,6 +488,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       required
                     />
                     <Input
+                      kind="text"
                       label={t("field.new")}
                       name="new_password"
                       type="password"
@@ -497,6 +499,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       required
                     />
                     <Input
+                      kind="text"
                       label={t("field.confirm")}
                       name="confirm"
                       type="password"
@@ -510,6 +513,7 @@ const SecurityAndPrivacy: React.FC = () => {
                 ) : (
                   <>
                     <Input
+                      kind="text"
                       label={t("field.currentEmail")}
                       name="current_email"
                       type="email"
@@ -519,6 +523,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       required
                     />
                     <Input
+                      kind="text"
                       label={t("field.newEmail")}
                       name="new_email"
                       type="email"
@@ -528,6 +533,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       required
                     />
                     <Input
+                      kind="text"
                       label={t("field.currentPassword")}
                       name="current_password"
                       type="password"

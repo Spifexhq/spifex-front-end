@@ -6,7 +6,7 @@ import type { ApiErrorBody } from "@/models/Api";
 import { useAuth } from "@/api";
 import Snackbar from "@/components/ui/Snackbar";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 
 import signInBackground from "@/assets/Images/background/signin-background.svg";
@@ -136,6 +136,7 @@ const SignIn: React.FC = () => {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <Input
+                  kind="text"
                   label={t("emailLabel")}
                   placeholder={t("emailPlaceholder")}
                   type="email"
@@ -147,6 +148,7 @@ const SignIn: React.FC = () => {
                 />
 
                 <Input
+                  kind="text"
                   label={t("passwordLabel")}
                   placeholder={t("passwordPlaceholder")}
                   type="password"

@@ -14,7 +14,7 @@ import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import ConfirmToast from "@/components/ui/ConfirmToast";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -686,6 +686,7 @@ const Statements: React.FC = () => {
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <Input
+                    kind="text"
                     id="statements-q"
                     label={t("filters.searchLabel")}
                     value={q}

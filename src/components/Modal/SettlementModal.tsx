@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import { DateInput } from "../ui/DateInput";
-import { AmountInput } from "../ui/AmountInput";
+import Input from "src/components/ui/Input";
 
 import { api } from "@/api/requests";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
@@ -493,13 +492,13 @@ const SettlementModal: React.FC<SettlementModalProps> = ({ isOpen, onClose, sele
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap min-w-0">
-                  <DateInput
+                  <Input
+                    kind="date"
                     value={bulkDate}
                     size="sm"
-                    onChange={(iso) => setBulkDate(iso)}
+                    onValueChange={(iso) => setBulkDate(iso)}
                     variant="default"
                     aria-label={t("actions.bulkDate")}
-                    className="w-[130px]"
                   />
                   <Button type="button" variant="outline" className="!h-8 !px-2 text-[12px]" onClick={applyDateToAll} disabled={!bulkDate}>
                     {t("actions.applyDateAll")}
@@ -538,10 +537,11 @@ const SettlementModal: React.FC<SettlementModalProps> = ({ isOpen, onClose, sele
                     <div key={row.id} className="px-3 py-2 border-b border-gray-200 hover:bg-gray-50">
                       <div className="grid grid-cols-[140px_1fr_140px_80px_180px] gap-2 items-center text-[12px]">
                         <div className="text-center">
-                          <DateInput
+                          <Input
+                            kind="date"
                             value={row.value_date}
                             size="sm"
-                            onChange={(iso) => updateEntryDate(row.id, iso)}
+                            onValueChange={(iso) => updateEntryDate(row.id, iso)}
                             aria-label={t("table.due")}
                             variant="default"
                             className="w-[130px] mx-auto"
@@ -560,7 +560,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({ isOpen, onClose, sele
 
                         <div className="flex items-center justify-center">
                           {row.isPartial ? (
-                            <AmountInput
+                            <Input
+                              kind="amount"
                               value={row.partial_amount || ""}
                               size="sm"
                               onValueChange={(val) => updatePartialAmount(row.id, val)}

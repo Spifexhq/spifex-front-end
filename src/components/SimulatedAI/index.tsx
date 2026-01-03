@@ -1,3 +1,6 @@
+/* -------------------------------------------------------------------------- */
+/* File: src\components\SimulatedAI                                           */
+/* -------------------------------------------------------------------------- */
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Copy,
@@ -11,15 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import Input from "../ui/Input";
-
-/* -----------------------------------------------------------------------------
- * SimulatedAI — i18n-powered FAQs (namespace: "simulatedAI")
- * - Reads FAQs from i18n: t("faqs", { returnObjects: true })
- * - Supports override via `qaList` prop
- * - Keeps: typewriter with pause/resume/skip, TTS, copy, search, recents
- * - A11y + shortcuts (Esc close, Ctrl/⌘+K focus search)
- * --------------------------------------------------------------------------- */
+import Input from "src/components/ui/Input";
 
 export interface SimulatedAIProps {
   isOpen: boolean;
@@ -470,6 +465,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
                 <label className="text-[12px] text-gray-600">{t("search.label")}</label>
                 <div className="mt-1 relative">
                   <Input
+                    kind="text"
                     ref={searchInputRef}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}

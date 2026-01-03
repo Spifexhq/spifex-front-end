@@ -1,34 +1,67 @@
-/**
- * Input.types.ts
- * 
- * This file defines the types for the Input component.
- * 
- * Features:
- * - Supports multiple input variants: "default", "outlined", "filled", "error"
- * - Allows an optional label for better accessibility
- * - Displays an error message when validation fails
- * - Supports a toggle button for password visibility
- * - Handles loading state to disable input interaction
- * - Extends `React.InputHTMLAttributes<HTMLInputElement>` for full HTML input functionality
- * 
- * Usage:
- * ```tsx
- * <Input variant="outlined" label="Username" placeholder="Enter your name" />
- * <Input type="password" label="Password" showTogglePassword />
- * <Input variant="error" errorMessage="This field is required" />
- * ```
- */
+import type React from "react";
 
-export type InputVariant = 'default' | 'outlined' | 'filled';
+export type InputKind = "text" | "amount" | "date";
+export type InputVariant = "default" | "outlined" | "filled";
 export type InputSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
-  variant?: InputVariant;
+export type AmountDisplay = "currency" | "amount";
+
+/** Shared props across all kinds */
+export type InputCommonProps = {
+  kind?: InputKind;
+
   label?: string;
   errorMessage?: string;
-  style?: React.CSSProperties;
-  showTogglePassword?: boolean;
-  isLoading?: boolean;
+
+  variant?: InputVariant;
   size?: InputSize;
-}
+
+  isLoading?: boolean;
+
+  /** Wrapper style */
+  style?: React.CSSProperties;
+};
+
+/** TEXT input props (native input) */
+export type TextInputProps = InputCommonProps &
+  Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> & {
+    kind?: "text";
+    showTogglePassword?: boolean;
+  };
+
+/** AMOUNT input props (major string like "1234.56") */
+export type AmountInputProps = InputCommonProps &
+  Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    | "type"
+    | "value"
+    | "defaultValue"
+    | "onChange"
+    | "onKeyDown"
+    | "inputMode"
+    | "pattern"
+    | "size"
+  > & {
+    kind: "amount";
+
+    value: string;
+    onValueChange: (nextMajor: string) => void;
+
+    display?: AmountDisplay;
+    zeroAsEmpty?: boolean;
+    currency?: string;
+    allowNegative?: boolean;
+  };
+
+/** DATE input props (ISO string "yyyy-MM-dd") */
+export type DateInputProps = InputCommonProps &
+  Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "type" | "value" | "onChange" | "size"
+  > & {
+    kind: "date";
+    value?: string;
+    onValueChange?: (valueIso: string) => void;
+  };
+
+export type InputProps = TextInputProps | AmountInputProps | DateInputProps;

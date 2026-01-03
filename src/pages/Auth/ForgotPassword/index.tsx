@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "@/api/requests";
 import Snackbar from "@/components/ui/Snackbar";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 
 type Snack =
   | {
@@ -72,6 +72,7 @@ const ForgotPassword = () => {
 
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
+            kind="text"
             label={t("emailLabel")}
             type="email"
             placeholder={t("emailPlaceholder")}

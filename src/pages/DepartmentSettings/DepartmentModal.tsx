@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 
@@ -307,6 +307,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
+                  kind="text"
                   ref={nameRef}
                   label={t("modal.fields.name")}
                   name="name"
@@ -317,6 +318,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("modal.fields.code")}
                   name="code"
                   value={formData.code}

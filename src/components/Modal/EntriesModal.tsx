@@ -6,11 +6,9 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
 import Spinner from "@/components/ui/Loaders/Spinner";
-import { DateInput } from "../ui/DateInput";
-import { AmountInput } from "../ui/AmountInput";
 
 import { api } from "@/api/requests";
 import { ApiError } from "@/models/Api";
@@ -134,7 +132,7 @@ function normalizeMajorAmount(v: unknown): string {
     const s = v.trim();
     if (!s) return "";
     const n = Number(s);
-    return Number.isFinite(n) ? n.toFixed(2) : s; // keep as-is if weird, AmountInput should keep sane
+    return Number.isFinite(n) ? n.toFixed(2) : s;
   }
   return "";
 }
@@ -972,15 +970,18 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       case "details":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <DateInput
+            <Input
+              kind="date"
               label={t("entriesModal:details.dueDate")}
               value={formData.details.dueDate}
-              onChange={(valueIso) =>
+              onValueChange={(valueIso) =>
                 setFormData((p) => ({ ...p, details: { ...p.details, dueDate: valueIso } }))
               }
             />
 
-            <AmountInput
+            <Input
+              kind="amount"
+              size="sm"
               ref={amountRef}
               id="amount-input"
               label={t("entriesModal:details.amount")}

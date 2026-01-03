@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
@@ -352,6 +352,7 @@ const CurrencySettings: React.FC = () => {
                 />
 
                 <Input
+                  kind="text"
                   label={t("currencySettings:field.password")}
                   name="currency_change_password"
                   type="password"

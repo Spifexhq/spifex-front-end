@@ -11,7 +11,7 @@ import { api } from "@/api/requests";
 import { validatePassword } from "@/lib";
 import Snackbar from "@/components/ui/Snackbar";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 
 type Snack =
   | {
@@ -91,6 +91,7 @@ const ResetPassword = () => {
 
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
+            kind="text"
             label={t("newPasswordLabel")}
             type="password"
             value={p1}

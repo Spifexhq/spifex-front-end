@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
@@ -683,6 +683,7 @@ const LedgerAccountSettings: React.FC = () => {
                   <div className="flex items-end gap-2">
                     <div className="w-72">
                       <Input
+                        kind="text"
                         label={t("buttons.search")}
                         placeholder={t("filters.placeholder")}
                         name="search"

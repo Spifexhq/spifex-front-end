@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
@@ -344,6 +344,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
           <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
+                kind="text"
                 ref={accountRef}
                 id={IDS.accountInput}
                 label={t("modal.account")}
@@ -355,6 +356,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
               />
 
               <Input
+                kind="text"
                 label={t("modal.code")}
                 name="code"
                 value={form.code || ""}
@@ -388,6 +390,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                 <div id={IDS.subgroupWrap}>
                   {addingNewSubgroup ? (
                     <Input
+                      kind="text"
                       label={t("modal.subcategoryNew")}
                       name="subcategory"
                       value={form.subcategory}

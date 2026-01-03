@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 
@@ -368,6 +368,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
+                  kind="text"
                   label={t("field.sku")}
                   name="sku"
                   value={formData.sku}
@@ -377,6 +378,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.name")}
                   name="name"
                   ref={nameRef}
@@ -387,6 +389,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.description")}
                   name="description"
                   value={formData.description}
@@ -395,6 +398,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.uom")}
                   name="uom"
                   placeholder={t("field.uomPlaceholder")}
@@ -404,6 +408,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.qty")}
                   name="quantity_on_hand"
                   type="number"

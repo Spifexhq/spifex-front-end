@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
@@ -783,6 +783,7 @@ const DepartmentSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="dept-filter-code-input"
               type="text"
               value={draftCode}
@@ -833,6 +834,7 @@ const DepartmentSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="dept-filter-name-input"
               type="text"
               value={draftName}

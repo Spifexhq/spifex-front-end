@@ -104,14 +104,14 @@ const TableHeader: React.FC<{
   const { t } = useTranslation("settledTable");
   return (
     <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <Checkbox
           checked={totalCount > 0 && selectedCount === totalCount}
           onChange={onSelectAll}
           size="sm"
           aria-label={t("aria.selectAll")}
         />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span className="text-[10px] uppercase tracking-wide text-gray-600">
             {t("labels.settled")}
           </span>
@@ -138,12 +138,76 @@ const EntryRow: React.FC<{
   runningBalance: number;
   isSelected: boolean;
   onSelect: (idNum: number, ev: React.MouseEvent) => void;
-}> = ({ entry, runningBalance, isSelected, onSelect }) => {
+  isMobile: boolean;
+}> = ({ entry, runningBalance, isSelected, onSelect, isMobile }) => {
   const { t } = useTranslation("settledTable");
   const value = txValue(entry);
   const positive = value >= 0;
   const idNum = hash32(entry.external_id);
 
+  const settlementDate = formatDateFromISO(entry.value_date);
+
+  // Mobile installments: numbers only (e.g. "2/6")
+  const installmentsLabel =
+    entry.installment_index || entry.installment_count
+      ? `${entry.installment_index ?? "-"}${entry.installment_count ? `/${entry.installment_count}` : ""}`
+      : "";
+
+  // Keep partial as numbers only in mobile (consistent with installments)
+  const partialLabel = entry.partial_index != null ? String(entry.partial_index) : "";
+
+  const bankName = entry.bank?.institution ? String(entry.bank.institution) : "";
+
+  if (isMobile) {
+    return (
+      <div className="group flex items-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+          <Checkbox
+            checked={isSelected}
+            onClick={(e) => onSelect(idNum, e)}
+            size="sm"
+            aria-label={t("aria.selectRow")}
+          />
+
+          <div className="min-w-0 flex-1 overflow-hidden pr-2">
+            <div className="text-[12px] text-gray-800 font-medium truncate leading-tight">
+              {entry.description}
+            </div>
+
+            <div className="mt-0.5 text-[10px] text-gray-500 truncate leading-tight">
+              {settlementDate}
+              {installmentsLabel ? <span className="ml-2">• {installmentsLabel}</span> : null}
+              {partialLabel ? <span className="ml-2">• {partialLabel}</span> : null}
+            </div>
+
+            {/* Bank: very small, directly below, forced single-line with ellipsis */}
+            {bankName ? (
+              <div className="mt-0.5 text-[9px] text-gray-500 leading-none overflow-hidden text-ellipsis whitespace-nowrap">
+                {bankName}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex items-center shrink-0 pl-2">
+            <div className="text-right">
+              <div
+                className={`text-[12px] leading-none font-semibold tabular-nums ${
+                  positive ? "text-green-900" : "text-red-900"
+                }`}
+              >
+                {formatCurrency(String(value))}
+              </div>
+              <div className="text-[10px] leading-none font-semibold tabular-nums text-gray-700 mt-0.5">
+                {formatCurrency(String(runningBalance))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: keep as-is
   return (
     <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -162,7 +226,7 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                {t("labels.settlement")} {formatDateFromISO(entry.value_date)}
+                {t("labels.settlement")} {settlementDate}
                 {(entry.installment_index || entry.installment_count) && (
                   <span className="ml-2">
                     {t("labels.installmentXofY", {
@@ -212,7 +276,8 @@ const SummaryRow: React.FC<{
   displayMonth: string; // MM/YYYY
   monthlySum: number;
   runningBalance: number;
-}> = ({ displayMonth, monthlySum, runningBalance }) => {
+  isMobile: boolean;
+}> = ({ displayMonth, monthlySum, runningBalance, isMobile }) => {
   const { t } = useTranslation("settledTable");
   const [m, y] = displayMonth.split("/");
   const monthDate = new Date(Number.parseInt(y, 10), Number.parseInt(m, 10) - 1, 1);
@@ -220,12 +285,38 @@ const SummaryRow: React.FC<{
   const months = t("months.short", { returnObjects: true }) as string[] | undefined;
   const label = (() => {
     const idx = monthDate.getMonth();
-    const name =
-      months && months[idx]
-        ? months[idx]
-        : monthDate.toLocaleString(undefined, { month: "short" });
+    const name = months && months[idx] ? months[idx] : monthDate.toLocaleString(undefined, { month: "short" });
     return `${name}, ${monthDate.getFullYear()}`;
   })();
+
+  if (isMobile) {
+    return (
+      <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-1.5 w-1.5 bg-gray-500 rounded-full shrink-0" />
+          <span className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide truncate">
+            {label}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="text-right">
+            <div
+              className={`text-[10px] font-semibold tabular-nums ${
+                monthlySum >= 0 ? "text-green-900" : "text-red-900"
+              }`}
+            >
+              {formatCurrency(String(monthlySum))}
+            </div>
+            <div className="text-[10px] font-semibold tabular-nums text-gray-700 mt-0.5">
+              {formatCurrency(String(runningBalance))}
+            </div>
+          </div>
+          <div className="w-8" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
@@ -288,39 +379,46 @@ const SkeletonDot = ({ className = "" }: { className?: string }) => (
 );
 
 const SkeletonEntryRow: React.FC = () => (
-  <div className="flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 border-b border-gray-200">
-    <div className="flex items-center gap-3 min-w-0 flex-1">
+  <div className="flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 border-b border-gray-200 overflow-hidden">
+    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
       <SkeletonDot className="h-4 w-4 rounded border border-gray-300" />
-      <div className="flex flex-col min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
-            <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-1" />
-          </div>
-          <div className="flex items-center shrink-0">
-            <div className="w-[150px] text-center">
-              <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="w-[150px] text-center">
-              <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-            </div>
-            <div className="w-8 flex justify-center">
-              <div className="h-6 w-6 rounded-md bg-gray-200 animate-pulse" />
-            </div>
-          </div>
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
+        <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-1" />
+        <div className="h-2 w-1/4 rounded bg-gray-200 animate-pulse mt-1" />
+      </div>
+
+      <div className="hidden sm:flex items-center shrink-0">
+        <div className="w-[150px] text-center">
+          <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
         </div>
+        <div className="w-[150px] text-center">
+          <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
+        </div>
+        <div className="w-8 flex justify-center">
+          <div className="h-6 w-6 rounded-md bg-gray-200 animate-pulse" />
+        </div>
+      </div>
+
+      <div className="flex sm:hidden items-center gap-2 shrink-0">
+        <div className="text-right">
+          <div className="h-3 w-14 rounded bg-gray-200 animate-pulse ml-auto" />
+          <div className="h-2 w-12 rounded bg-gray-200 animate-pulse mt-1 ml-auto" />
+        </div>
+        <div className="w-8" />
       </div>
     </div>
   </div>
 );
 
 const SkeletonSummaryRow: React.FC = () => (
-  <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-1.5 bg-gray-300 rounded-full" />
+  <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300 overflow-hidden">
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="h-1.5 w-1.5 bg-gray-300 rounded-full shrink-0" />
       <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
     </div>
-    <div className="flex items-center">
+
+    <div className="hidden sm:flex items-center">
       <div className="w-[150px] text-center">
         <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
       </div>
@@ -328,6 +426,14 @@ const SkeletonSummaryRow: React.FC = () => (
         <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
       </div>
       <div className="w-[32px]" />
+    </div>
+
+    <div className="flex sm:hidden items-center gap-2 shrink-0">
+      <div className="text-right">
+        <div className="h-2 w-12 rounded bg-gray-200 animate-pulse ml-auto" />
+        <div className="h-2 w-12 rounded bg-gray-200 animate-pulse mt-1 ml-auto" />
+      </div>
+      <div className="w-8" />
     </div>
   </div>
 );
@@ -376,6 +482,34 @@ const BottomLoader: React.FC = () => {
 const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filters, onSelectionChange }, ref) => {
   const { t } = useTranslation("settledTable");
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 639px)");
+    const apply = () => setIsMobile(mql.matches);
+
+    apply();
+
+    if (typeof mql.addEventListener === "function") {
+      mql.addEventListener("change", apply);
+      return () => mql.removeEventListener("change", apply);
+    }
+
+    const legacy = mql as unknown as {
+      addListener?: (cb: () => void) => void;
+      removeListener?: (cb: () => void) => void;
+    };
+
+    if (typeof legacy.addListener === "function") legacy.addListener(apply);
+    return () => {
+      if (typeof legacy.removeListener === "function") legacy.removeListener(apply);
+    };
+  }, []);
+
+  const hideScrollbarCls = useMemo(() => {
+    if (!isMobile) return "";
+    return "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+  }, [isMobile]);
+
   const [entries, setEntries] = useState<SettledEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -409,10 +543,11 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
       Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
 
     const ledger_account =
-      Array.isArray(f?.ledger_account_id) && f.ledger_account_id.length ? f.ledger_account_id.map(String).join(",") : undefined;
+      Array.isArray(f?.ledger_account_id) && f.ledger_account_id.length
+        ? f.ledger_account_id.map(String).join(",")
+        : undefined;
 
-    const tx_type =
-      f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
+    const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
 
     const base: GetSettledEntryRequest = {
       value_from: f?.start_date || undefined,
@@ -454,9 +589,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
         const incoming: SettledEntry[] = Array.isArray(data?.results) ? data.results : [];
 
         setEntries((prev) =>
-          reset
-            ? incoming.slice()
-            : [...prev, ...incoming.filter((e) => !prev.some((p) => p.external_id === e.external_id))]
+          reset ? incoming.slice() : [...prev, ...incoming.filter((e) => !prev.some((p) => p.external_id === e.external_id))]
         );
 
         const nextUrl = data?.next ?? null;
@@ -468,11 +601,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
         setError(null);
       } catch (err: unknown) {
         const msg =
-          err instanceof Error
-            ? err.message
-            : typeof err === "string"
-            ? err
-            : t("errors.fetch");
+          err instanceof Error ? err.message : typeof err === "string" ? err : t("errors.fetch");
         setError(msg);
       } finally {
         setLoading(false);
@@ -504,12 +633,8 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
     filters?.amount_max,
   ]);
 
-  const {
-    selectedIds: selectedNumIds,
-    handleSelectRow,
-    handleSelectAll,
-    clearSelection,
-  } = useShiftSelect<SettledEntry, number>(entries, (e) => hash32(e.external_id));
+  const { selectedIds: selectedNumIds, handleSelectRow, handleSelectAll, clearSelection } =
+    useShiftSelect<SettledEntry, number>(entries, (e) => hash32(e.external_id));
 
   useImperativeHandle(ref, () => ({ clearSelection }), [clearSelection]);
 
@@ -520,10 +645,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
   }, [entries]);
 
   useEffect(() => {
-    const rowsSelected = selectedNumIds
-      .map((n) => numIdToEntry.get(n))
-      .filter(Boolean) as SettledEntry[];
-
+    const rowsSelected = selectedNumIds.map((n) => numIdToEntry.get(n)).filter(Boolean) as SettledEntry[];
     const extIds = rowsSelected.map((r) => r.external_id);
     onSelectionChange?.(extIds, rowsSelected);
   }, [selectedNumIds, numIdToEntry, onSelectionChange]);
@@ -596,10 +718,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
     return () => ro.disconnect();
   }, []);
 
-  const rowHeights = useMemo(
-    () => rows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
-    [rows]
-  );
+  const rowHeights = useMemo(() => rows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)), [rows]);
 
   const rowOffsets = useMemo(() => {
     const off = new Array(rowHeights.length + 1);
@@ -667,13 +786,9 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
   return (
     <section
       aria-label={t("aria.section")}
-      className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col"
+      className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col max-w-full"
     >
-      <TableHeader
-        selectedCount={selectedNumIds.length}
-        totalCount={entries.length}
-        onSelectAll={handleSelectAll}
-      />
+      <TableHeader selectedCount={selectedNumIds.length} totalCount={entries.length} onSelectAll={handleSelectAll} />
 
       <div
         ref={scrollerRef}
@@ -686,14 +801,18 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
             if (nearBottom) void fetchEntries(false);
           }
         }}
-        className="flex-1 min-h-0 overflow-y-auto"
+        className={[
+          "flex-1 min-h-0 overflow-y-auto overflow-x-hidden max-w-full",
+          isMobile ? hideScrollbarCls : "",
+        ].join(" ")}
+        style={isMobile ? { scrollbarWidth: "none", msOverflowStyle: "none" } : undefined}
       >
         {loading && !entries.length ? (
           <TableSkeleton rows={Math.max(10, Math.ceil((viewportH || 400) / 42))} />
         ) : rows.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="divide-y divide-gray-200 relative">
+          <div className={["divide-y divide-gray-200 relative max-w-full overflow-x-hidden", hideScrollbarCls,].join(" ")}>
             <div style={{ height: totalHeight, position: "relative" }}>
               <div
                 style={{
@@ -711,6 +830,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
                       runningBalance={r.runningBalance}
                       isSelected={selectedNumIds.includes(hash32(r.entry.external_id))}
                       onSelect={handleSelectRow}
+                      isMobile={isMobile}
                     />
                   ) : (
                     <SummaryRow
@@ -718,6 +838,7 @@ const SettledEntriesTable = forwardRef<SettledEntriesTableHandle, Props>(({ filt
                       displayMonth={r.displayMonth}
                       monthlySum={r.monthlySum}
                       runningBalance={r.runningBalance}
+                      isMobile={isMobile}
                     />
                   )
                 )}

@@ -1,11 +1,12 @@
-// src/components/ui/DateInput.tsx
 import React, {
   forwardRef,
-  useId,
-  useState,
+  useCallback,
   useEffect,
-  useRef,
+  useId,
   useMemo,
+  useRef,
+  useState,
+  useImperativeHandle,
 } from "react";
 import classNames from "classnames";
 import {
@@ -24,26 +25,10 @@ import {
 } from "date-fns";
 import { getEffectiveDateFormat } from "@/lib/date";
 
+import type { DateInputProps, InputVariant, InputSize } from "./Input.types";
+import { DATE_SIZE } from "./sizes";
+
 type EffectiveDateCode = "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
-
-export type DateInputVariant = "default" | "outlined" | "filled";
-export type DateInputSize = "xs" | "sm" | "md" | "lg" | "xl";
-
-export interface DateInputProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "type" | "value" | "onChange" | "size"
-  > {
-  value?: string;
-  onChange?: (valueIso: string) => void;
-  label?: string;
-  errorMessage?: string;
-  variant?: DateInputVariant;
-  size?: DateInputSize;
-}
-
-/* --------------------------- Segment helpers --------------------------- */
-
 type SegmentBag = { day: string; month: string; year: string };
 
 const parseISOToSegments = (iso: string): SegmentBag => {
@@ -57,128 +42,21 @@ const parseISOToSegments = (iso: string): SegmentBag => {
   };
 };
 
-const getSegmentValue = (
-  segments: SegmentBag,
-  type: keyof SegmentBag,
-): string => segments[type] || "";
+const getSegmentValue = (segments: SegmentBag, type: keyof SegmentBag): string =>
+  segments[type] || "";
 
-/* ------------------------------ Sizing -------------------------------- */
-
-const SIZE: Record<
-  DateInputSize,
-  {
-    label: string;
-    error: string;
-
-    container: string; // h + px/py + gap + font + radius
-    slot: string;      // slot input text + placeholder size
-    sep: string;       // separator size
-
-    calBtn: string;    // calendar button size
-    calIcon: string;   // calendar icon size
-
-    popover: string;   // calendar popover padding/text/min width
-    navBtn: string;    // prev/next button size
-    title: string;     // month title size
-    weekday: string;   // weekday label cell
-    dayCell: string;   // day button
-  }
-> = {
-  xs: {
-    label: "text-[10px]",
-    error: "text-[10px]",
-
-    container: "h-7 px-2 py-1 gap-0.5 text-[11px] rounded-md",
-    slot: "text-[11px] placeholder:text-[11px]",
-    sep: "text-[11px]",
-
-    calBtn: "h-5 w-5",
-    calIcon: "h-3 w-3",
-
-    popover: "p-2 text-[11px] min-w-[190px]",
-    navBtn: "h-5 w-5 text-[12px]",
-    title: "text-[11px]",
-    weekday: "h-4 text-[9px]",
-    dayCell: "h-6 w-6 text-[11px]",
-  },
-  sm: {
-    label: "text-[10.5px]",
-    error: "text-[11px]",
-
-    container: "h-8 px-2.5 py-1 gap-0.5 text-xs rounded-md",
-    slot: "text-xs placeholder:text-xs",
-    sep: "text-xs",
-
-    calBtn: "h-6 w-6",
-    calIcon: "h-3.5 w-3.5",
-
-    popover: "p-2 text-xs min-w-[200px]",
-    navBtn: "h-6 w-6 text-xs",
-    title: "text-xs",
-    weekday: "h-5 text-[10px]",
-    dayCell: "h-7 w-7 text-xs",
-  },
-  md: {
-    // ✅ keeps your current visuals as default
-    label: "text-[10.5px]",
-    error: "text-[11px]",
-
-    container: "h-10 px-2.5 py-1.5 gap-1 text-xs rounded-lg",
-    slot: "text-xs placeholder:text-xs",
-    sep: "text-xs",
-
-    calBtn: "h-6 w-6",
-    calIcon: "h-3.5 w-3.5",
-
-    popover: "p-2 text-xs min-w-[210px]",
-    navBtn: "h-6 w-6 text-xs",
-    title: "text-xs",
-    weekday: "h-5 text-[10px]",
-    dayCell: "h-7 w-7 text-xs",
-  },
-  lg: {
-    label: "text-[11px]",
-    error: "text-[12px]",
-
-    container: "h-11 px-3 py-2 gap-1.5 text-[13px] rounded-lg",
-    slot: "text-[13px] placeholder:text-[13px]",
-    sep: "text-[13px]",
-
-    calBtn: "h-7 w-7",
-    calIcon: "h-4 w-4",
-
-    popover: "p-3 text-[13px] min-w-[230px]",
-    navBtn: "h-7 w-7 text-[14px]",
-    title: "text-[13px]",
-    weekday: "h-6 text-[11px]",
-    dayCell: "h-8 w-8 text-[13px]",
-  },
-  xl: {
-    label: "text-[12px]",
-    error: "text-[12.5px]",
-
-    container: "h-12 px-4 py-2.5 gap-2 text-[15px] rounded-xl",
-    slot: "text-[15px] placeholder:text-[15px]",
-    sep: "text-[15px]",
-
-    calBtn: "h-8 w-8",
-    calIcon: "h-5 w-5",
-
-    popover: "p-3.5 text-[15px] min-w-[250px]",
-    navBtn: "h-8 w-8 text-[16px]",
-    title: "text-[15px]",
-    weekday: "h-7 text-[12px]",
-    dayCell: "h-9 w-9 text-[15px]",
-  },
-};
-
-/* ------------------------------ Component ------------------------------ */
-
-const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
+/**
+ * DateField (Input: kind="date")
+ * - Mirrors old DateInput behavior:
+ *   - Calendar opens via calendar button click (preventDefault + stopPropagation)
+ *   - Sync external value into slots only when NOT focused
+ *   - Commit (emit) value on blur/outside click, and immediately on day pick
+ */
+const DateField = forwardRef<HTMLInputElement, DateInputProps>(
   (
     {
       value,
-      onChange,
+      onValueChange,
       label,
       errorMessage,
       variant = "default",
@@ -186,24 +64,30 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       disabled,
       className,
       style,
+      name,
+      required,
       ...rest
     },
-    ref,
+    forwardedRef
   ) => {
-    const id = useId();
-    const [isFocused, setIsFocused] = useState(false);
+    const autoId = useId();
+    const id = rest.id ?? autoId;
 
+    const [isFocused, setIsFocused] = useState(false);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
+
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
     const slot1Ref = useRef<HTMLInputElement | null>(null);
     const slot2Ref = useRef<HTMLInputElement | null>(null);
     const slot3Ref = useRef<HTMLInputElement | null>(null);
-    const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+    useImperativeHandle(forwardedRef, () => slot1Ref.current as HTMLInputElement, []);
 
     const { code } = getEffectiveDateFormat();
-    const effectiveCode: EffectiveDateCode = code;
+    const effectiveCode: EffectiveDateCode = code as EffectiveDateCode;
 
-    const sz = SIZE[size];
-
-    /* ---------------------- Slot / format configuration ---------------------- */
+    const sz = DATE_SIZE[size as InputSize];
 
     const slotConfig = useMemo(() => {
       switch (effectiveCode) {
@@ -237,16 +121,14 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const initialSegments = parseISOToSegments(value || "");
 
     const [slot1, setSlot1] = useState(
-      getSegmentValue(initialSegments, slotConfig.slot1.type),
+      getSegmentValue(initialSegments, slotConfig.slot1.type)
     );
     const [slot2, setSlot2] = useState(
-      getSegmentValue(initialSegments, slotConfig.slot2.type),
+      getSegmentValue(initialSegments, slotConfig.slot2.type)
     );
     const [slot3, setSlot3] = useState(
-      getSegmentValue(initialSegments, slotConfig.slot3.type),
+      getSegmentValue(initialSegments, slotConfig.slot3.type)
     );
-
-    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
     /* --------------------- Selected date / calendar month -------------------- */
 
@@ -258,6 +140,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       bag[slotConfig.slot3.type] = slot3;
 
       if (!bag.day || !bag.month || !bag.year) return null;
+
       const dateStr = `${bag.year}-${bag.month.padStart(2, "0")}-${bag.day.padStart(2, "0")}`;
       const parsed = parse(dateStr, "yyyy-MM-dd", new Date());
       return isValid(parsed) ? parsed : null;
@@ -277,52 +160,46 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       if (isValid(parsed)) setCalendarMonth(parsed);
     }, [value]);
 
-    /* ------------------ Forward outer ref to first segment ------------------- */
+    /* -------------------- Sync external value → slots (only if NOT focused) ------------------ */
 
     useEffect(() => {
-      if (!ref) return;
-      if (typeof ref === "function") {
-        ref(slot1Ref.current);
-      } else {
-        (ref as React.MutableRefObject<HTMLInputElement | null>).current =
-          slot1Ref.current;
-      }
-    }, [ref]);
-
-    /* -------------------- Sync external value → slot inputs ------------------ */
-
-    useEffect(() => {
-      if (!isFocused) {
-        const seg = parseISOToSegments(value || "");
-        setSlot1(getSegmentValue(seg, slotConfig.slot1.type));
-        setSlot2(getSegmentValue(seg, slotConfig.slot2.type));
-        setSlot3(getSegmentValue(seg, slotConfig.slot3.type));
-      }
+      if (isFocused) return;
+      const seg = parseISOToSegments(value || "");
+      setSlot1(getSegmentValue(seg, slotConfig.slot1.type));
+      setSlot2(getSegmentValue(seg, slotConfig.slot2.type));
+      setSlot3(getSegmentValue(seg, slotConfig.slot3.type));
     }, [value, isFocused, slotConfig]);
 
     /* ----------------------------- Build ISO date ---------------------------- */
 
-    const buildISO = (s1: string, s2: string, s3: string): string | null => {
-      const bag: SegmentBag = { day: "", month: "", year: "" };
+    const buildISO = useCallback(
+      (s1: string, s2: string, s3: string): string | null => {
+        const bag: SegmentBag = { day: "", month: "", year: "" };
 
-      bag[slotConfig.slot1.type] = s1;
-      bag[slotConfig.slot2.type] = s2;
-      bag[slotConfig.slot3.type] = s3;
+        bag[slotConfig.slot1.type] = s1;
+        bag[slotConfig.slot2.type] = s2;
+        bag[slotConfig.slot3.type] = s3;
 
-      if (!bag.day && !bag.month && !bag.year) return "";
-      if (!bag.day || !bag.month || !bag.year) return null;
+        // If everything empty, emit empty string (same as old DateInput)
+        if (!bag.day && !bag.month && !bag.year) return "";
 
-      const dateStr = `${bag.year}-${bag.month.padStart(2, "0")}-${bag.day.padStart(2, "0")}`;
-      const parsed = parse(dateStr, "yyyy-MM-dd", new Date());
-      return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : null;
-    };
+        // Incomplete: do not emit yet
+        if (!bag.day || !bag.month || !bag.year) return null;
 
-    const updateValue = (s1: string, s2: string, s3: string) => {
-      const iso = buildISO(s1, s2, s3);
-      if (iso !== null) {
-        onChange?.(iso);
-      }
-    };
+        const dateStr = `${bag.year}-${bag.month.padStart(2, "0")}-${bag.day.padStart(2, "0")}`;
+        const parsed = parse(dateStr, "yyyy-MM-dd", new Date());
+        return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : null;
+      },
+      [slotConfig]
+    );
+
+    const updateValue = useCallback(
+      (s1: string, s2: string, s3: string) => {
+        const iso = buildISO(s1, s2, s3);
+        if (iso !== null) onValueChange?.(iso);
+      },
+      [buildISO, onValueChange]
+    );
 
     /* -------------------------- Slot input handling -------------------------- */
 
@@ -330,15 +207,16 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       slotNum: 1 | 2 | 3,
       rawValue: string,
       maxLength: number,
-      nextRef?: React.RefObject<HTMLInputElement>,
+      nextRef?: React.RefObject<HTMLInputElement>
     ) => {
       let digits = rawValue.replace(/\D/g, "").slice(0, maxLength);
+
       const slotType =
         slotNum === 1
           ? slotConfig.slot1.type
           : slotNum === 2
-            ? slotConfig.slot2.type
-            : slotConfig.slot3.type;
+          ? slotConfig.slot2.type
+          : slotConfig.slot3.type;
 
       if (slotType === "month" && digits) {
         const monthNum = parseInt(digits, 10);
@@ -349,6 +227,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         if (dayNum > 31) digits = "31";
         else if (digits.length === 2 && dayNum < 1) digits = "01";
       }
+      // NOTE: year is NOT padded/forced. This fixes the "0000" behavior.
 
       if (slotNum === 1) setSlot1(digits);
       if (slotNum === 2) setSlot2(digits);
@@ -363,7 +242,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const handleKeyDown = (
       e: React.KeyboardEvent<HTMLInputElement>,
       prevRef?: React.RefObject<HTMLInputElement>,
-      nextRef?: React.RefObject<HTMLInputElement>,
+      nextRef?: React.RefObject<HTMLInputElement>
     ) => {
       const input = e.currentTarget;
       const cursorPos = input.selectionStart || 0;
@@ -376,11 +255,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       } else if (e.key === "ArrowLeft" && cursorPos === 0 && prevRef?.current) {
         e.preventDefault();
         prevRef.current.focus();
-      } else if (
-        e.key === "ArrowRight" &&
-        cursorPos === input.value.length &&
-        nextRef?.current
-      ) {
+      } else if (e.key === "ArrowRight" && cursorPos === input.value.length && nextRef?.current) {
         e.preventDefault();
         nextRef.current.focus();
       } else if (e.key === "/" || e.key === "-") {
@@ -389,7 +264,13 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           nextRef.current.focus();
           nextRef.current.select();
         }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
       }
+    };
+
+    const handleFocus = () => {
+      setIsFocused(true);
     };
 
     const handleBlur = () => {
@@ -401,9 +282,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           focusedElement === slot3Ref.current;
 
         const isInsideWrapper =
-          !!focusedElement &&
-          !!wrapperRef.current &&
-          wrapperRef.current.contains(focusedElement);
+          !!focusedElement && !!wrapperRef.current && wrapperRef.current.contains(focusedElement);
 
         if (!isStillInSlots && !isInsideWrapper) {
           setIsFocused(false);
@@ -413,11 +292,22 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       }, 0);
     };
 
-    const handleFocus = () => {
-      setIsFocused(true);
-    };
+    /* --------------------- Calendar open/close like old component ---------------------- */
 
-    /* --------------------- Personalized calendar click ---------------------- */
+    const computePlacement = useCallback(() => {
+      const el = wrapperRef.current;
+      if (!el || typeof window === "undefined") return;
+
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      // conservative popover estimate: 320px
+      const need = 320;
+      const spaceBelow = vh - r.bottom - 8;
+      const spaceAbove = r.top - 8;
+
+      setPlacement(spaceBelow >= need || spaceBelow >= spaceAbove ? "bottom" : "top");
+    }, []);
 
     const handleCalendarClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -429,10 +319,12 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       } else if (value) {
         const parsed = parse(value, "yyyy-MM-dd", new Date());
         if (isValid(parsed)) setCalendarMonth(parsed);
+        else setCalendarMonth(new Date());
       } else {
         setCalendarMonth(new Date());
       }
 
+      computePlacement();
       setIsCalendarOpen((prev) => !prev);
       setIsFocused(true);
     };
@@ -441,10 +333,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       if (!isCalendarOpen) return;
 
       const handleClickOutside = (event: MouseEvent) => {
-        if (
-          wrapperRef.current &&
-          !wrapperRef.current.contains(event.target as Node)
-        ) {
+        if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
           setIsCalendarOpen(false);
           setIsFocused(false);
           updateValue(slot1, slot2, slot3);
@@ -474,7 +363,8 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       setSlot3(s3);
 
       const iso = format(date, "yyyy-MM-dd");
-      onChange?.(iso);
+      onValueChange?.(iso);
+
       setIsCalendarOpen(false);
       setIsFocused(false);
     };
@@ -482,6 +372,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     /* -------------------------- Calendar rendering --------------------------- */
 
     const renderCalendar = () => {
+      // Monday as first day (matches old code)
       const start = startOfWeek(startOfMonth(calendarMonth), { weekStartsOn: 1 });
       const end = endOfWeek(endOfMonth(calendarMonth), { weekStartsOn: 1 });
 
@@ -497,19 +388,19 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           <button
             key={current.toISOString()}
             type="button"
-            onMouseDown={(e) => e.preventDefault()}
+            onMouseDown={(ev) => ev.preventDefault()}
             onClick={() => handleDateSelect(current)}
             className={classNames(
               "rounded-full flex items-center justify-center",
               sz.dayCell,
               !isCurrentMonth && "text-gray-400",
               isSelected && "bg-gray-900 text-white",
-              !isSelected && "hover:bg-gray-100",
+              !isSelected && "hover:bg-gray-100"
             )}
             tabIndex={isCalendarOpen ? 0 : -1}
           >
             {format(current, "d")}
-          </button>,
+          </button>
         );
 
         curr = addDays(curr, 1);
@@ -520,23 +411,28 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       return (
         <div
           className={classNames(
-            // position
-            "absolute left-0 top-full origin-top z-[60]",
+            // placement
+            "absolute left-0 origin-top",
+            placement === "bottom" ? "top-full" : "bottom-full mb-2",
+            // ensure above modals
+            "z-[10050]",
             // box
             "rounded-md border border-gray-200 bg-white shadow-lg",
+            // prevent hidden on small screens
+            "max-h-[50vh] overflow-auto",
             sz.popover,
-            // animation (same style as SelectDropdown)
+            // animation
             "transition-all duration-150 ease-out will-change-transform",
             isCalendarOpen
               ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 -translate-y-1 pointer-events-none",
+              : "opacity-0 -translate-y-1 pointer-events-none"
           )}
           aria-hidden={!isCalendarOpen}
         >
           <div className="flex items-center justify-between mb-2">
             <button
               type="button"
-              onMouseDown={(e) => e.preventDefault()}
+              onMouseDown={(ev) => ev.preventDefault()}
               onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
               className={classNames(
                 "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
@@ -553,7 +449,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 
             <button
               type="button"
-              onMouseDown={(e) => e.preventDefault()}
+              onMouseDown={(ev) => ev.preventDefault()}
               onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
               className={classNames(
                 "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
@@ -569,10 +465,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             {weekdayLabels.map((w) => (
               <div
                 key={w}
-                className={classNames(
-                  "flex items-center justify-center text-gray-500",
-                  sz.weekday
-                )}
+                className={classNames("flex items-center justify-center text-gray-500", sz.weekday)}
               >
                 {w}
               </div>
@@ -589,25 +482,23 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const errorId = errorMessage ? `${id}-err` : undefined;
 
     const baseContainer =
-      "w-full outline-none transition-colors duration-150 " +
+      "outline-none transition-colors duration-150 " +
       "border bg-white hover:bg-gray-50 focus-within:bg-gray-50 " +
       "focus-within:ring-1 focus-within:ring-gray-300 " +
-      "flex items-center justify-between";
+      "relative flex items-center";
 
-    const variantClasses: Record<DateInputVariant, string> = {
+    const variantClasses: Record<InputVariant, string> = {
       default: "border-gray-300",
       outlined: "border-2 border-gray-300 focus-within:ring-0",
-      filled:
-        "bg-gray-50 border border-transparent focus-within:border-gray-300",
+      filled: "bg-gray-50 border border-transparent focus-within:border-gray-300",
     };
 
     const containerClasses = classNames(
       baseContainer,
       sz.container,
       variantClasses[variant] ?? variantClasses.default,
-      errorMessage &&
-        "border-red-500 focus-within:border-red-500 focus-within:ring-red-200",
-      className,
+      errorMessage && "border-red-500 focus-within:border-red-500 focus-within:ring-red-200",
+      className
     );
 
     const slotClasses = classNames(
@@ -618,24 +509,29 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     /* -------------------------------- Render --------------------------------- */
 
     return (
-      <div
-        className="flex flex-col gap-1.5"
-        style={style}
-        ref={wrapperRef}
-        {...rest}
-      >
-        {label && (
+      <div className="flex flex-col gap-1.5 min-w-0" style={style} ref={wrapperRef}>
+        {label ? (
           <label
             htmlFor={id}
             className={classNames("font-semibold text-gray-700 select-none", sz.label)}
           >
             {label}
           </label>
-        )}
+        ) : null}
 
-        <div className="relative">
+        {/* hidden form field for native submit (optional) */}
+        {name ? (
+          <input
+            type="hidden"
+            name={name}
+            value={buildISO(slot1, slot2, slot3) ?? ""}
+            required={required}
+          />
+        ) : null}
+
+        <div className="relative w-full min-w-0">
           <div className={containerClasses}>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 min-w-0 flex-1 pr-10 overflow-hidden">
               <input
                 id={id}
                 ref={slot1Ref}
@@ -648,21 +544,17 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 placeholder={slotConfig.slot1.label}
                 value={slot1}
                 onChange={(e) =>
-                  handleSlotChange(
-                    1,
-                    e.target.value,
-                    slotConfig.slot1.maxLength,
-                    slot2Ref,
-                  )
+                  handleSlotChange(1, e.target.value, slotConfig.slot1.maxLength, slot2Ref)
                 }
                 onKeyDown={(e) => handleKeyDown(e, undefined, slot2Ref)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
+                aria-invalid={!!errorMessage}
+                aria-describedby={errorId}
+                {...rest}
               />
 
-              <span className={classNames("text-gray-400", sz.sep)}>
-                {slotConfig.separator}
-              </span>
+              <span className={classNames("text-gray-400", sz.sep)}>{slotConfig.separator}</span>
 
               <input
                 ref={slot2Ref}
@@ -675,21 +567,14 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 placeholder={slotConfig.slot2.label}
                 value={slot2}
                 onChange={(e) =>
-                  handleSlotChange(
-                    2,
-                    e.target.value,
-                    slotConfig.slot2.maxLength,
-                    slot3Ref,
-                  )
+                  handleSlotChange(2, e.target.value, slotConfig.slot2.maxLength, slot3Ref)
                 }
                 onKeyDown={(e) => handleKeyDown(e, slot1Ref, slot3Ref)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
               />
 
-              <span className={classNames("text-gray-400", sz.sep)}>
-                {slotConfig.separator}
-              </span>
+              <span className={classNames("text-gray-400", sz.sep)}>{slotConfig.separator}</span>
 
               <input
                 ref={slot3Ref}
@@ -701,13 +586,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 style={{ width: `${slotConfig.slot3.maxLength * 1}ch` }}
                 placeholder={slotConfig.slot3.label}
                 value={slot3}
-                onChange={(e) =>
-                  handleSlotChange(
-                    3,
-                    e.target.value,
-                    slotConfig.slot3.maxLength,
-                  )
-                }
+                onChange={(e) => handleSlotChange(3, e.target.value, slotConfig.slot3.maxLength)}
                 onKeyDown={(e) => handleKeyDown(e, slot2Ref, undefined)}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
@@ -715,31 +594,24 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             </div>
 
             <button
-              type="button"
-              className={classNames(
-                "flex-shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100",
-                sz.calBtn
-              )}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleCalendarClick}
-              aria-label="Open date picker"
-              tabIndex={-1}
-              disabled={disabled}
+            type="button"
+            className={classNames(
+                sz.calBtn,
+                "!absolute !right-0.5 !top-1/2 !left-auto !bottom-auto -translate-y-1/2 z-10 " +
+                    "flex-shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100"
+            )}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleCalendarClick}
+            aria-label="Open date picker"
+            tabIndex={-1}
+            disabled={disabled}
             >
               <svg
                 viewBox="0 0 24 24"
                 className={classNames("text-gray-400", sz.calIcon)}
                 fill="none"
               >
-                <rect
-                  x="3"
-                  y="4"
-                  width="18"
-                  height="17"
-                  rx="2"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
+                <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" strokeWidth="2" />
                 <path
                   d="M8 2v4M16 2v4M3 10h18"
                   stroke="currentColor"
@@ -750,22 +622,18 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             </button>
           </div>
 
-          {renderCalendar()}
+          {isCalendarOpen ? renderCalendar() : null}
         </div>
 
-        {errorMessage && (
-          <span
-            id={errorId}
-            className={classNames("text-red-600 leading-tight", sz.error)}
-          >
+        {errorMessage ? (
+          <span id={errorId} className={classNames("text-red-600 leading-tight", sz.error)}>
             {errorMessage}
           </span>
-        )}
+        ) : null}
       </div>
     );
-  },
+  }
 );
 
-DateInput.displayName = "DateInput";
-
-export default DateInput;
+DateField.displayName = "DateField";
+export default DateField;

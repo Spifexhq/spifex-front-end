@@ -8,7 +8,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 
@@ -188,6 +188,7 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
               <ModalSkeleton />
             ) : (
               <Input
+                kind="text"
                 label={label}
                 name="groupName"
                 value={name}

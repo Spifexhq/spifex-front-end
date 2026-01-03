@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Snackbar from "@/components/ui/Snackbar";
 import Checkbox from "@/components/ui/Checkbox";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
@@ -438,6 +438,7 @@ const OrganizationSettings: React.FC = () => {
               >
                 {(editingField === null || editingField === "name") && (
                   <Input
+                    kind="text"
                     label={t("field.orgNameInput")}
                     name="name"
                     value={formData.name}
@@ -447,19 +448,35 @@ const OrganizationSettings: React.FC = () => {
                 )}
 
                 {(editingField === null || editingField === "line1") && (
-                  <Input label={t("field.address1")} name="line1" value={formData.line1} onChange={handleChange} />
+                  <Input
+                    kind="text"
+                    label={t("field.address1")}
+                    name="line1"
+                    value={formData.line1}
+                    onChange={handleChange} />
                 )}
 
                 {(editingField === null || editingField === "line2") && (
-                  <Input label={t("field.address2")} name="line2" value={formData.line2} onChange={handleChange} />
+                  <Input
+                    kind="text"
+                    label={t("field.address2")}
+                    name="line2"
+                    value={formData.line2}
+                    onChange={handleChange} />
                 )}
 
                 {(editingField === null || editingField === "city") && (
-                  <Input label={t("field.city")} name="city" value={formData.city} onChange={handleChange} />
+                  <Input
+                    kind="text"
+                    label={t("field.city")}
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange} />
                 )}
 
                 {(editingField === null || editingField === "postal_code") && (
                   <Input
+                    kind="text"
                     label={t("field.postalCode")}
                     name="postal_code"
                     value={formData.postal_code}

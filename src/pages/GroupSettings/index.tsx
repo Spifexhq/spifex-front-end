@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
 import TopProgress from "@/components/ui/Loaders/TopProgress";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
@@ -319,6 +319,7 @@ const GroupSettings: React.FC = () => {
 
                 <div className="p-3 border-b border-gray-200">
                   <Input
+                    kind="text"
                     placeholder={t("left.searchPlaceholder")}
                     name="groupSearch"
                     value={groupSearch}

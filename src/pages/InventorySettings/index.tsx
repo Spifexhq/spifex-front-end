@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
@@ -942,6 +942,7 @@ const InventorySettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="inv-filter-sku-input"
               type="text"
               value={draftSku}
@@ -987,6 +988,7 @@ const InventorySettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="inv-filter-name-input"
               type="text"
               value={draftName}
@@ -1038,6 +1040,7 @@ const InventorySettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="inv-filter-desc-input"
               type="text"
               value={draftDescription}
@@ -1083,6 +1086,7 @@ const InventorySettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="inv-filter-uom-input"
               type="text"
               value={draftUom}
@@ -1137,6 +1141,7 @@ const InventorySettings: React.FC = () => {
               {t("filters.qtyMin", { defaultValue: "Min" })}
               <div className="mt-1">
                 <Input
+                  kind="text"
                   id="inv-filter-minqoh-input"
                   type="number"
                   inputMode="numeric"
@@ -1151,6 +1156,7 @@ const InventorySettings: React.FC = () => {
               {t("filters.qtyMax", { defaultValue: "Max" })}
               <div className="mt-1">
                 <Input
+                  kind="text"
                   type="number"
                   inputMode="numeric"
                   value={draftMaxQoh}

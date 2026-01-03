@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Snackbar from "@/components/ui/Snackbar";
 import ConfirmToast from "@/components/ui/ConfirmToast";
 import PageSkeleton from "@/components/ui/Loaders/PageSkeleton";
@@ -743,8 +743,8 @@ const MemberSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="member-filter-name-input"
-              type="text"
               value={draftName}
               onChange={(e) => setDraftName(e.target.value)}
               onKeyDown={(e) => {
@@ -786,8 +786,8 @@ const MemberSettings: React.FC = () => {
 
           <div className="mt-3">
             <Input
+              kind="text"
               id="member-filter-email-input"
-              type="text"
               value={draftEmail}
               onChange={(e) => setDraftEmail(e.target.value)}
               onKeyDown={(e) => {

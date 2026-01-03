@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Snackbar from "@/components/ui/Snackbar";
 
 import { api } from "@/api/requests";
@@ -227,6 +227,7 @@ const LedgerAccountsGate: React.FC = () => {
                     </div>
 
                     <Input
+                      kind="text"
                       type="file"
                       label={t("modes.csv.uploadLabel")}
                       onChange={handleUploadCSV}

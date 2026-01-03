@@ -11,7 +11,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Snackbar from "@/components/ui/Snackbar";
 import Checkbox from "@/components/ui/Checkbox";
@@ -524,6 +524,7 @@ const PersonalSettings: React.FC = () => {
               >
                 {(editingField === null || editingField === "name") && (
                   <Input
+                    kind="text"
                     label={t("field.fullName")}
                     name="name"
                     value={formData.name ?? ""}
@@ -534,6 +535,7 @@ const PersonalSettings: React.FC = () => {
 
                 {(editingField === null || editingField === "phone") && (
                   <Input
+                    kind="text"
                     label={t("field.phone")}
                     name="phone"
                     type="tel"
@@ -543,6 +545,7 @@ const PersonalSettings: React.FC = () => {
                 )}
                 {(editingField === null || editingField === "job_title") && (
                   <Input
+                    kind="text"
                     label={t("field.jobTitle")}
                     name="job_title"
                     value={formData.job_title ?? ""}
@@ -551,6 +554,7 @@ const PersonalSettings: React.FC = () => {
                 )}
                 {(editingField === null || editingField === "department") && (
                   <Input
+                    kind="text"
                     label={t("field.department")}
                     name="department"
                     value={formData.department ?? ""}

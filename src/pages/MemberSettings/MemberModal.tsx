@@ -8,7 +8,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import Input from "@/components/ui/Input";
+import Input from "src/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Shimmer from "@/components/ui/Loaders/Shimmer";
 import { SelectDropdown } from "@/components/ui/SelectDropdown";
@@ -325,6 +325,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
             ) : (
               <div className={`grid grid-cols-2 gap-4 ${disableForm ? "opacity-70 pointer-events-none" : ""}`}>
                 <Input
+                  kind="text"
                   label={t("field.name")}
                   name="name"
                   ref={nameRef}
@@ -334,6 +335,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                 />
 
                 <Input
+                  kind="text"
                   label={t("field.email")}
                   name="email"
                   type="email"
@@ -345,6 +347,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                 {mode === "create" && (
                   <>
                     <Input
+                      kind="text"
                       label={t("field.tempPassword")}
                       name="password"
                       type="password"
@@ -354,6 +357,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                       required
                     />
                     <Input
+                      kind="text"
                       label={t("field.confirmPassword")}
                       name="confirmPassword"
                       type="password"
