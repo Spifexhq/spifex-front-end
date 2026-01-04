@@ -20,13 +20,31 @@ export interface UserOrganizationDetail {
 }
 
 export interface PersonalSettings {
+  // core
   name: string;
   email: string;
+
+  // work/contact
   phone?: string;
   job_title?: string;
   department?: string;
+
+  // regional
   timezone: string;
-  country?: string;
+  country?: string; // ISO-3166 alpha-2
+
+  // address (like OrganizationSettings)
+  line1?: string;
+  line2?: string;
+  city?: string;
+  region?: string;
+  postal_code?: string;
+
+  // sensitive personal data
+  national_id?: string;
+  birth_date?: string | null; // "YYYY-MM-DD" or null
+  gender?: string;
+  note?: string;
 }
 
 export type EditPersonalSettingsRequest = Partial<Omit<PersonalSettings, "email">>;

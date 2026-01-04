@@ -6,8 +6,10 @@
   },
   "section": {
     "company": "Unternehmen",
-    "personalData": "Personendaten",
+    "personalData": "Persönliche Daten",
+    "address": "Adresse",
     "timezone": "Zeitzone",
+    "sensitive": "Sensible Daten",
     "security": "Sicherheit",
     "formats": "Formate"
   },
@@ -16,9 +18,25 @@
     "fullName": "Vollständiger Name",
     "primaryEmail": "Primäre E-Mail",
     "phone": "Telefon",
-    "jobTitle": "Berufsbezeichnung",
+    "jobTitle": "Position",
     "department": "Abteilung",
-    "country": "Land"
+    "country": "Land",
+    "address1": "Adresse (Zeile 1)",
+    "address2": "Adresse (Zeile 2)",
+    "city": "Stadt",
+    "region": "Region / Bundesland",
+    "postalCode": "Postleitzahl",
+    "nationalId": "Nationale ID",
+    "birthDate": "Geburtsdatum",
+    "gender": "Geschlecht",
+    "note": "Notiz"
+  },
+  "gender": {
+    "male": "Männlich",
+    "female": "Weiblich",
+    "nonBinary": "Nicht-binär",
+    "other": "Andere",
+    "preferNot": "Möchte ich nicht angeben"
   },
   "label": {
     "current": "Aktuell"
@@ -28,9 +46,18 @@
     "updateName": "Name aktualisieren",
     "updateEmail": "E-Mail aktualisieren",
     "updatePhone": "Telefon aktualisieren",
-    "updateJobTitle": "Stellenbezeichnung aktualisieren",
+    "updateJobTitle": "Position aktualisieren",
     "updateDepartment": "Abteilung aktualisieren",
     "updateCountry": "Land aktualisieren",
+    "updateAddress1": "Adresse (Zeile 1) aktualisieren",
+    "updateAddress2": "Adresse (Zeile 2) aktualisieren",
+    "updateCity": "Stadt aktualisieren",
+    "updateRegion": "Region/Bundesland aktualisieren",
+    "updatePostalCode": "Postleitzahl aktualisieren",
+    "updateNationalId": "Nationale ID aktualisieren",
+    "updateBirthDate": "Geburtsdatum aktualisieren",
+    "updateGender": "Geschlecht aktualisieren",
+    "updateNote": "Notiz aktualisieren",
     "manageSecurity": "Sicherheit verwalten",
     "cancel": "Abbrechen",
     "save": "Speichern",
@@ -42,18 +69,18 @@
   "modal": {
     "title": "Informationen bearbeiten",
     "close": "Schließen",
-    "useDeviceTz": "Zeitzone des Geräts verwenden",
+    "useDeviceTz": "Gerätezeitzone verwenden",
     "tzLabel": "Zeitzone auswählen"
   },
   "security": {
     "subtitle": "Schützen Sie Ihr Konto mit starken Passwörtern und sicherer Anmeldung."
   },
   "formats": {
-    "subtitle": "Verwalten Sie, wie Daten, Zahlen und andere Formate in Ihrem Konto angezeigt werden."
+    "subtitle": "Legen Sie fest, wie Datumsangaben, Zahlen und andere Formate in Ihrem Konto angezeigt werden."
   },
   "toast": {
-    "loadError": "Einstellungen konnten nicht geladen werden.",
+    "loadError": "Ihre Einstellungen konnten nicht geladen werden.",
     "updateOk": "Erfolgreich aktualisiert.",
-    "updateError": "Einstellungen konnten nicht aktualisiert werden."
+    "updateError": "Ihre Einstellungen konnten nicht aktualisiert werden."
   }
 }

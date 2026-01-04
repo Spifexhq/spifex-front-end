@@ -7,7 +7,9 @@
   "section": {
     "company": "Entreprise",
     "personalData": "Données personnelles",
+    "address": "Adresse",
     "timezone": "Fuseau horaire",
+    "sensitive": "Données sensibles",
     "security": "Sécurité",
     "formats": "Formats"
   },
@@ -16,9 +18,25 @@
     "fullName": "Nom complet",
     "primaryEmail": "E-mail principal",
     "phone": "Téléphone",
-    "jobTitle": "Intitulé du poste",
+    "jobTitle": "Poste",
     "department": "Département",
-    "country": "Pays"
+    "country": "Pays",
+    "address1": "Adresse (ligne 1)",
+    "address2": "Adresse (ligne 2)",
+    "city": "Ville",
+    "region": "Région / État",
+    "postalCode": "Code postal",
+    "nationalId": "Identifiant national",
+    "birthDate": "Date de naissance",
+    "gender": "Genre",
+    "note": "Note"
+  },
+  "gender": {
+    "male": "Homme",
+    "female": "Femme",
+    "nonBinary": "Non-binaire",
+    "other": "Autre",
+    "preferNot": "Préfère ne pas répondre"
   },
   "label": {
     "current": "Actuel"
@@ -31,6 +49,15 @@
     "updateJobTitle": "Mettre à jour le poste",
     "updateDepartment": "Mettre à jour le département",
     "updateCountry": "Mettre à jour le pays",
+    "updateAddress1": "Mettre à jour l’adresse (ligne 1)",
+    "updateAddress2": "Mettre à jour l’adresse (ligne 2)",
+    "updateCity": "Mettre à jour la ville",
+    "updateRegion": "Mettre à jour la région/état",
+    "updatePostalCode": "Mettre à jour le code postal",
+    "updateNationalId": "Mettre à jour l’identifiant national",
+    "updateBirthDate": "Mettre à jour la date de naissance",
+    "updateGender": "Mettre à jour le genre",
+    "updateNote": "Mettre à jour la note",
     "manageSecurity": "Gérer la sécurité",
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -42,14 +69,14 @@
   "modal": {
     "title": "Modifier les informations",
     "close": "Fermer",
-    "useDeviceTz": "Utiliser le fuseau du dispositif",
-    "tzLabel": "Sélectionner un fuseau horaire"
+    "useDeviceTz": "Utiliser le fuseau horaire de l’appareil",
+    "tzLabel": "Sélectionner le fuseau horaire"
   },
   "security": {
-    "subtitle": "Protégez votre compte avec des mots de passe forts et une connexion sécurisée."
+    "subtitle": "Protégez votre compte avec des mots de passe robustes et une connexion sécurisée."
   },
   "formats": {
-    "subtitle": "Gérez la manière dont les dates, les chiffres et autres formats sont affichés dans votre compte."
+    "subtitle": "Gérez l’affichage des dates, des nombres et d’autres formats dans votre compte."
   },
   "toast": {
     "loadError": "Impossible de charger vos paramètres.",

@@ -1,5 +1,5 @@
 {
-  "title": "Configurações Pessoais",
+  "title": "Configurações pessoais",
   "header": {
     "settings": "Configurações",
     "personal": "Pessoal"
@@ -7,7 +7,9 @@
   "section": {
     "company": "Empresa",
     "personalData": "Dados pessoais",
+    "address": "Endereço",
     "timezone": "Fuso horário",
+    "sensitive": "Dados sensíveis",
     "security": "Segurança",
     "formats": "Formatos"
   },
@@ -18,7 +20,23 @@
     "phone": "Telefone",
     "jobTitle": "Cargo",
     "department": "Departamento",
-    "country": "País"
+    "country": "País",
+    "address1": "Endereço (linha 1)",
+    "address2": "Endereço (linha 2)",
+    "city": "Cidade",
+    "region": "Região / Distrito",
+    "postalCode": "Código postal",
+    "nationalId": "Identificação nacional",
+    "birthDate": "Data de nascimento",
+    "gender": "Género",
+    "note": "Nota"
+  },
+  "gender": {
+    "male": "Masculino",
+    "female": "Feminino",
+    "nonBinary": "Não-binário",
+    "other": "Outro",
+    "preferNot": "Prefiro não dizer"
   },
   "label": {
     "current": "Atual"
@@ -31,29 +49,38 @@
     "updateJobTitle": "Atualizar cargo",
     "updateDepartment": "Atualizar departamento",
     "updateCountry": "Atualizar país",
-    "manageSecurity": "Gerenciar segurança",
+    "updateAddress1": "Atualizar endereço (linha 1)",
+    "updateAddress2": "Atualizar endereço (linha 2)",
+    "updateCity": "Atualizar cidade",
+    "updateRegion": "Atualizar região/distrito",
+    "updatePostalCode": "Atualizar código postal",
+    "updateNationalId": "Atualizar identificação nacional",
+    "updateBirthDate": "Atualizar data de nascimento",
+    "updateGender": "Atualizar género",
+    "updateNote": "Atualizar nota",
+    "manageSecurity": "Gerir segurança",
     "cancel": "Cancelar",
-    "save": "Salvar",
-    "manageFormats": "Gerenciar formatos"
+    "save": "Guardar",
+    "manageFormats": "Gerir formatos"
   },
   "btnLabel": {
     "tz": "Fuso horário"
   },
   "modal": {
-    "title": "Editar informações",
+    "title": "Editar informação",
     "close": "Fechar",
     "useDeviceTz": "Usar fuso horário do dispositivo",
-    "tzLabel": "Selecione o fuso horário"
+    "tzLabel": "Selecionar fuso horário"
   },
   "security": {
-    "subtitle": "Proteja sua conta com senhas fortes e login seguro."
+    "subtitle": "Proteja a sua conta com palavras-passe fortes e início de sessão seguro."
   },
   "formats": {
-    "subtitle": "Gerencie como datas, números e outros formatos são exibidos na sua conta."
+    "subtitle": "Defina como datas, números e outros formatos são apresentados na sua conta."
   },
   "toast": {
-    "loadError": "Não foi possível carregar suas configurações.",
+    "loadError": "Não foi possível carregar as suas configurações.",
     "updateOk": "Atualizado com sucesso.",
-    "updateError": "Não foi possível atualizar suas configurações."
+    "updateError": "Não foi possível atualizar as suas configurações."
   }
 }

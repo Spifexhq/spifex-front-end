@@ -7,7 +7,9 @@
   "section": {
     "company": "Company",
     "personalData": "Personal data",
+    "address": "Address",
     "timezone": "Timezone",
+    "sensitive": "Sensitive data",
     "security": "Security",
     "formats": "Formats"
   },
@@ -18,7 +20,23 @@
     "phone": "Phone",
     "jobTitle": "Job title",
     "department": "Department",
-    "country": "Country"
+    "country": "Country",
+    "address1": "Address line 1",
+    "address2": "Address line 2",
+    "city": "City",
+    "region": "Region / State",
+    "postalCode": "Postal code",
+    "nationalId": "National ID",
+    "birthDate": "Birth date",
+    "gender": "Gender",
+    "note": "Note"
+  },
+  "gender": {
+    "male": "Male",
+    "female": "Female",
+    "nonBinary": "Non-binary",
+    "other": "Other",
+    "preferNot": "Prefer not to say"
   },
   "label": {
     "current": "Current"
@@ -31,6 +49,15 @@
     "updateJobTitle": "Update job title",
     "updateDepartment": "Update department",
     "updateCountry": "Update country",
+    "updateAddress1": "Update address line 1",
+    "updateAddress2": "Update address line 2",
+    "updateCity": "Update city",
+    "updateRegion": "Update region/state",
+    "updatePostalCode": "Update postal code",
+    "updateNationalId": "Update national ID",
+    "updateBirthDate": "Update birth date",
+    "updateGender": "Update gender",
+    "updateNote": "Update note",
     "manageSecurity": "Manage security",
     "cancel": "Cancel",
     "save": "Save",
