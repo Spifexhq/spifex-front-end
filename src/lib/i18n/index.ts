@@ -47,6 +47,11 @@ import enResetPassword from "./locales/en/resetPassword.json";
 import frResetPassword from "./locales/fr/resetPassword.json";
 import deResetPassword from "./locales/de/resetPassword.json";
 
+import ptPasswordVerification from "./locales/pt/passwordVerification.json";
+import enPasswordVerification from "./locales/en/passwordVerification.json";
+import frPasswordVerification from "./locales/fr/passwordVerification.json";
+import dePasswordVerification from "./locales/de/passwordVerification.json";
+
 import ptEmailVerification from "./locales/pt/emailVerification.json";
 import enEmailVerification from "./locales/en/emailVerification.json";
 import frEmailVerification from "./locales/fr/emailVerification.json";
@@ -310,6 +315,7 @@ const NAMESPACES = [
   "passwordValidation",
   "forgotPassword",
   "resetPassword",
+  "passwordVerification",
   "emailVerification",
 
   // Layout
@@ -392,6 +398,7 @@ const resources: Resource = {
     passwordValidation: ptPasswordValidation,
     forgotPassword: ptForgotPassword,
     resetPassword: ptResetPassword,
+    passwordVerification: ptPasswordVerification,
     emailVerification: ptEmailVerification,
 
     navbar: ptNavbar,
@@ -458,6 +465,7 @@ const resources: Resource = {
     passwordValidation: enPasswordValidation,
     forgotPassword: enForgotPassword,
     resetPassword: enResetPassword,
+    passwordVerification: enPasswordVerification,
     emailVerification: enEmailVerification,
 
     navbar: enNavbar,
@@ -524,6 +532,7 @@ const resources: Resource = {
     passwordValidation: frPasswordValidation,
     forgotPassword: frForgotPassword,
     resetPassword: frResetPassword,
+    passwordVerification: frPasswordVerification,
     emailVerification: frEmailVerification,
 
     navbar: frNavbar,
@@ -590,6 +599,7 @@ const resources: Resource = {
     passwordValidation: dePasswordValidation,
     forgotPassword: deForgotPassword,
     resetPassword: deResetPassword,
+    passwordVerification: dePasswordVerification,
     emailVerification: deEmailVerification,
 
     navbar: deNavbar,

@@ -3,8 +3,8 @@ import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import type { SignInRequest, SignInResponse, SignOutResponse, SignUpRequest, SignUpResponse } from '@/models/auth/auth'
 import type { CookieConsentRequest, CookieConsentResponse } from 'src/models/auth/cookies';
-import type { ChangeEmailRequest, ChangeEmailResponse, ChangePasswordRequest, ChangePasswordResponse, ConfirmPasswordResetRequest,
-  ConfirmPasswordResetResponse, RequestPasswordResetRequest, RequestPasswordResetResponse } from 'src/models/auth/security';
+import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest,
+  VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse } from 'src/models/auth/security';
 import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from 'src/models/auth/user';
 import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from 'src/models/auth/organization';
 import type { GetEntitlementLimitsResponse } from 'src/models/auth/entitlements';
@@ -104,7 +104,7 @@ export const api = {
   saveCookieConsent: (payload: CookieConsentRequest) =>
     request<CookieConsentResponse>("cookies/consent/", "POST", payload),
 
-  /* --- Emails --- */
+  /* --- Email verifications --- */
   checkEmailAvailability: (email: string) =>
     request<{ available: boolean }>("auth/emails/check/", "POST", { email }),
 
@@ -117,23 +117,27 @@ export const api = {
   cancelEmailChange: <T>(changeId: string, token: string) =>
     request<T>(`auth/emails/cancel-change/${changeId}/${token}/`, "GET"),
 
-  /* --- Password / Email security --- */
-  changePassword: (payload: ChangePasswordRequest) =>
-    request<ChangePasswordResponse>("auth/password/change/", "PUT", payload),
+  /* --- Email / Password security --- */
+  emailChange: (payload: EmailChangeRequest) =>
+    request<EmailChangeResponse>("auth/emails/change/", "POST", payload),
 
-  changeEmail: (payload: ChangeEmailRequest) =>
-    request<ChangeEmailResponse>("auth/emails/change/", "POST", payload),
+  passwordChange: (payload: PasswordChangeRequest) =>
+    request<PasswordChangeResponse>("auth/password/change/", "PUT", payload),
 
-  requestPasswordReset: (email: string) =>
-    request<RequestPasswordResetResponse>("auth/password/reset/", "POST", {
+  verifyPasswordChange: <T>(changeId: string, token: string) =>
+    request<T>(`auth/password/verify-change/${changeId}/${token}/`, "GET"),
+
+  /* --- Password reset --- */
+  passwordReset: (email: string) =>
+    request<PasswordResetResponse>("auth/password/reset/", "POST", {
       email
-    } satisfies RequestPasswordResetRequest),
+    } satisfies PasswordResetRequest),
 
-  confirmPasswordReset: (uidb64: string, token: string, password: string) =>
-    request<ConfirmPasswordResetResponse>(`auth/password/reset/${uidb64}/${token}/`, "POST", {
+  verifyPasswordReset: (uidb64: string, token: string, password: string) =>
+    request<VerifyPasswordResetResponse>(`auth/password/reset/${uidb64}/${token}/`, "POST", {
       password,
       password_confirm: password,
-    } satisfies ConfirmPasswordResetRequest),
+    } satisfies VerifyPasswordResetRequest),
 
   /* --- User --- */
   getUser: () =>

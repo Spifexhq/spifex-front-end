@@ -1,11 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/PersonalSettings.tsx
- * Standalone settings page (not the /locale-setup flow)
- * - Uses "personalSettings" i18n namespace
- * - Adds: Address + national_id + birth_date + gender + note
- * - Country: ISO-3166 alpha-2 values (US/PT/BR...), label shows full country name
- * - Timezone select only inside modal (unchanged pattern)
- * - No nulls in local state (strings); birth_date cleared -> null on submit
  * -------------------------------------------------------------------------- */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

@@ -14,36 +14,37 @@
     "current": "Aktuelles Passwort",
     "new": "Neues Passwort",
     "confirm": "Neues Passwort bestätigen",
-    "primaryEmail": "Primäre E-Mail-Adresse",
-    "currentEmail": "Aktuelle E-Mail-Adresse",
-    "newEmail": "Neue E-Mail-Adresse",
+    "primaryEmail": "Primäre E-Mail",
+    "currentEmail": "Aktuelle E-Mail",
+    "newEmail": "Neue E-Mail",
     "currentPassword": "Aktuelles Passwort"
   },
   "btn": {
     "changePassword": "Passwort ändern",
-    "changeEmail": "E-Mail-Adresse ändern",
+    "changeEmail": "E-Mail ändern",
     "save": "Speichern",
     "saveEmail": "E-Mail speichern",
     "cancel": "Abbrechen"
   },
   "modal": {
     "title": "Passwort ändern",
-    "emailTitle": "E-Mail-Adresse ändern",
+    "emailTitle": "E-Mail ändern",
     "close": "Schließen"
   },
   "toast": {
     "success": "Passwort erfolgreich geändert.",
+    "passwordChangeRequested": "Wir haben einen Bestätigungslink an Ihre E-Mail gesendet.",
     "changeError": "Passwort konnte nicht geändert werden.",
     "unexpected": "Unerwarteter Fehler.",
-    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
-    "samePassword": "Das neue Passwort darf nicht dem aktuellen Passwort entsprechen.",
+    "passwordMismatch": "Passwörter stimmen nicht überein.",
+    "samePassword": "Das neue Passwort darf nicht mit dem aktuellen Passwort übereinstimmen.",
     "weakPassword": "Das neue Passwort erfüllt nicht die Mindestanforderungen.",
     "missingFields": "Bitte füllen Sie alle Felder aus.",
-    "emailChangeRequested": "Wir haben einen Bestätigungslink an die neue E-Mail-Adresse gesendet.",
-    "emailChangeError": "Die Anforderung zur Änderung der E-Mail-Adresse ist fehlgeschlagen.",
-    "emailInUse": "Diese E-Mail-Adresse wird bereits verwendet.",
-    "sameEmail": "Die neue E-Mail-Adresse darf nicht mit der aktuellen Adresse identisch sein.",
+    "emailChangeRequested": "Wir haben einen Bestätigungslink an Ihre neue E-Mail gesendet.",
+    "emailChangeError": "E-Mail-Änderung konnte nicht angefordert werden.",
+    "emailInUse": "Diese E-Mail wird bereits verwendet.",
+    "sameEmail": "Die neue E-Mail darf nicht mit der aktuellen E-Mail übereinstimmen.",
     "invalidCurrentPassword": "Das aktuelle Passwort ist falsch.",
-    "currentEmailMismatch": "Die aktuelle E-Mail-Adresse stimmt nicht mit Ihrem Konto überein."
+    "currentEmailMismatch": "Die aktuelle E-Mail stimmt nicht mit Ihrem Konto überein."
   }
 }

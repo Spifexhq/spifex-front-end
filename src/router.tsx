@@ -1,3 +1,4 @@
+// router.tsx
 import { lazy } from "react";
 import { RouteObject } from "react-router";
 import { Navigate } from 'react-router-dom';
@@ -16,6 +17,7 @@ const SignIn = lazy(() => import("@/pages/Auth/SignIn"));
 const EmailVerification = lazy(() => import("@/pages/Auth/EmailVerification"));
 const ForgotPassword = lazy(() => import("@/pages/Auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
+const PasswordVerification = lazy(() => import("@/pages/Auth/PasswordVerification"));
 
 // Main Pages
 const HomeDashboard = lazy(() => import("@/pages/HomeDashboard"));
@@ -86,8 +88,12 @@ const routes: RouteObject[] = [
                 element: <ForgotPassword />
             },
             {
-                path: 'reset-password/:uidb64/:token/',
-                element: <ResetPassword />
+                path: "reset-password/:uidb64/:token/",
+                element: <ResetPassword />,
+            },
+            {
+                path: "verify-pending-password/:uidb64/:token/",
+                element: <PasswordVerification />,
             },
             {
                 path: '',

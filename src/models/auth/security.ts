@@ -2,37 +2,46 @@
 
 /* ------------------------------ Change Password ------------------------------ */
 
-export interface ChangePasswordRequest {
+export interface PasswordChangeRequest {
   current_password: string;
   new_password: string;
 }
 
-export type ChangePasswordResponse = unknown;
+export interface PasswordChangeResponse {
+  status: "pending";
+  message: string;
+}
 
 /* -------------------------------- Change Email -------------------------------- */
 
-export interface ChangeEmailRequest {
+export interface EmailChangeRequest {
   current_email: string;
   new_email: string;
   current_password: string;
 }
 
-export interface ChangeEmailResponse {
+export interface EmailChangeResponse {
   status: string;
   message: string;
 }
 
 /* ----------------------------- Password Reset Flow ---------------------------- */
 
-export interface RequestPasswordResetRequest {
+export interface PasswordResetRequest {
   email: string;
 }
 
-export type RequestPasswordResetResponse = void;
+export type PasswordResetResponse = void;
 
-export interface ConfirmPasswordResetRequest {
+export interface VerifyPasswordResetRequest {
   password: string;
   password_confirm: string;
 }
 
-export type ConfirmPasswordResetResponse = void;
+export type VerifyPasswordResetResponse = void;
+
+/* ------------------------ Password Change Confirmation ------------------------ */
+
+export interface VerifyPasswordChangeResponse {
+  status: "confirmed";
+}

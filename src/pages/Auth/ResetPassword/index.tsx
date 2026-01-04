@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  FormEvent,
-  ChangeEvent,
-} from "react";
+import React, { useEffect, useMemo, useState, FormEvent, ChangeEvent, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -20,7 +15,7 @@ type Snack =
     }
   | null;
 
-const ResetPassword = () => {
+const ResetPassword: React.FC = () => {
   const { t } = useTranslation("resetPassword");
   const navigate = useNavigate();
   const { uidb64 = "", token = "" } = useParams();
@@ -34,60 +29,73 @@ const ResetPassword = () => {
     document.title = t("pageTitle");
   }, [t]);
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // --- Real-time validation / UX gating (same idea as SecurityAndPrivacy) ---
+  const pwValidation = useMemo(() => {
+    if (!p1) return { isValid: false, message: "" as React.ReactNode };
+    return validatePassword(p1);
+  }, [p1]);
 
-    if (!p1 || !p2) {
-      setSnack({
-        message: t("fillBothPasswords"),
-        severity: "warning",
-      });
-      return;
-    }
-    if (p1 !== p2) {
-      setSnack({
-        message: t("passwordsDontMatch"),
-        severity: "warning",
-      });
-      return;
-    }
+  const pwMismatch = useMemo(() => {
+    if (!p2) return false;
+    return p1 !== p2;
+  }, [p1, p2]);
 
-    const v = validatePassword(p1);
-    if (!v.isValid) {
-      setSnack({ message: v.message, severity: "warning" });
-      return;
-    }
+  const canSubmit = useMemo(() => {
+    if (!p1 || !p2) return false;
+    if (pwMismatch) return false;
+    if (!pwValidation.isValid) return false;
+    if (!uidb64 || !token) return false;
+    return true;
+  }, [p1, p2, pwMismatch, pwValidation.isValid, uidb64, token]);
 
-    setIsLoading(true);
-    try {
-      await api.confirmPasswordReset(uidb64, token, p1);
-      setSnack({
-        message: t("successMessage"),
-        severity: "success",
-      });
-      navigate("/signin");
-    } catch (err) {
-      setSnack({
-        message:
-          err instanceof Error
-            ? err.message
-            : t("invalidOrExpiredLink"),
-        severity: "error",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const onSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      // Basic token sanity
+      if (!uidb64 || !token) {
+        setSnack({ message: t("invalidOrExpiredLink"), severity: "error" });
+        return;
+      }
+
+      if (!p1 || !p2) {
+        setSnack({ message: t("fillBothPasswords"), severity: "warning" });
+        return;
+      }
+
+      if (p1 !== p2) {
+        setSnack({ message: t("passwordsDontMatch"), severity: "warning" });
+        return;
+      }
+
+      const v = validatePassword(p1);
+      if (!v.isValid) {
+        setSnack({ message: v.message || t("weakPassword"), severity: "warning" });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        await api.verifyPasswordReset(uidb64, token, p1);
+        setSnack({ message: t("successMessage"), severity: "success" });
+        navigate("/signin");
+      } catch (err: unknown) {
+        setSnack({
+          message: err instanceof Error ? err.message : t("invalidOrExpiredLink"),
+          severity: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [p1, p2, uidb64, token, t, navigate]
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
       <div className="w-full max-w-md bg-white shadow-sm rounded-2xl p-6 sm:p-8">
-        <h1 className="text-2xl font-semibold text-slate-900 mb-2">
-          {t("heading")}
-        </h1>
-        <p className="text-sm text-slate-500 mb-6">
-          {t("description")}
-        </p>
+        <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("heading")}</h1>
+        <p className="text-sm text-slate-500 mb-6">{t("description")}</p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
@@ -95,29 +103,44 @@ const ResetPassword = () => {
             label={t("newPasswordLabel")}
             type="password"
             value={p1}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setP1(e.target.value)
-            }
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setP1(e.target.value)}
             showTogglePassword
             disabled={isLoading}
             autoComplete="new-password"
           />
+
+          {p1 && !pwValidation.isValid && (
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              {pwValidation.message ? (
+                <div className="text-[12px] text-slate-800">{pwValidation.message}</div>
+              ) : (
+                <div className="text-[12px] text-slate-800">{t("weakPassword")}</div>
+              )}
+            </div>
+          )}
+
           <Input
             label={t("confirmPasswordLabel")}
             type="password"
             value={p2}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setP2(e.target.value)
-            }
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setP2(e.target.value)}
             showTogglePassword
             disabled={isLoading}
             autoComplete="new-password"
+            onPaste={(e) => e.preventDefault()}
+            onDrop={(e) => e.preventDefault()}
+            onDragOver={(e) => e.preventDefault()}
           />
+
+          {pwMismatch && (
+            <p className="text-[12px] text-red-600">{t("passwordsDontMatch")}</p>
+          )}
+
           <Button
             type="submit"
             variant="primary"
             isLoading={isLoading}
-            disabled={isLoading}
+            disabled={isLoading || !canSubmit}
             className="w-full h-11 rounded-xl text-sm font-medium"
           >
             {t("saveNewPasswordButton")}

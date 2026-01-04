@@ -1,9 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/OrganizationSettings/index.tsx
- * - Same modal + partial-update pattern as PersonalSettings
- * - Uses PUT (partial payload when editingField !== null)
- * - Country: ISO-3166 alpha-2 uppercase
- * - Timezone select only inside modal
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";

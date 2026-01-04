@@ -1,49 +1,50 @@
 {
-  "title": "Segurança e privacidade",
+  "title": "Segurança e Privacidade",
   "header": {
-    "settings": "Definições",
+    "settings": "Configurações",
     "title": "Segurança e privacidade"
   },
   "section": {
     "access": "Acesso e credenciais"
   },
   "field": {
-    "password": "Palavra-passe",
+    "password": "Senha",
     "lastChange": "Última alteração:",
     "never": "nunca",
-    "current": "Palavra-passe atual",
-    "new": "Nova palavra-passe",
-    "confirm": "Confirmar nova palavra-passe",
-    "primaryEmail": "Email principal",
-    "currentEmail": "Email atual",
-    "newEmail": "Novo email",
-    "currentPassword": "Palavra-passe atual"
+    "current": "Senha atual",
+    "new": "Nova senha",
+    "confirm": "Confirmar nova senha",
+    "primaryEmail": "E-mail principal",
+    "currentEmail": "E-mail atual",
+    "newEmail": "Novo e-mail",
+    "currentPassword": "Senha atual"
   },
   "btn": {
-    "changePassword": "Alterar palavra-passe",
-    "changeEmail": "Alterar email",
-    "save": "Guardar",
-    "saveEmail": "Guardar email",
+    "changePassword": "Alterar senha",
+    "changeEmail": "Alterar e-mail",
+    "save": "Salvar",
+    "saveEmail": "Salvar e-mail",
     "cancel": "Cancelar"
   },
   "modal": {
-    "title": "Alterar palavra-passe",
-    "emailTitle": "Alterar email",
+    "title": "Alterar senha",
+    "emailTitle": "Alterar e-mail",
     "close": "Fechar"
   },
   "toast": {
-    "success": "Palavra-passe alterada com sucesso.",
-    "changeError": "Não foi possível alterar a palavra-passe.",
+    "success": "Senha alterada com sucesso.",
+    "passwordChangeRequested": "Enviamos um link de confirmação para o seu e-mail.",
+    "changeError": "Falha ao alterar a senha.",
     "unexpected": "Erro inesperado.",
-    "passwordMismatch": "As palavras-passe não coincidem.",
-    "samePassword": "A nova palavra-passe não pode ser igual à palavra-passe atual.",
-    "weakPassword": "A nova palavra-passe não cumpre os requisitos mínimos.",
+    "passwordMismatch": "As senhas não coincidem.",
+    "samePassword": "A nova senha não pode ser igual à senha atual.",
+    "weakPassword": "A nova senha não atende aos requisitos mínimos.",
     "missingFields": "Preencha todos os campos.",
-    "emailChangeRequested": "Enviámos um link de confirmação para o novo email.",
-    "emailChangeError": "Não foi possível solicitar a alteração de email.",
-    "emailInUse": "Este email já está a ser utilizado.",
-    "sameEmail": "O novo email não pode ser igual ao email atual.",
-    "invalidCurrentPassword": "A palavra-passe atual está incorreta.",
-    "currentEmailMismatch": "O email atual não corresponde à sua conta."
+    "emailChangeRequested": "Enviamos um link de confirmação para o seu novo e-mail.",
+    "emailChangeError": "Falha ao solicitar a alteração de e-mail.",
+    "emailInUse": "Este e-mail já está em uso.",
+    "sameEmail": "O novo e-mail não pode ser igual ao e-mail atual.",
+    "invalidCurrentPassword": "A senha atual está incorreta.",
+    "currentEmailMismatch": "O e-mail atual não corresponde à sua conta."
   }
 }

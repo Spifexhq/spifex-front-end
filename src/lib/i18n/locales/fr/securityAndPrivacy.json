@@ -9,41 +9,42 @@
   },
   "field": {
     "password": "Mot de passe",
-    "lastChange": "Dernier changement :",
+    "lastChange": "Dernière modification :",
     "never": "jamais",
     "current": "Mot de passe actuel",
     "new": "Nouveau mot de passe",
     "confirm": "Confirmer le nouveau mot de passe",
-    "primaryEmail": "Adresse e-mail principale",
-    "currentEmail": "Adresse e-mail actuelle",
-    "newEmail": "Nouvelle adresse e-mail",
+    "primaryEmail": "E-mail principal",
+    "currentEmail": "E-mail actuel",
+    "newEmail": "Nouvel e-mail",
     "currentPassword": "Mot de passe actuel"
   },
   "btn": {
     "changePassword": "Changer le mot de passe",
-    "changeEmail": "Modifier l’adresse e-mail",
+    "changeEmail": "Changer l’e-mail",
     "save": "Enregistrer",
     "saveEmail": "Enregistrer l’e-mail",
     "cancel": "Annuler"
   },
   "modal": {
     "title": "Changer le mot de passe",
-    "emailTitle": "Modifier l’adresse e-mail",
+    "emailTitle": "Changer l’e-mail",
     "close": "Fermer"
   },
   "toast": {
     "success": "Mot de passe modifié avec succès.",
+    "passwordChangeRequested": "Nous avons envoyé un lien de confirmation à votre adresse e-mail.",
     "changeError": "Impossible de modifier le mot de passe.",
     "unexpected": "Erreur inattendue.",
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
     "samePassword": "Le nouveau mot de passe ne peut pas être identique à l’actuel.",
     "weakPassword": "Le nouveau mot de passe ne respecte pas les exigences minimales.",
     "missingFields": "Veuillez remplir tous les champs.",
-    "emailChangeRequested": "Nous avons envoyé un lien de confirmation à la nouvelle adresse e-mail.",
-    "emailChangeError": "Échec de la demande de changement d’e-mail.",
-    "emailInUse": "Cette adresse e-mail est déjà utilisée.",
-    "sameEmail": "La nouvelle adresse e-mail ne peut pas être identique à l’adresse actuelle.",
+    "emailChangeRequested": "Nous avons envoyé un lien de confirmation à votre nouvel e-mail.",
+    "emailChangeError": "Impossible de demander le changement d’e-mail.",
+    "emailInUse": "Cet e-mail est déjà utilisé.",
+    "sameEmail": "Le nouvel e-mail ne peut pas être identique à l’e-mail actuel.",
     "invalidCurrentPassword": "Le mot de passe actuel est incorrect.",
-    "currentEmailMismatch": "L’adresse e-mail actuelle ne correspond pas à votre compte."
+    "currentEmailMismatch": "L’e-mail actuel ne correspond pas à votre compte."
   }
 }

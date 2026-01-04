@@ -33,6 +33,7 @@
   },
   "toast": {
     "success": "Password changed successfully.",
+    "passwordChangeRequested": "We sent a confirmation link to your email.",
     "changeError": "Failed to change password.",
     "unexpected": "Unexpected error.",
     "passwordMismatch": "Passwords do not match.",

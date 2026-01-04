@@ -1,15 +1,11 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/SecurityAndPrivacy.tsx
- * Standardized flags + UX (matches Member/Entity/Department/Inventory)
- * - Flags: isInitialLoading, isSubmitting
- * - Initial: TopProgress + PageSkeleton
- * - Background: TopProgress while submitting (change password / email)
- * - i18n: namespace "securityAndPrivacy"
  * -------------------------------------------------------------------------- */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR, enUS, fr, de } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
@@ -21,7 +17,6 @@ import Snackbar from "@/shared/ui/Snackbar";
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
 import { validatePassword } from "@/lib";
-import { useTranslation } from "react-i18next";
 import type { ApiErrorBody } from "@/models/Api";
 import type { User } from "@/models/auth/user";
 
@@ -154,6 +149,37 @@ const SecurityAndPrivacy: React.FC = () => {
     current_password: "",
   });
 
+  /* ----------------------- Password validation (UI) ------------------------ */
+  const pwValidation = useMemo(() => {
+    if (!pwData.new_password) return { isValid: false, message: "" as React.ReactNode };
+    return validatePassword(pwData.new_password);
+  }, [pwData.new_password]);
+
+  const pwMismatch = useMemo(() => {
+    if (!pwData.confirm) return false;
+    return pwData.new_password !== pwData.confirm;
+  }, [pwData.new_password, pwData.confirm]);
+
+  const pwSameAsCurrent = useMemo(() => {
+    if (!pwData.current_password || !pwData.new_password) return false;
+    return pwData.current_password === pwData.new_password;
+  }, [pwData.current_password, pwData.new_password]);
+
+  const canSubmitPassword = useMemo(() => {
+    if (!pwData.current_password || !pwData.new_password || !pwData.confirm) return false;
+    if (pwMismatch) return false;
+    if (pwSameAsCurrent) return false;
+    if (!pwValidation.isValid) return false;
+    return true;
+  }, [
+    pwData.current_password,
+    pwData.new_password,
+    pwData.confirm,
+    pwMismatch,
+    pwSameAsCurrent,
+    pwValidation.isValid,
+  ]);
+
   /* ------------------------------ Bootstrap -------------------------------- */
   useEffect(() => {
     let mounted = true;
@@ -206,6 +232,15 @@ const SecurityAndPrivacy: React.FC = () => {
     setEmailData((p) => ({ ...p, [name]: value }));
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const resp = await api.getUser();
+      setUser(resp.data.user as User);
+    } catch {
+      /* silent */
+    }
+  }, []);
+
   const handlePasswordSubmit = useCallback(async () => {
     const { current_password, new_password, confirm } = pwData;
 
@@ -229,28 +264,22 @@ const SecurityAndPrivacy: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await api.changePassword({ current_password, new_password });
+      const res = await api.passwordChange({ current_password, new_password });
       closeModal();
-      setSnack({ message: t("toast.success"), severity: "success" });
-
-      // refresh last_password_change
-      try {
-        const resp = await api.getUser();
-        setUser(resp.data.user as User);
-      } catch {
-        /* silent */
-      }
+      setSnack({
+        message:
+          (res as { data?: { message?: string } })?.data?.message ||
+          t("toast.passwordChangeRequested"),
+        severity: "success",
+      });
     } catch (err: unknown) {
       if (isApiErrorBody(err)) {
         const message =
-          err.code === "invalid_credentials"
+          err.code === "invalid_password"
             ? t("toast.invalidCurrentPassword")
             : getApiErrorMessage(err) ?? t("toast.changeError");
 
-        setSnack({
-          message,
-          severity: "error",
-        });
+        setSnack({ message, severity: "error" });
       } else if (err instanceof Error) {
         setSnack({ message: err.message, severity: "error" });
       } else {
@@ -269,7 +298,6 @@ const SecurityAndPrivacy: React.FC = () => {
       return;
     }
 
-    // Local check: new e-mail cannot be the same as current
     if (current_email.trim().toLowerCase() === new_email.trim().toLowerCase()) {
       setSnack({ message: t("toast.sameEmail"), severity: "error" });
       return;
@@ -277,56 +305,32 @@ const SecurityAndPrivacy: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await api.changeEmail({
-        current_email,
-        new_email,
-        current_password,
-      });
+      await api.emailChange({ current_email, new_email, current_password });
       closeModal();
-      setSnack({
-        message: t("toast.emailChangeRequested"),
-        severity: "success",
-      });
-
-      // Optional: refresh user (email will only change after verification)
-      try {
-        const resp = await api.getUser();
-        setUser(resp.data.user as User);
-      } catch {
-        /* silent */
-      }
+      setSnack({ message: t("toast.emailChangeRequested"), severity: "success" });
+      await refreshUser();
     } catch (err: unknown) {
       if (isApiErrorBody(err)) {
         let message: string;
 
         switch (err.code) {
-          case "email_unavailable": {
-            // Prefer backend text ("This email is already in use.")
-            // but fall back to i18n if needed.
+          case "email_unavailable":
             message = getApiErrorMessage(err) ?? t("toast.emailInUse");
             break;
-          }
-          case "same_email": {
+          case "same_email":
             message = getApiErrorMessage(err) ?? t("toast.sameEmail");
             break;
-          }
-          case "invalid_credentials": {
+          case "invalid_credentials":
             message = t("toast.invalidCurrentPassword");
             break;
-          }
-          case "current_email_mismatch": {
+          case "current_email_mismatch":
             message = t("toast.currentEmailMismatch");
             break;
-          }
-          default: {
+          default:
             message = getApiErrorMessage(err) ?? t("toast.emailChangeError");
-          }
         }
 
-        setSnack({
-          message,
-          severity: "error",
-        });
+        setSnack({ message, severity: "error" });
       } else if (err instanceof Error) {
         setSnack({ message: err.message, severity: "error" });
       } else {
@@ -335,7 +339,7 @@ const SecurityAndPrivacy: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [emailData, t, closeModal]);
+  }, [emailData, t, closeModal, refreshUser]);
 
   /* ------------------------------- UX hooks -------------------------------- */
   useEffect(() => {
@@ -362,6 +366,10 @@ const SecurityAndPrivacy: React.FC = () => {
   }
 
   /* ---------------------------------- UI ---------------------------------- */
+  const lastChangeLabel = user?.last_password_change
+    ? format(new Date(user.last_password_change), datePattern, { locale: dateLocale })
+    : t("field.never");
+
   return (
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
@@ -395,41 +403,26 @@ const SecurityAndPrivacy: React.FC = () => {
               </div>
 
               <div className="flex flex-col">
-                {/* Email change row */}
                 <Row
                   label={t("field.primaryEmail")}
                   value={user?.email ?? authUser?.email ?? ""}
                   action={
-                    <Button
-                      variant="outline"
-                      onClick={openEmailModal}
-                      disabled={isSubmitting}
-                    >
+                    <Button variant="outline" onClick={openEmailModal} disabled={isSubmitting}>
                       {t("btn.changeEmail")}
                     </Button>
                   }
                   disabled={isSubmitting}
                 />
 
-                {/* Password change row */}
                 <Row
                   label={t("field.password")}
                   value={
                     <>
-                      {t("field.lastChange")}{" "}
-                      {user?.last_password_change
-                        ? format(new Date(user.last_password_change), datePattern, {
-                            locale: dateLocale,
-                          })
-                        : t("field.never")}
+                      {t("field.lastChange")} {lastChangeLabel}
                     </>
                   }
                   action={
-                    <Button
-                      variant="outline"
-                      onClick={openPasswordModal}
-                      disabled={isSubmitting}
-                    >
+                    <Button variant="outline" onClick={openPasswordModal} disabled={isSubmitting}>
                       {t("btn.changePassword")}
                     </Button>
                   }
@@ -462,14 +455,12 @@ const SecurityAndPrivacy: React.FC = () => {
               </header>
 
               <form
-                className={`space-y-3 ${
-                  isSubmitting ? "opacity-70 pointer-events-none" : ""
-                }`}
+                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (modalMode === "password") {
                     void handlePasswordSubmit();
-                  } else if (modalMode === "email") {
+                  } else {
                     void handleEmailSubmit();
                   }
                 }}
@@ -487,6 +478,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       autoComplete="current-password"
                       required
                     />
+
                     <Input
                       kind="text"
                       label={t("field.new")}
@@ -498,6 +490,21 @@ const SecurityAndPrivacy: React.FC = () => {
                       autoComplete="new-password"
                       required
                     />
+
+                    {pwData.new_password && !pwValidation.isValid && (
+                      <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                        {pwValidation.message ? (
+                          <div className="text-[12px] text-gray-800">{pwValidation.message}</div>
+                        ) : (
+                          <div className="text-[12px] text-gray-800">{t("toast.weakPassword")}</div>
+                        )}
+                      </div>
+                    )}
+
+                    {pwSameAsCurrent && (
+                      <p className="text-[12px] text-red-600">{t("toast.samePassword")}</p>
+                    )}
+
                     <Input
                       kind="text"
                       label={t("field.confirm")}
@@ -508,7 +515,14 @@ const SecurityAndPrivacy: React.FC = () => {
                       showTogglePassword
                       autoComplete="new-password"
                       required
+                      onPaste={(e) => e.preventDefault()}
+                      onDrop={(e) => e.preventDefault()}
+                      onDragOver={(e) => e.preventDefault()}
                     />
+
+                    {pwMismatch && (
+                      <p className="text-[12px] text-red-600">{t("toast.passwordMismatch")}</p>
+                    )}
                   </>
                 ) : (
                   <>
@@ -522,6 +536,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       autoComplete="email"
                       required
                     />
+
                     <Input
                       kind="text"
                       label={t("field.newEmail")}
@@ -532,6 +547,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       autoComplete="email"
                       required
                     />
+
                     <Input
                       kind="text"
                       label={t("field.currentPassword")}
@@ -547,15 +563,16 @@ const SecurityAndPrivacy: React.FC = () => {
                 )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button
-                    variant="cancel"
-                    type="button"
-                    onClick={closeModal}
-                    disabled={isSubmitting}
-                  >
+                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
                     {t("btn.cancel")}
                   </Button>
-                  <Button type="submit" disabled={isSubmitting}>
+
+                  <Button
+                    type="submit"
+                    disabled={
+                      isSubmitting || (modalMode === "password" ? !canSubmitPassword : false)
+                    }
+                  >
                     {modalMode === "password" ? t("btn.save") : t("btn.saveEmail")}
                   </Button>
                 </div>
