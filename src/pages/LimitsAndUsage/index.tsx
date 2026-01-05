@@ -11,9 +11,8 @@ import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { api } from "@/api/requests";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { formatDateTimeFromISO } from "@/lib/date/formatDate";
-
-// Reuse the same permission icons from GroupSettings
 import { PermissionIcon } from "@/pages/GroupSettings/permissionIcons";
+import Input from "@/shared/ui/Input";
 
 /* --------------------------------- Types ---------------------------------- */
 type LimitsPeriod = "daily" | "weekly" | "monthly" | "lifetime";
@@ -229,7 +228,8 @@ const LimitsAndUsage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <input
+            <Input
+              kind="text"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("searchPlaceholder")}

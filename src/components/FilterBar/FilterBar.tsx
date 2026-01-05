@@ -42,32 +42,55 @@ function isPositiveMajor(value?: string): boolean {
   return n !== null && n > 0;
 }
 
+/**
+ * Date utilities (rolling ranges forward from today):
+ * - Anchor at local noon to avoid DST boundary drift.
+ * - Rolling: week = +7 days, month = +1 month, quarter = +3 months, year = +12 months.
+ */
+function dateAtNoonLocal(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
+}
+
 function toISODateLocal(d: Date): string {
-  const yyyy = String(d.getFullYear());
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
+  const x = dateAtNoonLocal(d);
+  const yyyy = String(x.getFullYear());
+  const mm = String(x.getMonth() + 1).padStart(2, "0");
+  const dd = String(x.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function startOfWeekISO(d = new Date()): string {
-  const day = d.getDay();
-  const diff = (day + 6) % 7;
-  const start = new Date(d);
-  start.setDate(d.getDate() - diff);
-  return toISODateLocal(start);
+function addDaysLocal(base: Date, days: number): Date {
+  const d = dateAtNoonLocal(base);
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
-function startOfMonthISO(d = new Date()): string {
-  return toISODateLocal(new Date(d.getFullYear(), d.getMonth(), 1));
+/**
+ * Month add that clamps to last valid day of target month.
+ * Example: Jan 31 + 1 month => Feb 28/29.
+ */
+function addMonthsLocal(base: Date, months: number): Date {
+  const b = dateAtNoonLocal(base);
+  const desiredDay = b.getDate();
+
+  // Anchor on day=1 in target month to safely compute year/month.
+  const targetFirst = new Date(b.getFullYear(), b.getMonth() + months, 1, 12, 0, 0, 0);
+  const targetYear = targetFirst.getFullYear();
+  const targetMonth = targetFirst.getMonth();
+
+  // Try to set same day in target month.
+  let cand = new Date(targetYear, targetMonth, desiredDay, 12, 0, 0, 0);
+
+  // If it overflowed into next month, clamp to last day of target month.
+  if (cand.getMonth() !== targetMonth) {
+    cand = new Date(targetYear, targetMonth + 1, 0, 12, 0, 0, 0);
+  }
+
+  return cand;
 }
 
-function startOfQuarterISO(d = new Date()): string {
-  const q = Math.floor(d.getMonth() / 3) * 3;
-  return toISODateLocal(new Date(d.getFullYear(), q, 1));
-}
-
-function startOfYearISO(d = new Date()): string {
-  return toISODateLocal(new Date(d.getFullYear(), 0, 1));
+function addYearsLocal(base: Date, years: number): Date {
+  return addMonthsLocal(base, years * 12);
 }
 
 function amountChipLabel(minMajor?: string, maxMajor?: string, t?: (k: string) => string): string {
@@ -96,11 +119,7 @@ function useLatestRef<T>(value: T) {
   return ref;
 }
 
-function useOnClickOutside(
-  ref: React.RefObject<HTMLElement>,
-  onOutside: () => void,
-  enabled = true
-) {
+function useOnClickOutside(ref: React.RefObject<HTMLElement>, onOutside: () => void, enabled = true) {
   const handlerRef = useLatestRef(onOutside);
 
   useEffect(() => {
@@ -164,10 +183,7 @@ const DefaultStarIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-function buildInitialLocalFilters(
-  initial: EntryFilters | undefined,
-  contextSettlement: boolean
-): LocalFilters {
+function buildInitialLocalFilters(initial: EntryFilters | undefined, contextSettlement: boolean): LocalFilters {
   return {
     start_date: initial?.start_date ?? "",
     end_date: initial?.end_date ?? "",
@@ -311,12 +327,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const bankOptions = useBankOptions(bankActive);
 
   const allLedgerAccounts = useLedgerAccounts();
-  const {
-    views: savedViews,
-    setViews: setSavedViews,
-    loaded: viewsLoaded,
-    refresh: refreshViews,
-  } = useSavedViews();
+  const { views: savedViews, setViews: setSavedViews, loaded: viewsLoaded, refresh: refreshViews } = useSavedViews();
 
   const scopedViews = useMemo(
     () => savedViews.filter((v) => v.settlement_status === contextSettlement),
@@ -457,9 +468,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     const wanted = localFilters.tx_type;
     if (!wanted) return allLedgerAccounts;
 
-    const filtered = allLedgerAccounts.filter(
-      (a) => String(a.default_tx || "").toLowerCase() === wanted
-    );
+    const filtered = allLedgerAccounts.filter((a) => String(a.default_tx || "").toLowerCase() === wanted);
 
     return [...selected, ...filtered.filter((a) => !selectedIds.has(String(a.id)))];
   }, [allLedgerAccounts, localFilters.ledger_account_id, localFilters.tx_type]);
@@ -668,16 +677,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     } finally {
       setSaveBusy(false);
     }
-  }, [
-    localFilters,
-    overwriteView,
-    refreshViews,
-    resetSaveModalState,
-    saveDefault,
-    saveMode,
-    saveName,
-    savedViews,
-  ]);
+  }, [localFilters, overwriteView, refreshViews, resetSaveModalState, saveDefault, saveMode, saveName, savedViews]);
 
   /* Render */
   return (
@@ -710,9 +710,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
           {!panelOpen && (
             <div className="ml-auto">
               <button
-                className={`text-xs font-semibold text-red-600 ${
-                  hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"
-                }`}
+                className={`text-xs font-semibold text-red-600 ${hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"}`}
                 onClick={() => hasActiveFilters && clearAll()}
                 type="button"
               >
@@ -734,9 +732,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   icon="calendar"
                   label={`${t("filterBar:chips.date")}  ${
                     localFilters.start_date ? formatDateFromISO(localFilters.start_date) : "yyyy-mm-dd"
-                  } - ${
-                    localFilters.end_date ? formatDateFromISO(localFilters.end_date) : "yyyy-mm-dd"
-                  }`}
+                  } - ${localFilters.end_date ? formatDateFromISO(localFilters.end_date) : "yyyy-mm-dd"}`}
                   onClick={() => setOpenEditor((curr) => (curr === "date" ? null : "date"))}
                   onRemove={() => removeChip("date")}
                 />
@@ -760,9 +756,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   label={`${t("filterBar:chips.accounts")}  ${selectedAccounts
                     .slice(0, 2)
                     .map((a) => a.account)
-                    .join(", ")}${
-                    selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""
-                  }`}
+                    .join(", ")}${selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""}`}
                   onClick={() => setOpenEditor((curr) => (curr === "accounts" ? null : "accounts"))}
                   onRemove={() => removeChip("accounts")}
                 />
@@ -772,9 +766,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <Chip
                   icon="note"
                   label={`${t("filterBar:chips.type")} ${
-                    localFilters.tx_type === "credit"
-                      ? t("filterBar:chips.credit")
-                      : t("filterBar:chips.debit")
+                    localFilters.tx_type === "credit" ? t("filterBar:chips.credit") : t("filterBar:chips.debit")
                   }`}
                   onClick={() => setOpenEditor((curr) => (curr === "tx_type" ? null : "tx_type"))}
                   onRemove={() => removeChip("tx_type")}
@@ -863,9 +855,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   variant="outline"
                   size="sm"
                   aria-label={t("filterBar:buttons.views")}
-                  className={`font-semibold bg-white hover:bg-gray-50 ${
-                    viewsMenuOpen ? "!bg-white !border-gray-400" : ""
-                  }`}
+                  className={`font-semibold bg-white hover:bg-gray-50 ${viewsMenuOpen ? "!bg-white !border-gray-400" : ""}`}
                   onClick={() => setViewsMenuOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={viewsMenuOpen}
@@ -886,9 +876,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       label: (
                         <span className="flex items-center justify-between w-full">
                           <span className="truncate">{v.name}</span>
-                          {v.is_default && (
-                            <DefaultStarIcon className="w-3 h-3 text-amber-500 shrink-0 ml-2" />
-                          )}
+                          {v.is_default && <DefaultStarIcon className="w-3 h-3 text-amber-500 shrink-0 ml-2" />}
                         </span>
                       ),
                       onAction: () => {
@@ -924,9 +912,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`w-full sm:w-auto font-semibold bg-white hover:bg-gray-50 ${
-                    addFilterMenuOpen ? "!bg-white !border-gray-400" : ""
-                  }`}
+                  className={`w-full sm:w-auto font-semibold bg-white hover:bg-gray-50 ${addFilterMenuOpen ? "!bg-white !border-gray-400" : ""}`}
                   onClick={() => setAddFilterMenuOpen((v) => !v)}
                 >
                   {t("filterBar:menu.addFilter")}
@@ -954,9 +940,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
             <div className="flex">
               <button
-                className={`text-xs font-semibold text-red-600 ${
-                  hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"
-                }`}
+                className={`text-xs font-semibold text-red-600 ${hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"}`}
                 onClick={() => hasActiveFilters && clearAll()}
                 type="button"
               >
@@ -995,15 +979,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 </div>
 
                 <div className="mt-2">
-                  <div className="text-[11px] text-gray-500 mb-1">
-                    {t("filterBar:editors.date.shortcuts")}
-                  </div>
+                  <div className="text-[11px] text-gray-500 mb-1">{t("filterBar:editors.date.shortcuts")}</div>
 
                   <div className="flex items-center gap-2 flex-wrap">
                     <QuickButton
                       onClick={() => {
-                        const today = toISODateLocal(new Date());
-                        setLocalFilters((prev) => ({ ...prev, start_date: today, end_date: today }));
+                        const now = new Date();
+                        const start = toISODateLocal(now);
+                        setLocalFilters((prev) => ({ ...prev, start_date: start, end_date: start }));
                       }}
                     >
                       {t("filterBar:editors.date.today")}
@@ -1011,12 +994,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                     <QuickButton
                       onClick={() => {
-                        const today = toISODateLocal(new Date());
-                        setLocalFilters((prev) => ({
-                          ...prev,
-                          start_date: startOfWeekISO(),
-                          end_date: today,
-                        }));
+                        const now = new Date();
+                        const start = toISODateLocal(now);
+                        const end = toISODateLocal(addDaysLocal(now, 7));
+                        setLocalFilters((prev) => ({ ...prev, start_date: start, end_date: end }));
                       }}
                     >
                       {t("filterBar:editors.date.thisWeek")}
@@ -1024,12 +1005,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                     <QuickButton
                       onClick={() => {
-                        const today = toISODateLocal(new Date());
-                        setLocalFilters((prev) => ({
-                          ...prev,
-                          start_date: startOfMonthISO(),
-                          end_date: today,
-                        }));
+                        const now = new Date();
+                        const start = toISODateLocal(now);
+                        const end = toISODateLocal(addMonthsLocal(now, 1));
+                        setLocalFilters((prev) => ({ ...prev, start_date: start, end_date: end }));
                       }}
                     >
                       {t("filterBar:editors.date.thisMonth")}
@@ -1037,12 +1016,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                     <QuickButton
                       onClick={() => {
-                        const today = toISODateLocal(new Date());
-                        setLocalFilters((prev) => ({
-                          ...prev,
-                          start_date: startOfQuarterISO(),
-                          end_date: today,
-                        }));
+                        const now = new Date();
+                        const start = toISODateLocal(now);
+                        const end = toISODateLocal(addMonthsLocal(now, 3));
+                        setLocalFilters((prev) => ({ ...prev, start_date: start, end_date: end }));
                       }}
                     >
                       {t("filterBar:editors.date.thisQuarter")}
@@ -1050,12 +1027,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                     <QuickButton
                       onClick={() => {
-                        const today = toISODateLocal(new Date());
-                        setLocalFilters((prev) => ({
-                          ...prev,
-                          start_date: startOfYearISO(),
-                          end_date: today,
-                        }));
+                        const now = new Date();
+                        const start = toISODateLocal(now);
+                        const end = toISODateLocal(addYearsLocal(now, 1));
+                        setLocalFilters((prev) => ({ ...prev, start_date: start, end_date: end }));
                       }}
                     >
                       {t("filterBar:editors.date.thisYear")}
@@ -1064,20 +1039,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 </div>
 
                 <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={() => removeChip("date")}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("date")}>
                     {t("filterBar:buttons.remove")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={closeEditorsAndApply}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={closeEditorsAndApply}>
                     {t("filterBar:buttons.apply")}
                   </Button>
                 </div>
@@ -1095,9 +1060,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   label={t("filterBar:editors.banks.label")}
                   items={bankOptions}
                   selected={selectedBanks}
-                  onChange={(list) =>
-                    setLocalFilters((prev) => ({ ...prev, bank_id: list.map((x) => String(x.id)) }))
-                  }
+                  onChange={(list) => setLocalFilters((prev) => ({ ...prev, bank_id: list.map((x) => String(x.id)) }))}
                   getItemKey={(item) => item.id}
                   getItemLabel={(item) => item.institution}
                   buttonLabel={t("filterBar:editors.banks.button")}
@@ -1105,20 +1068,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 />
 
                 <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-semibold bg-white hover:bg-gray-50"
-                    onClick={() => removeChip("banks")}
-                  >
+                  <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("banks")}>
                     {t("filterBar:buttons.remove")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-semibold bg-white hover:bg-gray-50"
-                    onClick={closeEditorsAndApply}
-                  >
+                  <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={closeEditorsAndApply}>
                     {t("filterBar:buttons.apply")}
                   </Button>
                 </div>
@@ -1146,29 +1099,17 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   getItemLabel={(item) => (item.code ? `${item.code} — ${item.account}` : item.account)}
                   buttonLabel={t("filterBar:editors.accounts.button")}
                   customStyles={{ maxHeight: "240px" }}
-                  groupBy={(i) =>
-                    i.subcategory ? `${i.category} / ${i.subcategory}` : String(i.category || "")
-                  }
+                  groupBy={(i) => (i.subcategory ? `${i.category} / ${i.subcategory}` : String(i.category || ""))}
                   virtualize
                   virtualRowHeight={32}
                   virtualThreshold={300}
                 />
 
                 <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-semibold bg-white hover:bg-gray-50"
-                    onClick={() => removeChip("accounts")}
-                  >
+                  <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("accounts")}>
                     {t("filterBar:buttons.remove")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-semibold bg-white hover:bg-gray-50"
-                    onClick={closeEditorsAndApply}
-                  >
+                  <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={closeEditorsAndApply}>
                     {t("filterBar:buttons.apply")}
                   </Button>
                 </div>
@@ -1193,20 +1134,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 />
 
                 <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-semibold bg-white hover:bg-gray-50"
-                    onClick={() => removeChip("observation")}
-                  >
+                  <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={() => removeChip("observation")}>
                     {t("filterBar:buttons.remove")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="font-semibold bg-white hover:bg-gray-50"
-                    onClick={closeEditorsAndApply}
-                  >
+                  <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={closeEditorsAndApply}>
                     {t("filterBar:buttons.apply")}
                   </Button>
                 </div>
@@ -1221,39 +1152,19 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 className="w-[calc(100vw-1rem)] sm:min-w-[260px] sm:max-w-[360px]"
               >
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={() => setLocalFilters((prev) => ({ ...prev, tx_type: "credit" }))}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setLocalFilters((prev) => ({ ...prev, tx_type: "credit" }))}>
                     {t("filterBar:editors.txType.credit")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={() => setLocalFilters((prev) => ({ ...prev, tx_type: "debit" }))}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => setLocalFilters((prev) => ({ ...prev, tx_type: "debit" }))}>
                     {t("filterBar:editors.txType.debit")}
                   </Button>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={() => removeChip("tx_type")}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("tx_type")}>
                     {t("filterBar:buttons.remove")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={closeEditorsAndApply}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={closeEditorsAndApply}>
                     {t("filterBar:buttons.apply")}
                   </Button>
                 </div>
@@ -1292,20 +1203,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 </div>
 
                 <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={() => removeChip("amount")}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={() => removeChip("amount")}>
                     {t("filterBar:buttons.remove")}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white hover:bg-gray-50"
-                    onClick={closeEditorsAndApply}
-                  >
+                  <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={closeEditorsAndApply}>
                     {t("filterBar:buttons.apply")}
                   </Button>
                 </div>
@@ -1315,17 +1216,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
           {/* CONFIG MODAL */}
           {configModalOpen && (
-            <ModalShell
-              busy={configBusy}
-              title={t("filterBar:configModal.title")}
-              onClose={() => setConfigModalOpen(false)}
-            >
+            <ModalShell busy={configBusy} title={t("filterBar:configModal.title")} onClose={() => setConfigModalOpen(false)}>
               <div className={configBusy ? "pointer-events-none opacity-60" : ""}>
                 <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
                   {scopedViews.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-gray-500">
-                      {t("filterBar:configModal.empty")}
-                    </div>
+                    <div className="px-3 py-2 text-xs text-gray-500">{t("filterBar:configModal.empty")}</div>
                   )}
 
                   {scopedViews.map((v) => {
@@ -1334,12 +1229,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                     return (
                       <div key={v.id} className="px-3 py-2 flex items-center gap-3">
                         <label className="inline-flex items-center gap-2">
-                          <Checkbox
-                            checked={!!v.is_default}
-                            size="small"
-                            disabled={configBusy}
-                            onChange={() => void toggleDefaultView(v)}
-                          />
+                          <Checkbox checked={!!v.is_default} size="small" disabled={configBusy} onChange={() => void toggleDefaultView(v)} />
 
                           {isRenaming ? (
                             <input
@@ -1465,11 +1355,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   </label>
 
                   <label className="inline-flex items-center gap-2">
-                    <Checkbox
-                      checked={saveDefault}
-                      size="small"
-                      onChange={(e) => setSaveDefault(e.target.checked)}
-                    />
+                    <Checkbox checked={saveDefault} size="small" onChange={(e) => setSaveDefault(e.target.checked)} />
                     <span>{t("filterBar:saveModal.setDefault")}</span>
                   </label>
 
@@ -1510,9 +1396,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                           onChange={(list) => setOverwriteView(list[0] ?? null)}
                           getItemKey={(item) => item.id}
                           getItemLabel={(item) =>
-                            item.is_default
-                              ? `${item.name} (${t("filterBar:saveModal.defaultShort")})`
-                              : item.name
+                            item.is_default ? `${item.name} (${t("filterBar:saveModal.defaultShort")})` : item.name
                           }
                           buttonLabel={t("filterBar:saveModal.choosePlaceholder")}
                           singleSelect
@@ -1560,10 +1444,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
 /* ------------------------------ Subcomponents ------------------------------ */
 
-const QuickButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
-  className = "",
-  ...props
-}) => (
+const QuickButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ className = "", ...props }) => (
   <button
     {...props}
     className={`text-[11px] border border-gray-300 rounded px-2 py-[3px] bg-white hover:bg-gray-50 ${className}`}
@@ -1713,8 +1594,7 @@ const Menu: React.FC<{
       if (!actionableIndexes.length) return;
       const curr = actionableIndexes.indexOf(activeIndex);
       const base = curr === -1 ? (dir === 1 ? -1 : 1) : curr;
-      const next =
-        actionableIndexes[(base + dir + actionableIndexes.length) % actionableIndexes.length];
+      const next = actionableIndexes[(base + dir + actionableIndexes.length) % actionableIndexes.length];
       setActiveIndex(next);
     },
     [actionableIndexes, activeIndex]
@@ -1807,9 +1687,7 @@ const ModalShell: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-      <div
-        className={`bg-white border border-gray-200 rounded-lg p-5 w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto relative`}
-      >
+      <div className={`bg-white border border-gray-200 rounded-lg p-5 w-full ${maxWidthClass} max-h-[90vh] overflow-y-auto relative`}>
         {busy && <BusyOverlay label={t("filterBar:configModal.loading")} />}
 
         <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">

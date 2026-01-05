@@ -20,6 +20,18 @@ import type { SettledEntry } from "@/models/entries/settlements";
 import type { EntryFilters } from "@/models/components/filterBar";
 import { type ModalType } from "@/components/Modal/Modal.types";
 
+const DEFAULT_FILTERS: EntryFilters = {
+  bank_id: [],
+  ledger_account_id: [],
+  tx_type: undefined,
+  start_date: undefined,
+  end_date: undefined,
+  description: "",
+  observation: "",
+  amount_min: "",
+  amount_max: "",
+} as unknown as EntryFilters;
+
 const Settled = () => {
   const { t } = useTranslation(["settled"]);
 
@@ -33,16 +45,23 @@ const Settled = () => {
   const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
 
-  const [filters, setFilters] = useState<EntryFilters | null>(null);
+  const [banksKey, setBanksKey] = useState(0);
+  const [tableKey, setTableKey] = useState(0);
+  const [kpiRefresh, setKpiRefresh] = useState(0);
+
+  const bumpTable = useCallback(() => setTableKey((k) => k + 1), []);
+  const bumpBanks = useCallback(() => setBanksKey((k) => k + 1), []);
+  const bumpKpis = useCallback(() => setKpiRefresh((k) => k + 1), []);
+  const bumpAll = useCallback(() => {
+    bumpTable();
+    bumpBanks();
+    bumpKpis();
+  }, [bumpTable, bumpBanks, bumpKpis]);
+
+  const [filters, setFilters] = useState<EntryFilters>(() => DEFAULT_FILTERS);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
-
-  const [kpiRefresh, setKpiRefresh] = useState(0);
-  const [tableKey, setTableKey] = useState(0);
-
-  const [banksKey, setBanksKey] = useState(0);
-
   const [isReturning, setIsReturning] = useState(false);
 
   const tableRef = useRef<SettledEntriesTableHandle>(null);
@@ -61,10 +80,8 @@ const Settled = () => {
 
   const handleApplyFilters = useCallback(({ filters: newFilters }: { filters: EntryFilters }) => {
     setFilters(newFilters);
-    setTableKey((k) => k + 1);
-    setBanksKey((k) => k + 1);
-    setKpiRefresh((k) => k + 1);
-  }, []);
+    bumpAll();
+  }, [bumpAll]);
 
   const selectedAsMinimal: MinimalEntry[] = selectedEntries.map((e) => ({
     amount: e.amount,
@@ -105,28 +122,24 @@ const Settled = () => {
             />
           </PermissionMiddleware>
 
-          {filters && (
-            <>
-              <KpiCards
-                context="settled"
-                filters={filters}
-                selectedBankIds={filters.bank_id}
-                refreshToken={kpiRefresh}
-                banksRefreshKey={banksKey}
-              />
+          <KpiCards
+            selectedBankIds={filters.bank_id}
+            filters={filters}
+            context="settled"
+            refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey}
+          />
 
-              <div className="min-h-0 h-full">
-                <PermissionMiddleware codeName={["view_settled_entries"]} requireAll>
-                  <SettledEntriesTable
-                    ref={tableRef}
-                    key={tableKey}
-                    filters={filters}
-                    onSelectionChange={handleSelectionChange}
-                  />
-                </PermissionMiddleware>
-              </div>
-            </>
-          )}
+          <div className="min-h-0 h-full">
+            <PermissionMiddleware codeName={["view_settled_entries"]} requireAll>
+              <SettledEntriesTable
+                ref={tableRef}
+                key={tableKey}
+                filters={filters}
+                onSelectionChange={handleSelectionChange}
+              />
+            </PermissionMiddleware>
+          </div>
 
           {selectedIds.length > 0 && (
             <SelectionActionsBar
@@ -146,13 +159,11 @@ const Settled = () => {
                     await api.deleteSettledEntry(selectedIds[0] as string);
                   }
 
-                  tableRef.current?.clearSelection();
+                  bumpAll();
+
                   setSelectedIds([]);
                   setSelectedEntries([]);
-
-                  setBanksKey((k) => k + 1);
-                  setTableKey((k) => k + 1);
-                  setKpiRefresh((k) => k + 1);
+                  tableRef.current?.clearSelection();
                 } catch (err) {
                   console.error(err);
                   alert(t("settled:errors.returnSettlements"));
@@ -175,8 +186,8 @@ const Settled = () => {
               type={modalType}
               onSave={() => {
                 setIsModalOpen(false);
-                setKpiRefresh((k) => k + 1);
-                setTableKey((k) => k + 1);
+                bumpTable();
+                bumpKpis();
               }}
             />
           </PermissionMiddleware>
@@ -189,7 +200,7 @@ const Settled = () => {
               onClose={() => setIsTransferenceModalOpen(false)}
               onSave={() => {
                 setIsTransferenceModalOpen(false);
-                setBanksKey((k) => k + 1);
+                bumpBanks();
               }}
             />
           </PermissionMiddleware>

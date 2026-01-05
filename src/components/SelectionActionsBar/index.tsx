@@ -1,7 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/components/SelectionActionsBar/index.tsx
- * Update requested:
- * - Delete button uses a trash icon (inline SVG) instead of ⌫
+ * Update: Floating bottom bar with minimized floating box state
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -250,22 +249,65 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
 
   if (!hasSelection) return null;
 
+  /* MINIMIZED FLOATING BOX */
+  if (minimized) {
+    return (
+      <div
+        className={[
+          "fixed bottom-6 right-6 z-50",
+          "bg-white border-1 border-gray-300 rounded-xl shadow-2xl",
+          "px-4 py-3",
+          "hover:shadow-3xl transition-shadow duration-200",
+          className,
+        ].join(" ")}
+        role="region"
+        aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="text-xs font-semibold text-gray-900">
+              {t("labels.selected", {
+                defaultValue: "{{count}} selected",
+                count: selectedIds.length,
+              })}
+            </div>
+            <div className="text-xs text-gray-600">
+              <span className="font-semibold text-gray-900">{netLabel}</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={toggleMinimize}
+            disabled={disableAll}
+            aria-busy={disableAll || undefined}
+            title={t("actions.expand", { defaultValue: "Expand" })}
+            className="!py-1.5 !px-3 !text-xs"
+          >
+            <span className="text-sm leading-none">↗</span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /* EXPANDED FLOATING BAR */
   return (
     <div
       className={[
-        "sticky bottom-0 z-40 w-full overflow-x-hidden",
-        "border-t border-gray-200 bg-white/95 backdrop-blur",
-        "px-3 py-2 sm:px-4 sm:py-3",
+        "fixed bottom-0 left-0 right-0 z-50",
+        "border-t-1 border-gray-300 bg-white shadow-2xl",
+        "px-4 py-3 sm:px-6 sm:py-4",
         className,
       ].join(" ")}
       role="region"
       aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
     >
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         {/* INFO */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-            <div className="text-[11px] sm:text-[12px] font-semibold text-gray-900">
+            <div className="text-xs sm:text-sm font-semibold text-gray-900">
               {t("labels.selected", {
                 defaultValue: "{{count}} selected",
                 count: selectedIds.length,
@@ -273,101 +315,89 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
             </div>
 
             {dueLabel ? (
-              <div className="text-[10px] sm:text-[11px] text-gray-600 truncate min-w-0">
+              <div className="text-xs text-gray-600 truncate min-w-0">
                 <span className="text-gray-500">{t("labels.dueShort", { defaultValue: "Due:" })}</span>{" "}
                 <span className="font-medium text-gray-800">{dueLabel}</span>
               </div>
             ) : null}
 
-            <div className="sm:hidden text-[10px] text-gray-600 truncate min-w-0">
+            <div className="sm:hidden text-xs text-gray-600 truncate min-w-0">
               <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>{" "}
               <span className="font-semibold text-gray-900">{netLabel}</span>
             </div>
           </div>
 
-          {!minimized && (
-            <>
-              <div className="mt-1.5 hidden sm:flex text-[11px] text-gray-600 flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
-                  <span className="font-medium text-gray-800">{stats.creditCount}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-500">{t("labels.sumCredits", { defaultValue: "Σ Credits" })}:</span>
-                  <span className="font-medium text-gray-800">{creditLabel}</span>
-                </span>
+          <div className="mt-2 hidden sm:flex text-xs text-gray-600 flex-wrap items-center gap-x-4 gap-y-1 min-w-0">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
+              <span className="font-medium text-gray-800">{stats.creditCount}</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-500">{t("labels.sumCredits", { defaultValue: "Σ Credits" })}:</span>
+              <span className="font-medium text-gray-800">{creditLabel}</span>
+            </span>
 
-                <span className="text-gray-300">|</span>
+            <span className="text-gray-300">|</span>
 
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
-                  <span className="font-medium text-gray-800">{stats.debitCount}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-gray-500">{t("labels.sumDebits", { defaultValue: "Σ Debits" })}:</span>
-                  <span className="font-medium text-gray-800">{debitLabel}</span>
-                </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
+              <span className="font-medium text-gray-800">{stats.debitCount}</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-500">{t("labels.sumDebits", { defaultValue: "Σ Debits" })}:</span>
+              <span className="font-medium text-gray-800">{debitLabel}</span>
+            </span>
 
-                <span className="text-gray-300">|</span>
+            <span className="text-gray-300">|</span>
 
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>
-                  <span className="font-semibold text-gray-900">{netLabel}</span>
-                </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>
+              <span className="font-semibold text-gray-900">{netLabel}</span>
+            </span>
 
-                <span className="text-gray-400">
-                  {t("hints.escToCancel", { defaultValue: "Tip: press" })}{" "}
-                  <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
-                    Esc
-                  </kbd>{" "}
-                  {t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })
-                    .replace("(Esc)", "")
-                    .trim()}
-                </span>
-              </div>
+            <span className="text-gray-400 text-[11px]">
+              {t("hints.escToCancel", { defaultValue: "Tip: press" })}{" "}
+              <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
+                Esc
+              </kbd>{" "}
+              {t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })
+                .replace("(Esc)", "")
+                .trim()}
+            </span>
+          </div>
 
-              <div className="mt-1.5 sm:hidden text-[10px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-                <span className="inline-flex items-center gap-1 min-w-0">
-                  <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
-                  <span className="font-medium text-gray-800">{stats.creditCount}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="font-medium text-gray-800 truncate">{creditLabel}</span>
-                </span>
+          <div className="mt-2 sm:hidden text-[11px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+            <span className="inline-flex items-center gap-1 min-w-0">
+              <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
+              <span className="font-medium text-gray-800">{stats.creditCount}</span>
+              <span className="text-gray-400">•</span>
+              <span className="font-medium text-gray-800 truncate">{creditLabel}</span>
+            </span>
 
-                <span className="text-gray-300">|</span>
+            <span className="text-gray-300">|</span>
 
-                <span className="inline-flex items-center gap-1 min-w-0">
-                  <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
-                  <span className="font-medium text-gray-800">{stats.debitCount}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="font-medium text-gray-800 truncate">{debitLabel}</span>
-                </span>
-              </div>
-            </>
-          )}
+            <span className="inline-flex items-center gap-1 min-w-0">
+              <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
+              <span className="font-medium text-gray-800">{stats.debitCount}</span>
+              <span className="text-gray-400">•</span>
+              <span className="font-medium text-gray-800 truncate">{debitLabel}</span>
+            </span>
+          </div>
         </div>
 
         {/* ACTIONS */}
-        <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 sm:gap-2 max-w-full">
+        <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 max-w-full">
           <Button
             variant="outline"
             onClick={toggleMinimize}
             disabled={disableAll}
             aria-busy={disableAll || undefined}
-            title={
-              minimized
-                ? t("actions.expand", { defaultValue: "Expand" })
-                : t("actions.minimize", { defaultValue: "Minimize" })
-            }
-            className="!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]"
+            title={t("actions.minimize", { defaultValue: "Minimize" })}
+            className="!py-1.5 !px-3 !text-xs sm:!text-sm"
           >
-            <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
-              <span aria-hidden="true" className="text-[13px] leading-none">
-                {minimized ? "+" : "–"}
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span aria-hidden="true" className="text-sm leading-none">
+                ↘
               </span>
-              <span className="hidden sm:inline">
-                {minimized
-                  ? t("actions.expand", { defaultValue: "Expand" })
-                  : t("actions.minimize", { defaultValue: "Minimize" })}
-              </span>
+              <span className="hidden sm:inline">{t("actions.minimize", { defaultValue: "Minimize" })}</span>
             </span>
           </Button>
 
@@ -377,10 +407,10 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
             disabled={disableAll}
             aria-busy={disableAll || undefined}
             title={t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })}
-            className="!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]"
+            className="!py-1.5 !px-3 !text-xs sm:!text-sm"
           >
-            <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
-              <span aria-hidden="true" className="text-[13px] leading-none">
+            <span className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span aria-hidden="true" className="text-sm leading-none">
                 ✕
               </span>
               <span className="hidden sm:inline">{t("actions.cancel", { defaultValue: "Cancel" })}</span>
@@ -394,14 +424,14 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
               aria-busy={disableAll || undefined}
               title={t("actions.liquidateSelected", { defaultValue: "Settle selected" })}
               className={[
-                "!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]",
+                "!py-1.5 !px-3 !text-xs sm:!text-sm",
                 "bg-emerald-600 border border-emerald-600 text-white",
                 "hover:bg-emerald-700 hover:border-emerald-700",
                 "active:bg-emerald-800 active:border-emerald-800",
               ].join(" ")}
             >
-              <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
-                <span aria-hidden="true" className="text-[13px] leading-none">
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <span aria-hidden="true" className="text-sm leading-none">
                   ✓
                 </span>
                 <span>{t("actions.liquidate", { defaultValue: "Settle" })}</span>
@@ -416,13 +446,13 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
               aria-busy={disableAll || undefined}
               title={t("actions.return", { defaultValue: "Revert" })}
               className={[
-                "!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px]",
+                "!py-1.5 !px-3 !text-xs sm:!text-sm",
                 "bg-amber-500 border border-amber-500 text-white",
                 "hover:bg-amber-600 hover:border-amber-600",
               ].join(" ")}
             >
-              <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
-                <span aria-hidden="true" className="text-[13px] leading-none">
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <span aria-hidden="true" className="text-sm leading-none">
                   ↩
                 </span>
                 <span>{t("actions.return", { defaultValue: "Revert" })}</span>
@@ -438,10 +468,10 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
               disabled={disableAll}
               aria-busy={disableAll || undefined}
               title={t("actions.deleteSelected", { defaultValue: "Delete selected" })}
-              className="!py-1 !px-2 sm:!py-1.5 sm:!px-3 !text-[11px] sm:!text-[12px] border-red-200 text-red-600 hover:bg-red-50"
+              className="!py-1.5 !px-3 !text-xs sm:!text-sm border-red-200 text-red-600 hover:bg-red-50"
             >
-              <span className="inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
-                <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <TrashIcon className="h-4 w-4" />
                 <span>{t("actions.delete", { defaultValue: "Delete" })}</span>
               </span>
             </Button>

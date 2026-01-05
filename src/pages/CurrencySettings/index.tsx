@@ -320,14 +320,14 @@ const CurrencySettings: React.FC = () => {
                 {/* Dummy fields to absorb browser autofill */}
                 <input
                   type="text"
-                  name="fake-username"
+                  name="dummy"
                   autoComplete="username"
                   style={{ display: "none" }}
                   tabIndex={-1}
                 />
                 <input
                   type="password"
-                  name="fake-password"
+                  name="dummy"
                   autoComplete="new-password"
                   style={{ display: "none" }}
                   tabIndex={-1}
