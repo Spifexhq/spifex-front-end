@@ -1,4 +1,5 @@
 // src/api/auth.ts
+
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -20,6 +21,9 @@ import {
   clearTokens,
   setOrgExternalIdStored,
   clearOrgExternalIdStored,
+  getUserIdStored,
+  setUserIdStored,
+  clearUserIdStored,
 } from "@/lib/tokens";
 
 import { clearHttpCaches, AUTH_SYNC_EVENT, SUBSCRIPTION_BLOCKED_EVENT } from "@/lib/http";
@@ -39,6 +43,8 @@ let AUTH_BOOTSTRAP_STARTED = false;
 
 export const handleGetAccessToken = () => getAccess();
 
+/* --------------------------------- Helpers -------------------------------- */
+
 function isApiErrorBody(err: unknown): err is ApiErrorBody {
   return typeof err === "object" && err != null && typeof (err as Record<string, unknown>).code === "string";
 }
@@ -54,6 +60,8 @@ function shouldHardSignOut(err: unknown): boolean {
   if (err instanceof Error) {
     if (/(^|\s)401(\s|$)/.test(err.message)) return true;
     if (/refresh-failed/i.test(err.message)) return true;
+    if (/refresh-user-mismatch/i.test(err.message)) return true;
+    if (/refresh-user-missing/i.test(err.message)) return true;
   }
 
   return false;
@@ -100,11 +108,11 @@ function emitAuthSync(reason: string) {
  * Cross-tab token bridge (BroadcastChannel)
  * - Used only to "hand off" a short-lived access token from an existing tab
  *   to a new tab, without persisting it in localStorage.
- * - If the browser does not support BroadcastChannel, this becomes a no-op.
+ * - We also bridge orgExternalId and userId (external_id) to avoid cross-user mixups.
  * -------------------------------------------------------------------------- */
 
 type AuthBCReq = { type: "REQ_TOKENS"; from: string };
-type AuthBCTok = { type: "TOKENS"; to: string; access: string; orgExternalId?: string };
+type AuthBCTok = { type: "TOKENS"; to: string; access: string; orgExternalId?: string; userId?: string };
 type AuthBCMsg = AuthBCReq | AuthBCTok;
 
 function getTabId(): string {
@@ -130,11 +138,20 @@ function openAuthChannel(): BroadcastChannel | null {
   return new BroadcastChannel(AUTH_BC_NAME);
 }
 
+function readSessionValue(key: string): string | undefined {
+  try {
+    const v = sessionStorage.getItem(key) || "";
+    return v.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function startAuthTokenResponder(): () => void {
   const ch = openAuthChannel();
   if (!ch) return () => {};
 
-  const channel: BroadcastChannel = ch; // <- non-null alias
+  const channel: BroadcastChannel = ch;
 
   const onMessage = (ev: MessageEvent<AuthBCMsg>) => {
     const msg = ev.data;
@@ -144,23 +161,34 @@ function startAuthTokenResponder(): () => void {
       const access = getAccess();
       if (!access) return;
 
-      const orgExternalId = (() => {
-        try {
-          const v = sessionStorage.getItem("spifex:org-external-id") || "";
-          return v.trim() || undefined;
-        } catch {
-          return undefined;
-        }
-      })();
+      const orgExternalId = readSessionValue("spifex:org-external-id");
+      const userId = getUserIdStored().trim() || undefined;
 
-      const reply: AuthBCTok = { type: "TOKENS", to: msg.from, access, orgExternalId };
+      // If we don't know who we are (no userId), do not bridge tokens.
+      if (!userId) return;
+
+      const reply: AuthBCTok = { type: "TOKENS", to: msg.from, access, orgExternalId, userId };
       channel.postMessage(reply);
       return;
     }
 
     if (msg.type === "TOKENS" && msg.to === getTabId()) {
-      if (msg.access) setTokens(msg.access);
-      if (msg.orgExternalId) setOrgExternalIdStored(msg.orgExternalId);
+      const incomingAccess = typeof msg.access === "string" ? msg.access : "";
+      const incomingUserId = typeof msg.userId === "string" ? msg.userId.trim() : "";
+      const incomingOrgExternalId = typeof msg.orgExternalId === "string" ? msg.orgExternalId.trim() : "";
+
+      if (!incomingAccess || !incomingUserId) return;
+
+      const expectedUserId = (getUserIdStored() || "").trim();
+
+      // If this tab already knows the user, do not accept cross-user tokens.
+      if (expectedUserId && expectedUserId !== incomingUserId) return;
+
+      // Otherwise lock identity now.
+      if (!expectedUserId) setUserIdStored(incomingUserId);
+
+      setTokens(incomingAccess);
+      if (incomingOrgExternalId) setOrgExternalIdStored(incomingOrgExternalId);
     }
   };
 
@@ -182,7 +210,7 @@ async function requestTokensFromOtherTabs(timeoutMs = 800): Promise<boolean> {
     const ch = openAuthChannel();
     if (!ch) return false;
 
-    const channel: BroadcastChannel = ch; // <- non-null alias
+    const channel: BroadcastChannel = ch;
     const me = getTabId();
 
     return await new Promise<boolean>((resolve) => {
@@ -199,9 +227,20 @@ async function requestTokensFromOtherTabs(timeoutMs = 800): Promise<boolean> {
         const msg = ev.data;
         if (!msg || typeof msg !== "object") return;
 
-        if (msg.type === "TOKENS" && msg.to === me && typeof msg.access === "string" && msg.access) {
-          setTokens(msg.access);
-          if (msg.orgExternalId) setOrgExternalIdStored(msg.orgExternalId);
+        if (msg.type === "TOKENS" && msg.to === me) {
+          const incomingAccess = typeof msg.access === "string" ? msg.access : "";
+          const incomingUserId = typeof msg.userId === "string" ? msg.userId.trim() : "";
+          const incomingOrgExternalId = typeof msg.orgExternalId === "string" ? msg.orgExternalId.trim() : "";
+
+          if (!incomingAccess || !incomingUserId) return;
+
+          const expectedUserId = (getUserIdStored() || "").trim();
+          if (expectedUserId && expectedUserId !== incomingUserId) return;
+
+          if (!expectedUserId) setUserIdStored(incomingUserId);
+
+          setTokens(incomingAccess);
+          if (incomingOrgExternalId) setOrgExternalIdStored(incomingOrgExternalId);
 
           if (done) return;
           done = true;
@@ -226,6 +265,8 @@ async function requestTokensFromOtherTabs(timeoutMs = 800): Promise<boolean> {
   return tokenRequestInFlight;
 }
 
+/* ---------------------------------- Hook ---------------------------------- */
+
 export const useAuth = () => {
   const auth = useSelector((s: RootState) => s.auth);
   const dispatch = useDispatch();
@@ -245,6 +286,11 @@ export const useAuth = () => {
       dispatch(setIsSubscribed(Boolean(payload.is_subscribed)));
       dispatch(setPermissions(payload.permissions ?? []));
 
+      // Lock user identity (external id) tab-scoped
+      const uid = String(payload.user?.id || "").trim();
+      if (uid) setUserIdStored(uid);
+      else clearUserIdStored();
+
       const orgExt = payload.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
       if (orgExt) setOrgExternalIdStored(orgExt);
@@ -260,6 +306,7 @@ export const useAuth = () => {
     dispatch(resetAuth());
     clearTokens();
     clearOrgExternalIdStored();
+    clearUserIdStored();
     clearHttpCaches();
     clearAuthHint();
 
@@ -279,7 +326,6 @@ export const useAuth = () => {
 
   const syncAuth = useCallback(
     async (opts?: { force?: boolean; reason?: string }) => {
-      // Only attempt hydration if another tab (or this tab) previously marked session as active.
       if (!getAuthHintActive()) return;
 
       const mustFetch = Boolean(opts?.force) || authUserRef.current == null;
@@ -338,6 +384,11 @@ export const useAuth = () => {
       dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
       dispatch(setPermissions(res.data.permissions ?? []));
 
+      // Lock user identity (external id) tab-scoped
+      const uid = String(res.data.user?.id || "").trim();
+      if (uid) setUserIdStored(uid);
+      else clearUserIdStored();
+
       const orgExt = res.data.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
       if (orgExt) setOrgExternalIdStored(orgExt);
@@ -377,6 +428,7 @@ export const useAuth = () => {
         dispatch(resetAuth());
         clearTokens();
         clearOrgExternalIdStored();
+        clearUserIdStored();
         clearHttpCaches();
       }
     };
@@ -395,13 +447,17 @@ export const useAuth = () => {
     });
   }, [handleInitUser]);
 
-  // In-tab events (refresh_failed and subscription blocked)
+  // In-tab events (refresh_failed / refresh_user_mismatch / subscription blocked)
   useEffect(() => {
     const onAuthSync = (e: Event) => {
       const ce = e as CustomEvent;
       const reason = (ce.detail as { reason?: string } | undefined)?.reason;
 
-      if (reason === "refresh_failed") {
+      if (
+        reason === "refresh_failed" ||
+        reason === "refresh_user_mismatch" ||
+        reason === "refresh_user_missing"
+      ) {
         void handleSignOut();
       }
     };

@@ -2,9 +2,11 @@
 
 const ACCESS_STORAGE_KEY = "spifex:access";
 const ORG_EXTERNAL_ID_STORAGE_KEY = "spifex:org-external-id";
+const USER_ID_STORAGE_KEY = "spifex:user-id";
 
 let _access = "";
 let _orgExternalId = "";
+let _userId = "";
 
 function getSessionStorage(): Storage | null {
   try {
@@ -15,23 +17,17 @@ function getSessionStorage(): Storage | null {
   }
 }
 
-function loadAccessFromSession(): string {
+function loadFromSession(key: string): string {
   const ss = getSessionStorage();
   if (!ss) return "";
-  const v = ss.getItem(ACCESS_STORAGE_KEY);
-  return typeof v === "string" ? v : "";
-}
-
-function loadOrgExternalIdFromSession(): string {
-  const ss = getSessionStorage();
-  if (!ss) return "";
-  const v = ss.getItem(ORG_EXTERNAL_ID_STORAGE_KEY);
+  const v = ss.getItem(key);
   return typeof v === "string" ? v : "";
 }
 
 // Initialize from sessionStorage (tab-scoped persistence)
-_access = loadAccessFromSession();
-_orgExternalId = loadOrgExternalIdFromSession();
+_access = loadFromSession(ACCESS_STORAGE_KEY);
+_orgExternalId = loadFromSession(ORG_EXTERNAL_ID_STORAGE_KEY);
+_userId = loadFromSession(USER_ID_STORAGE_KEY);
 
 export const getAccess = (): string => _access;
 
@@ -58,7 +54,7 @@ export const clearTokens = () => {
 };
 
 // -----------------------------------------------------------------------------
-// NEW: Org external id (tab-scoped persistence)
+// Org external id (tab-scoped persistence)
 // -----------------------------------------------------------------------------
 
 export const getOrgExternalIdStored = (): string => _orgExternalId;
@@ -76,4 +72,25 @@ export const setOrgExternalIdStored = (externalId: string) => {
 
 export const clearOrgExternalIdStored = () => {
   setOrgExternalIdStored("");
+};
+
+// -----------------------------------------------------------------------------
+// User id (external_id) (tab-scoped persistence)
+// -----------------------------------------------------------------------------
+
+export const getUserIdStored = (): string => _userId;
+
+export const setUserIdStored = (userId: string) => {
+  const v = (userId || "").trim();
+  _userId = v;
+
+  const ss = getSessionStorage();
+  if (!ss) return;
+
+  if (v) ss.setItem(USER_ID_STORAGE_KEY, v);
+  else ss.removeItem(USER_ID_STORAGE_KEY);
+};
+
+export const clearUserIdStored = () => {
+  setUserIdStored("");
 };

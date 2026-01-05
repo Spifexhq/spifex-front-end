@@ -2,6 +2,7 @@
 import type { OrganizationSummary } from "./organization";
 
 export interface User {
+  id: string;
   name: string;
   email: string;
   is_active: boolean;

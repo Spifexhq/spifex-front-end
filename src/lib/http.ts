@@ -10,7 +10,15 @@ import axios, {
 } from "axios";
 
 import { type ApiErrorBody, type ApiSuccess } from "@/models/Api";
-import { getAccess, setTokens, clearTokens, getOrgExternalIdStored } from "@/lib/tokens";
+import {
+  getAccess,
+  setTokens,
+  clearTokens,
+  getOrgExternalIdStored,
+  getUserIdStored,
+  setUserIdStored,
+  clearUserIdStored,
+} from "@/lib/tokens";
 import "@/lib/netReport";
 import { store } from "@/redux/store";
 
@@ -107,7 +115,6 @@ export function clearAuthGate() {
 export async function waitAuthGate(timeoutMs = 4000): Promise<void> {
   if (!gate) return;
 
-  // SSR-safe: if no window, just await the gate (no timeout)
   if (typeof window === "undefined") {
     await gate.catch(() => undefined);
     return;
@@ -177,6 +184,18 @@ function readOrgExternalId(): string | undefined {
   return (fromRedux || fromSession || "").trim() || undefined;
 }
 
+function readExpectedUserId(): string | undefined {
+  const s = store.getState() as unknown as {
+    auth?: {
+      user?: { id?: string | null } | null;
+    };
+  };
+
+  const fromRedux = s.auth?.user?.id || "";
+  const fromSession = getUserIdStored();
+  return (fromRedux || fromSession || "").trim() || undefined;
+}
+
 http.interceptors.request.use((cfg) => {
   cfg.headers = cfg.headers ?? {};
   const headers = cfg.headers as Record<string, string>;
@@ -193,16 +212,6 @@ http.interceptors.request.use((cfg) => {
 /* --------------------------------- Helpers -------------------------------- */
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
-
-type Tokens = { access: string; refresh?: string };
-
-function unwrapTokens(payload: unknown): Tokens | null {
-  if (isObject(payload) && typeof payload.access === "string") return payload as Tokens;
-  if (isObject(payload) && "data" in payload && isObject(payload.data) && typeof payload.data.access === "string") {
-    return payload.data as Tokens;
-  }
-  return null;
-}
 
 function hasApiError(payload: unknown): payload is { error: ApiErrorBody } {
   if (!isObject(payload)) return false;
@@ -294,6 +303,22 @@ function finishLog(cfg: AxiosRequestConfig, res?: AxiosResponse, err?: AxiosErro
 
 /* ------------------------------- Token refresh ------------------------------ */
 
+type RefreshPayload = { access: string; user_id: string };
+
+function unwrapRefreshPayload(payload: unknown): RefreshPayload | null {
+  if (!isObject(payload)) return null;
+
+  const root = payload as Record<string, unknown>;
+  const src =
+    "data" in root && isObject(root.data) ? (root.data as Record<string, unknown>) : root;
+
+  const access = typeof src.access === "string" ? src.access : "";
+  const userId = typeof src.user_id === "string" ? src.user_id : "";
+
+  if (!access || !userId) return null;
+  return { access, user_id: userId };
+}
+
 let refreshingPromise: Promise<void> | null = null;
 const refreshSubscribers: Array<() => void> = [];
 
@@ -302,24 +327,40 @@ function notifyRefreshSubscribers() {
 }
 
 async function doRefresh(): Promise<void> {
-  const res = await axios.post(`${baseURL}auth/refresh/`, {}, {
-    validateStatus: (s) => s < 500,
-    withCredentials: true,
-  });
+  const res = await axios.post(
+    `${baseURL}auth/refresh/`,
+    {},
+    {
+      validateStatus: (s) => s < 500,
+      withCredentials: true,
+    },
+  );
 
   const { data, status } = res as AxiosResponse<unknown>;
-  const tokens = unwrapTokens(data);
+  const parsed = unwrapRefreshPayload(data);
 
-  if (status !== 200 || !tokens) throw new Error("refresh-failed");
+  if (status !== 200 || !parsed) throw new Error("refresh-failed");
 
-  setTokens(tokens.access);
+  const returnedUserId = (parsed.user_id || "").trim();
+  if (!returnedUserId) throw new Error("refresh-user-missing");
+
+  const expected = readExpectedUserId();
+
+  // Security invariant: if this tab already knows who the user is, refresh must match.
+  if (expected && expected !== returnedUserId) {
+    throw new Error("refresh-user-mismatch");
+  }
+
+  // If this tab didn't know yet (fresh reload), lock the user id now.
+  if (!expected) setUserIdStored(returnedUserId);
+
+  setTokens(parsed.access);
   emitWindowEvent(AUTH_SYNC_EVENT, { reason: "token_refreshed" });
 }
 
 type RetriableConfig = AxiosRequestConfig & { _retry?: boolean; _retried429?: number };
 
 function isAuthProfileUrl(url: string): boolean {
-  // Accept both "/auth/profile/" and "auth/profile" (in case cfg.url has no leading slash).
   return url.includes("/auth/profile/") || url.includes("auth/profile");
 }
 
@@ -328,10 +369,6 @@ function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig):
 
   if (status === 401) return true;
 
-  // Some backends use 403 for "missing credentials" on profile.
-  // Only attempt refresh if:
-  // - request is auth/profile
-  // - we currently have no access token
   if (status === 403) {
     const url = String(cfg.url || "");
     if (!isAuthProfileUrl(url)) return false;
@@ -385,8 +422,19 @@ http.interceptors.response.use(
       if (!refreshingPromise) {
         refreshingPromise = doRefresh()
           .catch((e) => {
+            // Local cleanup immediately; the auth layer will do the server signout.
             clearTokens();
-            emitWindowEvent(AUTH_SYNC_EVENT, { reason: "refresh_failed" });
+            clearUserIdStored();
+
+            const msg = e instanceof Error ? e.message : "";
+            const reason =
+              msg === "refresh-user-mismatch"
+                ? "refresh_user_mismatch"
+                : msg === "refresh-user-missing"
+                  ? "refresh_user_missing"
+                  : "refresh_failed";
+
+            emitWindowEvent(AUTH_SYNC_EVENT, { reason });
             throw e;
           })
           .finally(() => {
@@ -463,7 +511,11 @@ export function clearHttpCaches() {
   pauseUntil = 0;
 }
 
-export async function request<T>(endpoint: string, method: Method = "GET", payload?: object): Promise<ApiSuccess<T>> {
+export async function request<T>(
+  endpoint: string,
+  method: Method = "GET",
+  payload?: object,
+): Promise<ApiSuccess<T>> {
   try {
     const cfg: AxiosRequestConfig = {
       url: endpoint,
