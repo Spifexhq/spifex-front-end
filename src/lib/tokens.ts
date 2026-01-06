@@ -1,8 +1,8 @@
 // src/lib/tokens.ts
 
-const ACCESS_STORAGE_KEY = "spifex:access";
-const ORG_EXTERNAL_ID_STORAGE_KEY = "spifex:org-external-id";
-const USER_ID_STORAGE_KEY = "spifex:user-id";
+const ACCESS_STORAGE_KEY = "c0";
+const ORG_EXTERNAL_ID_STORAGE_KEY = "tenant";
+const USER_ID_STORAGE_KEY = "uid";
 
 let _access = "";
 let _orgExternalId = "";

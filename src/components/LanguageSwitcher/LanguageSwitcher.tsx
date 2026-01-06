@@ -13,7 +13,7 @@ const LABELS: Record<AppLang, string> = {
   de: "Deutsch",
 };
 
-const COOKIE_NAME = "app_language";
+const COOKIE_NAME = "lang";
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 const I18NEXT_STORAGE_KEY = "i18nextLng";
 

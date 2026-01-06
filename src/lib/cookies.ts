@@ -166,7 +166,7 @@ export const Cookies = {
  * Cookie de idioma (NÃO hasheado por padrão - pode ser hasheado se necessário)
  */
 export const LanguageCookie = {
-  NAME: 'app_language',
+  NAME: 'lang',
   MAX_AGE: 365 * 24 * 60 * 60, // 1 ano
 
   set(language: string, useHash: boolean = false): void {

@@ -32,13 +32,13 @@ import type { ApiErrorBody } from "@/models/Api";
 const AUTH_HINT_KEY = "auth_status";
 const AUTH_BOOTSTRAP_FAILED_KEY = "spifex:auth_bootstrap_failed";
 
-// Cross-tab token bridge (kept local to auth.ts)
+// Cross-tab token bridge
 const AUTH_BC_NAME = "spifex:auth";
 const TAB_ID_KEY = "spifex:tab-id";
 
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
 
-// Helps in React strict-mode / remounts: ensure we only run bootstrap once per tab session.
+// Helps in React strict-mode / remounts
 let AUTH_BOOTSTRAP_STARTED = false;
 
 export const handleGetAccessToken = () => getAccess();
@@ -50,18 +50,22 @@ function isApiErrorBody(err: unknown): err is ApiErrorBody {
 }
 
 function shouldHardSignOut(err: unknown): boolean {
-  // Hard sign-out only for clearly-invalid auth states.
   if (isApiErrorBody(err)) {
     if (err.status === 401) return true;
     if (err.code === "token_not_valid" || err.code === "authentication_failed") return true;
+    if (err.code === "session_not_valid") return true;
     return false;
   }
 
   if (err instanceof Error) {
     if (/(^|\s)401(\s|$)/.test(err.message)) return true;
-    if (/refresh-failed/i.test(err.message)) return true;
-    if (/refresh-user-mismatch/i.test(err.message)) return true;
-    if (/refresh-user-missing/i.test(err.message)) return true;
+
+    // Reasons emitted by http.ts refresh layer
+    if (err.message === "refresh_failed") return true;
+    if (err.message === "refresh_user_mismatch") return true;
+    if (err.message === "refresh_user_missing") return true;
+    if (err.message === "session_not_valid") return true;
+    if (err.message === "token_not_valid") return true;
   }
 
   return false;
@@ -104,15 +108,26 @@ function emitAuthSync(reason: string) {
   window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: { reason } }));
 }
 
-/* -----------------------------------------------------------------------------
+function lockUserIdStrict(nextUserId: string) {
+  const next = (nextUserId || "").trim();
+  if (!next) throw new Error("refresh_user_missing");
+
+  const expected = (getUserIdStored() || "").trim();
+  if (expected && expected !== next) {
+    throw new Error("refresh_user_mismatch");
+  }
+
+  if (!expected) setUserIdStored(next);
+}
+
+/* ---------------------------------------------------------------------------
  * Cross-tab token bridge (BroadcastChannel)
- * - Used only to "hand off" a short-lived access token from an existing tab
- *   to a new tab, without persisting it in localStorage.
- * - We also bridge orgExternalId and userId (external_id) to avoid cross-user mixups.
+ * - Bridges access token + orgExternalId + userId
+ * - Refuses cross-user bridging
  * -------------------------------------------------------------------------- */
 
 type AuthBCReq = { type: "REQ_TOKENS"; from: string };
-type AuthBCTok = { type: "TOKENS"; to: string; access: string; orgExternalId?: string; userId?: string };
+type AuthBCTok = { type: "TOKENS"; to: string; access: string; orgExternalId?: string; userId: string };
 type AuthBCMsg = AuthBCReq | AuthBCTok;
 
 function getTabId(): string {
@@ -161,11 +176,10 @@ function startAuthTokenResponder(): () => void {
       const access = getAccess();
       if (!access) return;
 
-      const orgExternalId = readSessionValue("spifex:org-external-id");
-      const userId = getUserIdStored().trim() || undefined;
+      const userId = (getUserIdStored() || "").trim();
+      if (!userId) return; // do not bridge tokens if identity not locked
 
-      // If we don't know who we are (no userId), do not bridge tokens.
-      if (!userId) return;
+      const orgExternalId = readSessionValue("spifex:org-external-id");
 
       const reply: AuthBCTok = { type: "TOKENS", to: msg.from, access, orgExternalId, userId };
       channel.postMessage(reply);
@@ -179,13 +193,10 @@ function startAuthTokenResponder(): () => void {
 
       if (!incomingAccess || !incomingUserId) return;
 
-      const expectedUserId = (getUserIdStored() || "").trim();
+      const expected = (getUserIdStored() || "").trim();
+      if (expected && expected !== incomingUserId) return;
 
-      // If this tab already knows the user, do not accept cross-user tokens.
-      if (expectedUserId && expectedUserId !== incomingUserId) return;
-
-      // Otherwise lock identity now.
-      if (!expectedUserId) setUserIdStored(incomingUserId);
+      if (!expected) setUserIdStored(incomingUserId);
 
       setTokens(incomingAccess);
       if (incomingOrgExternalId) setOrgExternalIdStored(incomingOrgExternalId);
@@ -234,10 +245,10 @@ async function requestTokensFromOtherTabs(timeoutMs = 800): Promise<boolean> {
 
           if (!incomingAccess || !incomingUserId) return;
 
-          const expectedUserId = (getUserIdStored() || "").trim();
-          if (expectedUserId && expectedUserId !== incomingUserId) return;
+          const expected = (getUserIdStored() || "").trim();
+          if (expected && expected !== incomingUserId) return;
 
-          if (!expectedUserId) setUserIdStored(incomingUserId);
+          if (!expected) setUserIdStored(incomingUserId);
 
           setTokens(incomingAccess);
           if (incomingOrgExternalId) setOrgExternalIdStored(incomingOrgExternalId);
@@ -281,15 +292,13 @@ export const useAuth = () => {
 
   const applyUserSnapshot = useCallback(
     (payload: Awaited<ReturnType<typeof api.getUser>>["data"]) => {
+      const uid = String(payload.user?.id || "").trim();
+      lockUserIdStrict(uid);
+
       dispatch(setUser(payload.user));
       dispatch(setUserOrganization(payload.organization));
       dispatch(setIsSubscribed(Boolean(payload.is_subscribed)));
       dispatch(setPermissions(payload.permissions ?? []));
-
-      // Lock user identity (external id) tab-scoped
-      const uid = String(payload.user?.id || "").trim();
-      if (uid) setUserIdStored(uid);
-      else clearUserIdStored();
 
       const orgExt = payload.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
@@ -339,8 +348,6 @@ export const useAuth = () => {
 
       syncInFlight.current = (async () => {
         try {
-          // If this tab has no access token, try to obtain it from another open tab.
-          // If it fails, proceed anyway: http.ts may refresh via cookie.
           if (!getAccess()) {
             await requestTokensFromOtherTabs(800);
           }
@@ -375,6 +382,11 @@ export const useAuth = () => {
       const access = res.data.access;
       if (!access) throw new Error("Missing access token");
 
+      // On explicit sign-in, we accept the new identity and overwrite tab identity.
+      const uid = String(res.data.user?.id || "").trim();
+      if (uid) setUserIdStored(uid);
+      else clearUserIdStored();
+
       setTokens(access);
       setAuthHintActive();
       clearBootstrapFailedFlag();
@@ -383,11 +395,6 @@ export const useAuth = () => {
       dispatch(setUserOrganization(res.data.organization));
       dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
       dispatch(setPermissions(res.data.permissions ?? []));
-
-      // Lock user identity (external id) tab-scoped
-      const uid = String(res.data.user?.id || "").trim();
-      if (uid) setUserIdStored(uid);
-      else clearUserIdStored();
 
       const orgExt = res.data.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
@@ -408,23 +415,19 @@ export const useAuth = () => {
     [auth.organization?.is_owner, auth.permissions],
   );
 
-  // Start the token responder (cross-tab) once per mount.
   useEffect(() => startAuthTokenResponder(), []);
 
-  // Cross-tab sign-in/sign-out via localStorage key changes
+  // Cross-tab sign-in/sign-out via localStorage changes
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== AUTH_HINT_KEY) return;
 
-      // Another tab signed in
       if (e.newValue === "active") {
         void syncAuth({ force: true, reason: "storage_active" });
         return;
       }
 
-      // Another tab signed out
       if (e.oldValue === "active" && e.newValue !== "active") {
-        // local-only cleanup; do NOT call api.signOut() here
         dispatch(resetAuth());
         clearTokens();
         clearOrgExternalIdStored();
@@ -437,17 +440,14 @@ export const useAuth = () => {
     return () => window.removeEventListener("storage", onStorage);
   }, [dispatch, syncAuth]);
 
-  // Bootstrap this tab once
   useEffect(() => {
     if (AUTH_BOOTSTRAP_STARTED) return;
     AUTH_BOOTSTRAP_STARTED = true;
 
-    void Promise.resolve(handleInitUser()).catch(() => {
-      // auth flow handles failures
-    });
+    void Promise.resolve(handleInitUser()).catch(() => undefined);
   }, [handleInitUser]);
 
-  // In-tab events (refresh_failed / refresh_user_mismatch / subscription blocked)
+  // In-tab events (refresh failures / Redis-session invalid / subscription blocked)
   useEffect(() => {
     const onAuthSync = (e: Event) => {
       const ce = e as CustomEvent;
@@ -456,7 +456,9 @@ export const useAuth = () => {
       if (
         reason === "refresh_failed" ||
         reason === "refresh_user_mismatch" ||
-        reason === "refresh_user_missing"
+        reason === "refresh_user_missing" ||
+        reason === "session_not_valid" ||
+        reason === "token_not_valid"
       ) {
         void handleSignOut();
       }

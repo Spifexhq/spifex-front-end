@@ -93,10 +93,10 @@ function filenameFromContentDisposition(
 export const api = {
   /* --- Auth --- */
   signIn: (payload: SignInRequest) =>
-    request<SignInResponse>('auth/signin/', 'POST', payload),
+    request<SignInResponse>("auth/signin/", "POST", payload),
 
   signUp: (payload: SignUpRequest) =>
-    request<SignUpResponse>('auth/signup/', 'POST', payload),
+    request<SignUpResponse>("auth/signup/", "POST", payload),
 
   signOut: () =>
     request<SignOutResponse>("auth/signout/", "POST"),
@@ -106,51 +106,51 @@ export const api = {
 
   /* --- Email verifications --- */
   checkEmailAvailability: (email: string) =>
-    request<{ available: boolean }>("auth/emails/check/", "POST", { email }),
+    request<{ available: boolean }>("identity/emails/check/", "POST", { email }),
 
   verifyEmail: <T>(uidb64: string, token: string) =>
-    request<T>(`auth/emails/verify/${uidb64}/${token}/`, "GET"),
+    request<T>(`identity/emails/verify/${uidb64}/${token}/`, "GET"),
 
   verifyNewEmail: <T>(changeId: string, token: string) =>
-    request<T>(`auth/emails/verify-change/${changeId}/${token}/`, "GET"),
+    request<T>(`identity/emails/verify-change/${changeId}/${token}/`, "GET"),
 
   cancelEmailChange: <T>(changeId: string, token: string) =>
-    request<T>(`auth/emails/cancel-change/${changeId}/${token}/`, "GET"),
+    request<T>(`identity/emails/cancel-change/${changeId}/${token}/`, "GET"),
 
   /* --- Email / Password security --- */
   emailChange: (payload: EmailChangeRequest) =>
-    request<EmailChangeResponse>("auth/emails/change/", "POST", payload),
+    request<EmailChangeResponse>("identity/emails/change/", "POST", payload),
 
   passwordChange: (payload: PasswordChangeRequest) =>
-    request<PasswordChangeResponse>("auth/password/change/", "PUT", payload),
+    request<PasswordChangeResponse>("identity/password/change/", "PUT", payload),
 
   verifyPasswordChange: <T>(changeId: string, token: string) =>
-    request<T>(`auth/password/verify-change/${changeId}/${token}/`, "GET"),
+    request<T>(`identity/password/verify-change/${changeId}/${token}/`, "GET"),
 
   /* --- Password reset --- */
   passwordReset: (email: string) =>
-    request<PasswordResetResponse>("auth/password/reset/", "POST", {
+    request<PasswordResetResponse>("identity/password/reset/", "POST", {
       email
     } satisfies PasswordResetRequest),
 
   verifyPasswordReset: (uidb64: string, token: string, password: string) =>
-    request<VerifyPasswordResetResponse>(`auth/password/reset/${uidb64}/${token}/`, "POST", {
+    request<VerifyPasswordResetResponse>(`identity/password/reset/${uidb64}/${token}/`, "POST", {
       password,
       password_confirm: password,
     } satisfies VerifyPasswordResetRequest),
 
   /* --- User --- */
   getUser: () =>
-    request<GetUserResponse>("auth/profile/", "GET"),
+    request<GetUserResponse>("identity/profile/", "GET"),
 
   editUser:(payload: Partial<User>) =>
-    request<User>("auth/profile/", "PUT", payload),
+    request<User>("identity/profile/", "PUT", payload),
 
   getPersonalSettings: () =>
-    request<PersonalSettings>("auth/profile/settings/", "GET"),
+    request<PersonalSettings>("identity/profile/settings/", "GET"),
 
   editPersonalSettings:(payload: EditPersonalSettingsRequest) =>
-    request<PersonalSettings>("auth/profile/settings/", "PATCH", payload),
+    request<PersonalSettings>("identity/profile/settings/", "PATCH", payload),
 
   /* --- Organization --- */
   getOrganization: () =>
@@ -184,10 +184,10 @@ export const api = {
 
   /* --- Notifications --- */
   getNotificationPreferences: () =>
-    request<GetNotificationPreferencesResponse>("auth/notifications/preferences/", "GET"),
+    request<GetNotificationPreferencesResponse>("identity/notifications/preferences/", "GET"),
 
   updateNotificationPreferences: (payload: UpdateNotificationPreferencesRequest) =>
-    request<UpdateNotificationPreferencesResponse>("auth/notifications/preferences/", "PUT", payload),
+    request<UpdateNotificationPreferencesResponse>("identity/notifications/preferences/", "PUT", payload),
 
   /* --- Permissions --- */
   getPermissions: () =>

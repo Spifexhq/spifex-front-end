@@ -98,16 +98,12 @@ function sanitizeUrl(fullUrl: string): string {
 
 /* ---------------------------------- Axios --------------------------------- */
 
-// -----------------------------------------------------------------------------
-// Auth Gate (inlined)
-// Blocks non-auth requests while a critical auth sync is running in this tab.
-// -----------------------------------------------------------------------------
+// Auth Gate: blocks non-auth requests while a critical auth sync is running in this tab.
 let gate: Promise<void> | null = null;
 
 export function setAuthGate(p: Promise<void>) {
   gate = p;
 }
-
 export function clearAuthGate() {
   gate = null;
 }
@@ -154,19 +150,21 @@ http.interceptors.request.use(async (cfg) => {
     await new Promise((r) => setTimeout(r, pauseUntil - Date.now()));
   }
 
-  startAt.set(cfg, performance.now());
+  startAt.set(cfg, typeof performance !== "undefined" ? performance.now() : Date.now());
 
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
   const safeUrl = sanitizeUrl(fullUrl);
 
   const headers = (cfg.headers ?? {}) as Record<string, unknown>;
-  window.NetReport?.push({
-    t: Date.now(),
-    method,
-    url,
-    fullUrl: safeUrl,
-    reqId: typeof headers["X-Request-Id"] === "string" ? (headers["X-Request-Id"] as string) : undefined,
-  });
+  if (typeof window !== "undefined") {
+    window.NetReport?.push({
+      t: Date.now(),
+      method,
+      url,
+      fullUrl: safeUrl,
+      reqId: typeof headers["X-Request-Id"] === "string" ? (headers["X-Request-Id"] as string) : undefined,
+    });
+  }
 
   return cfg;
 });
@@ -186,9 +184,7 @@ function readOrgExternalId(): string | undefined {
 
 function readExpectedUserId(): string | undefined {
   const s = store.getState() as unknown as {
-    auth?: {
-      user?: { id?: string | null } | null;
-    };
+    auth?: { user?: { id?: string | null } | null };
   };
 
   const fromRedux = s.auth?.user?.id || "";
@@ -219,12 +215,14 @@ function hasApiError(payload: unknown): payload is { error: ApiErrorBody } {
   return isObject(e) && typeof e.code === "string";
 }
 
+function extractApiErrorCode(payload: unknown): string | undefined {
+  if (!hasApiError(payload)) return undefined;
+  return payload.error.code;
+}
+
 function getApiErrorCode(err: AxiosError): string | undefined {
   const data = err.response?.data;
-  if (!isObject(data)) return undefined;
-  const e = data.error;
-  if (!isObject(e)) return undefined;
-  return typeof e.code === "string" ? e.code : undefined;
+  return extractApiErrorCode(data);
 }
 
 function getDetailMessage(err: AxiosError): string | undefined {
@@ -275,8 +273,9 @@ function calc429DelayMs(err: AxiosError): number {
 type TelemetryExtra = { retried429?: number; retryAfterMs?: number };
 
 function finishLog(cfg: AxiosRequestConfig, res?: AxiosResponse, err?: AxiosError, extra?: TelemetryExtra) {
-  const t0 = startAt.get(cfg) ?? performance.now();
-  const ms = performance.now() - t0;
+  const t0 = startAt.get(cfg) ?? (typeof performance !== "undefined" ? performance.now() : Date.now());
+  const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const ms = t1 - t0;
   const status = res?.status ?? err?.response?.status;
 
   const resHeaders = res?.headers as Record<string, unknown> | undefined;
@@ -289,16 +288,18 @@ function finishLog(cfg: AxiosRequestConfig, res?: AxiosResponse, err?: AxiosErro
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
   const safeUrl = sanitizeUrl(fullUrl);
 
-  window.NetReport?.push({
-    t: Date.now(),
-    method: (cfg.method || "GET").toUpperCase() as Method,
-    url: cfg.url || "",
-    fullUrl: safeUrl,
-    status,
-    ms,
-    reqId,
-    ...extra,
-  });
+  if (typeof window !== "undefined") {
+    window.NetReport?.push({
+      t: Date.now(),
+      method: (cfg.method || "GET").toUpperCase() as Method,
+      url: cfg.url || "",
+      fullUrl: safeUrl,
+      status,
+      ms,
+      reqId,
+      ...extra,
+    });
+  }
 }
 
 /* ------------------------------- Token refresh ------------------------------ */
@@ -309,8 +310,7 @@ function unwrapRefreshPayload(payload: unknown): RefreshPayload | null {
   if (!isObject(payload)) return null;
 
   const root = payload as Record<string, unknown>;
-  const src =
-    "data" in root && isObject(root.data) ? (root.data as Record<string, unknown>) : root;
+  const src = "data" in root && isObject(root.data) ? (root.data as Record<string, unknown>) : root;
 
   const access = typeof src.access === "string" ? src.access : "";
   const userId = typeof src.user_id === "string" ? src.user_id : "";
@@ -326,29 +326,42 @@ function notifyRefreshSubscribers() {
   refreshSubscribers.splice(0).forEach((fn) => fn());
 }
 
+const REFRESH_FATAL_REASONS = new Set([
+  "refresh_user_mismatch",
+  "refresh_user_missing",
+  "session_not_valid",
+  "token_not_valid",
+  "refresh_failed",
+]);
+
+const rawHttp = axios.create({
+  baseURL,
+  withCredentials: true,
+  validateStatus: (s) => s < 500,
+});
+
 async function doRefresh(): Promise<void> {
-  const res = await axios.post(
-    `${baseURL}auth/refresh/`,
-    {},
-    {
-      validateStatus: (s) => s < 500,
-      withCredentials: true,
-    },
-  );
+  const res = await rawHttp.post("auth/refresh/", {});
 
   const { data, status } = res as AxiosResponse<unknown>;
-  const parsed = unwrapRefreshPayload(data);
 
-  if (status !== 200 || !parsed) throw new Error("refresh-failed");
+  if (status !== 200) {
+    // If backend used the envelope error format, preserve the code as a reason.
+    const code = extractApiErrorCode(data);
+    throw new Error(code || "refresh_failed");
+  }
+
+  const parsed = unwrapRefreshPayload(data);
+  if (!parsed) throw new Error("refresh_failed");
 
   const returnedUserId = (parsed.user_id || "").trim();
-  if (!returnedUserId) throw new Error("refresh-user-missing");
+  if (!returnedUserId) throw new Error("refresh_user_missing");
 
   const expected = readExpectedUserId();
 
   // Security invariant: if this tab already knows who the user is, refresh must match.
   if (expected && expected !== returnedUserId) {
-    throw new Error("refresh-user-mismatch");
+    throw new Error("refresh_user_mismatch");
   }
 
   // If this tab didn't know yet (fresh reload), lock the user id now.
@@ -360,8 +373,8 @@ async function doRefresh(): Promise<void> {
 
 type RetriableConfig = AxiosRequestConfig & { _retry?: boolean; _retried429?: number };
 
-function isAuthProfileUrl(url: string): boolean {
-  return url.includes("/auth/profile/") || url.includes("auth/profile");
+function isProfileUrl(url: string): boolean {
+  return url.includes("/identity/profile/") || url.includes("identity/profile");
 }
 
 function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig): boolean {
@@ -369,9 +382,10 @@ function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig):
 
   if (status === 401) return true;
 
+  // Only do 403-refresh for profile when we have no access token (cookie-only auth bootstrap).
   if (status === 403) {
     const url = String(cfg.url || "");
-    if (!isAuthProfileUrl(url)) return false;
+    if (!isProfileUrl(url)) return false;
     if (getAccess()) return false;
     return true;
   }
@@ -422,17 +436,11 @@ http.interceptors.response.use(
       if (!refreshingPromise) {
         refreshingPromise = doRefresh()
           .catch((e) => {
-            // Local cleanup immediately; the auth layer will do the server signout.
             clearTokens();
             clearUserIdStored();
 
-            const msg = e instanceof Error ? e.message : "";
-            const reason =
-              msg === "refresh-user-mismatch"
-                ? "refresh_user_mismatch"
-                : msg === "refresh-user-missing"
-                  ? "refresh_user_missing"
-                  : "refresh_failed";
+            const msg = e instanceof Error ? (e.message || "").trim() : "";
+            const reason = REFRESH_FATAL_REASONS.has(msg) ? msg : "refresh_failed";
 
             emitWindowEvent(AUTH_SYNC_EVENT, { reason });
             throw e;
@@ -511,14 +519,16 @@ export function clearHttpCaches() {
   pauseUntil = 0;
 }
 
-export async function request<T>(
-  endpoint: string,
-  method: Method = "GET",
-  payload?: object,
-): Promise<ApiSuccess<T>> {
+function normalizeEndpoint(ep: string): string {
+  return String(ep || "").replace(/^\/+/, "");
+}
+
+export async function request<T>(endpoint: string, method: Method = "GET", payload?: object): Promise<ApiSuccess<T>> {
   try {
+    const ep = normalizeEndpoint(endpoint);
+
     const cfg: AxiosRequestConfig = {
-      url: endpoint,
+      url: ep,
       method,
       data: method !== "GET" ? payload : undefined,
       params: method === "GET" ? pruneParams(payload) : undefined,
