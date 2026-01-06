@@ -21,7 +21,7 @@ export type LiveSyncEnvelope<
   type: TType;
   ts: string;
   scope: {
-    user_id?: number;
+    user_external_id?: string;
     org_external_id?: string;
     [k: string]: unknown;
   };
