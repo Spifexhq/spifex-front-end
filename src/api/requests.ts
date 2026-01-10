@@ -2,51 +2,48 @@
 import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import type { SignInRequest, SignInResponse, SignOutResponse, SignUpRequest, SignUpResponse } from '@/models/auth/auth'
-import type { CookieConsentRequest, CookieConsentResponse } from 'src/models/auth/cookies';
+import type { CookieConsentRequest, CookieConsentResponse } from '@/models/auth/cookies';
 import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest,
-  VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse } from 'src/models/auth/security';
-import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from 'src/models/auth/user';
-import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from 'src/models/auth/organization';
-import type { GetEntitlementLimitsResponse } from 'src/models/auth/entitlements';
+  VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse } from '@/models/auth/security';
+import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from '@/models/auth/user';
+import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from '@/models/auth/organization';
+import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
 import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, CreateCustomerPortalSessionRequest,
   CreateCustomerPortalSessionResponse, 
-  GetSubscriptionStatusResponse} from 'src/models/auth/billing';
+  GetSubscriptionStatusResponse} from '@/models/auth/billing';
 import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesRequest,
-  UpdateNotificationPreferencesResponse } from 'src/models/auth/notifications';
+  UpdateNotificationPreferencesResponse } from '@/models/auth/notifications';
 import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse, GetGroupsResponse,
-  GetPermissionsResponse, UpdateGroupPermissionsResponse } from 'src/models/auth/rbac';
-import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse } from 'src/models/auth/members';
-import type { CashflowKpis, KpiQueryParams, SettledKpis } from 'src/models/components/cardKpis';
-import type { DashboardOverview } from 'src/models/components/dashboard';
-import type { ReportsSummaryParams, ReportsSummary } from 'src/models/components/reports';
+  GetPermissionsResponse, UpdateGroupPermissionsResponse } from '@/models/auth/rbac';
+import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse } from '@/models/auth/members';
+import type { CashflowKpis, KpiQueryParams, SettledKpis } from '@/models/components/cardKpis';
+import type { DashboardOverview } from '@/models/components/dashboard';
+import type { ReportsSummaryParams, ReportsSummary } from '@/models/components/reports';
 import type { AddViewPresetRequest, AddViewPresetResponse, EditViewPresetRequest, EditViewPresetResponse,
-  GetViewPresetsResponse } from 'src/models/components/viewPresets';
+  GetViewPresetsResponse } from '@/models/components/viewPresets';
 import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest, GetEntriesBulkResponse,
   GetEntryRequest, EditEntriesBulkResponse, EditEntryRequest, GetEntryResponse,
-  DeleteEntriesBulkRequest } from 'src/models/entries/entries';
+  DeleteEntriesBulkRequest } from '@/models/entries/entries';
 import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, BulkSettleItem, BulkSettleResponse,
-  EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from 'src/models/entries/settlements';
+  EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from '@/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
 import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
   GetBanksBulkRequest, GetBanksBulkResponse, GetBanksParams, GetBanksResponse, 
   GetBanksTableParams,
-  GetBanksTableResponse} from 'src/models/settings/banking';
+  GetBanksTableResponse} from '@/models/settings/banking';
 import type { AddLedgerAccountRequest, DeleteAllLedgerAccountsRequest, DeleteAllLedgerAccountsResponse,
   EditLedgerAccountRequest, GetLedgerAccountsRequest, GetLedgerAccountsResponse, ImportLedgerAccountsResponse,
   ImportStandardLedgerAccountsRequest, ImportStandardLedgerAccountsResponse, LedgerAccount, LedgerAccountsBulkRequest,
-  LedgerAccountsBulkResponse, LedgerAccountsExistsResponse } from 'src/models/settings/ledgerAccounts';
+  LedgerAccountsBulkResponse, LedgerAccountsExistsResponse } from '@/models/settings/ledgerAccounts';
 import type { AddDepartmentRequest, Department, DepartmentsBulkRequest, DepartmentsBulkResponse, EditDepartmentRequest,
-  GetDepartmentResponse, GetDepartmentsParams, GetDepartmentsResponse } from 'src/models/settings/departments';
+  GetDepartmentResponse, GetDepartmentsParams, GetDepartmentsResponse } from '@/models/settings/departments';
 import type { AddProjectRequest, EditProjectRequest, GetProjectsParams, GetProjectsResponse, Project,
-  ProjectsBulkRequest, ProjectsBulkResponse } from 'src/models/settings/projects';
+  ProjectsBulkRequest, ProjectsBulkResponse } from '@/models/settings/projects';
 import type { AddInventoryItemRequest, EditInventoryItemRequest, GetInventoryItemsParams, GetInventoryItemsResponse,
-  InventoryItem, InventoryItemsBulkRequest, InventoryItemsBulkResponse } from 'src/models/settings/inventory';
+  InventoryItem, InventoryItemsBulkRequest, InventoryItemsBulkResponse } from '@/models/settings/inventory';
 import type { AddEntityRequest, EditEntityRequest, EntitiesBulkRequest, EntitiesBulkResponse, Entity,
-  GetEntitiesParams, GetEntitiesResponse, GetEntityResponse } from 'src/models/settings/entities';
-
-import { GetTask, GetTasks, AddTaskRequest, EditTaskRequest } from '@/models/tasks/dto';
-import { TaskDetail } from '@/models/tasks/domain';
-import { GetStatementsParams, GetStatementsResponse, TriggerStatementAnalysisResponse, UploadStatementResponse } from 'src/models/settings/statements';
+  GetEntitiesParams, GetEntitiesResponse, GetEntityResponse } from '@/models/settings/entities';
+import { GetStatementsParams, GetStatementsResponse, TriggerStatementAnalysisResponse, UploadStatementResponse } from '@/models/settings/statements';
 
 
 async function downloadTemplate(path: string, filename: string) {
@@ -254,25 +251,6 @@ export const api = {
   /* --- Reports --- */
   getReportsSummary: (params: ReportsSummaryParams) =>
     request<ReportsSummary>("cashflow/reports/summary/", "GET", params),
-  
-  /* --- Tasks --- */
-  getAllTasks: () =>
-    request<GetTasks>("companies/tasks", "GET"),
-
-  getTask: (ids: number[]) =>
-    request<GetTask>(`companies/tasks/${ids.join(',')}`, "GET"),
-
-  addTask: (payload: AddTaskRequest) =>
-    request<TaskDetail>("companies/tasks", "POST", payload),
-
-  editTask: (ids: number[], payload: Partial<EditTaskRequest>) =>
-    request<TaskDetail>(`companies/tasks/${ids.join(',')}`, "PUT", payload),
-  
-  deleteAllTasks: () =>
-    request<TaskDetail>("companies/tasks", 'DELETE'),
-
-  deleteTask: (ids: number[]) =>
-    request<TaskDetail>(`companies/tasks/${ids.join(',')}`, 'DELETE'),
 
   /* --- View Presets --- */
   getViewPresets: () =>

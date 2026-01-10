@@ -30,9 +30,11 @@ function emitWindowEvent(name: string, detail?: Record<string, unknown>) {
   window.dispatchEvent(new CustomEvent(name, { detail }));
 }
 
-const rawBaseURL = import.meta.env.DEV
-  ? import.meta.env.VITE_SPIFEX_DEVELOPMENT_URL_API
-  : import.meta.env.VITE_SPIFEX_URL_API || "https://spifex-backend.onrender.com/api/v1";
+const rawBaseURL = String(import.meta.env.VITE_API_BASE_URL || "").trim();
+
+if (!rawBaseURL) {
+  throw new Error("Missing VITE_API_BASE_URL (set it in .env.dev / .env.prod).");
+}
 
 export const baseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 

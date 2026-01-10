@@ -1,5 +1,5 @@
 export * from "./Api";
 export * from "./auth";
-export * from "./enterprise_structure";
 export * from "./entries";
-export * from "./tasks";
+export * from "./components";
+export * from "./settings";

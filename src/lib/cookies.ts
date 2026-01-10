@@ -33,18 +33,6 @@ function simpleUnhash(value: string): string {
 }
 
 /**
- * Hash usando SubtleCrypto (mais seguro, assíncrono)
- * Usa SHA-256 para criar um hash real
- */
-async function cryptoHash(value: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(value);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
  * Classe principal para gerenciar cookies
  */
 export const Cookies = {
@@ -270,6 +258,8 @@ export const SidebarCookie = {
   },
 };
 
+type TableDensity = 'compact' | 'comfortable' | 'spacious';
+
 /**
  * Cookie de densidade de tabelas
  */
@@ -277,16 +267,19 @@ export const TableDensityCookie = {
   NAME: 'table_density',
   MAX_AGE: 365 * 24 * 60 * 60,
 
-  set(density: 'compact' | 'comfortable' | 'spacious'): void {
+  set(density: TableDensity): void {
     Cookies.set(this.NAME, density, {
       maxAge: this.MAX_AGE,
       sameSite: 'lax',
     });
   },
 
-  get(): 'compact' | 'comfortable' | 'spacious' {
+  get(): TableDensity {
     const value = Cookies.get(this.NAME);
-    return (value as any) || 'comfortable';
+    if (value === 'compact' || value === 'comfortable' || value === 'spacious') {
+      return value;
+    }
+    return 'comfortable';
   },
 
   remove(): void {
@@ -410,7 +403,7 @@ export const CSRFCookie = {
 
 /* ==================== Hooks React (opcional) ==================== */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export function useLanguageCookie(useHash: boolean = false) {
   const [language, setLanguageState] = useState<string | null>(() => 
@@ -452,11 +445,11 @@ export function useSidebarCookie() {
 }
 
 export function useTableDensityCookie() {
-  const [density, setDensityState] = useState<'compact' | 'comfortable' | 'spacious'>(() => 
+  const [density, setDensityState] = useState<TableDensity>(() => 
     TableDensityCookie.get()
   );
 
-  const setDensity = (newDensity: typeof density) => {
+  const setDensity = (newDensity: TableDensity) => {
     TableDensityCookie.set(newDensity);
     setDensityState(newDensity);
   };

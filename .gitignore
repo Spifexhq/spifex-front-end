@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
+infra/https/certs/*.pem
+infra/https/certs/*-key.pem
+infra/https/Caddyfile
