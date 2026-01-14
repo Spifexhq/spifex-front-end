@@ -45,3 +45,15 @@ export type VerifyPasswordResetResponse = void;
 export interface VerifyPasswordChangeResponse {
   status: "confirmed";
 }
+
+/* ------------------------ Two-Factor Authentication ------------------------ */
+
+export interface TwoFactorSettingsResponse {
+  enabled: boolean;
+  method: "email";
+}
+
+export interface TwoFactorSettingsUpdateRequest {
+  enabled: boolean;
+  current_password: string;
+}

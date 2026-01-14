@@ -18,5 +18,23 @@
   "tooManyAttempts": "Muitas tentativas. Tente novamente dentro de alguns minutos.",
   "unexpectedError": "Erro inesperado. Tente novamente mais tarde.",
   "copyright": "Copyright © 2025 Spifex.",
-  "emailNotRegistered": "Este email não está registado. Verifique-o ou crie uma conta."
+  "emailNotRegistered": "Este email não está registado. Verifique-o ou crie uma conta.",
+
+  "twoFactorHeading": "Autenticação de dois fatores",
+  "twoFactorSubheading": "Introduza o código de 6 dígitos que enviámos para o seu email.",
+  "twoFactorRequired": "A autenticação de dois fatores está ativa. Verifique o seu email para obter o código de 6 dígitos.",
+  "twoFactorEmailHint": "A entrar como",
+  "twoFactorCodeLabel": "Código de autenticação",
+  "twoFactorCodePlaceholder": "Código de 6 dígitos",
+  "verifyCodeButton": "Validar código",
+  "backToSignIn": "Voltar",
+  "twoFactorCodeNote": "Os códigos expiram rapidamente. Se falhar, volte a entrar.",
+  "twoFactorEnter6Digits": "Introduza o código de 6 dígitos.",
+  "twoFactorDigitsOnly": "O código deve conter apenas números.",
+  "twoFactorInvalidCode": "Código inválido. Tente novamente.",
+  "twoFactorExpired": "Este código expirou. Volte a entrar.",
+  "twoFactorResend": "Reenviar código",
+  "twoFactorResent": "Enviámos um novo código.",
+  "twoFactorResendTooSoon": "Aguarde um momento antes de pedir um novo código.",
+  "twoFactorDeliveryFailed": "Não foi possível enviar o código. Tente novamente mais tarde."
 }

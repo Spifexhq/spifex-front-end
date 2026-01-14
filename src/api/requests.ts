@@ -1,10 +1,12 @@
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
-import type { SignInRequest, SignInResponse, SignOutResponse, SignUpRequest, SignUpResponse } from '@/models/auth/auth'
+import type { MfaRequiredPayload, SignInRequest, SignInResend2FARequest,
+  SignInResend2FAResponse, SignInResponse, SignInVerify2FARequest, SignOutResponse,
+  SignUpRequest, SignUpResponse } from '@/models/auth/auth'
 import type { CookieConsentRequest, CookieConsentResponse } from '@/models/auth/cookies';
-import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest,
-  VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse } from '@/models/auth/security';
+import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest, VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse, 
+  TwoFactorSettingsResponse, TwoFactorSettingsUpdateRequest} from '@/models/auth/security';
 import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from '@/models/auth/user';
 import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from '@/models/auth/organization';
 import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
@@ -13,8 +15,8 @@ import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, Creat
   GetSubscriptionStatusResponse} from '@/models/auth/billing';
 import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesRequest,
   UpdateNotificationPreferencesResponse } from '@/models/auth/notifications';
-import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse, GetGroupsResponse,
-  GetPermissionsResponse, UpdateGroupPermissionsResponse } from '@/models/auth/rbac';
+import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse,
+  GetGroupsResponse, GetPermissionsResponse, UpdateGroupPermissionsResponse } from '@/models/auth/rbac';
 import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse } from '@/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from '@/models/components/cardKpis';
 import type { DashboardOverview } from '@/models/components/dashboard';
@@ -90,7 +92,7 @@ function filenameFromContentDisposition(
 export const api = {
   /* --- Auth --- */
   signIn: (payload: SignInRequest) =>
-    request<SignInResponse>("auth/signin/", "POST", payload),
+    request<SignInResponse | MfaRequiredPayload>("auth/signin/", "POST", payload),
 
   signUp: (payload: SignUpRequest) =>
     request<SignUpResponse>("auth/signup/", "POST", payload),
@@ -100,6 +102,13 @@ export const api = {
 
   saveCookieConsent: (payload: CookieConsentRequest) =>
     request<CookieConsentResponse>("cookies/consent/", "POST", payload),
+
+  /* --- 2FA Sign-in --- */
+  signInVerify2FA: (payload: SignInVerify2FARequest) =>
+    request<SignInResponse>("auth/signin/verify-2fa/", "POST", payload),
+
+  signInResend2FA: (payload: SignInResend2FARequest) =>
+    request<SignInResend2FAResponse>("auth/signin/resend-2fa/", "POST", payload),
 
   /* --- Email verifications --- */
   checkEmailAvailability: (email: string) =>
@@ -113,6 +122,13 @@ export const api = {
 
   cancelEmailChange: <T>(changeId: string, token: string) =>
     request<T>(`identity/emails/cancel-change/${changeId}/${token}/`, "GET"),
+
+  /* --- 2FA --- */
+  getTwoFactorSettings: () =>
+    request<TwoFactorSettingsResponse>("identity/profile/two-factor/", "GET"),
+
+  updateTwoFactorSettings: (payload: TwoFactorSettingsUpdateRequest) =>
+    request<TwoFactorSettingsResponse>("identity/profile/two-factor/", "PATCH", payload),
 
   /* --- Email / Password security --- */
   emailChange: (payload: EmailChangeRequest) =>

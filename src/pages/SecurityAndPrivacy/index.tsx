@@ -13,6 +13,7 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
+import Checkbox from "@/shared/ui/Checkbox";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -134,7 +135,7 @@ const SecurityAndPrivacy: React.FC = () => {
 
   const [user, setUser] = useState<User | null>(null);
 
-  const [modalMode, setModalMode] = useState<"password" | "email" | null>(null);
+  const [modalMode, setModalMode] = useState<"password" | "email" | "twofactor" | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
   const [pwData, setPwData] = useState({
@@ -148,6 +149,12 @@ const SecurityAndPrivacy: React.FC = () => {
     new_email: "",
     current_password: "",
   });
+
+  /* ------------------------------ 2FA -------------------------------------- */
+  const [twoFactor, setTwoFactor] = useState<{ enabled: boolean; method: "email" } | null>(null);
+  const [twoFactorIntentEnabled, setTwoFactorIntentEnabled] = useState<boolean | null>(null);
+  const [twoFactorConfirm, setTwoFactorConfirm] = useState({ email: "", password: "" });
+  const [isTwoFactorSubmitting, setIsTwoFactorSubmitting] = useState(false);
 
   /* ----------------------- Password validation (UI) ------------------------ */
   const pwValidation = useMemo(() => {
@@ -180,6 +187,8 @@ const SecurityAndPrivacy: React.FC = () => {
     pwValidation.isValid,
   ]);
 
+  const currentTwoFactorEnabled = !!twoFactor?.enabled;
+
   /* ------------------------------ Bootstrap -------------------------------- */
   useEffect(() => {
     let mounted = true;
@@ -188,10 +197,21 @@ const SecurityAndPrivacy: React.FC = () => {
         const resp = await api.getUser();
         if (!mounted) return;
         setUser(resp.data.user as User);
+
+        // Fetch 2FA settings (endpoint: identity/profile/two-factor/)
+        try {
+          const tf = await api.getTwoFactorSettings();
+          if (!mounted) return;
+          setTwoFactor(tf.data);
+        } catch {
+          if (!mounted) return;
+          setTwoFactor(null);
+        }
       } finally {
         if (mounted) setIsInitialLoading(false);
       }
     })();
+
     return () => {
       mounted = false;
     };
@@ -212,6 +232,16 @@ const SecurityAndPrivacy: React.FC = () => {
     setModalMode("email");
   }, [user, authUser]);
 
+  const openTwoFactorConfirmModal = useCallback(
+    (nextEnabled: boolean) => {
+      if (!twoFactor) return;
+      setTwoFactorIntentEnabled(nextEnabled);
+      setTwoFactorConfirm({ email: "", password: "" });
+      setModalMode("twofactor");
+    },
+    [twoFactor]
+  );
+
   const closeModal = useCallback(() => {
     setPwData({ current_password: "", new_password: "", confirm: "" });
     setEmailData((prev) => ({
@@ -219,6 +249,10 @@ const SecurityAndPrivacy: React.FC = () => {
       new_email: "",
       current_password: "",
     }));
+
+    setTwoFactorIntentEnabled(null);
+    setTwoFactorConfirm({ email: "", password: "" });
+
     setModalMode(null);
   }, [user, authUser]);
 
@@ -278,7 +312,6 @@ const SecurityAndPrivacy: React.FC = () => {
           err.code === "invalid_password"
             ? t("toast.invalidCurrentPassword")
             : getApiErrorMessage(err) ?? t("toast.changeError");
-
         setSnack({ message, severity: "error" });
       } else if (err instanceof Error) {
         setSnack({ message: err.message, severity: "error" });
@@ -341,6 +374,76 @@ const SecurityAndPrivacy: React.FC = () => {
     }
   }, [emailData, t, closeModal, refreshUser]);
 
+  const handleTwoFactorCheckboxChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!twoFactor) return;
+      const nextEnabled = e.target.checked;
+      openTwoFactorConfirmModal(nextEnabled);
+    },
+    [twoFactor, openTwoFactorConfirmModal]
+  );
+
+  const handleTwoFactorConfirmChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTwoFactorConfirm((p) => (name === "email" ? { ...p, email: value } : { ...p, password: value }));
+  }, []);
+
+  const handleTwoFactorSubmit = useCallback(async () => {
+    if (twoFactorIntentEnabled === null) return;
+
+    const expectedEmail = (user?.email ?? authUser?.email ?? "").trim().toLowerCase();
+    const providedEmail = (twoFactorConfirm.email || "").trim().toLowerCase();
+    const password = twoFactorConfirm.password || "";
+
+    if (!providedEmail || !password) {
+      setSnack({ message: t("toast.missingFields"), severity: "error" });
+      return;
+    }
+
+    if (!expectedEmail || providedEmail !== expectedEmail) {
+      setSnack({ message: t("toast.emailMismatch"), severity: "error" });
+      return;
+    }
+
+    setIsTwoFactorSubmitting(true);
+    try {
+      const res = await api.updateTwoFactorSettings({
+        enabled: twoFactorIntentEnabled,
+        current_password: password,
+      });
+
+      setTwoFactor(res.data);
+      closeModal();
+
+      setSnack({
+        message: res.data.enabled ? t("toast.twoFactorEnabled") : t("toast.twoFactorDisabled"),
+        severity: "success",
+      });
+    } catch (err: unknown) {
+      if (isApiErrorBody(err)) {
+        const message =
+          err.code === "invalid_password"
+            ? t("toast.invalidCurrentPassword")
+            : getApiErrorMessage(err) ?? t("toast.changeError");
+        setSnack({ message, severity: "error" });
+      } else if (err instanceof Error) {
+        setSnack({ message: err.message, severity: "error" });
+      } else {
+        setSnack({ message: t("toast.unexpected"), severity: "error" });
+      }
+    } finally {
+      setIsTwoFactorSubmitting(false);
+    }
+  }, [
+    twoFactorIntentEnabled,
+    twoFactorConfirm.email,
+    twoFactorConfirm.password,
+    user,
+    authUser,
+    t,
+    closeModal,
+  ]);
+
   /* ------------------------------- UX hooks -------------------------------- */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
@@ -372,7 +475,7 @@ const SecurityAndPrivacy: React.FC = () => {
 
   return (
     <>
-      <TopProgress active={isSubmitting} variant="top" topOffset={64} />
+      <TopProgress active={isSubmitting || isTwoFactorSubmitting} variant="top" topOffset={64} />
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
@@ -407,11 +510,15 @@ const SecurityAndPrivacy: React.FC = () => {
                   label={t("field.primaryEmail")}
                   value={user?.email ?? authUser?.email ?? ""}
                   action={
-                    <Button variant="outline" onClick={openEmailModal} disabled={isSubmitting}>
+                    <Button
+                      variant="outline"
+                      onClick={openEmailModal}
+                      disabled={isSubmitting || isTwoFactorSubmitting}
+                    >
                       {t("btn.changeEmail")}
                     </Button>
                   }
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isTwoFactorSubmitting}
                 />
 
                 <Row
@@ -422,11 +529,37 @@ const SecurityAndPrivacy: React.FC = () => {
                     </>
                   }
                   action={
-                    <Button variant="outline" onClick={openPasswordModal} disabled={isSubmitting}>
+                    <Button
+                      variant="outline"
+                      onClick={openPasswordModal}
+                      disabled={isSubmitting || isTwoFactorSubmitting}
+                    >
                       {t("btn.changePassword")}
                     </Button>
                   }
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isTwoFactorSubmitting}
+                />
+
+                {/* New row: 2FA toggle (checkbox) */}
+                <Row
+                  label={t("field.twoFactor")}
+                  value={
+                    twoFactor
+                      ? currentTwoFactorEnabled
+                        ? t("field.enabled")
+                        : t("field.disabled")
+                      : t("field.unavailable")
+                  }
+                  action={
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={currentTwoFactorEnabled}
+                        onChange={handleTwoFactorCheckboxChange}
+                        disabled={!twoFactor || isSubmitting || isTwoFactorSubmitting}
+                      />
+                    </div>
+                  }
+                  disabled={!twoFactor || isSubmitting || isTwoFactorSubmitting}
                 />
               </div>
             </div>
@@ -435,34 +568,36 @@ const SecurityAndPrivacy: React.FC = () => {
 
         {modalMode && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
-                  {modalMode === "password" ? t("modal.title") : t("modal.emailTitle")}
+                  {modalMode === "password"
+                    ? t("modal.title")
+                    : modalMode === "email"
+                    ? t("modal.emailTitle")
+                    : twoFactorIntentEnabled
+                    ? t("modal.twoFactorEnableTitle")
+                    : t("modal.twoFactorDisableTitle")}
                 </h3>
                 <button
                   className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
                   onClick={closeModal}
                   aria-label={t("modal.close")}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isTwoFactorSubmitting}
                 >
                   &times;
                 </button>
               </header>
 
               <form
-                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
+                className={`space-y-3 ${
+                  isSubmitting || isTwoFactorSubmitting ? "opacity-70 pointer-events-none" : ""
+                }`}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (modalMode === "password") {
-                    void handlePasswordSubmit();
-                  } else {
-                    void handleEmailSubmit();
-                  }
+                  if (modalMode === "password") void handlePasswordSubmit();
+                  else if (modalMode === "email") void handleEmailSubmit();
+                  else void handleTwoFactorSubmit();
                 }}
               >
                 {modalMode === "password" ? (
@@ -524,7 +659,7 @@ const SecurityAndPrivacy: React.FC = () => {
                       <p className="text-[12px] text-red-600">{t("toast.passwordMismatch")}</p>
                     )}
                   </>
-                ) : (
+                ) : modalMode === "email" ? (
                   <>
                     <Input
                       kind="text"
@@ -560,20 +695,70 @@ const SecurityAndPrivacy: React.FC = () => {
                       required
                     />
                   </>
+                ) : (
+                  <>
+                    <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                      <div className="text-[12px] text-gray-800">
+                        {twoFactorIntentEnabled
+                          ? t("modal.twoFactorEnableHelp")
+                          : t("modal.twoFactorDisableHelp")}
+                      </div>
+                    </div>
+
+                    <Input
+                      kind="text"
+                      label={t("field.confirmEmail")}
+                      name="email"
+                      type="email"
+                      value={twoFactorConfirm.email}
+                      onChange={handleTwoFactorConfirmChange}
+                      autoComplete="email"
+                      required
+                    />
+
+                    <Input
+                      kind="text"
+                      label={t("field.currentPassword")}
+                      name="password"
+                      type="password"
+                      value={twoFactorConfirm.password}
+                      onChange={handleTwoFactorConfirmChange}
+                      showTogglePassword
+                      autoComplete="current-password"
+                      required
+                    />
+                  </>
                 )}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
+                  <Button
+                    variant="cancel"
+                    type="button"
+                    onClick={closeModal}
+                    disabled={isSubmitting || isTwoFactorSubmitting}
+                  >
                     {t("btn.cancel")}
                   </Button>
 
                   <Button
                     type="submit"
                     disabled={
-                      isSubmitting || (modalMode === "password" ? !canSubmitPassword : false)
+                      isSubmitting ||
+                      isTwoFactorSubmitting ||
+                      (modalMode === "password"
+                        ? !canSubmitPassword
+                        : modalMode === "twofactor"
+                        ? !twoFactorConfirm.email ||
+                          !twoFactorConfirm.password ||
+                          twoFactorIntentEnabled === null
+                        : false)
                     }
                   >
-                    {modalMode === "password" ? t("btn.save") : t("btn.saveEmail")}
+                    {modalMode === "password"
+                      ? t("btn.save")
+                      : modalMode === "email"
+                      ? t("btn.saveEmail")
+                      : t("btn.confirm")}
                   </Button>
                 </div>
               </form>

@@ -59,3 +59,21 @@ export type SignUpResponse = SignUpResponseSuccess | SignUpResponseError;
 /* ---------------------------------- Sign Out ---------------------------------- */
 
 export type SignOutResponse = { ok: true } | Record<string, never>;
+
+/* ---------------------------------- 2FA ---------------------------------- */
+
+export type MfaRequiredPayload = {
+  mfa_required: true;
+  challenge_id: string;
+  expires_at?: string;
+  channel?: string; // "email"
+};
+
+export type VerifyTwoFactorArgs = {
+  challenge_id: string;
+  code: string;
+};
+
+export type SignInVerify2FARequest = { challenge_id: string; code: string };
+export type SignInResend2FARequest = { challenge_id: string };
+export type SignInResend2FAResponse = { challenge_id: string; expires_at?: string; channel?: string };

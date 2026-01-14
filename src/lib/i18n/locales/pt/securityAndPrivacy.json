@@ -17,18 +17,28 @@
     "primaryEmail": "E-mail principal",
     "currentEmail": "E-mail atual",
     "newEmail": "Novo e-mail",
-    "currentPassword": "Senha atual"
+    "currentPassword": "Senha atual",
+    "twoFactor": "Autenticação de dois fatores (2FA)",
+    "enabled": "Ativada",
+    "disabled": "Desativada",
+    "unavailable": "Indisponível",
+    "confirmEmail": "Confirme seu e-mail"
   },
   "btn": {
     "changePassword": "Alterar senha",
     "changeEmail": "Alterar e-mail",
     "save": "Salvar",
     "saveEmail": "Salvar e-mail",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
   },
   "modal": {
     "title": "Alterar senha",
     "emailTitle": "Alterar e-mail",
+    "twoFactorEnableTitle": "Ativar autenticação de dois fatores",
+    "twoFactorDisableTitle": "Desativar autenticação de dois fatores",
+    "twoFactorEnableHelp": "Ao ativar, você receberá um código de 6 dígitos por e-mail sempre que fizer login.",
+    "twoFactorDisableHelp": "Ao desativar, você fará login apenas com a sua senha.",
     "close": "Fechar"
   },
   "toast": {
@@ -45,6 +55,9 @@
     "emailInUse": "Este e-mail já está em uso.",
     "sameEmail": "O novo e-mail não pode ser igual ao e-mail atual.",
     "invalidCurrentPassword": "A senha atual está incorreta.",
-    "currentEmailMismatch": "O e-mail atual não corresponde à sua conta."
+    "currentEmailMismatch": "O e-mail atual não corresponde à sua conta.",
+    "twoFactorEnabled": "A autenticação de dois fatores foi ativada.",
+    "twoFactorDisabled": "A autenticação de dois fatores foi desativada.",
+    "emailMismatch": "O e-mail informado não corresponde ao e-mail da sua conta."
   }
 }

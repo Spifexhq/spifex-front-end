@@ -1,7 +1,7 @@
 // contexts/AuthContext.tsx
 import { createContext } from "react";
 import type { ApiSuccess } from "@/models";
-import type { SignInResponse } from "@/models/auth/auth";
+import type { MfaRequiredPayload, SignInResponse, VerifyTwoFactorArgs } from "@/models/auth/auth";
 import type { User, UserOrganizationDetail } from "@/models/auth/user";
 
 export interface AuthContextType {
@@ -20,7 +20,9 @@ export interface AuthContextType {
 
   handleInitUser: () => Promise<void>;
   handlePermissionExists: (permissionCodename: string) => boolean;
-  handleSignIn: (email: string, password: string) => Promise<ApiSuccess<SignInResponse>>;
+  handleSignIn: (email: string, password: string) => Promise<ApiSuccess<SignInResponse | MfaRequiredPayload>>;
+  handleVerifyTwoFactor: (args: VerifyTwoFactorArgs) => Promise<ApiSuccess<SignInResponse>>;
+  handleResendTwoFactor: (args: { challenge_id: string }) => Promise<ApiSuccess<{ challenge_id: string; expires_at?: string; channel?: string }>>;
   handleSignOut: () => Promise<void> | void;
 }
 

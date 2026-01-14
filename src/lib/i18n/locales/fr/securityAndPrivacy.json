@@ -17,18 +17,28 @@
     "primaryEmail": "E-mail principal",
     "currentEmail": "E-mail actuel",
     "newEmail": "Nouvel e-mail",
-    "currentPassword": "Mot de passe actuel"
+    "currentPassword": "Mot de passe actuel",
+    "twoFactor": "Authentification à deux facteurs (2FA)",
+    "enabled": "Activée",
+    "disabled": "Désactivée",
+    "unavailable": "Indisponible",
+    "confirmEmail": "Confirmez votre e-mail"
   },
   "btn": {
     "changePassword": "Changer le mot de passe",
     "changeEmail": "Changer l’e-mail",
     "save": "Enregistrer",
     "saveEmail": "Enregistrer l’e-mail",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
   },
   "modal": {
     "title": "Changer le mot de passe",
     "emailTitle": "Changer l’e-mail",
+    "twoFactorEnableTitle": "Activer l’authentification à deux facteurs",
+    "twoFactorDisableTitle": "Désactiver l’authentification à deux facteurs",
+    "twoFactorEnableHelp": "Une fois activée, vous recevrez un code à 6 chiffres par e-mail à chaque connexion.",
+    "twoFactorDisableHelp": "Une fois désactivée, vous vous connecterez uniquement avec votre mot de passe.",
     "close": "Fermer"
   },
   "toast": {
@@ -45,6 +55,9 @@
     "emailInUse": "Cet e-mail est déjà utilisé.",
     "sameEmail": "Le nouvel e-mail ne peut pas être identique à l’e-mail actuel.",
     "invalidCurrentPassword": "Le mot de passe actuel est incorrect.",
-    "currentEmailMismatch": "L’e-mail actuel ne correspond pas à votre compte."
+    "currentEmailMismatch": "L’e-mail actuel ne correspond pas à votre compte.",
+    "twoFactorEnabled": "L’authentification à deux facteurs a été activée.",
+    "twoFactorDisabled": "L’authentification à deux facteurs a été désactivée.",
+    "emailMismatch": "L’e-mail saisi ne correspond pas à l’e-mail de votre compte."
   }
 }

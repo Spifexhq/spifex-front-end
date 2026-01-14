@@ -42,7 +42,14 @@ const useCombinedUserInfo = (): UserInfo => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { handleInitUser, handleSignIn, handleSignOut, syncAuth } = useAuthHook();
+  const {
+    handleInitUser,
+    handleSignIn,
+    handleVerifyTwoFactor,
+    handleResendTwoFactor,
+    handleSignOut,
+    syncAuth,
+  } = useAuthHook();
   const userInfo = useCombinedUserInfo();
 
   const handlePermissionExists = useCallback(
@@ -55,10 +62,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ...userInfo,
       handleInitUser,
       handleSignIn,
+      handleVerifyTwoFactor,
+      handleResendTwoFactor,
       handleSignOut,
       handlePermissionExists,
     }),
-    [userInfo, handleInitUser, handleSignIn, handleSignOut, handlePermissionExists],
+    [
+      userInfo,
+      handleInitUser,
+      handleSignIn,
+      handleVerifyTwoFactor,
+      handleResendTwoFactor,
+      handleSignOut,
+      handlePermissionExists,
+    ],
   );
 
   const orgExternalId = userInfo.organization?.organization?.id ?? null;

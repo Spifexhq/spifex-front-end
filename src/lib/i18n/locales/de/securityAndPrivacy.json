@@ -17,18 +17,28 @@
     "primaryEmail": "Primäre E-Mail",
     "currentEmail": "Aktuelle E-Mail",
     "newEmail": "Neue E-Mail",
-    "currentPassword": "Aktuelles Passwort"
+    "currentPassword": "Aktuelles Passwort",
+    "twoFactor": "Zwei-Faktor-Authentifizierung (2FA)",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "unavailable": "Nicht verfügbar",
+    "confirmEmail": "Bestätigen Sie Ihre E-Mail"
   },
   "btn": {
     "changePassword": "Passwort ändern",
     "changeEmail": "E-Mail ändern",
     "save": "Speichern",
     "saveEmail": "E-Mail speichern",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen"
   },
   "modal": {
     "title": "Passwort ändern",
     "emailTitle": "E-Mail ändern",
+    "twoFactorEnableTitle": "Zwei-Faktor-Authentifizierung aktivieren",
+    "twoFactorDisableTitle": "Zwei-Faktor-Authentifizierung deaktivieren",
+    "twoFactorEnableHelp": "Wenn aktiviert, erhalten Sie bei jeder Anmeldung einen 6-stelligen Code per E-Mail.",
+    "twoFactorDisableHelp": "Wenn deaktiviert, melden Sie sich nur mit Ihrem Passwort an.",
     "close": "Schließen"
   },
   "toast": {
@@ -45,6 +55,9 @@
     "emailInUse": "Diese E-Mail wird bereits verwendet.",
     "sameEmail": "Die neue E-Mail darf nicht mit der aktuellen E-Mail übereinstimmen.",
     "invalidCurrentPassword": "Das aktuelle Passwort ist falsch.",
-    "currentEmailMismatch": "Die aktuelle E-Mail stimmt nicht mit Ihrem Konto überein."
+    "currentEmailMismatch": "Die aktuelle E-Mail stimmt nicht mit Ihrem Konto überein.",
+    "twoFactorEnabled": "Die Zwei-Faktor-Authentifizierung wurde aktiviert.",
+    "twoFactorDisabled": "Die Zwei-Faktor-Authentifizierung wurde deaktiviert.",
+    "emailMismatch": "Die eingegebene E-Mail stimmt nicht mit der E-Mail Ihres Kontos überein."
   }
 }

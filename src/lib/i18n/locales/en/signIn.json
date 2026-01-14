@@ -18,5 +18,23 @@
   "tooManyAttempts": "Too many attempts. Please try again in a few minutes.",
   "unexpectedError": "Unexpected error. Please try again later.",
   "copyright": "Copyright © 2025 Spifex.",
-  "emailNotRegistered": "This email address is not registered. Please check it or sign up."
+  "emailNotRegistered": "This email address is not registered. Please check it or sign up.",
+
+  "twoFactorHeading": "Two-factor authentication",
+  "twoFactorSubheading": "Enter the 6-digit code we sent to your email.",
+  "twoFactorRequired": "Two-factor authentication is enabled. Check your email for a 6-digit code.",
+  "twoFactorEmailHint": "Signing in as",
+  "twoFactorCodeLabel": "Authentication code",
+  "twoFactorCodePlaceholder": "6-digit code",
+  "verifyCodeButton": "Verify code",
+  "backToSignIn": "Back",
+  "twoFactorCodeNote": "Codes expire quickly. If it fails, sign in again.",
+  "twoFactorEnter6Digits": "Enter the 6-digit code.",
+  "twoFactorDigitsOnly": "The code must contain only numbers.",
+  "twoFactorInvalidCode": "Invalid code. Please try again.",
+  "twoFactorExpired": "This code expired. Please sign in again.",
+  "twoFactorResend": "Resend code",
+  "twoFactorResent": "We sent a new code.",
+  "twoFactorResendTooSoon": "Please wait a moment before requesting a new code.",
+  "twoFactorDeliveryFailed": "We couldn't send the code. Please try again later."
 }

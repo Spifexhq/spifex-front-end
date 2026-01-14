@@ -28,6 +28,7 @@ import {
 
 import { clearHttpCaches, AUTH_SYNC_EVENT, SUBSCRIPTION_BLOCKED_EVENT } from "@/lib/http";
 import type { ApiErrorBody } from "@/models/Api";
+import type { SignInResponse, MfaRequiredPayload } from "@/models/auth/auth";
 
 const AUTH_HINT_KEY = "auth_status";
 const AUTH_BOOTSTRAP_FAILED_KEY = "spifex:auth_bootstrap_failed";
@@ -118,6 +119,12 @@ function lockUserIdStrict(nextUserId: string) {
   }
 
   if (!expected) setUserIdStored(next);
+}
+
+function isMfaRequiredPayload(value: unknown): value is MfaRequiredPayload {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Partial<MfaRequiredPayload>;
+  return v.mfa_required === true && typeof v.challenge_id === "string" && v.challenge_id.trim().length > 0;
 }
 
 /* ---------------------------------------------------------------------------
@@ -375,15 +382,13 @@ export const useAuth = () => {
     await syncAuth({ force: authUserRef.current == null, reason: "init_user" });
   }, [syncAuth]);
 
-  const handleSignIn = useCallback(
-    async (email: string, password: string) => {
-      const res = await api.signIn({ email, password });
-
-      const access = res.data.access;
+  const applySignInSnapshot = useCallback(
+    (data: SignInResponse) => {
+      const access = data.access;
       if (!access) throw new Error("Missing access token");
 
       // On explicit sign-in, we accept the new identity and overwrite tab identity.
-      const uid = String(res.data.user?.id || "").trim();
+      const uid = String(data.user?.id || "").trim();
       if (uid) setUserIdStored(uid);
       else clearUserIdStored();
 
@@ -391,20 +396,55 @@ export const useAuth = () => {
       setAuthHintActive();
       clearBootstrapFailedFlag();
 
-      dispatch(setUser(res.data.user));
-      dispatch(setUserOrganization(res.data.organization));
-      dispatch(setIsSubscribed(Boolean(res.data.is_subscribed)));
-      dispatch(setPermissions(res.data.permissions ?? []));
+      dispatch(setUser(data.user));
+      dispatch(setUserOrganization(data.organization));
+      dispatch(setIsSubscribed(Boolean(data.is_subscribed)));
+      dispatch(setPermissions(data.permissions ?? []));
 
-      const orgExt = res.data.organization?.organization?.id ?? null;
+      const orgExt = data.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
 
       emitAuthSync("signed_in");
-      return res;
     },
     [dispatch],
+  );
+
+  const handleSignIn = useCallback(
+    async (email: string, password: string) => {
+      const res = await api.signIn({ email, password });
+
+      // If backend says MFA is required, do NOT throw.
+      if (isMfaRequiredPayload(res.data)) {
+        setAuthHintActive(); // optional; keep if you want “active session” hint
+        clearBootstrapFailedFlag();
+        return res;
+      }
+
+      // Normal sign-in success
+      applySignInSnapshot(res.data);
+      return res;
+    },
+    [applySignInSnapshot],
+  );
+
+  const handleVerifyTwoFactor = useCallback(
+    async (args: { challenge_id: string; code: string }) => {
+      const res = await api.signInVerify2FA(args);
+
+      // After verification, we get normal SignInResponse (access token + user/org)
+      applySignInSnapshot(res.data);
+      return res;
+    },
+    [applySignInSnapshot],
+  );
+
+  const handleResendTwoFactor = useCallback(
+    async (args: { challenge_id: string }) => {
+      return await api.signInResend2FA(args);
+    },
+    [],
   );
 
   const handlePermissionExists = useCallback(
@@ -489,6 +529,8 @@ export const useAuth = () => {
       handleInitUser,
       handlePermissionExists,
       handleSignIn,
+      handleVerifyTwoFactor,
+      handleResendTwoFactor,
       handleSignOut,
 
       syncAuth,
@@ -501,6 +543,8 @@ export const useAuth = () => {
       handleInitUser,
       handlePermissionExists,
       handleSignIn,
+      handleVerifyTwoFactor,
+      handleResendTwoFactor,
       handleSignOut,
       syncAuth,
       accessToken,

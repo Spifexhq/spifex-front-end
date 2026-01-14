@@ -17,18 +17,28 @@
     "primaryEmail": "Primary email",
     "currentEmail": "Current email",
     "newEmail": "New email",
-    "currentPassword": "Current password"
+    "currentPassword": "Current password",
+    "twoFactor": "Two-factor authentication (2FA)",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "unavailable": "Unavailable",
+    "confirmEmail": "Confirm your email"
   },
   "btn": {
     "changePassword": "Change password",
     "changeEmail": "Change email",
     "save": "Save",
     "saveEmail": "Save email",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
   "modal": {
     "title": "Change password",
     "emailTitle": "Change email",
+    "twoFactorEnableTitle": "Enable two-factor authentication",
+    "twoFactorDisableTitle": "Disable two-factor authentication",
+    "twoFactorEnableHelp": "When enabled, you will receive a 6-digit code by email every time you sign in.",
+    "twoFactorDisableHelp": "If disabled, you will sign in using only your password.",
     "close": "Close"
   },
   "toast": {
@@ -45,6 +55,9 @@
     "emailInUse": "This email is already in use.",
     "sameEmail": "The new email cannot be the same as the current email.",
     "invalidCurrentPassword": "The current password is incorrect.",
-    "currentEmailMismatch": "The current email does not match your account."
+    "currentEmailMismatch": "The current email does not match your account.",
+    "twoFactorEnabled": "Two-factor authentication has been enabled.",
+    "twoFactorDisabled": "Two-factor authentication has been disabled.",
+    "emailMismatch": "The email you entered does not match your account email."
   }
 }
