@@ -1,10 +1,11 @@
 // vite.config.ts
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
 import fs from "node:fs";
+import type { ServerOptions as HttpsServerOptions } from "node:https";
 
-function readHttps() {
+function readHttps(): HttpsServerOptions {
   const certPath = path.resolve(process.cwd(), "infra/https/certs/127.0.0.1.pem");
   const keyPath = path.resolve(process.cwd(), "infra/https/certs/127.0.0.1-key.pem");
 
@@ -26,27 +27,27 @@ function readHttps() {
   };
 }
 
-export default defineConfig(() => {
-  const https = readHttps();
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const useHttps = env.VITE_HTTPS === "true";
+
+  // IMPORTANT: use `undefined` when disabled (not `false`)
+  const https = useHttps ? readHttps() : undefined;
 
   return {
-    plugins: [tailwindcss()],
+    plugins: tailwindcss(),
     resolve: {
       alias: {
         src: path.resolve(__dirname, "src"),
         "@": path.resolve(__dirname, "src"),
       },
     },
-
-    // Vite dev server (https://127.0.0.1:5173)
     server: {
       host: "127.0.0.1",
       port: 5173,
       strictPort: true,
       https,
     },
-
-    // Vite preview (used by `vite preview`) (https://127.0.0.1:5173)
     preview: {
       host: "127.0.0.1",
       port: 5173,
