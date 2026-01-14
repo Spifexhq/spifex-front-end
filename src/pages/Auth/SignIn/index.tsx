@@ -20,6 +20,8 @@ type Snack =
 type SnackSeverity = NonNullable<Snack>["severity"];
 
 const REMEMBERED_EMAIL_KEY = "spifex:rememberedEmail";
+const MAX_RESEND_ATTEMPTS = 2;
+const RESEND_COUNTDOWN_SECONDS = 30;
 
 type SignInStep = "credentials" | "twofactor";
 
@@ -61,6 +63,8 @@ const SignIn: React.FC = () => {
 
   const [challengeId, setChallengeId] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendAttempts, setResendAttempts] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
@@ -77,12 +81,32 @@ const SignIn: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setResendCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
 
   const isFormIncomplete = useMemo(() => {
     if (step === "credentials") return normalizedEmail === "" || password === "";
     return twoFactorCode.trim().length !== 6;
   }, [step, normalizedEmail, password, twoFactorCode]);
+
+  const canResendCode = useMemo(() => {
+    return resendCountdown === 0 && resendAttempts < MAX_RESEND_ATTEMPTS;
+  }, [resendCountdown, resendAttempts]);
 
   const resolveErrorMessage = (err: unknown): { message: React.ReactNode; severity: SnackSeverity } => {
     if (isApiErrorBody(err)) {
@@ -116,14 +140,19 @@ const SignIn: React.FC = () => {
   };
 
   const persistRememberedEmail = (emailToPersist: string) => {
-    if (rememberDevice) localStorage.setItem(REMEMBERED_EMAIL_KEY, emailToPersist);
-    else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    if (rememberDevice) {
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, emailToPersist);
+    } else {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
   };
 
   const startTwoFactor = (id: string) => {
     setChallengeId(id);
     setTwoFactorCode("");
     setStep("twofactor");
+    setResendCountdown(RESEND_COUNTDOWN_SECONDS);
+    setResendAttempts(0);
     setSnack({ message: t("twoFactorRequired"), severity: "info" });
   };
 
@@ -131,6 +160,8 @@ const SignIn: React.FC = () => {
     setStep("credentials");
     setTwoFactorCode("");
     setChallengeId("");
+    setResendCountdown(0);
+    setResendAttempts(0);
   };
 
   const handleSubmitCredentials = async () => {
@@ -143,7 +174,6 @@ const SignIn: React.FC = () => {
     try {
       const res = await handleSignIn(normalizedEmail, password);
 
-      // IMPORTANT: check res.data (ApiSuccess wrapper)
       if (isMfaRequiredPayload(res.data)) {
         startTwoFactor(res.data.challenge_id);
         return;
@@ -196,8 +226,11 @@ const SignIn: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (step === "credentials") await handleSubmitCredentials();
-    else await handleSubmitTwoFactor();
+    if (step === "credentials") {
+      await handleSubmitCredentials();
+    } else {
+      await handleSubmitTwoFactor();
+    }
   };
 
   const handleTwoFactorCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -206,17 +239,30 @@ const SignIn: React.FC = () => {
   };
 
   const handleResend = async () => {
-    if (!challengeId) return;
+    if (!challengeId || !canResendCode) return;
+
     setIsLoading(true);
     try {
       await handleResendTwoFactor({ challenge_id: challengeId });
-      setSnack({ message: t("resendCodeSent"), severity: "info" });
+      setResendAttempts((prev) => prev + 1);
+      setResendCountdown(RESEND_COUNTDOWN_SECONDS);
+      setSnack({ message: t("twoFactorResent"), severity: "success" });
     } catch (err: unknown) {
       const { message, severity } = resolveErrorMessage(err);
       setSnack({ message, severity });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getResendButtonText = () => {
+    if (resendCountdown > 0) {
+      return `${t("twoFactorResend")} (${resendCountdown}s)`;
+    }
+    if (resendAttempts >= MAX_RESEND_ATTEMPTS) {
+      return t("twoFactorResendTooSoon");
+    }
+    return t("twoFactorResend");
   };
 
   return (
@@ -328,6 +374,7 @@ const SignIn: React.FC = () => {
                       inputMode="numeric"
                       autoComplete="one-time-code"
                       autoCorrect="off"
+                      autoFocus
                     />
                   </div>
 
@@ -335,7 +382,7 @@ const SignIn: React.FC = () => {
                     <button
                       type="button"
                       onClick={resetToCredentials}
-                      className="text-sm text-slate-600 hover:text-slate-900 hover:underline underline-offset-4"
+                      className="text-sm text-slate-600 hover:text-slate-900 hover:underline underline-offset-4 transition-colors"
                       disabled={isLoading}
                     >
                       {t("backToSignIn")}
@@ -344,10 +391,10 @@ const SignIn: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleResend}
-                      className="text-sm text-slate-600 hover:text-slate-900 hover:underline underline-offset-4"
-                      disabled={isLoading}
+                      className="text-sm text-slate-600 hover:text-slate-900 hover:underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline transition-colors"
+                      disabled={isLoading || !canResendCode}
                     >
-                      {t("resendCode")}
+                      {getResendButtonText()}
                     </button>
                   </div>
 
