@@ -19,7 +19,7 @@ import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
 import { validatePassword } from "@/lib";
 import type { ApiErrorBody } from "@/models/Api";
-import type { User } from "@/models/auth/user";
+import type { SecurityStatusResponse } from "@/models/auth/security";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =
@@ -133,7 +133,8 @@ const SecurityAndPrivacy: React.FC = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null);
+  // Single source of truth for this page.
+  const [security, setSecurity] = useState<SecurityStatusResponse | null>(null);
 
   const [modalMode, setModalMode] = useState<"password" | "email" | "twofactor" | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
@@ -151,7 +152,6 @@ const SecurityAndPrivacy: React.FC = () => {
   });
 
   /* ------------------------------ 2FA -------------------------------------- */
-  const [twoFactor, setTwoFactor] = useState<{ enabled: boolean; method: "email" } | null>(null);
   const [twoFactorIntentEnabled, setTwoFactorIntentEnabled] = useState<boolean | null>(null);
   const [twoFactorConfirm, setTwoFactorConfirm] = useState({ email: "", password: "" });
   const [isTwoFactorSubmitting, setIsTwoFactorSubmitting] = useState(false);
@@ -187,26 +187,27 @@ const SecurityAndPrivacy: React.FC = () => {
     pwValidation.isValid,
   ]);
 
-  const currentTwoFactorEnabled = !!twoFactor?.enabled;
+  /* ----------------------- Email validation (UI) ------------------------ */
+  const canSubmitEmail = useMemo(() => {
+    const cur = (emailData.current_email || "").trim();
+    const next = (emailData.new_email || "").trim();
+    const pw = (emailData.current_password || "").trim();
+    if (!cur || !next || !pw) return false;
+    if (cur.toLowerCase() === next.toLowerCase()) return false;
+    return true;
+  }, [emailData.current_email, emailData.new_email, emailData.current_password]);
+
+  const currentTwoFactorEnabled = !!security?.two_factor_enabled;
 
   /* ------------------------------ Bootstrap -------------------------------- */
   useEffect(() => {
     let mounted = true;
+
     (async () => {
       try {
-        const resp = await api.getUser();
+        const sec = await api.getSecurityStatus();
         if (!mounted) return;
-        setUser(resp.data.user as User);
-
-        // Fetch 2FA settings (endpoint: identity/profile/two-factor/)
-        try {
-          const tf = await api.getTwoFactorSettings();
-          if (!mounted) return;
-          setTwoFactor(tf.data);
-        } catch {
-          if (!mounted) return;
-          setTwoFactor(null);
-        }
+        setSecurity(sec.data);
       } finally {
         if (mounted) setIsInitialLoading(false);
       }
@@ -218,34 +219,41 @@ const SecurityAndPrivacy: React.FC = () => {
   }, []);
 
   /* ------------------------------- Handlers -------------------------------- */
+  const refreshSecurity = useCallback(async () => {
+    try {
+      const sec = await api.getSecurityStatus();
+      setSecurity(sec.data);
+    } catch {
+      /* silent */
+    }
+  }, []);
+
   const openPasswordModal = useCallback(() => {
     setPwData({ current_password: "", new_password: "", confirm: "" });
     setModalMode("password");
   }, []);
 
   const openEmailModal = useCallback(() => {
+    const currentEmail = (security?.email ?? authUser?.email ?? "").trim();
     setEmailData({
-      current_email: user?.email ?? authUser?.email ?? "",
+      current_email: currentEmail,
       new_email: "",
       current_password: "",
     });
     setModalMode("email");
-  }, [user, authUser]);
+  }, [security?.email, authUser?.email]);
 
-  const openTwoFactorConfirmModal = useCallback(
-    (nextEnabled: boolean) => {
-      if (!twoFactor) return;
-      setTwoFactorIntentEnabled(nextEnabled);
-      setTwoFactorConfirm({ email: "", password: "" });
-      setModalMode("twofactor");
-    },
-    [twoFactor]
-  );
+  const openTwoFactorConfirmModal = useCallback((nextEnabled: boolean) => {
+    setTwoFactorIntentEnabled(nextEnabled);
+    setTwoFactorConfirm({ email: "", password: "" });
+    setModalMode("twofactor");
+  }, []);
 
   const closeModal = useCallback(() => {
     setPwData({ current_password: "", new_password: "", confirm: "" });
+
     setEmailData((prev) => ({
-      current_email: user?.email ?? authUser?.email ?? prev.current_email,
+      current_email: (security?.email ?? authUser?.email ?? prev.current_email).trim(),
       new_email: "",
       current_password: "",
     }));
@@ -254,7 +262,7 @@ const SecurityAndPrivacy: React.FC = () => {
     setTwoFactorConfirm({ email: "", password: "" });
 
     setModalMode(null);
-  }, [user, authUser]);
+  }, [security?.email, authUser?.email]);
 
   const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -264,15 +272,6 @@ const SecurityAndPrivacy: React.FC = () => {
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEmailData((p) => ({ ...p, [name]: value }));
-  }, []);
-
-  const refreshUser = useCallback(async () => {
-    try {
-      const resp = await api.getUser();
-      setUser(resp.data.user as User);
-    } catch {
-      /* silent */
-    }
   }, []);
 
   const handlePasswordSubmit = useCallback(async () => {
@@ -306,6 +305,8 @@ const SecurityAndPrivacy: React.FC = () => {
           t("toast.passwordChangeRequested"),
         severity: "success",
       });
+
+      await refreshSecurity();
     } catch (err: unknown) {
       if (isApiErrorBody(err)) {
         const message =
@@ -321,7 +322,7 @@ const SecurityAndPrivacy: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [pwData, t, closeModal]);
+  }, [pwData, t, closeModal, refreshSecurity]);
 
   const handleEmailSubmit = useCallback(async () => {
     const { current_email, new_email, current_password } = emailData;
@@ -341,7 +342,8 @@ const SecurityAndPrivacy: React.FC = () => {
       await api.emailChange({ current_email, new_email, current_password });
       closeModal();
       setSnack({ message: t("toast.emailChangeRequested"), severity: "success" });
-      await refreshUser();
+
+      await refreshSecurity();
     } catch (err: unknown) {
       if (isApiErrorBody(err)) {
         let message: string;
@@ -372,15 +374,14 @@ const SecurityAndPrivacy: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [emailData, t, closeModal, refreshUser]);
+  }, [emailData, t, closeModal, refreshSecurity]);
 
   const handleTwoFactorCheckboxChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!twoFactor) return;
       const nextEnabled = e.target.checked;
       openTwoFactorConfirmModal(nextEnabled);
     },
-    [twoFactor, openTwoFactorConfirmModal]
+    [openTwoFactorConfirmModal]
   );
 
   const handleTwoFactorConfirmChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -391,7 +392,7 @@ const SecurityAndPrivacy: React.FC = () => {
   const handleTwoFactorSubmit = useCallback(async () => {
     if (twoFactorIntentEnabled === null) return;
 
-    const expectedEmail = (user?.email ?? authUser?.email ?? "").trim().toLowerCase();
+    const expectedEmail = (security?.email ?? authUser?.email ?? "").trim().toLowerCase();
     const providedEmail = (twoFactorConfirm.email || "").trim().toLowerCase();
     const password = twoFactorConfirm.password || "";
 
@@ -407,18 +408,19 @@ const SecurityAndPrivacy: React.FC = () => {
 
     setIsTwoFactorSubmitting(true);
     try {
-      const res = await api.updateTwoFactorSettings({
+      await api.updateTwoFactorSettings({
         enabled: twoFactorIntentEnabled,
         current_password: password,
       });
 
-      setTwoFactor(res.data);
       closeModal();
 
       setSnack({
-        message: res.data.enabled ? t("toast.twoFactorEnabled") : t("toast.twoFactorDisabled"),
+        message: twoFactorIntentEnabled ? t("toast.twoFactorEnabled") : t("toast.twoFactorDisabled"),
         severity: "success",
       });
+
+      await refreshSecurity();
     } catch (err: unknown) {
       if (isApiErrorBody(err)) {
         const message =
@@ -438,10 +440,11 @@ const SecurityAndPrivacy: React.FC = () => {
     twoFactorIntentEnabled,
     twoFactorConfirm.email,
     twoFactorConfirm.password,
-    user,
-    authUser,
+    security?.email,
+    authUser?.email,
     t,
     closeModal,
+    refreshSecurity,
   ]);
 
   /* ------------------------------- UX hooks -------------------------------- */
@@ -469,9 +472,11 @@ const SecurityAndPrivacy: React.FC = () => {
   }
 
   /* ---------------------------------- UI ---------------------------------- */
-  const lastChangeLabel = user?.last_password_change
-    ? format(new Date(user.last_password_change), datePattern, { locale: dateLocale })
+  const lastChangeLabel = security?.last_password_change
+    ? format(new Date(security.last_password_change), datePattern, { locale: dateLocale })
     : t("field.never");
+
+  const primaryEmail = security?.email ?? authUser?.email ?? "";
 
   return (
     <>
@@ -508,7 +513,7 @@ const SecurityAndPrivacy: React.FC = () => {
               <div className="flex flex-col">
                 <Row
                   label={t("field.primaryEmail")}
-                  value={user?.email ?? authUser?.email ?? ""}
+                  value={primaryEmail}
                   action={
                     <Button
                       variant="outline"
@@ -540,11 +545,10 @@ const SecurityAndPrivacy: React.FC = () => {
                   disabled={isSubmitting || isTwoFactorSubmitting}
                 />
 
-                {/* New row: 2FA toggle (checkbox) */}
                 <Row
                   label={t("field.twoFactor")}
                   value={
-                    twoFactor
+                    security
                       ? currentTwoFactorEnabled
                         ? t("field.enabled")
                         : t("field.disabled")
@@ -555,11 +559,11 @@ const SecurityAndPrivacy: React.FC = () => {
                       <Checkbox
                         checked={currentTwoFactorEnabled}
                         onChange={handleTwoFactorCheckboxChange}
-                        disabled={!twoFactor || isSubmitting || isTwoFactorSubmitting}
+                        disabled={!security || isSubmitting || isTwoFactorSubmitting}
                       />
                     </div>
                   }
-                  disabled={!twoFactor || isSubmitting || isTwoFactorSubmitting}
+                  disabled={!security || isSubmitting || isTwoFactorSubmitting}
                 />
               </div>
             </div>
@@ -568,7 +572,11 @@ const SecurityAndPrivacy: React.FC = () => {
 
         {modalMode && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md" role="dialog" aria-modal="true">
+            <div
+              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
+              role="dialog"
+              aria-modal="true"
+            >
               <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
                 <h3 className="text-[14px] font-semibold text-gray-800">
                   {modalMode === "password"
@@ -747,11 +755,11 @@ const SecurityAndPrivacy: React.FC = () => {
                       isTwoFactorSubmitting ||
                       (modalMode === "password"
                         ? !canSubmitPassword
-                        : modalMode === "twofactor"
-                        ? !twoFactorConfirm.email ||
+                        : modalMode === "email"
+                        ? !canSubmitEmail
+                        : !twoFactorConfirm.email ||
                           !twoFactorConfirm.password ||
-                          twoFactorIntentEnabled === null
-                        : false)
+                          twoFactorIntentEnabled === null)
                     }
                   >
                     {modalMode === "password"

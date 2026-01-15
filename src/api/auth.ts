@@ -19,6 +19,7 @@ import {
   getAccess,
   setTokens,
   clearTokens,
+  getOrgExternalIdStored,
   setOrgExternalIdStored,
   clearOrgExternalIdStored,
   getUserIdStored,
@@ -32,6 +33,10 @@ import type { SignInResponse, MfaRequiredPayload } from "@/models/auth/auth";
 
 const AUTH_HINT_KEY = "auth_status";
 const AUTH_BOOTSTRAP_FAILED_KEY = "spifex:auth_bootstrap_failed";
+
+// Keep in sync with src/lib/tokens.ts
+const ORG_EXTERNAL_ID_STORAGE_KEY = "tenant";
+const USER_ID_STORAGE_KEY = "uid";
 
 // Cross-tab token bridge
 const AUTH_BC_NAME = "spifex:auth";
@@ -160,15 +165,6 @@ function openAuthChannel(): BroadcastChannel | null {
   return new BroadcastChannel(AUTH_BC_NAME);
 }
 
-function readSessionValue(key: string): string | undefined {
-  try {
-    const v = sessionStorage.getItem(key) || "";
-    return v.trim() || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function startAuthTokenResponder(): () => void {
   const ch = openAuthChannel();
   if (!ch) return () => {};
@@ -179,6 +175,7 @@ function startAuthTokenResponder(): () => void {
     const msg = ev.data;
     if (!msg || typeof msg !== "object") return;
 
+    // Another tab is asking for tokens.
     if (msg.type === "REQ_TOKENS") {
       const access = getAccess();
       if (!access) return;
@@ -186,13 +183,15 @@ function startAuthTokenResponder(): () => void {
       const userId = (getUserIdStored() || "").trim();
       if (!userId) return; // do not bridge tokens if identity not locked
 
-      const orgExternalId = readSessionValue("spifex:org-external-id");
+      // IMPORTANT: read from token storage helper, not some random sessionStorage key.
+      const orgExternalId = (getOrgExternalIdStored() || "").trim() || undefined;
 
       const reply: AuthBCTok = { type: "TOKENS", to: msg.from, access, orgExternalId, userId };
       channel.postMessage(reply);
       return;
     }
 
+    // This tab is receiving tokens.
     if (msg.type === "TOKENS" && msg.to === getTabId()) {
       const incomingAccess = typeof msg.access === "string" ? msg.access : "";
       const incomingUserId = typeof msg.userId === "string" ? msg.userId.trim() : "";
@@ -387,7 +386,7 @@ export const useAuth = () => {
       const access = data.access;
       if (!access) throw new Error("Missing access token");
 
-      // On explicit sign-in, we accept the new identity and overwrite tab identity.
+      // On explicit sign-in, we accept the new identity.
       const uid = String(data.user?.id || "").trim();
       if (uid) setUserIdStored(uid);
       else clearUserIdStored();
@@ -415,14 +414,12 @@ export const useAuth = () => {
     async (email: string, password: string) => {
       const res = await api.signIn({ email, password });
 
-      // If backend says MFA is required, do NOT throw.
       if (isMfaRequiredPayload(res.data)) {
-        setAuthHintActive(); // optional; keep if you want “active session” hint
+        setAuthHintActive();
         clearBootstrapFailedFlag();
         return res;
       }
 
-      // Normal sign-in success
       applySignInSnapshot(res.data);
       return res;
     },
@@ -432,20 +429,15 @@ export const useAuth = () => {
   const handleVerifyTwoFactor = useCallback(
     async (args: { challenge_id: string; code: string }) => {
       const res = await api.signInVerify2FA(args);
-
-      // After verification, we get normal SignInResponse (access token + user/org)
       applySignInSnapshot(res.data);
       return res;
     },
     [applySignInSnapshot],
   );
 
-  const handleResendTwoFactor = useCallback(
-    async (args: { challenge_id: string }) => {
-      return await api.signInResend2FA(args);
-    },
-    [],
-  );
+  const handleResendTwoFactor = useCallback(async (args: { challenge_id: string }) => {
+    return await api.signInResend2FA(args);
+  }, []);
 
   const handlePermissionExists = useCallback(
     (code: string) => {
@@ -457,22 +449,33 @@ export const useAuth = () => {
 
   useEffect(() => startAuthTokenResponder(), []);
 
-  // Cross-tab sign-in/sign-out via localStorage changes
+  // Cross-tab: react to auth + identity changes.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key !== AUTH_HINT_KEY) return;
+      if (!e.key) return;
 
-      if (e.newValue === "active") {
-        void syncAuth({ force: true, reason: "storage_active" });
+      // Auth status on/off
+      if (e.key === AUTH_HINT_KEY) {
+        if (e.newValue === "active") {
+          void syncAuth({ force: true, reason: "storage_active" });
+          return;
+        }
+
+        if (e.oldValue === "active" && e.newValue !== "active") {
+          dispatch(resetAuth());
+          clearTokens();
+          clearOrgExternalIdStored();
+          clearUserIdStored();
+          clearHttpCaches();
+        }
         return;
       }
 
-      if (e.oldValue === "active" && e.newValue !== "active") {
-        dispatch(resetAuth());
-        clearTokens();
-        clearOrgExternalIdStored();
-        clearUserIdStored();
-        clearHttpCaches();
+      // Org/user identity changes (tenant/uid) should refresh auth snapshot in other tabs.
+      if (e.key === ORG_EXTERNAL_ID_STORAGE_KEY || e.key === USER_ID_STORAGE_KEY) {
+        if (getAuthHintActive()) {
+          void syncAuth({ force: true, reason: "storage_identity_change" });
+        }
       }
     };
 

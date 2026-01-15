@@ -57,3 +57,11 @@ export interface TwoFactorSettingsUpdateRequest {
   enabled: boolean;
   current_password: string;
 }
+
+/* ------------------------ Security ------------------------ */
+
+export type SecurityStatusResponse = {
+  email: string;
+  last_password_change: string;
+  two_factor_enabled: boolean;
+};

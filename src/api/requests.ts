@@ -6,7 +6,7 @@ import type { MfaRequiredPayload, SignInRequest, SignInResend2FARequest,
   SignUpRequest, SignUpResponse } from '@/models/auth/auth'
 import type { CookieConsentRequest, CookieConsentResponse } from '@/models/auth/cookies';
 import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest, VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse, 
-  TwoFactorSettingsResponse, TwoFactorSettingsUpdateRequest} from '@/models/auth/security';
+  TwoFactorSettingsResponse, TwoFactorSettingsUpdateRequest, SecurityStatusResponse} from '@/models/auth/security';
 import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from '@/models/auth/user';
 import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from '@/models/auth/organization';
 import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
@@ -164,6 +164,9 @@ export const api = {
 
   editPersonalSettings:(payload: EditPersonalSettingsRequest) =>
     request<PersonalSettings>("identity/profile/settings/", "PATCH", payload),
+
+  getSecurityStatus: () =>
+    request<SecurityStatusResponse>("identity/profile/security-status/", "GET"),
 
   /* --- Organization --- */
   getOrganization: () =>
