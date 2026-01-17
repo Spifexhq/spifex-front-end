@@ -1,7 +1,5 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/EntitySettings/EntityModal.tsx                              */
-/* Design: aligned to EntriesModal (tabs + header/body/footer + overlays)      */
-/* i18n: namespace "entitySettings"                                            */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +15,28 @@ import { api } from "@/api/requests";
 
 import type { Entity } from "@/models/settings/entities";
 
-type EntityTypeValue = "client" | "supplier" | "employee";
+/* ------------------------------ Entity Type (fixed options) ------------------------------ */
+const ENTITY_TYPE_VALUES = [
+  "client",
+  "supplier",
+  "employee",
+  "contractor",
+  "partner",
+  "prospect",
+  "affiliate",
+  "advisor",
+  "investor",
+  "other",
+] as const;
+
+type EntityTypeValue = (typeof ENTITY_TYPE_VALUES)[number];
+
+const ENTITY_TYPE_ITEMS: { value: EntityTypeValue }[] = ENTITY_TYPE_VALUES.map((v) => ({ value: v }));
+
+function coerceEntityType(v: unknown): EntityTypeValue {
+  return ENTITY_TYPE_VALUES.includes(v as EntityTypeValue) ? (v as EntityTypeValue) : "other";
+}
+
 type EntityModalMode = "create" | "edit";
 
 type Snack =
@@ -37,9 +56,6 @@ export type EntityModalProps = {
 
   canEdit?: boolean;
 };
-
-const ENTITY_TYPE_VALUES: EntityTypeValue[] = ["client", "supplier", "employee"];
-const ENTITY_TYPE_ITEMS: { value: EntityTypeValue }[] = ENTITY_TYPE_VALUES.map((v) => ({ value: v }));
 
 const IDS = {
   tabsGeneral: "entity-tab-general",
@@ -190,16 +206,25 @@ const EntityModal: React.FC<EntityModalProps> = ({
   const fullNameRef = useRef<HTMLInputElement>(null);
   const baselineRef = useRef<string>(JSON.stringify(normalizeDirtyComparable(emptyForm)));
 
-  const TAB_LIST = useMemo(
-    () => TAB_LIST_BASE.map((x) => ({ ...x, label: t(x.labelKey) })),
-    [t]
-  );
+  const TAB_LIST = useMemo(() => TAB_LIST_BASE.map((x) => ({ ...x, label: t(x.labelKey) })), [t]);
 
   const badgeText = useMemo(() => {
-    const v = (formData.entity_type || "client") as EntityTypeValue;
-    if (v === "client") return "CL";
-    if (v === "supplier") return "SU";
-    return "EM";
+    const v = coerceEntityType(formData.entity_type);
+
+    const map: Record<EntityTypeValue, string> = {
+      client: "CL",
+      supplier: "SU",
+      employee: "EM",
+      contractor: "CO",
+      partner: "PA",
+      prospect: "PR",
+      affiliate: "AF",
+      advisor: "AD",
+      investor: "IN",
+      other: "OT",
+    };
+
+    return map[v];
   }, [formData.entity_type]);
 
   const title = mode === "create" ? t("modal.createTitle") : t("modal.editTitle");
@@ -288,7 +313,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
         const next: FormState = {
           full_name: detail.full_name ?? "",
           alias_name: detail.alias_name ?? "",
-          entity_type: (detail.entity_type as EntityTypeValue) ?? "client",
+          entity_type: coerceEntityType(detail.entity_type),
           is_active: detail.is_active ?? true,
 
           ssn_tax_id: detail.ssn_tax_id ?? "",
@@ -321,7 +346,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
           ...emptyForm,
           full_name: entity?.full_name ?? "",
           alias_name: entity?.alias_name ?? "",
-          entity_type: ((entity?.entity_type as EntityTypeValue) ?? "client") as EntityTypeValue,
+          entity_type: coerceEntityType(entity?.entity_type),
           is_active: entity?.is_active ?? true,
 
           ssn_tax_id: entity?.ssn_tax_id ?? "",
@@ -421,6 +446,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
       const payload = {
         ...formData,
+        // server expects nullable when empty
         ssn_tax_id: formData.ssn_tax_id.trim() || null,
         ein_tax_id: formData.ein_tax_id.trim() || null,
 

@@ -49,14 +49,21 @@
   },
   "entities": {
     "type": "Entity type",
-    "typeBtn": "Select type",
+    "typeBtn": "Select a type",
     "entity": "Entity",
-    "entityBtn": "Select entity",
+    "entityBtn": "Select an entity",
     "unnamed": "Unnamed entity",
     "types": {
       "client": "Client",
       "supplier": "Supplier",
-      "employee": "Employee"
+      "employee": "Employee",
+      "contractor": "Contractor",
+      "partner": "Partner",
+      "prospect": "Prospect",
+      "affiliate": "Affiliate",
+      "advisor": "Advisor",
+      "investor": "Investor",
+      "other": "Other"
     }
   },
   "recurrence": {

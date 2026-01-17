@@ -29,10 +29,11 @@ import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
 import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
 import type { InventoryItem } from "@/models/settings/inventory";
-import type { Entity } from "@/models/settings/entities";
+import type { Entity, EntityTypeValue } from "@/models/settings/entities";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocTypeItem = { id: string; label: string };
+type EntityTypeOption = { id: number; label: string; value: EntityTypeValue };
 
 type EntryDiffable = {
   id: string;
@@ -79,10 +80,17 @@ const PERIOD_OPTIONS_BASE: PeriodOption[] = [
   { id: 12, label: "entriesModal:period.annual", value: 12 },
 ];
 
-const ENTITY_TYPE_OPTIONS_BASE = [
+const ENTITY_TYPE_OPTIONS_BASE: Array<{ id: number; label: string; value: EntityTypeValue }> = [
   { id: 1, label: "entriesModal:entities.types.client", value: "client" },
   { id: 2, label: "entriesModal:entities.types.supplier", value: "supplier" },
   { id: 3, label: "entriesModal:entities.types.employee", value: "employee" },
+  { id: 4, label: "entriesModal:entities.types.contractor", value: "contractor" },
+  { id: 5, label: "entriesModal:entities.types.partner", value: "partner" },
+  { id: 6, label: "entriesModal:entities.types.prospect", value: "prospect" },
+  { id: 7, label: "entriesModal:entities.types.affiliate", value: "affiliate" },
+  { id: 8, label: "entriesModal:entities.types.advisor", value: "advisor" },
+  { id: 9, label: "entriesModal:entities.types.investor", value: "investor" },
+  { id: 10, label: "entriesModal:entities.types.other", value: "other" },
 ];
 
 function getEmptyFormData(): FormData {
@@ -166,6 +174,10 @@ function normalizeDocTypes(raw: unknown): DocTypeItem[] {
   return out.filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
 }
 
+function normalizeEntityType(v: Entity["entity_type"]) {
+  return String(v || "").trim().toLowerCase();
+}
+
 function isDropdownOpen() {
   return !!document.querySelector('[data-select-open="true"]');
 }
@@ -239,7 +251,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const [selectedProject, setSelectedProject] = useState<Project[]>([]);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
-  const [selectedEntityType, setSelectedEntityType] = useState<{ id: number; label: string; value: string }[]>([]);
+  const [selectedEntityType, setSelectedEntityType] = useState<EntityTypeOption[]>([]);
 
   /* ------------------------------ Locks & derived ------------------------------ */
   const lastSettledOnStr = useMemo(() => {
@@ -461,9 +473,10 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     setSelectedEntity(ent ? [ent] : []);
 
     // entity type (if entity has entity_type)
-    const entType = ent ? (ent as unknown as { entity_type?: string }).entity_type : undefined;
-    if (entType) {
-      const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === entType);
+    const normalizedEntType = ent ? normalizeEntityType(ent.entity_type) : "";
+    const derivedType = normalizedEntType ? (normalizedEntType as EntityTypeValue) : "";
+    if (derivedType) {
+      const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === derivedType);
       setSelectedEntityType(opt ? [opt] : []);
       setFormData((p) => ({ ...p, entities: { ...p.entities, entityType: opt?.value || "" } }));
     } else {
@@ -1181,23 +1194,23 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         );
 
       case "entities": {
-        const filteredEntities = formData.entities.entityType
-          ? entities.filter(
-              (e) => (e as unknown as { entity_type?: string }).entity_type === formData.entities.entityType
-            )
-          : entities;
+        const activeType = formData.entities.entityType as EntityTypeValue | "";
+        const filteredEntities =
+          activeType && activeType.length > 0
+            ? entities.filter((e) => normalizeEntityType(e.entity_type) === activeType)
+            : entities;
 
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div id={IDS.entityTypeWrap}>
-              <SelectDropdown<{ id: number; label: string; value: string }>
+              <SelectDropdown<EntityTypeOption>
                 label={t("entriesModal:entities.type")}
                 items={ENTITY_TYPE_OPTIONS}
                 selected={selectedEntityType}
                 onChange={(v) => {
                   if (isFinancialLocked) return;
 
-                  const nextType = v[0]?.value || "";
+                  const nextType = (v[0]?.value || "") as EntityTypeValue | "";
 
                   setSelectedEntityType(v);
                   setSelectedEntity([]);
@@ -1211,7 +1224,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 getItemLabel={(i) => i.label}
                 buttonLabel={t("entriesModal:entities.typeBtn")}
                 singleSelect
-                customStyles={{ maxHeight: "160px" }}
+                customStyles={{ maxHeight: "200px" }}
                 hideFilter
                 disabled={isFinancialLocked}
               />

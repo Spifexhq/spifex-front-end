@@ -1,13 +1,29 @@
 // src/models/settings/entities.ts
 import type { Paginated } from "@/models/Api";
 
+/* -------------------------------------------------------------------------- */
+/* Entity Type                                                                */
+/* -------------------------------------------------------------------------- */
+
+export type EntityTypeValue =
+  | "client"
+  | "supplier"
+  | "employee"
+  | "contractor"
+  | "partner"
+  | "prospect"
+  | "affiliate"
+  | "advisor"
+  | "investor"
+  | "other";
+
 /* --------------------------------- Read model -------------------------------- */
 
 export interface Entity {
   id: string; // external_id from the API
   full_name: string | null;
   alias_name: string | null;
-  entity_type: string | null; // "client" | "supplier" | "employee" | ...
+  entity_type: EntityTypeValue | null;
   is_active: boolean;
 
   ssn_tax_id: string | null;
@@ -31,7 +47,7 @@ export interface Entity {
 
 export interface EntityType {
   id: number;
-  entity_type: string;
+  entity_type: EntityTypeValue;
 }
 
 /* -------------------------------- Query params ------------------------------- */
@@ -39,27 +55,13 @@ export interface EntityType {
 export interface GetEntitiesParams {
   cursor?: string;
   active?: "true" | "false";
-
-  /**
-   * Backwards-compatible:
-   * - single type: "client"
-   * - multi-type: "client,supplier"
-   */
   type?: string;
-
-  /** Separated filters (new) */
-  name?: string;  // full_name filter
-  alias?: string; // alias_name filter
-
-  /** Back-compat generic search */
+  name?: string;
+  alias?: string;
   q?: string;
 }
 
-/**
- * Use shared Paginated model; count is intentionally discarded.
- */
 export type GetEntitiesResponse = Paginated<Entity>;
-
 export type GetEntityResponse = Entity;
 
 /* --------------------------------- Write DTOs -------------------------------- */
@@ -67,7 +69,7 @@ export type GetEntityResponse = Entity;
 export interface EntityPayloadBase {
   full_name?: string | null;
   alias_name?: string | null;
-  entity_type?: string | null;
+  entity_type?: EntityTypeValue | null;
   is_active?: boolean;
 
   ssn_tax_id?: string | null;

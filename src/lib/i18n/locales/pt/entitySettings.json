@@ -7,7 +7,18 @@
     "aria": "Buscar entidades",
     "button": "Buscar"
   },
-  "types": { "client": "Cliente", "supplier": "Fornecedor", "employee": "Funcionário" },
+  "types": {
+    "client": "Cliente",
+    "supplier": "Fornecedor",
+    "employee": "Funcionário",
+    "contractor": "Prestador",
+    "partner": "Parceiro",
+    "prospect": "Prospect",
+    "affiliate": "Afiliado",
+    "advisor": "Consultor",
+    "investor": "Investidor",
+    "other": "Outro"
+  },
   "row": { "inactive": "• Inativo", "untitled": "(sem título)" },
 
   "tabs": {

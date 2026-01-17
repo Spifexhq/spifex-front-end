@@ -56,7 +56,14 @@
     "types": {
       "client": "Cliente",
       "supplier": "Fornecedor",
-      "employee": "Funcionário"
+      "employee": "Funcionário",
+      "contractor": "Prestador",
+      "partner": "Parceiro",
+      "prospect": "Prospect",
+      "affiliate": "Afiliado",
+      "advisor": "Consultor",
+      "investor": "Investidor",
+      "other": "Outro"
     }
   },
   "recurrence": {

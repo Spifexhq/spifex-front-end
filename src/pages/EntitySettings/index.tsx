@@ -1,5 +1,6 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/EntitySettings/index.tsx                                   */
+/* Refactor: uses new EntityTypeValue union from "@/models/settings/entities"  */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -22,14 +23,13 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
-import type { Entity, GetEntitiesParams } from "@/models/settings/entities";
+import type { Entity, EntityTypeValue, GetEntitiesParams } from "@/models/settings/entities";
 
 /* ------------------------------ Snackbar type ----------------------------- */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-type EntityTypeValue = "client" | "supplier" | "employee";
 type FilterKey = "name" | "alias" | "type" | "status" | null;
 
 type StatusKey = "active" | "inactive";
@@ -68,8 +68,18 @@ function toActiveParamFromStatusKeys(keys: StatusKey[]): GetEntitiesParams["acti
   return undefined;
 }
 
-function normalizeEntityType(v: string | null | undefined) {
+/**
+ * Keep this lightweight and predictable:
+ * - backend might send null/""; we default to "other"
+ * - we do not attempt any extra parsing beyond trim+lowercase
+ */
+function normalizeEntityType(v: Entity["entity_type"]) {
   return String(v || "").trim().toLowerCase();
+}
+
+/** Since the backend is now constrained, a small cast is acceptable. */
+function asEntityTypeValue(v: string): EntityTypeValue {
+  return v as EntityTypeValue;
 }
 
 /* ------------------------------- Chip UI ---------------------------------- */
@@ -278,7 +288,8 @@ const Row: React.FC<{
   t: (key: string, opts?: Record<string, unknown>) => string;
   busy?: boolean;
 }> = ({ entity, onEdit, onDelete, canEdit, t, busy }) => {
-  const type = (normalizeEntityType(entity.entity_type) || "client") as EntityTypeValue;
+  const normalized = normalizeEntityType(entity.entity_type);
+  const type: EntityTypeValue = normalized ? asEntityTypeValue(normalized) : "other";
   const typeLabel = t(`types.${type}`);
 
   return (
@@ -288,9 +299,7 @@ const Row: React.FC<{
           {typeLabel}
           {entity.is_active === false ? ` ${t("row.inactive")}` : ""}
         </p>
-        <p className="text-[13px] font-medium text-gray-900 truncate">
-          {entity.full_name || t("row.untitled")}
-        </p>
+        <p className="text-[13px] font-medium text-gray-900 truncate">{entity.full_name || t("row.untitled")}</p>
       </div>
 
       {canEdit && (
@@ -432,6 +441,13 @@ const EntitySettings: React.FC = () => {
       { key: "client", label: t("types.client") },
       { key: "supplier", label: t("types.supplier") },
       { key: "employee", label: t("types.employee") },
+      { key: "contractor", label: t("types.contractor") },
+      { key: "partner", label: t("types.partner") },
+      { key: "prospect", label: t("types.prospect") },
+      { key: "affiliate", label: t("types.affiliate") },
+      { key: "advisor", label: t("types.advisor") },
+      { key: "investor", label: t("types.investor") },
+      { key: "other", label: t("types.other") },
     ],
     [t]
   );
@@ -511,8 +527,7 @@ const EntitySettings: React.FC = () => {
       inflightRef.current = true;
 
       try {
-        const typeParam =
-          appliedTypes.length === 0 ? undefined : uniq(appliedTypes).slice().sort().join(",");
+        const typeParam = appliedTypes.length === 0 ? undefined : uniq(appliedTypes).slice().sort().join(",");
 
         const params: GetEntitiesParams = {
           cursor,
@@ -527,7 +542,7 @@ const EntitySettings: React.FC = () => {
         const items = (data?.results ?? []) as Entity[];
 
         const nextUrl = meta?.pagination?.next ?? (data as unknown as { next?: string | null }).next ?? null;
-        const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
+        const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
 
         return { items, nextCursor };
       } finally {
@@ -581,7 +596,6 @@ const EntitySettings: React.FC = () => {
     const addedFiltered = added.filter((e) => !deletedIds.has(e.id) && matchesFilters(e));
     const addedIds = new Set(addedFiltered.map((e) => e.id));
     const base = pager.items.filter((e) => !deletedIds.has(e.id) && !addedIds.has(e.id));
-
     return [...addedFiltered, ...base];
   }, [added, deletedIds, pager.items, matchesFilters]);
 
@@ -658,12 +672,8 @@ const EntitySettings: React.FC = () => {
                 {getInitials()}
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("header.settings")}
-                </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("header.entities")}
-                </h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.entities")}</h1>
               </div>
             </div>
           </header>
@@ -799,9 +809,7 @@ const EntitySettings: React.FC = () => {
       {/* NAME POPOVER */}
       <AnchoredPopover open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} scroll>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byNameTitle", { defaultValue: "Filter by name" })}
-          </div>
+          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byNameTitle")}</div>
 
           <div className="mt-3">
             <Input
@@ -820,7 +828,7 @@ const EntitySettings: React.FC = () => {
                   setOpenFilter(null);
                 }
               }}
-              placeholder={t("filters.namePlaceholder", { defaultValue: "Type a name…" })}
+              placeholder={t("filters.namePlaceholder")}
               disabled={globalBusy}
             />
           </div>
@@ -832,11 +840,11 @@ const EntitySettings: React.FC = () => {
               onClick={() => setDraftName("")}
               disabled={globalBusy}
             >
-              {t("filters.clear", { defaultValue: "Clear" })}
+              {t("filters.clear")}
             </button>
 
             <Button onClick={() => applyFromDraft("name")} disabled={globalBusy}>
-              {t("filters.apply", { defaultValue: "Apply" })}
+              {t("filters.apply")}
             </Button>
           </div>
         </div>
@@ -845,9 +853,7 @@ const EntitySettings: React.FC = () => {
       {/* ALIAS POPOVER */}
       <AnchoredPopover open={openFilter === "alias"} anchorRef={aliasAnchorRef} onClose={() => setOpenFilter(null)} scroll>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byAliasTitle", { defaultValue: "Filter by alias" })}
-          </div>
+          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byAliasTitle")}</div>
 
           <div className="mt-3">
             <Input
@@ -866,7 +872,7 @@ const EntitySettings: React.FC = () => {
                   setOpenFilter(null);
                 }
               }}
-              placeholder={t("filters.aliasPlaceholder", { defaultValue: "Type an alias…" })}
+              placeholder={t("filters.aliasPlaceholder")}
               disabled={globalBusy}
             />
           </div>
@@ -878,11 +884,11 @@ const EntitySettings: React.FC = () => {
               onClick={() => setDraftAlias("")}
               disabled={globalBusy}
             >
-              {t("filters.clear", { defaultValue: "Clear" })}
+              {t("filters.clear")}
             </button>
 
             <Button onClick={() => applyFromDraft("alias")} disabled={globalBusy}>
-              {t("filters.apply", { defaultValue: "Apply" })}
+              {t("filters.apply")}
             </Button>
           </div>
         </div>
@@ -897,15 +903,12 @@ const EntitySettings: React.FC = () => {
         width={420}
       >
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byTypeTitle", { defaultValue: "Filter by type" })}
-          </div>
+          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byTypeTitle")}</div>
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
-            {/* Hide SelectDropdown internal text filter but keep checkboxes */}
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <SelectDropdown<EntityTypeOption>
-                label={t("filters.typeLabel", { defaultValue: "Type" })}
+                label={t("filters.typeLabel")}
                 items={typeOptions}
                 selected={selectedDraftTypeOptions}
                 onChange={(list) => setDraftTypes(uniq((list || []).map((x) => x.key)))}
@@ -917,7 +920,7 @@ const EntitySettings: React.FC = () => {
                         .map((x) => x.label)
                         .slice(0, 2)
                         .join(", ") + (draftTypes.length > 2 ? ` +${draftTypes.length - 2}` : "")
-                    : t("filters.typeAny", { defaultValue: "Any" })
+                    : t("filters.typeAny")
                 }
                 customStyles={{ maxHeight: "240px" }}
                 hideFilter
@@ -932,11 +935,11 @@ const EntitySettings: React.FC = () => {
               onClick={() => setDraftTypes([])}
               disabled={globalBusy}
             >
-              {t("filters.clear", { defaultValue: "Clear" })}
+              {t("filters.clear")}
             </button>
 
             <Button onClick={() => applyFromDraft("type")} disabled={globalBusy}>
-              {t("filters.apply", { defaultValue: "Apply" })}
+              {t("filters.apply")}
             </Button>
           </div>
         </div>
@@ -951,14 +954,12 @@ const EntitySettings: React.FC = () => {
         width={420}
       >
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byStatusTitle", { defaultValue: "Filter by status" })}
-          </div>
+          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byStatusTitle")}</div>
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
               <SelectDropdown<StatusOption>
-                label={t("filters.statusLabel", { defaultValue: "Status" })}
+                label={t("filters.statusLabel")}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}
                 onChange={(list) => setDraftStatuses(uniq((list || []).map((x) => x.key)))}
@@ -978,11 +979,11 @@ const EntitySettings: React.FC = () => {
               onClick={() => setDraftStatuses([])}
               disabled={globalBusy}
             >
-              {t("filters.clear", { defaultValue: "Clear" })}
+              {t("filters.clear")}
             </button>
 
             <Button onClick={() => applyFromDraft("status")} disabled={globalBusy}>
-              {t("filters.apply", { defaultValue: "Apply" })}
+              {t("filters.apply")}
             </Button>
           </div>
         </div>
