@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Überweisungsmodal" },
-  "header": { "kind": "Überweisung", "title": "Zwischen Konten/Banken" },
+  "header": { "badge": "TR", "kind": "Überweisung", "title": "Zwischen Konten/Banken" },
   "fields": {
     "date": "Datum",
     "amount": "Betrag",
@@ -9,7 +9,6 @@
     "bankIn": "Zielbank"
   },
   "placeholders": {
-    "amount": "0,00",
     "note": "z. B. Überweisung, Grund, usw.",
     "selectBank": "Bank auswählen"
   },
@@ -33,7 +32,11 @@
     "fillToSave": "Betrag eingeben, Banken und Datum auswählen.",
     "shortcuts": "Kurzbefehle: Esc (schließen), Ctrl/⌘+S (speichern)"
   },
+  "footer": {
+    "value": "Wert"
+  },
   "errors": {
-    "save": "Fehler beim Speichern der Überweisung."
+    "save": "Fehler beim Speichern der Überweisung.",
+    "loadBanks": "Fehler beim Laden der Banken."
   }
 }

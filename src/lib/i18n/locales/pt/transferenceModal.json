@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Modal de transferência bancária" },
-  "header": { "kind": "Transferência", "title": "Entre contas/bancos" },
+  "header": { "badge": "TR", "kind": "Transferência", "title": "Entre contas/bancos" },
   "fields": {
     "date": "Data",
     "amount": "Valor",
@@ -9,7 +9,6 @@
     "bankIn": "Banco de entrada"
   },
   "placeholders": {
-    "amount": "0,00",
     "note": "Ex.: TED, motivo, etc.",
     "selectBank": "Selecione o banco"
   },
@@ -33,7 +32,11 @@
     "fillToSave": "Informe um valor, selecione os bancos e a data.",
     "shortcuts": "Atalhos: Esc (fechar), Ctrl/⌘+S (salvar)"
   },
+  "footer": {
+    "value": "Valor"
+  },
   "errors": {
-    "save": "Erro ao salvar transferência."
+    "save": "Erro ao salvar transferência.",
+    "loadBanks": "Erro ao carregar bancos."
   }
 }

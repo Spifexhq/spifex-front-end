@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Fenêtre de virement bancaire" },
-  "header": { "kind": "Virement", "title": "Entre comptes/banques" },
+  "header": { "badge": "TR", "kind": "Virement", "title": "Entre comptes/banques" },
   "fields": {
     "date": "Date",
     "amount": "Montant",
@@ -9,7 +9,6 @@
     "bankIn": "Banque de destination"
   },
   "placeholders": {
-    "amount": "0,00",
     "note": "ex. virement, motif, etc.",
     "selectBank": "Sélectionnez une banque"
   },
@@ -33,7 +32,11 @@
     "fillToSave": "Saisissez un montant, choisissez les banques et la date.",
     "shortcuts": "Raccourcis : Échap (fermer), Ctrl/⌘+S (enregistrer)"
   },
+  "footer": {
+    "value": "Valeur"
+  },
   "errors": {
-    "save": "Erreur lors de l’enregistrement du virement."
+    "save": "Erreur lors de l’enregistrement du virement.",
+    "loadBanks": "Erreur lors du chargement des banques."
   }
 }

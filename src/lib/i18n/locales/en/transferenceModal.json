@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Bank transference modal" },
-  "header": { "kind": "Transference", "title": "Between accounts/banks" },
+  "header": { "badge": "TR", "kind": "Transference", "title": "Between accounts/banks" },
   "fields": {
     "date": "Date",
     "amount": "Amount",
@@ -9,7 +9,6 @@
     "bankIn": "Destination bank"
   },
   "placeholders": {
-    "amount": "0.00",
     "note": "e.g., wire, reason, etc.",
     "selectBank": "Select a bank"
   },
@@ -33,7 +32,11 @@
     "fillToSave": "Enter an amount, select the banks and the date.",
     "shortcuts": "Shortcuts: Esc (close), Ctrl/⌘+S (save)"
   },
+  "footer": {
+    "value": "Value"
+  },
   "errors": {
-    "save": "Error saving transference."
+    "save": "Error saving transference.",
+    "loadBanks": "Error loading banks."
   }
 }

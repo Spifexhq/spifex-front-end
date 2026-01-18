@@ -415,7 +415,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             "absolute left-0 origin-top",
             placement === "bottom" ? "top-full" : "bottom-full mb-2",
             // ensure above modals
-            "z-[10050]",
+            "z-[9999]",
             // box
             "rounded-md border border-gray-200 bg-white shadow-lg",
             // prevent hidden on small screens

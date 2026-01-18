@@ -10,6 +10,7 @@ import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 import { formatCurrency } from "@/lib";
 
 import type { BankAccount } from "@/models/settings/banking";
+import type { ApiError } from "@/models/Api";
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -18,10 +19,10 @@ interface TransferenceModalProps {
 }
 
 type FormState = {
-  date: string; // ISO (YYYY-MM-DD)
-  amount: string; // major decimal string: "1234.56"
-  source_bank: string; // external_id
-  dest_bank: string; // external_id
+  date: string;
+  amount: string;
+  source_bank: string;
+  dest_bank: string;
   description: string;
 };
 
@@ -65,12 +66,12 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   const sortedBanks = useMemo(() => sortBanksByInstitution(banks), [banks]);
 
   const selectedOut = useMemo(
-    () => banks.find((b) => b.id === formData.source_bank),
-    [banks, formData.source_bank]
+    () => sortedBanks.find((b) => b.id === formData.source_bank),
+    [sortedBanks, formData.source_bank]
   );
   const selectedIn = useMemo(
-    () => banks.find((b) => b.id === formData.dest_bank),
-    [banks, formData.dest_bank]
+    () => sortedBanks.find((b) => b.id === formData.dest_bank),
+    [sortedBanks, formData.dest_bank]
   );
 
   const bankOutOptions = useMemo(
@@ -82,38 +83,30 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     [sortedBanks, formData.source_bank]
   );
 
-  const amountMajorNumber = useMemo(() => {
-    const n = Number(formData.amount);
-    return Number.isFinite(n) ? n : 0;
-  }, [formData.amount]);
-
   const isValid = useMemo(() => {
+    const hasAmount = formData.amount > "";
+    const n = Number(formData.amount);
+
     return (
-      amountMajorNumber > 0 &&
+      hasAmount &&
+      Number.isFinite(n) &&
+      n > 0 &&
       !!formData.date &&
       !!formData.source_bank &&
       !!formData.dest_bank &&
       formData.source_bank !== formData.dest_bank
     );
-  }, [amountMajorNumber, formData.date, formData.source_bank, formData.dest_bank]);
+  }, [formData.amount, formData.date, formData.source_bank, formData.dest_bank]);
 
   const showSameBankWarning =
     !!formData.source_bank && !!formData.dest_bank && formData.source_bank === formData.dest_bank;
 
   const tKey = useCallback((key: string) => String(t(key)), [t]);
 
-  const bankOutFooterLabel = useMemo(
-    () => getBankFooterLabel(tKey, selectedOut),
-    [tKey, selectedOut]
-  );
-
-  const bankInFooterLabel = useMemo(
-    () => getBankFooterLabel(tKey, selectedIn),
-    [tKey, selectedIn]
-  );
+  const bankOutFooterLabel = useMemo(() => getBankFooterLabel(tKey, selectedOut), [tKey, selectedOut]);
+  const bankInFooterLabel = useMemo(() => getBankFooterLabel(tKey, selectedIn), [tKey, selectedIn]);
 
   // ---------- Effects ----------
-  // lock scroll + shortcuts while open
   useEffect(() => {
     if (!isOpen) return;
 
@@ -134,8 +127,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     };
 
     window.addEventListener("keydown", onKeyDown);
-
-    // focus after paint
     requestAnimationFrame(() => amountRef.current?.focus());
 
     return () => {
@@ -144,31 +135,36 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     };
   }, [isOpen, closeModal]);
 
-  // load banks when opening
   useEffect(() => {
     if (!isOpen) return;
 
     let alive = true;
     (async () => {
       try {
-        const { data } = await api.getBanks();
-        const page = (data?.results ?? []) as BankAccount[];
+        type ApiOk<T> = { data: T };
+        type ApiResult<T> = ApiOk<T> | ApiError;
+
+        const res = (await api.getBanks()) as ApiResult<{ results?: BankAccount[] }>;
+        if (!("data" in res)) {
+          console.error(t("errors.loadBanks"), res?.error);
+          return;
+        }
+
+        const page = (res.data?.results ?? []) as BankAccount[];
         if (alive) setBanks(page);
       } catch (err) {
-        console.error("Erro ao buscar bancos:", err);
+        console.error(t("errors.loadBanks"), err);
       }
     })();
 
     return () => {
       alive = false;
     };
-  }, [isOpen]);
+  }, [isOpen, t]);
 
   // ---------- Handlers ----------
   const handleBankChange = useCallback(
     (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
-      // IMPORTANT: your BankAccount domain uses `id` as the external_id in the UI layer.
-      // (Keeping consistent with the rest of your app + current modal usage.)
       const id = selected[0]?.id ?? "";
       setField(field, id);
     },
@@ -191,23 +187,25 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
       setIsSubmitting(true);
       try {
         await api.addTransference({
-          amount: formData.amount, // major decimal string
+          amount: formData.amount,
           date: formData.date,
           description: formData.description || "",
           source_bank: formData.source_bank,
           dest_bank: formData.dest_bank,
         });
 
-        resetForm();
         onSave();
+        closeModal();
       } catch (err) {
-        console.error("Erro ao salvar transferência:", err);
-        window.alert(t("errors.save"));
+        console.error(t("errors.save"), err);
+
+        const message = t("errors.save");
+        window.alert(message);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [formData, isSubmitting, isValid, onSave, resetForm, t]
+    [closeModal, formData, isSubmitting, isValid, onSave, t]
   );
 
   // ---------- Render ----------
@@ -225,7 +223,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                TR
+                {t("header.badge")}
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
@@ -245,7 +243,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
           </div>
         </header>
 
-        {/* IMPORTANT: footer must be inside the form so the submit button works */}
         <form ref={formRef} onSubmit={handleSubmit} className="relative z-10 flex-1 flex flex-col">
           <div className="px-5 py-4 overflow-visible">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -253,7 +250,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 kind="date"
                 label={t("fields.date")}
                 value={formData.date}
-                onValueChange={(iso) => setField("date", iso)}
+                onValueChange={(iso: string) => setField("date", iso)}
               />
 
               <Input
@@ -262,7 +259,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 label={t("fields.amount")}
                 id="amount-input"
                 value={formData.amount}
-                onValueChange={(next) => setField("amount", next)}
+                onValueChange={(next: string) => setField("amount", next)}
                 aria-label={t("fields.amount")}
                 zeroAsEmpty
               />
@@ -279,11 +276,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               <SelectDropdown<BankAccount>
                 label={t("fields.bankOut")}
                 items={bankOutOptions}
-                selected={
-                  formData.source_bank
-                    ? bankOutOptions.filter((b) => b.id === formData.source_bank)
-                    : []
-                }
+                selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
                 onChange={(sel) => handleBankChange("source_bank", sel)}
                 getItemKey={(b) => b.id}
                 getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
@@ -326,12 +319,11 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
             </div>
           </div>
 
-          {/* Keep the exact same footer design, but inside the form */}
           <footer className="mt-auto border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
             <div className="text-[12px] text-gray-600">
-              {amountMajorNumber > 0 ? (
+              {formData.amount > "" ? (
                 <>
-                  <b>{formatCurrency(formData.amount)}</b>
+                  {t("footer.value")} <b>{formatCurrency(formData.amount)}</b>
                   {bankOutFooterLabel || bankInFooterLabel ? (
                     <>
                       {" "}
