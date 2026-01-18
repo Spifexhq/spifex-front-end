@@ -1,3 +1,4 @@
+// src/shared/ui/Input/sizes.ts
 import type { InputSize } from "./Input.types";
 
 export const INPUT_SIZE: Record<
@@ -13,6 +14,8 @@ export const INPUT_SIZE: Record<
     trailingGap: string;
     trailingBtnPad: string;
 
+    trailingText: string;
+
     rightPadNone: string;
     rightPadOne: string;
     rightPadTwo: string;
@@ -27,6 +30,7 @@ export const INPUT_SIZE: Record<
     trailingRight: "right-1.5",
     trailingGap: "gap-0.5",
     trailingBtnPad: "p-0.5",
+    trailingText: "text-[11px]",
     rightPadNone: "pr-2.5",
     rightPadOne: "pr-8",
     rightPadTwo: "pr-12",
@@ -40,6 +44,7 @@ export const INPUT_SIZE: Record<
     trailingRight: "right-2",
     trailingGap: "gap-1",
     trailingBtnPad: "p-1",
+    trailingText: "text-xs",
     rightPadNone: "pr-3",
     rightPadOne: "pr-10",
     rightPadTwo: "pr-16",
@@ -53,6 +58,7 @@ export const INPUT_SIZE: Record<
     trailingRight: "right-2",
     trailingGap: "gap-1",
     trailingBtnPad: "p-1",
+    trailingText: "text-xs",
     rightPadNone: "pr-3.5",
     rightPadOne: "pr-10",
     rightPadTwo: "pr-16",
@@ -66,6 +72,7 @@ export const INPUT_SIZE: Record<
     trailingRight: "right-2.5",
     trailingGap: "gap-1.5",
     trailingBtnPad: "p-1",
+    trailingText: "text-[13px]",
     rightPadNone: "pr-4",
     rightPadOne: "pr-11",
     rightPadTwo: "pr-[4.25rem]",
@@ -79,6 +86,7 @@ export const INPUT_SIZE: Record<
     trailingRight: "right-3",
     trailingGap: "gap-2",
     trailingBtnPad: "p-1.5",
+    trailingText: "text-[15px]",
     rightPadNone: "pr-5",
     rightPadOne: "pr-12",
     rightPadTwo: "pr-[4.75rem]",

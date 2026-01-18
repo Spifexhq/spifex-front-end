@@ -1,6 +1,6 @@
 import type React from "react";
 
-export type InputKind = "text" | "amount" | "date";
+export type InputKind = "text" | "amount" | "percentage" | "date";
 export type InputVariant = "default" | "outlined" | "filled";
 export type InputSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -53,15 +53,36 @@ export type AmountInputProps = InputCommonProps &
     allowNegative?: boolean;
   };
 
-/** DATE input props (ISO string "yyyy-MM-dd") */
-export type DateInputProps = InputCommonProps &
+/** PERCENTAGE input props (major string like "12.34" representing 12.34%) */
+export type PercentageInputProps = InputCommonProps &
   Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "type" | "value" | "onChange" | "size"
+    | "type"
+    | "value"
+    | "defaultValue"
+    | "onChange"
+    | "onKeyDown"
+    | "inputMode"
+    | "pattern"
+    | "size"
   > & {
+    kind: "percentage";
+
+    /** Canonical major string with 2 decimals, e.g. "12.34" (no "%") */
+    value: string;
+    onValueChange: (nextMajor: string) => void;
+
+    /** Same semantics as AmountField */
+    zeroAsEmpty?: boolean;
+    allowNegative?: boolean;
+  };
+
+/** DATE input props (ISO string "yyyy-MM-dd") */
+export type DateInputProps = InputCommonProps &
+  Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "onChange" | "size"> & {
     kind: "date";
     value?: string;
     onValueChange?: (valueIso: string) => void;
   };
 
-export type InputProps = TextInputProps | AmountInputProps | DateInputProps;
+export type InputProps = TextInputProps | AmountInputProps | PercentageInputProps | DateInputProps;
