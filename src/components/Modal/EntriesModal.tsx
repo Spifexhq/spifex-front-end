@@ -1,5 +1,4 @@
 // src/components/Modal/EntriesModal.tsx
-// Money rule: amount is ALWAYS a MAJOR decimal string ("1234.56"), never minor cents.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
@@ -14,7 +13,6 @@ import { api } from "@/api/requests";
 import { ApiError } from "@/models/Api";
 import { fetchAllCursor } from "@/lib/list";
 import { formatCurrency, formatDateFromISO } from "@/lib";
-import documentTypesData from "@/data/documentTypes.json";
 
 import type {
   FormData,
@@ -24,15 +22,17 @@ import type {
   Tab,
   IntervalMonths,
 } from "./Modal.types";
+
 import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
 import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
 import type { InventoryItem } from "@/models/settings/inventory";
 import type { Entity, EntityTypeValue } from "@/models/settings/entities";
+import type { DocumentType } from "src/models/entries/documentTypes";
 
 /* ---------------------------------- Types --------------------------------- */
-type DocTypeItem = { id: string; label: string };
+type DocumentTypeItem = { id: DocumentType["code"]; label: string };
 type EntityTypeOption = { id: number; label: string; value: EntityTypeValue };
 
 type EntryDiffable = {
@@ -44,6 +44,7 @@ type EntryDiffable = {
   amount: number | string;
   tx_type: "credit" | "debit";
   ledger_account?: string | null;
+  document_type?: string | null;
   project?: string | null;
   entity?: string | null;
   installment_count?: number | null;
@@ -156,24 +157,6 @@ function toLocalISODate(d: Date) {
   return local.toISOString().slice(0, 10);
 }
 
-function normalizeDocTypes(raw: unknown): DocTypeItem[] {
-  if (!Array.isArray(raw)) return [];
-  const out: DocTypeItem[] = [];
-
-  for (const it of raw) {
-    if (typeof it === "string") out.push({ id: it, label: it });
-    else if (it && typeof it === "object" && "id" in it) {
-      const anyIt = it as { id?: string; label?: string; code?: string; name?: string };
-      const id = String(anyIt.id ?? anyIt.code ?? "");
-      const label = String(anyIt.label ?? anyIt.name ?? anyIt.id ?? anyIt.code ?? "");
-      if (id) out.push({ id, label });
-    }
-  }
-
-  const seen = new Set<string>();
-  return out.filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
-}
-
 function normalizeEntityType(v: Entity["entity_type"]) {
   return String(v || "").trim().toLowerCase();
 }
@@ -223,7 +206,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     [t]
   );
 
-  const documentTypes = useMemo(() => normalizeDocTypes(documentTypesData), []);
+  const [docTypes, setDocTypes] = useState<DocumentType[]>([]);
+  const documentTypes = useMemo<DocumentTypeItem[]>(() => {
+    return docTypes
+      .filter((dt) => dt.is_active !== false)
+      .map((dt) => ({
+        id: dt.code,
+        label: t(`entriesModal:documentTypes.${dt.code}`, { defaultValue: dt.code }),
+      }));
+  }, [docTypes, t]);
 
   /* -------------------------------- State -------------------------------- */
   const [activeTab, setActiveTab] = useState<Tab>("details");
@@ -246,7 +237,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   // selected objects (dropdowns use objects)
   const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<LedgerAccount[]>([]);
-  const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocTypeItem[]>([]);
+  const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocumentTypeItem[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project[]>([]);
   const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem[]>([]);
@@ -294,7 +285,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       d.notes.trim() ||
       d.ledgerAccount ||
       d.documentType
-    ) return true;
+    )
+      return true;
 
     const cc = formData.costCenters;
     if (cc.departments.length > 0 || cc.projects) return true;
@@ -355,6 +347,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const fetchAllProjects = useCallback(() => fetchAllCursor<Project>(api.getProjectsOptions), []);
   const fetchAllInventoryItems = useCallback(() => fetchAllCursor<InventoryItem>(api.getInventoryOptions), []);
   const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions), []);
+  const fetchAllDocumentTypes = useCallback(() => fetchAllCursor<DocumentType>(api.getDocumentTypes), []);
 
   /* --------------------------- Load sources on open --------------------------- */
   useEffect(() => {
@@ -364,12 +357,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
     (async () => {
       try {
-        const [la, deps, prjs, invs, ents] = await Promise.all([
+        const [la, deps, prjs, invs, ents, dts] = await Promise.all([
           fetchAllLedgerAccounts(),
           fetchAllDepartments(),
           fetchAllProjects(),
           fetchAllInventoryItems(),
           fetchAllEntities(),
+          fetchAllDocumentTypes(),
         ]);
 
         if (!alive) return;
@@ -378,6 +372,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         setProjects(prjs);
         setInventoryItems(invs);
         setEntities(ents);
+        setDocTypes(dts);
       } catch (e) {
         console.error("Error loading modal sources:", e);
       }
@@ -406,6 +401,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     fetchAllProjects,
     fetchAllInventoryItems,
     fetchAllEntities,
+    fetchAllDocumentTypes,
   ]);
 
   /* ------------------------ Fill form when editing ------------------------- */
@@ -429,7 +425,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         observation: ie.observation ?? "",
         amount: normalizeMajorAmount(ie.amount),
         ledgerAccount: ie.ledger_account || "",
-        documentType: "",
+        documentType: ie.document_type || "",
         notes: ie.notes ?? "",
       },
       costCenters: {
@@ -512,6 +508,29 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       }));
     }
   }, [isOpen, initialEntry, ledgerAccounts, projects, entities, departments, ENTITY_TYPE_OPTIONS]);
+
+  /* -------- Keep selected document type in sync (async load + locale) -------- */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const id = String(formData.details.documentType || "");
+    if (!id) {
+      setSelectedDocumentType([]);
+      return;
+    }
+
+    const found = documentTypes.find((d) => d.id === id);
+    setSelectedDocumentType(
+      found
+        ? [found]
+        : [
+            {
+              id,
+              label: t(`entriesModal:documentTypes.${id}`, { defaultValue: id }),
+            },
+          ]
+    );
+  }, [isOpen, documentTypes, formData.details.documentType, t]);
 
   /* ---------------------------- Validations ---------------------------- */
   type ValidationResult = { ok: boolean; tab?: Tab; focusId?: string; title?: string; message?: string };
@@ -615,7 +634,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     [isFinancialLocked]
   );
 
-  const handleDocumentTypeChange = useCallback((updated: DocTypeItem[]) => {
+  const handleDocumentTypeChange = useCallback((updated: DocumentTypeItem[]) => {
     setSelectedDocumentType(updated);
     const id = updated.length ? String(updated[0].id) : "";
     setFormData((p) => ({ ...p, details: { ...p.details, documentType: id } }));
@@ -805,11 +824,10 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             tx_type: type,
 
             ledger_account: formData.details.ledgerAccount,
-            document_type: formData.details.documentType || "",
 
+            ...(formData.details.documentType ? { document_type: formData.details.documentType } : {}),
             ...(formData.costCenters.projects ? { project: formData.costCenters.projects } : {}),
             ...(formData.entities.entity ? { entity: formData.entities.entity } : {}),
-
             ...(deps ? { departments: deps } : {}),
             ...(items ? { items } : {}),
 
@@ -846,8 +864,11 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             changes.ledger_account = formData.details.ledgerAccount;
           }
 
-          if (formData.details.documentType) {
-            changes.document_type = formData.details.documentType;
+          // Document type: allow change + allow clearing (null)
+          const initialDocType = ie.document_type || "";
+          const newDocType = formData.details.documentType || "";
+          if (newDocType !== initialDocType) {
+            changes.document_type = newDocType || null;
           }
 
           const initialProject = ie.project || "";
@@ -1039,7 +1060,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
               />
             </div>
 
-            <SelectDropdown<DocTypeItem>
+            <SelectDropdown<DocumentTypeItem>
               label={t("entriesModal:details.docType")}
               items={documentTypes}
               selected={selectedDocumentTypes}

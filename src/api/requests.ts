@@ -29,6 +29,7 @@ import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest,
 import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, BulkSettleItem, BulkSettleResponse,
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from '@/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
+import type { GetDocumentTypesResponse } from 'src/models/entries/documentTypes';
 import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse, GetBankResponse,
   GetBanksBulkRequest, GetBanksBulkResponse, GetBanksParams, GetBanksResponse, 
   GetBanksTableParams,
@@ -397,6 +398,10 @@ export const api = {
 
   deleteBank: (bankId: string) =>
     request<void>(`banking/accounts/${bankId}/`, "DELETE"),
+
+  /* --- Document Types --- */
+  getDocumentTypes: () =>
+    request<GetDocumentTypesResponse>(`cashflow/document-types/`, "GET"),
 
   /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>
