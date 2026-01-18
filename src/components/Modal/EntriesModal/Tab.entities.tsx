@@ -1,6 +1,6 @@
 // src/components/Modal/Tab.entities.tsx
 
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
@@ -14,15 +14,12 @@ type Props = {
   t: TFunction;
 
   formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 
   entityTypeOptions: EntityTypeOption[];
-  selectedEntityType: EntityTypeOption[];
-  onEntityTypeChange: (updated: EntityTypeOption[]) => void;
   entityTypeWrapId: string;
 
   entities: Entity[];
-  selectedEntity: Entity[];
-  onEntityChange: (updated: Entity[]) => void;
   entityWrapId: string;
 
   isFinancialLocked: boolean;
@@ -31,16 +28,60 @@ type Props = {
 const EntitiesTab: React.FC<Props> = ({
   t,
   formData,
+  setFormData,
   entityTypeOptions,
-  selectedEntityType,
-  onEntityTypeChange,
   entityTypeWrapId,
   entities,
-  selectedEntity,
-  onEntityChange,
   entityWrapId,
   isFinancialLocked,
 }) => {
+  const activeEntityType = useMemo(
+    () => (formData.entities.entityType as EntityTypeValue | "") || "",
+    [formData.entities.entityType]
+  );
+
+  const filteredEntities = useMemo(() => {
+    if (!activeEntityType) return entities;
+    return entities.filter((e) => e.entity_type === activeEntityType);
+  }, [entities, activeEntityType]);
+
+  const selectedEntityType = useMemo<EntityTypeOption[]>(() => {
+    if (!activeEntityType) return [];
+    const found = entityTypeOptions.find((o) => o.value === activeEntityType);
+    return found ? [found] : [];
+  }, [entityTypeOptions, activeEntityType]);
+
+  const handleEntityTypeChange = useCallback(
+    (updated: EntityTypeOption[]) => {
+      if (isFinancialLocked) return;
+
+      const nextType = (updated[0]?.value || "") as EntityTypeValue | "";
+
+      // If type changes, clear entity selection (same behavior as your prior orchestrator handler)
+      setFormData((p) => ({
+        ...p,
+        entities: { ...p.entities, entityType: nextType, entity: "" },
+      }));
+    },
+    [isFinancialLocked, setFormData]
+  );
+
+  const selectedEntity = useMemo<Entity[]>(() => {
+    const id = String(formData.entities.entity || "");
+    if (!id) return [];
+    const found = filteredEntities.find((e) => String(e.id) === id);
+    return found ? [found] : [];
+  }, [filteredEntities, formData.entities.entity]);
+
+  const handleEntityChange = useCallback(
+    (updated: Entity[]) => {
+      if (isFinancialLocked) return;
+      const id = updated.length ? String(updated[0].id) : "";
+      setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
+    },
+    [isFinancialLocked, setFormData]
+  );
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div id={entityTypeWrapId}>
@@ -48,7 +89,7 @@ const EntitiesTab: React.FC<Props> = ({
           label={t("entriesModal:entities.type")}
           items={entityTypeOptions}
           selected={selectedEntityType}
-          onChange={onEntityTypeChange}
+          onChange={handleEntityTypeChange}
           getItemKey={(i) => i.id}
           getItemLabel={(i) => i.label}
           buttonLabel={t("entriesModal:entities.typeBtn")}
@@ -62,9 +103,9 @@ const EntitiesTab: React.FC<Props> = ({
       <div id={entityWrapId}>
         <SelectDropdown<Entity>
           label={t("entriesModal:entities.entity")}
-          items={entities}
+          items={filteredEntities}
           selected={selectedEntity}
-          onChange={onEntityChange}
+          onChange={handleEntityChange}
           getItemKey={(i) => i.id}
           getItemLabel={(i) => i.full_name || t("entriesModal:entities.unnamed")}
           buttonLabel={t("entriesModal:entities.entityBtn")}
@@ -77,9 +118,6 @@ const EntitiesTab: React.FC<Props> = ({
         />
       </div>
 
-      {/* this keeps the same validation rule behavior:
-          if entityType is set but entity isn't, submit will warn.
-          (formData.entities.entityType is still set in the orchestrator handler). */}
       <input type="hidden" value={formData.entities.entityType || ""} readOnly />
     </div>
   );

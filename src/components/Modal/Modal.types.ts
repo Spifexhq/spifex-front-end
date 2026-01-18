@@ -29,7 +29,7 @@ export interface FormData {
       recurrence: number;
       installments: string;
       periods: number;
-      weekend: string;
+      weekend: "" | 1 | -1;
     };
   }
 

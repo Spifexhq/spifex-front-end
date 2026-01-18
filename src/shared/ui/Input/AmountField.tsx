@@ -4,11 +4,7 @@ import classNames from "classnames";
 import type { AmountInputProps, InputVariant, InputSize } from "./Input.types";
 import { INPUT_SIZE } from "./sizes";
 
-import {
-  formatCurrency,
-  formatMajorNumber,
-  toCanonicalMajorString,
-} from "@/lib/currency/formatCurrency";
+import { formatCurrency, formatMajorNumber, toCanonicalMajorString } from "@/lib/currency/formatCurrency";
 
 const SHORTCUT_KEYS = new Set(["a", "c", "v", "x", "z", "y"]);
 const NAV_KEYS = new Set(["Tab", "ArrowLeft", "ArrowRight", "Home", "End"]);
@@ -41,14 +37,14 @@ function centsDigitsToMajorFixed(centsDigits: string): string {
 }
 
 function majorToCentsDigits(major: string): string {
-  const canonical = toCanonicalMajorString(major);
+  const canonical = toCanonicalMajorString(major.replace(",", "."));
   if (!canonical) return "";
   const unsigned = canonical.startsWith("-") ? canonical.slice(1) : canonical;
   return unsigned.replace(".", "");
 }
 
 function isZeroLikeMajor(v: string) {
-  const c = toCanonicalMajorString(v);
+  const c = toCanonicalMajorString(v.replace(",", "."));
   return !c || c === "0.00" || c === "-0.00";
 }
 
@@ -63,244 +59,260 @@ function dropLastDigit(centsDigits: string) {
   return clean.slice(0, -1);
 }
 
-const AmountField = forwardRef<HTMLInputElement, AmountInputProps>(
-  (
-    {
-      variant = "default",
-      size = "md",
+const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) => {
+  const {
+    variant = "default",
+    size = "md",
 
-      label,
-      errorMessage,
-      style,
+    label,
+    errorMessage,
+    style,
 
-      isLoading = false,
+    isLoading = false,
 
-      display = "currency",
-      zeroAsEmpty = false,
-      currency,
-      value,
-      onValueChange,
-      allowNegative = false,
+    display = "currency",
+    zeroAsEmpty = false,
+    currency,
+    allowNegative = false,
 
-      ...rest
+    ...rest
+  } = props;
+
+  const valueType = ("valueType" in props ? props.valueType : undefined) ?? "string";
+  const isNumberMode = valueType === "number";
+
+  const onValueChange =
+    props.onValueChange as unknown as ((v: string) => void) & ((v: number | "") => void);
+
+  const rawValue = props.value as unknown;
+
+  const autoId = useId();
+  const inputId = rest.id ?? autoId;
+
+  const disabled = rest.disabled ?? false;
+  const placeholder = rest.placeholder;
+
+  // Always work internally with a "major string" like "1234.56"
+  const majorValue = useMemo(() => {
+    if (rawValue === "" || rawValue == null) return "";
+    if (typeof rawValue === "number" && Number.isFinite(rawValue)) return rawValue.toFixed(2);
+    return String(rawValue);
+  }, [rawValue]);
+
+  const centsDigits = useMemo(() => majorToCentsDigits(majorValue), [majorValue]);
+
+  const displayValue = useMemo(() => {
+    if (!majorValue) return "";
+    if (zeroAsEmpty && isZeroLikeMajor(majorValue)) return "";
+    return display === "currency" ? formatCurrency(majorValue, currency) : formatMajorNumber(majorValue);
+  }, [majorValue, zeroAsEmpty, display, currency]);
+
+  const resolvedPlaceholder =
+    placeholder == null || placeholder === ""
+      ? display === "currency"
+        ? formatCurrency("0.00", currency)
+        : formatMajorNumber("0.00")
+      : placeholder;
+
+  const canClear = !isLoading && !disabled && !!majorValue && !(zeroAsEmpty && isZeroLikeMajor(majorValue));
+
+  const sz = INPUT_SIZE[size as InputSize];
+
+  const rightPadClass = useMemo(() => {
+    if (canClear && isLoading) return sz.rightPadTwo;
+    if (canClear || isLoading) return sz.rightPadOne;
+    return sz.rightPadNone;
+  }, [canClear, isLoading, sz]);
+
+  const inputClasses = classNames(
+    BASE,
+    sz.inputBox,
+    rightPadClass,
+    VARIANT[variant] ?? VARIANT.default,
+    errorMessage && "border-red-500 focus:border-red-500 focus-visible:ring-red-200"
+  );
+
+  const emitEmpty = useCallback(() => {
+    if (isNumberMode) {
+      (onValueChange as (v: number | "") => void)("");
+      return;
+    }
+    (onValueChange as (v: string) => void)("");
+  }, [isNumberMode, onValueChange]);
+
+  const emitMajor = useCallback(
+    (major: string) => {
+      const canonical = toCanonicalMajorString(String(major ?? "").replace(",", "."));
+
+      if (zeroAsEmpty && (!canonical || canonical === "0.00" || canonical === "-0.00")) {
+        emitEmpty();
+        return;
+      }
+
+      if (!canonical) {
+        emitEmpty();
+        return;
+      }
+
+      if (isNumberMode) {
+        const n = Number(canonical);
+        const fixed = Number.isFinite(n) ? Number(n.toFixed(2)) : "";
+        (onValueChange as (v: number | "") => void)(fixed);
+        return;
+      }
+
+      (onValueChange as (v: string) => void)(canonical);
     },
-    ref
-  ) => {
-    const autoId = useId();
-    const inputId = rest.id ?? autoId;
+    [emitEmpty, isNumberMode, onValueChange, zeroAsEmpty]
+  );
 
-    const disabled = rest.disabled ?? false;
-    const placeholder = rest.placeholder;
+  const emitFromCentsDigits = useCallback(
+    (nextDigits: string) => {
+      const fixed = centsDigitsToMajorFixed(nextDigits);
+      emitMajor(fixed);
+    },
+    [emitMajor]
+  );
 
-    const centsDigits = useMemo(() => majorToCentsDigits(value), [value]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const k = e.key.toLowerCase();
+        if (SHORTCUT_KEYS.has(k)) return;
+      }
 
-    const displayValue = useMemo(() => {
-      if (!value) return "";
-      if (zeroAsEmpty && isZeroLikeMajor(value)) return "";
-      return display === "currency"
-        ? formatCurrency(value, currency)
-        : formatMajorNumber(value);
-    }, [value, zeroAsEmpty, display, currency]);
+      if (NAV_KEYS.has(e.key)) return;
 
-    const resolvedPlaceholder =
-      placeholder == null || placeholder === ""
-        ? display === "currency"
-          ? formatCurrency("0.00", currency)
-          : formatMajorNumber("0.00")
-        : placeholder;
-
-    const canClear =
-      !isLoading &&
-      !disabled &&
-      !!value &&
-      !(zeroAsEmpty && isZeroLikeMajor(value));
-
-    const sz = INPUT_SIZE[size as InputSize];
-
-    const rightPadClass = useMemo(() => {
-      if (canClear && isLoading) return sz.rightPadTwo;
-      if (canClear || isLoading) return sz.rightPadOne;
-      return sz.rightPadNone;
-    }, [canClear, isLoading, sz]);
-
-    const inputClasses = classNames(
-      BASE,
-      sz.inputBox,
-      rightPadClass,
-      VARIANT[variant] ?? VARIANT.default,
-      errorMessage && "border-red-500 focus:border-red-500 focus-visible:ring-red-200"
-    );
-
-    const emitMajor = useCallback(
-      (major: string) => {
-        const canonical = toCanonicalMajorString(major);
-        if (zeroAsEmpty && (!canonical || canonical === "0.00" || canonical === "-0.00")) {
-          onValueChange("");
-          return;
-        }
-        onValueChange(canonical || "");
-      },
-      [onValueChange, zeroAsEmpty]
-    );
-
-    const emitFromCentsDigits = useCallback(
-      (nextDigits: string) => {
-        const fixed = centsDigitsToMajorFixed(nextDigits);
-        emitMajor(fixed);
-      },
-      [emitMajor]
-    );
-
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-          const k = e.key.toLowerCase();
-          if (SHORTCUT_KEYS.has(k)) return;
-        }
-
-        if (NAV_KEYS.has(e.key)) return;
-
-        if (allowNegative && (e.key === "-" || e.key === "Subtract")) {
-          e.preventDefault();
-          if (!value) {
-            emitMajor("-0.00");
-            return;
-          }
-          emitMajor(value.startsWith("-") ? value.slice(1) : `-${value}`);
-          return;
-        }
-
-        if (/^\d$/.test(e.key)) {
-          e.preventDefault();
-          const nextDigits = appendDigit(centsDigits, e.key);
-          emitFromCentsDigits(nextDigits);
-          return;
-        }
-
-        if (e.key === "Backspace" || e.key === "Delete") {
-          e.preventDefault();
-          const nextDigits = dropLastDigit(centsDigits);
-          emitFromCentsDigits(nextDigits);
-          return;
-        }
-
+      if (allowNegative && (e.key === "-" || e.key === "Subtract")) {
         e.preventDefault();
-      },
-      [allowNegative, centsDigits, emitFromCentsDigits, emitMajor, value]
-    );
-
-    const handlePaste = useCallback(
-      (e: React.ClipboardEvent<HTMLInputElement>) => {
-        const text = e.clipboardData.getData("text");
-        if (!text) return;
-        e.preventDefault();
-        emitMajor(text);
-      },
-      [emitMajor]
-    );
-
-    const handleChange = useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const raw = String(e.target.value ?? "").trim();
-        if (!raw) {
-          onValueChange("");
+        if (!majorValue) {
+          emitMajor("-0.00");
           return;
         }
-        emitMajor(raw);
-      },
-      [emitMajor, onValueChange]
-    );
+        const toggled = majorValue.startsWith("-") ? majorValue.slice(1) : `-${majorValue}`;
+        emitMajor(toggled);
+        return;
+      }
 
-    const errorId = errorMessage ? `${inputId}-err` : undefined;
+      if (/^\d$/.test(e.key)) {
+        e.preventDefault();
+        const nextDigits = appendDigit(centsDigits, e.key);
+        emitFromCentsDigits(nextDigits);
+        return;
+      }
 
-    return (
-      <div className="flex flex-col gap-1.5 w-full min-w-0" style={style}>
-        {label ? (
-          <label
-            htmlFor={inputId}
-            className={classNames("font-semibold text-gray-700 select-none", sz.label)}
-          >
-            {label}
-          </label>
-        ) : null}
+      if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        const nextDigits = dropLastDigit(centsDigits);
+        emitFromCentsDigits(nextDigits);
+        return;
+      }
 
-        <div className="relative w-full min-w-0">
-          <input
-            {...rest}
-            id={inputId}
-            ref={ref}
-            type="text"
-            className={inputClasses}
-            aria-invalid={!!errorMessage}
-            aria-describedby={errorId}
-            disabled={isLoading || disabled}
-            value={displayValue}
-            placeholder={resolvedPlaceholder}
-            inputMode="decimal"
-            autoComplete="off"
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            onChange={handleChange}
-          />
+      e.preventDefault();
+    },
+    [allowNegative, centsDigits, emitFromCentsDigits, emitMajor, majorValue]
+  );
 
-          <div
-            className={classNames(
-              "pointer-events-none absolute inset-y-0 flex items-center",
-              sz.trailingRight,
-              sz.trailingGap
-            )}
-          >
-            {isLoading && (
-              <svg className={classNames("animate-spin text-gray-400", sz.icon)} viewBox="0 0 24 24">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="9"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  opacity="0.25"
-                />
-                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" fill="none" />
-              </svg>
-            )}
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>) => {
+      const text = e.clipboardData.getData("text");
+      if (!text) return;
+      e.preventDefault();
+      emitMajor(text);
+    },
+    [emitMajor]
+  );
 
-            {canClear && (
-              <button
-                type="button"
-                onClick={() => onValueChange("")}
-                onMouseDown={(ev) => ev.preventDefault()}
-                className={classNames(
-                  "pointer-events-auto rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
-                  sz.trailingBtnPad
-                )}
-                aria-label="Clear amount"
-                tabIndex={-1}
-                disabled={isLoading || disabled}
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = String(e.target.value ?? "").trim();
+      if (!raw) {
+        emitEmpty();
+        return;
+      }
+      emitMajor(raw);
+    },
+    [emitEmpty, emitMajor]
+  );
+
+  const errorId = errorMessage ? `${inputId}-err` : undefined;
+
+  return (
+    <div className="flex flex-col gap-1.5 w-full min-w-0" style={style}>
+      {label ? (
+        <label htmlFor={inputId} className={classNames("font-semibold text-gray-700 select-none", sz.label)}>
+          {label}
+        </label>
+      ) : null}
+
+      <div className="relative w-full min-w-0">
+        <input
+          {...rest}
+          id={inputId}
+          ref={ref}
+          type="text"
+          className={inputClasses}
+          aria-invalid={!!errorMessage}
+          aria-describedby={errorId}
+          disabled={isLoading || disabled}
+          value={displayValue}
+          placeholder={resolvedPlaceholder}
+          inputMode="decimal"
+          autoComplete="off"
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          onChange={handleChange}
+        />
+
+        <div
+          className={classNames(
+            "pointer-events-none absolute inset-y-0 flex items-center",
+            sz.trailingRight,
+            sz.trailingGap
+          )}
+        >
+          {isLoading && (
+            <svg className={classNames("animate-spin text-gray-400", sz.icon)} viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.25" />
+              <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" fill="none" />
+            </svg>
+          )}
+
+          {canClear && (
+            <button
+              type="button"
+              onClick={() => emitEmpty()}
+              onMouseDown={(ev) => ev.preventDefault()}
+              className={classNames(
+                "pointer-events-auto rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
+                sz.trailingBtnPad
+              )}
+              aria-label="Clear amount"
+              tabIndex={-1}
+              disabled={isLoading || disabled}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className={classNames("text-gray-500", sz.icon)}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className={classNames("text-gray-500", sz.icon)}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
-
-        {errorMessage ? (
-          <span id={errorId} className={classNames("text-red-600 leading-tight", sz.error)}>
-            {errorMessage}
-          </span>
-        ) : null}
       </div>
-    );
-  }
-);
+
+      {errorMessage ? (
+        <span id={errorId} className={classNames("text-red-600 leading-tight", sz.error)}>
+          {errorMessage}
+        </span>
+      ) : null}
+    </div>
+  );
+});
 
 AmountField.displayName = "AmountField";
 export default AmountField;

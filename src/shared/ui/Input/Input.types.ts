@@ -29,8 +29,8 @@ export type TextInputProps = InputCommonProps &
     showTogglePassword?: boolean;
   };
 
-/** AMOUNT input props (major string like "1234.56") */
-export type AmountInputProps = InputCommonProps &
+/** AMOUNT base props */
+type AmountInputBaseProps = InputCommonProps &
   Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
     | "type"
@@ -43,15 +43,30 @@ export type AmountInputProps = InputCommonProps &
     | "size"
   > & {
     kind: "amount";
-
-    value: string;
-    onValueChange: (nextMajor: string) => void;
-
     display?: AmountDisplay;
     zeroAsEmpty?: boolean;
     currency?: string;
     allowNegative?: boolean;
-  };
+  } & (
+    | { value: string; onValueChange: (next: string) => void }
+    | { value: number; onValueChange: (next: number) => void }
+  );
+
+/** AMOUNT input props (string-mode: major string like "1234.56") */
+export type AmountInputStringProps = AmountInputBaseProps & {
+  valueType?: "string"; // default
+  value: string;
+  onValueChange: (nextMajor: string) => void;
+};
+
+/** AMOUNT input props (number-mode: decimal number like 1234.56) */
+export type AmountInputNumberProps = AmountInputBaseProps & {
+  valueType: "number";
+  value: number;
+  onValueChange: (next: number) => void;
+};
+
+export type AmountInputProps = AmountInputStringProps | AmountInputNumberProps;
 
 /** PERCENTAGE input props (major string like "12.34" representing 12.34%) */
 export type PercentageInputProps = InputCommonProps &

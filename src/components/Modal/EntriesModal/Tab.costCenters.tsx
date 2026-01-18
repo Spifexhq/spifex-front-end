@@ -1,6 +1,6 @@
 // src/components/Modal/Tab.costCenters.tsx
 
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
@@ -14,36 +14,104 @@ type Props = {
   t: TFunction;
 
   formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 
   departments: Department[];
-  selectedDepartments: Department[];
-  onDepartmentsChange: (updated: Department[]) => void;
-
-  onPercentageChange: (index: number, value: string) => void;
-  percentageSum: number;
-  deptPercPrefix: string;
-
   projects: Project[];
-  selectedProject: Project[];
-  onProjectChange: (updated: Project[]) => void;
 
+  deptPercPrefix: string;
   isFinancialLocked: boolean;
 };
+
+function computePercentageSum(percs: Array<string | number>) {
+  const nums = percs
+    .map((p) => Number(String(p ?? "").replace(",", ".")))
+    .filter((n) => Number.isFinite(n));
+  const total = nums.reduce((acc, n) => acc + n, 0);
+  return Math.round(total * 100) / 100;
+}
 
 const CostCentersTab: React.FC<Props> = ({
   t,
   formData,
+  setFormData,
   departments,
-  selectedDepartments,
-  onDepartmentsChange,
-  onPercentageChange,
-  percentageSum,
-  deptPercPrefix,
   projects,
-  selectedProject,
-  onProjectChange,
+  deptPercPrefix,
   isFinancialLocked,
 }) => {
+  const selectedDepartments = useMemo(() => {
+    const byId = new Map(departments.map((d) => [String(d.id), d]));
+    return (formData.costCenters.departments || [])
+      .map((id) => byId.get(String(id)))
+      .filter(Boolean) as Department[];
+  }, [departments, formData.costCenters.departments]);
+
+  const selectedProject = useMemo(() => {
+    const id = String(formData.costCenters.projects || "");
+    if (!id) return [];
+    const found = projects.find((p) => String(p.id) === id);
+    return found ? [found] : [];
+  }, [projects, formData.costCenters.projects]);
+
+  const percentageSum = useMemo(
+    () => computePercentageSum(formData.costCenters.department_percentage || []),
+    [formData.costCenters.department_percentage]
+  );
+
+  const handleDepartmentChange = useCallback(
+    (updated: Department[]) => {
+      if (isFinancialLocked) return;
+
+      const departmentIds = updated.map((d) => String(d.id));
+      const count = departmentIds.length;
+
+      // Even split with rounding, last item adjusted to guarantee total = 100.00
+      const base = count > 0 ? Number((100 / count).toFixed(2)) : 0;
+      const percentages = Array.from({ length: count }, () => base);
+
+      const total = percentages.reduce((sum, v) => sum + v, 0);
+      const diff = Number((100 - total).toFixed(2));
+
+      if (count > 0) {
+        percentages[count - 1] = Number((percentages[count - 1] + diff).toFixed(2));
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        costCenters: {
+          ...prev.costCenters,
+          departments: departmentIds,
+          department_percentage: percentages.map((n) => n.toFixed(2)),
+        },
+      }));
+    },
+    [isFinancialLocked, setFormData]
+  );
+
+  const handlePercentageChange = useCallback(
+    (index: number, value: string) => {
+      if (isFinancialLocked) return;
+
+      setFormData((p) => {
+        const percs = [...p.costCenters.department_percentage];
+        percs[index] = value;
+        return { ...p, costCenters: { ...p.costCenters, department_percentage: percs } };
+      });
+    },
+    [isFinancialLocked, setFormData]
+  );
+
+  const handleProjectChange = useCallback(
+    (updated: Project[]) => {
+      if (isFinancialLocked) return;
+
+      const id = updated.length ? String(updated[0].id) : "";
+      setFormData((p) => ({ ...p, costCenters: { ...p.costCenters, projects: id } }));
+    },
+    [isFinancialLocked, setFormData]
+  );
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
@@ -51,7 +119,7 @@ const CostCentersTab: React.FC<Props> = ({
           label={t("entriesModal:costCenters.departments")}
           items={departments}
           selected={selectedDepartments}
-          onChange={onDepartmentsChange}
+          onChange={handleDepartmentChange}
           getItemKey={(d) => d.id}
           getItemLabel={(d) => d.name || t("entriesModal:costCenters.unnamedDepartment")}
           clearOnClickOutside={false}
@@ -91,7 +159,7 @@ const CostCentersTab: React.FC<Props> = ({
                   }`}
                   name={`department_percentage_${dept.id}`}
                   value={formData.costCenters.department_percentage[index] || ""}
-                  onValueChange={(next) => onPercentageChange(index, next)}
+                  onValueChange={(next) => handlePercentageChange(index, next)}
                   disabled={isFinancialLocked}
                   zeroAsEmpty
                 />
@@ -99,7 +167,9 @@ const CostCentersTab: React.FC<Props> = ({
             ))}
 
             {selectedDepartments.length === 0 && (
-              <p className="text-[12px] text-gray-500">{t("entriesModal:costCenters.noneSelected")}</p>
+              <p className="text-[12px] text-gray-500">
+                {t("entriesModal:costCenters.noneSelected")}
+              </p>
             )}
           </div>
         </div>
@@ -110,7 +180,7 @@ const CostCentersTab: React.FC<Props> = ({
           label={t("entriesModal:costCenters.projects")}
           items={projects}
           selected={selectedProject}
-          onChange={onProjectChange}
+          onChange={handleProjectChange}
           getItemKey={(p) => p.id}
           getItemLabel={(p) => p.name || p.code || `${t("entriesModal:costCenters.project")} ${p.id}`}
           buttonLabel={t("entriesModal:costCenters.projectsBtn")}

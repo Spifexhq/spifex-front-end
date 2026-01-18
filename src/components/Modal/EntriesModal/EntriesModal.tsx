@@ -36,7 +36,6 @@ import RecurrenceTab from "./Tab.recurrence";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocumentTypeItem = { id: DocumentType["code"]; label: string };
-type EntityTypeOption = { id: number; label: string; value: EntityTypeValue };
 
 type EntryDiffable = {
   id: string;
@@ -44,7 +43,7 @@ type EntryDiffable = {
   description?: string | null;
   observation?: string | null;
   notes?: string | null;
-  amount: number | string;
+  amount: string;
   tx_type: "credit" | "debit";
   ledger_account?: string | null;
   document_type?: string | null;
@@ -130,38 +129,10 @@ function getEmptyFormData(): FormData {
   };
 }
 
-// backend: KEEP=0, POSTPONE=1, ANTICIPATE=-1
-function mapWeekendToNumber(raw: string): number | undefined {
-  if (!raw) return undefined;
-  if (raw === "postpone") return 1;
-  if (raw === "antedate") return -1;
-  return undefined;
-}
-
-function normalizeMajorAmount(v: unknown): string {
-  if (typeof v === "number" && Number.isFinite(v)) return v.toFixed(2);
-  if (typeof v === "string") {
-    const s = v.trim();
-    if (!s) return "";
-    const n = Number(s);
-    return Number.isFinite(n) ? n.toFixed(2) : s;
-  }
-  return "";
-}
-
-function majorToNumber(v: unknown): number {
-  const n = Number(String(v ?? "").trim());
-  return Number.isFinite(n) ? n : 0;
-}
-
 function toLocalISODate(d: Date) {
   const off = d.getTimezoneOffset();
   const local = new Date(d.getTime() - off * 60000);
   return local.toISOString().slice(0, 10);
-}
-
-function normalizeEntityType(v: Entity["entity_type"]) {
-  return String(v || "").trim().toLowerCase();
 }
 
 function isDropdownOpen() {
@@ -194,7 +165,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const { t } = useTranslation(["entriesModal"]);
 
   /* ----------------------------- Translated lists ---------------------------- */
-  const periodOptions = useMemo(
+  const PERIOD_OPTIONS = useMemo(
     () => PERIOD_OPTIONS_BASE.map((p) => ({ ...p, label: t(p.label) })),
     [t]
   );
@@ -210,7 +181,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   );
 
   const [docTypes, setDocTypes] = useState<DocumentType[]>([]);
-  const documentTypes = useMemo<DocumentTypeItem[]>(() => {
+  const DOCUMENT_TYPES = useMemo<DocumentTypeItem[]>(() => {
     return docTypes
       .filter((dt) => dt.is_active !== false)
       .map((dt) => ({
@@ -231,21 +202,11 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
 
-  // sources
   const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
-
-  // selected objects (dropdowns use objects)
-  const [selectedLedgerAccounts, setSelectedLedgerAccount] = useState<LedgerAccount[]>([]);
-  const [selectedDocumentTypes, setSelectedDocumentType] = useState<DocumentTypeItem[]>([]);
-  const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project[]>([]);
-  const [selectedInventoryItem, setSelectedInventoryItem] = useState<InventoryItem[]>([]);
-  const [selectedEntity, setSelectedEntity] = useState<Entity[]>([]);
-  const [selectedEntityType, setSelectedEntityType] = useState<EntityTypeOption[]>([]);
 
   /* ------------------------------ Locks & derived ------------------------------ */
   const lastSettledOnStr = useMemo(() => {
@@ -267,8 +228,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     return count > 1 || !!lastSettledOnStr;
   }, [initialEntry, lastSettledOnStr]);
 
-  const amountMajorNum = useMemo(() => majorToNumber(formData.details.amount), [formData.details.amount]);
-
   const percentageSum = useMemo(() => {
     const nums = formData.costCenters.department_percentage
       .map((p) => Number(String(p).replace(",", ".")))
@@ -277,19 +236,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     return Math.round(total * 100) / 100;
   }, [formData.costCenters.department_percentage]);
 
-  const activeEntityType = useMemo(
-    () => (formData.entities.entityType as EntityTypeValue | "") || "",
-    [formData.entities.entityType]
-  );
-
-  const filteredEntities = useMemo(() => {
-    if (!activeEntityType) return entities;
-    return entities.filter((e) => normalizeEntityType(e.entity_type) === activeEntityType);
-  }, [entities, activeEntityType]);
-
-  /* ---------------- Flag: meaningful data (ignore dueDate) ---------------- */
+  /* ------------------------- Flag: meaningful data ------------------------- */
   const hasMeaningfulData = useMemo(() => {
-    if (amountMajorNum > 0) return true;
+    if (formData.details.amount > "") return true;
 
     const d = formData.details;
     if (
@@ -314,20 +263,12 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     if (rec.recurrence === 1 || !!rec.installments || !!rec.weekend || Number(rec.periods) !== 1) return true;
 
     return false;
-  }, [formData, amountMajorNum]);
+  }, [formData]);
 
   /* ------------------------- Reset / close helpers ------------------------- */
   const resetInternalState = useCallback(() => {
     setFormData(getEmptyFormData());
     setActiveTab("details");
-
-    setSelectedLedgerAccount([]);
-    setSelectedDocumentType([]);
-    setSelectedDepartments([]);
-    setSelectedProject([]);
-    setSelectedInventoryItem([]);
-    setSelectedEntity([]);
-    setSelectedEntityType([]);
 
     setWarning(null);
     setShowCloseConfirm(false);
@@ -365,9 +306,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   /* --------------------------- Load sources on open --------------------------- */
   useEffect(() => {
     if (!isOpen) return;
-
     let alive = true;
-
     (async () => {
       try {
         const [la, deps, prjs, invs, ents, dts] = await Promise.all([
@@ -390,7 +329,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         console.error("Error loading modal sources:", e);
       }
 
-      // default due date for new entry
       if (!alive) return;
       if (!initialEntry) {
         setFormData((prev) => ({
@@ -399,7 +337,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         }));
       }
 
-      // focus amount first
       setTimeout(() => amountRef.current?.focus(), 50);
     })();
 
@@ -436,7 +373,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         dueDate: ie.due_date,
         description: ie.description ?? "",
         observation: ie.observation ?? "",
-        amount: normalizeMajorAmount(ie.amount),
+        amount: ie.amount ?? "",
         ledgerAccount: ie.ledger_account || "",
         documentType: ie.document_type || "",
         notes: ie.notes ?? "",
@@ -455,101 +392,16 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         recurrence: recCount > 1 ? 1 : 0,
         installments: recCount > 1 ? String(recCount) : "",
         periods: Number(interval),
-        weekend: weekendNum === 1 ? "postpone" : weekendNum === -1 ? "antedate" : "",
+        weekend: weekendNum === 1 ? 1 : weekendNum === -1 ? -1 : "",
       },
     });
   }, [isOpen, initialEntry]);
-
-  /* --------------------- Sync selected objects in edit --------------------- */
-  useEffect(() => {
-    if (!isOpen || !initialEntry) return;
-
-    const ie = initialEntry as unknown as EntryDiffable;
-
-    // ledger
-    const ledger_account_id = ie.ledger_account || "";
-    const la = ledgerAccounts.find((a) => a.id === ledger_account_id);
-    setSelectedLedgerAccount(la ? [la] : []);
-
-    // project
-    const prjId = ie.project || "";
-    const prj = projects.find((p) => p.id === prjId);
-    setSelectedProject(prj ? [prj] : []);
-
-    // entity
-    const entId = ie.entity || "";
-    const ent = entities.find((e) => e.id === entId);
-    setSelectedEntity(ent ? [ent] : []);
-
-    // entity type (if entity has entity_type)
-    const normalizedEntType = ent ? normalizeEntityType(ent.entity_type) : "";
-    const derivedType = normalizedEntType ? (normalizedEntType as EntityTypeValue) : "";
-    if (derivedType) {
-      const opt = ENTITY_TYPE_OPTIONS.find((o) => o.value === derivedType);
-      setSelectedEntityType(opt ? [opt] : []);
-      setFormData((p) => ({ ...p, entities: { ...p.entities, entityType: opt?.value || "" } }));
-    } else {
-      setSelectedEntityType([]);
-    }
-
-    // departments
-    const rawDeps = (ie.departments ?? []) as Array<{ department_id: string; percent: string | number }>;
-    const depIds = rawDeps.map((d) => String(d.department_id));
-    const idToPercent = new Map(
-      rawDeps.map((d) => [
-        String(d.department_id),
-        typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent),
-      ])
-    );
-
-    const selectedDeps = depIds
-      .map((id) => departments.find((d) => d.id === id))
-      .filter(Boolean) as Department[];
-
-    setSelectedDepartments(selectedDeps);
-
-    if (selectedDeps.length) {
-      const percsInOrder = selectedDeps.map((d) => idToPercent.get(d.id) ?? "");
-      const idsInOrder = selectedDeps.map((d) => String(d.id));
-      setFormData((prev) => ({
-        ...prev,
-        costCenters: {
-          ...prev.costCenters,
-          departments: idsInOrder,
-          department_percentage: percsInOrder,
-        },
-      }));
-    }
-  }, [isOpen, initialEntry, ledgerAccounts, projects, entities, departments, ENTITY_TYPE_OPTIONS]);
-
-  /* -------- Keep selected document type in sync (async load + locale) -------- */
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const id = String(formData.details.documentType || "");
-    if (!id) {
-      setSelectedDocumentType([]);
-      return;
-    }
-
-    const found = documentTypes.find((d) => d.id === id);
-    setSelectedDocumentType(
-      found
-        ? [found]
-        : [
-            {
-              id,
-              label: t(`entriesModal:documentTypes.${id}`, { defaultValue: id }),
-            },
-          ]
-    );
-  }, [isOpen, documentTypes, formData.details.documentType, t]);
 
   /* ---------------------------- Validations ---------------------------- */
   type ValidationResult = { ok: boolean; tab?: Tab; focusId?: string; title?: string; message?: string };
 
   const validateAll = useCallback((): ValidationResult => {
-    if (amountMajorNum <= 0) {
+    if (formData.details.amount <= "") {
       return {
         ok: false,
         tab: "details",
@@ -634,116 +486,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     }
 
     return { ok: true };
-  }, [amountMajorNum, formData, isRecurrenceLocked, percentageSum, t]);
+  }, [formData, isRecurrenceLocked, percentageSum, t]);
 
-  /* ------------------------------ Handlers ------------------------------ */
-  const handleLedgerAccountChange = useCallback(
-    (updated: LedgerAccount[]) => {
-      if (isFinancialLocked) return;
-      setSelectedLedgerAccount(updated);
-      const id = updated.length ? String(updated[0].id) : "";
-      setFormData((p) => ({ ...p, details: { ...p.details, ledgerAccount: id } }));
-    },
-    [isFinancialLocked]
-  );
-
-  const handleDocumentTypeChange = useCallback((updated: DocumentTypeItem[]) => {
-    setSelectedDocumentType(updated);
-    const id = updated.length ? String(updated[0].id) : "";
-    setFormData((p) => ({ ...p, details: { ...p.details, documentType: id } }));
-  }, []);
-
-  const handleDepartmentChange = useCallback(
-    (updated: Department[]) => {
-      if (isFinancialLocked) return;
-
-      setSelectedDepartments(updated);
-
-      const departmentIds = updated.map((d) => String(d.id));
-      const count = departmentIds.length;
-
-      // Even split with rounding, last item adjusted to guarantee total = 100.00
-      const base = count > 0 ? Number((100 / count).toFixed(2)) : 0;
-      const percentages = Array.from({ length: count }, () => base);
-
-      const total = percentages.reduce((sum, v) => sum + v, 0);
-      const diff = Number((100 - total).toFixed(2));
-
-      if (count > 0) {
-        percentages[count - 1] = Number((percentages[count - 1] + diff).toFixed(2));
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        costCenters: {
-          ...prev.costCenters,
-          departments: departmentIds,
-          department_percentage: percentages.map((n) => n.toFixed(2)),
-        },
-      }));
-    },
-    [isFinancialLocked]
-  );
-
-  const handlePercentageChange = useCallback(
-    (index: number, value: string) => {
-      if (isFinancialLocked) return;
-      setFormData((p) => {
-        const percs = [...p.costCenters.department_percentage];
-        percs[index] = value;
-        return { ...p, costCenters: { ...p.costCenters, department_percentage: percs } };
-      });
-    },
-    [isFinancialLocked]
-  );
-
-  const handleProjectChange = useCallback(
-    (updated: Project[]) => {
-      if (isFinancialLocked) return;
-      setSelectedProject(updated);
-      const id = updated.length ? String(updated[0].id) : "";
-      setFormData((p) => ({ ...p, costCenters: { ...p.costCenters, projects: id } }));
-    },
-    [isFinancialLocked]
-  );
-
-  const handleInventoryChange = useCallback(
-    (updated: InventoryItem[]) => {
-      if (isFinancialLocked) return;
-      setSelectedInventoryItem(updated);
-      const id = updated.length ? String(updated[0].id) : "";
-      setFormData((p) => ({ ...p, inventory: { ...p.inventory, product: id } }));
-    },
-    [isFinancialLocked]
-  );
-
-  const handleEntityChange = useCallback(
-    (updated: Entity[]) => {
-      if (isFinancialLocked) return;
-      setSelectedEntity(updated);
-      const id = updated.length ? String(updated[0].id) : "";
-      setFormData((p) => ({ ...p, entities: { ...p.entities, entity: id } }));
-    },
-    [isFinancialLocked]
-  );
-
-  const handleEntityTypeChange = useCallback(
-    (v: EntityTypeOption[]) => {
-      if (isFinancialLocked) return;
-
-      const nextType = (v[0]?.value || "") as EntityTypeValue | "";
-
-      setSelectedEntityType(v);
-      setSelectedEntity([]);
-
-      setFormData((p) => ({
-        ...p,
-        entities: { ...p.entities, entityType: nextType, entity: "" },
-      }));
-    },
-    [isFinancialLocked]
-  );
-
+  /* ----------------------- Keyboard: ESC, Ctrl/⌘+S, Ctrl+Alt+←/→ ----------------------- */
   const goTabRelative = useCallback(
     (delta: number) => {
       const idx = TAB_LIST.findIndex((x) => x.id === activeTab);
@@ -754,7 +499,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     [activeTab, TAB_LIST]
   );
 
-  /* ----------------------- Keyboard: ESC, Ctrl/⌘+S, Ctrl+Alt+←/→ ----------------------- */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -850,7 +594,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             description: formData.details.description || "",
             observation: formData.details.observation || "",
             notes: formData.details.notes || "",
-            amount: normalizeMajorAmount(formData.details.amount),
+            amount: formData.details.amount || "",
             tx_type: type,
 
             ledger_account: formData.details.ledgerAccount,
@@ -865,8 +609,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
               ? {
                   installment_count: installmentCount,
                   interval_months: formData.recurrence.periods as IntervalMonths,
-                  ...(formData.recurrence.weekend
-                    ? { weekend_action: mapWeekendToNumber(formData.recurrence.weekend) }
+                  ...(formData.recurrence.weekend !== ""
+                    ? { weekend_action: formData.recurrence.weekend }
                     : {}),
                 }
               : {}),
@@ -884,11 +628,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             changes.observation = formData.details.observation || "";
           if ((formData.details.notes || "") !== (ie.notes || "")) changes.notes = formData.details.notes || "";
 
-          const initialAmountStr = normalizeMajorAmount(ie.amount);
-          const newAmountStr = normalizeMajorAmount(formData.details.amount);
-
-          if (!isFinancialLocked && newAmountStr !== initialAmountStr) {
-            changes.amount = newAmountStr;
+          if (!isFinancialLocked && formData.details.amount !== ie.amount) {
+            changes.amount = formData.details.amount;
           }
 
           const initialGl = ie.ledger_account || "";
@@ -896,7 +637,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             changes.ledger_account = formData.details.ledgerAccount;
           }
 
-          // Document type: allow change + allow clearing (null)
           const initialDocType = ie.document_type || "";
           const newDocType = formData.details.documentType || "";
           if (newDocType !== initialDocType) {
@@ -918,7 +658,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           if (!isFinancialLocked && deps) changes.departments = deps;
           if (!isFinancialLocked && items) changes.items = items;
 
-          // recurrence update only if originally not recurring
           const initialRecCount = ie.installment_count ?? 1;
           if (initialRecCount <= 1) {
             const wantRecurring = formData.recurrence.recurrence === 1;
@@ -928,7 +667,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
               changes.installment_count = count;
               changes.interval_months = formData.recurrence.periods as IntervalMonths;
               if (formData.recurrence.weekend) {
-                changes.weekend_action = mapWeekendToNumber(formData.recurrence.weekend);
+                changes.weekend_action = formData.recurrence.weekend;
               }
             }
           }
@@ -979,7 +718,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   );
 
   /* ---------------------------- UI derivations ------------------------- */
-  const isAmountValid = amountMajorNum > 0;
+  const isAmountValid = formData.details.amount > "";
   const isLedgerValid = !!formData.details.ledgerAccount;
 
   const isRecurrenceValid =
@@ -1042,12 +781,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             amountRef={amountRef}
             descriptionRef={descriptionRef}
             ledgerAccounts={ledgerAccounts}
-            selectedLedgerAccounts={selectedLedgerAccounts}
-            onLedgerAccountChange={handleLedgerAccountChange}
             ledgerWrapId={IDS.ledgerWrap}
-            documentTypes={documentTypes}
-            selectedDocumentTypes={selectedDocumentTypes}
-            onDocumentTypeChange={handleDocumentTypeChange}
+            documentTypes={DOCUMENT_TYPES}
             isFinancialLocked={isFinancialLocked}
           />
         );
@@ -1057,15 +792,10 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           <CostCentersTab
             t={t}
             formData={formData}
+            setFormData={setFormData}
             departments={departments}
-            selectedDepartments={selectedDepartments}
-            onDepartmentsChange={handleDepartmentChange}
-            onPercentageChange={handlePercentageChange}
-            percentageSum={percentageSum}
-            deptPercPrefix={IDS.deptPercPrefix}
             projects={projects}
-            selectedProject={selectedProject}
-            onProjectChange={handleProjectChange}
+            deptPercPrefix={IDS.deptPercPrefix}
             isFinancialLocked={isFinancialLocked}
           />
         );
@@ -1077,8 +807,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             formData={formData}
             setFormData={setFormData}
             inventoryItems={inventoryItems}
-            selectedInventoryItem={selectedInventoryItem}
-            onInventoryChange={handleInventoryChange}
             inventoryQtyId={IDS.inventoryQty}
             isFinancialLocked={isFinancialLocked}
           />
@@ -1089,14 +817,11 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           <EntitiesTab
             t={t}
             formData={formData}
+            setFormData={setFormData}
             entityTypeOptions={ENTITY_TYPE_OPTIONS}
-            selectedEntityType={selectedEntityType}
-            onEntityTypeChange={handleEntityTypeChange}
             entityTypeWrapId={IDS.entityTypeWrap}
             entityWrapId={IDS.entityWrap}
-            entities={filteredEntities}
-            selectedEntity={selectedEntity}
-            onEntityChange={handleEntityChange}
+            entities={entities}
             isFinancialLocked={isFinancialLocked}
           />
         );
@@ -1107,7 +832,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             t={t}
             formData={formData}
             setFormData={setFormData}
-            periodOptions={periodOptions}
+            periodOptions={PERIOD_OPTIONS}
             installmentsInputId={IDS.installmentsInput}
             isRecurrenceLocked={isRecurrenceLocked}
           />
@@ -1176,7 +901,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           {/* Footer */}
           <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
             <p className="text-[12px] text-gray-600">
-              {amountMajorNum > 0 ? (
+              {formData.details.amount > "" ? (
                 <>
                   {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount)}</b>
                 </>
