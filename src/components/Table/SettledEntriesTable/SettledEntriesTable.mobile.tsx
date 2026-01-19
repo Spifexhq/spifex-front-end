@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/components/Table/CashFlowTable/CashFlowTable.mobile.tsx          */
+/* File: src/components/Table/SettledEntriesTable/SettledEntriesTable.mobile.tsx */
 /* -------------------------------------------------------------------------- */
 
 import React, {
@@ -20,23 +20,37 @@ import { api } from "@/api/requests";
 import { getCursorFromUrl } from "@/lib/list";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { formatDateFromISO, formatCurrency } from "@/lib";
-import { PermissionMiddleware } from "@/middlewares";
 
 import type { EntryFilters } from "@/models/components/filterBar";
-import type { Entry, GetEntryRequest, GetEntryResponse } from "@/models/entries/entries";
+import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry } from "@/models/entries/settlements";
+import type { SettledEntriesTableHandle, SettledEntriesTableProps } from "./SettledEntriesTable";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const getId = (e: Entry): string => e.id;
-const getAmount = (e: Entry): number => parseFloat(e.amount ?? "0") || 0;
-const getTxString = (e: Entry): string => (e.tx_type ?? "").toLowerCase();
-const isCredit = (e: Entry): boolean => getTxString(e) === "credit";
-const getDueDate = (e: Entry): string => e.due_date;
-const getDescription = (e: Entry): string => e.description ?? "";
+const getId = (e: SettledEntry): string => e.external_id;
 
-const getInstallments = (e: Entry) => ({
+const getAmount = (e: SettledEntry): number => {
+  const raw = (e as unknown as { amount?: unknown }).amount;
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
+
+  const s = String(raw ?? "0").trim();
+  if (!s) return 0;
+
+  // tolerate "1,23" and "1.23" (major units)
+  const normalized = s.includes(",") && !s.includes(".") ? s.replace(",", ".") : s;
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const getTxString = (e: SettledEntry): string => String(e.tx_type ?? "").toLowerCase();
+const isCredit = (e: SettledEntry): boolean => getTxString(e).includes("credit");
+
+const getDueDate = (e: SettledEntry): string => e.value_date;
+const getDescription = (e: SettledEntry): string => e.description ?? "";
+
+const getInstallments = (e: SettledEntry) => ({
   index: e.installment_index ?? null,
   count: e.installment_count ?? null,
 });
@@ -61,11 +75,15 @@ const parseOptionalAmount = (v: unknown): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-const getServerRunning = (e: Entry): number | null => {
-  if (typeof e.running_balance === "string" && e.running_balance.length) {
-    const n = Number(e.running_balance);
+const getServerRunning = (e: SettledEntry): number | null => {
+  const raw = (e as unknown as { running_balance?: unknown }).running_balance;
+
+  if (typeof raw === "string" && raw.trim().length) {
+    const n = Number(raw);
     return Number.isFinite(n) ? n : null;
   }
+
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
   return null;
 };
 
@@ -83,7 +101,7 @@ const formatMonthYearSummary = (isoDate: string, monthsShort: string[]): string 
 };
 
 /** + for credits, - for debits (major units) */
-const getTransactionValue = (entry: Entry): number => {
+const getTransactionValue = (entry: SettledEntry): number => {
   const amount = getAmount(entry);
   return isCredit(entry) ? amount : -amount;
 };
@@ -102,21 +120,10 @@ const safeT = (t: TFn, key: string, fallback: string, options?: Record<string, u
 interface TableRow {
   id: string;
   type: "entry" | "summary";
-  entry?: Entry;
+  entry?: SettledEntry;
   monthlySum?: number;
   runningBalance?: number;
   displayMonth?: string;
-}
-
-export type CashFlowTableHandle = {
-  clearSelection: () => void;
-  refresh: () => void;
-};
-
-export interface CashFlowTableProps {
-  filters?: EntryFilters;
-  onEdit(entry: Entry): void;
-  onSelectionChange?: (ids: string[], entries: Entry[]) => void;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -129,7 +136,7 @@ const MobileHeader: React.FC<{
   onSelectAll: () => void;
   onClear: () => void;
 }> = ({ totalCount, selectedCount, onSelectAll, onClear }) => {
-  const { t } = useTranslation("cashFlowTable");
+  const { t } = useTranslation("settledTable");
 
   return (
     <div className="shrink-0 bg-white border-b border-gray-200">
@@ -146,7 +153,7 @@ const MobileHeader: React.FC<{
             <div className="min-w-0 min-h-10">
               <div className="flex items-baseline gap-2 min-w-0 min-h-5">
                 <span className="text-[12px] font-semibold text-gray-900 truncate">
-                  {t("labels.entries")}
+                  {safeT(t as unknown as TFn, "labels.settled", "Settled")}
                 </span>
                 <span className="text-[11px] text-gray-500 tabular-nums">({totalCount})</span>
 
@@ -158,19 +165,14 @@ const MobileHeader: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate">
-                {safeT(t, "labels.tapToSelect", "Tap a row to select. Use the pencil to edit.")}
+                {safeT(t as unknown as TFn, "labels.tapToSelect", "Tap a row to select.")}
               </div>
             </div>
           </div>
 
           {selectedCount > 0 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="!h-8 text-[11px] font-semibold"
-              onClick={onClear}
-            >
-              {safeT(t, "actions.clear", "Clear")}
+            <Button variant="outline" size="sm" className="!h-8 text-[11px] font-semibold" onClick={onClear}>
+              {safeT(t as unknown as TFn, "actions.clear", "Clear")}
             </Button>
           ) : null}
         </div>
@@ -180,7 +182,7 @@ const MobileHeader: React.FC<{
 };
 
 const MobileEmptyState: React.FC = () => {
-  const { t } = useTranslation("cashFlowTable");
+  const { t } = useTranslation("settledTable");
   return (
     <div className="flex flex-col items-center justify-center py-10 px-4">
       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -215,7 +217,6 @@ const MobileSkeleton: React.FC<{ rows: number }> = ({ rows }) => (
             <div className="h-3 w-14 rounded bg-gray-200 animate-pulse ml-auto" />
             <div className="h-2 w-12 rounded bg-gray-200 animate-pulse mt-2 ml-auto" />
           </div>
-          <div className="h-8 w-8 rounded-md bg-gray-200 animate-pulse shrink-0" />
         </div>
       </div>
     ))}
@@ -223,7 +224,7 @@ const MobileSkeleton: React.FC<{ rows: number }> = ({ rows }) => (
 );
 
 const BottomLoader: React.FC = () => {
-  const { t } = useTranslation("cashFlowTable");
+  const { t } = useTranslation("settledTable");
   return (
     <div
       className="flex items-center justify-center gap-2 py-3 border-t border-gray-200 bg-white"
@@ -238,23 +239,26 @@ const BottomLoader: React.FC = () => {
 };
 
 const MobileEntryRow: React.FC<{
-  entry: Entry;
+  entry: SettledEntry;
   runningBalance: number;
   isSelected: boolean;
   onSelect: (id: string, event: React.MouseEvent) => void;
-  onEdit: (entry: Entry) => void;
-}> = ({ entry, runningBalance, isSelected, onSelect, onEdit }) => {
-  const { t } = useTranslation("cashFlowTable");
+}> = ({ entry, runningBalance, isSelected, onSelect }) => {
+  const { t } = useTranslation("settledTable");
 
   const transactionValue = getTransactionValue(entry);
   const positive = transactionValue >= 0;
 
   const due = formatDateFromISO(getDueDate(entry));
+
   const installments = getInstallments(entry);
   const installmentsLabel =
     installments.index || installments.count
       ? `${installments.index ?? "-"}${installments.count ? `/${installments.count}` : ""}`
       : "";
+
+  const partialLabel = entry.partial_index != null ? String(entry.partial_index) : "";
+  const bankName = entry.bank?.institution ? String(entry.bank.institution) : "";
 
   const accent = positive ? "border-l-green-500" : "border-l-red-500";
   const selectedCls = isSelected ? "bg-blue-50 ring-1 ring-blue-200" : "bg-white";
@@ -270,10 +274,10 @@ const MobileEntryRow: React.FC<{
       tabIndex={0}
       aria-label={t("aria.selectRow")}
       aria-pressed={isSelected}
-      onClick={(e) => onSelect(entry.id, e)}
+      onClick={(e) => onSelect(getId(entry), e)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
-          onSelect(entry.id, e as unknown as React.MouseEvent);
+          onSelect(getId(entry), e as unknown as React.MouseEvent);
         }
       }}
     >
@@ -289,9 +293,12 @@ const MobileEntryRow: React.FC<{
               <div className="text-[12px] font-semibold text-gray-900 truncate leading-tight">
                 {getDescription(entry)}
               </div>
+
               <div className="text-[10px] text-gray-500 truncate mt-1">
                 {due}
                 {installmentsLabel ? <span className="ml-2">• {installmentsLabel}</span> : null}
+                {partialLabel ? <span className="ml-2">• {partialLabel}</span> : null}
+                {bankName ? <span className="ml-2">• {bankName}</span> : null}
               </div>
             </div>
 
@@ -304,40 +311,13 @@ const MobileEntryRow: React.FC<{
               >
                 {formatCurrency(transactionValue)}
               </div>
+
               <div className="text-[10px] font-semibold tabular-nums text-gray-700 mt-1">
                 {formatCurrency(runningBalance)}
               </div>
             </div>
           </div>
         </div>
-
-        <PermissionMiddleware codeName={["change_cash_flow_entries"]} requireAll>
-          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="!h-8 !w-8 !p-0 grid place-items-center rounded-lg"
-              onClick={() => onEdit(entry)}
-              aria-label={t("actions.edit")}
-              title={t("actions.edit")}
-            >
-              <svg
-                className="w-4 h-4 text-gray-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.75}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                <path d="M15 5l3 3" />
-              </svg>
-            </Button>
-          </div>
-        </PermissionMiddleware>
       </div>
     </div>
   );
@@ -348,7 +328,8 @@ const MobileSummaryRow: React.FC<{
   monthlySum: number;
   runningBalance: number;
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
-  const { t } = useTranslation("cashFlowTable");
+  const { t } = useTranslation("settledTable");
+
   const monthsShort =
     (t("months.short", { returnObjects: true }) as string[]) ??
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -364,9 +345,7 @@ const MobileSummaryRow: React.FC<{
       <div className="flex items-center justify-between h-full">
         <div className="min-w-0 flex items-center gap-2">
           <div className="h-1.5 w-1.5 bg-gray-400 rounded-full shrink-0" />
-          <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wide truncate">
-            {label}
-          </span>
+          <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wide truncate">{label}</span>
         </div>
 
         <div className="shrink-0 flex items-center gap-3">
@@ -386,9 +365,9 @@ const MobileSummaryRow: React.FC<{
 /* Main mobile table                                                          */
 /* -------------------------------------------------------------------------- */
 
-const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
-  ({ filters, onEdit, onSelectionChange }, ref) => {
-    const { t } = useTranslation("cashFlowTable");
+const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledEntriesTableProps>(
+  ({ filters, onSelectionChange }, ref) => {
+    const { t } = useTranslation("settledTable");
 
     const hideScrollbarCls = useMemo(
       () => "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
@@ -396,7 +375,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     );
 
     // Data
-    const [entries, setEntries] = useState<Entry[]>([]);
+    const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
@@ -405,7 +384,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
     // Selection
-    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<Entry, string>(
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<SettledEntry, string>(
       entries,
       getId,
     );
@@ -431,7 +410,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       onSelectionChange?.(selectedIds, selectedRows);
     }, [selectedIds, entries, onSelectionChange]);
 
-    const buildPayload = useCallback((reset: boolean): GetEntryRequest => {
+    const buildPayload = useCallback((reset: boolean): GetSettledEntryRequest => {
       const f = latest.current.filters;
 
       const qCombined =
@@ -439,21 +418,27 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const ledger_account = f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
-      const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
-      const bank = Array.isArray(f?.bank_id) && f!.bank_id!.length ? f!.bank_id!.join(",") : undefined;
+      const bank = Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
 
-      const base: GetEntryRequest = {
-        date_from: f?.start_date || undefined,
-        date_to: f?.end_date || undefined,
+      const ledger_account =
+        Array.isArray(f?.ledger_account_id) && f.ledger_account_id.length
+          ? f.ledger_account_id.map(String).join(",")
+          : undefined;
+
+      const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
+
+      const base: GetSettledEntryRequest = {
+        value_from: f?.start_date || undefined,
+        value_to: f?.end_date || undefined,
+        bank,
+        q,
         description: f?.description || undefined,
         observation: f?.observation || undefined,
-        q,
         ledger_account,
         tx_type,
         amount_min: parseOptionalAmount(f?.amount_min),
         amount_max: parseOptionalAmount(f?.amount_max),
-        bank,
+        include_inactive: true,
       };
 
       if (!reset && latest.current.nextCursor) base.cursor = latest.current.nextCursor;
@@ -470,11 +455,11 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         else setLoadingMore(true);
 
         try {
-          const { data } = await api.getEntriesTable(payload);
-          const incoming: Entry[] = (data as GetEntryResponse).results ?? [];
+          const { data } = await api.getSettledEntriesTable(payload);
+          const incoming: SettledEntry[] = (data as GetSettledEntryResponse).results ?? [];
 
           setEntries((prev) => {
-            const map = new Map<string, Entry>(reset ? [] : prev.map((e) => [getId(e), e]));
+            const map = new Map<string, SettledEntry>(reset ? [] : prev.map((e) => [getId(e), e]));
             for (const e of incoming) map.set(getId(e), e);
             const merged = Array.from(map.values());
 
@@ -489,8 +474,8 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
             return merged;
           });
 
-          setNextCursor(getCursorFromUrl((data as GetEntryResponse).next) ?? null);
-          setHasMore(Boolean((data as GetEntryResponse).next));
+          setNextCursor(getCursorFromUrl((data as GetSettledEntryResponse).next) ?? null);
+          setHasMore(Boolean((data as GetSettledEntryResponse).next));
           setError(null);
         } catch (err) {
           setError(err instanceof Error ? err.message : t("errors.fetch"));
@@ -526,6 +511,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     /* ------------------------- Build rows + summaries ---------------------- */
     const tableRows = useMemo((): TableRow[] => {
       if (!entries.length) return [];
+
       let currentMonth = "";
       let monthlySum = 0;
       const rows: TableRow[] = [];
@@ -537,6 +523,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         if (currentMonth && currentMonth !== entryMonth) {
           const lastRow = rows[rows.length - 1];
           const lastRunning = lastRow?.type === "entry" ? lastRow.runningBalance ?? 0 : 0;
+
           rows.push({
             id: `summary-${currentMonth}-${index}`,
             type: "summary",
@@ -544,6 +531,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
             runningBalance: lastRunning,
             displayMonth: currentMonth,
           });
+
           monthlySum = 0;
         }
 
@@ -646,6 +634,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       [clearSelection, fetchEntries],
     );
 
+    // Match CashFlowTable logic: fetch on filters change (no selection mutation here)
     useEffect(() => {
       setNextCursor(null);
       fetchEntries(true);
@@ -732,23 +721,24 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                         <MobileEntryRow
                           key={row.id}
                           entry={row.entry}
-                          runningBalance={row.runningBalance!}
+                          runningBalance={row.runningBalance ?? 0}
                           isSelected={isSelected}
                           onSelect={handleSelectRow}
-                          onEdit={onEdit}
                         />
                       );
                     }
+
                     if (row.type === "summary") {
                       return (
                         <MobileSummaryRow
                           key={row.id}
-                          displayMonth={row.displayMonth!}
-                          monthlySum={row.monthlySum!}
-                          runningBalance={row.runningBalance!}
+                          displayMonth={row.displayMonth ?? ""}
+                          monthlySum={row.monthlySum ?? 0}
+                          runningBalance={row.runningBalance ?? 0}
                         />
                       );
                     }
+
                     return null;
                   })}
                 </div>
@@ -763,4 +753,4 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
   },
 );
 
-export default CashFlowTableMobile;
+export default SettledEntriesTableMobile;

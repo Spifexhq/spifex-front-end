@@ -1,8 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/Settled/index.tsx
- * Update: Handles new SelectionActionsBar (desktop + mobile)
- * - Mobile: no left margin; centered content; extra bottom padding when selection is active
- * - Sidebar mobile bar should hide when SelectionActionsBarMobile is active
  * -------------------------------------------------------------------------- */
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
@@ -10,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/shared/layout/Sidebar";
 import { EntriesModal, TransferenceModal } from "@/components/Modal";
-import SettledEntriesTable, { type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
+import { SettledEntriesTable, type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import FilterBar from "@/components/FilterBar";
 import KpiCards from "@/components/KpiCards";
 import { SelectionActionsBar, type MinimalEntry } from "@/components/SelectionActionsBar";
@@ -117,8 +114,7 @@ const Settled = () => {
         toggleSidebar={toggleSidebar}
         handleOpenModal={handleOpenModal}
         handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
-        // Critical: hide SidebarMobile floating bar when SelectionActionsBarMobile is active
-        mode={hasSelection ? "settled" : "default"}
+        mode="default"
       />
 
       <div

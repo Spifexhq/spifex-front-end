@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/shared/layout/Sidebar";
 import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
-import CashFlowTable, { type CashFlowTableHandle } from "@/components/Table/CashFlowTable/CashFlowTable";
+import { CashFlowTable, type CashFlowTableHandle } from "@/components/Table/CashFlowTable";
 import FilterBar from "@/components/FilterBar";
 import KpiCards from "@/components/KpiCards";
 import { SelectionActionsBar } from "@/components/SelectionActionsBar";
