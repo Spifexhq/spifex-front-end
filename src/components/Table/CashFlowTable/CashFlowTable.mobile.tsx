@@ -1,4 +1,8 @@
-// src/components/Table/CashFlowTable/CashFlowTable.mobile.tsx
+/* -------------------------------------------------------------------------- */
+/* File: src/components/Table/CashFlowTable/CashFlowTable.mobile.tsx          */
+/* Update: Clear button moved to top header; removed bottom selection bar.     */
+/* -------------------------------------------------------------------------- */
+
 import React, {
   useEffect,
   useMemo,
@@ -119,11 +123,13 @@ export interface CashFlowTableProps {
 /* -------------------------------------------------------------------------- */
 /* Mobile UI subcomponents                                                    */
 /* -------------------------------------------------------------------------- */
+
 const MobileHeader: React.FC<{
   totalCount: number;
   selectedCount: number;
   onSelectAll: () => void;
-}> = ({ totalCount, selectedCount, onSelectAll }) => {
+  onClear: () => void;
+}> = ({ totalCount, selectedCount, onSelectAll, onClear }) => {
   const { t } = useTranslation("cashFlowTable");
 
   return (
@@ -158,32 +164,17 @@ const MobileHeader: React.FC<{
             </div>
           </div>
 
-          {/* No Clear button here (per request). */}
+          {selectedCount > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="!h-8 text-[11px] font-semibold"
+              onClick={onClear}
+            >
+              {safeT(t, "actions.clear", "Clear")}
+            </Button>
+          ) : null}
         </div>
-      </div>
-    </div>
-  );
-};
-
-const MobileSelectionBar: React.FC<{ selectedCount: number; onClear: () => void }> = ({
-  selectedCount,
-  onClear,
-}) => {
-  const { t } = useTranslation("cashFlowTable");
-
-  if (selectedCount <= 0) return null;
-
-  return (
-    <div className="shrink-0 border-t border-gray-200 bg-white">
-      <div className="px-3 py-2 flex items-center justify-between">
-        {/* Count only (no selectedCount label). */}
-        <div className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full bg-blue-600 text-white text-[12px] font-bold tabular-nums">
-          {selectedCount}
-        </div>
-
-        <Button variant="outline" size="sm" className="!h-8 text-[11px] font-semibold" onClick={onClear}>
-          {safeT(t, "actions.clear", "Clear")}
-        </Button>
       </div>
     </div>
   );
@@ -283,13 +274,15 @@ const MobileEntryRow: React.FC<{
       onClick={(e) => onSelect(entry.id, e)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
-          // keep keyboard accessibility; hook expects MouseEvent, so we cast safely
           onSelect(entry.id, e as unknown as React.MouseEvent);
         }
       }}
     >
       <div className="flex items-center gap-2 h-full">
-        <Checkbox checked={isSelected} />
+        {/* indicator only (selection is by row click) */}
+        <div aria-hidden="true" className="pointer-events-none">
+          <Checkbox checked={isSelected} size="sm" />
+        </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
@@ -378,12 +371,12 @@ const MobileSummaryRow: React.FC<{
         </div>
 
         <div className="shrink-0 flex items-center gap-3">
-          <div className={`text-[10px] font-bold tabular-nums ${sumPositive ? "text-green-900" : "text-red-900"}`}>
+          <div
+            className={`text-[10px] font-bold tabular-nums ${sumPositive ? "text-green-900" : "text-red-900"}`}
+          >
             {formatCurrency(monthlySum)}
           </div>
-          <div className="text-[10px] font-bold tabular-nums text-gray-700">
-            {formatCurrency(runningBalance)}
-          </div>
+          <div className="text-[10px] font-bold tabular-nums text-gray-700">{formatCurrency(runningBalance)}</div>
         </div>
       </div>
     </div>
@@ -391,7 +384,7 @@ const MobileSummaryRow: React.FC<{
 };
 
 /* -------------------------------------------------------------------------- */
-/* Main mobile table (full logic duplicated)                                   */
+/* Main mobile table                                                          */
 /* -------------------------------------------------------------------------- */
 
 const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
@@ -447,8 +440,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const ledger_account =
-        f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
+      const ledger_account = f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
       const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
       const bank = Array.isArray(f?.bank_id) && f!.bank_id!.length ? f!.bank_id!.join(",") : undefined;
 
@@ -584,8 +576,8 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     }, [entries]);
 
     /* ------------------------------ Virtualization -------------------------- */
-    const ENTRY_ROW_H = 64; // fixed to match MobileEntryRow height
-    const SUMMARY_ROW_H = 44; // fixed to match MobileSummaryRow height
+    const ENTRY_ROW_H = 64;
+    const SUMMARY_ROW_H = 44;
     const OVERSCAN = 10;
 
     const [scrollTop, setScrollTop] = useState(0);
@@ -678,7 +670,12 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
             <div className="text-center">
               <p className="text-[13px] font-semibold text-red-800 mb-1">{t("errors.title")}</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
-              <Button variant="outline" size="sm" className="text-[11px] font-semibold" onClick={() => fetchEntries(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-[11px] font-semibold"
+                onClick={() => fetchEntries(true)}
+              >
                 {t("actions.retry")}
               </Button>
             </div>
@@ -695,7 +692,12 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         aria-label={t("aria.section")}
         className="border border-gray-200 rounded-xl bg-white overflow-hidden h-full flex flex-col max-w-full shadow-sm"
       >
-        <MobileHeader totalCount={entries.length} selectedCount={selectedCount} onSelectAll={handleSelectAll} />
+        <MobileHeader
+          totalCount={entries.length}
+          selectedCount={selectedCount}
+          onSelectAll={handleSelectAll}
+          onClear={clearSelection}
+        />
 
         <div
           ref={scrollerRef}
@@ -757,7 +759,6 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         </div>
 
         {loadingMore && <BottomLoader />}
-        <MobileSelectionBar selectedCount={selectedCount} onClear={clearSelection} />
       </section>
     );
   },

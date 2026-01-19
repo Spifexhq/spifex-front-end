@@ -10,7 +10,7 @@ import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/M
 import CashFlowTable, { type CashFlowTableHandle } from "@/components/Table/CashFlowTable/CashFlowTable";
 import FilterBar from "@/components/FilterBar";
 import KpiCards from "@/components/KpiCards";
-import SelectionActionsBar from "@/components/SelectionActionsBar";
+import { SelectionActionsBar } from "@/components/SelectionActionsBar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
@@ -169,6 +169,8 @@ const CashFlow = () => {
     setSelectedEntries(rows);
   }, []);
 
+  const hasSelection = selectedIds.length > 0;
+
   return (
     <div className="flex">
       <TopProgress active={banksLoading} variant="top" topOffset={64} />
@@ -181,8 +183,20 @@ const CashFlow = () => {
         mode="default"
       />
 
-      <div className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${isSidebarOpen ? "ml-60" : "ml-16"}`}>
-        <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+      <div
+        className={[
+          "flex-1 min-h-0 flex flex-col transition-all duration-300",
+          "ml-0",
+          isSidebarOpen ? "sm:ml-60" : "sm:ml-16",
+        ].join(" ")}
+      >
+        <div
+          className={[
+            "mt-[15px] pb-6 h-[calc(100vh-80px)]",
+            "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden",
+            "px-4 sm:px-10",
+          ].join(" ")}
+        >
           <PermissionMiddleware codeName={["view_filters"]} requireAll>
             <FilterBar
               onApply={handleApplyFilters}
@@ -212,7 +226,7 @@ const CashFlow = () => {
             </PermissionMiddleware>
           </div>
 
-          {selectedIds.length > 0 && (
+          {hasSelection && (
             <SelectionActionsBar
               context="cashflow"
               selectedIds={selectedIds}

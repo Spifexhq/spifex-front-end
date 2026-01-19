@@ -1,8 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/components/SelectionActionsBar/index.tsx
- * Update: Floating bottom bar with minimized floating box state
- * -------------------------------------------------------------------------- */
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -126,7 +121,7 @@ const TrashIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
 );
 
 /* ------------------------------- Component -------------------------------- */
-const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
+const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
   context,
   selectedIds,
   selectedEntries,
@@ -460,7 +455,6 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
             </Button>
           )}
 
-          {/* Delete: Trash icon */}
           {showDelete && (
             <Button
               variant="outline"
@@ -482,4 +476,4 @@ const SelectionActionsBar: React.FC<SelectionActionsBarProps> = ({
   );
 };
 
-export default SelectionActionsBar;
+export default SelectionActionsBarDesktop;

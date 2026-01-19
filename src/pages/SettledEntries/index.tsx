@@ -1,5 +1,8 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/Settled/index.tsx
+ * Update: Handles new SelectionActionsBar (desktop + mobile)
+ * - Mobile: no left margin; centered content; extra bottom padding when selection is active
+ * - Sidebar mobile bar should hide when SelectionActionsBarMobile is active
  * -------------------------------------------------------------------------- */
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
@@ -10,7 +13,7 @@ import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import SettledEntriesTable, { type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import FilterBar from "@/components/FilterBar";
 import KpiCards from "@/components/KpiCards";
-import SelectionActionsBar, { type MinimalEntry } from "@/components/SelectionActionsBar";
+import { SelectionActionsBar, type MinimalEntry } from "@/components/SelectionActionsBar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
@@ -68,7 +71,7 @@ const Settled = () => {
 
   const filterBarHotkeysEnabled = useMemo(
     () => !isModalOpen && !isTransferenceModalOpen,
-    [isModalOpen, isTransferenceModalOpen]
+    [isModalOpen, isTransferenceModalOpen],
   );
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -78,22 +81,32 @@ const Settled = () => {
     setIsModalOpen(true);
   };
 
-  const handleApplyFilters = useCallback(({ filters: newFilters }: { filters: EntryFilters }) => {
-    setFilters(newFilters);
-    bumpAll();
-  }, [bumpAll]);
-
-  const selectedAsMinimal: MinimalEntry[] = selectedEntries.map((e) => ({
-    amount: e.amount,
-    transaction_type: e.tx_type.toLowerCase().includes("credit") ? "credit" : "debit",
-    due_date: e.value_date,
-    settlement_due_date: e.value_date,
-  }));
+  const handleApplyFilters = useCallback(
+    ({ filters: newFilters }: { filters: EntryFilters }) => {
+      setFilters(newFilters);
+      bumpAll();
+    },
+    [bumpAll],
+  );
 
   const handleSelectionChange = useCallback((ids: string[], rows: SettledEntry[]) => {
     setSelectedIds(ids);
     setSelectedEntries(rows);
   }, []);
+
+  const hasSelection = selectedIds.length > 0;
+
+  // Map SettledEntry -> MinimalEntry for SelectionActionsBar stats display
+  const selectedAsMinimal: MinimalEntry[] = useMemo(
+    () =>
+      selectedEntries.map((e) => ({
+        amount: e.amount,
+        transaction_type: e.tx_type?.toLowerCase().includes("credit") ? "credit" : "debit",
+        due_date: e.value_date,
+        settlement_due_date: e.value_date,
+      })),
+    [selectedEntries],
+  );
 
   return (
     <div className="flex">
@@ -104,15 +117,24 @@ const Settled = () => {
         toggleSidebar={toggleSidebar}
         handleOpenModal={handleOpenModal}
         handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
-        mode="default"
+        // Critical: hide SidebarMobile floating bar when SelectionActionsBarMobile is active
+        mode={hasSelection ? "settled" : "default"}
       />
 
       <div
-        className={`flex-1 min-h-0 flex flex-col transition-all duration-300 ${
-          isSidebarOpen ? "ml-60" : "ml-16"
-        }`}
+        className={[
+          "flex-1 min-h-0 flex flex-col transition-all duration-300",
+          "ml-0",
+          isSidebarOpen ? "sm:ml-60" : "sm:ml-16",
+        ].join(" ")}
       >
-        <div className="mt-[15px] px-10 pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
+        <div
+          className={[
+            "mt-[15px] pb-6 h-[calc(100vh-80px)]",
+            "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden",
+            "px-4 sm:px-10",
+          ].join(" ")}
+        >
           <PermissionMiddleware codeName={["view_filters"]} requireAll>
             <FilterBar
               onApply={handleApplyFilters}
@@ -141,7 +163,7 @@ const Settled = () => {
             </PermissionMiddleware>
           </div>
 
-          {selectedIds.length > 0 && (
+          {hasSelection && (
             <SelectionActionsBar
               context="settled"
               selectedIds={selectedIds}
