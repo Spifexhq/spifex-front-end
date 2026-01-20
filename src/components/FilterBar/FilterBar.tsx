@@ -1185,7 +1185,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       kind="amount"
                       display="currency"
                       value={localFilters.amount_min || ""}
-                      onValueChange={(next) => setLocalFilters((prev) => ({ ...prev, amount_min: next }))}
+                      onValueChange={(next: string) => setLocalFilters((prev) => ({ ...prev, amount_min: next }))}
                       zeroAsEmpty
                     />
                   </label>
@@ -1196,7 +1196,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                       kind="amount"
                       display="currency"
                       value={localFilters.amount_max || ""}
-                      onValueChange={(next) => setLocalFilters((prev) => ({ ...prev, amount_max: next }))}
+                      onValueChange={(next: string) => setLocalFilters((prev) => ({ ...prev, amount_max: next }))}
                       zeroAsEmpty
                     />
                   </label>
