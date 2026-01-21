@@ -29,6 +29,9 @@ export const SaveViewModal: React.FC<{
   const [saveMode, setSaveMode] = useState<"create" | "overwrite">("create");
   const [overwriteView, setOverwriteView] = useState<Visualization | null>(null);
 
+  const isOverwrite = saveMode === "overwrite";
+  const defaultLocked = isOverwrite && !!overwriteView?.is_default;
+
   const reset = useCallback(() => {
     setSaveName("");
     setSaveDefault(false);
@@ -40,19 +43,25 @@ export const SaveViewModal: React.FC<{
     if (!open) reset();
   }, [open, reset]);
 
+  const effectiveName = useMemo(() => {
+    if (isOverwrite) return (overwriteView?.name ?? "").trim();
+    return saveName.trim();
+  }, [isOverwrite, overwriteView, saveName]);
+
   const canSave = useMemo(() => {
-    const nameOk = !!saveName.trim();
-    const overwriteOk = saveMode !== "overwrite" || !!overwriteView;
+    const nameOk = isOverwrite ? !!overwriteView : !!effectiveName;
+    const overwriteOk = !isOverwrite || !!overwriteView;
     return nameOk && overwriteOk && !busy;
-  }, [busy, overwriteView, saveMode, saveName]);
+  }, [busy, effectiveName, isOverwrite, overwriteView]);
 
   const saveView = useCallback(async () => {
-    const name = saveName.trim();
+    const name = effectiveName;
     if (!name) return;
 
     const payload = {
       name,
-      is_default: saveDefault,
+      // If selected overwrite view is default, force true no matter what.
+      is_default: defaultLocked ? true : saveDefault,
       settlement_status: !!localFilters.settlement_status,
       filters: toEntryFilters(localFilters),
     };
@@ -60,7 +69,7 @@ export const SaveViewModal: React.FC<{
     try {
       setBusy(true);
 
-      if (saveMode === "overwrite" && overwriteView) {
+      if (isOverwrite && overwriteView) {
         const r: ApiResponse<unknown> = await api.editViewPreset(overwriteView.id, payload);
         if (isApiError(r)) throw r.error;
       } else {
@@ -82,7 +91,18 @@ export const SaveViewModal: React.FC<{
     } finally {
       setBusy(false);
     }
-  }, [localFilters, onClose, onRefreshViews, overwriteView, reset, saveDefault, saveMode, saveName, scopedViews]);
+  }, [
+    defaultLocked,
+    effectiveName,
+    isOverwrite,
+    localFilters,
+    onClose,
+    onRefreshViews,
+    overwriteView,
+    reset,
+    saveDefault,
+    scopedViews,
+  ]);
 
   if (!open) return null;
 
@@ -104,14 +124,26 @@ export const SaveViewModal: React.FC<{
             <Input
               kind="text"
               label={t("filterBar:saveModal.name")}
-              value={saveName}
+              value={isOverwrite ? (overwriteView?.name ?? "") : saveName}
               onChange={(e) => setSaveName(e.currentTarget.value)}
               placeholder={t("filterBar:saveModal.namePlaceholder")}
+              disabled={isOverwrite}
             />
           </label>
 
           <label className="inline-flex items-center gap-2">
-            <Checkbox checked={saveDefault} size="small" onChange={(e) => setSaveDefault(e.target.checked)} />
+            <Checkbox
+              checked={defaultLocked ? true : saveDefault}
+              size="small"
+              onChange={(e) => {
+                const next = e.target.checked;
+
+                // If overwriting a default view, prevent unchecking.
+                if (defaultLocked && !next) return;
+
+                setSaveDefault(next);
+              }}
+            />
             <span>{t("filterBar:saveModal.setDefault")}</span>
           </label>
 
@@ -126,6 +158,7 @@ export const SaveViewModal: React.FC<{
                   onChange={() => {
                     setSaveMode("create");
                     setOverwriteView(null);
+                    // keep saveName as-is (user may want to reuse it)
                   }}
                 />
                 <span>{t("filterBar:saveModal.create")}</span>
@@ -135,7 +168,12 @@ export const SaveViewModal: React.FC<{
                 <Checkbox
                   size="small"
                   checked={saveMode === "overwrite"}
-                  onChange={() => setSaveMode("overwrite")}
+                  onChange={() => {
+                    setSaveMode("overwrite");
+                    setOverwriteView(null);
+                    setSaveName("");
+                    setSaveDefault(false);
+                  }}
                 />
                 <span>{t("filterBar:saveModal.overwrite")}</span>
               </label>
@@ -147,7 +185,14 @@ export const SaveViewModal: React.FC<{
                   label={t("filterBar:saveModal.chooseView")}
                   items={scopedViews}
                   selected={overwriteView ? [overwriteView] : []}
-                  onChange={(list) => setOverwriteView(list[0] ?? null)}
+                  onChange={(list) => {
+                    const v = list?.[0] ?? null;
+                    setOverwriteView(v);
+
+                    // Fill name (input is disabled) and sync default state
+                    setSaveName(v?.name ?? "");
+                    setSaveDefault(!!v?.is_default);
+                  }}
                   getItemKey={(item) => item.id}
                   getItemLabel={(item) =>
                     item.is_default ? `${item.name} (${t("filterBar:saveModal.defaultShort")})` : item.name
@@ -176,7 +221,13 @@ export const SaveViewModal: React.FC<{
               {t("filterBar:saveModal.cancel")}
             </Button>
 
-            <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" disabled={!canSave} onClick={() => void saveView()}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white hover:bg-gray-50"
+              disabled={!canSave}
+              onClick={() => void saveView()}
+            >
               {t("filterBar:saveModal.save")}
             </Button>
           </div>

@@ -23,7 +23,7 @@ export const ModalShell: React.FC<{
   const { t } = useTranslation(["filterBar"]);
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[10000]">
       <div
         className={`bg-white border border-gray-200 rounded-lg p-5 w-full ${maxWidthClass} max-h-[90vh] relative`}
       >

@@ -37,7 +37,17 @@ export const ChipsSearchBar: React.FC<{
   onSearchChange,
 }) => {
   return (
-    <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-md px-2 h-10 sm:h-8 whitespace-nowrap overflow-x-auto bg-white">
+    <div
+      className={[
+        "flex-1",
+        "flex flex-wrap items-center gap-2",
+        "border border-gray-300 rounded-md px-2",
+        // allow the container to grow if it wraps
+        "min-h-10 sm:min-h-8 py-1",
+        // IMPORTANT: remove nowrap + horizontal scroll
+        "bg-white",
+      ].join(" ")}
+    >
       {filterDefs
         .filter((d) => d.isActive(localFilters))
         .map((d) => (
@@ -53,7 +63,13 @@ export const ChipsSearchBar: React.FC<{
 
       <input
         ref={searchInputRef}
-        className="flex-[1_1_140px] min-w-[120px] sm:flex-[1_1_30%] sm:min-w-[160px] h-7 sm:h-6 bg-transparent outline-none text-xs placeholder-gray-400"
+        className={[
+          // take remaining space on the current line, but allow wrapping
+          "flex-1",
+          "min-w-[160px] sm:min-w-[200px]",
+          "h-7 sm:h-6",
+          "bg-transparent outline-none text-xs placeholder-gray-400",
+        ].join(" ")}
         placeholder={t("filterBar:search.placeholder")}
         value={localFilters.description || ""}
         onChange={(e) => onSearchChange(e.target.value)}
