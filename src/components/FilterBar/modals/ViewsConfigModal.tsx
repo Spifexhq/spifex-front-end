@@ -3,7 +3,7 @@ import type { TFunction } from "i18next";
 
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
-import { Star } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 import { api } from "@/api/requests";
 import type { ApiResponse } from "@/models/Api";
@@ -37,6 +37,9 @@ export const ViewsConfigModal: React.FC<{
 
   const toggleDefaultView = useCallback(
     async (view: Visualization) => {
+      // Freeze checkboxes while renaming any view
+      if (renamingId) return;
+
       try {
         setBusy(true);
 
@@ -62,7 +65,7 @@ export const ViewsConfigModal: React.FC<{
         setBusy(false);
       }
     },
-    [onRefreshViews, scopedViews]
+    [onRefreshViews, scopedViews, renamingId]
   );
 
   const renameView = useCallback(async () => {
@@ -102,6 +105,8 @@ export const ViewsConfigModal: React.FC<{
 
   if (!open) return null;
 
+  const isRenamingAny = renamingId != null;
+
   return (
     <ModalShell busy={busy} title={t("filterBar:configModal.title")} onClose={onClose}>
       <div className={busy ? "pointer-events-none opacity-60" : ""}>
@@ -116,23 +121,22 @@ export const ViewsConfigModal: React.FC<{
             return (
               <div key={v.id} className="px-3 py-2 flex items-center gap-3">
                 <label className="inline-flex items-center gap-2">
-                  <Checkbox checked={!!v.is_default} size="small" disabled={busy} onChange={() => void toggleDefaultView(v)} />
+                  <Checkbox
+                    checked={!!v.is_default}
+                    size="small"
+                    disabled={busy || isRenamingAny} // freeze while renaming
+                    onChange={() => void toggleDefaultView(v)}
+                  />
 
                   {isRenaming ? (
                     <input
                       className="border border-gray-300 rounded px-2 py-1 text-sm"
                       value={renamingName}
                       onChange={(e) => setRenamingName(e.target.value)}
+                      autoFocus
                     />
                   ) : (
                     <span className="text-sm text-gray-800">{v.name}</span>
-                  )}
-
-                  {v.is_default && (
-                    <span className="inline-flex items-center gap-1 text-[11px] text-amber-600">
-                      <Star className="w-3 h-3 text-amber-500 shrink-0 ml-2" aria-hidden />
-                      <span>{t("filterBar:configModal.defaultTag")}</span>
-                    </span>
                   )}
                 </label>
 
@@ -148,6 +152,7 @@ export const ViewsConfigModal: React.FC<{
                       >
                         {t("filterBar:configModal.saveName")}
                       </Button>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -166,12 +171,13 @@ export const ViewsConfigModal: React.FC<{
                       variant="outline"
                       size="sm"
                       disabled={busy}
-                      className="bg-white hover:bg-gray-50"
                       onClick={() => {
                         setRenamingId(v.id);
                         setRenamingName(v.name);
                       }}
+                      className="inline-flex items-center gap-2"
                     >
+                      <Pencil className="h-4 w-4" aria-hidden />
                       {t("filterBar:configModal.rename")}
                     </Button>
                   )}
@@ -180,7 +186,6 @@ export const ViewsConfigModal: React.FC<{
                     variant="outline"
                     size="sm"
                     disabled={busy}
-                    className="bg-white hover:bg-gray-50"
                     onClick={() => {
                       const fresh = viewById.get(v.id) ?? v;
                       onApplyViewToForm(fresh);
@@ -189,13 +194,7 @@ export const ViewsConfigModal: React.FC<{
                     {t("filterBar:configModal.apply")}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={busy}
-                    className="!text-red-600 !border-red-200 hover:!bg-red-50"
-                    onClick={() => void deleteView(v.id)}
-                  >
+                  <Button variant="outline" size="sm" disabled={busy} onClick={() => void deleteView(v.id)}>
                     {t("filterBar:configModal.delete")}
                   </Button>
                 </div>

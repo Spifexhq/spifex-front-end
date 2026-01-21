@@ -3,7 +3,6 @@
  * -------------------------------------------------------------------------- */
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import Input from "@/shared/ui/Input";
@@ -13,8 +12,8 @@ import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
-
 import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Popover from "src/shared/ui/Popover";
 
 import DepartmentModal from "./DepartmentModal";
 
@@ -160,114 +159,7 @@ const ClearFiltersChip = ({
   );
 };
 
-/* -------------------------- Portal anchored popover ------------------------ */
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-const AnchoredPopover: React.FC<{
-  open: boolean;
-  anchorRef: React.RefObject<HTMLElement>;
-  onClose: () => void;
-  width?: number;
-  scroll?: boolean;
-  children: React.ReactNode;
-}> = ({ open, anchorRef, onClose, width = 360, scroll = true, children }) => {
-  const popRef = useRef<HTMLDivElement | null>(null);
-  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
-
-  const updatePosition = useCallback(() => {
-    const a = anchorRef.current;
-    if (!a) return;
-
-    const r = a.getBoundingClientRect();
-    const padding = 12;
-    const top = r.bottom + 8;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    const desiredLeft = r.left;
-    const maxLeft = vw - width - padding;
-    const left = clamp(desiredLeft, padding, Math.max(padding, maxLeft));
-
-    const maxHeight = Math.max(160, vh - top - padding);
-
-    setPos({ top, left, maxHeight });
-  }, [anchorRef, width]);
-
-  useEffect(() => {
-    if (!open) return;
-    updatePosition();
-
-    const onResize = () => updatePosition();
-    const onScroll = () => updatePosition();
-
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onScroll, true);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onScroll, true);
-    };
-  }, [open, updatePosition]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onMouseDown = (e: MouseEvent) => {
-      const pop = popRef.current;
-      const anc = anchorRef.current;
-      const target = e.target as Node;
-
-      if (pop && pop.contains(target)) return;
-      if (anc && anc.contains(target)) return;
-      onClose();
-    };
-
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [open, onClose, anchorRef]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  if (typeof document === "undefined") return null;
-  if (!pos) return null;
-
-  return createPortal(
-    <div
-      style={{
-        position: "fixed",
-        top: pos.top,
-        left: pos.left,
-        width,
-        zIndex: 99,
-      }}
-    >
-      <div ref={popRef} className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
-        {scroll ? (
-          <div style={{ maxHeight: pos.maxHeight, overflowY: "auto" }}>{children}</div>
-        ) : (
-          children
-        )}
-      </div>
-    </div>,
-    document.body
-  );
-};
+/* ------------------------------ Row component ------------------------------ */
 
 const Row = ({
   dept,
@@ -770,11 +662,10 @@ const DepartmentSettings: React.FC = () => {
       </main>
 
       {/* CODE POPOVER (PORTAL) */}
-      <AnchoredPopover
+      <Popover
         open={openFilter === "code"}
         anchorRef={codeAnchorRef}
         onClose={() => setOpenFilter(null)}
-        scroll
       >
         <div className="p-4">
           <div className="text-[14px] font-semibold text-gray-900">
@@ -818,14 +709,13 @@ const DepartmentSettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* NAME POPOVER (PORTAL) */}
-      <AnchoredPopover
+      <Popover
         open={openFilter === "name"}
         anchorRef={nameAnchorRef}
         onClose={() => setOpenFilter(null)}
-        scroll
       >
         <div className="p-4">
           <div className="text-[14px] font-semibold text-gray-900">
@@ -869,14 +759,13 @@ const DepartmentSettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* STATUS POPOVER (PORTAL) */}
-      <AnchoredPopover
+      <Popover
         open={openFilter === "status"}
         anchorRef={statusAnchorRef}
         onClose={() => setOpenFilter(null)}
-        scroll={false}
         width={420}
       >
         <div className="p-4 overflow-visible">
@@ -915,7 +804,7 @@ const DepartmentSettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       <ConfirmToast
         open={confirmOpen}

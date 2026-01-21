@@ -40,7 +40,7 @@ export const Popover: React.FC<{
     return (
       <div
         className={[
-          "fixed inset-0 z-[99999] flex items-end justify-center p-2",
+          "fixed inset-0 z-[9999] flex items-end justify-center p-2",
           "transition-opacity duration-150 ease-out",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
           "bg-black/30",
@@ -77,7 +77,7 @@ export const Popover: React.FC<{
   }
 
   return (
-    <div className="absolute z-[99999] mt-1">
+    <div className="absolute z-[9999] mt-1">
       <div
         ref={ref}
         className={[

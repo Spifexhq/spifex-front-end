@@ -1,7 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/GroupSettings/index.tsx
- * Fixed: Removed double unwrapping - request() already returns ApiSuccess<T>
- * Refactor: separate GroupModal (create/rename), no inline modals
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -14,6 +12,7 @@ import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
+import { Pencil } from "lucide-react";
 
 import GroupPermissionsTable from "./GroupPermissionsTable";
 import GroupModal from "./GroupModal";
@@ -368,7 +367,13 @@ const GroupSettings: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {isOwner && (
                         <>
-                          <Button variant="outline" onClick={openRenameModal} disabled={busy}>
+                          <Button
+                            variant="outline"
+                            className="inline-flex items-center gap-2"
+                            onClick={openRenameModal}
+                            disabled={busy}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden />
                             {t("right.rename")}
                           </Button>
                           {!selectedGroupDetail.is_system && (

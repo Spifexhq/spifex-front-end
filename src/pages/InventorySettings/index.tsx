@@ -3,7 +3,6 @@
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import Input from "@/shared/ui/Input";
@@ -13,8 +12,8 @@ import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
-
 import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Popover from "src/shared/ui/Popover";
 
 import InventoryModal from "./InventoryModal";
 
@@ -56,10 +55,6 @@ function truncate(s: string, max = 24) {
   const v = (s || "").trim();
   if (v.length <= max) return v;
   return `${v.slice(0, max - 1)}…`;
-}
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
 }
 
 function computeStatusMode(keys: StatusKey[]): "all" | "active" | "inactive" {
@@ -182,111 +177,6 @@ const ClearFiltersChip = ({
       </span>
       <span>{label}</span>
     </button>
-  );
-};
-
-/* -------------------------- Portal anchored popover ------------------------ */
-
-const AnchoredPopover: React.FC<{
-  open: boolean;
-  anchorRef: React.RefObject<HTMLElement>;
-  onClose: () => void;
-  width?: number;
-  scroll?: boolean;
-  children: React.ReactNode;
-}> = ({ open, anchorRef, onClose, width = 360, scroll = true, children }) => {
-  const popRef = useRef<HTMLDivElement | null>(null);
-  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
-
-  const updatePosition = useCallback(() => {
-    const a = anchorRef.current;
-    if (!a) return;
-
-    const r = a.getBoundingClientRect();
-    const padding = 12;
-    const top = r.bottom + 8;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    const desiredLeft = r.left;
-    const maxLeft = vw - width - padding;
-    const left = clamp(desiredLeft, padding, Math.max(padding, maxLeft));
-
-    const maxHeight = Math.max(160, vh - top - padding);
-
-    setPos({ top, left, maxHeight });
-  }, [anchorRef, width]);
-
-  useEffect(() => {
-    if (!open) return;
-    updatePosition();
-
-    const onResize = () => updatePosition();
-    const onScroll = () => updatePosition();
-
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onScroll, true);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onScroll, true);
-    };
-  }, [open, updatePosition]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onMouseDown = (e: MouseEvent) => {
-      const pop = popRef.current;
-      const anc = anchorRef.current;
-      const target = e.target as Node;
-
-      if (pop && pop.contains(target)) return;
-      if (anc && anc.contains(target)) return;
-      onClose();
-    };
-
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [open, onClose, anchorRef]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
-  if (!open) return null;
-  if (typeof document === "undefined") return null;
-  if (!pos) return null;
-
-  return createPortal(
-    <div
-      style={{
-        position: "fixed",
-        top: pos.top,
-        left: pos.left,
-        width,
-        zIndex: 99, // over everything
-      }}
-    >
-      <div ref={popRef} className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
-        {scroll ? (
-          <div style={{ maxHeight: pos.maxHeight, overflowY: "auto" }}>{children}</div>
-        ) : (
-          children
-        )}
-      </div>
-    </div>,
-    document.body
   );
 };
 
@@ -934,7 +824,7 @@ const InventorySettings: React.FC = () => {
       </main>
 
       {/* SKU POPOVER */}
-      <AnchoredPopover open={openFilter === "sku"} anchorRef={skuAnchorRef} onClose={() => setOpenFilter(null)} scroll>
+      <Popover open={openFilter === "sku"} anchorRef={skuAnchorRef} onClose={() => setOpenFilter(null)}>
         <div className="p-4">
           <div className="text-[14px] font-semibold text-gray-900">
             {t("filters.bySkuTitle", { defaultValue: "Filter by SKU" })}
@@ -977,10 +867,10 @@ const InventorySettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* NAME POPOVER */}
-      <AnchoredPopover open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} scroll>
+      <Popover open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)}>
         <div className="p-4">
           <div className="text-[14px] font-semibold text-gray-900">
             {t("filters.byNameTitle", { defaultValue: "Filter by name" })}
@@ -1023,14 +913,13 @@ const InventorySettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* DESCRIPTION POPOVER */}
-      <AnchoredPopover
+      <Popover
         open={openFilter === "description"}
         anchorRef={descAnchorRef}
         onClose={() => setOpenFilter(null)}
-        scroll
         width={420}
       >
         <div className="p-4">
@@ -1075,10 +964,10 @@ const InventorySettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* UOM POPOVER */}
-      <AnchoredPopover open={openFilter === "uom"} anchorRef={uomAnchorRef} onClose={() => setOpenFilter(null)} scroll>
+      <Popover open={openFilter === "uom"} anchorRef={uomAnchorRef} onClose={() => setOpenFilter(null)}>
         <div className="p-4">
           <div className="text-[14px] font-semibold text-gray-900">
             {t("filters.byUomTitle", { defaultValue: "Filter by unit (UoM)" })}
@@ -1121,14 +1010,13 @@ const InventorySettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* QTY POPOVER */}
-      <AnchoredPopover
+      <Popover
         open={openFilter === "qty"}
         anchorRef={qtyAnchorRef}
         onClose={() => setOpenFilter(null)}
-        scroll
         width={420}
       >
         <div className="p-4">
@@ -1185,14 +1073,13 @@ const InventorySettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       {/* STATUS POPOVER */}
-      <AnchoredPopover
+      <Popover
         open={openFilter === "status"}
         anchorRef={statusAnchorRef}
         onClose={() => setOpenFilter(null)}
-        scroll={false}
         width={420}
       >
         <div className="p-4 overflow-visible">
@@ -1231,7 +1118,7 @@ const InventorySettings: React.FC = () => {
             </Button>
           </div>
         </div>
-      </AnchoredPopover>
+      </Popover>
 
       <ConfirmToast
         open={confirmOpen}
