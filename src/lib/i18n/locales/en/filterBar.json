@@ -75,7 +75,7 @@
     "create": "Create new view",
     "overwrite": "Overwrite existing",
     "chooseView": "Choose a view",
-    "choosePlaceholder": "— select —",
+    "choosePlaceholder": "Select",
     "cancel": "Cancel",
     "save": "Save",
     "loading": "Saving view...",

@@ -616,7 +616,7 @@ function SelectDropdown<T>({
         {/* Panel */}
         <div
           className={cn(
-            "absolute left-0 right-0 top-full origin-top rounded-md border border-gray-200 bg-white z-[60]",
+            "absolute left-0 right-0 top-full origin-top rounded-md shadow-lg mt-1 border border-gray-200 bg-white z-[60]",
             "transition-all duration-150 ease-out",
             isOpen
               ? "opacity-100 translate-y-0 pointer-events-auto"

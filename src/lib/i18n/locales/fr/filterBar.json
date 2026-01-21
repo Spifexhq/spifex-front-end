@@ -75,7 +75,7 @@
     "create": "Créer une nouvelle vue",
     "overwrite": "Écraser l'existante",
     "chooseView": "Choisir une vue",
-    "choosePlaceholder": "— sélectionner —",
+    "choosePlaceholder": "Sélectionner",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "loading": "Enregistrement de la vue...",

@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom";
 import { useAuthContext } from "@/hooks/useAuth";
 import { AuthMiddleware, LocaleProfileMiddleware } from "@/middlewares";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import Navbar from "@/shared/layout/Navbar";
+import { Navbar } from "@/shared/layout/Navbar";
 import { CookieBanner } from "@/components/Cookies/CookieBanner";
 
 export const SpifexLayout: FC = () => {

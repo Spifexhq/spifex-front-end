@@ -1,11 +1,4 @@
-/**
- * UserMenu.tsx
- *
- * Dropdown menu for user-related actions (i18n ready).
- * Adds the same open/close transition used by SelectDropdown:
- * - transition-all duration-150 ease-out
- * - opacity/translate + pointer-events gating
- */
+/** UserMenu.tsx **/
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";

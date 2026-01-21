@@ -6,7 +6,8 @@
   "actions": {
     "open": "Abrir menu",
     "close": "Fechar",
-    "menu": "Menu"
+    "menu": "Menu",
+    "swipeLeftToClose": "Arraste para a esquerda para fechar"
   },
   "links": {
     "cashflow": "Fluxo de Caixa",

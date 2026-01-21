@@ -6,7 +6,8 @@
   "actions": {
     "open": "Ouvrir le menu",
     "close": "Fermer",
-    "menu": "Menu"
+    "menu": "Menu",
+    "swipeLeftToClose": "Faites glisser vers la gauche pour fermer"
   },
   "links": {
     "cashflow": "Flux de trésorerie",

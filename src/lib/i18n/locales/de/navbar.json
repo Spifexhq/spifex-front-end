@@ -6,7 +6,8 @@
   "actions": {
     "open": "Menü öffnen",
     "close": "Schließen",
-    "menu": "Menü"
+    "menu": "Menü",
+    "swipeLeftToClose": "Zum Schließen nach links ziehen"
   },
   "links": {
     "cashflow": "Cashflow",
