@@ -192,7 +192,7 @@ const CashFlow = () => {
       >
         <div
           className={[
-            "mt-[15px] pb-6",
+            "mt-[15px] pb-6 h-[calc(100vh-80px)]",
             "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden",
             "px-4 sm:px-10",
           ].join(" ")}

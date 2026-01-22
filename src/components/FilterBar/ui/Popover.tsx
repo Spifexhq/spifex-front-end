@@ -77,7 +77,7 @@ export const Popover: React.FC<{
   }
 
   return (
-    <div className="absolute z-[9999] mt-1">
+    <div className="absolute z-[999] mt-1">
       <div
         ref={ref}
         className={[

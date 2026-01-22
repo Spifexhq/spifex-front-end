@@ -434,7 +434,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <div className="grid grid-cols-[140px_1fr_140px_80px_180px] gap-2 items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-[10000]">
+              <div className="grid grid-cols-[140px_1fr_140px_80px_180px] gap-2 items-center px-3 py-2 bg-white text-[11px] text-gray-600 border-b border-gray-200 sticky top-0 z-[9999]">
                 <div className="text-center">{t("table.due")}</div>
                 <div className="text-center">{t("table.desc")}</div>
                 <div className="text-center">{t("table.amount")}</div>

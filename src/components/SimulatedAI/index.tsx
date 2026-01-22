@@ -283,7 +283,7 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
 
   /* --------------------------------- UI --------------------------------- */
   return (
-    <div className="fixed inset-0 z-[10000]">
+    <div className="fixed inset-0 z-[9999]">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"

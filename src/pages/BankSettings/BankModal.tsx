@@ -413,7 +413,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   kind="amount"
                   label={t("field.initialBalance")}
                   value={formData.initial_balance}
-                  onValueChange={(nextMajor) =>
+                  onValueChange={(nextMajor: string) =>
                     setFormData((p) => ({ ...p, initial_balance: nextMajor || "0.00" }))
                   }
                   display="currency"

@@ -63,7 +63,7 @@ const ConfirmToast: React.FC<ConfirmToastProps> = ({
     variant === "danger" ? "common" /* your destructive style */ : "outline";
 
   return (
-    <div className="fixed bottom-6 right-6 z-[10000]">
+    <div className="fixed bottom-6 right-6 z-[9999]">
       <div
         role="dialog"
         aria-modal="true"

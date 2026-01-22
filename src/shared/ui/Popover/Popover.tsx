@@ -185,7 +185,7 @@ export const Popover: React.FC<{
     return createPortal(
       <div
         className={[
-          "fixed inset-0 z-[9999] flex items-end justify-center p-2",
+          "fixed inset-0 z-[999] flex items-end justify-center p-2",
           "transition-opacity duration-150 ease-out",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
           "bg-black/30",
@@ -226,7 +226,7 @@ export const Popover: React.FC<{
   /* -------------------------------- Desktop -------------------------------- */
   if (hasAnchor && pos) {
     return createPortal(
-      <div className="absolute z-[9999]" style={{ top: pos.top, left: pos.left }}>
+      <div className="absolute z-[999]" style={{ top: pos.top, left: pos.left }}>
         <div className="mt-1">
           <div
             ref={popRef}
@@ -250,7 +250,7 @@ export const Popover: React.FC<{
   }
 
   return (
-    <div className="absolute z-[9999] mt-1">
+    <div className="absolute z-[999] mt-1">
       <div
         ref={popRef}
         style={sizeStyle}
