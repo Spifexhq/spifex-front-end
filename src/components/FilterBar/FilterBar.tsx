@@ -249,6 +249,36 @@ const FilterBar: React.FC<FilterBarProps> = ({
   }, [closeEditorsAndMenus, contextSettlement, lastAppliedSig, onApply]);
 
   /* Hotkeys */
+  const escEnabled =
+    shortcutsEnabled &&
+    (saveModalOpen || configModalOpen || openEditor !== null || viewsMenuOpen || addFilterMenuOpen);
+
+  const onEsc = useCallback(() => {
+    // Close the “topmost” thing inside the FilterBar first
+    if (saveModalOpen) {
+      setSaveModalOpen(false);
+      return;
+    }
+    if (configModalOpen) {
+      setConfigModalOpen(false);
+      return;
+    }
+    if (openEditor !== null) {
+      setOpenEditor(null);
+      return;
+    }
+    if (viewsMenuOpen) {
+      setViewsMenuOpen(false);
+      return;
+    }
+    if (addFilterMenuOpen) {
+      setAddFilterMenuOpen(false);
+      return;
+    }
+  }, [addFilterMenuOpen, configModalOpen, openEditor, saveModalOpen, viewsMenuOpen]);
+
+  window.useGlobalEsc(escEnabled, onEsc);
+
   useEffect(() => {
     if (!shortcutsEnabled) return;
 
@@ -266,24 +296,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
         void tryApplyCurrentFilters();
         return;
       }
-
-      if (e.key === "Escape" || e.code === "Escape") {
-        if (saveModalOpen) setSaveModalOpen(false);
-        if (configModalOpen) setConfigModalOpen(false);
-        closeEditorsAndMenus();
-      }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [
-    shortcutsEnabled,
-    panelVisible,
-    tryApplyCurrentFilters,
-    closeEditorsAndMenus,
-    saveModalOpen,
-    configModalOpen,
-  ]);
+  }, [shortcutsEnabled, panelVisible, tryApplyCurrentFilters]);
 
   /* Apply default view once per mount */
   const bootstrappedRef = useRef(false);

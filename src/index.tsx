@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import "@/lib/i18n";
 import i18n from '@/lib/i18n';
 import { CookieProvider } from "@/contexts/CookieProvider";
+import "@/shared/esc/initGlobalEsc";
 import './index.css';
 
 document.documentElement.lang = i18n.language;

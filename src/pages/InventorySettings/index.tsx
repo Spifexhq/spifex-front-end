@@ -842,10 +842,6 @@ const InventorySettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("sku");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.skuPlaceholder", { defaultValue: "Type a SKU…" })}
               disabled={globalBusy}
@@ -887,10 +883,6 @@ const InventorySettings: React.FC = () => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   applyFromDraft("name");
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
                 }
               }}
               placeholder={t("filters.namePlaceholder", { defaultValue: "Type a name…" })}
@@ -939,10 +931,6 @@ const InventorySettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("description");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.descriptionPlaceholder", { defaultValue: "Type a description…" })}
               disabled={globalBusy}
@@ -984,10 +972,6 @@ const InventorySettings: React.FC = () => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   applyFromDraft("uom");
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
                 }
               }}
               placeholder={t("filters.uomPlaceholder", { defaultValue: "e.g.: ea, box, kg…" })}

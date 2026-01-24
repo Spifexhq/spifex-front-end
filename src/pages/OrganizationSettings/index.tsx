@@ -236,11 +236,11 @@ const OrganizationSettings: React.FC = () => {
   };
 
   /* ------------------------------ Modal UX ------------------------------ */
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [modalOpen, closeModal]);
+  const onEsc = useCallback(() => {
+    closeModal();
+  }, [closeModal]);
+
+  window.useGlobalEsc(modalOpen, onEsc);
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";

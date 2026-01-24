@@ -37,7 +37,7 @@ type CategoryOption = {
 type SubgroupOption = { label: string; value: string };
 
 export type LedgerAccountModalProps = {
-  open: boolean;
+  isOpen: boolean;
   mode: "create" | "edit";
   initial: FormState;
 
@@ -89,7 +89,7 @@ function focusFirstInteractive(wrapId?: string) {
 }
 
 const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
-  open,
+  isOpen,
   mode,
   initial,
   categoryOptions,
@@ -129,10 +129,10 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
   }, [form.account, form.category, form.subcategory, effectiveBusy]);
 
   const isDirty = useMemo(() => {
-    if (!open) return false;
+    if (!isOpen) return false;
     const cur = normalizeForCompare(form);
     return !shallowEqual(cur, initialRef.current);
-  }, [open, form]);
+  }, [isOpen, form]);
 
   const resetInternalState = useCallback(() => {
     setForm(initial);
@@ -143,7 +143,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
   }, [initial]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
 
     initialRef.current = normalizeForCompare(initial);
     setForm(initial);
@@ -154,16 +154,16 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
 
     // focus after open paint
     setTimeout(() => accountRef.current?.focus(), 60);
-  }, [open, initial]);
+  }, [isOpen, initial]);
 
   // lock body scroll
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [isOpen]);
 
   const handleClose = useCallback(() => {
     resetInternalState();
@@ -171,7 +171,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
   }, [onClose, resetInternalState]);
 
   const attemptClose = useCallback(() => {
-    if (!open) return;
+    if (!isOpen) return;
     if (effectiveBusy) return;
     if (isDropdownOpen()) return;
 
@@ -191,19 +191,13 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     }
 
     handleClose();
-  }, [open, effectiveBusy, warning, showCloseConfirm, isDirty, handleClose]);
+  }, [isOpen, effectiveBusy, warning, showCloseConfirm, isDirty, handleClose]);
 
   // Keyboard: ESC, Ctrl/⌘+S
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
-
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         if (effectiveBusy) return;
@@ -214,7 +208,9 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, attemptClose, effectiveBusy]);
+  }, [isOpen, attemptClose, effectiveBusy]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   const handleCategoryChange = useCallback((items: { label: string; value: CategoryKey }[]) => {
     const sel = items[0];
@@ -297,7 +293,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     return <>{t("modal.defaultTxHint")}</>;
   }, [selectedCategory, t]);
 
-  if (!open) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">

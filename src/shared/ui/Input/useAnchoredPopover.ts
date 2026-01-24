@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 type LegacyMQL = MediaQueryList & {
@@ -6,8 +6,11 @@ type LegacyMQL = MediaQueryList & {
   removeListener?: (listener: (ev: MediaQueryListEvent) => void) => void;
 };
 
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(false);
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(query).matches;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -66,11 +69,41 @@ export function useAnchoredPopover({
     visibility: "hidden",
   });
 
-  const computedMaxHeight = useMemo(() => {
-    if (typeof window === "undefined") return maxHeightPx;
-    return Math.min(maxHeightPx, Math.max(160, window.innerHeight - marginPx * 2));
-  }, [maxHeightPx, marginPx]);
+  function hasTransientOverlayOpen() {
+    return !!document.querySelector(
+      '[data-select-open="true"],[data-menu-open="true"],[data-popover-open="true"]'
+    );
+  }
 
+  const closeTransientOverlays = useCallback((): boolean => {
+    if (typeof document === "undefined") return false;
+    if (!hasTransientOverlayOpen()) return false;
+
+    // Avoid treating *this* popover as a "transient overlay"
+    const pop = popoverRef.current;
+    const found = document.querySelector(
+      '[data-select-open="true"],[data-menu-open="true"],[data-popover-open="true"]'
+    ) as HTMLElement | null;
+
+    if (pop && found && found === pop) {
+      return false;
+    }
+
+    const target = document.body || document.documentElement;
+    target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    return true;
+  }, []);
+
+  const onEsc = useCallback(() => {
+    // Close transient overlays (SelectDropdown/Menu/Popover) before closing THIS popover
+    if (closeTransientOverlays()) return;
+    onClose();
+  }, [closeTransientOverlays, onClose]);
+
+  // Global ESC (stacked). Assumes initGlobalEsc is imported somewhere in app bootstrap.
+  window.useGlobalEsc(open, onEsc);
+
+  // Positioning
   useEffect(() => {
     if (!open) return;
     if (typeof window === "undefined") return;
@@ -83,7 +116,7 @@ export function useAnchoredPopover({
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      const maxH = Math.min(computedMaxHeight, Math.max(160, vh - marginPx * 2));
+      const maxH = Math.min(maxHeightPx, Math.max(160, vh - marginPx * 2));
 
       let width = r.width;
       let left = r.left;
@@ -116,7 +149,6 @@ export function useAnchoredPopover({
     };
 
     update();
-
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
 
@@ -124,24 +156,12 @@ export function useAnchoredPopover({
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [
-    open,
-    anchorRef,
-    isMobile,
-    mobileFullWidth,
-    offsetPx,
-    marginPx,
-    computedMaxHeight,
-    zIndex,
-  ]);
+  }, [open, anchorRef, isMobile, mobileFullWidth, offsetPx, maxHeightPx, marginPx, zIndex]);
 
+  // Click outside to close (keep)
   useEffect(() => {
     if (!open) return;
     if (typeof document === "undefined") return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
 
     const onPointerDown = (e: Event) => {
       const t = e.target as Node | null;
@@ -155,15 +175,13 @@ export function useAnchoredPopover({
       onClose();
     };
 
-    document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerdown", onPointerDown, true);
-
     return () => {
-      document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("pointerdown", onPointerDown, true);
     };
   }, [open, onClose, anchorRef]);
 
+  // Mobile: lock body scroll while open
   useEffect(() => {
     if (!open) return;
     if (!isMobile) return;

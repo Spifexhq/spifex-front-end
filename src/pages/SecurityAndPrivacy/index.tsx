@@ -448,11 +448,28 @@ const SecurityAndPrivacy: React.FC = () => {
   ]);
 
   /* ------------------------------- UX hooks -------------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalMode) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalMode, closeModal]);
+  const closeTransientOverlays = useCallback((): boolean => {
+    if (typeof document === "undefined") return false;
+
+    const hasOpen = !!document.querySelector(
+      '[data-select-open="true"],[data-menu-open="true"],[data-popover-open="true"]'
+    );
+    if (!hasOpen) return false;
+
+    const target = document.body || document.documentElement;
+    target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    return true;
+  }, []);
+
+  const onEsc = useCallback(() => {
+    if (!modalMode) return;
+    if (isSubmitting || isTwoFactorSubmitting) return;
+    if (closeTransientOverlays()) return;
+    closeModal();
+  }, [modalMode, isSubmitting, isTwoFactorSubmitting, closeTransientOverlays, closeModal]);
+
+  // Global ESC stack (topmost wins)
+  window.useGlobalEsc(!!modalMode, onEsc);
 
   useEffect(() => {
     document.body.style.overflow = modalMode ? "hidden" : "";

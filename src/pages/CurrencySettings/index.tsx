@@ -166,10 +166,8 @@ const CurrencySettings: React.FC = () => {
       });
       const updatedCode = (resp.data?.currency ?? selectedCurrency) as string;
 
-      // Local state (this page)
       setCurrency(updatedCode);
 
-      // 🔄 Update Redux auth.organization with the new currency
       if (organization) {
         dispatch(
           setUserOrganization({
@@ -197,7 +195,6 @@ const CurrencySettings: React.FC = () => {
         const data = err.response?.data;
 
         if (status === 400 || status === 401) {
-          // 🔒 Always show "wrong password" for 400/401
           message = t("currencySettings:toast.invalidPassword");
         } else if (data) {
           if (typeof data.message === "string") {
@@ -208,7 +205,6 @@ const CurrencySettings: React.FC = () => {
         }
       }
 
-      // Never show err.message (which is "Request failed with status code 400")
       setSnack({
         message,
         severity: "error",
@@ -218,11 +214,11 @@ const CurrencySettings: React.FC = () => {
     }
   }, [selectedCurrency, currentPassword, t, closeModal, dispatch, organization]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
+  const onEsc = useCallback(() => {
+    closeModal();
+  }, [closeModal]);
+
+  window.useGlobalEsc(modalOpen, onEsc);
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";

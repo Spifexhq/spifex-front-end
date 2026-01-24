@@ -108,11 +108,6 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("groupModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -122,6 +117,8 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   const submit = useCallback(
     async (e: React.FormEvent) => {

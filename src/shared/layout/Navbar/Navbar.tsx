@@ -31,7 +31,6 @@ function useMediaQuery(query: string): boolean {
       return () => mql.removeEventListener("change", handler);
     }
 
-    // Legacy fallback
     const legacy = mql as unknown as {
       addListener?: (cb: (e: MediaQueryListEvent) => void) => void;
       removeListener?: (cb: (e: MediaQueryListEvent) => void) => void;
@@ -51,23 +50,19 @@ const Navbar: React.FC = () => {
   const [isSimulatedAIOpen, setIsSimulatedAIOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Tailwind "sm" breakpoint is 640px, so mobile is < 640
   const isMobile = useMediaQuery("(max-width: 639px)");
 
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // close drawer/user menu on route change
   useEffect(() => {
     setDrawerOpen(false);
     setUserMenuOpen(false);
   }, [location.pathname]);
 
-  // If leaving mobile, ensure drawer is closed
   useEffect(() => {
     if (!isMobile) setDrawerOpen(false);
   }, [isMobile]);
 
-  // Lock body scroll only when mobile drawer is open (robust restore)
   const bodyOverflowRef = useRef<string | null>(null);
   useEffect(() => {
     if (!isMobile) {
@@ -90,19 +85,13 @@ const Navbar: React.FC = () => {
     }
   }, [drawerOpen, isMobile]);
 
-  // ESC to close open menus/drawer
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (userMenuOpen) setUserMenuOpen(false);
-      if (drawerOpen) setDrawerOpen(false);
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  const onEsc = useCallback(() => {
+    if (userMenuOpen) setUserMenuOpen(false);
+    if (drawerOpen) setDrawerOpen(false);
   }, [userMenuOpen, drawerOpen]);
 
-  // click outside to close user menu (drawer uses overlay)
+  window.useGlobalEsc(userMenuOpen || drawerOpen, onEsc);
+
   useEffect(() => {
     const handler = (event: Event) => {
       if (!userMenuRef.current) return;

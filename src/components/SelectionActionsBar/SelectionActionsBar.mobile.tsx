@@ -210,19 +210,7 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
   }, [selectedIds.length]);
 
   // ESC cancels (useful on devices with keyboard)
-  useEffect(() => {
-    if (!hasSelection) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onCancel();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [hasSelection, onCancel]);
+  window.useGlobalEsc(hasSelection, onCancel);
 
   // Hide the mobile sidebar bar + push layout using CSS var
   useEffect(() => {

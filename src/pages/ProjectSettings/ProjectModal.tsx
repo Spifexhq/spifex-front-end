@@ -256,12 +256,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
-
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("projectModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -272,6 +266,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   const submit = useCallback(
     async (e: React.FormEvent) => {

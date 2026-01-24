@@ -62,6 +62,8 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     setFormData((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  window.useGlobalEsc(isOpen, onClose);
+
   // ---------- Derived state ----------
   const sortedBanks = useMemo(() => sortBanksByInstitution(banks), [banks]);
 
@@ -114,12 +116,6 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
     document.body.style.overflow = "hidden";
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeModal();
-        return;
-      }
-
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "s") {
         e.preventDefault();
         formRef.current?.requestSubmit();

@@ -249,11 +249,6 @@ const BankModal: React.FC<BankModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("bankModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -263,6 +258,8 @@ const BankModal: React.FC<BankModalProps> = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   const submit = useCallback(
     async (e: React.FormEvent) => {

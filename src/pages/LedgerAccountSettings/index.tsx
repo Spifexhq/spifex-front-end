@@ -178,11 +178,11 @@ const LedgerAccountSettings: React.FC = () => {
 
   /* ----------------------------- Modal state ------------------------------ */
   type ModalState =
-    | { open: false; mode: "create" | "edit"; editing: LedgerAccount | null; initial: FormState }
-    | { open: true; mode: "create" | "edit"; editing: LedgerAccount | null; initial: FormState };
+    | { isOpen: false; mode: "create" | "edit"; editing: LedgerAccount | null; initial: FormState }
+    | { isOpen: true; mode: "create" | "edit"; editing: LedgerAccount | null; initial: FormState };
 
   const [modal, setModal] = useState<ModalState>({
-    open: false,
+    isOpen: false,
     mode: "create",
     editing: null,
     initial: EMPTY_FORM,
@@ -367,14 +367,14 @@ const LedgerAccountSettings: React.FC = () => {
   }, [search, filterGroup, pager]);
 
   const openCreateModal = () => {
-    setModal({ open: true, mode: "create", editing: null, initial: EMPTY_FORM });
+    setModal({ isOpen: true, mode: "create", editing: null, initial: EMPTY_FORM });
   };
 
   const openEditModal = (acc: LedgerAccount) => {
     const key = getCategoryKeyFromAccount(acc as GLX);
 
     setModal({
-      open: true,
+      isOpen: true,
       mode: "edit",
       editing: acc,
       initial: {
@@ -389,7 +389,7 @@ const LedgerAccountSettings: React.FC = () => {
 
   const closeModal = useCallback(() => {
     if (isSubmitting) return;
-    setModal((p) => ({ ...p, open: false }));
+    setModal((p) => ({ ...p, isOpen: false }));
   }, [isSubmitting]);
 
   const handleFilterGroupChange = (items: { label: string; value: CategoryKey }[]) => {
@@ -875,7 +875,7 @@ const LedgerAccountSettings: React.FC = () => {
 
         {/* Modal (separate component) */}
         <LedgerAccountModal
-          open={modal.open}
+          isOpen={modal.isOpen}
           mode={modal.mode}
           initial={modal.initial}
           busy={globalBusy}

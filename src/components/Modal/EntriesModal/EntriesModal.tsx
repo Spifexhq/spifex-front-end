@@ -152,6 +152,21 @@ function focusFirstInteractive(wrapId?: string, amountRef?: React.RefObject<HTML
   el?.focus();
 }
 
+function hasTransientOverlayOpen() {
+  return !!document.querySelector(
+    '[data-select-open="true"],[data-menu-open="true"],[data-popover-open="true"]'
+  );
+}
+
+function closeTransientOverlays() {
+  if (typeof document === "undefined") return false;
+  if (!hasTransientOverlayOpen()) return false;
+
+  const target = document.body || document.documentElement;
+  target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+  return true;
+}
+
 /* -------------------------------- Component -------------------------------- */
 
 const EntriesModal: React.FC<EntriesModalProps> = ({
@@ -289,6 +304,21 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
     handleClose();
   }, [hasMeaningfulData, handleClose]);
+
+  const onEsc = useCallback(() => {
+    if (warning) {
+      setWarning(null);
+      return;
+    }
+    if (showCloseConfirm) {
+      setShowCloseConfirm(false);
+      return;
+    }
+    if (closeTransientOverlays()) return;
+    attemptClose();
+  }, [attemptClose, showCloseConfirm, warning]);
+
+  window.useGlobalEsc(isOpen, onEsc);
 
   /* --------------------------- Fetch helpers --------------------------- */
   const fetchAllLedgerAccounts = useCallback(async () => {
@@ -503,40 +533,31 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (warning) {
-          e.stopPropagation();
-          setWarning(null);
-          return;
-        }
-        if (showCloseConfirm) {
-          e.stopPropagation();
-          setShowCloseConfirm(false);
-          return;
-        }
-        if (isDropdownOpen()) return;
-        attemptClose();
-        return;
-      }
-
+      // Ctrl/⌘ + S => submit
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        if (warning || showCloseConfirm) return;
+        if (hasTransientOverlayOpen()) return;
+
         e.preventDefault();
-        (document.getElementById("modalForm") as HTMLFormElement | null)?.requestSubmit();
+
+        const el = document.getElementById("modalForm");
+        if (el instanceof HTMLFormElement) el.requestSubmit();
         return;
       }
 
+      // Ctrl + Alt + Arrow => tab switch
       if (e.ctrlKey && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         if (warning || showCloseConfirm) return;
-        if (isDropdownOpen()) return;
+        if (hasTransientOverlayOpen()) return;
+
         e.preventDefault();
         goTabRelative(e.key === "ArrowRight" ? 1 : -1);
-        return;
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, attemptClose, showCloseConfirm, goTabRelative, warning]);
+  }, [isOpen, goTabRelative, showCloseConfirm, warning]);
 
   /* ------------------------------ Submit helpers ------------------------------ */
   const buildDepartmentsPayload = useCallback(() => {

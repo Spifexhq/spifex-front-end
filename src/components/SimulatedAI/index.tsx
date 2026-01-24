@@ -235,10 +235,6 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
     }, 10);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        handleClose();
-      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         searchInputRef.current?.focus();
@@ -276,6 +272,8 @@ const SimulatedAI: React.FC<SimulatedAIProps> = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, filteredQuestions, handleClose, handlePickQuestion]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   if (!isOpen) return null;
 

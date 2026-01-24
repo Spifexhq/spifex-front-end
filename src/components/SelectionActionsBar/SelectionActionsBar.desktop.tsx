@@ -158,19 +158,7 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
   }, [selectedIds.length]);
 
   /* ESC to cancel selection */
-  useEffect(() => {
-    if (!hasSelection) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onCancel();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [hasSelection, onCancel]);
+  window.useGlobalEsc(hasSelection, onCancel);
 
   /* Compute stats */
   const stats = useMemo(() => {

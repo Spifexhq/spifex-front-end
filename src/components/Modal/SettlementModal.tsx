@@ -107,10 +107,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     return partial <= 0 || partial > full;
   }, []);
 
-  const somePartialInvalid = useMemo(
-    () => entriesState.some(rowHasError),
-    [entriesState, rowHasError]
-  );
+  const somePartialInvalid = useMemo(() => entriesState.some(rowHasError), [entriesState, rowHasError]);
 
   const totalOriginalSigned = useMemo(() => {
     return selectedEntries.reduce((sum, e) => {
@@ -127,13 +124,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   }, [entriesState]);
 
   const isSubmitDisabled = useMemo(() => {
-    return (
-      loadingBanks ||
-      !!banksError ||
-      !selectedBankId ||
-      entriesState.length === 0 ||
-      somePartialInvalid
-    );
+    return loadingBanks || !!banksError || !selectedBankId || entriesState.length === 0 || somePartialInvalid;
   }, [banksError, entriesState.length, loadingBanks, selectedBankId, somePartialInvalid]);
 
   useEffect(() => {
@@ -167,6 +158,8 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     setBulkDate(today);
   }, [isOpen, selectedEntries]);
 
+  window.useGlobalEsc(isOpen, onClose);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -174,11 +167,6 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     document.body.style.overflow = "hidden";
 
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "enter") {
         e.preventDefault();
         if (!submitDisabledRef.current) formRef.current?.requestSubmit();
@@ -190,28 +178,22 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   /* -------------------------------- handlers -------------------------------- */
 
   const updateEntryDate = useCallback((id: string, val: string) => {
-    setEntriesState((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, value_date: val } : row))
-    );
+    setEntriesState((prev) => prev.map((row) => (row.id === id ? { ...row, value_date: val } : row)));
   }, []);
 
   const togglePartial = useCallback((id: string) => {
     setEntriesState((prev) =>
-      prev.map((row) =>
-        row.id === id ? { ...row, isPartial: !row.isPartial, partial_amount: "" } : row
-      )
+      prev.map((row) => (row.id === id ? { ...row, isPartial: !row.isPartial, partial_amount: "" } : row))
     );
   }, []);
 
   const updatePartialAmount = useCallback((id: string, val: string) => {
-    setEntriesState((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, partial_amount: val } : row))
-    );
+    setEntriesState((prev) => prev.map((row) => (row.id === id ? { ...row, partial_amount: val } : row)));
   }, []);
 
   const applyDateToAll = useCallback(() => {
@@ -263,7 +245,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
       } catch (err) {
         const message =
           axios.isAxiosError(err) && err.response?.data?.error?.message
-            ? err.response!.data.error.message
+            ? err.response.data.error.message
             : t("errors.bulk");
 
         window.alert(message);
@@ -277,8 +259,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   if (!isOpen) return null;
 
   const selectedCount = selectedEntries.length;
-  const headerTitle =
-    selectedCount === 1 ? t("header.title.one") : t("header.title.many", { n: selectedCount });
+  const headerTitle = selectedCount === 1 ? t("header.title.one") : t("header.title.many", { n: selectedCount });
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
@@ -308,6 +289,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               onClick={onClose}
               aria-label={t("actions.close")}
               title={t("actions.close")}
+              type="button"
             >
               &times;
             </button>
@@ -335,9 +317,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
               {selectedBankId && (
                 <span className="text-[11px] text-gray-600">
                   {t("banks.balance")}&nbsp;
-                  <b className="text-gray-900">
-                    {formatCurrency(String(chosenBank?.consolidated_balance ?? "0.00"))}
-                  </b>
+                  <b className="text-gray-900">{formatCurrency(String(chosenBank?.consolidated_balance ?? "0.00"))}</b>
                 </span>
               )}
             </div>

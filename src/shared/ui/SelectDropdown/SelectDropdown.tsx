@@ -217,26 +217,20 @@ function SelectDropdown<T>({
         if (clearOnClickOutside) onChange([]);
       }
     };
-    const handleDocKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isOpen) {
-        event.stopImmediatePropagation?.();
-        event.stopPropagation();
-        event.preventDefault();
-        setIsOpen(false);
-        setSearchTerm("");
-        setActiveIndex(null);
-      }
-    };
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleDocKeyDown, { passive: false });
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleDocKeyDown);
     };
   }, [isOpen, onChange, clearOnClickOutside]);
+
+  window.useGlobalEsc(isOpen, () => {
+    setIsOpen(false);
+    setSearchTerm("");
+    setActiveIndex(null);
+  });
 
   // set active item & focus on open
   useEffect(() => {

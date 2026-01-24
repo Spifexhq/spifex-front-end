@@ -397,12 +397,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
-
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("entityModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -420,6 +414,8 @@ const EntityModal: React.FC<EntityModalProps> = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose, goTabRelative, warning, showCloseConfirm]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {

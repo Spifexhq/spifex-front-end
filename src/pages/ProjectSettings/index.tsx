@@ -808,10 +808,6 @@ const ProjectSettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("code");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.codePlaceholder", { defaultValue: "Type a code…" })}
               disabled={globalBusy}
@@ -856,10 +852,6 @@ const ProjectSettings: React.FC = () => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   applyFromDraft("search");
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
                 }
               }}
               placeholder={t("filters.searchPlaceholder", { defaultValue: "Search by name, code…" })}

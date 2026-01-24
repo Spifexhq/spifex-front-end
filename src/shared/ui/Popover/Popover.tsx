@@ -155,18 +155,7 @@ export const Popover: React.FC<{
   }, [mounted, anchorRef, closeWithAnimation]);
 
   // ESC
-  useEffect(() => {
-    if (!mounted) return;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      e.preventDefault();
-      closeWithAnimation();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mounted, closeWithAnimation]);
+  window.useGlobalEsc(isOpen, closeWithAnimation);
 
   const portalTarget = useMemo(() => {
     if (typeof document === "undefined") return null;

@@ -207,11 +207,6 @@ const MemberModal: React.FC<MemberModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("memberModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -221,6 +216,8 @@ const MemberModal: React.FC<MemberModalProps> = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   /* ------------------------------ submit ---------------------------------- */
   const submit = useCallback(

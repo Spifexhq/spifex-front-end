@@ -92,12 +92,9 @@ export const Menu: React.FC<{
     [actionableIndexes, activeIndex]
   );
 
+  window.useGlobalEsc(isOpen, () => closeWithAnimation());
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      closeWithAnimation();
-      return;
-    }
     if (e.key === "ArrowDown") {
       e.preventDefault();
       focusNext(1);

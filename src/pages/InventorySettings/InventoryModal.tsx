@@ -241,12 +241,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
-
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("inventoryModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -257,6 +251,8 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose]);
+
+  window.useGlobalEsc(isOpen, onClose);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

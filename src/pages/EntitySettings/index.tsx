@@ -714,10 +714,6 @@ const EntitySettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("name");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.namePlaceholder")}
               disabled={globalBusy}
@@ -757,10 +753,6 @@ const EntitySettings: React.FC = () => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   applyFromDraft("alias");
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
                 }
               }}
               placeholder={t("filters.aliasPlaceholder")}

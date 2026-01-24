@@ -849,10 +849,6 @@ const BankSettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("institution");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.institutionPlaceholder")}
               disabled={globalBusy}
@@ -938,10 +934,6 @@ const BankSettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("branch");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.branchPlaceholder")}
               disabled={globalBusy}
@@ -986,10 +978,6 @@ const BankSettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("accountNumber");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.accountNumberPlaceholder")}
               disabled={globalBusy}
@@ -1029,10 +1017,6 @@ const BankSettings: React.FC = () => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   applyFromDraft("iban");
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
                 }
               }}
               placeholder={t("filters.ibanPlaceholder")}

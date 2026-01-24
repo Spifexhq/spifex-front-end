@@ -684,10 +684,6 @@ const DepartmentSettings: React.FC = () => {
                   e.preventDefault();
                   applyFromDraft("code");
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
-                }
               }}
               placeholder={t("filters.codePlaceholder", { defaultValue: "Type a code…" })}
               disabled={globalBusy}
@@ -733,10 +729,6 @@ const DepartmentSettings: React.FC = () => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   applyFromDraft("name");
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setOpenFilter(null);
                 }
               }}
               placeholder={t("filters.namePlaceholder", { defaultValue: "Type a name…" })}

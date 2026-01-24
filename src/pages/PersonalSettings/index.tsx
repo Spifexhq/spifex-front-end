@@ -309,11 +309,11 @@ const PersonalSettings: React.FC = () => {
   const handleFormatsNavigation = () => navigate("/settings/manage-formats");
 
   /* ------------------------------ Modal UX ------------------------------- */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && closeModal();
-    if (modalOpen) window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalOpen, closeModal]);
+  const onEsc = useCallback(() => {
+    closeModal();
+  }, [closeModal]);
+
+  window.useGlobalEsc(modalOpen, onEsc);
 
   useEffect(() => {
     document.body.style.overflow = modalOpen ? "hidden" : "";

@@ -169,20 +169,46 @@ const CumulativeAreaChart: React.FC<CumulativeAreaChartProps> = ({
     msUserSelect: "none",
   };
 
+  const hasSelection = x1 != null && x2 != null;
+
+  const closeTransientOverlays = useCallback((): boolean => {
+    if (typeof document === "undefined") return false;
+
+    const hasOpen = !!document.querySelector(
+      '[data-select-open="true"],[data-menu-open="true"],[data-popover-open="true"]'
+    );
+    if (!hasOpen) return false;
+
+    const target = document.body || document.documentElement;
+    target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    return true;
+  }, []);
+
+  const onEsc = useCallback(() => {
+    if (!hasSelection) return;
+    if (closeTransientOverlays()) return;
+    clearSelection();
+  }, [hasSelection, closeTransientOverlays, clearSelection]);
+
+  window.useGlobalEsc(hasSelection, onEsc);
+
   return (
     <div
       className={className}
       role="group"
       aria-label={title || "Cumulative area chart"}
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (!data?.length) return;
-        if (e.key === "Escape") clearSelection();
-      }}
       style={{ outline: "none", ...noSelect }}
       onClick={(e) => {
+        if (!hasSelection) return;
+
         const el = e.target as HTMLElement;
-        if (el?.closest?.(".cum-area-chart") == null && (x1 || x2)) clearSelection();
+
+        // Click outside both the chart area and the "selection summary" area clears selection
+        if (el?.closest?.(".cum-area-chart")) return;
+        if (el?.closest?.(".cum-area-selection")) return;
+
+        clearSelection();
       }}
     >
       {title ? <p className="text-[12px] font-medium mb-3">{title}</p> : null}

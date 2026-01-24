@@ -171,7 +171,6 @@ const SidebarSettingsMobile: FC<SidebarSettingsProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  // Keep refs array aligned with item count
   useEffect(() => {
     btnRefs.current = Array.from({ length: flatItems.length }, (_, i) => btnRefs.current[i] ?? null);
   }, [flatItems.length]);
@@ -179,31 +178,22 @@ const SidebarSettingsMobile: FC<SidebarSettingsProps> = ({
   const activeIdx = Math.max(0, idxById.get(activeItem ?? "") ?? 0);
   const [focusIdx, setFocusIdx] = useState<number>(activeIdx);
 
-  // Update focus when active changes, ensure active button is visible
   useEffect(() => {
     setFocusIdx(activeIdx);
     const btn = btnRefs.current[activeIdx];
     requestAnimationFrame(() => btn?.scrollIntoView({ block: "nearest" }));
   }, [activeIdx]);
 
-  // When drawer opens, focus the scroll container
   useEffect(() => {
     if (mobileOpen) listRef.current?.focus({ preventScroll: true });
   }, [mobileOpen]);
 
-  // ESC to close (only when open)
-  useEffect(() => {
-    if (!mobileOpen) return;
+  const onEsc = useCallback(() => {
+    onMobileClose?.();
+  }, [onMobileClose]);
 
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") onMobileClose?.();
-    };
+  window.useGlobalEsc(!!mobileOpen, onEsc);
 
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [mobileOpen, onMobileClose]);
-
-  // Lock body scroll only when mobile drawer is open (robust restore)
   const bodyOverflowRef = useRef<string | null>(null);
   useEffect(() => {
     if (!mobileOpen) {
@@ -242,7 +232,6 @@ const SidebarSettingsMobile: FC<SidebarSettingsProps> = ({
     }
   };
 
-  // Follow focus index with actual focus + visibility
   useEffect(() => {
     const el = btnRefs.current[focusIdx];
     el?.focus({ preventScroll: true });
