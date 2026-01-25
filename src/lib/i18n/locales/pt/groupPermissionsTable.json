@@ -1,10 +1,9 @@
 {
+  "aria": { "tabs": "Abas de permissões" },
   "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Barra lateral",
-    "page_components": "Componentes de página",
-    "entries": "Lançamentos",
-    "settings": "Configurações e acesso"
+    "visualization": "Visualização",
+    "actions": "Ações",
+    "pages": "Páginas"
   },
   "noItems": "Nenhuma permissão nesta seção.",
   "buttons": {
@@ -12,213 +11,111 @@
     "save": "Salvar permissões"
   },
   "perms": {
-    "view_cash_flow_button": {
-      "label": "Botão de Fluxo de Caixa",
-      "description": "Controla se o grupo vê o botão de Fluxo de Caixa na barra superior."
-    },
-    "view_settled_button": {
-      "label": "Botão de Lançamentos Baixados",
-      "description": "Controla se o grupo vê o botão de lançamentos baixados na barra superior."
-    },
-    "view_report_button": {
-      "label": "Botão de Relatórios",
-      "description": "Controla se o grupo vê a seção de Relatórios na barra superior."
-    },
-    "view_credit_modal_button": {
-      "label": "Botão de lançamento de crédito",
-      "description": "Permite abrir o modal para adicionar lançamentos de crédito pela barra lateral."
-    },
-    "view_debit_modal_button": {
-      "label": "Botão de lançamento de débito",
-      "description": "Permite abrir o modal para adicionar lançamentos de débito pela barra lateral."
-    },
-    "view_transference_modal_button": {
-      "label": "Botão de lançamento de transferência",
-      "description": "Permite abrir o modal para adicionar lançamentos de transferência pela barra lateral."
-    },
-    "view_cash_flow_entries": {
-      "label": "Lista de lançamentos do Fluxo de Caixa",
-      "description": "Permite visualizar a lista de lançamentos do Fluxo de Caixa."
-    },
-    "view_settled_entries": {
-      "label": "Lista de lançamentos baixados",
-      "description": "Permite visualizar a lista de lançamentos já baixados."
-    },
-    "view_banks_table": {
-      "label": "Tabela de bancos",
-      "description": "Permite visualizar a tabela de saldos bancários."
-    },
-    "view_filters": {
-      "label": "Painel de filtros",
-      "description": "Permite visualizar e usar os filtros nas telas de Fluxo de Caixa."
-    },
-    "add_cash_flow_entries": {
-      "label": "Adicionar lançamento",
-      "description": "Permite criar novos lançamentos no Fluxo de Caixa."
-    },
-    "change_cash_flow_entries": {
-      "label": "Editar lançamento",
-      "description": "Permite editar lançamentos existentes no Fluxo de Caixa."
-    },
-    "delete_cash_flow_entries": {
-      "label": "Excluir lançamento",
-      "description": "Permite excluir lançamentos do Fluxo de Caixa."
-    },
-    "change_settled_entries": {
-      "label": "Editar lançamento baixado",
-      "description": "Permite editar lançamentos que já foram baixados."
-    },
-    "delete_settled_entries": {
-      "label": "Excluir lançamento baixado",
-      "description": "Permite excluir lançamentos que já foram baixados."
-    },
-    "add_transference": {
-      "label": "Registrar transferência",
-      "description": "Permite registrar transferências entre contas bancárias."
-    },
-    "add_user": {
-      "label": "Adicionar usuário",
-      "description": "Permite criar novos usuários na organização."
-    },
-    "change_user": {
-      "label": "Editar usuário",
-      "description": "Permite editar dados de usuários."
-    },
-    "delete_user": {
-      "label": "Excluir usuário",
-      "description": "Permite excluir usuários da organização."
-    },
-    "view_user": {
-      "label": "Visualizar usuários",
-      "description": "Permite visualizar a lista de usuários e seus detalhes."
-    },
-    "add_bank": {
-      "label": "Adicionar conta bancária",
-      "description": "Permite criar contas bancárias."
-    },
-    "change_bank": {
-      "label": "Editar conta bancária",
-      "description": "Permite editar a configuração das contas bancárias."
-    },
-    "delete_bank": {
-      "label": "Excluir conta bancária",
-      "description": "Permite excluir contas bancárias."
-    },
-    "view_bank": {
-      "label": "Visualizar contas bancárias",
-      "description": "Permite visualizar contas bancárias e saldos."
-    },
-    "add_member": {
-      "label": "Adicionar colaborador",
-      "description": "Permite criar registros de colaboradores."
-    },
-    "change_member": {
-      "label": "Editar colaborador",
-      "description": "Permite editar dados de colaboradores."
-    },
-    "delete_member": {
-      "label": "Excluir colaborador",
-      "description": "Permite excluir registros de colaboradores."
-    },
-    "view_member": {
-      "label": "Visualizar colaboradores",
-      "description": "Permite visualizar a lista de colaboradores."
-    },
-    "add_group": {
-      "label": "Adicionar grupo",
-      "description": "Permite criar grupos de permissão."
-    },
-    "change_group": {
-      "label": "Editar grupo",
-      "description": "Permite editar grupos de permissão."
-    },
-    "delete_group": {
-      "label": "Excluir grupo",
-      "description": "Permite excluir grupos de permissão."
-    },
-    "view_group": {
-      "label": "Visualizar grupos",
-      "description": "Permite visualizar a lista de grupos de permissão."
-    },
-    "add_ledger_account": {
-      "label": "Adicionar conta contábil",
-      "description": "Permite criar contas no plano de contas contábil."
-    },
-    "change_ledger_account": {
-      "label": "Editar conta contábil",
-      "description": "Permite editar contas contábeis."
-    },
-    "delete_ledger_account": {
-      "label": "Excluir conta contábil",
-      "description": "Permite excluir contas contábeis."
-    },
-    "view_ledger_account": {
-      "label": "Visualizar contas contábeis",
-      "description": "Permite visualizar o plano de contas."
-    },
-    "add_department": {
-      "label": "Adicionar departamento",
-      "description": "Permite criar departamentos."
-    },
-    "change_department": {
-      "label": "Editar departamento",
-      "description": "Permite editar departamentos."
-    },
-    "delete_department": {
-      "label": "Excluir departamento",
-      "description": "Permite excluir departamentos."
-    },
-    "view_department": {
-      "label": "Visualizar departamentos",
-      "description": "Permite visualizar a lista de departamentos."
-    },
-    "add_project": {
-      "label": "Adicionar projeto",
-      "description": "Permite criar projetos."
-    },
-    "change_project": {
-      "label": "Editar projeto",
-      "description": "Permite editar projetos."
-    },
-    "delete_project": {
-      "label": "Excluir projeto",
-      "description": "Permite excluir projetos."
-    },
-    "view_project": {
-      "label": "Visualizar projetos",
-      "description": "Permite visualizar a lista de projetos."
-    },
-    "add_inventory": {
-      "label": "Adicionar item de estoque",
-      "description": "Permite criar itens de estoque."
-    },
-    "change_inventory": {
-      "label": "Editar item de estoque",
-      "description": "Permite editar itens de estoque."
-    },
-    "delete_inventory": {
-      "label": "Excluir item de estoque",
-      "description": "Permite excluir itens de estoque."
-    },
-    "view_inventory": {
-      "label": "Visualizar estoque",
-      "description": "Permite visualizar os itens de estoque."
-    },
-    "add_entity": {
-      "label": "Adicionar entidade",
-      "description": "Permite criar entidades (empresas/unidades)."
-    },
-    "change_entity": {
-      "label": "Editar entidade",
-      "description": "Permite editar configurações de entidades."
-    },
-    "delete_entity": {
-      "label": "Excluir entidade",
-      "description": "Permite excluir entidades."
-    },
-    "view_entity": {
-      "label": "Visualizar entidades",
-      "description": "Permite visualizar a lista de entidades."
-    }
+    "view_cash_flow_entries": { "label": "Lançamentos do Fluxo de Caixa", "description": "Permite visualizar a lista de lançamentos do Fluxo de Caixa." },
+    "view_settled_entries": { "label": "Lançamentos baixados", "description": "Permite visualizar a lista de lançamentos baixados." },
+    "view_filters": { "label": "Filtros", "description": "Permite visualizar e usar o painel de filtros." },
+
+    "view_consolidated_balance": { "label": "Saldo consolidado", "description": "Permite visualizar os valores de saldo consolidado." },
+    "view_cash_flow_amount": { "label": "Valores do Fluxo de Caixa", "description": "Permite visualizar valores do Fluxo de Caixa." },
+    "view_settlement_amount": { "label": "Valores de baixa", "description": "Permite visualizar valores de baixa." },
+    "view_cash_flow_kpis": { "label": "KPIs do Fluxo de Caixa", "description": "Permite visualizar os KPIs do Fluxo de Caixa." },
+    "view_settlement_kpis": { "label": "KPIs de baixa", "description": "Permite visualizar os KPIs de baixa." },
+
+    "view_cash_flow_entry_view": { "label": "Presets de visão (Fluxo de Caixa)", "description": "Permite visualizar e usar presets de visão do Fluxo de Caixa." },
+    "view_settlement_entry_view": { "label": "Presets de visão (Baixados)", "description": "Permite visualizar e usar presets de visão de lançamentos baixados." },
+
+    "view_statement": { "label": "Extratos (dados)", "description": "Permite visualizar dados de extratos bancários." },
+    "view_limits_and_usage": { "label": "Limites e uso (dados)", "description": "Permite visualizar informações de limites e uso." },
+    "view_permission": { "label": "Permissões (dados)", "description": "Permite visualizar o catálogo de permissões." },
+
+    "view_user": { "label": "Usuários (dados)", "description": "Permite visualizar dados de usuários." },
+    "view_member": { "label": "Colaboradores (dados)", "description": "Permite visualizar dados de colaboradores." },
+    "view_group": { "label": "Grupos (dados)", "description": "Permite visualizar dados de grupos." },
+
+    "view_bank": { "label": "Bancos (dados)", "description": "Permite visualizar contas bancárias e saldos." },
+    "view_ledger_account": { "label": "Contas contábeis (dados)", "description": "Permite visualizar dados de contas contábeis." },
+    "view_department": { "label": "Departamentos (dados)", "description": "Permite visualizar dados de departamentos." },
+    "view_project": { "label": "Projetos (dados)", "description": "Permite visualizar dados de projetos." },
+    "view_inventory": { "label": "Estoque (dados)", "description": "Permite visualizar dados de estoque." },
+    "view_entity": { "label": "Entidades (dados)", "description": "Permite visualizar dados de entidades." },
+
+    "add_cash_flow_entries": { "label": "Criar lançamento (Fluxo de Caixa)", "description": "Permite criar lançamentos no Fluxo de Caixa." },
+    "change_cash_flow_entries": { "label": "Editar lançamento (Fluxo de Caixa)", "description": "Permite editar lançamentos do Fluxo de Caixa." },
+    "delete_cash_flow_entries": { "label": "Excluir lançamento (Fluxo de Caixa)", "description": "Permite excluir lançamentos do Fluxo de Caixa." },
+
+    "add_settled_entries": { "label": "Criar lançamento baixado", "description": "Permite criar lançamentos baixados." },
+    "change_settled_entries": { "label": "Editar lançamento baixado", "description": "Permite editar lançamentos baixados." },
+    "delete_settled_entries": { "label": "Excluir/estornar lançamento baixado", "description": "Permite excluir (estornar) lançamentos baixados." },
+
+    "add_transference": { "label": "Criar transferência", "description": "Permite criar transferências entre contas bancárias." },
+
+    "add_entry_view": { "label": "Criar preset de visão", "description": "Permite criar presets de visão." },
+    "change_entry_view": { "label": "Editar preset de visão", "description": "Permite editar presets de visão." },
+    "delete_entry_view": { "label": "Excluir preset de visão", "description": "Permite excluir presets de visão." },
+
+    "add_statement": { "label": "Enviar extrato", "description": "Permite enviar (upload) extratos bancários." },
+    "change_statement": { "label": "Editar extrato", "description": "Permite atualizar extratos bancários." },
+    "delete_statement": { "label": "Excluir extrato", "description": "Permite excluir extratos bancários." },
+
+    "add_user": { "label": "Criar usuário", "description": "Permite criar usuários." },
+    "change_user": { "label": "Editar usuário", "description": "Permite editar usuários." },
+    "delete_user": { "label": "Excluir usuário", "description": "Permite excluir usuários." },
+
+    "add_member": { "label": "Criar colaborador", "description": "Permite criar colaboradores." },
+    "change_member": { "label": "Editar colaborador", "description": "Permite editar colaboradores." },
+    "delete_member": { "label": "Excluir colaborador", "description": "Permite excluir colaboradores." },
+
+    "add_group": { "label": "Criar grupo", "description": "Permite criar grupos." },
+    "change_group": { "label": "Editar grupo", "description": "Permite editar grupos." },
+    "delete_group": { "label": "Excluir grupo", "description": "Permite excluir grupos." },
+
+    "add_bank": { "label": "Criar conta bancária", "description": "Permite criar contas bancárias." },
+    "change_bank": { "label": "Editar conta bancária", "description": "Permite editar contas bancárias." },
+    "delete_bank": { "label": "Excluir conta bancária", "description": "Permite excluir contas bancárias." },
+
+    "add_ledger_account": { "label": "Criar conta contábil", "description": "Permite criar contas contábeis." },
+    "change_ledger_account": { "label": "Editar conta contábil", "description": "Permite editar contas contábeis." },
+    "delete_ledger_account": { "label": "Excluir conta contábil", "description": "Permite excluir contas contábeis." },
+
+    "add_department": { "label": "Criar departamento", "description": "Permite criar departamentos." },
+    "change_department": { "label": "Editar departamento", "description": "Permite editar departamentos." },
+    "delete_department": { "label": "Excluir departamento", "description": "Permite excluir departamentos." },
+
+    "add_project": { "label": "Criar projeto", "description": "Permite criar projetos." },
+    "change_project": { "label": "Editar projeto", "description": "Permite editar projetos." },
+    "delete_project": { "label": "Excluir projeto", "description": "Permite excluir projetos." },
+
+    "add_inventory": { "label": "Criar item de estoque", "description": "Permite criar itens de estoque." },
+    "change_inventory": { "label": "Editar item de estoque", "description": "Permite editar itens de estoque." },
+    "delete_inventory": { "label": "Excluir item de estoque", "description": "Permite excluir itens de estoque." },
+
+    "add_entity": { "label": "Criar entidade", "description": "Permite criar entidades." },
+    "change_entity": { "label": "Editar entidade", "description": "Permite editar entidades." },
+    "delete_entity": { "label": "Excluir entidade", "description": "Permite excluir entidades." },
+
+    "view_home_dashboard_page": { "label": "Página inicial", "description": "Permite acessar a página inicial (dashboard)." },
+    "view_cash_flow_page": { "label": "Página de Fluxo de Caixa", "description": "Permite acessar a página de Fluxo de Caixa." },
+    "view_settlement_page": { "label": "Página de Baixados", "description": "Permite acessar a página de lançamentos baixados." },
+    "view_report_page": { "label": "Página de Relatórios", "description": "Permite acessar a página de relatórios." },
+
+    "view_personal_settings_page": { "label": "Página de configurações pessoais", "description": "Permite acessar a página de configurações pessoais." },
+    "view_subscription_management_page": { "label": "Página de assinatura", "description": "Permite acessar a página de gerenciamento de assinatura." },
+    "view_limits_and_usage_page": { "label": "Página de limites e uso", "description": "Permite acessar a página de limites e uso." },
+    "view_security_and_privacy_page": { "label": "Página de segurança e privacidade", "description": "Permite acessar a página de segurança e privacidade." },
+
+    "view_organization_settings_page": { "label": "Configurações da organização", "description": "Permite acessar as configurações da organização." },
+    "view_department_settings_page": { "label": "Configurações de departamentos", "description": "Permite acessar as configurações de departamentos." },
+    "view_bank_settings_page": { "label": "Configurações de bancos", "description": "Permite acessar as configurações de bancos." },
+    "view_entity_settings_page": { "label": "Configurações de entidades", "description": "Permite acessar as configurações de entidades." },
+    "view_inventory_settings_page": { "label": "Configurações de estoque", "description": "Permite acessar as configurações de estoque." },
+    "view_project_settings_page": { "label": "Configurações de projetos", "description": "Permite acessar as configurações de projetos." },
+    "view_member_settings_page": { "label": "Configurações de colaboradores", "description": "Permite acessar as configurações de colaboradores." },
+    "view_group_settings_page": { "label": "Configurações de grupos", "description": "Permite acessar as configurações de grupos." },
+    "view_ledger_accounts_page": { "label": "Configurações do plano de contas", "description": "Permite acessar a página de contas contábeis." },
+
+    "view_statements_page": { "label": "Página de extratos", "description": "Permite acessar a página de extratos." },
+    "view_notification_settings_page": { "label": "Configurações de notificações", "description": "Permite acessar as configurações de notificações." },
+    "view_format_settings_page": { "label": "Configurações de formato", "description": "Permite acessar as configurações de formato." },
+    "view_currency_settings_page": { "label": "Configurações de moeda", "description": "Permite acessar as configurações de moeda." }
   }
 }

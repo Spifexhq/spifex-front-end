@@ -25,7 +25,7 @@ const SidebarDesktop: React.FC<SidebarProps> = ({
       <div className="flex flex-col flex-grow p-3 space-y-1 select-none">
         {mode !== "settled" && (
           <>
-            <PermissionMiddleware codeName={["view_credit_modal_button"]} requireAll>
+            <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
               <button
                 type="button"
                 onClick={() => handleOpenModal("credit" as ModalType)}
@@ -59,7 +59,7 @@ const SidebarDesktop: React.FC<SidebarProps> = ({
               </button>
             </PermissionMiddleware>
 
-            <PermissionMiddleware codeName={["view_debit_modal_button"]} requireAll>
+            <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
               <button
                 type="button"
                 onClick={() => handleOpenModal("debit" as ModalType)}
@@ -92,7 +92,7 @@ const SidebarDesktop: React.FC<SidebarProps> = ({
               </button>
             </PermissionMiddleware>
 
-            <PermissionMiddleware codeName={["view_transference_modal_button"]} requireAll>
+            <PermissionMiddleware codeName={["add_transference"]} requireAll>
               <button
                 type="button"
                 onClick={handleOpenTransferenceModal}

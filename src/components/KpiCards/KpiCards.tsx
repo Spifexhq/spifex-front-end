@@ -290,7 +290,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
       <section className="relative w-full max-w-full overflow-x-hidden
                           [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div className="grid grid-cols-12 gap-2 w-full max-w-full px-1">
-          <PermissionMiddleware codeName={["view_banks_table"]} requireAll>
+          <PermissionMiddleware codeName={["view_bank"]} requireAll>
             <BanksTable
               expanded={expanded}
               onExpandedChange={setExpanded}
@@ -348,7 +348,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           className={`grid grid-cols-12 gap-3 w-full ${expanded ? "grid-rows-[100px_100px] auto-rows-[100px]" : ""}`}
           transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
         >
-          <PermissionMiddleware codeName={["view_banks_table"]} requireAll>
+          <PermissionMiddleware codeName={["view_bank"]} requireAll>
             <BanksTable
               expanded={expanded}
               onExpandedChange={setExpanded}

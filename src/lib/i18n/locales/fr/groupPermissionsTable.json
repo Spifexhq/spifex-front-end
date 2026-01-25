@@ -1,224 +1,118 @@
 {
+  "aria": { "tabs": "Onglets de permissions" },
   "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Barre latérale",
-    "page_components": "Composants de page",
-    "entries": "Écritures",
-    "settings": "Paramètres et accès"
+    "visualization": "Visualisation",
+    "actions": "Actions",
+    "pages": "Pages"
   },
   "noItems": "Aucune permission dans cette section.",
-  "buttons": {
-    "undo": "Annuler les modifications",
-    "save": "Enregistrer les permissions"
-  },
+  "buttons": { "undo": "Annuler les modifications", "save": "Enregistrer les permissions" },
   "perms": {
-    "view_cash_flow_button": {
-      "label": "Bouton Flux de trésorerie",
-      "description": "Contrôle si le groupe voit le bouton Flux de trésorerie dans la barre de navigation."
-    },
-    "view_settled_button": {
-      "label": "Bouton Écritures réglées",
-      "description": "Contrôle si le groupe voit le bouton des écritures réglées dans la barre de navigation."
-    },
-    "view_report_button": {
-      "label": "Bouton Rapports",
-      "description": "Contrôle si le groupe voit la section Rapports dans la barre de navigation."
-    },
-    "view_credit_modal_button": {
-      "label": "Bouton écriture de crédit",
-      "description": "Permet d'ouvrir la fenêtre modale pour ajouter une écriture de crédit depuis la barre latérale."
-    },
-    "view_debit_modal_button": {
-      "label": "Bouton écriture de débit",
-      "description": "Permet d'ouvrir la fenêtre modale pour ajouter une écriture de débit depuis la barre latérale."
-    },
-    "view_transference_modal_button": {
-      "label": "Bouton écriture de virement",
-      "description": "Permet d'ouvrir la fenêtre modale pour ajouter une écriture de virement depuis la barre latérale."
-    },
-    "view_cash_flow_entries": {
-      "label": "Liste des écritures du flux de trésorerie",
-      "description": "Permet d'afficher la liste des écritures du flux de trésorerie."
-    },
-    "view_settled_entries": {
-      "label": "Liste des écritures réglées",
-      "description": "Permet d'afficher la liste des écritures déjà réglées."
-    },
-    "view_banks_table": {
-      "label": "Tableau des banques",
-      "description": "Permet d'afficher le tableau des soldes bancaires."
-    },
-    "view_filters": {
-      "label": "Panneau de filtres",
-      "description": "Permet d'afficher et d'utiliser les filtres sur les pages de flux de trésorerie."
-    },
-    "add_cash_flow_entries": {
-      "label": "Ajouter une écriture",
-      "description": "Permet de créer de nouvelles écritures dans le flux de trésorerie."
-    },
-    "change_cash_flow_entries": {
-      "label": "Modifier une écriture",
-      "description": "Permet de modifier des écritures existantes dans le flux de trésorerie."
-    },
-    "delete_cash_flow_entries": {
-      "label": "Supprimer une écriture",
-      "description": "Permet de supprimer des écritures du flux de trésorerie."
-    },
-    "change_settled_entries": {
-      "label": "Modifier une écriture réglée",
-      "description": "Permet de modifier des écritures déjà réglées."
-    },
-    "delete_settled_entries": {
-      "label": "Supprimer une écriture réglée",
-      "description": "Permet de supprimer des écritures déjà réglées."
-    },
-    "add_transference": {
-      "label": "Ajouter un virement",
-      "description": "Permet d'enregistrer des virements entre comptes bancaires."
-    },
-    "add_user": {
-      "label": "Ajouter un utilisateur",
-      "description": "Permet de créer de nouveaux utilisateurs pour l'organisation."
-    },
-    "change_user": {
-      "label": "Modifier un utilisateur",
-      "description": "Permet de modifier les informations des utilisateurs."
-    },
-    "delete_user": {
-      "label": "Supprimer un utilisateur",
-      "description": "Permet de supprimer des utilisateurs de l'organisation."
-    },
-    "view_user": {
-      "label": "Voir les utilisateurs",
-      "description": "Permet de voir la liste des utilisateurs et leurs détails."
-    },
-    "add_bank": {
-      "label": "Ajouter un compte bancaire",
-      "description": "Permet de créer des comptes bancaires."
-    },
-    "change_bank": {
-      "label": "Modifier un compte bancaire",
-      "description": "Permet de modifier la configuration des comptes bancaires."
-    },
-    "delete_bank": {
-      "label": "Supprimer un compte bancaire",
-      "description": "Permet de supprimer des comptes bancaires."
-    },
-    "view_bank": {
-      "label": "Voir les comptes bancaires",
-      "description": "Permet de voir les comptes bancaires et leurs soldes."
-    },
-    "add_member": {
-      "label": "Ajouter un employé",
-      "description": "Permet de créer des fiches employé."
-    },
-    "change_member": {
-      "label": "Modifier un employé",
-      "description": "Permet de modifier les informations des employés."
-    },
-    "delete_member": {
-      "label": "Supprimer un employé",
-      "description": "Permet de supprimer des fiches employé."
-    },
-    "view_member": {
-      "label": "Voir les employés",
-      "description": "Permet de voir la liste des employés."
-    },
-    "add_group": {
-      "label": "Ajouter un groupe",
-      "description": "Permet de créer des groupes de permissions."
-    },
-    "change_group": {
-      "label": "Modifier un groupe",
-      "description": "Permet de modifier des groupes de permissions."
-    },
-    "delete_group": {
-      "label": "Supprimer un groupe",
-      "description": "Permet de supprimer des groupes de permissions."
-    },
-    "view_group": {
-      "label": "Voir les groupes",
-      "description": "Permet de voir la liste des groupes de permissions."
-    },
-    "add_ledger_account": {
-      "label": "Ajouter un compte comptable",
-      "description": "Permet de créer des comptes dans le plan comptable."
-    },
-    "change_ledger_account": {
-      "label": "Modifier un compte comptable",
-      "description": "Permet de modifier des comptes comptables."
-    },
-    "delete_ledger_account": {
-      "label": "Supprimer un compte comptable",
-      "description": "Permet de supprimer des comptes comptables."
-    },
-    "view_ledger_account": {
-      "label": "Voir les comptes comptables",
-      "description": "Permet de voir le plan comptable."
-    },
-    "add_department": {
-      "label": "Ajouter un département",
-      "description": "Permet de créer des départements."
-    },
-    "change_department": {
-      "label": "Modifier un département",
-      "description": "Permet de modifier des départements."
-    },
-    "delete_department": {
-      "label": "Supprimer un département",
-      "description": "Permet de supprimer des départements."
-    },
-    "view_department": {
-      "label": "Voir les départements",
-      "description": "Permet de voir la liste des départements."
-    },
-    "add_project": {
-      "label": "Ajouter un projet",
-      "description": "Permet de créer des projets."
-    },
-    "change_project": {
-      "label": "Modifier un projet",
-      "description": "Permet de modifier des projets."
-    },
-    "delete_project": {
-      "label": "Supprimer un projet",
-      "description": "Permet de supprimer des projets."
-    },
-    "view_project": {
-      "label": "Voir les projets",
-      "description": "Permet de voir la liste des projets."
-    },
-    "add_inventory": {
-      "label": "Ajouter un article de stock",
-      "description": "Permet de créer des articles de stock."
-    },
-    "change_inventory": {
-      "label": "Modifier un article de stock",
-      "description": "Permet de modifier des articles de stock."
-    },
-    "delete_inventory": {
-      "label": "Supprimer un article de stock",
-      "description": "Permet de supprimer des articles de stock."
-    },
-    "view_inventory": {
-      "label": "Voir le stock",
-      "description": "Permet de voir les articles de stock."
-    },
-    "add_entity": {
-      "label": "Ajouter une entité",
-      "description": "Permet de créer des entités (sociétés/filiales)."
-    },
-    "change_entity": {
-      "label": "Modifier une entité",
-      "description": "Permet de modifier la configuration des entités."
-    },
-    "delete_entity": {
-      "label": "Supprimer une entité",
-      "description": "Permet de supprimer des entités."
-    },
-    "view_entity": {
-      "label": "Voir les entités",
-      "description": "Permet de voir la liste des entités."
-    }
+    "view_cash_flow_entries": { "label": "Écritures de trésorerie", "description": "Permet de voir la liste des écritures de trésorerie." },
+    "view_settled_entries": { "label": "Écritures réglées", "description": "Permet de voir la liste des écritures réglées." },
+    "view_filters": { "label": "Filtres", "description": "Permet de voir et d’utiliser le panneau de filtres." },
+
+    "view_consolidated_balance": { "label": "Solde consolidé", "description": "Permet de voir les valeurs de solde consolidé." },
+    "view_cash_flow_amount": { "label": "Montants (trésorerie)", "description": "Permet de voir les montants de trésorerie." },
+    "view_settlement_amount": { "label": "Montants (règlement)", "description": "Permet de voir les montants de règlement." },
+    "view_cash_flow_kpis": { "label": "KPIs (trésorerie)", "description": "Permet de voir les KPIs de trésorerie." },
+    "view_settlement_kpis": { "label": "KPIs (règlement)", "description": "Permet de voir les KPIs de règlement." },
+
+    "view_cash_flow_entry_view": { "label": "Vues enregistrées (trésorerie)", "description": "Permet de voir et d’utiliser les vues enregistrées (trésorerie)." },
+    "view_settlement_entry_view": { "label": "Vues enregistrées (réglées)", "description": "Permet de voir et d’utiliser les vues enregistrées (réglées)." },
+
+    "view_statement": { "label": "Relevés (données)", "description": "Permet de voir les données des relevés bancaires." },
+    "view_limits_and_usage": { "label": "Limites & usage (données)", "description": "Permet de voir les informations de limites et d’usage." },
+    "view_permission": { "label": "Permissions (données)", "description": "Permet de voir le catalogue des permissions." },
+
+    "view_user": { "label": "Utilisateurs (données)", "description": "Permet de voir les données des utilisateurs." },
+    "view_member": { "label": "Membres (données)", "description": "Permet de voir les données des membres." },
+    "view_group": { "label": "Groupes (données)", "description": "Permet de voir les données des groupes." },
+
+    "view_bank": { "label": "Banques (données)", "description": "Permet de voir les comptes bancaires et les soldes." },
+    "view_ledger_account": { "label": "Comptes comptables (données)", "description": "Permet de voir les comptes comptables." },
+    "view_department": { "label": "Départements (données)", "description": "Permet de voir les départements." },
+    "view_project": { "label": "Projets (données)", "description": "Permet de voir les projets." },
+    "view_inventory": { "label": "Stock (données)", "description": "Permet de voir le stock." },
+    "view_entity": { "label": "Entités (données)", "description": "Permet de voir les entités." },
+
+    "add_cash_flow_entries": { "label": "Créer une écriture (trésorerie)", "description": "Permet de créer des écritures de trésorerie." },
+    "change_cash_flow_entries": { "label": "Modifier une écriture (trésorerie)", "description": "Permet de modifier des écritures de trésorerie." },
+    "delete_cash_flow_entries": { "label": "Supprimer une écriture (trésorerie)", "description": "Permet de supprimer des écritures de trésorerie." },
+
+    "add_settled_entries": { "label": "Créer une écriture réglée", "description": "Permet de créer des écritures réglées." },
+    "change_settled_entries": { "label": "Modifier une écriture réglée", "description": "Permet de modifier des écritures réglées." },
+    "delete_settled_entries": { "label": "Supprimer/annuler une écriture réglée", "description": "Permet de supprimer (annuler) des écritures réglées." },
+
+    "add_transference": { "label": "Créer un virement", "description": "Permet de créer des virements entre comptes." },
+
+    "add_entry_view": { "label": "Créer une vue enregistrée", "description": "Permet de créer des vues enregistrées." },
+    "change_entry_view": { "label": "Modifier une vue enregistrée", "description": "Permet de modifier des vues enregistrées." },
+    "delete_entry_view": { "label": "Supprimer une vue enregistrée", "description": "Permet de supprimer des vues enregistrées." },
+
+    "add_statement": { "label": "Importer un relevé", "description": "Permet d’importer des relevés bancaires." },
+    "change_statement": { "label": "Modifier un relevé", "description": "Permet de modifier des relevés bancaires." },
+    "delete_statement": { "label": "Supprimer un relevé", "description": "Permet de supprimer des relevés bancaires." },
+
+    "add_user": { "label": "Créer un utilisateur", "description": "Permet de créer des utilisateurs." },
+    "change_user": { "label": "Modifier un utilisateur", "description": "Permet de modifier des utilisateurs." },
+    "delete_user": { "label": "Supprimer un utilisateur", "description": "Permet de supprimer des utilisateurs." },
+
+    "add_member": { "label": "Créer un membre", "description": "Permet de créer des membres." },
+    "change_member": { "label": "Modifier un membre", "description": "Permet de modifier des membres." },
+    "delete_member": { "label": "Supprimer un membre", "description": "Permet de supprimer des membres." },
+
+    "add_group": { "label": "Créer un groupe", "description": "Permet de créer des groupes." },
+    "change_group": { "label": "Modifier un groupe", "description": "Permet de modifier des groupes." },
+    "delete_group": { "label": "Supprimer un groupe", "description": "Permet de supprimer des groupes." },
+
+    "add_bank": { "label": "Créer un compte bancaire", "description": "Permet de créer des comptes bancaires." },
+    "change_bank": { "label": "Modifier un compte bancaire", "description": "Permet de modifier des comptes bancaires." },
+    "delete_bank": { "label": "Supprimer un compte bancaire", "description": "Permet de supprimer des comptes bancaires." },
+
+    "add_ledger_account": { "label": "Créer un compte comptable", "description": "Permet de créer des comptes comptables." },
+    "change_ledger_account": { "label": "Modifier un compte comptable", "description": "Permet de modifier des comptes comptables." },
+    "delete_ledger_account": { "label": "Supprimer un compte comptable", "description": "Permet de supprimer des comptes comptables." },
+
+    "add_department": { "label": "Créer un département", "description": "Permet de créer des départements." },
+    "change_department": { "label": "Modifier un département", "description": "Permet de modifier des départements." },
+    "delete_department": { "label": "Supprimer un département", "description": "Permet de supprimer des départements." },
+
+    "add_project": { "label": "Créer un projet", "description": "Permet de créer des projets." },
+    "change_project": { "label": "Modifier un projet", "description": "Permet de modifier des projets." },
+    "delete_project": { "label": "Supprimer un projet", "description": "Permet de supprimer des projets." },
+
+    "add_inventory": { "label": "Créer un article de stock", "description": "Permet de créer des articles de stock." },
+    "change_inventory": { "label": "Modifier un article de stock", "description": "Permet de modifier des articles de stock." },
+    "delete_inventory": { "label": "Supprimer un article de stock", "description": "Permet de supprimer des articles de stock." },
+
+    "add_entity": { "label": "Créer une entité", "description": "Permet de créer des entités." },
+    "change_entity": { "label": "Modifier une entité", "description": "Permet de modifier des entités." },
+    "delete_entity": { "label": "Supprimer une entité", "description": "Permet de supprimer des entités." },
+
+    "view_home_dashboard_page": { "label": "Page d’accueil", "description": "Permet d’accéder au tableau de bord." },
+    "view_cash_flow_page": { "label": "Page Trésorerie", "description": "Permet de voir la page Trésorerie." },
+    "view_settlement_page": { "label": "Page Règlements", "description": "Permet de voir la page des écritures réglées." },
+    "view_report_page": { "label": "Page Rapports", "description": "Permet de voir la page Rapports." },
+
+    "view_personal_settings_page": { "label": "Paramètres personnels", "description": "Permet de voir la page des paramètres personnels." },
+    "view_subscription_management_page": { "label": "Gestion d’abonnement", "description": "Permet de voir la page de gestion d’abonnement." },
+    "view_limits_and_usage_page": { "label": "Limites & usage", "description": "Permet de voir la page Limites & usage." },
+    "view_security_and_privacy_page": { "label": "Sécurité & confidentialité", "description": "Permet de voir la page Sécurité & confidentialité." },
+
+    "view_organization_settings_page": { "label": "Paramètres de l’organisation", "description": "Permet de voir les paramètres de l’organisation." },
+    "view_department_settings_page": { "label": "Paramètres des départements", "description": "Permet de voir les paramètres des départements." },
+    "view_bank_settings_page": { "label": "Paramètres des banques", "description": "Permet de voir les paramètres des banques." },
+    "view_entity_settings_page": { "label": "Paramètres des entités", "description": "Permet de voir les paramètres des entités." },
+    "view_inventory_settings_page": { "label": "Paramètres du stock", "description": "Permet de voir les paramètres du stock." },
+    "view_project_settings_page": { "label": "Paramètres des projets", "description": "Permet de voir les paramètres des projets." },
+    "view_member_settings_page": { "label": "Paramètres des membres", "description": "Permet de voir les paramètres des membres." },
+    "view_group_settings_page": { "label": "Paramètres des groupes", "description": "Permet de voir les paramètres des groupes." },
+    "view_ledger_accounts_page": { "label": "Plan comptable", "description": "Permet de voir la page des comptes comptables." },
+
+    "view_statements_page": { "label": "Page des relevés", "description": "Permet de voir la page des relevés." },
+    "view_notification_settings_page": { "label": "Notifications", "description": "Permet de voir la page des notifications." },
+    "view_format_settings_page": { "label": "Formats", "description": "Permet de voir la page des formats." },
+    "view_currency_settings_page": { "label": "Devises", "description": "Permet de voir la page des devises." }
   }
 }

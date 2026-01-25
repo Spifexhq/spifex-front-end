@@ -1,224 +1,118 @@
 {
+  "aria": { "tabs": "Berechtigungs-Tabs" },
   "tabs": {
-    "navbar": "Navbar",
-    "sidebar": "Seitenleiste",
-    "page_components": "Seitenelemente",
-    "entries": "Buchungen",
-    "settings": "Einstellungen & Zugriff"
+    "visualization": "Visualisierung",
+    "actions": "Aktionen",
+    "pages": "Seiten"
   },
   "noItems": "Keine Berechtigungen in diesem Bereich.",
-  "buttons": {
-    "undo": "Änderungen verwerfen",
-    "save": "Berechtigungen speichern"
-  },
+  "buttons": { "undo": "Änderungen verwerfen", "save": "Berechtigungen speichern" },
   "perms": {
-    "view_cash_flow_button": {
-      "label": "Cash-Flow-Button",
-      "description": "Steuert, ob die Gruppe den Cash-Flow-Button in der oberen Navigation sieht."
-    },
-    "view_settled_button": {
-      "label": "Button „Abgerechnete Buchungen“",
-      "description": "Steuert, ob die Gruppe den Button für abgerechnete Buchungen in der Navigation sieht."
-    },
-    "view_report_button": {
-      "label": "Berichte-Button",
-      "description": "Steuert, ob die Gruppe den Bereich Berichte in der Navigation sieht."
-    },
-    "view_credit_modal_button": {
-      "label": "Button Gutschrift-Buchung",
-      "description": "Erlaubt das Öffnen des Modals für Gutschrift-Buchungen über die Seitenleiste."
-    },
-    "view_debit_modal_button": {
-      "label": "Button Belastungs-Buchung",
-      "description": "Erlaubt das Öffnen des Modals für Belastungs-Buchungen über die Seitenleiste."
-    },
-    "view_transference_modal_button": {
-      "label": "Button Überweisungs-Buchung",
-      "description": "Erlaubt das Öffnen des Modals für Überweisungs-Buchungen über die Seitenleiste."
-    },
-    "view_cash_flow_entries": {
-      "label": "Liste der Cash-Flow-Buchungen",
-      "description": "Erlaubt das Anzeigen der Liste der Cash-Flow-Buchungen."
-    },
-    "view_settled_entries": {
-      "label": "Liste der abgerechneten Buchungen",
-      "description": "Erlaubt das Anzeigen der Liste der bereits abgerechneten Buchungen."
-    },
-    "view_banks_table": {
-      "label": "Bankentabelle",
-      "description": "Erlaubt das Anzeigen der Tabelle mit Banksalden."
-    },
-    "view_filters": {
-      "label": "Filterbereich",
-      "description": "Erlaubt das Anzeigen und Verwenden der Filter auf den Cash-Flow-Seiten."
-    },
-    "add_cash_flow_entries": {
-      "label": "Buchung hinzufügen",
-      "description": "Erlaubt das Anlegen neuer Buchungen im Cash-Flow."
-    },
-    "change_cash_flow_entries": {
-      "label": "Buchung bearbeiten",
-      "description": "Erlaubt das Bearbeiten bestehender Buchungen im Cash-Flow."
-    },
-    "delete_cash_flow_entries": {
-      "label": "Buchung löschen",
-      "description": "Erlaubt das Löschen von Buchungen im Cash-Flow."
-    },
-    "change_settled_entries": {
-      "label": "Abgerechnete Buchung bearbeiten",
-      "description": "Erlaubt das Bearbeiten bereits abgerechneter Buchungen."
-    },
-    "delete_settled_entries": {
-      "label": "Abgerechnete Buchung löschen",
-      "description": "Erlaubt das Löschen bereits abgerechneter Buchungen."
-    },
-    "add_transference": {
-      "label": "Transfer buchen",
-      "description": "Erlaubt das Erfassen von Transfers zwischen Bankkonten."
-    },
-    "add_user": {
-      "label": "Benutzer hinzufügen",
-      "description": "Erlaubt das Anlegen neuer Benutzer für die Organisation."
-    },
-    "change_user": {
-      "label": "Benutzer bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Benutzerdaten."
-    },
-    "delete_user": {
-      "label": "Benutzer löschen",
-      "description": "Erlaubt das Löschen von Benutzern aus der Organisation."
-    },
-    "view_user": {
-      "label": "Benutzer anzeigen",
-      "description": "Erlaubt das Anzeigen der Benutzerliste und ihrer Details."
-    },
-    "add_bank": {
-      "label": "Bankkonto hinzufügen",
-      "description": "Erlaubt das Anlegen von Bankkonten."
-    },
-    "change_bank": {
-      "label": "Bankkonto bearbeiten",
-      "description": "Erlaubt das Bearbeiten der Bankkonto-Konfiguration."
-    },
-    "delete_bank": {
-      "label": "Bankkonto löschen",
-      "description": "Erlaubt das Löschen von Bankkonten."
-    },
-    "view_bank": {
-      "label": "Bankkonten anzeigen",
-      "description": "Erlaubt das Anzeigen von Bankkonten und deren Salden."
-    },
-    "add_member": {
-      "label": "Mitarbeiter hinzufügen",
-      "description": "Erlaubt das Anlegen von Mitarbeiter-Datensätzen."
-    },
-    "change_member": {
-      "label": "Mitarbeiter bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Mitarbeiterdaten."
-    },
-    "delete_member": {
-      "label": "Mitarbeiter löschen",
-      "description": "Erlaubt das Löschen von Mitarbeiter-Datensätzen."
-    },
-    "view_member": {
-      "label": "Mitarbeiter anzeigen",
-      "description": "Erlaubt das Anzeigen der Mitarbeiterliste."
-    },
-    "add_group": {
-      "label": "Gruppe hinzufügen",
-      "description": "Erlaubt das Anlegen von Berechtigungsgruppen."
-    },
-    "change_group": {
-      "label": "Gruppe bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Berechtigungsgruppen."
-    },
-    "delete_group": {
-      "label": "Gruppe löschen",
-      "description": "Erlaubt das Löschen von Berechtigungsgruppen."
-    },
-    "view_group": {
-      "label": "Gruppen anzeigen",
-      "description": "Erlaubt das Anzeigen der Liste der Berechtigungsgruppen."
-    },
-    "add_ledger_account": {
-      "label": "Sachkonto hinzufügen",
-      "description": "Erlaubt das Anlegen von Sachkonten im Kontenplan."
-    },
-    "change_ledger_account": {
-      "label": "Sachkonto bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Sachkonten."
-    },
-    "delete_ledger_account": {
-      "label": "Sachkonto löschen",
-      "description": "Erlaubt das Löschen von Sachkonten."
-    },
-    "view_ledger_account": {
-      "label": "Sachkonten anzeigen",
-      "description": "Erlaubt das Anzeigen des Kontenplans."
-    },
-    "add_department": {
-      "label": "Abteilung hinzufügen",
-      "description": "Erlaubt das Anlegen von Abteilungen."
-    },
-    "change_department": {
-      "label": "Abteilung bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Abteilungen."
-    },
-    "delete_department": {
-      "label": "Abteilung löschen",
-      "description": "Erlaubt das Löschen von Abteilungen."
-    },
-    "view_department": {
-      "label": "Abteilungen anzeigen",
-      "description": "Erlaubt das Anzeigen der Abteilungsliste."
-    },
-    "add_project": {
-      "label": "Projekt hinzufügen",
-      "description": "Erlaubt das Anlegen von Projekten."
-    },
-    "change_project": {
-      "label": "Projekt bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Projekten."
-    },
-    "delete_project": {
-      "label": "Projekt löschen",
-      "description": "Erlaubt das Löschen von Projekten."
-    },
-    "view_project": {
-      "label": "Projekte anzeigen",
-      "description": "Erlaubt das Anzeigen der Projektliste."
-    },
-    "add_inventory": {
-      "label": "Lagerartikel hinzufügen",
-      "description": "Erlaubt das Anlegen von Lagerartikeln."
-    },
-    "change_inventory": {
-      "label": "Lagerartikel bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Lagerartikeln."
-    },
-    "delete_inventory": {
-      "label": "Lagerartikel löschen",
-      "description": "Erlaubt das Löschen von Lagerartikeln."
-    },
-    "view_inventory": {
-      "label": "Lager anzeigen",
-      "description": "Erlaubt das Anzeigen der Lagerartikel."
-    },
-    "add_entity": {
-      "label": "Entität hinzufügen",
-      "description": "Erlaubt das Anlegen von Entitäten (Unternehmen/Einheiten)."
-    },
-    "change_entity": {
-      "label": "Entität bearbeiten",
-      "description": "Erlaubt das Bearbeiten der Entitätskonfiguration."
-    },
-    "delete_entity": {
-      "label": "Entität löschen",
-      "description": "Erlaubt das Löschen von Entitäten."
-    },
-    "view_entity": {
-      "label": "Entitäten anzeigen",
-      "description": "Erlaubt das Anzeigen der Entitätenliste."
-    }
+    "view_cash_flow_entries": { "label": "Cash-Flow-Buchungen", "description": "Erlaubt das Anzeigen der Cash-Flow-Buchungsliste." },
+    "view_settled_entries": { "label": "Abgerechnete Buchungen", "description": "Erlaubt das Anzeigen der Liste abgerechneter Buchungen." },
+    "view_filters": { "label": "Filter", "description": "Erlaubt das Anzeigen und Verwenden des Filterbereichs." },
+
+    "view_consolidated_balance": { "label": "Konsolidierter Saldo", "description": "Erlaubt das Anzeigen konsolidierter Salden." },
+    "view_cash_flow_amount": { "label": "Beträge (Cash Flow)", "description": "Erlaubt das Anzeigen von Cash-Flow-Beträgen." },
+    "view_settlement_amount": { "label": "Beträge (Abrechnung)", "description": "Erlaubt das Anzeigen von Abrechnungsbeträgen." },
+    "view_cash_flow_kpis": { "label": "KPIs (Cash Flow)", "description": "Erlaubt das Anzeigen der Cash-Flow-KPIs." },
+    "view_settlement_kpis": { "label": "KPIs (Abrechnung)", "description": "Erlaubt das Anzeigen der Abrechnungs-KPIs." },
+
+    "view_cash_flow_entry_view": { "label": "Ansichten (Cash Flow)", "description": "Erlaubt das Anzeigen und Verwenden gespeicherter Ansichten (Cash Flow)." },
+    "view_settlement_entry_view": { "label": "Ansichten (Abgerechnet)", "description": "Erlaubt das Anzeigen und Verwenden gespeicherter Ansichten (abgerechnet)." },
+
+    "view_statement": { "label": "Kontoauszüge (Daten)", "description": "Erlaubt das Anzeigen von Kontoauszugsdaten." },
+    "view_limits_and_usage": { "label": "Limits & Nutzung (Daten)", "description": "Erlaubt das Anzeigen von Limits- und Nutzungsinformationen." },
+    "view_permission": { "label": "Berechtigungen (Daten)", "description": "Erlaubt das Anzeigen des Berechtigungskatalogs." },
+
+    "view_user": { "label": "Benutzer (Daten)", "description": "Erlaubt das Anzeigen von Benutzerdaten." },
+    "view_member": { "label": "Mitglieder (Daten)", "description": "Erlaubt das Anzeigen von Mitgliederdaten." },
+    "view_group": { "label": "Gruppen (Daten)", "description": "Erlaubt das Anzeigen von Gruppendaten." },
+
+    "view_bank": { "label": "Banken (Daten)", "description": "Erlaubt das Anzeigen von Bankkonten und Salden." },
+    "view_ledger_account": { "label": "Sachkonten (Daten)", "description": "Erlaubt das Anzeigen von Sachkontendaten." },
+    "view_department": { "label": "Abteilungen (Daten)", "description": "Erlaubt das Anzeigen von Abteilungsdaten." },
+    "view_project": { "label": "Projekte (Daten)", "description": "Erlaubt das Anzeigen von Projektdaten." },
+    "view_inventory": { "label": "Lager (Daten)", "description": "Erlaubt das Anzeigen von Lagerdaten." },
+    "view_entity": { "label": "Entitäten (Daten)", "description": "Erlaubt das Anzeigen von Entitätsdaten." },
+
+    "add_cash_flow_entries": { "label": "Buchung erstellen (Cash Flow)", "description": "Erlaubt das Erstellen von Cash-Flow-Buchungen." },
+    "change_cash_flow_entries": { "label": "Buchung bearbeiten (Cash Flow)", "description": "Erlaubt das Bearbeiten von Cash-Flow-Buchungen." },
+    "delete_cash_flow_entries": { "label": "Buchung löschen (Cash Flow)", "description": "Erlaubt das Löschen von Cash-Flow-Buchungen." },
+
+    "add_settled_entries": { "label": "Abgerechnete Buchung erstellen", "description": "Erlaubt das Erstellen abgerechneter Buchungen." },
+    "change_settled_entries": { "label": "Abgerechnete Buchung bearbeiten", "description": "Erlaubt das Bearbeiten abgerechneter Buchungen." },
+    "delete_settled_entries": { "label": "Abgerechnete Buchung löschen/stornieren", "description": "Erlaubt das Löschen (Stornieren) abgerechneter Buchungen." },
+
+    "add_transference": { "label": "Transfer erstellen", "description": "Erlaubt Transfers zwischen Bankkonten." },
+
+    "add_entry_view": { "label": "Ansicht erstellen", "description": "Erlaubt das Erstellen gespeicherter Ansichten." },
+    "change_entry_view": { "label": "Ansicht bearbeiten", "description": "Erlaubt das Bearbeiten gespeicherter Ansichten." },
+    "delete_entry_view": { "label": "Ansicht löschen", "description": "Erlaubt das Löschen gespeicherter Ansichten." },
+
+    "add_statement": { "label": "Kontoauszug hochladen", "description": "Erlaubt das Hochladen von Kontoauszügen." },
+    "change_statement": { "label": "Kontoauszug bearbeiten", "description": "Erlaubt das Bearbeiten von Kontoauszügen." },
+    "delete_statement": { "label": "Kontoauszug löschen", "description": "Erlaubt das Löschen von Kontoauszügen." },
+
+    "add_user": { "label": "Benutzer erstellen", "description": "Erlaubt das Erstellen von Benutzern." },
+    "change_user": { "label": "Benutzer bearbeiten", "description": "Erlaubt das Bearbeiten von Benutzern." },
+    "delete_user": { "label": "Benutzer löschen", "description": "Erlaubt das Löschen von Benutzern." },
+
+    "add_member": { "label": "Mitglied erstellen", "description": "Erlaubt das Erstellen von Mitgliedern." },
+    "change_member": { "label": "Mitglied bearbeiten", "description": "Erlaubt das Bearbeiten von Mitgliedern." },
+    "delete_member": { "label": "Mitglied löschen", "description": "Erlaubt das Löschen von Mitgliedern." },
+
+    "add_group": { "label": "Gruppe erstellen", "description": "Erlaubt das Erstellen von Gruppen." },
+    "change_group": { "label": "Gruppe bearbeiten", "description": "Erlaubt das Bearbeiten von Gruppen." },
+    "delete_group": { "label": "Gruppe löschen", "description": "Erlaubt das Löschen von Gruppen." },
+
+    "add_bank": { "label": "Bankkonto erstellen", "description": "Erlaubt das Erstellen von Bankkonten." },
+    "change_bank": { "label": "Bankkonto bearbeiten", "description": "Erlaubt das Bearbeiten von Bankkonten." },
+    "delete_bank": { "label": "Bankkonto löschen", "description": "Erlaubt das Löschen von Bankkonten." },
+
+    "add_ledger_account": { "label": "Sachkonto erstellen", "description": "Erlaubt das Erstellen von Sachkonten." },
+    "change_ledger_account": { "label": "Sachkonto bearbeiten", "description": "Erlaubt das Bearbeiten von Sachkonten." },
+    "delete_ledger_account": { "label": "Sachkonto löschen", "description": "Erlaubt das Löschen von Sachkonten." },
+
+    "add_department": { "label": "Abteilung erstellen", "description": "Erlaubt das Erstellen von Abteilungen." },
+    "change_department": { "label": "Abteilung bearbeiten", "description": "Erlaubt das Bearbeiten von Abteilungen." },
+    "delete_department": { "label": "Abteilung löschen", "description": "Erlaubt das Löschen von Abteilungen." },
+
+    "add_project": { "label": "Projekt erstellen", "description": "Erlaubt das Erstellen von Projekten." },
+    "change_project": { "label": "Projekt bearbeiten", "description": "Erlaubt das Bearbeiten von Projekten." },
+    "delete_project": { "label": "Projekt löschen", "description": "Erlaubt das Löschen von Projekten." },
+
+    "add_inventory": { "label": "Lagerartikel erstellen", "description": "Erlaubt das Erstellen von Lagerartikeln." },
+    "change_inventory": { "label": "Lagerartikel bearbeiten", "description": "Erlaubt das Bearbeiten von Lagerartikeln." },
+    "delete_inventory": { "label": "Lagerartikel löschen", "description": "Erlaubt das Löschen von Lagerartikeln." },
+
+    "add_entity": { "label": "Entität erstellen", "description": "Erlaubt das Erstellen von Entitäten." },
+    "change_entity": { "label": "Entität bearbeiten", "description": "Erlaubt das Bearbeiten von Entitäten." },
+    "delete_entity": { "label": "Entität löschen", "description": "Erlaubt das Löschen von Entitäten." },
+
+    "view_home_dashboard_page": { "label": "Startseite", "description": "Erlaubt den Zugriff auf das Dashboard." },
+    "view_cash_flow_page": { "label": "Cash-Flow-Seite", "description": "Erlaubt das Anzeigen der Cash-Flow-Seite." },
+    "view_settlement_page": { "label": "Abrechnungsseite", "description": "Erlaubt das Anzeigen der Abrechnungsseite." },
+    "view_report_page": { "label": "Berichte-Seite", "description": "Erlaubt das Anzeigen der Berichte-Seite." },
+
+    "view_personal_settings_page": { "label": "Persönliche Einstellungen", "description": "Erlaubt das Anzeigen der Seite für persönliche Einstellungen." },
+    "view_subscription_management_page": { "label": "Abo-Verwaltung", "description": "Erlaubt das Anzeigen der Abo-Verwaltungsseite." },
+    "view_limits_and_usage_page": { "label": "Limits & Nutzung", "description": "Erlaubt das Anzeigen der Seite „Limits & Nutzung“." },
+    "view_security_and_privacy_page": { "label": "Sicherheit & Datenschutz", "description": "Erlaubt das Anzeigen der Seite „Sicherheit & Datenschutz“." },
+
+    "view_organization_settings_page": { "label": "Organisationseinstellungen", "description": "Erlaubt das Anzeigen der Organisationseinstellungen." },
+    "view_department_settings_page": { "label": "Abteilungseinstellungen", "description": "Erlaubt das Anzeigen der Abteilungseinstellungen." },
+    "view_bank_settings_page": { "label": "Bankeinstellungen", "description": "Erlaubt das Anzeigen der Bankeinstellungen." },
+    "view_entity_settings_page": { "label": "Entitätseinstellungen", "description": "Erlaubt das Anzeigen der Entitätseinstellungen." },
+    "view_inventory_settings_page": { "label": "Lagereinstellungen", "description": "Erlaubt das Anzeigen der Lagereinstellungen." },
+    "view_project_settings_page": { "label": "Projekteinstellungen", "description": "Erlaubt das Anzeigen der Projekteinstellungen." },
+    "view_member_settings_page": { "label": "Mitgliedereinstellungen", "description": "Erlaubt das Anzeigen der Mitgliedereinstellungen." },
+    "view_group_settings_page": { "label": "Gruppeneinstellungen", "description": "Erlaubt das Anzeigen der Gruppeneinstellungen." },
+    "view_ledger_accounts_page": { "label": "Kontenplan", "description": "Erlaubt das Anzeigen der Seite für Sachkonten." },
+
+    "view_statements_page": { "label": "Kontoauszüge", "description": "Erlaubt das Anzeigen der Kontoauszugsseite." },
+    "view_notification_settings_page": { "label": "Benachrichtigungen", "description": "Erlaubt das Anzeigen der Benachrichtigungseinstellungen." },
+    "view_format_settings_page": { "label": "Format", "description": "Erlaubt das Anzeigen der Formateinstellungen." },
+    "view_currency_settings_page": { "label": "Währung", "description": "Erlaubt das Anzeigen der Währungseinstellungen." }
   }
 }

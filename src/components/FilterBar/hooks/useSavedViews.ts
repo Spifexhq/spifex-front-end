@@ -4,13 +4,13 @@ import type { ApiResponse } from "@/models/Api";
 import type { Visualization } from "@/models/components/filterBar";
 import { extractArray, isApiError } from "../FilterBar.utils";
 
-export function useSavedViews() {
+export function useSavedViews(settlementStatus: boolean) {
   const [views, setViews] = useState<Visualization[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
-      const res: ApiResponse<unknown> = await api.getViewPresets();
+      const res: ApiResponse<unknown> = await api.getViewPresets(settlementStatus);
       if (isApiError(res)) {
         console.error("Failed to load saved views", res.error);
         setViews([]);
@@ -23,7 +23,7 @@ export function useSavedViews() {
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }, [settlementStatus]);
 
   useEffect(() => {
     void refresh();

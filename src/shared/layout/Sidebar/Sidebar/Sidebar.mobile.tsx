@@ -108,7 +108,7 @@ const SidebarMobile: React.FC<SidebarProps> = ({ handleOpenModal, handleOpenTran
           "border border-gray-200 bg-white/90 px-2 py-2 shadow-lg backdrop-blur",
         ].join(" ")}
       >
-        <PermissionMiddleware codeName={["view_credit_modal_button"]} requireAll>
+        <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
           <ActionButton
             ariaLabel={t("sidebar:sidebar.items.credit")}
             onClick={() => handleOpenModal("credit" as ModalType)}
@@ -116,7 +116,7 @@ const SidebarMobile: React.FC<SidebarProps> = ({ handleOpenModal, handleOpenTran
           />
         </PermissionMiddleware>
 
-        <PermissionMiddleware codeName={["view_debit_modal_button"]} requireAll>
+        <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
           <ActionButton
             ariaLabel={t("sidebar:sidebar.items.debit")}
             onClick={() => handleOpenModal("debit" as ModalType)}
@@ -124,7 +124,7 @@ const SidebarMobile: React.FC<SidebarProps> = ({ handleOpenModal, handleOpenTran
           />
         </PermissionMiddleware>
 
-        <PermissionMiddleware codeName={["view_transference_modal_button"]} requireAll>
+        <PermissionMiddleware codeName={["add_transference"]} requireAll>
           <ActionButton
             ariaLabel={t("sidebar:sidebar.items.transfer")}
             onClick={handleOpenTransferenceModal}

@@ -47,7 +47,7 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
 
             {/* Desktop links */}
             <div className="flex items-center space-x-4">
-              <PermissionMiddleware codeName="view_cash_flow_button">
+              <PermissionMiddleware codeName="view_cash_flow_page">
                 <NavLink
                   to="/cashflow"
                   end
@@ -61,7 +61,7 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
                 </NavLink>
               </PermissionMiddleware>
 
-              <PermissionMiddleware codeName="view_settled_button">
+              <PermissionMiddleware codeName="view_settlement_page">
                 <NavLink
                   to="/settled"
                   className={({ isActive }) =>
@@ -75,7 +75,7 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
               </PermissionMiddleware>
 
               {(isSubscribed || isSuperUser) && (
-                <PermissionMiddleware codeName="view_report_button">
+                <PermissionMiddleware codeName="view_report_page">
                   <NavLink
                     to="/reports"
                     className={({ isActive }) =>

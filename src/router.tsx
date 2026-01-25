@@ -122,7 +122,7 @@ const routes: RouteObject[] = [
             {
                 path: 'cashflow',
                 element: (
-                    <PermissionMiddleware codeName="view_cash_flow_button" redirectTo={'/settled'}>
+                    <PermissionMiddleware codeName="view_cash_flow_page" redirectTo={'/settled'}>
                         <CashFlow />
                     </PermissionMiddleware>
                 )
@@ -131,7 +131,7 @@ const routes: RouteObject[] = [
             {
                 path: 'settled',
                 element: (
-                    <PermissionMiddleware codeName="view_settled_button" redirectTo={'/settings'}>
+                    <PermissionMiddleware codeName="view_settlement_page" redirectTo={'/settings'}>
                         <SettledEntries />
                     </PermissionMiddleware>
                 )
@@ -141,7 +141,7 @@ const routes: RouteObject[] = [
                 path: 'reports',
                 element: (
                     <SubscriptionMiddleware redirectTo="/settings">
-                        <PermissionMiddleware codeName="view_report_button" behavior="lock" redirectTo={'/settings'}>
+                        <PermissionMiddleware codeName="view_report_page" behavior="lock" redirectTo={'/settings'}>
                             <Reports />
                         </PermissionMiddleware>
                     </SubscriptionMiddleware>

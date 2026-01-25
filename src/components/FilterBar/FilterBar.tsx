@@ -97,12 +97,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   const bankOptions = useBankOptions(bankActive);
   const allLedgerAccounts = useLedgerAccounts();
-  const { views: savedViews, loaded: viewsLoaded, refresh: refreshViews } = useSavedViews();
+  const { views: savedViews, loaded: viewsLoaded, refresh: refreshViews } = useSavedViews(contextSettlement);
 
-  const scopedViews = useMemo(
-    () => savedViews.filter((v) => v.settlement_status === contextSettlement),
-    [savedViews, contextSettlement]
-  );
+  const scopedViews = useMemo(() => savedViews, [savedViews]);
 
   const [localFilters, setLocalFilters] = useState<LocalFilters>(() =>
     buildInitialLocalFilters(initial, contextSettlement)

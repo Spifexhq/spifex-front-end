@@ -245,7 +245,7 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({
                 onNavigate={onCloseDrawer}
               />
 
-              <PermissionMiddleware codeName="view_cash_flow_button">
+              <PermissionMiddleware codeName="view_cash_flow_page">
                 <MobileNavItem
                   to="/cashflow"
                   end
@@ -255,7 +255,7 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({
                 />
               </PermissionMiddleware>
 
-              <PermissionMiddleware codeName="view_settled_button">
+              <PermissionMiddleware codeName="view_settlement_page">
                 <MobileNavItem
                   to="/settled"
                   label={t("links.settled")}
@@ -265,7 +265,7 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({
               </PermissionMiddleware>
 
               {(isSubscribed || isSuperUser) && (
-                <PermissionMiddleware codeName="view_report_button">
+                <PermissionMiddleware codeName="view_report_page">
                   <MobileNavItem
                     to="/reports"
                     label={t("links.reports")}

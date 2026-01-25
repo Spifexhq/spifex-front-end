@@ -16,24 +16,24 @@ export type PermissionIconId =
 export const getPermissionIconId = (code: string): PermissionIconId => {
   switch (code) {
     // Navbar buttons
-    case "view_cash_flow_button":
+    case "view_cash_flow_page":
       return "list";
-    case "view_settled_button":
+    case "view_settlement_page":
       return "check_list";
-    case "view_report_button":
+    case "view_report_page":
       return "chart";
 
     // Sidebar actions
-    case "view_credit_modal_button":
+    case "add_cash_flow_entries":
       return "plus_square";
-    case "view_debit_modal_button":
+    case "add_cash_flow_entries":
       return "minus_square";
-    case "view_transference_modal_button":
+    case "add_transference":
     case "add_transference":
       return "swap";
 
     // Page components
-    case "view_banks_table":
+    case "view_bank":
       return "table";
     case "view_filters":
       return "sliders";

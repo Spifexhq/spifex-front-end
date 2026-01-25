@@ -4,10 +4,13 @@ export interface ViewPreset {
   id: string;
   name: string;
   is_default: boolean;
+  settlement_status: boolean;
   filters: unknown;
 }
 
 /* ----------------------------- Requests / Responses ---------------------------- */
+
+export type ViewPresetsContext = "cashflow" | "settled";
 
 export type GetViewPresetsResponse = ViewPreset[];
 

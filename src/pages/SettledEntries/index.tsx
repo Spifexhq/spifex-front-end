@@ -195,7 +195,7 @@ const Settled = () => {
 
         {modalType && (
           <PermissionMiddleware
-            codeName={["add_cash_flow_entries", "view_credit_modal_button", "view_debit_modal_button"]}
+            codeName={["add_cash_flow_entries", "add_cash_flow_entries", "add_cash_flow_entries"]}
             requireAll
           >
             <EntriesModal
@@ -212,7 +212,7 @@ const Settled = () => {
         )}
 
         {isTransferenceModalOpen && (
-          <PermissionMiddleware codeName={["add_transference", "view_transference_modal_button"]} requireAll>
+          <PermissionMiddleware codeName={["add_transference", "add_transference"]} requireAll>
             <TransferenceModal
               isOpen={isTransferenceModalOpen}
               onClose={() => setIsTransferenceModalOpen(false)}

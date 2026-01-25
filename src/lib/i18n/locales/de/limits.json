@@ -13,7 +13,7 @@
     "exhausted": "100% ausgeschöpft",
     "unmetered": "Unbegrenzt"
   },
-  "searchPlaceholder": "Berechtigung suchen…",
+  "searchPlaceholder": "Nach Code, Name oder Beschreibung suchen…",
   "th": {
     "permission": "Berechtigung",
     "period": "Zeitraum",
@@ -41,59 +41,19 @@
   "remaining": "Verbleibend",
   "empty": "Keine Berechtigungen entsprechen deiner Suche.",
   "perms": {
-    "view_cash_flow_button": {
-      "label": "Cash-Flow-Button",
-      "description": "Steuert, ob die Gruppe den Cash-Flow-Button in der oberen Navigation sieht."
-    },
-    "view_settled_button": {
-      "label": "Button „Abgerechnete Buchungen“",
-      "description": "Steuert, ob die Gruppe den Button für abgerechnete Buchungen in der Navigation sieht."
-    },
-    "view_report_button": {
-      "label": "Berichte-Button",
-      "description": "Steuert, ob die Gruppe den Bereich Berichte in der Navigation sieht."
-    },
-    "view_credit_modal_button": {
-      "label": "Button Gutschrift-Buchung",
-      "description": "Erlaubt das Öffnen des Modals für Gutschrift-Buchungen über die Seitenleiste."
-    },
-    "view_debit_modal_button": {
-      "label": "Button Belastungs-Buchung",
-      "description": "Erlaubt das Öffnen des Modals für Belastungs-Buchungen über die Seitenleiste."
-    },
-    "view_transference_modal_button": {
-      "label": "Button Überweisungs-Buchung",
-      "description": "Erlaubt das Öffnen des Modals für Überweisungs-Buchungen über die Seitenleiste."
-    },
-    "view_cash_flow_entries": {
-      "label": "Liste der Cash-Flow-Buchungen",
-      "description": "Erlaubt das Anzeigen der Liste der Cash-Flow-Buchungen."
-    },
-    "view_settled_entries": {
-      "label": "Liste der abgerechneten Buchungen",
-      "description": "Erlaubt das Anzeigen der Liste der bereits abgerechneten Buchungen."
-    },
-    "view_banks_table": {
-      "label": "Bankentabelle",
-      "description": "Erlaubt das Anzeigen der Tabelle mit Banksalden."
-    },
-    "view_filters": {
-      "label": "Filterbereich",
-      "description": "Erlaubt das Anzeigen und Verwenden der Filter auf den Cash-Flow-Seiten."
-    },
     "add_cash_flow_entries": {
-      "label": "Buchung hinzufügen",
-      "description": "Erlaubt das Anlegen neuer Buchungen im Cash-Flow."
+      "label": "Cash-Flow-Buchung anlegen",
+      "description": "Erlaubt das Anlegen neuer Cash-Flow-Buchungen."
     },
     "change_cash_flow_entries": {
-      "label": "Buchung bearbeiten",
-      "description": "Erlaubt das Bearbeiten bestehender Buchungen im Cash-Flow."
+      "label": "Cash-Flow-Buchung bearbeiten",
+      "description": "Erlaubt das Bearbeiten bestehender Cash-Flow-Buchungen."
     },
     "delete_cash_flow_entries": {
-      "label": "Buchung löschen",
-      "description": "Erlaubt das Löschen von Buchungen im Cash-Flow."
+      "label": "Cash-Flow-Buchung löschen",
+      "description": "Erlaubt das Löschen von Cash-Flow-Buchungen."
     },
-    "change_settled_entries": {
+    "add_settled_entries": {
       "label": "Abgerechnete Buchung bearbeiten",
       "description": "Erlaubt das Bearbeiten bereits abgerechneter Buchungen."
     },
@@ -102,152 +62,44 @@
       "description": "Erlaubt das Löschen bereits abgerechneter Buchungen."
     },
     "add_transference": {
-      "label": "Transfer buchen",
+      "label": "Transfer erfassen",
       "description": "Erlaubt das Erfassen von Transfers zwischen Bankkonten."
     },
-    "add_user": {
-      "label": "Benutzer hinzufügen",
-      "description": "Erlaubt das Anlegen neuer Benutzer für die Organisation."
-    },
-    "change_user": {
-      "label": "Benutzer bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Benutzerdaten."
-    },
-    "delete_user": {
-      "label": "Benutzer löschen",
-      "description": "Erlaubt das Löschen von Benutzern aus der Organisation."
-    },
-    "view_user": {
-      "label": "Benutzer anzeigen",
-      "description": "Erlaubt das Anzeigen der Benutzerliste und ihrer Details."
-    },
-    "add_bank": {
-      "label": "Bankkonto hinzufügen",
-      "description": "Erlaubt das Anlegen von Bankkonten."
-    },
-    "change_bank": {
-      "label": "Bankkonto bearbeiten",
-      "description": "Erlaubt das Bearbeiten der Bankkonto-Konfiguration."
-    },
-    "delete_bank": {
-      "label": "Bankkonto löschen",
-      "description": "Erlaubt das Löschen von Bankkonten."
-    },
-    "view_bank": {
-      "label": "Bankkonten anzeigen",
-      "description": "Erlaubt das Anzeigen von Bankkonten und deren Salden."
-    },
-    "add_member": {
-      "label": "Mitarbeiter hinzufügen",
-      "description": "Erlaubt das Anlegen von Mitarbeiter-Datensätzen."
-    },
-    "change_member": {
-      "label": "Mitarbeiter bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Mitarbeiterdaten."
-    },
-    "delete_member": {
-      "label": "Mitarbeiter löschen",
-      "description": "Erlaubt das Löschen von Mitarbeiter-Datensätzen."
-    },
-    "view_member": {
-      "label": "Mitarbeiter anzeigen",
-      "description": "Erlaubt das Anzeigen der Mitarbeiterliste."
-    },
-    "add_group": {
-      "label": "Gruppe hinzufügen",
-      "description": "Erlaubt das Anlegen von Berechtigungsgruppen."
-    },
-    "change_group": {
-      "label": "Gruppe bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Berechtigungsgruppen."
-    },
-    "delete_group": {
-      "label": "Gruppe löschen",
-      "description": "Erlaubt das Löschen von Berechtigungsgruppen."
-    },
-    "view_group": {
-      "label": "Gruppen anzeigen",
-      "description": "Erlaubt das Anzeigen der Liste der Berechtigungsgruppen."
-    },
-    "add_ledger_account": {
-      "label": "Sachkonto hinzufügen",
-      "description": "Erlaubt das Anlegen von Sachkonten im Kontenplan."
-    },
-    "change_ledger_account": {
-      "label": "Sachkonto bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Sachkonten."
-    },
-    "delete_ledger_account": {
-      "label": "Sachkonto löschen",
-      "description": "Erlaubt das Löschen von Sachkonten."
-    },
-    "view_ledger_account": {
-      "label": "Sachkonten anzeigen",
-      "description": "Erlaubt das Anzeigen des Kontenplans."
-    },
-    "add_department": {
-      "label": "Abteilung hinzufügen",
-      "description": "Erlaubt das Anlegen von Abteilungen."
-    },
-    "change_department": {
-      "label": "Abteilung bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Abteilungen."
-    },
-    "delete_department": {
-      "label": "Abteilung löschen",
-      "description": "Erlaubt das Löschen von Abteilungen."
-    },
-    "view_department": {
-      "label": "Abteilungen anzeigen",
-      "description": "Erlaubt das Anzeigen der Abteilungsliste."
-    },
-    "add_project": {
-      "label": "Projekt hinzufügen",
-      "description": "Erlaubt das Anlegen von Projekten."
-    },
-    "change_project": {
-      "label": "Projekt bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Projekten."
-    },
-    "delete_project": {
-      "label": "Projekt löschen",
-      "description": "Erlaubt das Löschen von Projekten."
-    },
-    "view_project": {
-      "label": "Projekte anzeigen",
-      "description": "Erlaubt das Anzeigen der Projektliste."
-    },
-    "add_inventory": {
-      "label": "Lagerartikel hinzufügen",
-      "description": "Erlaubt das Anlegen von Lagerartikeln."
-    },
-    "change_inventory": {
-      "label": "Lagerartikel bearbeiten",
-      "description": "Erlaubt das Bearbeiten von Lagerartikeln."
-    },
-    "delete_inventory": {
-      "label": "Lagerartikel löschen",
-      "description": "Erlaubt das Löschen von Lagerartikeln."
-    },
-    "view_inventory": {
-      "label": "Lager anzeigen",
-      "description": "Erlaubt das Anzeigen der Lagerartikel."
-    },
-    "add_entity": {
-      "label": "Entität hinzufügen",
-      "description": "Erlaubt das Anlegen von Entitäten (Unternehmen/Einheiten)."
-    },
-    "change_entity": {
-      "label": "Entität bearbeiten",
-      "description": "Erlaubt das Bearbeiten der Entitätskonfiguration."
-    },
-    "delete_entity": {
-      "label": "Entität löschen",
-      "description": "Erlaubt das Löschen von Entitäten."
-    },
-    "view_entity": {
-      "label": "Entitäten anzeigen",
-      "description": "Erlaubt das Anzeigen der Entitätenliste."
-    }
+
+    "add_user": { "label": "Benutzer anlegen", "description": "Erlaubt das Anlegen neuer Benutzer für die Organisation." },
+    "change_user": { "label": "Benutzer bearbeiten", "description": "Erlaubt das Bearbeiten von Benutzerdaten." },
+    "delete_user": { "label": "Benutzer löschen", "description": "Erlaubt das Löschen von Benutzern aus der Organisation." },
+
+    "add_bank": { "label": "Bankkonto anlegen", "description": "Erlaubt das Anlegen von Bankkonten." },
+    "change_bank": { "label": "Bankkonto bearbeiten", "description": "Erlaubt das Bearbeiten der Bankkonto-Konfiguration." },
+    "delete_bank": { "label": "Bankkonto löschen", "description": "Erlaubt das Löschen von Bankkonten." },
+
+    "add_member": { "label": "Mitarbeiter anlegen", "description": "Erlaubt das Anlegen von Mitarbeiter-Datensätzen." },
+    "change_member": { "label": "Mitarbeiter bearbeiten", "description": "Erlaubt das Bearbeiten von Mitarbeiterdaten." },
+    "delete_member": { "label": "Mitarbeiter löschen", "description": "Erlaubt das Löschen von Mitarbeiter-Datensätzen." },
+
+    "add_group": { "label": "Gruppe anlegen", "description": "Erlaubt das Anlegen von Berechtigungsgruppen." },
+    "change_group": { "label": "Gruppe bearbeiten", "description": "Erlaubt das Bearbeiten von Berechtigungsgruppen." },
+    "delete_group": { "label": "Gruppe löschen", "description": "Erlaubt das Löschen von Berechtigungsgruppen." },
+
+    "add_ledger_account": { "label": "Sachkonto anlegen", "description": "Erlaubt das Anlegen von Sachkonten im Kontenplan." },
+    "change_ledger_account": { "label": "Sachkonto bearbeiten", "description": "Erlaubt das Bearbeiten von Sachkonten." },
+    "delete_ledger_account": { "label": "Sachkonto löschen", "description": "Erlaubt das Löschen von Sachkonten." },
+
+    "add_department": { "label": "Abteilung anlegen", "description": "Erlaubt das Anlegen von Abteilungen." },
+    "change_department": { "label": "Abteilung bearbeiten", "description": "Erlaubt das Bearbeiten von Abteilungen." },
+    "delete_department": { "label": "Abteilung löschen", "description": "Erlaubt das Löschen von Abteilungen." },
+
+    "add_project": { "label": "Projekt anlegen", "description": "Erlaubt das Anlegen von Projekten." },
+    "change_project": { "label": "Projekt bearbeiten", "description": "Erlaubt das Bearbeiten von Projekten." },
+    "delete_project": { "label": "Projekt löschen", "description": "Erlaubt das Löschen von Projekten." },
+
+    "add_inventory": { "label": "Lagerartikel anlegen", "description": "Erlaubt das Anlegen von Lagerartikeln." },
+    "change_inventory": { "label": "Lagerartikel bearbeiten", "description": "Erlaubt das Bearbeiten von Lagerartikeln." },
+    "delete_inventory": { "label": "Lagerartikel löschen", "description": "Erlaubt das Löschen von Lagerartikeln." },
+
+    "add_entity": { "label": "Entität anlegen", "description": "Erlaubt das Anlegen von Entitäten (Unternehmen/Einheiten)." },
+    "change_entity": { "label": "Entität bearbeiten", "description": "Erlaubt das Bearbeiten der Entitätskonfiguration." },
+    "delete_entity": { "label": "Entität löschen", "description": "Erlaubt das Löschen von Entitäten." }
   }
 }

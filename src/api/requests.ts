@@ -273,8 +273,11 @@ export const api = {
     request<ReportsSummary>("cashflow/reports/summary/", "GET", params),
 
   /* --- View Presets --- */
-  getViewPresets: () =>
-    request<GetViewPresetsResponse>("cashflow/view-preset/", "GET"),
+  getViewPresets: (settlementStatus: boolean) =>
+    request<GetViewPresetsResponse>(
+      `cashflow/view-preset/?settlement_status=${settlementStatus ? "true" : "false"}`,
+      "GET"
+    ),
 
   addViewPreset: (payload: AddViewPresetRequest) =>
     request<AddViewPresetResponse>("cashflow/view-preset/", "POST", payload),
