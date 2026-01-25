@@ -305,7 +305,7 @@ const GroupSettings: React.FC = () => {
 
           <section className="mt-6 grid grid-cols-12 gap-6">
             {/* LEFT: Groups */}
-            <aside className="col-span-12 lg:col-span-4">
+            <aside className="col-span-12 lg:col-span-3">
               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
                   <div className="text-[11px] uppercase tracking-wide text-gray-700">{t("left.groups")}</div>
@@ -351,7 +351,7 @@ const GroupSettings: React.FC = () => {
             </aside>
 
             {/* RIGHT: Permissions panel */}
-            <section className="col-span-12 lg:col-span-8">
+            <section className="col-span-12 lg:col-span-9">
               {!selectedGroupDetail ? (
                 <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
                   {t("right.selectPrompt")}
