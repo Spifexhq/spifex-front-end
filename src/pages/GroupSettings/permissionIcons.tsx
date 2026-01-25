@@ -1,201 +1,91 @@
-// src/pages/GroupSettings/permissionIcons.tsx
-import React, { useMemo } from "react";
-import { getPermissionIconId, type PermissionIconId } from "./permissionIcons.map";
+/* -----------------------------------------------------------------------------
+ * File: src/lib/permissions/permissionIcons.ts
+ * ---------------------------------------------------------------------------*/
 
-type IconProps = React.SVGProps<SVGSVGElement> & {
-  title?: string;
-};
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  BookOpen,
+  Building2,
+  Coins,
+  CreditCard,
+  Eye,
+  FileText,
+  FolderKanban,
+  Gauge,
+  KeyRound,
+  Landmark,
+  LayoutDashboard,
+  Lock,
+  Paintbrush,
+  Package,
+  Pencil,
+  Plus,
+  Settings,
+  Shield,
+  SlidersHorizontal,
+  Table,
+  Trash2,
+  User,
+  Users,
+} from "lucide-react";
 
-const baseSvgProps = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  xmlns: "http://www.w3.org/2000/svg",
-} as const;
+export function permissionIcons(code: string): LucideIcon {
+  // Generic action icons
+  if (code.startsWith("add_")) return Plus;
+  if (code.startsWith("change_")) return Pencil;
+  if (code.startsWith("delete_")) return Trash2;
 
-/* ------------------------------ Icon components --------------------------- */
+  // Pages
+  if (code === "view_home_dashboard_page") return LayoutDashboard;
+  if (code === "view_cash_flow_page") return BarChart3;
+  if (code === "view_settlement_page") return Table;
+  if (code === "view_report_page") return FileText;
 
-const EyeIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "View"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path
-      d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+  if (code === "view_personal_settings_page") return User;
+  if (code === "view_subscription_management_page") return CreditCard;
+  if (code === "view_limits_and_usage_page") return Gauge;
+  if (code === "view_security_and_privacy_page") return Shield;
 
-const PlusSquareIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Add"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="1.75" />
-    <path d="M12 8.5v7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M8.5 12h7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-  </svg>
-);
+  if (code === "view_organization_settings_page") return Settings;
+  if (code === "view_department_settings_page") return Building2;
+  if (code === "view_bank_settings_page") return Landmark;
+  if (code === "view_entity_settings_page") return Building2;
+  if (code === "view_inventory_settings_page") return Package;
+  if (code === "view_project_settings_page") return FolderKanban;
+  if (code === "view_member_settings_page") return Users;
+  if (code === "view_group_settings_page") return Users;
+  if (code === "view_ledger_accounts_page") return BookOpen;
 
-const MinusSquareIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Remove"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="1.75" />
-    <path d="M8.5 12h7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-  </svg>
-);
+  if (code === "view_statements_page") return FileText;
+  if (code === "view_notification_settings_page") return Bell;
+  if (code === "view_format_settings_page") return Paintbrush;
+  if (code === "view_currency_settings_page") return Coins;
 
-const PencilIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Edit"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path
-      d="M12.25 6.75 17.25 11.75"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M7 17.5h3.1c.35 0 .69-.14.94-.39l7.42-7.42a1.33 1.33 0 0 0 0-1.88l-2.4-2.4a1.33 1.33 0 0 0-1.88 0l-7.42 7.42c-.25.25-.39.59-.39.94V17.5Z"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+  // Visualization (non-page)
+  if (code === "view_filters") return SlidersHorizontal;
+  if (code === "view_cash_flow_entry_view" || code === "view_settlement_entry_view") return SlidersHorizontal;
+  if (code === "view_cash_flow_kpis" || code === "view_settlement_kpis") return BarChart3;
+  if (code === "view_cash_flow_amount" || code === "view_settlement_amount" || code === "view_consolidated_balance")
+    return Gauge;
 
-const TrashIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Delete"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path d="M9 4.5h6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M5.5 7h13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path
-      d="M8 7v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V7"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path d="M10.5 11v7M13.5 11v7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-  </svg>
-);
+  if (code === "view_permission") return KeyRound;
+  if (code === "view_limits_and_usage") return Gauge;
+  if (code === "view_statement") return FileText;
 
-const SwapIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Transfer"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path d="M5 9h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path
-      d="M17 7l2 2-2 2"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path d="M19 15H5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path
-      d="M7 13l-2 2 2 2"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+  if (code === "view_user") return User;
+  if (code === "view_member") return Users;
+  if (code === "view_group") return Users;
 
-const TableIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Table"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <rect x="4" y="5" width="16" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.75" />
-    <path d="M4 10h16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M9 5v14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M15 5v14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-  </svg>
-);
+  if (code === "view_bank") return Landmark;
+  if (code === "view_ledger_account") return BookOpen;
+  if (code === "view_department") return Building2;
+  if (code === "view_project") return FolderKanban;
+  if (code === "view_inventory") return Package;
+  if (code === "view_entity") return Building2;
 
-const SlidersIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Filters"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path d="M5 7h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M5 12h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M5 17h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M9 7v0" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-    <path d="M15 12v0" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-    <path d="M11 17v0" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-  </svg>
-);
-
-const ChartIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Reports"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path d="M5 19V5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M5 19h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path
-      d="M8 16v-5M12 16v-8M16 16v-3"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
-const ListIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "List"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path d="M8 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M8 12h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M8 17h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M5 7h.01M5 12h.01M5 17h.01" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
-  </svg>
-);
-
-const CheckListIcon: React.FC<IconProps> = ({ className, title, ...rest }) => (
-  <svg {...baseSvgProps} className={className} role="img" aria-label={title ?? "Settled"} {...rest}>
-    {title ? <title>{title}</title> : null}
-    <path d="M9 7h11" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M9 12h11" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path d="M9 17h11" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    <path
-      d="M4.5 7.2l1 1 2-2.2"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M4.5 12.2l1 1 2-2.2"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const ICONS: Record<PermissionIconId, React.FC<IconProps>> = {
-  eye: EyeIcon,
-  plus_square: PlusSquareIcon,
-  minus_square: MinusSquareIcon,
-  pencil: PencilIcon,
-  trash: TrashIcon,
-  swap: SwapIcon,
-  table: TableIcon,
-  sliders: SlidersIcon,
-  chart: ChartIcon,
-  list: ListIcon,
-  check_list: CheckListIcon,
-};
-
-type PermissionIconProps = { code: string } & Omit<IconProps, "title">;
-
-export const PermissionIcon: React.FC<PermissionIconProps> = ({ code, className, ...rest }) => {
-  const id = useMemo(() => getPermissionIconId(code), [code]);
-  const Icon = ICONS[id];
-  return <Icon className={className} {...rest} />;
-};
+  // Fallback
+  if (code.startsWith("view_")) return Eye;
+  return Lock;
+}

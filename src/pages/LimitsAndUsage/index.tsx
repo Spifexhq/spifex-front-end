@@ -11,7 +11,7 @@ import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { api } from "@/api/requests";
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { formatDateTimeFromISO } from "@/lib/date/formatDate";
-import { PermissionIcon } from "@/pages/GroupSettings/permissionIcons";
+import { permissionIcons } from "@/pages/GroupSettings/permissionIcons";
 import Input from "@/shared/ui/Input";
 
 /* --------------------------------- Types ---------------------------------- */
@@ -261,6 +261,7 @@ const LimitsAndUsage: React.FC = () => {
           <div className="divide-y divide-gray-200">
             {filtered.map((it) => {
               const { permission, limits, usage } = it;
+              const Icon = permissionIcons(permission.code);
               const percentage = pct(usage.used, limits.limit, limits.unmetered);
               const st = statusFrom(usage.used, limits.limit, limits.unmetered);
 
@@ -312,7 +313,7 @@ const LimitsAndUsage: React.FC = () => {
                         }`}
                         aria-hidden="true"
                       >
-                        <PermissionIcon code={permission.code} className="h-5 w-5 text-gray-700" />
+                        <Icon className="h-5 w-5 text-gray-700" />
                       </div>
 
                       <div className="min-w-0">
