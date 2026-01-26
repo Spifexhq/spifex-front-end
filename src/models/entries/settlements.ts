@@ -32,8 +32,7 @@ export interface GetSettledEntryRequest {
  * Matches settled entries list/table endpoints
  */
 export type GetSettledEntryResponse = Paginated<SettledEntry> & {
-  running_seed_minor?: number;
-  running_seed?: string;
+  total_consolidated_balance?: string;
 };
 
 /* ---------------------------------- Read ---------------------------------- */

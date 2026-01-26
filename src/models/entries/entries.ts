@@ -30,8 +30,7 @@ export interface GetEntryRequest {
   tx_type?: number;  // backend accepts TxType enum ints (e.g., -1/1) if used
 
   bank?: string;
-  running_seed_minor?: number;
-  running_seed?: string;
+  total_consolidated_balance?: string;
 }
 
 export type GetEntryResponse = Paginated<Entry>;

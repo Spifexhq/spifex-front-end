@@ -3,6 +3,9 @@
  * Updates requested:
  * - Mobile KPI strip: scrolls but scrollbar is hidden/invisible
  * (BanksTable scrollbar hiding is handled inside BanksTable)
+ * - Wrap KPI area with PermissionMiddleware:
+ *   - cashflow => view_cash_flow_kpis
+ *   - settled  => view_settlement_kpis
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -275,6 +278,11 @@ const KpiCards: React.FC<KpiCardsProps> = ({
 
   const autoKpis = context === "settled" ? settledKpis : cashflowKpis;
 
+  const kpiPermission = useMemo(
+    () => (context === "settled" ? ["view_settlement_kpis"] : ["view_cash_flow_kpis"]),
+    [context],
+  );
+
   const [expanded, setExpanded] = useState(false);
 
   const rightPlacement = (i: number) => {
@@ -287,8 +295,10 @@ const KpiCards: React.FC<KpiCardsProps> = ({
 
   if (isMobile) {
     return (
-      <section className="relative w-full max-w-full overflow-x-hidden
-                          [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <section
+        className="relative w-full max-w-full overflow-x-hidden
+                   [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
         <div className="grid grid-cols-12 gap-2 w-full max-w-full px-1">
           <PermissionMiddleware codeName={["view_bank"]} requireAll>
             <BanksTable
@@ -302,40 +312,42 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           </PermissionMiddleware>
         </div>
 
-        <div className="mt-2 w-full max-w-full px-1">
-          <div
-            className="flex w-full max-w-full items-stretch gap-2 overflow-x-auto overflow-y-hidden pb-1
-                       [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {autoKpis.map((kpi) => (
-              <div
-                key={kpi.key}
-                title={kpi.hint && !loading ? kpi.hint : undefined}
-                className="w-[78vw] max-w-[220px] flex-shrink-0 rounded-md border border-gray-300 bg-white px-3 py-2"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-gray-600">
-                    {kpi.label}
-                  </span>
-                  {kpi.delta && (
-                    <span
-                      className={`shrink-0 whitespace-nowrap text-[10px] ${
-                        kpi.delta.positive ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {kpi.delta.value}
+        <PermissionMiddleware codeName={kpiPermission} requireAll>
+          <div className="mt-2 w-full max-w-full px-1">
+            <div
+              className="flex w-full max-w-full items-stretch gap-2 overflow-x-auto overflow-y-hidden pb-1
+                         [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {autoKpis.map((kpi) => (
+                <div
+                  key={kpi.key}
+                  title={kpi.hint && !loading ? kpi.hint : undefined}
+                  className="w-[78vw] max-w-[220px] flex-shrink-0 rounded-md border border-gray-300 bg-white px-3 py-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-gray-600">
+                      {kpi.label}
                     </span>
-                  )}
-                </div>
+                    {kpi.delta && (
+                      <span
+                        className={`shrink-0 whitespace-nowrap text-[10px] ${
+                          kpi.delta.positive ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {kpi.delta.value}
+                      </span>
+                    )}
+                  </div>
 
-                <div className="mt-0.5 text-base font-semibold leading-5 text-gray-800 tabular-nums">
-                  {loading ? "—" : kpi.value}
+                  <div className="mt-0.5 text-base font-semibold leading-5 text-gray-800 tabular-nums">
+                    {loading ? "—" : kpi.value}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </PermissionMiddleware>
       </section>
     );
   }
@@ -359,29 +371,37 @@ const KpiCards: React.FC<KpiCardsProps> = ({
             />
           </PermissionMiddleware>
 
-          {autoKpis.map((kpi, i) => (
-            <motion.div
-              key={kpi.key}
-              layout
-              transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
-              className={`col-span-12 sm:col-span-6 ${rightPlacement(i)} h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-[11px] uppercase tracking-wide text-gray-600">{kpi.label}</span>
-                {kpi.delta && (
-                  <span className={`text-[11px] ${kpi.delta.positive ? "text-green-600" : "text-red-600"}`}>
-                    {kpi.delta.value}
-                  </span>
-                )}
-              </div>
+          <PermissionMiddleware codeName={kpiPermission} requireAll>
+            <>
+              {autoKpis.map((kpi, i) => (
+                <motion.div
+                  key={kpi.key}
+                  layout
+                  transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
+                  className={`col-span-12 sm:col-span-6 ${rightPlacement(i)} h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-600">{kpi.label}</span>
+                    {kpi.delta && (
+                      <span className={`text-[11px] ${kpi.delta.positive ? "text-green-600" : "text-red-600"}`}>
+                        {kpi.delta.value}
+                      </span>
+                    )}
+                  </div>
 
-              <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">{loading ? "—" : kpi.value}</div>
+                  <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
+                    {loading ? "—" : kpi.value}
+                  </div>
 
-              {kpi.hint && (
-                <div className="mt-0.5 text-[11px] text-gray-500">{loading ? tr("kpiCards:loading") : kpi.hint}</div>
-              )}
-            </motion.div>
-          ))}
+                  {kpi.hint && (
+                    <div className="mt-0.5 text-[11px] text-gray-500">
+                      {loading ? tr("kpiCards:loading") : kpi.hint}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </>
+          </PermissionMiddleware>
         </motion.div>
       </LayoutGroup>
     </section>
