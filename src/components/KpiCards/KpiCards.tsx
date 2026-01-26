@@ -1,11 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/components/KpiCards/KpiCards.tsx
- * Updates requested:
- * - Mobile KPI strip: scrolls but scrollbar is hidden/invisible
- * (BanksTable scrollbar hiding is handled inside BanksTable)
- * - Wrap KPI area with PermissionMiddleware:
- *   - cashflow => view_cash_flow_kpis
- *   - settled  => view_settlement_kpis
  * -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
