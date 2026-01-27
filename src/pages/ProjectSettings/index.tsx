@@ -18,7 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import ProjectModal from "./ProjectModal";
 
 import { api } from "@/api/requests";
-import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
@@ -191,7 +191,6 @@ const Row = ({
   project,
   onEdit,
   onDelete,
-  canEdit,
   t,
   busy,
   typeLabel,
@@ -199,7 +198,6 @@ const Row = ({
   project: Project;
   onEdit: (p: Project) => void;
   onDelete: (p: Project) => void;
-  canEdit: boolean;
   t: TFunction;
   busy?: boolean;
   typeLabel: string;
@@ -218,16 +216,19 @@ const Row = ({
     <div className="flex items-center gap-3 shrink-0">
       <span className="text-[12px] text-gray-700">{project.is_active ? t("row.active") : t("row.inactive")}</span>
 
-      {canEdit && (
-        <div className="flex gap-2">
+      <div className="flex gap-2">
+        <PermissionMiddleware codeName={"change_project"}>
           <Button variant="outline" onClick={() => onEdit(project)} disabled={busy}>
             {t("btn.edit")}
           </Button>
+        </PermissionMiddleware>
+
+        <PermissionMiddleware codeName={"delete_project"}>
           <Button variant="outline" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
             {t("btn.delete")}
           </Button>
-        </div>
-      )}
+        </PermissionMiddleware>
+      </div>
     </div>
   </div>
 );
@@ -236,7 +237,6 @@ const Row = ({
 
 const ProjectSettings: React.FC = () => {
   const { t, i18n } = useTranslation("projectSettings");
-  const { isOwner } = useAuthContext();
 
   useEffect(() => {
     document.title = t("title");
@@ -621,7 +621,6 @@ const ProjectSettings: React.FC = () => {
     );
   }
 
-  const canEdit = !!isOwner;
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   const codeChipValue = appliedCode.trim() ? truncate(appliedCode.trim(), 22) : "";
@@ -717,11 +716,11 @@ const ProjectSettings: React.FC = () => {
 
                   {/* RIGHT: add button */}
                   <div className="shrink-0">
-                    {canEdit && (
+                    <PermissionMiddleware codeName={"add_project"}>
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.addProject")}
                       </Button>
-                    )}
+                    </PermissionMiddleware>
                   </div>
                 </div>
               </div>
@@ -746,7 +745,6 @@ const ProjectSettings: React.FC = () => {
                           <Row
                             key={p.id}
                             project={p}
-                            canEdit={canEdit}
                             onEdit={openEditModal}
                             onDelete={requestDeleteProject}
                             t={t}
@@ -770,24 +768,25 @@ const ProjectSettings: React.FC = () => {
           </section>
         </div>
 
-        <ProjectModal
-          isOpen={modalOpen}
-          mode={modalMode}
-          project={editingProject}
-          canEdit={canEdit}
-          onClose={closeModal}
-          onNotify={(s) => setSnack(s)}
-          onSaved={async (res) => {
-            try {
-              if (res.mode === "create" && res.created) {
-                setAdded((prev) => [res.created!, ...prev]);
+        <PermissionMiddleware codeName={["add_project", "change_project"]}>
+          <ProjectModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            project={editingProject}
+            onClose={closeModal}
+            onNotify={(s) => setSnack(s)}
+            onSaved={async (res) => {
+              try {
+                if (res.mode === "create" && res.created) {
+                  setAdded((prev) => [res.created!, ...prev]);
+                }
+                await pager.refresh();
+              } catch {
+                setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
               }
-              await pager.refresh();
-            } catch {
-              setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
-            }
-          }}
-        />
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* CODE POPOVER */}

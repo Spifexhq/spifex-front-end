@@ -19,6 +19,7 @@ import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
 import BankModal from "./BankModal";
 
 import { api } from "@/api/requests";
+import { PermissionMiddleware } from "src/middlewares";
 import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -173,14 +174,12 @@ const Row = ({
   bank,
   onEdit,
   onDelete,
-  canEdit,
   t,
   busy,
 }: {
   bank: BankAccount;
   onEdit: (b: BankAccount) => void;
   onDelete: (b: BankAccount) => void;
-  canEdit: boolean;
   t: TFunction;
   busy?: boolean;
 }) => {
@@ -201,16 +200,19 @@ const Row = ({
         <p className="text-[12px] text-gray-600 truncate">{line2}</p>
       </div>
 
-      {canEdit && (
-        <div className="flex gap-2 shrink-0">
+      <div className="flex gap-2 shrink-0">
+        <PermissionMiddleware codeName={"change_bank"}>
           <Button variant="outline" onClick={() => onEdit(bank)} disabled={busy}>
             {t("btn.edit")}
           </Button>
+        </PermissionMiddleware>
+
+        <PermissionMiddleware codeName={"delete_bank"}>
           <Button variant="outline" onClick={() => onDelete(bank)} disabled={busy} aria-busy={busy || undefined}>
             {t("btn.delete")}
           </Button>
-        </div>
-      )}
+        </PermissionMiddleware>
+      </div>
     </div>
   );
 };
@@ -219,7 +221,7 @@ const Row = ({
 
 const BankSettings: React.FC = () => {
   const { t, i18n } = useTranslation("bankSettings");
-  const { organization: authOrg, isOwner } = useAuthContext();
+  const { organization: authOrg } = useAuthContext();
 
   const orgCurrency = useMemo(() => safeCurrency(authOrg?.organization?.currency), [authOrg]);
 
@@ -398,7 +400,6 @@ const BankSettings: React.FC = () => {
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
-  const canEdit = !!isOwner;
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   /* ------------------------------ Filter apply/clear ------------------------ */
@@ -755,11 +756,11 @@ const BankSettings: React.FC = () => {
 
                   {/* RIGHT: add button */}
                   <div className="shrink-0">
-                    {canEdit && (
+                    <PermissionMiddleware codeName={"add_bank"}>
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.addBank")}
                       </Button>
-                    )}
+                    </PermissionMiddleware>
                   </div>
                 </div>
               </div>
@@ -784,7 +785,6 @@ const BankSettings: React.FC = () => {
                           <Row
                             key={b.id}
                             bank={b}
-                            canEdit={canEdit}
                             onEdit={openEditModal}
                             onDelete={requestDeleteBank}
                             t={t}
@@ -807,25 +807,26 @@ const BankSettings: React.FC = () => {
           </section>
         </div>
 
-        <BankModal
-          isOpen={modalOpen}
-          mode={modalMode}
-          bank={editingBank}
-          orgCurrency={orgCurrency}
-          canEdit={canEdit}
-          onClose={closeModal}
-          onNotify={(s) => setSnack(s)}
-          onSaved={async (res) => {
-            try {
-              if (res.mode === "create" && res.created) {
-                setAdded((prev) => [res.created!, ...prev]);
+        <PermissionMiddleware codeName={["add_bank", "change_bank"]}>
+          <BankModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            bank={editingBank}
+            orgCurrency={orgCurrency}
+            onClose={closeModal}
+            onNotify={(s) => setSnack(s)}
+            onSaved={async (res) => {
+              try {
+                if (res.mode === "create" && res.created) {
+                  setAdded((prev) => [res.created!, ...prev]);
+                }
+                await pager.refresh();
+              } catch {
+                setSnack({ message: t("errors.fetchError"), severity: "error" });
               }
-              await pager.refresh();
-            } catch {
-              setSnack({ message: t("errors.fetchError"), severity: "error" });
-            }
-          }}
-        />
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* INSTITUTION POPOVER */}

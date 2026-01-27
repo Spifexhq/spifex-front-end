@@ -65,8 +65,6 @@ export type ProjectModalProps = {
   mode: Mode;
   project?: Project | null;
 
-  canEdit?: boolean;
-
   onClose: () => void;
   onNotify?: (snack: Snack) => void;
   onSaved?: (result: { mode: Mode; created?: Project }) => void;
@@ -104,14 +102,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   isOpen,
   mode,
   project,
-  canEdit = true,
   onClose,
   onNotify,
   onSaved,
 }) => {
   const { t } = useTranslation("projectSettings");
 
-  // primitive dep (avoid lint noise like project?.id)
   const projectId = project?.id ?? null;
 
   const [formData, setFormData] = useState<FormState>(emptyForm);
@@ -145,13 +141,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   }, [formData]);
 
   const isSaveDisabled = useMemo(() => {
-    if (!canEdit) return true;
     if (isSubmitting || isDetailLoading) return true;
     if (!formData.name.trim()) return true;
     // type must be valid
     if (!isProjectType(formData.type)) return true;
     return false;
-  }, [canEdit, isSubmitting, isDetailLoading, formData.name, formData.type]);
+  }, [isSubmitting, isDetailLoading, formData.name, formData.type]);
 
   const resetInternalState = useCallback(() => {
     setFormData(emptyForm);
@@ -272,8 +267,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!canEdit) return;
-
       const name = formData.name.trim();
       if (!name) {
         setWarning({ title: t("errors.validationTitle"), message: t("errors.validationName") });
@@ -318,7 +311,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [canEdit, formData, mode, projectId, onNotify, onSaved, handleClose, t]
+    [formData, mode, projectId, onNotify, onSaved, handleClose, t]
   );
 
   if (!isOpen) return null;
@@ -369,7 +362,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   value={formData.name}
                   onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                   required
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -378,7 +371,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   name="code"
                   value={formData.code}
                   onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value }))}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <div className="md:col-span-2">
@@ -393,7 +386,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                     hideCheckboxes
                     buttonLabel={t("btnLabel.type")}
                     customStyles={{ maxHeight: "240px" }}
-                    disabled={isSubmitting || isDetailLoading || !canEdit}
+                    disabled={isSubmitting || isDetailLoading}
                   />
                 </div>
 
@@ -404,7 +397,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                     name="description"
                     value={formData.description}
                     onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-                    disabled={isSubmitting || isDetailLoading || !canEdit}
+                    disabled={isSubmitting || isDetailLoading}
                   />
                 </div>
 
@@ -412,7 +405,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <Checkbox
                     checked={!!formData.is_active}
                     onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                    disabled={isSubmitting || isDetailLoading || !canEdit}
+                    disabled={isSubmitting || isDetailLoading}
                   />
                   {t("field.isActive")}
                 </label>

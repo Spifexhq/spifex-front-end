@@ -27,7 +27,7 @@ type BankForm = {
   branch: string;
   account_number: string;
   iban: string;
-  initial_balance: string; // MAJOR decimal string
+  initial_balance: string;
   is_active: boolean;
 };
 
@@ -88,8 +88,7 @@ export type BankModalProps = {
   mode: Mode;
   bank?: BankAccount | null;
 
-  orgCurrency: string; // pinned by rule; display + payload uses this
-  canEdit?: boolean;
+  orgCurrency: string;
 
   onClose: () => void;
   onNotify?: (snack: { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null) => void;
@@ -101,7 +100,6 @@ const BankModal: React.FC<BankModalProps> = ({
   mode,
   bank,
   orgCurrency,
-  canEdit = true,
   onClose,
   onNotify,
   onSaved,
@@ -137,12 +135,11 @@ const BankModal: React.FC<BankModalProps> = ({
   }, [formData]);
 
   const isSaveDisabled = useMemo(() => {
-    if (!canEdit) return true;
     if (isSubmitting || isDetailLoading) return true;
     if (!formData.institution.trim()) return true;
     if (!isAccountType(formData.account_type)) return true;
     return false;
-  }, [canEdit, isSubmitting, isDetailLoading, formData.institution, formData.account_type]);
+  }, [isSubmitting, isDetailLoading, formData.institution, formData.account_type]);
 
   const hardReset = useCallback(() => {
     setFormData(buildEmptyForm());
@@ -264,8 +261,6 @@ const BankModal: React.FC<BankModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!canEdit) return;
-
       const institution = formData.institution.trim();
       if (!institution) {
         setWarning({ title: t("errors.validationTitle"), message: t("errors.validationInstitution") });
@@ -280,7 +275,7 @@ const BankModal: React.FC<BankModalProps> = ({
       const payload = {
         institution,
         account_type: formData.account_type,
-        currency: orgCurrency, // pinned by rule
+        currency: orgCurrency,
         branch: (formData.branch ?? "").trim(),
         account_number: (formData.account_number ?? "").trim(),
         iban: (formData.iban ?? "").trim(),
@@ -311,7 +306,7 @@ const BankModal: React.FC<BankModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [canEdit, formData, mode, bankId, orgCurrency, onNotify, onSaved, handleClose, t]
+    [formData, mode, bankId, orgCurrency, onNotify, onSaved, handleClose, t]
   );
 
   if (!isOpen) return null;
@@ -362,7 +357,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   value={formData.institution}
                   onChange={(e) => setFormData((p) => ({ ...p, institution: e.target.value }))}
                   required
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <SelectDropdown<{ value: AccountType; label: string }>
@@ -376,7 +371,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   hideCheckboxes
                   buttonLabel={t("btn.selectAccountType")}
                   customStyles={{ maxHeight: "240px" }}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -385,7 +380,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   name="branch"
                   value={formData.branch}
                   onChange={(e) => setFormData((p) => ({ ...p, branch: e.target.value }))}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -394,7 +389,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   name="account_number"
                   value={formData.account_number}
                   onChange={(e) => setFormData((p) => ({ ...p, account_number: e.target.value }))}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -403,7 +398,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   name="iban"
                   value={formData.iban}
                   onChange={(e) => setFormData((p) => ({ ...p, iban: e.target.value }))}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -415,7 +410,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   }
                   display="currency"
                   currency={orgCurrency}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                   zeroAsEmpty
                 />
 
@@ -423,7 +418,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   <Checkbox
                     checked={!!formData.is_active}
                     onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                    disabled={isSubmitting || isDetailLoading || !canEdit}
+                    disabled={isSubmitting || isDetailLoading}
                   />
                   {t("field.isActive")}
                 </label>

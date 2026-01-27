@@ -48,13 +48,11 @@ type Tab = "general" | "tax" | "address" | "bank";
 export type EntityModalProps = {
   isOpen: boolean;
   mode: EntityModalMode;
-  entity?: Entity | null; // used for edit
+  entity?: Entity | null;
   onClose: () => void;
 
   onNotify?: (snack: Snack) => void;
   onSaved?: (result: { mode: EntityModalMode; created?: Entity }) => void;
-
-  canEdit?: boolean;
 };
 
 const IDS = {
@@ -187,7 +185,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
   onClose,
   onNotify,
   onSaved,
-  canEdit = true,
 }) => {
   const { t } = useTranslation("entitySettings");
 
@@ -235,11 +232,10 @@ const EntityModal: React.FC<EntityModalProps> = ({
   }, [formData]);
 
   const isSaveDisabled = useMemo(() => {
-    if (!canEdit) return true;
     if (isSubmitting || isDetailLoading) return true;
     if (!formData.full_name.trim()) return true;
     return false;
-  }, [canEdit, formData.full_name, isSubmitting, isDetailLoading]);
+  }, [formData.full_name, isSubmitting, isDetailLoading]);
 
   const resetInternalState = useCallback(() => {
     setActiveTab("general");
@@ -428,8 +424,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!canEdit) return;
-
       if (!formData.full_name.trim()) {
         setActiveTab("general");
         setWarning({
@@ -482,7 +476,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
       }
     },
     // NOTE: entityId is the only entity-related dependency (fixes your lint warning)
-    [canEdit, formData, mode, entityId, onNotify, onSaved, handleClose, t]
+    [formData, mode, entityId, onNotify, onSaved, handleClose, t]
   );
 
   const Tabs: React.FC = () => (
@@ -524,7 +518,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -535,7 +529,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="alias_name"
                 value={formData.alias_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -554,7 +548,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 singleSelect
                 hideCheckboxes
                 buttonLabel={t("field.entity_type")}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -565,7 +559,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -576,7 +570,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -585,7 +579,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 size="small"
                 checked={!!formData.is_active}
                 onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
               {t("field.is_active")}
             </label>
@@ -602,7 +596,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="ssn_tax_id"
                 value={formData.ssn_tax_id}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -613,7 +607,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="ein_tax_id"
                 value={formData.ein_tax_id}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
           </div>
@@ -629,7 +623,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="street"
                 value={formData.street}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -640,7 +634,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="street_number"
                 value={formData.street_number}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -651,7 +645,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -662,7 +656,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -673,7 +667,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="postal_code"
                 value={formData.postal_code}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -684,7 +678,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
           </div>
@@ -700,7 +694,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="bank_name"
                 value={formData.bank_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -711,7 +705,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="bank_branch"
                 value={formData.bank_branch}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -722,7 +716,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="checking_account"
                 value={formData.checking_account}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -733,7 +727,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="account_holder_tax_id"
                 value={formData.account_holder_tax_id}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
 
@@ -744,7 +738,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="account_holder_name"
                 value={formData.account_holder_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading || !canEdit}
+                disabled={isSubmitting || isDetailLoading}
               />
             </div>
           </div>

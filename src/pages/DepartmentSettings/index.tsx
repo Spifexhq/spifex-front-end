@@ -18,7 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import DepartmentModal from "./DepartmentModal";
 
 import { api } from "@/api/requests";
-import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
@@ -165,14 +165,12 @@ const Row = ({
   dept,
   onEdit,
   onDelete,
-  canEdit,
   t,
   busy,
 }: {
   dept: Department;
   onEdit: (d: Department) => void;
   onDelete: (d: Department) => void;
-  canEdit: boolean;
   t: TFunction;
   busy?: boolean;
 }) => (
@@ -185,16 +183,19 @@ const Row = ({
       <p className="text-[13px] font-medium text-gray-900 truncate">{dept.name || t("tags.noName")}</p>
     </div>
 
-    {canEdit && (
-      <div className="flex gap-2 shrink-0">
+    <div className="flex gap-2 shrink-0">
+      <PermissionMiddleware codeName={"change_department"}>
         <Button variant="outline" onClick={() => onEdit(dept)} disabled={busy}>
           {t("buttons.edit")}
         </Button>
+      </PermissionMiddleware>
+
+      <PermissionMiddleware codeName={"delete_department"}>
         <Button variant="outline" onClick={() => onDelete(dept)} disabled={busy} aria-busy={busy || undefined}>
           {t("buttons.delete")}
         </Button>
-      </div>
-    )}
+      </PermissionMiddleware>
+    </div>
   </div>
 );
 
@@ -202,7 +203,6 @@ const Row = ({
 
 const DepartmentSettings: React.FC = () => {
   const { t, i18n } = useTranslation("departmentSettings");
-  const { isOwner } = useAuthContext();
 
   useEffect(() => {
     document.title = t("title");
@@ -504,7 +504,6 @@ const DepartmentSettings: React.FC = () => {
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
   /* -------------------------------- Derived UI ---------------------------- */
-  const canEdit = !!isOwner;
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   const codeChipValue = appliedCode.trim() ? truncate(appliedCode.trim(), 22) : "";
@@ -588,11 +587,11 @@ const DepartmentSettings: React.FC = () => {
 
                   {/* RIGHT: add button */}
                   <div className="shrink-0">
-                    {canEdit && (
+                    <PermissionMiddleware codeName={"change_department"}>
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("buttons.add")}
                       </Button>
-                    )}
+                    </PermissionMiddleware>
                   </div>
                 </div>
               </div>
@@ -618,7 +617,6 @@ const DepartmentSettings: React.FC = () => {
                           <Row
                             key={d.id}
                             dept={d}
-                            canEdit={canEdit}
                             onEdit={openEditModal}
                             onDelete={requestDeleteDepartment}
                             t={t}
@@ -641,24 +639,25 @@ const DepartmentSettings: React.FC = () => {
           </section>
         </div>
 
-        <DepartmentModal
-          isOpen={modalOpen}
-          mode={modalMode}
-          department={editingDept}
-          canEdit={canEdit}
-          onClose={closeModal}
-          onNotify={(s) => setSnack(s)}
-          onSaved={async (res) => {
-            try {
-              if (res.mode === "create" && res.created) {
-                setAdded((prev) => [res.created!, ...prev]);
+        <PermissionMiddleware codeName={["add_department", "change_department"]}>
+          <DepartmentModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            department={editingDept}
+            onClose={closeModal}
+            onNotify={(s) => setSnack(s)}
+            onSaved={async (res) => {
+              try {
+                if (res.mode === "create" && res.created) {
+                  setAdded((prev) => [res.created!, ...prev]);
+                }
+                await pager.refresh();
+              } catch {
+                setSnack({ message: t("errors.fetchError"), severity: "error" });
               }
-              await pager.refresh();
-            } catch {
-              setSnack({ message: t("errors.fetchError"), severity: "error" });
-            }
-          }}
-        />
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* CODE POPOVER (PORTAL) */}

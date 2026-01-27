@@ -31,8 +31,6 @@ export type DepartmentModalProps = {
   mode: Mode;
   department?: Department | null;
 
-  canEdit?: boolean;
-
   onClose: () => void;
   onNotify?: (snack: Snack) => void;
   onSaved?: (result: { mode: Mode; created?: Department }) => void;
@@ -62,14 +60,12 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   isOpen,
   mode,
   department,
-  canEdit = true,
   onClose,
   onNotify,
   onSaved,
 }) => {
   const { t } = useTranslation("departmentSettings");
 
-  // primitive dependency (avoid redundant `department?.id` deps patterns)
   const departmentId = department?.id ?? null;
 
   const [formData, setFormData] = useState<FormState>(emptyForm);
@@ -94,11 +90,10 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   }, [formData]);
 
   const isSaveDisabled = useMemo(() => {
-    if (!canEdit) return true;
     if (isSubmitting || isDetailLoading) return true;
     if (!formData.name.trim()) return true;
     return false;
-  }, [canEdit, isSubmitting, isDetailLoading, formData.name]);
+  }, [isSubmitting, isDetailLoading, formData.name]);
 
   const resetInternalState = useCallback(() => {
     setFormData(emptyForm);
@@ -220,8 +215,6 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!canEdit) return;
-
       const trimmedName = formData.name.trim();
       if (!trimmedName) {
         setWarning({ title: t("errors.validationTitle"), message: t("errors.validationName") });
@@ -259,7 +252,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [canEdit, formData, mode, departmentId, onNotify, onSaved, handleClose, t]
+    [formData, mode, departmentId, onNotify, onSaved, handleClose, t]
   );
 
   if (!isOpen) return null;
@@ -310,7 +303,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -319,14 +312,14 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
                   name="code"
                   value={formData.code}
                   onChange={handleChange}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <label className="flex items-center gap-2 text-sm pt-6">
                   <Checkbox
                     checked={!!formData.is_active}
                     onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                    disabled={isSubmitting || isDetailLoading || !canEdit}
+                    disabled={isSubmitting || isDetailLoading}
                   />
                   {t("modal.fields.is_active")}
                 </label>

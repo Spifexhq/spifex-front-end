@@ -19,10 +19,11 @@ import Popover from "src/shared/ui/Popover";
 import EntityModal from "./EntityModal";
 
 import { api } from "@/api/requests";
-import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
+import type { TFunction } from "i18next";
 import type { Entity, EntityTypeValue, GetEntitiesParams } from "@/models/settings/entities";
 
 /* ------------------------------ Snackbar type ----------------------------- */
@@ -175,10 +176,9 @@ const Row: React.FC<{
   entity: Entity;
   onEdit: (e: Entity) => void;
   onDelete: (e: Entity) => void;
-  canEdit: boolean;
-  t: (key: string, opts?: Record<string, unknown>) => string;
+  t: TFunction;
   busy?: boolean;
-}> = ({ entity, onEdit, onDelete, canEdit, t, busy }) => {
+}> = ({ entity, onEdit, onDelete, t, busy }) => {
   const normalized = normalizeEntityType(entity.entity_type);
   const type: EntityTypeValue = normalized ? asEntityTypeValue(normalized) : "other";
   const typeLabel = t(`types.${type}`);
@@ -193,16 +193,19 @@ const Row: React.FC<{
         <p className="text-[13px] font-medium text-gray-900 truncate">{entity.full_name || t("row.untitled")}</p>
       </div>
 
-      {canEdit && (
-        <div className="flex gap-2 shrink-0">
+      <div className="flex gap-2 shrink-0">
+        <PermissionMiddleware codeName={"change_entity"}>
           <Button variant="outline" onClick={() => onEdit(entity)} disabled={busy}>
             {t("btn.edit")}
           </Button>
+        </PermissionMiddleware>
+
+        <PermissionMiddleware codeName={"delete_entity"}>
           <Button variant="outline" onClick={() => onDelete(entity)} disabled={busy} aria-busy={busy || undefined}>
             {t("btn.delete")}
           </Button>
-        </div>
-      )}
+        </PermissionMiddleware>
+      </div>
     </div>
   );
 };
@@ -211,7 +214,6 @@ const Row: React.FC<{
 
 const EntitySettings: React.FC = () => {
   const { t, i18n } = useTranslation("entitySettings");
-  const { isOwner } = useAuthContext();
 
   useEffect(() => {
     document.title = t("title");
@@ -535,7 +537,6 @@ const EntitySettings: React.FC = () => {
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
-  const canEdit = !!isOwner;
 
   const nameChipValue = appliedName.trim() ? `• ${truncate(appliedName.trim(), 22)}` : "";
   const aliasChipValue = appliedAlias.trim() ? `• ${truncate(appliedAlias.trim(), 22)}` : "";
@@ -630,11 +631,11 @@ const EntitySettings: React.FC = () => {
 
                   {/* RIGHT: add button */}
                   <div className="shrink-0">
-                    {canEdit && (
+                    <PermissionMiddleware codeName={"add_entity"}>
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.add")}
                       </Button>
-                    )}
+                    </PermissionMiddleware>
                   </div>
                 </div>
               </div>
@@ -657,7 +658,6 @@ const EntitySettings: React.FC = () => {
                         <Row
                           key={e.id}
                           entity={e}
-                          canEdit={canEdit}
                           onEdit={openEditModal}
                           onDelete={requestDeleteEntity}
                           t={t}
@@ -679,22 +679,23 @@ const EntitySettings: React.FC = () => {
           </section>
         </div>
 
-        <EntityModal
-          isOpen={modalOpen}
-          mode={modalMode}
-          entity={editingEntity}
-          onClose={closeModal}
-          canEdit={canEdit}
-          onNotify={setSnack}
-          onSaved={async ({ mode, created }) => {
-            try {
-              if (mode === "create" && created) setAdded((prev) => [created, ...prev]);
-              await pager.refresh();
-            } catch {
-              setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
-            }
-          }}
-        />
+        <PermissionMiddleware codeName={["add_entity", "change_entity"]}>
+          <EntityModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            entity={editingEntity}
+            onClose={closeModal}
+            onNotify={setSnack}
+            onSaved={async ({ mode, created }) => {
+              try {
+                if (mode === "create" && created) setAdded((prev) => [created, ...prev]);
+                await pager.refresh();
+              } catch {
+                setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
+              }
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* NAME POPOVER */}

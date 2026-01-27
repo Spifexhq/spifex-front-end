@@ -18,7 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import InventoryModal from "./InventoryModal";
 
 import { api } from "@/api/requests";
-import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
@@ -186,14 +186,12 @@ const Row = ({
   item,
   onEdit,
   onDelete,
-  canEdit,
   t,
   busy,
 }: {
   item: InventoryItem;
   onEdit: (i: InventoryItem) => void;
   onDelete: (i: InventoryItem) => void;
-  canEdit: boolean;
   t: TFunction;
   busy?: boolean;
 }) => (
@@ -213,16 +211,19 @@ const Row = ({
         {t("row.qtyPrefix")} {item.quantity_on_hand ?? "0"}
       </span>
 
-      {canEdit && (
-        <div className="flex gap-2 shrink-0">
+      <div className="flex gap-2 shrink-0">
+        <PermissionMiddleware codeName={"change_inventory"}>
           <Button variant="outline" onClick={() => onEdit(item)} disabled={busy}>
             {t("btn.edit")}
           </Button>
+        </PermissionMiddleware>
+
+        <PermissionMiddleware codeName={"delete_inventory"}>
           <Button variant="outline" onClick={() => onDelete(item)} disabled={busy} aria-busy={busy || undefined}>
             {t("btn.delete")}
           </Button>
-        </div>
-      )}
+        </PermissionMiddleware>
+      </div>
     </div>
   </div>
 );
@@ -231,7 +232,6 @@ const Row = ({
 
 const InventorySettings: React.FC = () => {
   const { t, i18n } = useTranslation("inventorySettings");
-  const { isOwner } = useAuthContext();
 
   useEffect(() => {
     document.title = t("title");
@@ -622,7 +622,6 @@ const InventorySettings: React.FC = () => {
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
-  const canEdit = !!isOwner;
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
   const skuChipValue = appliedSku.trim() ? truncate(appliedSku.trim(), 18) : "";
@@ -751,11 +750,11 @@ const InventorySettings: React.FC = () => {
 
                   {/* RIGHT: add button */}
                   <div className="shrink-0">
-                    {canEdit && (
+                    <PermissionMiddleware codeName={"add_inventory"}>
                       <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                         {t("btn.addItem")}
                       </Button>
-                    )}
+                    </PermissionMiddleware>
                   </div>
                 </div>
               </div>
@@ -780,7 +779,6 @@ const InventorySettings: React.FC = () => {
                           <Row
                             key={i.id}
                             item={i}
-                            canEdit={canEdit}
                             onEdit={openEditModal}
                             onDelete={requestDeleteItem}
                             t={t}
@@ -803,24 +801,25 @@ const InventorySettings: React.FC = () => {
           </section>
         </div>
 
-        <InventoryModal
-          isOpen={modalOpen}
-          mode={modalMode}
-          item={editingItem}
-          canEdit={canEdit}
-          onClose={closeModal}
-          onNotify={(s) => setSnack(s)}
-          onSaved={async (res) => {
-            try {
-              if (res.mode === "create" && res.created) {
-                setAdded((prev) => [res.created!, ...prev]);
+        <PermissionMiddleware codeName={["add_inventory", "change_inventory"]}>
+          <InventoryModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            item={editingItem}
+            onClose={closeModal}
+            onNotify={(s) => setSnack(s)}
+            onSaved={async (res) => {
+              try {
+                if (res.mode === "create" && res.created) {
+                  setAdded((prev) => [res.created!, ...prev]);
+                }
+                await pager.refresh();
+              } catch {
+                setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
               }
-              await pager.refresh();
-            } catch {
-              setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
-            }
-          }}
-        />
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* SKU POPOVER */}

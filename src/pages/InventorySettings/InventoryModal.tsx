@@ -28,7 +28,7 @@ type FormState = {
   name: string;
   description: string;
   uom: string;
-  quantity_on_hand: string; // keep as string (inputs)
+  quantity_on_hand: string;
   is_active: boolean;
 };
 
@@ -94,7 +94,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
   isOpen,
   mode,
   item,
-  canEdit = true,
   onClose,
   onNotify,
   onSaved,
@@ -126,7 +125,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
   }, [formData]);
 
   const isSaveDisabled = useMemo(() => {
-    if (!canEdit) return true;
     if (isSubmitting || isDetailLoading) return true;
     if (!formData.sku.trim()) return true;
     if (!formData.name.trim()) return true;
@@ -134,7 +132,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
     const n = Number(String(formData.quantity_on_hand ?? "").trim());
     if (!Number.isFinite(n) || n < 0 || !Number.isInteger(n)) return true;
     return false;
-  }, [canEdit, isSubmitting, isDetailLoading, formData.sku, formData.name, formData.quantity_on_hand]);
+  }, [isSubmitting, isDetailLoading, formData.sku, formData.name, formData.quantity_on_hand]);
 
   const resetInternalState = useCallback(() => {
     setFormData(emptyForm);
@@ -269,8 +267,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!canEdit) return;
-
       const sku = formData.sku.trim();
       const name = formData.name.trim();
 
@@ -320,7 +316,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [canEdit, formData, mode, itemId, onNotify, onSaved, handleClose, t]
+    [formData, mode, itemId, onNotify, onSaved, handleClose, t]
   );
 
   if (!isOpen) return null;
@@ -370,7 +366,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                   value={formData.sku}
                   onChange={handleChange}
                   required
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -381,7 +377,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -390,7 +386,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -400,7 +396,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                   placeholder={t("field.uomPlaceholder")}
                   value={formData.uom}
                   onChange={handleChange}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <Input
@@ -412,14 +408,14 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
                   min="0"
                   value={formData.quantity_on_hand}
                   onChange={handleChange}
-                  disabled={isSubmitting || isDetailLoading || !canEdit}
+                  disabled={isSubmitting || isDetailLoading}
                 />
 
                 <label className="flex items-center gap-2 text-sm pt-6">
                   <Checkbox
                     checked={!!formData.is_active}
                     onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                    disabled={isSubmitting || isDetailLoading || !canEdit}
+                    disabled={isSubmitting || isDetailLoading}
                   />
                   {t("field.isActive")}
                 </label>
