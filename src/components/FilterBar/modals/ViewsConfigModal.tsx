@@ -10,6 +10,7 @@ import type { ApiResponse } from "@/models/Api";
 import type { Visualization } from "@/models/components/filterBar";
 import { isApiError } from "../FilterBar.utils";
 import { ModalShell } from "../ui/ModalShell";
+import { PermissionMiddleware } from "src/middlewares";
 
 export const ViewsConfigModal: React.FC<{
   t: TFunction;
@@ -167,19 +168,21 @@ export const ViewsConfigModal: React.FC<{
                       </Button>
                     </>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={busy}
-                      onClick={() => {
-                        setRenamingId(v.id);
-                        setRenamingName(v.name);
-                      }}
-                      className="inline-flex items-center gap-2"
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden />
-                      {t("filterBar:configModal.rename")}
-                    </Button>
+                    <PermissionMiddleware codeName="change_entry_view">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => {
+                          setRenamingId(v.id);
+                          setRenamingName(v.name);
+                        }}
+                        className="inline-flex items-center gap-2"
+                      >
+                        <Pencil className="h-4 w-4" aria-hidden />
+                        {t("filterBar:configModal.rename")}
+                      </Button>
+                    </PermissionMiddleware>
                   )}
 
                   <Button
@@ -193,10 +196,11 @@ export const ViewsConfigModal: React.FC<{
                   >
                     {t("filterBar:configModal.apply")}
                   </Button>
-
-                  <Button variant="outline" size="sm" disabled={busy} onClick={() => void deleteView(v.id)}>
-                    {t("filterBar:configModal.delete")}
-                  </Button>
+                  <PermissionMiddleware codeName="delete_entry_view">
+                    <Button variant="outline" size="sm" disabled={busy} onClick={() => void deleteView(v.id)}>
+                      {t("filterBar:configModal.delete")}
+                    </Button>
+                  </PermissionMiddleware>
                 </div>
               </div>
             );

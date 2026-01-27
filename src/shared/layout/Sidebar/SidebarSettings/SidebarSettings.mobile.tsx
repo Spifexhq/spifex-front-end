@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 
 import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "@/middlewares";
 
 /* -------------------------------- Types ----------------------------------- */
 export interface SidebarSettingsProps {
@@ -80,7 +81,7 @@ const Icons = {
 } as const;
 
 type IconKey = keyof typeof Icons;
-type SidebarItem = { id: string; icon: IconKey; label: string };
+type SidebarItem = { id: string; icon: IconKey; label: string; permission: string };
 type SidebarSection = { title: string; id: string; items: SidebarItem[] };
 
 /* -------------------------------- Component -------------------------------- */
@@ -93,7 +94,7 @@ const SidebarSettingsMobile: FC<SidebarSettingsProps> = ({
   onMobileClose,
 }) => {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user, permissions } = useAuthContext();
   const { t } = useTranslation("settingsSidebar");
 
   const displayName = user?.name || userName;
@@ -104,44 +105,44 @@ const SidebarSettingsMobile: FC<SidebarSettingsProps> = ({
         title: "",
         id: "me",
         items: [
-          { id: "personal", icon: "personal", label: t("items.personal") },
-          { id: "notifications", icon: "bell", label: t("items.notifications") },
-          { id: "security", icon: "shield", label: t("items.security") },
+          { id: "personal", icon: "personal", label: t("items.personal"), permission: "view_personal_settings_page" },
+          { id: "notifications", icon: "bell", label: t("items.notifications"), permission: "view_notification_settings_page" },
+          { id: "security", icon: "shield", label: t("items.security"), permission: "view_security_and_privacy_page" },
         ],
       },
       {
         title: t("sections.organization"),
         id: "org",
         items: [
-          { id: "organization-settings", icon: "building", label: t("items.organization-settings") },
-          { id: "members", icon: "members", label: t("items.members") },
-          { id: "groups", icon: "groups", label: t("items.groups") },
-          { id: "subscription-management", icon: "layers", label: t("items.subscription-management") },
+          { id: "organization-settings", icon: "building", label: t("items.organization-settings"), permission: "view_organization_settings_page" },
+          { id: "members", icon: "members", label: t("items.members"), permission: "view_member_settings_page" },
+          { id: "groups", icon: "groups", label: t("items.groups"), permission: "view_group_settings_page" },
+          { id: "subscription-management", icon: "layers", label: t("items.subscription-management"), permission: "view_subscription_management_page" },
         ],
       },
       {
         title: t("sections.banking"),
         id: "banking",
         items: [
-          { id: "banks", icon: "bank", label: t("items.banks") },
-          { id: "bank-statements", icon: "card", label: t("items.bank-statements") },
+          { id: "banks", icon: "bank", label: t("items.banks"), permission: "view_bank_settings_page" },
+          { id: "bank-statements", icon: "card", label: t("items.bank-statements"), permission: "view_statements_page" },
         ],
       },
       {
         title: t("sections.management"),
         id: "mgmt",
         items: [
-          { id: "projects", icon: "projects", label: t("items.projects") },
-          { id: "inventory", icon: "inventory", label: t("items.inventory") },
-          { id: "entities", icon: "entities", label: t("items.entities") },
+          { id: "projects", icon: "projects", label: t("items.projects"), permission: "view_project_settings_page" },
+          { id: "inventory", icon: "inventory", label: t("items.inventory"), permission: "view_inventory_settings_page" },
+          { id: "entities", icon: "entities", label: t("items.entities"), permission: "view_entity_settings_page" },
         ],
       },
       {
         title: t("sections.accounting"),
         id: "acct",
         items: [
-          { id: "ledger-accounts", icon: "ledger", label: t("items.ledger-accounts") },
-          { id: "departments", icon: "departments", label: t("items.departments") },
+          { id: "ledger-accounts", icon: "ledger", label: t("items.ledger-accounts"), permission: "view_ledger_accounts_page" },
+          { id: "departments", icon: "departments", label: t("items.departments"), permission: "view_department_settings_page" },
         ],
       },
     ],
@@ -299,64 +300,71 @@ const SidebarSettingsMobile: FC<SidebarSettingsProps> = ({
           style={{ scrollPaddingTop: 12, scrollPaddingBottom: 48 }}
         >
           <div className="mt-1 space-y-4">
-            {sections.map(({ title, id: sectionId, items }) => (
-              <section key={sectionId} aria-label={title || "Profile"}>
-                {title ? (
-                  <p className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                    {title}
-                  </p>
-                ) : null}
+            {sections.map(({ title, id: sectionId, items }) => {
+              const visibleItems = items.filter((item) => permissions.includes(item.permission));
+              if (visibleItems.length === 0) return null;
 
-                <ul className="space-y-0.5 px-2">
-                  {items.map(({ id, icon, label }) => {
-                    const active = activeItem === id;
-                    const idx = idxById.get(id) ?? 0;
+              return (
+                <section key={sectionId} aria-label={title || "Profile"}>
+                  {title ? (
+                    <p className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                      {title}
+                    </p>
+                  ) : null}
 
-                    return (
-                      <li key={id}>
-                        <button
-                          ref={(el) => {
-                            btnRefs.current[idx] = el;
-                          }}
-                          type="button"
-                          role="menuitem"
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => handleClick(id)}
-                          tabIndex={focusIdx === idx ? 0 : -1}
-                          className={[
-                            "group w-full flex items-center gap-3 h-9 rounded-md px-3",
-                            "transition-colors outline-none",
-                            "scroll-mt-3 scroll-mb-3",
-                            active ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50",
-                          ].join(" ")}
-                          title={label}
-                        >
-                          <span
-                            className={[
-                              "flex items-center justify-center rounded",
-                              active ? "text-gray-900" : "text-gray-500 group-hover:text-gray-700",
-                            ].join(" ")}
-                            aria-hidden="true"
-                          >
-                            {Icons[icon]}
-                          </span>
+                  <ul className="space-y-0.5 px-2">
+                    {visibleItems.map(({ id, icon, label, permission }) => {
+                      const active = activeItem === id;
+                      const idx = idxById.get(id) ?? 0;
 
-                          <span className="text-sm truncate">{label}</span>
+                      return (
+                        <li key={id}>
+                          <PermissionMiddleware codeName={permission}>
+                            <button
+                              ref={(el) => {
+                                btnRefs.current[idx] = el;
+                              }}
+                              type="button"
+                              role="menuitem"
+                              aria-current={active ? "page" : undefined}
+                              onClick={() => handleClick(id)}
+                              tabIndex={focusIdx === idx ? 0 : -1}
+                              className={[
+                                "group w-full flex items-center gap-3 h-9 rounded-md px-3",
+                                "transition-colors outline-none",
+                                "scroll-mt-3 scroll-mb-3",
+                                active ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50",
+                              ].join(" ")}
+                              title={label}
+                            >
+                              <span
+                                className={[
+                                  "flex items-center justify-center rounded",
+                                  active ? "text-gray-900" : "text-gray-500 group-hover:text-gray-700",
+                                ].join(" ")}
+                                aria-hidden="true"
+                              >
+                                {Icons[icon]}
+                              </span>
 
-                          <span
-                            aria-hidden="true"
-                            className={[
-                              "ml-auto h-4 w-0.5 rounded-full",
-                              active ? "bg-gray-400/70" : "bg-transparent",
-                            ].join(" ")}
-                          />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ))}
+                              <span className="text-sm truncate">{label}</span>
+
+                              <span
+                                aria-hidden="true"
+                                className={[
+                                  "ml-auto h-4 w-0.5 rounded-full",
+                                  active ? "bg-gray-400/70" : "bg-transparent",
+                                ].join(" ")}
+                              />
+                            </button>
+                          </PermissionMiddleware>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              );
+            })}
           </div>
         </div>
       </nav>

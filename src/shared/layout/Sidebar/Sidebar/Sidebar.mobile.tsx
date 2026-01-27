@@ -67,7 +67,6 @@ declare global {
 const SidebarMobile: React.FC<SidebarProps> = ({ handleOpenModal, handleOpenTransferenceModal, mode }) => {
   const { t } = useTranslation(["sidebar"]);
 
-  // Hooks must always run
   const [mounted, setMounted] = useState(false);
   const [hiddenBySelection, setHiddenBySelection] = useState<boolean>(() => Boolean(window.__SPX_MOBILE_SIDEBAR_HIDDEN__));
 
@@ -87,7 +86,6 @@ const SidebarMobile: React.FC<SidebarProps> = ({ handleOpenModal, handleOpenTran
 
   const portalTarget = useMemo(() => (mounted ? document.body : null), [mounted]);
 
-  // Conditional returns AFTER hooks
   if (mode === "settled") return null;
   if (hiddenBySelection) return null;
   if (!portalTarget) return null;

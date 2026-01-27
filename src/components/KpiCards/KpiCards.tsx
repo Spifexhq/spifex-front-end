@@ -27,7 +27,7 @@ export type KpiItem = {
 interface KpiCardsProps {
   selectedBankIds?: (string | number)[];
   filters?: EntryFilters;
-  context?: "cashflow" | "settled";
+  contextSettlement: boolean;
   refreshToken?: number;
   banksRefreshKey?: number;
 }
@@ -54,7 +54,7 @@ const signedCurrencyFromDecimal = (v: unknown) => {
 const KpiCards: React.FC<KpiCardsProps> = ({
   selectedBankIds,
   filters,
-  context = "cashflow",
+  contextSettlement,
   refreshToken = 0,
   banksRefreshKey = 0,
 }) => {
@@ -114,7 +114,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     (async () => {
       setLoading(true);
       try {
-        if (context === "settled") {
+        if (contextSettlement) {
           const { data } = await api.getSettledKpis({
             description: filters?.description,
             observation: filters?.observation,
@@ -150,7 +150,7 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     return () => {
       mounted = false;
     };
-  }, [context, ledgerAccountParam, bankParam, filters?.description, filters?.observation, refreshToken]);
+  }, [contextSettlement, ledgerAccountParam, bankParam, filters?.description, filters?.observation, refreshToken]);
 
   const cashflowKpis: KpiItem[] = useMemo(() => {
     if (!cf) {
@@ -270,11 +270,11 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     ];
   }, [st, tr]);
 
-  const autoKpis = context === "settled" ? settledKpis : cashflowKpis;
+  const autoKpis = contextSettlement ? settledKpis : cashflowKpis;
 
   const kpiPermission = useMemo(
-    () => (context === "settled" ? ["view_settlement_kpis"] : ["view_cash_flow_kpis"]),
-    [context],
+    () => (contextSettlement ? ["view_settlement_kpis"] : ["view_cash_flow_kpis"]),
+    [contextSettlement],
   );
 
   const [expanded, setExpanded] = useState(false);

@@ -7,7 +7,6 @@ import type { SelectionActionsBarProps } from "./SelectionActionsBar.desktop";
 export type {
   MinimalEntry,
   SelectionActionsBarProps,
-  SelectionActionsContext,
 } from "./SelectionActionsBar.desktop";
 
 const SelectionActionsBar: React.FC<SelectionActionsBarProps> = (props) => {

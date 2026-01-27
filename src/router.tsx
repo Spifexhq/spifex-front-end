@@ -158,67 +158,131 @@ const routes: RouteObject[] = [
                 },
                 {
                     path: 'personal',
-                    element: <Personal />
+                    element: (
+                    <PermissionMiddleware codeName="view_personal_settings_page" behavior="lock">
+                        <Personal />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'organization-settings',
-                    element: <OrganizationSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <OrganizationSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'subscription-management',
-                    element: <SubscriptionManagement />
+                    element: (
+                    <PermissionMiddleware codeName="view_subscription_management_page" behavior="redirect" redirectTo={'/settings'}>
+                        <SubscriptionManagement />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'limits',
-                    element: <LimitsAndUsage />
+                    element: (
+                    <PermissionMiddleware codeName="view_limits_and_usage_page" behavior="redirect" redirectTo={'/settings'}>
+                        <LimitsAndUsage />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'security',
-                    element: <SecurityAndPrivacy />
+                    element: (
+                    <PermissionMiddleware codeName="view_security_and_privacy_page" behavior="redirect" redirectTo={'/settings'}>
+                        <SecurityAndPrivacy />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'banks',
-                    element: <BankSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_bank_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <BankSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'departments',
-                    element: <DepartmentSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_department_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <DepartmentSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'entities',
-                    element: <EntitySettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_entity_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <EntitySettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'inventory',
-                    element: <InventorySettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_inventory_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <InventorySettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'projects',
-                    element: <ProjectSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_project_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <ProjectSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'members',
-                    element: <MemberSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_member_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <MemberSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'groups',
-                    element: <GroupSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_group_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <GroupSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'ledger-accounts',
-                    element: <LedgerAccountsRouter />
+                    element: (
+                    <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
+                        <LedgerAccountsRouter />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'register/ledger-accounts',
-                    element: <LedgerAccountsRouter />
+                    element: (
+                    <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
+                        <LedgerAccountsRouter />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'bank-statements',
-                    element: <Statements />
+                    element: (
+                    <PermissionMiddleware codeName="view_statements_page" behavior="redirect" redirectTo={'/settings'}>
+                        <Statements />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'notifications',
-                    element: <NotificationSettings />
+                    element: (
+                    <PermissionMiddleware codeName="view_notification_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <NotificationSettings />
+                    </PermissionMiddleware>
+                    ),
                 },
                 {
                     path: 'manage-formats',

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Spinner from "@/shared/ui/Loaders/Spinner";
 import { formatCurrency } from "@/lib";
 import { api } from "@/api/requests";
+import { PermissionMiddleware } from "src/middlewares";
 
 import type { BankAccountTableRow, GetBanksTableResponse } from "@/models/settings/banking";
 import type { ApiSuccess } from "@/models/Api";
@@ -197,9 +198,11 @@ const BanksTable: React.FC<BanksTableProps> = ({
           className="col-span-12 sm:col-span-6 lg:col-span-3 w-full max-w-full h-[70px] sm:h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 overflow-hidden"
         >
           <div className="flex items-start justify-between gap-2">
-            <span className="text-[11px] uppercase tracking-wide text-gray-600">
-              {t("kpiCards:panel.consolidatedBalance")}
-            </span>
+            <PermissionMiddleware codeName="view_consolidated_balance">
+              <span className="text-[11px] uppercase tracking-wide text-gray-600">
+                {t("kpiCards:panel.consolidatedBalance")}
+              </span>
+            </PermissionMiddleware>
 
             {/* Desktop only: accounts count */}
             <span className="hidden sm:inline text-[11px] text-gray-500">
@@ -207,9 +210,11 @@ const BanksTable: React.FC<BanksTableProps> = ({
             </span>
           </div>
 
-          <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-            {state.loading ? "—" : totalFmt}
-          </div>
+          <PermissionMiddleware codeName="view_consolidated_balance">
+            <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
+              {state.loading ? "—" : totalFmt}
+            </div>
+          </PermissionMiddleware>
 
           {/* Desktop only: top bank preview */}
           {!state.loading && topBank && (
@@ -236,18 +241,20 @@ const BanksTable: React.FC<BanksTableProps> = ({
         >
           <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full w-full max-w-full">
             <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
-              <div className="text-[12px] text-gray-700">
-                {t("kpiCards:panel.header")}{" "}
-                <button
-                  type="button"
-                  onClick={handleGoToBanks}
-                  className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
-                  aria-label={t("kpiCards:aria.goToBanks")}
-                  title={t("kpiCards:aria.openBanks")}
-                >
-                  {state.loading ? "—" : totalFmt}
-                </button>
-              </div>
+              <PermissionMiddleware codeName="view_consolidated_balance">
+                <div className="text-[12px] text-gray-700">
+                  {t("kpiCards:panel.header")}{" "}
+                  <button
+                    type="button"
+                    onClick={handleGoToBanks}
+                    className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
+                    aria-label={t("kpiCards:aria.goToBanks")}
+                    title={t("kpiCards:aria.openBanks")}
+                  >
+                    {state.loading ? "—" : totalFmt}
+                  </button>
+                </div>
+              </PermissionMiddleware>
 
               <button
                 className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
@@ -281,10 +288,12 @@ const BanksTable: React.FC<BanksTableProps> = ({
                         {t("banksTable:labels.count", { count: state.count || sorted.length })}
                       </span>
                     </div>
-                    <div className="text-[11px] text-gray-600">
-                      {t("banksTable:labels.total")}{" "}
-                      <span className="font-semibold text-gray-800 tabular-nums">{totalFmt}</span>
-                    </div>
+                    <PermissionMiddleware codeName="view_consolidated_balance">
+                      <div className="text-[11px] text-gray-600">
+                        {t("banksTable:labels.total")}{" "}
+                        <span className="font-semibold text-gray-800 tabular-nums">{totalFmt}</span>
+                      </div>
+                    </PermissionMiddleware>
                   </div>
 
                   <div className={`flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 ${hideScrollbarCls}`}>

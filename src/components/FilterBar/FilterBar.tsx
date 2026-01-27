@@ -23,6 +23,7 @@ import { useOnClickOutside } from "./hooks/useOnClickOutside";
 import { useBankOptions } from "./hooks/useBankOptions";
 import { useLedgerAccounts } from "./hooks/useLedgerAccounts";
 import { useSavedViews } from "./hooks/useSavedViews";
+import { PermissionMiddleware } from "src/middlewares";
 
 import { buildClearedLocalFilters, buildInitialLocalFilters, toEntryFilters } from "./FilterBar.utils";
 import type { FilterDefinition } from "./FilterBar.types";
@@ -48,12 +49,6 @@ function normalizeNumString(v?: string): string {
   return Number.isFinite(n) ? String(n) : "";
 }
 
-/**
- * Canonical signature to detect "same filter as last applied".
- * - Arrays sorted
- * - Numbers normalized
- * - Settlement included
- */
 function filtersSignature(filters: EntryFilters): string {
   const sig = {
     settlement_status: !!filters.settlement_status,
@@ -93,7 +88,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   shortcutsEnabled = true,
 }) => {
   const { t } = useTranslation(["filterBar"]);
-  const isMobile = useMediaQuery("(max-width: 639px)"); // Tailwind <sm
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   const bankOptions = useBankOptions(bankActive);
   const allLedgerAccounts = useLedgerAccounts();
@@ -105,7 +100,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
     buildInitialLocalFilters(initial, contextSettlement)
   );
 
-  // Registry (single source of truth)
   const filterDefs = useMemo<FilterDefinition[]>(() => getFilterDefinitions(), []);
   const defsByKey = useMemo(() => {
     const map = new Map<ChipKey, FilterDefinition>();
@@ -120,6 +114,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const addFilterMenuRef = useRef<HTMLDivElement>(null);
   const viewsMenuRef = useRef<HTMLDivElement>(null);
 
+  const configPermission = contextSettlement
+  ? "view_settlement_entry_view"
+  : "view_cash_flow_entry_view";
+
   useOnClickOutside(addFilterMenuRef, () => setAddFilterMenuOpen(false), addFilterMenuOpen);
   useOnClickOutside(viewsMenuRef, () => setViewsMenuOpen(false), viewsMenuOpen);
 
@@ -128,10 +126,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
-  // Mobile-only collapsible panel
   const [panelOpen, setPanelOpen] = useState<boolean>(false);
 
-  // Track last applied filters (prevents re-applying identical filters)
   const [lastAppliedSig, setLastAppliedSig] = useState<string | null>(null);
 
   useEffect(() => {
@@ -446,69 +442,75 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 </Button>
               )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label={t("filterBar:buttons.config")}
-                onClick={() => setConfigModalOpen(true)}
-                className="text-sm bg-white hover:bg-gray-50"
-              >
-                <Settings className="h-4 w-4" aria-hidden />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label={t("filterBar:buttons.saveView")}
-                className="font-semibold bg-white hover:bg-gray-50"
-                onClick={() => setSaveModalOpen(true)}
-              >
-                <span className="sm:hidden" aria-hidden>
-                  <Save className="h-4 w-4" />
-                </span>
-                <span className="hidden sm:inline">{t("filterBar:buttons.saveView")}</span>
-              </Button>
-
-              <div className="relative" ref={viewsMenuRef}>
+              <PermissionMiddleware codeName={configPermission}>
                 <Button
                   variant="outline"
                   size="sm"
-                  aria-label={t("filterBar:buttons.views")}
-                  className={`font-semibold bg-white hover:bg-gray-50 ${
-                    viewsMenuOpen ? "!bg-white !border-gray-400" : ""
-                  }`}
-                  onClick={() => setViewsMenuOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={viewsMenuOpen}
+                  aria-label={t("filterBar:buttons.config")}
+                  onClick={() => setConfigModalOpen(true)}
+                  className="text-sm bg-white hover:bg-gray-50"
+                >
+                  <Settings className="h-4 w-4" aria-hidden />
+                </Button>
+              </PermissionMiddleware>
+
+              <PermissionMiddleware codeName="add_entry_view">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label={t("filterBar:buttons.saveView")}
+                  className="font-semibold bg-white hover:bg-gray-50"
+                  onClick={() => setSaveModalOpen(true)}
                 >
                   <span className="sm:hidden" aria-hidden>
-                    <Eye className="h-4 w-4" />
+                    <Save className="h-4 w-4" />
                   </span>
-                  <span className="hidden sm:inline">{t("filterBar:buttons.views")}</span>
+                  <span className="hidden sm:inline">{t("filterBar:buttons.saveView")}</span>
                 </Button>
+              </PermissionMiddleware>
 
-                {viewsMenuOpen && (
-                  <Menu
-                    roleLabel={t("filterBar:viewsMenu.aria")}
-                    align="right"
-                    emptyLabel={t("filterBar:viewsMenu.empty")}
-                    items={scopedViews.map((v) => ({
-                      key: v.id,
-                      label: (
-                        <span className="flex items-center justify-between w-full">
-                          <span className="truncate">{v.name}</span>
-                          {v.is_default && <Star className="w-3 h-3 text-amber-500 shrink-0 ml-2" aria-hidden />}
-                        </span>
-                      ),
-                      onAction: () => {
-                        setViewsMenuOpen(false);
-                        applyViewToForm(v);
-                      },
-                    }))}
-                    onClose={() => setViewsMenuOpen(false)}
-                  />
-                )}
-              </div>
+              <PermissionMiddleware codeName={configPermission}>
+                <div className="relative" ref={viewsMenuRef}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label={t("filterBar:buttons.views")}
+                    className={`font-semibold bg-white hover:bg-gray-50 ${
+                      viewsMenuOpen ? "!bg-white !border-gray-400" : ""
+                    }`}
+                    onClick={() => setViewsMenuOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={viewsMenuOpen}
+                  >
+                    <span className="sm:hidden" aria-hidden>
+                      <Eye className="h-4 w-4" />
+                    </span>
+                    <span className="hidden sm:inline">{t("filterBar:buttons.views")}</span>
+                  </Button>
+
+                  {viewsMenuOpen && (
+                    <Menu
+                      roleLabel={t("filterBar:viewsMenu.aria")}
+                      align="right"
+                      emptyLabel={t("filterBar:viewsMenu.empty")}
+                      items={scopedViews.map((v) => ({
+                        key: v.id,
+                        label: (
+                          <span className="flex items-center justify-between w-full">
+                            <span className="truncate">{v.name}</span>
+                            {v.is_default && <Star className="w-3 h-3 text-amber-500 shrink-0 ml-2" aria-hidden />}
+                          </span>
+                        ),
+                        onAction: () => {
+                          setViewsMenuOpen(false);
+                          applyViewToForm(v);
+                        },
+                      }))}
+                      onClose={() => setViewsMenuOpen(false)}
+                    />
+                  )}
+                </div>
+              </PermissionMiddleware>
             </div>
           </div>
 

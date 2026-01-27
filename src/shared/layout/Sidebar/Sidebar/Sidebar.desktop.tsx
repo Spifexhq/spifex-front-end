@@ -18,7 +18,7 @@ const SidebarDesktop: React.FC<SidebarProps> = ({
     <nav
       aria-label={t("sidebar:sidebar.aria.nav")}
       className={[
-        "fixed top-16 left-0 h-[calc(100vh-4rem)] z-50 bg-white flex flex-col transition-all duration-300 border-r border-gray-200",
+        "top-16 left-0 h-[calc(100vh-4rem)] z-50 bg-white flex flex-col transition-all duration-300 border-r border-gray-200",
         isOpen ? "w-60" : "w-16",
       ].join(" ")}
     >

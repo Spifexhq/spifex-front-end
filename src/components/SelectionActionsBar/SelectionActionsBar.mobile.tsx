@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
+import { PermissionMiddleware } from "src/middlewares";
 
 /* -------------------------------- Helpers --------------------------------- */
 
@@ -48,26 +49,18 @@ function formatMoney(amount: number, locale: string, currency: string): string {
 
 export type MinimalEntry = {
   amount?: number | string | null;
-
-  // Settled mapping uses this
   transaction_type?: string | null;
-
-  // CashFlow Entry model uses this
   tx_type?: string | null;
-
   due_date?: string | null;
   settlement_due_date?: string | null;
   value_date?: string | null;
 };
 
-export type SelectionActionsContext = "cashflow" | "settled" | (string & {});
-
 export type SelectionActionsBarProps = {
-  context: SelectionActionsContext;
+  contextSettlement: boolean;
 
   selectedIds: string[];
   selectedEntries: MinimalEntry[];
-
   isProcessing?: boolean;
 
   onCancel: () => void;
@@ -79,13 +72,7 @@ export type SelectionActionsBarProps = {
   // Settled actions
   onReturn?: () => Promise<void> | void;
 
-  /**
-   * Optional currency override.
-   * If omitted/empty, defaults to USD.
-   * (Desktop variant may use org currency; mobile stays minimal by design.)
-   */
   currency?: string | null;
-
   className?: string;
 };
 
@@ -179,7 +166,7 @@ const ReturnIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
 /* ------------------------------- Component -------------------------------- */
 
 const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
-  context,
+  contextSettlement,
   selectedIds,
   selectedEntries,
   isProcessing = false,
@@ -253,9 +240,9 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
     [net, i18n.language, resolvedCurrency],
   );
 
-  const showLiquidate = context === "cashflow" && typeof onLiquidate === "function";
-  const showDelete = context === "cashflow" && typeof onDelete === "function";
-  const showReturn = context === "settled" && typeof onReturn === "function";
+  const showLiquidate = !contextSettlement && typeof onLiquidate === "function";
+  const showDelete = !contextSettlement && typeof onDelete === "function";
+  const showReturn = contextSettlement && typeof onReturn === "function";
 
   const toggleCollapsed = useCallback(() => setCollapsed((v) => !v), []);
 
@@ -356,51 +343,57 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
               <XIcon className="h-4 w-4" />
             </Button>
 
-            {showLiquidate && (
-              <Button
-                onClick={onLiquidate}
-                disabled={disableAll}
-                aria-busy={disableAll || undefined}
-                title={t("actions.liquidate", { defaultValue: "Settle" })}
-                className={[
-                  "!h-10 !w-10 !p-0 rounded-xl",
-                  "bg-emerald-600 border border-emerald-600 text-white",
-                  "hover:bg-emerald-700 hover:border-emerald-700",
-                  "active:bg-emerald-800 active:border-emerald-800",
-                ].join(" ")}
-              >
-                <CheckIcon className="h-4 w-4" />
-              </Button>
-            )}
+            <PermissionMiddleware codeName={["add_settled_entries", "view_cash_flow_entries"]} requireAll>
+              {showLiquidate && (
+                <Button
+                  onClick={onLiquidate}
+                  disabled={disableAll}
+                  aria-busy={disableAll || undefined}
+                  title={t("actions.liquidate", { defaultValue: "Settle" })}
+                  className={[
+                    "!h-10 !w-10 !p-0 rounded-xl",
+                    "bg-emerald-600 border border-emerald-600 text-white",
+                    "hover:bg-emerald-700 hover:border-emerald-700",
+                    "active:bg-emerald-800 active:border-emerald-800",
+                  ].join(" ")}
+                >
+                  <CheckIcon className="h-4 w-4" />
+                </Button>
+              )}
+            </PermissionMiddleware>
 
-            {showReturn && (
-              <Button
-                onClick={onReturn}
-                disabled={disableAll}
-                aria-busy={disableAll || undefined}
-                title={t("actions.return", { defaultValue: "Revert" })}
-                className={[
-                  "!h-10 !w-10 !p-0 rounded-xl",
-                  "bg-amber-500 border border-amber-500 text-white",
-                  "hover:bg-amber-600 hover:border-amber-600",
-                ].join(" ")}
-              >
-                <ReturnIcon className="h-4 w-4" />
-              </Button>
-            )}
+            <PermissionMiddleware codeName={["delete_settled_entries", "view_settled_entries"]} requireAll>
+              {showReturn && (
+                <Button
+                  onClick={onReturn}
+                  disabled={disableAll}
+                  aria-busy={disableAll || undefined}
+                  title={t("actions.return", { defaultValue: "Revert" })}
+                  className={[
+                    "!h-10 !w-10 !p-0 rounded-xl",
+                    "bg-amber-500 border border-amber-500 text-white",
+                    "hover:bg-amber-600 hover:border-amber-600",
+                  ].join(" ")}
+                >
+                  <ReturnIcon className="h-4 w-4" />
+                </Button>
+              )}
+            </PermissionMiddleware>
 
-            {showDelete && (
-              <Button
-                variant="outline"
-                onClick={onDelete}
-                disabled={disableAll}
-                aria-busy={disableAll || undefined}
-                title={t("actions.delete", { defaultValue: "Delete" })}
-                className="!h-10 !w-10 !p-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            )}
+            <PermissionMiddleware codeName={["delete_cash_flow_entries", "view_cash_flow_entries"]} requireAll>
+              {showDelete && (
+                <Button
+                  variant="outline"
+                  onClick={onDelete}
+                  disabled={disableAll}
+                  aria-busy={disableAll || undefined}
+                  title={t("actions.delete", { defaultValue: "Delete" })}
+                  className="!h-10 !w-10 !p-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
+              )}
+            </PermissionMiddleware>
           </div>
         </div>
       </div>

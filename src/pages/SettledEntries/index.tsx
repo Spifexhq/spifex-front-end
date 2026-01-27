@@ -109,21 +109,19 @@ const Settled = () => {
     <div className="flex">
       <TopProgress active={isReturning} variant="top" topOffset={64} />
 
-      <Sidebar
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-        handleOpenModal={handleOpenModal}
-        handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
-        mode="default"
-      />
+      <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries", "add_transference"]}>
+        <div className="shrink-0">
+          <Sidebar
+            isOpen={isSidebarOpen}
+            toggleSidebar={toggleSidebar}
+            handleOpenModal={handleOpenModal}
+            handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
+            mode="default"
+          />
+        </div>
+      </PermissionMiddleware>
 
-      <div
-        className={[
-          "flex-1 min-h-0 flex flex-col transition-all duration-300",
-          "ml-0",
-          isSidebarOpen ? "sm:ml-60" : "sm:ml-16",
-        ].join(" ")}
-      >
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <div
           className={[
             "mt-[15px] pb-6 h-[calc(100vh-80px)]",
@@ -143,7 +141,7 @@ const Settled = () => {
           <KpiCards
             selectedBankIds={filters.bank_id}
             filters={filters}
-            context="settled"
+            contextSettlement={true}
             refreshToken={kpiRefresh}
             banksRefreshKey={banksKey}
           />
@@ -161,7 +159,7 @@ const Settled = () => {
 
           {hasSelection && (
             <SelectionActionsBar
-              context="settled"
+              contextSettlement={true}
               selectedIds={selectedIds}
               selectedEntries={selectedAsMinimal}
               isProcessing={isReturning}
@@ -194,10 +192,7 @@ const Settled = () => {
         </div>
 
         {modalType && (
-          <PermissionMiddleware
-            codeName={["add_cash_flow_entries", "add_cash_flow_entries", "add_cash_flow_entries"]}
-            requireAll
-          >
+          <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>
             <EntriesModal
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
@@ -212,7 +207,7 @@ const Settled = () => {
         )}
 
         {isTransferenceModalOpen && (
-          <PermissionMiddleware codeName={["add_transference", "add_transference"]} requireAll>
+          <PermissionMiddleware codeName={"add_transference"}>
             <TransferenceModal
               isOpen={isTransferenceModalOpen}
               onClose={() => setIsTransferenceModalOpen(false)}

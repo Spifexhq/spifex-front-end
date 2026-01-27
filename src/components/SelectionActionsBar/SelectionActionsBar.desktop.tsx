@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 
 /* -------------------------------- Helpers --------------------------------- */
 function safeCurrency(raw: unknown) {
@@ -58,26 +59,18 @@ function formatDateShort(d: Date, locale: string): string {
 /* --------------------------------- Types ---------------------------------- */
 export type MinimalEntry = {
   amount?: number | string | null;
-
-  // Settled mapping uses this
   transaction_type?: string | null;
-
-  // CashFlow Entry model uses this
   tx_type?: string | null;
-
   due_date?: string | null;
   settlement_due_date?: string | null;
   value_date?: string | null;
 };
 
-export type SelectionActionsContext = "cashflow" | "settled" | (string & {});
-
 export type SelectionActionsBarProps = {
-  context: SelectionActionsContext;
+  contextSettlement: boolean;
 
   selectedIds: string[];
   selectedEntries: MinimalEntry[];
-
   isProcessing?: boolean;
 
   onCancel: () => void;
@@ -89,12 +82,7 @@ export type SelectionActionsBarProps = {
   // Settled actions
   onReturn?: () => Promise<void> | void;
 
-  /**
-   * Optional currency override.
-   * If omitted/empty, uses org currency (BankSettings pattern), then "USD".
-   */
   currency?: string | null;
-
   className?: string;
 };
 
@@ -122,7 +110,7 @@ const TrashIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
 
 /* ------------------------------- Component -------------------------------- */
 const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
-  context,
+  contextSettlement,
   selectedIds,
   selectedEntries,
   isProcessing = false,
@@ -223,10 +211,10 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
     return formatDateShort(stats.earliestDue, i18n.language);
   }, [stats.earliestDue, i18n.language]);
 
-  /* Context actions */
-  const showLiquidate = context === "cashflow" && typeof onLiquidate === "function";
-  const showDelete = context === "cashflow" && typeof onDelete === "function";
-  const showReturn = context === "settled" && typeof onReturn === "function";
+  /* contextSettlement actions */
+  const showLiquidate = !contextSettlement && typeof onLiquidate === "function";
+  const showDelete = !contextSettlement && typeof onDelete === "function";
+  const showReturn = contextSettlement && typeof onReturn === "function";
 
   const toggleMinimize = useCallback(() => setMinimized((p) => !p), []);
 
@@ -400,64 +388,70 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
             </span>
           </Button>
 
-          {showLiquidate && (
-            <Button
-              onClick={onLiquidate}
-              disabled={disableAll}
-              aria-busy={disableAll || undefined}
-              title={t("actions.liquidateSelected", { defaultValue: "Settle selected" })}
-              className={[
-                "!py-1.5 !px-3 !text-xs sm:!text-sm",
-                "bg-emerald-600 border border-emerald-600 text-white",
-                "hover:bg-emerald-700 hover:border-emerald-700",
-                "active:bg-emerald-800 active:border-emerald-800",
-              ].join(" ")}
-            >
-              <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                <span aria-hidden="true" className="text-sm leading-none">
-                  ✓
+          <PermissionMiddleware codeName={["add_settled_entries", "view_cash_flow_entries"]} requireAll>
+            {showLiquidate && (
+              <Button
+                onClick={onLiquidate}
+                disabled={disableAll}
+                aria-busy={disableAll || undefined}
+                title={t("actions.liquidateSelected", { defaultValue: "Settle selected" })}
+                className={[
+                  "!py-1.5 !px-3 !text-xs sm:!text-sm",
+                  "bg-emerald-600 border border-emerald-600 text-white",
+                  "hover:bg-emerald-700 hover:border-emerald-700",
+                  "active:bg-emerald-800 active:border-emerald-800",
+                ].join(" ")}
+              >
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <span aria-hidden="true" className="text-sm leading-none">
+                    ✓
+                  </span>
+                  <span>{t("actions.liquidate", { defaultValue: "Settle" })}</span>
                 </span>
-                <span>{t("actions.liquidate", { defaultValue: "Settle" })}</span>
-              </span>
-            </Button>
-          )}
+              </Button>
+            )}
+          </PermissionMiddleware>
 
-          {showReturn && (
-            <Button
-              onClick={onReturn}
-              disabled={disableAll}
-              aria-busy={disableAll || undefined}
-              title={t("actions.return", { defaultValue: "Revert" })}
-              className={[
-                "!py-1.5 !px-3 !text-xs sm:!text-sm",
-                "bg-amber-500 border border-amber-500 text-white",
-                "hover:bg-amber-600 hover:border-amber-600",
-              ].join(" ")}
-            >
-              <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                <span aria-hidden="true" className="text-sm leading-none">
-                  ↩
+          <PermissionMiddleware codeName={["delete_settled_entries", "view_settled_entries"]} requireAll>
+            {showReturn && (
+              <Button
+                onClick={onReturn}
+                disabled={disableAll}
+                aria-busy={disableAll || undefined}
+                title={t("actions.return", { defaultValue: "Revert" })}
+                className={[
+                  "!py-1.5 !px-3 !text-xs sm:!text-sm",
+                  "bg-amber-500 border border-amber-500 text-white",
+                  "hover:bg-amber-600 hover:border-amber-600",
+                ].join(" ")}
+              >
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <span aria-hidden="true" className="text-sm leading-none">
+                    ↩
+                  </span>
+                  <span>{t("actions.return", { defaultValue: "Revert" })}</span>
                 </span>
-                <span>{t("actions.return", { defaultValue: "Revert" })}</span>
-              </span>
-            </Button>
-          )}
+              </Button>
+            )}
+          </PermissionMiddleware>
 
-          {showDelete && (
-            <Button
-              variant="outline"
-              onClick={onDelete}
-              disabled={disableAll}
-              aria-busy={disableAll || undefined}
-              title={t("actions.deleteSelected", { defaultValue: "Delete selected" })}
-              className="!py-1.5 !px-3 !text-xs sm:!text-sm border-red-200 text-red-600 hover:bg-red-50"
-            >
-              <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                <TrashIcon className="h-4 w-4" />
-                <span>{t("actions.delete", { defaultValue: "Delete" })}</span>
-              </span>
-            </Button>
-          )}
+          <PermissionMiddleware codeName={["delete_cash_flow_entries", "view_cash_flow_entries"]} requireAll>
+            {showDelete && (
+              <Button
+                variant="outline"
+                onClick={onDelete}
+                disabled={disableAll}
+                aria-busy={disableAll || undefined}
+                title={t("actions.deleteSelected", { defaultValue: "Delete selected" })}
+                className="!py-1.5 !px-3 !text-xs sm:!text-sm border-red-200 text-red-600 hover:bg-red-50"
+              >
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <TrashIcon className="h-4 w-4" />
+                  <span>{t("actions.delete", { defaultValue: "Delete" })}</span>
+                </span>
+              </Button>
+            )}
+          </PermissionMiddleware>
         </div>
       </div>
     </div>
