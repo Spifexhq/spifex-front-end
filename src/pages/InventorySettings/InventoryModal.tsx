@@ -46,8 +46,6 @@ export type InventoryModalProps = {
   mode: Mode;
   item?: InventoryItem | null;
 
-  canEdit?: boolean;
-
   onClose: () => void;
   onNotify?: (snack: Snack) => void;
   onSaved?: (result: { mode: Mode; created?: InventoryItem }) => void;
@@ -100,7 +98,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
 }) => {
   const { t } = useTranslation("inventorySettings");
 
-  // primitive dep (avoid noisy deps like item?.id)
   const itemId = item?.id ?? null;
 
   const [formData, setFormData] = useState<FormState>(emptyForm);
@@ -128,7 +125,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
     if (isSubmitting || isDetailLoading) return true;
     if (!formData.sku.trim()) return true;
     if (!formData.name.trim()) return true;
-    // qty must be integer >= 0
     const n = Number(String(formData.quantity_on_hand ?? "").trim());
     if (!Number.isFinite(n) || n < 0 || !Number.isInteger(n)) return true;
     return false;
@@ -256,7 +252,6 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
     const { name, value } = e.target;
 
     if (name === "quantity_on_hand") {
-      // allow intermediate states like "" while typing, normalize on submit
       setFormData((p) => ({ ...p, quantity_on_hand: value }));
       return;
     }

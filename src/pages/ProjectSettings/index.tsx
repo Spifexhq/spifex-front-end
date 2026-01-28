@@ -18,6 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import ProjectModal from "./ProjectModal";
 
 import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -237,6 +238,12 @@ const Row = ({
 
 const ProjectSettings: React.FC = () => {
   const { t, i18n } = useTranslation("projectSettings");
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewProjects = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_project");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -358,6 +365,10 @@ const ProjectSettings: React.FC = () => {
 
   const fetchProjectsPage = useCallback(
     async (cursor?: string) => {
+      if (!canViewProjects) {
+        return { items: [] as Project[], nextCursor: undefined as string | undefined };
+      }
+
       if (inflightRef.current) {
         return { items: [] as Project[], nextCursor: undefined as string | undefined };
       }
@@ -384,18 +395,20 @@ const ProjectSettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [appliedCode, appliedSearch, appliedStatuses, appliedTypeParam]
+    [canViewProjects, appliedCode, appliedSearch, appliedStatuses, appliedTypeParam]
   );
 
   const pager = useCursorPager<Project>(fetchProjectsPage, {
-    autoLoadFirst: true,
-    deps: [appliedCode, appliedSearch, appliedStatuses, appliedTypeParam],
+    autoLoadFirst: canViewProjects,
+    deps: [canViewProjects, appliedCode, appliedSearch, appliedStatuses, appliedTypeParam],
   });
-
-  const isInitialLoading = pager.loading && pager.items.length === 0;
-  const isBackgroundSync = pager.loading && pager.items.length > 0;
-
+  
   const { refresh } = pager;
+
+  useEffect(() => {
+    if (!canViewProjects) return;
+    refresh();
+  }, [canViewProjects, refresh]);
 
   /* ------------------------------ Filter apply/clear ------------------------ */
   const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
@@ -612,14 +625,8 @@ const ProjectSettings: React.FC = () => {
   };
 
   /* ------------------------------ Loading --------------------------------- */
-  if (isInitialLoading) {
-    return (
-      <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
-      </>
-    );
-  }
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
 
   const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
 
@@ -627,6 +634,17 @@ const ProjectSettings: React.FC = () => {
   const searchChipValue = appliedSearch.trim() ? truncate(appliedSearch.trim(), 22) : "";
   const statusChipValue = appliedStatuses.length ? appliedStatusValue : "";
   const typeChipValue = appliedTypes.length ? appliedTypeChipValue : "";
+
+  const shouldBlockOnInitial = isInitialLoading && canViewProjects;
+
+  if (shouldBlockOnInitial) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -655,117 +673,119 @@ const ProjectSettings: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between gap-3">
-                  {/* LEFT: chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div ref={codeAnchorRef}>
-                      <Chip
-                        label={t("filters.codeLabel", { defaultValue: "Code" })}
-                        value={codeChipValue ? `• ${codeChipValue}` : undefined}
-                        active={!!appliedCode.trim()}
-                        onClick={() => togglePopover("code")}
-                        onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
-                        disabled={globalBusy}
-                      />
+          <PermissionMiddleware codeName={"view_project"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* LEFT: chips */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div ref={codeAnchorRef}>
+                        <Chip
+                          label={t("filters.codeLabel", { defaultValue: "Code" })}
+                          value={codeChipValue ? `• ${codeChipValue}` : undefined}
+                          active={!!appliedCode.trim()}
+                          onClick={() => togglePopover("code")}
+                          onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={searchAnchorRef}>
+                        <Chip
+                          label={t("filters.searchLabel", { defaultValue: "Search" })}
+                          value={searchChipValue ? `• ${searchChipValue}` : undefined}
+                          active={!!appliedSearch.trim()}
+                          onClick={() => togglePopover("search")}
+                          onClear={appliedSearch.trim() ? () => clearOne("search") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={typeAnchorRef}>
+                        <Chip
+                          label={t("filters.typeLabel", { defaultValue: "Type" })}
+                          value={typeChipValue ? `• ${typeChipValue}` : undefined}
+                          active={appliedTypes.length > 0}
+                          onClick={() => togglePopover("type")}
+                          onClear={appliedTypes.length ? () => clearOne("type") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={statusAnchorRef}>
+                        <Chip
+                          label={t("filters.statusLabel", { defaultValue: "Status" })}
+                          value={statusChipValue ? `• ${statusChipValue}` : undefined}
+                          active={appliedStatuses.length > 0}
+                          onClick={() => togglePopover("status")}
+                          onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      {hasAppliedFilters && (
+                        <ClearFiltersChip
+                          label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                          onClick={clearAll}
+                          disabled={globalBusy}
+                        />
+                      )}
                     </div>
 
-                    <div ref={searchAnchorRef}>
-                      <Chip
-                        label={t("filters.searchLabel", { defaultValue: "Search" })}
-                        value={searchChipValue ? `• ${searchChipValue}` : undefined}
-                        active={!!appliedSearch.trim()}
-                        onClick={() => togglePopover("search")}
-                        onClear={appliedSearch.trim() ? () => clearOne("search") : undefined}
-                        disabled={globalBusy}
-                      />
+                    {/* RIGHT: add button */}
+                    <div className="shrink-0">
+                      <PermissionMiddleware codeName={"add_project"}>
+                        <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
+                          {t("btn.addProject")}
+                        </Button>
+                      </PermissionMiddleware>
                     </div>
-
-                    <div ref={typeAnchorRef}>
-                      <Chip
-                        label={t("filters.typeLabel", { defaultValue: "Type" })}
-                        value={typeChipValue ? `• ${typeChipValue}` : undefined}
-                        active={appliedTypes.length > 0}
-                        onClick={() => togglePopover("type")}
-                        onClear={appliedTypes.length ? () => clearOne("type") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={statusAnchorRef}>
-                      <Chip
-                        label={t("filters.statusLabel", { defaultValue: "Status" })}
-                        value={statusChipValue ? `• ${statusChipValue}` : undefined}
-                        active={appliedStatuses.length > 0}
-                        onClick={() => togglePopover("status")}
-                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    {hasAppliedFilters && (
-                      <ClearFiltersChip
-                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
-                        onClick={clearAll}
-                        disabled={globalBusy}
-                      />
-                    )}
-                  </div>
-
-                  {/* RIGHT: add button */}
-                  <div className="shrink-0">
-                    <PermissionMiddleware codeName={"add_project"}>
-                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("btn.addProject")}
-                      </Button>
-                    </PermissionMiddleware>
                   </div>
                 </div>
+
+                {pager.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
+                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
+                      {t("btn.retry")}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y divide-gray-200">
+                      {visibleItems.length === 0 ? (
+                        <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
+                      ) : (
+                        visibleItems.map((p) => {
+                          const rowBusy = globalBusy || deleteTargetId === p.id || deletedIds.has(p.id);
+                          return (
+                            <Row
+                              key={p.id}
+                              project={p}
+                              onEdit={openEditModal}
+                              onDelete={requestDeleteProject}
+                              t={t}
+                              busy={rowBusy}
+                              typeLabel={getTypeLabel(p.type)}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <PaginationArrows
+                      onPrev={pager.prev}
+                      onNext={pager.next}
+                      disabledPrev={!pager.canPrev || globalBusy}
+                      disabledNext={!pager.canNext || globalBusy}
+                    />
+                  </>
+                )}
               </div>
-
-              {pager.error ? (
-                <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
-                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                    {t("btn.retry")}
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="divide-y divide-gray-200">
-                    {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                    ) : (
-                      visibleItems.map((p) => {
-                        const rowBusy = globalBusy || deleteTargetId === p.id || deletedIds.has(p.id);
-                        return (
-                          <Row
-                            key={p.id}
-                            project={p}
-                            onEdit={openEditModal}
-                            onDelete={requestDeleteProject}
-                            t={t}
-                            busy={rowBusy}
-                            typeLabel={getTypeLabel(p.type)}
-                          />
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <PaginationArrows
-                    onPrev={pager.prev}
-                    onNext={pager.next}
-                    disabledPrev={!pager.canPrev || globalBusy}
-                    disabledNext={!pager.canNext || globalBusy}
-                  />
-                </>
-              )}
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
 
         <PermissionMiddleware codeName={["add_project", "change_project"]}>

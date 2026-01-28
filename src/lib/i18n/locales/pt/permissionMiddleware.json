@@ -1,10 +1,11 @@
 {
-  "lock": {
-    "alt": "Bloqueado",
-    "title": "Você ainda não tem permissão para acessar essa área!",
-    "subtitle": "Se você solicitou para a administração, clique no botão abaixo e atualize a página!",
-    "btn": {
-      "refresh": "Atualizar página"
-    }
+  "header": {
+    "settings": "Acesso",
+    "title": "Permissão necessária"
+  },
+  "message": "Você não tem permissão para acessar esta área. Se você solicitou acesso, atualize a página depois que ele liberar.",
+  "btn": {
+    "refresh": "Atualizar página",
+    "goBack": "Voltar"
   }
 }

@@ -1,9 +1,8 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings/LedgerAccountsGate.tsx
- * i18n: namespace "ledgerAccounts"
  * -------------------------------------------------------------------------- */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "@/shared/ui/Button";
@@ -11,9 +10,10 @@ import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
 
 import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 import { useTranslation } from "react-i18next";
 
-/* --- Snackbar type --- */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
@@ -27,8 +27,13 @@ function getInitials() {
 const LedgerAccountsGate: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("ledgerAccountsGate");
+  const { isOwner, permissions } = useAuthContext();
 
-  /* --------- Page meta --------- */
+  const canAddLedgerAccounts = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("add_ledger_account");
+  }, [isOwner, permissions]);
+
   useEffect(() => {
     document.title = t("pageTitle");
   }, [t]);
@@ -49,7 +54,19 @@ const LedgerAccountsGate: React.FC = () => {
 
   /* --------- Template downloads (backend) --------- */
 
+  const guardNoPermission = () => {
+    setSnack({
+      message: t("snackbar.noPermission"),
+      severity: "error",
+    });
+  };
+
   const downloadCsvTemplate = async () => {
+    if (!canAddLedgerAccounts) {
+      guardNoPermission();
+      return;
+    }
+
     try {
       await api.downloadLedgerCsvTemplate();
     } catch (e) {
@@ -62,6 +79,11 @@ const LedgerAccountsGate: React.FC = () => {
   };
 
   const downloadXlsxTemplate = async () => {
+    if (!canAddLedgerAccounts) {
+      guardNoPermission();
+      return;
+    }
+
     try {
       await api.downloadLedgerXlsxTemplate();
     } catch (e) {
@@ -78,8 +100,12 @@ const LedgerAccountsGate: React.FC = () => {
     setCsvFile(file);
   };
 
-  // Standard mode now calls backend JSON templates
   const addStandardPlan = async (): Promise<boolean> => {
+    if (!canAddLedgerAccounts) {
+      guardNoPermission();
+      return false;
+    }
+
     if (!stdChoice) {
       setSnack({
         message: t("snackbar.standardRequired"),
@@ -93,16 +119,17 @@ const LedgerAccountsGate: React.FC = () => {
   };
 
   const submit = async () => {
+    if (!canAddLedgerAccounts) {
+      guardNoPermission();
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
-      // CSV/XLSX -> backend import
       if (mode === "csv") {
         if (!csvFile) {
-          setSnack({
-            message: t("snackbar.selectCsv"),
-            severity: "warning",
-          });
+          setSnack({ message: t("snackbar.selectCsv"), severity: "warning" });
           return;
         }
 
@@ -112,18 +139,10 @@ const LedgerAccountsGate: React.FC = () => {
 
         await api.importLedgerAccounts(formData);
 
-        setSnack({
-          message: t("snackbar.csvSuccess"),
-          severity: "success",
-        });
-      }
-      // Manual -> backend import
-      else if (mode === "manual") {
+        setSnack({ message: t("snackbar.csvSuccess"), severity: "success" });
+      } else if (mode === "manual") {
         if (!textBlock.trim()) {
-          setSnack({
-            message: t("snackbar.manualRequired"),
-            severity: "warning",
-          });
+          setSnack({ message: t("snackbar.manualRequired"), severity: "warning" });
           return;
         }
 
@@ -133,36 +152,20 @@ const LedgerAccountsGate: React.FC = () => {
 
         await api.importLedgerAccounts(formData);
 
-        setSnack({
-          message: t("snackbar.manualSuccess"),
-          severity: "success",
-        });
-      }
-      // Standard -> backend JSON templates
-      else if (mode === "standard") {
+        setSnack({ message: t("snackbar.manualSuccess"), severity: "success" });
+      } else if (mode === "standard") {
         const ok = await addStandardPlan();
         if (!ok) return;
 
-        setSnack({
-          message: t("snackbar.standardSuccess"),
-          severity: "success",
-        });
-      }
-      // No mode
-      else {
-        setSnack({
-          message: t("snackbar.chooseMode"),
-          severity: "info",
-        });
+        setSnack({ message: t("snackbar.standardSuccess"), severity: "success" });
+      } else {
+        setSnack({ message: t("snackbar.chooseMode"), severity: "info" });
         return;
       }
 
-      // After import, go to main listing
       navigate("/settings/ledger-accounts", { replace: true });
     } catch (e) {
-      const msg =
-        (e as { message?: string })?.message ||
-        (t("snackbar.saveError") as string);
+      const msg = (e as { message?: string })?.message || (t("snackbar.saveError") as string);
       setSnack({ message: msg, severity: "error" });
     } finally {
       setIsSubmitting(false);
@@ -195,155 +198,157 @@ const LedgerAccountsGate: React.FC = () => {
           </header>
 
           {/* Content */}
-          <section className="mt-6">
-            <div className="max-w-3xl mx-auto p-6 md:p-8 border border-gray-200 rounded-lg bg-white space-y-6">
-              <p className="text-sm text-gray-600">{t("subtitle")}</p>
+          <PermissionMiddleware codeName={"add_ledger_account"} behavior="lock">
+            <section className="mt-6">
+              <div className="max-w-3xl mx-auto p-6 md:p-8 border border-gray-200 rounded-lg bg-white space-y-6">
+                <p className="text-sm text-gray-600">{t("subtitle")}</p>
 
-              {/* CSV / XLSX */}
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-medium">{t("modes.csv.title")}</h2>
-                  <label className="text-sm flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="mode"
-                      checked={mode === "csv"}
-                      onChange={() => setMode("csv")}
-                      disabled={isSubmitting}
-                    />
-                    {t("modes.csv.choose")}
-                  </label>
-                </div>
+                {/* CSV / XLSX */}
+                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-medium">{t("modes.csv.title")}</h2>
+                    <label className="text-sm flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="mode"
+                        checked={mode === "csv"}
+                        onChange={() => setMode("csv")}
+                        disabled={isSubmitting}
+                      />
+                      {t("modes.csv.choose")}
+                    </label>
+                  </div>
 
-                {mode === "csv" && (
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" onClick={downloadCsvTemplate} disabled={isSubmitting}>
-                        {t("modes.csv.downloadTemplate")}
-                      </Button>
-                      <Button variant="outline" onClick={downloadXlsxTemplate} disabled={isSubmitting}>
-                        {t("modes.csv.downloadXlsxTemplate")}
-                      </Button>
+                  {mode === "csv" && (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={downloadCsvTemplate} disabled={isSubmitting}>
+                          {t("modes.csv.downloadTemplate")}
+                        </Button>
+                        <Button variant="outline" onClick={downloadXlsxTemplate} disabled={isSubmitting}>
+                          {t("modes.csv.downloadXlsxTemplate")}
+                        </Button>
+                      </div>
+
+                      <Input
+                        kind="text"
+                        type="file"
+                        label={t("modes.csv.uploadLabel")}
+                        onChange={handleUploadCSV}
+                        accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                        disabled={isSubmitting}
+                      />
+
+                      <p className="text-[12px] text-gray-500">
+                        {t("modes.csv.hintHeaderRow")} · {t("modes.csv.hintColumns")}
+                      </p>
+                      <p className="text-[11px] text-gray-500">{t("modes.csv.hintCategories")}</p>
+                      <p className="text-[11px] text-gray-400">{t("modes.csv.hintXlsxMeta")}</p>
                     </div>
-
-                    <Input
-                      kind="text"
-                      type="file"
-                      label={t("modes.csv.uploadLabel")}
-                      onChange={handleUploadCSV}
-                      accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-                      disabled={isSubmitting}
-                    />
-
-                    <p className="text-[12px] text-gray-500">
-                      {t("modes.csv.hintHeaderRow")} · {t("modes.csv.hintColumns")}
-                    </p>
-                    <p className="text-[11px] text-gray-500">{t("modes.csv.hintCategories")}</p>
-                    <p className="text-[11px] text-gray-400">{t("modes.csv.hintXlsxMeta")}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Manual */}
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-medium">{t("modes.manual.title")}</h2>
-                  <label className="text-sm flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="mode"
-                      checked={mode === "manual"}
-                      onChange={() => setMode("manual")}
-                      disabled={isSubmitting}
-                    />
-                    {t("modes.manual.choose")}
-                  </label>
+                  )}
                 </div>
 
-                {mode === "manual" && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500">{t("modes.manual.instructions")}</p>
-
-                    <textarea
-                      className="w-full border border-gray-200 rounded p-2 resize-y min-h-[140px] outline-none focus:ring-2 focus:ring-gray-200"
-                      placeholder={t("modes.manual.placeholder")}
-                      value={textBlock}
-                      onChange={(e) => setTextBlock(e.target.value)}
-                      disabled={isSubmitting}
-                    />
-
-                    <p className="text-[11px] text-gray-500">{t("modes.manual.hintCategories")}</p>
+                {/* Manual */}
+                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-medium">{t("modes.manual.title")}</h2>
+                    <label className="text-sm flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="mode"
+                        checked={mode === "manual"}
+                        onChange={() => setMode("manual")}
+                        disabled={isSubmitting}
+                      />
+                      {t("modes.manual.choose")}
+                    </label>
                   </div>
-                )}
-              </div>
 
-              {/* Standard */}
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-medium">{t("modes.standard.title")}</h2>
-                  <label className="text-sm flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="mode"
-                      checked={mode === "standard"}
-                      onChange={() => setMode("standard")}
-                      disabled={isSubmitting}
-                    />
-                    {t("modes.standard.choose")}
-                  </label>
-                </div>
+                  {mode === "manual" && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-500">{t("modes.manual.instructions")}</p>
 
-                {mode === "standard" && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name="std"
-                          checked={stdChoice === "personal"}
-                          onChange={() => setStdChoice("personal")}
-                          disabled={isSubmitting}
-                        />
-                        {t("modes.standard.personal")}
-                      </label>
+                      <textarea
+                        className="w-full border border-gray-200 rounded p-2 resize-y min-h-[140px] outline-none focus:ring-2 focus:ring-gray-200"
+                        placeholder={t("modes.manual.placeholder")}
+                        value={textBlock}
+                        onChange={(e) => setTextBlock(e.target.value)}
+                        disabled={isSubmitting}
+                      />
 
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="radio"
-                          name="std"
-                          checked={stdChoice === "business"}
-                          onChange={() => setStdChoice("business")}
-                          disabled={isSubmitting}
-                        />
-                        {t("modes.standard.business")}
-                      </label>
+                      <p className="text-[11px] text-gray-500">{t("modes.manual.hintCategories")}</p>
                     </div>
+                  )}
+                </div>
 
-                    <p className="text-[12px] text-gray-500">{t("modes.standard.hint")}</p>
+                {/* Standard */}
+                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-medium">{t("modes.standard.title")}</h2>
+                    <label className="text-sm flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="mode"
+                        checked={mode === "standard"}
+                        onChange={() => setMode("standard")}
+                        disabled={isSubmitting}
+                      />
+                      {t("modes.standard.choose")}
+                    </label>
                   </div>
-                )}
-              </div>
 
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setMode(null);
-                    setCsvFile(null);
-                    setTextBlock("");
-                    setStdChoice(null);
-                  }}
-                  disabled={isSubmitting}
-                >
-                  {t("buttons.clear")}
-                </Button>
+                  {mode === "standard" && (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="std"
+                            checked={stdChoice === "personal"}
+                            onChange={() => setStdChoice("personal")}
+                            disabled={isSubmitting}
+                          />
+                          {t("modes.standard.personal")}
+                        </label>
 
-                <Button onClick={submit} disabled={isSubmitting}>
-                  {isSubmitting ? t("buttons.finishing") : t("buttons.finish")}
-                </Button>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="std"
+                            checked={stdChoice === "business"}
+                            onChange={() => setStdChoice("business")}
+                            disabled={isSubmitting}
+                          />
+                          {t("modes.standard.business")}
+                        </label>
+                      </div>
+
+                      <p className="text-[12px] text-gray-500">{t("modes.standard.hint")}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMode(null);
+                      setCsvFile(null);
+                      setTextBlock("");
+                      setStdChoice(null);
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    {t("buttons.clear")}
+                  </Button>
+
+                  <Button onClick={submit} disabled={isSubmitting}>
+                    {isSubmitting ? t("buttons.finishing") : t("buttons.finish")}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
       </main>
 

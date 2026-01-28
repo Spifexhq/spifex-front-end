@@ -1,11 +1,12 @@
 // src/middlewares/auth/PermissionMiddleware.tsx
 import { type ReactNode, useEffect, useMemo, useRef } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { useAuthContext } from "@/hooks/useAuth";
 import { getAccess } from "@/lib/tokens";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import Button from "@/shared/ui/Button";
 
 type PermissionBehavior = "hide" | "redirect" | "lock";
 
@@ -17,36 +18,18 @@ type Props = {
   requireAll?: boolean;
 };
 
-const LockIcon: React.FC<{ className?: string; title?: string }> = ({ className, title }) => (
-  <svg
-    className={className}
-    viewBox="0 0 128 128"
-    xmlns="http://www.w3.org/2000/svg"
-    role="img"
-    aria-label={title ?? "Locked"}
-  >
-    {title ? <title>{title}</title> : null}
+function getInitials(name?: string): string {
+  const parts = (name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="
-        M44 52V36
-        C44 24.9543 52.9543 16 64 16
-        C75.0457 16 84 24.9543 84 36
-        V52H44Z
+  if (!parts.length) return "U";
 
-        M54 52V36
-        C54 30.4772 58.4772 26 64 26
-        C69.5228 26 74 30.4772 74 36
-        V52H54Z
-      "
-      fill="currentColor"
-    />
-    <rect x="24" y="48" width="80" height="68" rx="16" fill="currentColor" />
-    <circle cx="64" cy="84" r="8" fill="#FFFFFF" />
-  </svg>
-);
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+  return (first + last).toUpperCase() || "U";
+}
 
 export const PermissionMiddleware = ({
   children,
@@ -70,8 +53,7 @@ export const PermissionMiddleware = ({
     if (didInit.current) return;
     didInit.current = true;
 
-    void handleInitUser().catch(() => {
-    });
+    void handleInitUser().catch(() => {});
   }, [authReady, handleInitUser]);
 
   const hasPermission = useMemo(() => {
@@ -79,6 +61,7 @@ export const PermissionMiddleware = ({
     if (isOwner) return true;
 
     const required = Array.isArray(codeName) ? codeName : [codeName];
+
     return requireAll
       ? required.every((cn) => permissions.includes(cn))
       : required.some((cn) => permissions.includes(cn));
@@ -87,37 +70,66 @@ export const PermissionMiddleware = ({
   if (!authReady) return <TopProgress active variant="center" />;
 
   if (!hasPermission) {
-    if (behavior === "redirect") {
-      const target = redirectTo ?? "/";
-      if (location.pathname === target) return null;
-      return <Navigate to={target} replace state={{ from: location.pathname }} />;
-    }
+    // Default behavior used for inline elements (navbar buttons, etc.)
+    if (behavior === "hide") return null;
 
-    if (behavior === "lock") {
-      return (
-        <div className="flex h-full w-full items-center justify-center">
-          <div className="flex flex-col items-center justify-center text-center">
-            <LockIcon
-              title={t("permissionMiddleware:lock.alt")}
-              className="my-6 h-56 w-56 text-gray-900"
-            />
+    // For route-level guards: do NOT auto-redirect anymore.
+    // Keep refresh UX, optionally allow user to go back manually.
+    const target = redirectTo ?? "/settings";
+    const showGoBack = behavior === "redirect" && !!redirectTo;
 
-            <h1 className="text-lg font-semibold">{t("permissionMiddleware:lock.title")}</h1>
-            <h2 className="mb-6 text-sm font-medium">{t("permissionMiddleware:lock.subtitle")}</h2>
+    return (
+      <>
+        <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
+          <div className="max-w-5xl mx-auto">
+            {/* Header card (same pattern as subscription page) */}
+            <header className="bg-white border border-gray-200 rounded-lg">
+              <div className="px-5 py-4 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+                  {getInitials(user?.name)}
+                </div>
 
-            <button
-              type="button"
-              onClick={() => navigate(0)}
-              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold shadow-sm border border-gray-200 bg-gray-900 text-white hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
-            >
-              {t("permissionMiddleware:lock.btn.refresh")}
-            </button>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                    {t("header.settings")}
+                  </div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                    {t("header.title")}
+                  </h1>
+                </div>
+              </div>
+            </header>
+
+            {/* Restricted access message */}
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-[13px] text-gray-700 mb-4">{t("message")}</p>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => navigate(0)}>
+                    {t("btn.refresh")}
+                  </Button>
+
+                  {showGoBack && (
+                    <Button
+                      variant="cancel"
+                      onClick={() =>
+                        navigate(target, {
+                          replace: true,
+                          state: { from: location.pathname },
+                        })
+                      }
+                    >
+                      {t("btn.goBack")}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
-      );
-    }
-
-    return null;
+        </main>
+      </>
+    );
   }
 
   return <>{children}</>;

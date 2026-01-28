@@ -18,6 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import InventoryModal from "./InventoryModal";
 
 import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -232,6 +233,12 @@ const Row = ({
 
 const InventorySettings: React.FC = () => {
   const { t, i18n } = useTranslation("inventorySettings");
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewInventory = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_inventory");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -341,6 +348,10 @@ const InventorySettings: React.FC = () => {
 
   const fetchItemsPage = useCallback(
     async (cursor?: string) => {
+      if (!canViewInventory) {
+        return { items: [] as InventoryItem[], nextCursor: undefined as string | undefined };
+      }
+
       if (inflightRef.current) {
         return { items: [] as InventoryItem[], nextCursor: undefined as string | undefined };
       }
@@ -371,15 +382,38 @@ const InventorySettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [appliedStatuses, appliedSku, appliedName, appliedDescription, appliedUom, appliedMinQoh, appliedMaxQoh]
+    [
+      canViewInventory,
+      appliedStatuses,
+      appliedSku,
+      appliedName,
+      appliedDescription,
+      appliedUom,
+      appliedMinQoh,
+      appliedMaxQoh,
+    ]
   );
 
   const pager = useCursorPager<InventoryItem>(fetchItemsPage, {
-    autoLoadFirst: true,
-    deps: [appliedStatuses, appliedSku, appliedName, appliedDescription, appliedUom, appliedMinQoh, appliedMaxQoh],
+    autoLoadFirst: canViewInventory,
+    deps: [
+      canViewInventory,
+      appliedStatuses,
+      appliedSku,
+      appliedName,
+      appliedDescription,
+      appliedUom,
+      appliedMinQoh,
+      appliedMaxQoh,
+    ],
   });
 
   const { refresh } = pager;
+
+  useEffect(() => {
+    if (!canViewInventory) return;
+    refresh();
+  }, [canViewInventory, refresh]);
 
   /* ------------------------------ Filter apply/clear ------------------------ */
   const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
@@ -631,7 +665,9 @@ const InventorySettings: React.FC = () => {
   const qtyValue = qtyChipValue(appliedMinQoh, appliedMaxQoh);
   const statusChipValue = appliedStatuses.length ? appliedStatusValue : "";
 
-  if (isInitialLoading) {
+  const shouldBlockOnInitial = isInitialLoading && canViewInventory;
+
+  if (shouldBlockOnInitial) {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
@@ -667,138 +703,140 @@ const InventorySettings: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between gap-3">
-                  {/* LEFT: chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div ref={skuAnchorRef}>
-                      <Chip
-                        label={t("filters.skuLabel", { defaultValue: "SKU" })}
-                        value={skuChipValue ? `• ${skuChipValue}` : undefined}
-                        active={!!appliedSku.trim()}
-                        onClick={() => togglePopover("sku")}
-                        onClear={appliedSku.trim() ? () => clearOne("sku") : undefined}
-                        disabled={globalBusy}
-                      />
+          <PermissionMiddleware codeName={"view_inventory"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* LEFT: chips */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div ref={skuAnchorRef}>
+                        <Chip
+                          label={t("filters.skuLabel", { defaultValue: "SKU" })}
+                          value={skuChipValue ? `• ${skuChipValue}` : undefined}
+                          active={!!appliedSku.trim()}
+                          onClick={() => togglePopover("sku")}
+                          onClear={appliedSku.trim() ? () => clearOne("sku") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={nameAnchorRef}>
+                        <Chip
+                          label={t("filters.nameLabel", { defaultValue: "Name" })}
+                          value={nameChipValue ? `• ${nameChipValue}` : undefined}
+                          active={!!appliedName.trim()}
+                          onClick={() => togglePopover("name")}
+                          onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={descAnchorRef}>
+                        <Chip
+                          label={t("filters.descriptionLabel", { defaultValue: "Description" })}
+                          value={descChipValue ? `• ${descChipValue}` : undefined}
+                          active={!!appliedDescription.trim()}
+                          onClick={() => togglePopover("description")}
+                          onClear={appliedDescription.trim() ? () => clearOne("description") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={uomAnchorRef}>
+                        <Chip
+                          label={t("filters.uomLabel", { defaultValue: "UoM" })}
+                          value={uomChipValue ? `• ${uomChipValue}` : undefined}
+                          active={!!appliedUom.trim()}
+                          onClick={() => togglePopover("uom")}
+                          onClear={appliedUom.trim() ? () => clearOne("uom") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={qtyAnchorRef}>
+                        <Chip
+                          label={t("filters.qtyLabel", { defaultValue: "Qty" })}
+                          value={qtyValue ? `• ${qtyValue}` : undefined}
+                          active={!!qtyValue}
+                          onClick={() => togglePopover("qty")}
+                          onClear={qtyValue ? () => clearOne("qty") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={statusAnchorRef}>
+                        <Chip
+                          label={t("filters.statusLabel", { defaultValue: "Status" })}
+                          value={statusChipValue ? `• ${statusChipValue}` : undefined}
+                          active={appliedStatuses.length > 0}
+                          onClick={() => togglePopover("status")}
+                          onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      {hasAppliedFilters && (
+                        <ClearFiltersChip
+                          label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                          onClick={clearAll}
+                          disabled={globalBusy}
+                        />
+                      )}
                     </div>
 
-                    <div ref={nameAnchorRef}>
-                      <Chip
-                        label={t("filters.nameLabel", { defaultValue: "Name" })}
-                        value={nameChipValue ? `• ${nameChipValue}` : undefined}
-                        active={!!appliedName.trim()}
-                        onClick={() => togglePopover("name")}
-                        onClear={appliedName.trim() ? () => clearOne("name") : undefined}
-                        disabled={globalBusy}
-                      />
+                    {/* RIGHT: add button */}
+                    <div className="shrink-0">
+                      <PermissionMiddleware codeName={"add_inventory"}>
+                        <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
+                          {t("btn.addItem")}
+                        </Button>
+                      </PermissionMiddleware>
                     </div>
-
-                    <div ref={descAnchorRef}>
-                      <Chip
-                        label={t("filters.descriptionLabel", { defaultValue: "Description" })}
-                        value={descChipValue ? `• ${descChipValue}` : undefined}
-                        active={!!appliedDescription.trim()}
-                        onClick={() => togglePopover("description")}
-                        onClear={appliedDescription.trim() ? () => clearOne("description") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={uomAnchorRef}>
-                      <Chip
-                        label={t("filters.uomLabel", { defaultValue: "UoM" })}
-                        value={uomChipValue ? `• ${uomChipValue}` : undefined}
-                        active={!!appliedUom.trim()}
-                        onClick={() => togglePopover("uom")}
-                        onClear={appliedUom.trim() ? () => clearOne("uom") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={qtyAnchorRef}>
-                      <Chip
-                        label={t("filters.qtyLabel", { defaultValue: "Qty" })}
-                        value={qtyValue ? `• ${qtyValue}` : undefined}
-                        active={!!qtyValue}
-                        onClick={() => togglePopover("qty")}
-                        onClear={qtyValue ? () => clearOne("qty") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={statusAnchorRef}>
-                      <Chip
-                        label={t("filters.statusLabel", { defaultValue: "Status" })}
-                        value={statusChipValue ? `• ${statusChipValue}` : undefined}
-                        active={appliedStatuses.length > 0}
-                        onClick={() => togglePopover("status")}
-                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    {hasAppliedFilters && (
-                      <ClearFiltersChip
-                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
-                        onClick={clearAll}
-                        disabled={globalBusy}
-                      />
-                    )}
-                  </div>
-
-                  {/* RIGHT: add button */}
-                  <div className="shrink-0">
-                    <PermissionMiddleware codeName={"add_inventory"}>
-                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("btn.addItem")}
-                      </Button>
-                    </PermissionMiddleware>
                   </div>
                 </div>
+
+                {pager.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
+                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
+                      {t("btn.retry")}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y divide-gray-200">
+                      {visibleItems.length === 0 ? (
+                        <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
+                      ) : (
+                        visibleItems.map((i) => {
+                          const rowBusy = globalBusy || deleteTargetId === i.id || deletedIds.has(i.id);
+                          return (
+                            <Row
+                              key={i.id}
+                              item={i}
+                              onEdit={openEditModal}
+                              onDelete={requestDeleteItem}
+                              t={t}
+                              busy={rowBusy}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <PaginationArrows
+                      onPrev={pager.prev}
+                      onNext={pager.next}
+                      disabledPrev={!pager.canPrev || globalBusy}
+                      disabledNext={!pager.canNext || globalBusy}
+                    />
+                  </>
+                )}
               </div>
-
-              {pager.error ? (
-                <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
-                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                    {t("btn.retry")}
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="divide-y divide-gray-200">
-                    {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                    ) : (
-                      visibleItems.map((i) => {
-                        const rowBusy = globalBusy || deleteTargetId === i.id || deletedIds.has(i.id);
-                        return (
-                          <Row
-                            key={i.id}
-                            item={i}
-                            onEdit={openEditModal}
-                            onDelete={requestDeleteItem}
-                            t={t}
-                            busy={rowBusy}
-                          />
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <PaginationArrows
-                    onPrev={pager.prev}
-                    onNext={pager.next}
-                    disabledPrev={!pager.canPrev || globalBusy}
-                    disabledNext={!pager.canNext || globalBusy}
-                  />
-                </>
-              )}
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
 
         <PermissionMiddleware codeName={["add_inventory", "change_inventory"]}>

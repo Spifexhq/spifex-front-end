@@ -1,6 +1,5 @@
 /* --------------------------------------------------------------------------
  * File: src/pages/LedgerAccountSettings.tsx
- * Refactor: extracted create/edit modal into LedgerAccountModal
  * -------------------------------------------------------------------------- */
 
 import React, { useRef, useEffect, useMemo, useState, useCallback } from "react";
@@ -18,6 +17,7 @@ import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 import { useTranslation } from "react-i18next";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -153,7 +153,12 @@ let INFLIGHT_FETCH = false;
 const LedgerAccountSettings: React.FC = () => {
   const { t, i18n } = useTranslation("ledgerAccountsSettings");
   const navigate = useNavigate();
-  const { isOwner } = useAuthContext();
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewLedgerAccounts = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_ledger_account");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -217,38 +222,52 @@ const LedgerAccountSettings: React.FC = () => {
   });
   const qKey = useMemo(() => `${appliedQuery.q}::${appliedQuery.group ?? ""}`, [appliedQuery]);
 
-  const fetchAccountsPage = useCallback(async (cursor?: string) => {
-    if (INFLIGHT_FETCH) {
-      return { items: [] as LedgerAccount[], nextCursor: undefined as string | undefined };
-    }
-    INFLIGHT_FETCH = true;
-    try {
-      const { data, meta } = (await api.getLedgerAccounts({
-        cursor,
-      })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
+  const fetchAccountsPage = useCallback(
+    async (cursor?: string) => {
+      // ✅ Permission gate: no network call if user cannot view ledger accounts
+      if (!canViewLedgerAccounts) {
+        return { items: [] as LedgerAccount[], nextCursor: undefined as string | undefined };
+      }
 
-      const items = ((data?.results ?? []) as LedgerAccount[]).slice().sort((a, b) => {
-        const ca = (a.code || "").toString();
-        const cb = (b.code || "").toString();
-        if (ca && cb && ca !== cb) return ca.localeCompare(cb, undefined, { numeric: true });
-        return (a.account || "").localeCompare(b.account || "", undefined);
-      });
+      if (INFLIGHT_FETCH) {
+        return { items: [] as LedgerAccount[], nextCursor: undefined as string | undefined };
+      }
 
-      const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
-      const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
-      return { items, nextCursor };
-    } finally {
-      INFLIGHT_FETCH = false;
-    }
-  }, []);
+      INFLIGHT_FETCH = true;
+      try {
+        const { data, meta } = (await api.getLedgerAccounts({
+          cursor,
+        })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
+
+        const items = ((data?.results ?? []) as LedgerAccount[]).slice().sort((a, b) => {
+          const ca = (a.code || "").toString();
+          const cb = (b.code || "").toString();
+          if (ca && cb && ca !== cb) return ca.localeCompare(cb, undefined, { numeric: true });
+          return (a.account || "").localeCompare(b.account || "", undefined);
+        });
+
+        const nextUrl = meta?.pagination?.next ?? data?.next ?? null;
+        const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
+
+        return { items, nextCursor };
+      } finally {
+        INFLIGHT_FETCH = false;
+      }
+    },
+    [canViewLedgerAccounts]
+  );
 
   const pager = useCursorPager<LedgerAccount>(fetchAccountsPage, {
-    autoLoadFirst: true,
-    deps: [qKey],
+    autoLoadFirst: canViewLedgerAccounts,
+    deps: [canViewLedgerAccounts, qKey],
   });
 
-  const isInitialLoading = pager.loading && pager.items.length === 0;
-  const isBackgroundSync = pager.loading && pager.items.length > 0;
+  const { refresh } = pager;
+
+  useEffect(() => {
+    if (!canViewLedgerAccounts) return;
+    refresh();
+  }, [canViewLedgerAccounts, refresh]);
 
   /* ----------------------------- Category helpers ------------------------- */
   const resolveCategoryLabel = useCallback(
@@ -519,7 +538,14 @@ const LedgerAccountSettings: React.FC = () => {
   };
 
   /* ----------------------------- Loading UI ------------------------------- */
-  if (isInitialLoading) {
+  const isInitialLoading = pager.loading && pager.items.length === 0;
+  const isBackgroundSync = pager.loading && pager.items.length > 0;
+
+  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy || deletingAll;
+
+  const shouldBlockOnInitial = isInitialLoading && canViewLedgerAccounts;
+
+  if (shouldBlockOnInitial) {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
@@ -527,9 +553,6 @@ const LedgerAccountSettings: React.FC = () => {
       </>
     );
   }
-
-  const canEdit = !!isOwner;
-  const globalBusy = isSubmitting || isBackgroundSync || confirmBusy || deletingAll;
 
   /* ----------------------------- View utils ------------------------------- */
   const RowAccountList = ({ a }: { a: LedgerAccount }) => {
@@ -550,11 +573,15 @@ const LedgerAccountSettings: React.FC = () => {
             {a.is_active === false ? <Badge>{t("tags.inactive")}</Badge> : null}
           </div>
         </div>
-        {canEdit && (
-          <div className="flex gap-2 shrink-0">
+
+        <div className="flex gap-2 shrink-0">
+          <PermissionMiddleware codeName={"change_ledger_account"}>
             <Button variant="outline" onClick={() => openEditModal(a)} disabled={rowBusy}>
               {t("buttons.edit")}
             </Button>
+          </PermissionMiddleware>
+
+          <PermissionMiddleware codeName={"delete_ledger_account"}>
             <Button
               variant="outline"
               onClick={() => requestDeleteAccount(a)}
@@ -563,8 +590,8 @@ const LedgerAccountSettings: React.FC = () => {
             >
               {t("buttons.delete")}
             </Button>
-          </div>
-        )}
+          </PermissionMiddleware>
+        </div>
       </div>
     );
   };
@@ -622,268 +649,280 @@ const LedgerAccountSettings: React.FC = () => {
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
               </div>
 
-              {isOwner && (
-                <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2">
+                <PermissionMiddleware codeName={"add_ledger_account"}>
                   <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
                     {t("buttons.add")}
                   </Button>
+                </PermissionMiddleware>
 
-                  <div className="relative" ref={menuRef}>
-                    <Button
-                      variant="outline"
-                      onClick={() => setMenuOpen((v) => !v)}
-                      aria-haspopup="menu"
-                      aria-expanded={menuOpen}
-                      title={t("buttons.options")}
-                      disabled={globalBusy}
-                    >
-                      ⋯
-                    </Button>
+                <div className="relative" ref={menuRef}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                    title={t("buttons.options")}
+                    disabled={globalBusy}
+                  >
+                    ⋯
+                  </Button>
 
-                    {menuOpen && (
+                  {menuOpen && (
+                    <PermissionMiddleware codeName={["view_ledger_account", "delete_ledger_account"]}>
                       <div
                         role="menu"
                         className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden"
                       >
-                        <button
-                          role="menuitem"
-                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 border-b border-gray-100 transition-colors"
-                          onClick={handleDownloadPDF}
-                          disabled={globalBusy || pager.items.length + added.length === 0}
-                          title={
-                            pager.items.length + added.length === 0
-                              ? t("buttons.downloadPdfDisabled")
-                              : t("buttons.downloadPdf")
-                          }
-                        >
-                          {t("buttons.downloadPdf")}
-                        </button>
+                        <PermissionMiddleware codeName={"view_ledger_account"}>
+                          <button
+                            role="menuitem"
+                            className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 border-b border-gray-100 transition-colors"
+                            onClick={handleDownloadPDF}
+                            disabled={globalBusy || pager.items.length + added.length === 0}
+                            title={
+                              pager.items.length + added.length === 0
+                                ? t("buttons.downloadPdfDisabled")
+                                : t("buttons.downloadPdf")
+                            }
+                          >
+                            {t("buttons.downloadPdf")}
+                          </button>
+                        </PermissionMiddleware>
 
-                        <button
-                          role="menuitem"
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
-                          onClick={requestDeleteAll}
-                          disabled={globalBusy || pager.items.length + added.length === 0}
-                          title={deletingAll ? t("buttons.deletingAll") : t("buttons.resetAll")}
-                        >
-                          {deletingAll ? t("buttons.deletingAll") : t("buttons.resetAll")}
-                        </button>
+                        <PermissionMiddleware codeName={"delete_ledger_account"}>
+                          <button
+                            role="menuitem"
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:text-red-300 transition-colors"
+                            onClick={requestDeleteAll}
+                            disabled={globalBusy || pager.items.length + added.length === 0}
+                            title={deletingAll ? t("buttons.deletingAll") : t("buttons.resetAll")}
+                          >
+                            {deletingAll ? t("buttons.deletingAll") : t("buttons.resetAll")}
+                          </button>
+                        </PermissionMiddleware>
                       </div>
-                    )}
-                  </div>
+                    </PermissionMiddleware>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white">
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                  <div className="flex items-end gap-2">
-                    <div className="w-72">
-                      <Input
-                        kind="text"
-                        label={t("buttons.search")}
-                        placeholder={t("filters.placeholder")}
-                        name="search"
+          <PermissionMiddleware codeName={"view_ledger_account"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                    <div className="flex items-end gap-2">
+                      <div className="w-72">
+                        <Input
+                          kind="text"
+                          label={t("buttons.search")}
+                          placeholder={t("filters.placeholder")}
+                          name="search"
+                          size="sm"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <SelectDropdown<{ label: string; value: CategoryKey }>
+                        label={t("filters.category")}
                         size="sm"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        items={groupOptions.map((g) => ({ label: g.label, value: g.key }))}
+                        selected={
+                          filterGroup
+                            ? [{ label: t(`categories.${filterGroup}`), value: filterGroup }]
+                            : []
+                        }
+                        onChange={handleFilterGroupChange}
+                        getItemKey={(i) => i.value}
+                        getItemLabel={(i) => i.label}
+                        singleSelect
+                        hideCheckboxes
+                        buttonLabel={t("buttons.filterCategory")}
+                        clearOnClickOutside={false}
+                        customStyles={{ maxHeight: "240px" }}
                         disabled={globalBusy}
                       />
+
+                      {(search || filterGroup) && (
+                        <Button
+                          variant="outline"
+                          className="self-end !border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                          onClick={() => {
+                            setSearch("");
+                            setFilterGroup(null);
+                            setAppliedQuery({ q: "", group: null });
+                            pager.refresh();
+                          }}
+                          disabled={globalBusy}
+                        >
+                          {t("buttons.clear")}
+                        </Button>
+                      )}
+
+                      <Button onClick={applySearch} variant="outline" className="self-end" disabled={globalBusy}>
+                        {t("buttons.runSearchAria")}
+                      </Button>
                     </div>
 
-                    <SelectDropdown<{ label: string; value: CategoryKey }>
-                      label={t("filters.category")}
-                      size="sm"
-                      items={groupOptions.map((g) => ({ label: g.label, value: g.key }))}
-                      selected={
-                        filterGroup
-                          ? [{ label: t(`categories.${filterGroup}`), value: filterGroup }]
-                          : []
-                      }
-                      onChange={handleFilterGroupChange}
-                      getItemKey={(i) => i.value}
-                      getItemLabel={(i) => i.label}
-                      singleSelect
-                      hideCheckboxes
-                      buttonLabel={t("buttons.filterCategory")}
-                      clearOnClickOutside={false}
-                      customStyles={{ maxHeight: "240px" }}
-                      disabled={globalBusy}
-                    />
+                    <div className="flex items-end gap-2">
+                      {viewMode === "accordion" && groups.length > 0 && (
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            openAccordions.size === groups.length ? collapseAll() : expandAll(groups)
+                          }
+                          disabled={globalBusy}
+                        >
+                          {openAccordions.size === groups.length ? t("buttons.collapseAll") : t("buttons.expandAll")}
+                        </Button>
+                      )}
 
-                    {(search || filterGroup) && (
                       <Button
                         variant="outline"
-                        className="self-end !border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                        onClick={() => {
-                          setSearch("");
-                          setFilterGroup(null);
-                          setAppliedQuery({ q: "", group: null });
-                          pager.refresh();
-                        }}
+                        onClick={() => setViewMode((v) => (v === "accordion" ? "list" : "accordion"))}
                         disabled={globalBusy}
                       >
-                        {t("buttons.clear")}
+                        {viewMode === "accordion" ? t("buttons.viewList") : t("buttons.viewAccordion")}
                       </Button>
-                    )}
-
-                    <Button onClick={applySearch} variant="outline" className="self-end" disabled={globalBusy}>
-                      {t("buttons.runSearchAria")}
-                    </Button>
-                  </div>
-
-                  <div className="flex items-end gap-2">
-                    {viewMode === "accordion" && groups.length > 0 && (
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          openAccordions.size === groups.length ? collapseAll() : expandAll(groups)
-                        }
-                        disabled={globalBusy}
-                      >
-                        {openAccordions.size === groups.length ? t("buttons.collapseAll") : t("buttons.expandAll")}
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      onClick={() => setViewMode((v) => (v === "accordion" ? "list" : "accordion"))}
-                      disabled={globalBusy}
-                    >
-                      {viewMode === "accordion" ? t("buttons.viewList") : t("buttons.viewAccordion")}
-                    </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-4">
-                {viewMode === "list" ? (
-                  renderListView()
-                ) : (
-                  <div className="space-y-4">
-                    {groups.map((g) => {
-                      const accInGroup = accountsFiltered.filter((a) => getCategoryKeyFromAccount(a as GLX) === g);
-                      if (accInGroup.length === 0) return null;
+                <div className="p-4">
+                  {viewMode === "list" ? (
+                    renderListView()
+                  ) : (
+                    <div className="space-y-4">
+                      {groups.map((g) => {
+                        const accInGroup = accountsFiltered.filter((a) => getCategoryKeyFromAccount(a as GLX) === g);
+                        if (accInGroup.length === 0) return null;
 
-                      const subsInGroup = Array.from(
-                        new Set(accInGroup.map((a) => a.subcategory || t("tags.noSubgroup")))
-                      );
-                      const isOpen = openAccordions.has(g);
+                        const subsInGroup = Array.from(
+                          new Set(accInGroup.map((a) => a.subcategory || t("tags.noSubgroup")))
+                        );
+                        const isOpen = openAccordions.has(g);
 
-                      return (
-                        <div key={g} className="rounded-lg border border-gray-200 overflow-hidden">
-                          <button
-                            onClick={() => toggleAccordion(g)}
-                            className="w-full flex items-center justify-between cursor-pointer select-none px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
-                          >
-                            <span className="text-[13px] font-semibold text-gray-900">{t(`categories.${g}`)}</span>
-                            <svg
-                              className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                              fill="none"
-                              viewBox="0 0 24 24"
+                        return (
+                          <div key={g} className="rounded-lg border border-gray-200 overflow-hidden">
+                            <button
+                              onClick={() => toggleAccordion(g)}
+                              className="w-full flex items-center justify-between cursor-pointer select-none px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
                             >
-                              <path
-                                fill="currentColor"
-                                fillRule="evenodd"
-                                d="m12 6.662 9.665 8.59-1.33 1.495L12 9.337l-8.335 7.41-1.33-1.495L12 6.662Z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
+                              <span className="text-[13px] font-semibold text-gray-900">{t(`categories.${g}`)}</span>
+                              <svg
+                                className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  fill="currentColor"
+                                  fillRule="evenodd"
+                                  d="m12 6.662 9.665 8.59-1.33 1.495L12 9.337l-8.335 7.41-1.33-1.495L12 6.662Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
 
-                          {isOpen && (
-                            <div className="p-4 space-y-4">
-                              {subsInGroup.map((sg) => (
-                                <div key={sg}>
-                                  <p className="text-[12px] font-semibold text-gray-800 mb-2">{sg}</p>
-                                  <div className="divide-y divide-gray-200">
-                                    {accInGroup
-                                      .filter((a) => (a.subcategory || t("tags.noSubgroup")) === sg)
-                                      .map((a) => {
-                                        const id = getLedgerAccountId(a);
-                                        const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
-                                        const tx = getDefaultTx(a as GLX);
+                            {isOpen && (
+                              <div className="p-4 space-y-4">
+                                {subsInGroup.map((sg) => (
+                                  <div key={sg}>
+                                    <p className="text-[12px] font-semibold text-gray-800 mb-2">{sg}</p>
+                                    <div className="divide-y divide-gray-200">
+                                      {accInGroup
+                                        .filter((a) => (a.subcategory || t("tags.noSubgroup")) === sg)
+                                        .map((a) => {
+                                          const id = getLedgerAccountId(a);
+                                          const rowBusy = globalBusy || deleteTargetId === id || deletedIds.has(id);
+                                          const tx = getDefaultTx(a as GLX);
 
-                                        return (
-                                          <div
-                                            key={id}
-                                            className={`flex items-center justify-between px-2 py-2 ${
-                                              rowBusy ? "opacity-70 pointer-events-none" : ""
-                                            }`}
-                                          >
-                                            <div className="min-w-0">
-                                              <p className="text-[13px] font-medium text-gray-900 truncate">
-                                                {a.account || t("tags.noAccount")}
-                                              </p>
-                                              <div className="mt-1 flex gap-2 flex-wrap">
-                                                {a.code ? <Badge>{t("tags.code")}: {a.code}</Badge> : null}
-                                                {tx ? (
-                                                  <Badge>
-                                                    {tx === "credit" ? t("tags.credit") : t("tags.debit")}
-                                                  </Badge>
-                                                ) : null}
-                                                {a.is_active === false ? <Badge>{t("tags.inactive")}</Badge> : null}
+                                          return (
+                                            <div
+                                              key={id}
+                                              className={`flex items-center justify-between px-2 py-2 ${
+                                                rowBusy ? "opacity-70 pointer-events-none" : ""
+                                              }`}
+                                            >
+                                              <div className="min-w-0">
+                                                <p className="text-[13px] font-medium text-gray-900 truncate">
+                                                  {a.account || t("tags.noAccount")}
+                                                </p>
+                                                <div className="mt-1 flex gap-2 flex-wrap">
+                                                  {a.code ? <Badge>{t("tags.code")}: {a.code}</Badge> : null}
+                                                  {tx ? (
+                                                    <Badge>
+                                                      {tx === "credit" ? t("tags.credit") : t("tags.debit")}
+                                                    </Badge>
+                                                  ) : null}
+                                                  {a.is_active === false ? <Badge>{t("tags.inactive")}</Badge> : null}
+                                                </div>
+                                              </div>
+
+                                              <div className="flex gap-2 shrink-0">
+                                                <PermissionMiddleware codeName={"change_ledger_account"}>
+                                                  <Button variant="outline" onClick={() => openEditModal(a)} disabled={rowBusy}>
+                                                    {t("buttons.edit")}
+                                                  </Button>
+                                                </PermissionMiddleware>
+
+                                                <PermissionMiddleware codeName={"delete_ledger_account"}>
+                                                  <Button
+                                                    variant="outline"
+                                                    onClick={() => requestDeleteAccount(a)}
+                                                    disabled={rowBusy}
+                                                    aria-busy={rowBusy || undefined}
+                                                    >
+                                                    {t("buttons.delete")}
+                                                  </Button>
+                                                  </PermissionMiddleware>
                                               </div>
                                             </div>
-
-                                            {canEdit && (
-                                              <div className="flex gap-2 shrink-0">
-                                                <Button variant="outline" onClick={() => openEditModal(a)} disabled={rowBusy}>
-                                                  {t("buttons.edit")}
-                                                </Button>
-                                                <Button
-                                                  variant="outline"
-                                                  onClick={() => requestDeleteAccount(a)}
-                                                  disabled={rowBusy}
-                                                  aria-busy={rowBusy || undefined}
-                                                >
-                                                  {t("buttons.delete")}
-                                                </Button>
-                                              </div>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
+                                          );
+                                        })}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
 
-                    {groups.length === 0 && (
-                      <p className="p-4 text-center text-sm text-gray-500">{t("list.groupEmpty")}</p>
-                    )}
-                  </div>
-                )}
+                      {groups.length === 0 && (
+                        <p className="p-4 text-center text-sm text-gray-500">{t("list.groupEmpty")}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <PaginationArrows
+                  onPrev={pager.prev}
+                  onNext={pager.next}
+                  disabledPrev={!pager.canPrev || isBackgroundSync}
+                  disabledNext={!pager.canNext || isBackgroundSync}
+                />
               </div>
-
-              <PaginationArrows
-                onPrev={pager.prev}
-                onNext={pager.next}
-                disabledPrev={!pager.canPrev || isBackgroundSync}
-                disabledNext={!pager.canNext || isBackgroundSync}
-              />
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
 
-        {/* Modal (separate component) */}
-        <LedgerAccountModal
-          isOpen={modal.isOpen}
-          mode={modal.mode}
-          initial={modal.initial}
-          busy={globalBusy}
-          categoryOptions={groupOptions}
-          getSubgroupOptions={getSubgroupOptionsForCategory}
-          onClose={closeModal}
-          onSubmit={submitAccount}
-        />
+        <PermissionMiddleware codeName={["add_ledger_account", "change_ledger_account"]}>
+          <LedgerAccountModal
+            isOpen={modal.isOpen}
+            mode={modal.mode}
+            initial={modal.initial}
+            busy={globalBusy}
+            categoryOptions={groupOptions}
+            getSubgroupOptions={getSubgroupOptionsForCategory}
+            onClose={closeModal}
+            onSubmit={submitAccount}
+          />
+        </PermissionMiddleware>
       </main>
 
       <ConfirmToast

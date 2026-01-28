@@ -1,6 +1,5 @@
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/EntitySettings/index.tsx                                   */
-/* Refactor: uses new EntityTypeValue union from "@/models/settings/entities"  */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,6 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import EntityModal from "./EntityModal";
 
 import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -214,6 +214,12 @@ const Row: React.FC<{
 
 const EntitySettings: React.FC = () => {
   const { t, i18n } = useTranslation("entitySettings");
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewEntities = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_entity");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -416,6 +422,10 @@ const EntitySettings: React.FC = () => {
 
   const fetchEntitiesPage = useCallback(
     async (cursor?: string) => {
+      if (!canViewEntities) {
+        return { items: [] as Entity[], nextCursor: undefined as string | undefined };
+      }
+
       if (inflightRef.current) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
       inflightRef.current = true;
 
@@ -442,13 +452,20 @@ const EntitySettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [appliedName, appliedAlias, appliedTypes, appliedStatuses]
+    [canViewEntities, appliedName, appliedAlias, appliedTypes, appliedStatuses]
   );
 
   const pager = useCursorPager<Entity>(fetchEntitiesPage, {
-    autoLoadFirst: true,
-    deps: [appliedName, appliedAlias, appliedTypes, appliedStatuses],
+    autoLoadFirst: canViewEntities,
+    deps: [canViewEntities, appliedName, appliedAlias, appliedTypes, appliedStatuses],
   });
+
+  const { refresh } = pager;
+
+  useEffect(() => {
+    if (!canViewEntities) return;
+    refresh();
+  }, [canViewEntities, refresh]);
 
   /* ------------------------------ Overlay filtering ------------------------- */
   const matchesFilters = useCallback(
@@ -543,7 +560,9 @@ const EntitySettings: React.FC = () => {
   const typeChipValue = appliedTypes.length ? `• ${truncate(appliedTypeLabel, 26)}` : "";
   const statusChipValue = appliedStatuses.length ? `• ${appliedStatusValue}` : "";
 
-  if (isInitialLoading) {
+  const shouldBlockOnInitial = isInitialLoading && canViewEntities;
+
+  if (shouldBlockOnInitial) {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
@@ -570,113 +589,115 @@ const EntitySettings: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between gap-3">
-                  {/* LEFT: chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div ref={nameAnchorRef}>
-                      <Chip
-                        label={t("filters.nameLabel", { defaultValue: "Name" })}
-                        value={nameChipValue || undefined}
-                        active={!!appliedName.trim()}
-                        onClick={() => togglePopover("name")}
-                        onClear={appliedName.trim() ? () => clearOne("name") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={aliasAnchorRef}>
-                      <Chip
-                        label={t("filters.aliasLabel", { defaultValue: "Alias" })}
-                        value={aliasChipValue || undefined}
-                        active={!!appliedAlias.trim()}
-                        onClick={() => togglePopover("alias")}
-                        onClear={appliedAlias.trim() ? () => clearOne("alias") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={typeAnchorRef}>
-                      <Chip
-                        label={t("filters.typeLabel", { defaultValue: "Type" })}
-                        value={typeChipValue || undefined}
-                        active={appliedTypes.length > 0}
-                        onClick={() => togglePopover("type")}
-                        onClear={appliedTypes.length ? () => clearOne("type") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={statusAnchorRef}>
-                      <Chip
-                        label={t("filters.statusLabel", { defaultValue: "Status" })}
-                        value={statusChipValue || undefined}
-                        active={appliedStatuses.length > 0}
-                        onClick={() => togglePopover("status")}
-                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    {hasAppliedFilters && (
-                      <ClearFiltersChip
-                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
-                        onClick={clearAll}
-                        disabled={globalBusy}
-                      />
-                    )}
-                  </div>
-
-                  {/* RIGHT: add button */}
-                  <div className="shrink-0">
-                    <PermissionMiddleware codeName={"add_entity"}>
-                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("btn.add")}
-                      </Button>
-                    </PermissionMiddleware>
-                  </div>
-                </div>
-              </div>
-
-              {pager.error ? (
-                <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
-                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                    {t("btn.retry")}
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="divide-y divide-gray-200">
-                    {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                    ) : (
-                      visibleItems.map((e) => (
-                        <Row
-                          key={e.id}
-                          entity={e}
-                          onEdit={openEditModal}
-                          onDelete={requestDeleteEntity}
-                          t={t}
-                          busy={globalBusy || deleteTargetId === e.id || deletedIds.has(e.id)}
+          <PermissionMiddleware codeName={"view_entity"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* LEFT: chips */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div ref={nameAnchorRef}>
+                        <Chip
+                          label={t("filters.nameLabel", { defaultValue: "Name" })}
+                          value={nameChipValue || undefined}
+                          active={!!appliedName.trim()}
+                          onClick={() => togglePopover("name")}
+                          onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                          disabled={globalBusy}
                         />
-                      ))
-                    )}
-                  </div>
+                      </div>
 
-                  <PaginationArrows
-                    onPrev={pager.prev}
-                    onNext={pager.next}
-                    disabledPrev={!pager.canPrev || globalBusy}
-                    disabledNext={!pager.canNext || globalBusy}
-                  />
-                </>
-              )}
-            </div>
-          </section>
+                      <div ref={aliasAnchorRef}>
+                        <Chip
+                          label={t("filters.aliasLabel", { defaultValue: "Alias" })}
+                          value={aliasChipValue || undefined}
+                          active={!!appliedAlias.trim()}
+                          onClick={() => togglePopover("alias")}
+                          onClear={appliedAlias.trim() ? () => clearOne("alias") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={typeAnchorRef}>
+                        <Chip
+                          label={t("filters.typeLabel", { defaultValue: "Type" })}
+                          value={typeChipValue || undefined}
+                          active={appliedTypes.length > 0}
+                          onClick={() => togglePopover("type")}
+                          onClear={appliedTypes.length ? () => clearOne("type") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={statusAnchorRef}>
+                        <Chip
+                          label={t("filters.statusLabel", { defaultValue: "Status" })}
+                          value={statusChipValue || undefined}
+                          active={appliedStatuses.length > 0}
+                          onClick={() => togglePopover("status")}
+                          onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      {hasAppliedFilters && (
+                        <ClearFiltersChip
+                          label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                          onClick={clearAll}
+                          disabled={globalBusy}
+                        />
+                      )}
+                    </div>
+
+                    {/* RIGHT: add button */}
+                    <div className="shrink-0">
+                      <PermissionMiddleware codeName={"add_entity"}>
+                        <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
+                          {t("btn.add")}
+                        </Button>
+                      </PermissionMiddleware>
+                    </div>
+                  </div>
+                </div>
+
+                {pager.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
+                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
+                      {t("btn.retry")}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y divide-gray-200">
+                      {visibleItems.length === 0 ? (
+                        <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
+                      ) : (
+                        visibleItems.map((e) => (
+                          <Row
+                            key={e.id}
+                            entity={e}
+                            onEdit={openEditModal}
+                            onDelete={requestDeleteEntity}
+                            t={t}
+                            busy={globalBusy || deleteTargetId === e.id || deletedIds.has(e.id)}
+                          />
+                        ))
+                      )}
+                    </div>
+
+                    <PaginationArrows
+                      onPrev={pager.prev}
+                      onNext={pager.next}
+                      disabledPrev={!pager.canPrev || globalBusy}
+                      disabledNext={!pager.canNext || globalBusy}
+                    />
+                  </>
+                )}
+              </div>
+            </section>
+          </PermissionMiddleware>
         </div>
 
         <PermissionMiddleware codeName={["add_entity", "change_entity"]}>

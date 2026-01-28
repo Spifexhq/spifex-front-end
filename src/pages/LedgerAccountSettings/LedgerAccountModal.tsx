@@ -1,7 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/pages/LedgerAccountModal.tsx                              */
-/* i18n: namespace "ledgerAccountsSettings"                                    */
-/* Modal UI: aligned to EntriesModal (header/body/footer + overlays)           */
+/* File: src/pages/LedgerAccountModal.tsx                                     */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -106,11 +104,9 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
   const [form, setForm] = useState<FormState>(initial);
   const [addingNewSubgroup, setAddingNewSubgroup] = useState(false);
 
-  // local submission guard
   const [localSubmitting, setLocalSubmitting] = useState(false);
   const effectiveBusy = busy || localSubmitting;
 
-  // overlays (same pattern as EntriesModal)
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
 
@@ -152,11 +148,9 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     setShowCloseConfirm(false);
     setWarning(null);
 
-    // focus after open paint
     setTimeout(() => accountRef.current?.focus(), 60);
   }, [isOpen, initial]);
 
-  // lock body scroll
   useEffect(() => {
     if (!isOpen) return;
     document.body.style.overflow = "hidden";
@@ -193,7 +187,6 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     handleClose();
   }, [isOpen, effectiveBusy, warning, showCloseConfirm, isDirty, handleClose]);
 
-  // Keyboard: ESC, Ctrl/⌘+S
   useEffect(() => {
     if (!isOpen) return;
 
@@ -222,7 +215,6 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     setForm((p) => ({ ...p, category: sel.value, subcategory: "" }));
     setAddingNewSubgroup(false);
 
-    // focus subgroup next (matches “guided” UX of EntriesModal)
     setTimeout(() => focusFirstInteractive(IDS.subgroupWrap), 0);
   }, []);
 
@@ -263,7 +255,6 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
           code: form.code?.trim() ? form.code.trim() : "",
           is_active: typeof form.is_active === "boolean" ? form.is_active : true,
         });
-        // parent is expected to close modal on success
       } catch (err) {
         console.error(err);
         setWarning({

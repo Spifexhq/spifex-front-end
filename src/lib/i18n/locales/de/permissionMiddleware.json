@@ -1,10 +1,11 @@
 {
-  "lock": {
-    "alt": "Gesperrt",
-    "title": "Du hast noch keine Berechtigung, auf diesen Bereich zuzugreifen!",
-    "subtitle": "Wenn du die Freigabe bei der Administration angefragt hast, klicke unten auf den Button und aktualisiere die Seite!",
-    "btn": {
-      "refresh": "Seite aktualisieren"
-    }
+  "header": {
+    "settings": "Zugriff",
+    "title": "Berechtigung erforderlich"
+  },
+  "message": "Du hast keine Berechtigung, auf diesen Bereich zuzugreifen. Wenn du den Zugriff angefragt hast, aktualisiere die Seite, sobald er ihn freigeschaltet hat.",
+  "btn": {
+    "refresh": "Seite aktualisieren",
+    "goBack": "Zurück"
   }
 }

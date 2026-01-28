@@ -1,10 +1,11 @@
 {
-  "lock": {
-    "alt": "Locked",
-    "title": "You don’t have permission to access this area yet!",
-    "subtitle": "If you requested access from an admin, click the button below and refresh the page!",
-    "btn": {
-      "refresh": "Refresh page"
-    }
+  "header": {
+    "settings": "Access",
+    "title": "Permission required"
+  },
+  "message": "You don’t have permission to access this area. If you requested access, refresh the page after it’s granted.",
+  "btn": {
+    "refresh": "Refresh page",
+    "goBack": "Go back"
   }
 }

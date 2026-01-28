@@ -15,6 +15,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import Input from "@/shared/ui/Input";
+import { PermissionMiddleware } from "src/middlewares";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -25,7 +26,7 @@ import type { BankAccount } from "@/models/settings/banking";
 type StatementStatus = "uploaded" | "processing" | "ready" | "failed";
 
 type Statement = {
-  id: string; // external_id
+  id: string;
   bank_account_id: string | null;
   bank_account_label: string | null;
   original_filename: string;
@@ -33,15 +34,15 @@ type Statement = {
   size_bytes: number;
   pages: number | null;
   status: StatementStatus;
-  created_at: string; // ISO
-  json_ready?: boolean; // backend provides this (optional in type)
+  created_at: string;
+  json_ready?: boolean;
 };
 
 type UploadRow = {
-  id: string; // temp id
+  id: string;
   file: File;
   bankAccount?: { label: string; value: string } | null;
-  progress: number; // 0..100
+  progress: number;
   error?: string;
 };
 
@@ -92,16 +93,6 @@ const isTooLarge = (f: File) => f.size > maxBytesForFile(f);
 const toStatus = (v?: string): "" | StatementStatus =>
   v === "uploaded" || v === "processing" || v === "ready" || v === "failed" ? (v as StatementStatus) : "";
 
-/**
- * Your API wraps errors like:
- * { error: { message, detail, fields, status, ... }, meta: { request_id } }
- *
- * This extracts a readable string from:
- * - { error: { fields: { file: ["..."] } } }
- * - { error: { detail: { file: ["..."] } } }
- * - { detail: "..." } (plain DRF)
- * - { file: ["..."] } (plain DRF serializer errors)
- */
 const extractApiMessage = (data: unknown, depth = 0): string | null => {
   if (!data || depth > 4) return null;
 
@@ -115,15 +106,12 @@ const extractApiMessage = (data: unknown, depth = 0): string | null => {
   if (typeof data !== "object") return null;
   const obj = data as Record<string, unknown>;
 
-  // Envelope
   if (obj.error && typeof obj.error === "object") {
     return extractApiMessage(obj.error, depth + 1);
   }
 
-  // Common message
   if (typeof obj.message === "string" && obj.message.trim()) return obj.message.trim();
 
-  // Prefer structured field errors
   if (obj.fields) {
     const msg = extractApiMessage(obj.fields, depth + 1);
     if (msg) return msg;
@@ -133,16 +121,13 @@ const extractApiMessage = (data: unknown, depth = 0): string | null => {
     if (msg) return msg;
   }
 
-  // Plain DRF fallback
   if (typeof obj.detail === "string" && obj.detail.trim()) return obj.detail.trim();
 
-  // Serializer errors (prefer file)
   if (obj.file) {
     const msg = extractApiMessage(obj.file, depth + 1);
     if (msg) return msg;
   }
 
-  // First nested string
   for (const v of Object.values(obj)) {
     const msg = extractApiMessage(v, depth + 1);
     if (msg) return msg;
@@ -223,11 +208,20 @@ let INFLIGHT_FETCH = false;
 /* --------------------------------- Page ----------------------------------- */
 const Statements: React.FC = () => {
   const { t, i18n } = useTranslation("statements");
+  const { handleInitUser, isSuperUser, isSubscribed, permissions, isOwner } = useAuthContext();
 
-  // Subscription (same verification pattern as SubscriptionMiddleware)
+  const canViewBanks = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_bank");
+  }, [isOwner, permissions]);
+
+  const canViewStatements = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_statement");
+  }, [isOwner, permissions]);
+
   const location = useLocation();
   const navigate = useNavigate();
-  const { handleInitUser, isSuperUser, isSubscribed } = useAuthContext();
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
@@ -257,37 +251,34 @@ const Statements: React.FC = () => {
   const [isBackgroundSync, setIsBackgroundSync] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // banks for selector
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const bankItems = useMemo(
     () =>
       banks.map((b) => ({
         label: `${b.institution} • ${b.branch ?? "-"} / ${b.account_number ?? "-"}`,
-        value: b.id // external_id
+        value: b.id
       })),
     [banks]
   );
 
-  // list & filters
   const [statements, setStatements] = useState<Statement[]>([]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatementStatus | "">("");
   const [bankFilter, setBankFilter] = useState<string | "">("");
 
-  // uploads
   const [queue, setQueue] = useState<UploadRow[]>([]);
   const dndRef = useRef<HTMLDivElement>(null);
 
-  // confirm delete
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  // keyboard
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* ------------------------------ Fetching -------------------------------- */
   const refreshBanks = useCallback(async () => {
+    if (isAccessLocked || !canViewBanks) return;
+
     try {
       const { data } = await api.getBanks();
       setBanks(data?.results ?? []);
@@ -295,10 +286,12 @@ const Statements: React.FC = () => {
       const msg = getApiErrorMessage(t, err, "toast.banksFetchError");
       setSnack({ message: msg, severity: "error" });
     }
-  }, [t]);
+  }, [t, isAccessLocked, canViewBanks]);
 
   const refreshStatements = useCallback(
     async (opts: { background?: boolean } = {}) => {
+      if (isAccessLocked || !canViewStatements) return;
+
       if (INFLIGHT_FETCH) return;
       INFLIGHT_FETCH = true;
 
@@ -323,10 +316,9 @@ const Statements: React.FC = () => {
         INFLIGHT_FETCH = false;
       }
     },
-    [q, statusFilter, bankFilter, t]
+    [q, statusFilter, bankFilter, t, isAccessLocked, canViewStatements]
   );
 
-  // Initial fetch (skip completely if access is locked)
   useEffect(() => {
     if (isAuthLoading) return;
 
@@ -336,12 +328,23 @@ const Statements: React.FC = () => {
       return;
     }
 
-    void Promise.all([refreshBanks(), refreshStatements()]);
-  }, [isAuthLoading, isAccessLocked, refreshBanks, refreshStatements]);
+    if (!canViewStatements) setIsInitialLoading(false);
 
-  // Poll while there is any processing statement
+    const jobs: Promise<unknown>[] = [];
+    if (canViewBanks) jobs.push(refreshBanks());
+    if (canViewStatements) jobs.push(refreshStatements());
+
+    if (!jobs.length) {
+      setIsInitialLoading(false);
+      setIsBackgroundSync(false);
+      return;
+    }
+
+    void Promise.all(jobs);
+  }, [isAuthLoading, isAccessLocked, canViewBanks, canViewStatements, refreshBanks, refreshStatements]);
+
   useEffect(() => {
-    if (isAccessLocked) return;
+    if (isAccessLocked || !canViewStatements) return;
 
     const hasProcessing = statements.some((s) => s.status === "processing");
     if (!hasProcessing) return;
@@ -351,7 +354,7 @@ const Statements: React.FC = () => {
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [statements, refreshStatements, isAccessLocked]);
+  }, [statements, refreshStatements, isAccessLocked, canViewStatements]);
 
   /* ------------------------------- Upload --------------------------------- */
   const buildTooLargeRowError = (file: File) => {
@@ -376,7 +379,6 @@ const Statements: React.FC = () => {
 
       const id = `${file.name}_${file.size}_${file.lastModified}_${Math.random().toString(36).slice(2, 8)}`;
 
-      // Client-side size gate (dynamic size + configured limit)
       if (isTooLarge(file)) {
         const msg = buildTooLargeRowError(file);
         rows.push({ id, file, progress: 0, bankAccount: null, error: msg });
@@ -409,13 +411,11 @@ const Statements: React.FC = () => {
   const removeFromQueue = (id: string) => setQueue((prev) => prev.filter((r) => r.id !== id));
 
   const uploadOne = async (row: UploadRow) => {
-    // If already flagged invalid (e.g. too large), don’t even hit the API.
     if (row.error) {
       setSnack({ message: row.error, severity: "error" });
       return;
     }
 
-    // Extra safety (in case rows were created elsewhere)
     if (isTooLarge(row.file)) {
       const msg = buildTooLargeRowError(row.file);
       setQueue((prev) => prev.map((r) => (r.id === row.id ? { ...r, error: msg } : r)));
@@ -493,7 +493,6 @@ const Statements: React.FC = () => {
     }
   };
 
-  // Keyboard: ⌘/Ctrl+U focuses hidden file input; ⌘/Ctrl+F focuses search
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isAccessLocked) return;
@@ -516,7 +515,9 @@ const Statements: React.FC = () => {
   /* ------------------------------ Loading UI ------------------------------- */
   if (isAuthLoading) return <TopProgress active variant="center" />;
 
-  if (isInitialLoading && !isAccessLocked) {
+  const shouldBlockOnStatements = !isAccessLocked && canViewStatements;
+
+  if (isInitialLoading && shouldBlockOnStatements) {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
@@ -565,14 +566,16 @@ const Statements: React.FC = () => {
                   {headerBadge}
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="!py-1.5"
-                    aria-label={t("aria.uploadTrigger")}
-                    disabled={globalBusy}
-                  >
-                    {t("btn.upload")}
-                  </Button>
+                  <PermissionMiddleware codeName={"add_statement"}>
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="!py-1.5"
+                      aria-label={t("aria.uploadTrigger")}
+                      disabled={globalBusy}
+                    >
+                      {t("btn.upload")}
+                    </Button>
+                  </PermissionMiddleware>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -585,243 +588,251 @@ const Statements: React.FC = () => {
               </div>
             </header>
 
-            <section className="mt-6">
-              <div
-                ref={dndRef}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                onDragLeave={onDragLeave}
-                className="bg-white border border-dashed border-gray-300 rounded-lg p-6 text-center"
-                aria-busy={globalBusy || undefined}
-              >
-                <p className="text-[13px] text-gray-700">
-                  {t("dnd.text")}{" "}
-                  <button
-                    type="button"
-                    className="underline underline-offset-2 hover:no-underline"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {t("dnd.click")}
-                  </button>
-                  .
-                </p>
-                <p className="text-[12px] text-gray-500 mt-1">{t("dnd.hint")}</p>
-              </div>
+            <PermissionMiddleware codeName={"add_statement"}>
+              <section className="mt-6">
+                <div
+                  ref={dndRef}
+                  onDrop={onDrop}
+                  onDragOver={onDragOver}
+                  onDragLeave={onDragLeave}
+                  className="bg-white border border-dashed border-gray-300 rounded-lg p-6 text-center"
+                  aria-busy={globalBusy || undefined}
+                >
+                  <p className="text-[13px] text-gray-700">
+                    {t("dnd.text")}{" "}
+                    <button
+                      type="button"
+                      className="underline underline-offset-2 hover:no-underline"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {t("dnd.click")}
+                    </button>
+                    .
+                  </p>
+                  <p className="text-[12px] text-gray-500 mt-1">{t("dnd.hint")}</p>
+                </div>
 
-              {queue.length > 0 && (
-                <div className="mt-4 border border-gray-200 bg-white rounded-lg">
-                  <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                      {t("queue.title", { count: queue.length })}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button variant="cancel" onClick={() => setQueue([])} disabled={globalBusy}>
-                        {t("btn.clearQueue")}
-                      </Button>
-                      <Button onClick={uploadAll} disabled={globalBusy}>
-                        {t("btn.sendAll")}
-                      </Button>
+                {queue.length > 0 && (
+                  <div className="mt-4 border border-gray-200 bg-white rounded-lg">
+                    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                      <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                        {t("queue.title", { count: queue.length })}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button variant="cancel" onClick={() => setQueue([])} disabled={globalBusy}>
+                          {t("btn.clearQueue")}
+                        </Button>
+                        <Button onClick={uploadAll} disabled={globalBusy}>
+                          {t("btn.sendAll")}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  <ul className="divide-y divide-gray-200">
-                    {queue.map((row) => (
-                      <li
-                        key={row.id}
-                        className={`px-4 py-3 flex items-end gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-medium text-gray-900 truncate">{row.file.name}</p>
-                          <p className="text-[12px] text-gray-600">{formatBytes(row.file.size)}</p>
+                    <ul className="divide-y divide-gray-200">
+                      {queue.map((row) => (
+                        <li
+                          key={row.id}
+                          className={`px-4 py-3 flex items-end gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-medium text-gray-900 truncate">{row.file.name}</p>
+                            <p className="text-[12px] text-gray-600">{formatBytes(row.file.size)}</p>
 
-                          <div className="mt-2 h-2 bg-gray-100 rounded" aria-label={t("aria.progress")}>
-                            <div
-                              className="h-2 bg-gray-300 rounded"
-                              style={{ width: `${row.progress}%` }}
-                              aria-valuenow={row.progress}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              role="progressbar"
+                            <div className="mt-2 h-2 bg-gray-100 rounded" aria-label={t("aria.progress")}>
+                              <div
+                                className="h-2 bg-gray-300 rounded"
+                                style={{ width: `${row.progress}%` }}
+                                aria-valuenow={row.progress}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                role="progressbar"
+                              />
+                            </div>
+
+                            {row.error && <p className="mt-2 text-[12px] text-rose-700">{row.error}</p>}
+                          </div>
+
+                          <div className="w-72">
+                            <SelectDropdown
+                              label={t("row.accountOptional")}
+                              items={bankItems}
+                              selected={row.bankAccount ? [row.bankAccount] : []}
+                              onChange={(items) =>
+                                setQueue((prev) =>
+                                  prev.map((r) => (r.id === row.id ? { ...r, bankAccount: items?.[0] ?? null } : r))
+                                )
+                              }
+                              getItemKey={(i) => i.value}
+                              getItemLabel={(i) => i.label}
+                              singleSelect
+                              hideCheckboxes
+                              buttonLabel={t("row.accountButton")}
+                              disabled={globalBusy || !!row.error}
                             />
                           </div>
 
-                          {row.error && <p className="mt-2 text-[12px] text-rose-700">{row.error}</p>}
-                        </div>
-
-                        <div className="w-72">
-                          <SelectDropdown
-                            label={t("row.accountOptional")}
-                            items={bankItems}
-                            selected={row.bankAccount ? [row.bankAccount] : []}
-                            onChange={(items) =>
-                              setQueue((prev) =>
-                                prev.map((r) => (r.id === row.id ? { ...r, bankAccount: items?.[0] ?? null } : r))
-                              )
-                            }
-                            getItemKey={(i) => i.value}
-                            getItemLabel={(i) => i.label}
-                            singleSelect
-                            hideCheckboxes
-                            buttonLabel={t("row.accountButton")}
-                            disabled={globalBusy || !!row.error}
-                          />
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button variant="outline" onClick={() => uploadOne(row)} disabled={globalBusy || !!row.error}>
-                            {t("btn.send")}
-                          </Button>
-                          <Button variant="cancel" onClick={() => removeFromQueue(row.id)} disabled={globalBusy}>
-                            {t("btn.remove")}
-                          </Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </section>
-
-            <section className="mt-6">
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <Input
-                    kind="text"
-                    id="statements-q"
-                    label={t("filters.searchLabel")}
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder={t("filters.placeholder")}
-                    disabled={globalBusy}
-                  />
-                  <SelectDropdown
-                    label={t("filters.status")}
-                    items={statusOptions}
-                    selected={
-                      statusFilter
-                        ? [{ label: statusOptions.find((s) => s.value === statusFilter)?.label ?? "", value: statusFilter }]
-                        : []
-                    }
-                    onChange={(items) => setStatusFilter(toStatus(items?.[0]?.value))}
-                    getItemKey={(i) => i.value}
-                    getItemLabel={(i) => i.label}
-                    singleSelect
-                    hideCheckboxes
-                    buttonLabel={t("filters.statusPick")}
-                  />
-                  <SelectDropdown
-                    label={t("filters.bank")}
-                    items={bankItems}
-                    selected={bankFilter ? bankItems.filter((i) => i.value === bankFilter) : []}
-                    onChange={(items) => setBankFilter(items?.[0]?.value ?? "")}
-                    getItemKey={(i) => i.value}
-                    getItemLabel={(i) => i.label}
-                    singleSelect
-                    hideCheckboxes
-                    buttonLabel={t("filters.bankPick")}
-                  />
-                  <div className="flex items-end gap-2">
-                    <Button onClick={() => refreshStatements({ background: true })} className="!w-full" disabled={globalBusy}>
-                      {t("btn.applyFilters")}
-                    </Button>
-                    <Button
-                      variant="cancel"
-                      onClick={() => {
-                        setQ("");
-                        setStatusFilter("");
-                        setBankFilter("");
-                        void refreshStatements({ background: true });
-                      }}
-                      disabled={globalBusy}
-                    >
-                      {t("btn.clearFilters")}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("list.title", { count: statements.length })}
-                  </span>
-                </div>
-
-                {statements.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-gray-500">{t("list.empty")}</p>
-                ) : (
-                  <ul className="divide-y divide-gray-200">
-                    {statements.map((s) => {
-                      const rowBusy = globalBusy || deleteTargetId === s.id || s.status === "processing";
-                      const canDownloadJson = s.status === "ready" && (s.json_ready ?? true);
-
-                      return (
-                        <li
-                          key={s.id}
-                          className={`px-4 py-3 grid grid-cols-12 gap-3 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}
-                        >
-                          <div className="col-span-4 min-w-0">
-                            <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
-                            <p className="text-[12px] text-gray-600">
-                              {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág · {new Date(s.created_at).toLocaleString()}
-                            </p>
-                          </div>
-
-                          <div className="col-span-3">
-                            <p className="text-[12px] text-gray-600">{t("filters.bank")}</p>
-                            <p className="text-[13px] text-gray-900">{s.bank_account_label ?? "—"}</p>
-                          </div>
-
-                          <div className="col-span-5 flex items-center gap-2 justify-end">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}>
-                              {t(`meta.chip.${s.status}`)}
-                            </span>
-
-                            <Button
-                              variant="outline"
-                              onClick={() => api.downloadStatement(s.id)}
-                              title={t("actions.download")}
-                              disabled={globalBusy}
-                            >
-                              {t("actions.download")}
+                          <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => uploadOne(row)} disabled={globalBusy || !!row.error}>
+                              {t("btn.send")}
                             </Button>
-
-                            <Button
-                              variant="outline"
-                              onClick={() => downloadJson(s.id)}
-                              title={t("actions.downloadJson")}
-                              disabled={!canDownloadJson || globalBusy}
-                            >
-                              {t("actions.downloadJson")}
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              onClick={() => triggerAnalysis(s.id)}
-                              disabled={s.status === "processing" || globalBusy}
-                              title={t("actions.analyze")}
-                            >
-                              {t("actions.analyze")}
-                            </Button>
-
-                            <Button
-                              variant="cancel"
-                              onClick={() => requestDelete(s.id)}
-                              title={t("actions.delete")}
-                              disabled={globalBusy}
-                            >
-                              {t("actions.delete")}
+                            <Button variant="cancel" onClick={() => removeFromQueue(row.id)} disabled={globalBusy}>
+                              {t("btn.remove")}
                             </Button>
                           </div>
                         </li>
-                      );
-                    })}
-                  </ul>
+                      ))}
+                    </ul>
+                  </div>
                 )}
-              </div>
-            </section>
+              </section>
+            </PermissionMiddleware>
+
+            <PermissionMiddleware codeName={"view_statement"} behavior="lock">
+              <section className="mt-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <Input
+                      kind="text"
+                      id="statements-q"
+                      label={t("filters.searchLabel")}
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      placeholder={t("filters.placeholder")}
+                      disabled={globalBusy}
+                    />
+                    <SelectDropdown
+                      label={t("filters.status")}
+                      items={statusOptions}
+                      selected={
+                        statusFilter
+                          ? [{ label: statusOptions.find((s) => s.value === statusFilter)?.label ?? "", value: statusFilter }]
+                          : []
+                      }
+                      onChange={(items) => setStatusFilter(toStatus(items?.[0]?.value))}
+                      getItemKey={(i) => i.value}
+                      getItemLabel={(i) => i.label}
+                      singleSelect
+                      hideCheckboxes
+                      buttonLabel={t("filters.statusPick")}
+                    />
+                    <SelectDropdown
+                      label={t("filters.bank")}
+                      items={bankItems}
+                      selected={bankFilter ? bankItems.filter((i) => i.value === bankFilter) : []}
+                      onChange={(items) => setBankFilter(items?.[0]?.value ?? "")}
+                      getItemKey={(i) => i.value}
+                      getItemLabel={(i) => i.label}
+                      singleSelect
+                      hideCheckboxes
+                      buttonLabel={t("filters.bankPick")}
+                    />
+                    <div className="flex items-end gap-2">
+                      <Button onClick={() => refreshStatements({ background: true })} className="!w-full" disabled={globalBusy}>
+                        {t("btn.applyFilters")}
+                      </Button>
+                      <Button
+                        variant="cancel"
+                        onClick={() => {
+                          setQ("");
+                          setStatusFilter("");
+                          setBankFilter("");
+                          void refreshStatements({ background: true });
+                        }}
+                        disabled={globalBusy}
+                      >
+                        {t("btn.clearFilters")}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="mt-6">
+                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                    <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                      {t("list.title", { count: statements.length })}
+                    </span>
+                  </div>
+
+                  {statements.length === 0 ? (
+                    <p className="p-4 text-center text-sm text-gray-500">{t("list.empty")}</p>
+                  ) : (
+                    <ul className="divide-y divide-gray-200">
+                      {statements.map((s) => {
+                        const rowBusy = globalBusy || deleteTargetId === s.id || s.status === "processing";
+                        const canDownloadJson = s.status === "ready" && (s.json_ready ?? true);
+
+                        return (
+                          <li
+                            key={s.id}
+                            className={`px-4 py-3 grid grid-cols-12 gap-3 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}
+                          >
+                            <div className="col-span-4 min-w-0">
+                              <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
+                              <p className="text-[12px] text-gray-600">
+                                {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág · {new Date(s.created_at).toLocaleString()}
+                              </p>
+                            </div>
+
+                            <div className="col-span-3">
+                              <p className="text-[12px] text-gray-600">{t("filters.bank")}</p>
+                              <p className="text-[13px] text-gray-900">{s.bank_account_label ?? "—"}</p>
+                            </div>
+
+                            <div className="col-span-5 flex items-center gap-2 justify-end">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}>
+                                {t(`meta.chip.${s.status}`)}
+                              </span>
+
+                              <PermissionMiddleware codeName={"change_statement"}>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => api.downloadStatement(s.id)}
+                                  title={t("actions.download")}
+                                  disabled={globalBusy}
+                                >
+                                  {t("actions.download")}
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  onClick={() => downloadJson(s.id)}
+                                  title={t("actions.downloadJson")}
+                                  disabled={!canDownloadJson || globalBusy}
+                                >
+                                  {t("actions.downloadJson")}
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  onClick={() => triggerAnalysis(s.id)}
+                                  disabled={s.status === "processing" || globalBusy}
+                                  title={t("actions.analyze")}
+                                >
+                                  {t("actions.analyze")}
+                                </Button>
+                              </PermissionMiddleware>
+
+                              <PermissionMiddleware codeName={"delete_statement"}>
+                                <Button
+                                  variant="cancel"
+                                  onClick={() => requestDelete(s.id)}
+                                  title={t("actions.delete")}
+                                  disabled={globalBusy}
+                                >
+                                  {t("actions.delete")}
+                                </Button>
+                              </PermissionMiddleware>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </section>
+            </PermissionMiddleware>
           </div>
 
           <ConfirmToast

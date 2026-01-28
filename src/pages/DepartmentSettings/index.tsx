@@ -18,6 +18,7 @@ import Popover from "src/shared/ui/Popover";
 import DepartmentModal from "./DepartmentModal";
 
 import { api } from "@/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
@@ -203,6 +204,12 @@ const Row = ({
 
 const DepartmentSettings: React.FC = () => {
   const { t, i18n } = useTranslation("departmentSettings");
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewDepartments = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_department");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -292,6 +299,10 @@ const DepartmentSettings: React.FC = () => {
 
   const fetchDepartmentsPage = useCallback(
     async (cursor?: string) => {
+      if (!canViewDepartments) {
+        return { items: [] as Department[], nextCursor: undefined as string | undefined };
+      }
+
       if (inflightRef.current) {
         return { items: [] as Department[], nextCursor: undefined as string | undefined };
       }
@@ -317,15 +328,20 @@ const DepartmentSettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [appliedCode, appliedName, appliedStatuses]
+    [canViewDepartments, appliedCode, appliedName, appliedStatuses]
   );
 
   const pager = useCursorPager<Department>(fetchDepartmentsPage, {
-    autoLoadFirst: true,
-    deps: [appliedCode, appliedName, appliedStatuses],
+    autoLoadFirst: canViewDepartments,
+    deps: [canViewDepartments, appliedCode, appliedName, appliedStatuses],
   });
 
   const { refresh } = pager;
+
+  useEffect(() => {
+    if (!canViewDepartments) return;
+    refresh();
+  }, [canViewDepartments, refresh]);
 
   /* ------------------------------ Filter apply/clear ------------------------ */
   const applyFromDraft = useCallback(
@@ -510,7 +526,9 @@ const DepartmentSettings: React.FC = () => {
   const nameChipValue = appliedName.trim() ? truncate(appliedName.trim(), 22) : "";
   const statusChipValue = appliedStatuses.length ? appliedStatusValue : "";
 
-  if (isInitialLoading) {
+  const shouldBlockOnInitial = isInitialLoading && canViewDepartments;
+
+  if (shouldBlockOnInitial) {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
@@ -537,106 +555,108 @@ const DepartmentSettings: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between gap-3">
-                  {/* LEFT: chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div ref={codeAnchorRef}>
-                      <Chip
-                        label={t("filters.codeLabel", { defaultValue: "Code" })}
-                        value={codeChipValue ? `• ${codeChipValue}` : undefined}
-                        active={!!appliedCode.trim()}
-                        onClick={() => togglePopover("code")}
-                        onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
-                        disabled={globalBusy}
-                      />
+          <PermissionMiddleware codeName={"view_department"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* LEFT: chips */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div ref={codeAnchorRef}>
+                        <Chip
+                          label={t("filters.codeLabel", { defaultValue: "Code" })}
+                          value={codeChipValue ? `• ${codeChipValue}` : undefined}
+                          active={!!appliedCode.trim()}
+                          onClick={() => togglePopover("code")}
+                          onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={nameAnchorRef}>
+                        <Chip
+                          label={t("filters.nameLabel", { defaultValue: "Name" })}
+                          value={nameChipValue ? `• ${nameChipValue}` : undefined}
+                          active={!!appliedName.trim()}
+                          onClick={() => togglePopover("name")}
+                          onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={statusAnchorRef}>
+                        <Chip
+                          label={t("filters.statusLabel", { defaultValue: "Status" })}
+                          value={statusChipValue ? `• ${statusChipValue}` : undefined}
+                          active={appliedStatuses.length > 0}
+                          onClick={() => togglePopover("status")}
+                          onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      {hasAppliedFilters && (
+                        <ClearFiltersChip
+                          label={t("filters.clearAll", { defaultValue: "Clear filters" })}
+                          onClick={clearAll}
+                          disabled={globalBusy}
+                        />
+                      )}
                     </div>
 
-                    <div ref={nameAnchorRef}>
-                      <Chip
-                        label={t("filters.nameLabel", { defaultValue: "Name" })}
-                        value={nameChipValue ? `• ${nameChipValue}` : undefined}
-                        active={!!appliedName.trim()}
-                        onClick={() => togglePopover("name")}
-                        onClear={appliedName.trim() ? () => clearOne("name") : undefined}
-                        disabled={globalBusy}
-                      />
+                    {/* RIGHT: add button */}
+                    <div className="shrink-0">
+                      <PermissionMiddleware codeName={"change_department"}>
+                        <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
+                          {t("buttons.add")}
+                        </Button>
+                      </PermissionMiddleware>
                     </div>
-
-                    <div ref={statusAnchorRef}>
-                      <Chip
-                        label={t("filters.statusLabel", { defaultValue: "Status" })}
-                        value={statusChipValue ? `• ${statusChipValue}` : undefined}
-                        active={appliedStatuses.length > 0}
-                        onClick={() => togglePopover("status")}
-                        onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    {hasAppliedFilters && (
-                      <ClearFiltersChip
-                        label={t("filters.clearAll", { defaultValue: "Clear filters" })}
-                        onClick={clearAll}
-                        disabled={globalBusy}
-                      />
-                    )}
-                  </div>
-
-                  {/* RIGHT: add button */}
-                  <div className="shrink-0">
-                    <PermissionMiddleware codeName={"change_department"}>
-                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("buttons.add")}
-                      </Button>
-                    </PermissionMiddleware>
                   </div>
                 </div>
+
+                {pager.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.fetchError")}</p>
+                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
+                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
+                      {t("buttons.tryAgain")}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y divide-gray-200">
+                      {visibleItems.length === 0 ? (
+                        <p className="p-4 text-center text-sm text-gray-500">{t("alerts.noData")}</p>
+                      ) : (
+                        visibleItems.map((d) => {
+                          const rowBusy = globalBusy || deleteTargetId === d.id || deletedIds.has(d.id);
+
+                          return (
+                            <Row
+                              key={d.id}
+                              dept={d}
+                              onEdit={openEditModal}
+                              onDelete={requestDeleteDepartment}
+                              t={t}
+                              busy={rowBusy}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <PaginationArrows
+                      onPrev={pager.prev}
+                      onNext={pager.next}
+                      disabledPrev={!pager.canPrev || globalBusy}
+                      disabledNext={!pager.canNext || globalBusy}
+                    />
+                  </>
+                )}
               </div>
-
-              {pager.error ? (
-                <div className="p-6 text-center">
-                  <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.fetchError")}</p>
-                  <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                  <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                    {t("buttons.tryAgain")}
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="divide-y divide-gray-200">
-                    {visibleItems.length === 0 ? (
-                      <p className="p-4 text-center text-sm text-gray-500">{t("alerts.noData")}</p>
-                    ) : (
-                      visibleItems.map((d) => {
-                        const rowBusy = globalBusy || deleteTargetId === d.id || deletedIds.has(d.id);
-
-                        return (
-                          <Row
-                            key={d.id}
-                            dept={d}
-                            onEdit={openEditModal}
-                            onDelete={requestDeleteDepartment}
-                            t={t}
-                            busy={rowBusy}
-                          />
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <PaginationArrows
-                    onPrev={pager.prev}
-                    onNext={pager.next}
-                    disabledPrev={!pager.canPrev || globalBusy}
-                    disabledNext={!pager.canNext || globalBusy}
-                  />
-                </>
-              )}
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
 
         <PermissionMiddleware codeName={["add_department", "change_department"]}>

@@ -1,8 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/pages/MemberSettings/MemberModal.tsx                              */
-/* - No tabs                                                                   */
-/* - Owns: detail fetch (edit), create/edit submit, password validation        */
-/* - i18n: namespace "memberSettings"                                         */
+/* File: src/pages/MemberSettings/MemberModal.tsx                             */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -14,6 +11,7 @@ import Shimmer from "@/shared/ui/Loaders/Shimmer";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
+import { PermissionMiddleware } from "src/middlewares";
 import { validatePassword } from "@/lib";
 
 import type { GroupListItem } from "@/models/auth/rbac";
@@ -47,7 +45,7 @@ function normalizeComparable(f: FormState) {
   return {
     name: trim(f.name),
     email: trim(f.email),
-    password: f.password, // keep as-is (user input)
+    password: f.password,
     confirmPassword: f.confirmPassword,
     groupIds,
   };
@@ -75,7 +73,6 @@ export type MemberModalProps = {
   member?: Member | null;
 
   allGroups: GroupListItem[];
-  canEdit?: boolean;
 
   onClose: () => void;
   onNotify?: (snack: Snack) => void;
@@ -87,7 +84,6 @@ const MemberModal: React.FC<MemberModalProps> = ({
   mode,
   member,
   allGroups,
-  canEdit = true,
   onClose,
   onNotify,
   onSaved,
@@ -114,7 +110,24 @@ const MemberModal: React.FC<MemberModalProps> = ({
   }, [formData]);
 
   const busy = isSubmitting || isDetailLoading;
-  const disableForm = busy || !canEdit;
+  const disableForm = busy;
+
+  const requiredFilled = useMemo(() => {
+    const nameOk = formData.name.trim().length > 0;
+    const emailOk = formData.email.trim().length > 0;
+
+    // create requires password + confirm
+    if (mode === "create") {
+      const pwOk = formData.password.trim().length > 0;
+      const cpwOk = formData.confirmPassword.trim().length > 0;
+      return nameOk && emailOk && pwOk && cpwOk;
+    }
+
+    // edit does not require passwords
+    return nameOk && emailOk;
+  }, [formData.name, formData.email, formData.password, formData.confirmPassword, mode]);
+
+  const canSubmit = !busy && requiredFilled;
 
   const hardReset = useCallback(() => {
     setFormData(emptyForm);
@@ -209,13 +222,15 @@ const MemberModal: React.FC<MemberModalProps> = ({
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        (document.getElementById("memberModalForm") as HTMLFormElement | null)?.requestSubmit();
+          if (canSubmit) {
+            (document.getElementById("memberModalForm") as HTMLFormElement | null)?.requestSubmit();
+          }
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, attemptClose]);
+  }, [isOpen, attemptClose, canSubmit]);
 
   window.useGlobalEsc(isOpen, onClose);
 
@@ -223,8 +238,6 @@ const MemberModal: React.FC<MemberModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!canEdit) return;
-
       const name = formData.name.trim();
       const email = formData.email.trim();
 
@@ -278,7 +291,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [canEdit, formData, mode, memberId, onNotify, onSaved, closeNow, t]
+    [formData, mode, memberId, onNotify, onSaved, closeNow, t]
   );
 
   if (!isOpen) return null;
@@ -366,20 +379,22 @@ const MemberModal: React.FC<MemberModalProps> = ({
                   </>
                 )}
 
-                <div className="col-span-1">
-                  <SelectDropdown<GroupListItem>
-                    label={t("field.groups")}
-                    items={allGroups}
-                    selected={formData.groups}
-                    onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
-                    getItemKey={(g) => g.id}
-                    getItemLabel={(g) => g.name}
-                    buttonLabel={t("btnLabel.groups")}
-                    hideCheckboxes={false}
-                    clearOnClickOutside={false}
-                    customStyles={{ maxHeight: "280px" }}
-                  />
-                </div>
+                <PermissionMiddleware codeName={"view_group"}>
+                  <div className="col-span-1">
+                    <SelectDropdown<GroupListItem>
+                      label={t("field.groups")}
+                      items={allGroups}
+                      selected={formData.groups}
+                      onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
+                      getItemKey={(g) => g.id}
+                      getItemLabel={(g) => g.name}
+                      buttonLabel={t("btnLabel.groups")}
+                      hideCheckboxes={false}
+                      clearOnClickOutside={false}
+                      customStyles={{ maxHeight: "280px" }}
+                    />
+                  </div>
+                </PermissionMiddleware>
               </div>
             )}
           </div>
@@ -394,7 +409,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
               <Button variant="cancel" type="button" onClick={attemptClose} disabled={busy}>
                 {t("btn.cancel")}
               </Button>
-              <Button type="submit" disabled={busy || !canEdit}>
+              <Button type="submit" disabled={!canSubmit}>
                 {t("btn.save")}
               </Button>
             </div>

@@ -25,6 +25,7 @@ import Popover from "src/shared/ui/Popover";
 import MemberModal from "./MemberModal";
 
 import { api } from "@/api/requests";
+import { PermissionMiddleware } from "src/middlewares";
 import { useAuthContext } from "@/hooks/useAuth";
 
 import type { GroupListItem } from "@/models/auth/rbac";
@@ -44,7 +45,7 @@ const getInitials = () => "FN";
 
 type FilterKey = "name" | "email" | "role" | "group" | null;
 
-type RoleKey = Exclude<Role, "owner">; // UI typically filters these
+type RoleKey = Exclude<Role, "owner">;
 type RoleOption = { key: RoleKey; label: string };
 
 type GroupOption = { key: string; label: string };
@@ -156,14 +157,12 @@ const Row = ({
   member,
   onEdit,
   onDelete,
-  canEdit,
   t,
   busy,
 }: {
   member: Member;
   onEdit: (e: Member) => void;
   onDelete: (e: Member) => void;
-  canEdit: boolean;
   t: TFunction;
   busy?: boolean;
 }) => (
@@ -172,23 +171,36 @@ const Row = ({
       <p className="text-[13px] font-medium text-gray-900 truncate">{member.name}</p>
       <p className="text-[12px] text-gray-600 truncate">{member.email}</p>
     </div>
-    {canEdit && (
-      <div className="flex gap-2 shrink-0">
+    <div className="flex gap-2 shrink-0">
+      <PermissionMiddleware codeName={"change_member"}>
         <Button variant="outline" onClick={() => onEdit(member)} disabled={busy}>
           {t("btn.edit")}
         </Button>
+      </PermissionMiddleware>
+
+      <PermissionMiddleware codeName={"delete_member"}>
         <Button variant="outline" onClick={() => onDelete(member)} disabled={busy} aria-busy={busy || undefined}>
           {t("btn.delete")}
         </Button>
-      </div>
-    )}
+      </PermissionMiddleware>
+    </div>
   </div>
 );
 
 /* ----------------------------- Component --------------------------------- */
 const MemberSettings: React.FC = () => {
   const { t, i18n } = useTranslation("memberSettings");
-  const { isOwner } = useAuthContext();
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewMembers = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_member");
+  }, [isOwner, permissions]);
+
+  const canViewGroups = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_group");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -201,26 +213,21 @@ const MemberSettings: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [groups, setGroups] = useState<GroupListItem[]>([]);
 
-  // Standard flags
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isBackgroundSync, setIsBackgroundSync] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
-  // Toast
   const [snack, setSnack] = useState<Snack>(null);
 
-  // ConfirmToast
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-  // Guards
   const fetchSeqRef = useRef(0);
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -234,7 +241,7 @@ const MemberSettings: React.FC = () => {
   const [appliedName, setAppliedName] = useState("");
   const [appliedEmail, setAppliedEmail] = useState("");
   const [appliedRoles, setAppliedRoles] = useState<RoleKey[]>([]);
-  const [appliedGroups, setAppliedGroups] = useState<string[]>([]); // group slug
+  const [appliedGroups, setAppliedGroups] = useState<string[]>([]);
 
   const hasAppliedFilters = useMemo(() => {
     return (
@@ -272,7 +279,6 @@ const MemberSettings: React.FC = () => {
   );
 
   const groupOptions: GroupOption[] = useMemo(() => {
-    // assumes GroupListItem has { name, slug }
     return (groups || []).map((g) => ({ key: g.slug as string, label: g.name }));
   }, [groups]);
 
@@ -316,7 +322,6 @@ const MemberSettings: React.FC = () => {
 
   /* ----------------------------- Fetchers --------------------------------- */
   const normalizeAndSet = useCallback((memRes: Member[], grpRes: GroupListItem[]) => {
-    // Keep non-owner memberships visible by default
     const visible = memRes.filter((e) => e.role !== "owner");
 
     const normMembers = [...visible].sort((a, b) => {
@@ -334,10 +339,24 @@ const MemberSettings: React.FC = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!canViewMembers && !canViewGroups) {
+      setIsInitialLoading(false);
+      setIsBackgroundSync(false);
+    }
+  }, [canViewMembers, canViewGroups]);
+
   const fetchList = useCallback(
     async (opts: { background?: boolean } = {}) => {
+      if (!canViewMembers && !canViewGroups) {
+        if (opts.background) setIsBackgroundSync(false);
+        else setIsInitialLoading(false);
+        return;
+      }
+
       if (INFLIGHT_FETCH) return;
       INFLIGHT_FETCH = true;
+
       const seq = ++fetchSeqRef.current;
 
       if (opts.background) setIsBackgroundSync(true);
@@ -347,15 +366,32 @@ const MemberSettings: React.FC = () => {
         const params: GetMembersParams = {
           name: appliedName.trim() || undefined,
           email: appliedEmail.trim() || undefined,
-          role: (appliedRoleParam as Role) || undefined, // only when exactly one selected
-          group: appliedGroupParam || undefined, // only when exactly one selected
+          role: (appliedRoleParam as Role) || undefined,
+          group: appliedGroupParam || undefined,
         };
 
-        const [memResp, grpResp] = await Promise.all([api.getMembers(params), api.getGroups()]);
-        if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+        let memList: Member[] = [];
+        let grpList: GroupListItem[] = [];
 
-        const memList = memResp.data.members || [];
-        const grpList = grpResp.data.results || [];
+        if (canViewMembers && canViewGroups) {
+          const [memResp, grpResp] = await Promise.all([api.getMembers(params), api.getGroups()]);
+          if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+          memList = memResp.data.members || [];
+          grpList = grpResp.data.results || [];
+        } else if (canViewMembers) {
+          const memResp = await api.getMembers(params);
+          if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+          memList = memResp.data.members || [];
+          grpList = [];
+        } else {
+          const grpResp = await api.getGroups();
+          if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+          memList = [];
+          grpList = grpResp.data.results || [];
+        }
 
         normalizeAndSet(memList, grpList);
       } catch (err: unknown) {
@@ -371,7 +407,16 @@ const MemberSettings: React.FC = () => {
         INFLIGHT_FETCH = false;
       }
     },
-    [appliedName, appliedEmail, appliedRoleParam, appliedGroupParam, normalizeAndSet, t]
+    [
+      canViewMembers,
+      canViewGroups,
+      appliedName,
+      appliedEmail,
+      appliedRoleParam,
+      appliedGroupParam,
+      normalizeAndSet,
+      t,
+    ]
   );
 
   useEffect(() => {
@@ -480,7 +525,9 @@ const MemberSettings: React.FC = () => {
   };
 
   /* ------------------------------ Render ---------------------------------- */
-  if (isInitialLoading) {
+  const shouldBlockOnInitial = isInitialLoading && (canViewMembers || canViewGroups);
+
+  if (shouldBlockOnInitial) {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
@@ -489,7 +536,6 @@ const MemberSettings: React.FC = () => {
     );
   }
 
-  const canEdit = !!isOwner;
   const headerBadge = isBackgroundSync ? (
     <span
       aria-live="polite"
@@ -531,108 +577,112 @@ const MemberSettings: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between gap-3">
-                  {/* LEFT: chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div ref={nameAnchorRef}>
-                      <Chip
-                        label={t("filters.nameLabel")}
-                        value={nameChipValue ? `• ${nameChipValue}` : undefined}
-                        active={!!appliedName.trim()}
-                        onClick={() => togglePopover("name")}
-                        onClear={appliedName.trim() ? () => clearOne("name") : undefined}
-                        disabled={globalBusy}
-                      />
+          <PermissionMiddleware codeName={"view_member"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* LEFT: chips */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div ref={nameAnchorRef}>
+                        <Chip
+                          label={t("filters.nameLabel")}
+                          value={nameChipValue ? `• ${nameChipValue}` : undefined}
+                          active={!!appliedName.trim()}
+                          onClick={() => togglePopover("name")}
+                          onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={emailAnchorRef}>
+                        <Chip
+                          label={t("filters.emailLabel")}
+                          value={emailChipValue ? `• ${emailChipValue}` : undefined}
+                          active={!!appliedEmail.trim()}
+                          onClick={() => togglePopover("email")}
+                          onClear={appliedEmail.trim() ? () => clearOne("email") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={roleAnchorRef}>
+                        <Chip
+                          label={t("filters.roleLabel")}
+                          value={roleChipValue ? `• ${roleChipValue}` : undefined}
+                          active={appliedRoles.length > 0}
+                          onClick={() => togglePopover("role")}
+                          onClear={appliedRoles.length ? () => clearOne("role") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <PermissionMiddleware codeName={"view_group"}>
+                        <div ref={groupAnchorRef}>
+                          <Chip
+                            label={t("filters.groupLabel")}
+                            value={groupChipValue ? `• ${groupChipValue}` : undefined}
+                            active={appliedGroups.length > 0}
+                            onClick={() => togglePopover("group")}
+                            onClear={appliedGroups.length ? () => clearOne("group") : undefined}
+                            disabled={globalBusy}
+                          />
+                        </div>
+                      </PermissionMiddleware>
+
+                      {hasAppliedFilters && (
+                        <ClearFiltersChip label={t("filters.clearAll")} onClick={clearAll} disabled={globalBusy} />
+                      )}
                     </div>
 
-                    <div ref={emailAnchorRef}>
-                      <Chip
-                        label={t("filters.emailLabel")}
-                        value={emailChipValue ? `• ${emailChipValue}` : undefined}
-                        active={!!appliedEmail.trim()}
-                        onClick={() => togglePopover("email")}
-                        onClear={appliedEmail.trim() ? () => clearOne("email") : undefined}
-                        disabled={globalBusy}
-                      />
+                    {/* RIGHT: add button */}
+                    <div className="shrink-0">
+                      <PermissionMiddleware codeName={"add_member"}>
+                        <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
+                          {t("btn.addMember")}
+                        </Button>
+                      </PermissionMiddleware>
                     </div>
-
-                    <div ref={roleAnchorRef}>
-                      <Chip
-                        label={t("filters.roleLabel")}
-                        value={roleChipValue ? `• ${roleChipValue}` : undefined}
-                        active={appliedRoles.length > 0}
-                        onClick={() => togglePopover("role")}
-                        onClear={appliedRoles.length ? () => clearOne("role") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    <div ref={groupAnchorRef}>
-                      <Chip
-                        label={t("filters.groupLabel")}
-                        value={groupChipValue ? `• ${groupChipValue}` : undefined}
-                        active={appliedGroups.length > 0}
-                        onClick={() => togglePopover("group")}
-                        onClear={appliedGroups.length ? () => clearOne("group") : undefined}
-                        disabled={globalBusy}
-                      />
-                    </div>
-
-                    {hasAppliedFilters && (
-                      <ClearFiltersChip label={t("filters.clearAll")} onClick={clearAll} disabled={globalBusy} />
-                    )}
-                  </div>
-
-                  {/* RIGHT: add button */}
-                  <div className="shrink-0">
-                    {canEdit && (
-                      <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
-                        {t("btn.addMember")}
-                      </Button>
-                    )}
                   </div>
                 </div>
-              </div>
 
-              <div className="divide-y divide-gray-200">
-                {members.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                ) : (
-                  members.map((m) => {
-                    const rowBusy = globalBusy || deleteTargetId === m.id;
-                    return (
-                      <Row
-                        key={m.id}
-                        member={m}
-                        canEdit={canEdit}
-                        onEdit={openEditModal}
-                        onDelete={requestDeleteMember}
-                        t={t}
-                        busy={rowBusy}
-                      />
-                    );
-                  })
-                )}
+                <div className="divide-y divide-gray-200">
+                  {members.length === 0 ? (
+                    <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
+                  ) : (
+                    members.map((m) => {
+                      const rowBusy = globalBusy || deleteTargetId === m.id;
+                      return (
+                        <Row
+                          key={m.id}
+                          member={m}
+                          onEdit={openEditModal}
+                          onDelete={requestDeleteMember}
+                          t={t}
+                          busy={rowBusy}
+                        />
+                      );
+                    })
+                  )}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
 
-        <MemberModal
-          isOpen={modalOpen}
-          mode={modalMode}
-          member={editingMember}
-          allGroups={groups}
-          canEdit={canEdit}
-          onClose={closeModal}
-          onNotify={(s) => setSnack(s)}
-          onSaved={async () => {
-            await fetchList({ background: true });
-          }}
-        />
+        <PermissionMiddleware codeName={["add_member", "change_member"]}>
+          <MemberModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            member={editingMember}
+            allGroups={groups}
+            onClose={closeModal}
+            onNotify={(s) => setSnack(s)}
+            onSaved={async () => {
+              await fetchList({ background: true });
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* NAME POPOVER */}

@@ -20,6 +20,7 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { validatePassword } from "@/lib";
 import type { ApiErrorBody } from "@/models/Api";
 import type { SecurityStatusResponse } from "@/models/auth/security";
+import { PermissionMiddleware } from "src/middlewares";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =
@@ -519,72 +520,74 @@ const SecurityAndPrivacy: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                  {t("section.access")}
-                </span>
+          <PermissionMiddleware codeName={"view_security_and_privacy_page"} behavior="lock">
+            <section className="mt-6">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+                    {t("section.access")}
+                  </span>
+                </div>
+
+                <div className="flex flex-col">
+                  <Row
+                    label={t("field.primaryEmail")}
+                    value={primaryEmail}
+                    action={
+                      <Button
+                        variant="outline"
+                        onClick={openEmailModal}
+                        disabled={isSubmitting || isTwoFactorSubmitting}
+                      >
+                        {t("btn.changeEmail")}
+                      </Button>
+                    }
+                    disabled={isSubmitting || isTwoFactorSubmitting}
+                  />
+
+                  <Row
+                    label={t("field.password")}
+                    value={
+                      <>
+                        {t("field.lastChange")} {lastChangeLabel}
+                      </>
+                    }
+                    action={
+                      <Button
+                        variant="outline"
+                        onClick={openPasswordModal}
+                        disabled={isSubmitting || isTwoFactorSubmitting}
+                      >
+                        {t("btn.changePassword")}
+                      </Button>
+                    }
+                    disabled={isSubmitting || isTwoFactorSubmitting}
+                  />
+
+                  <Row
+                    label={t("field.twoFactor")}
+                    value={
+                      security
+                        ? currentTwoFactorEnabled
+                          ? t("field.enabled")
+                          : t("field.disabled")
+                        : t("field.unavailable")
+                    }
+                    action={
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={currentTwoFactorEnabled}
+                          onChange={handleTwoFactorCheckboxChange}
+                          disabled={!security || isSubmitting || isTwoFactorSubmitting}
+                        />
+                      </div>
+                    }
+                    disabled={!security || isSubmitting || isTwoFactorSubmitting}
+                  />
+                </div>
               </div>
-
-              <div className="flex flex-col">
-                <Row
-                  label={t("field.primaryEmail")}
-                  value={primaryEmail}
-                  action={
-                    <Button
-                      variant="outline"
-                      onClick={openEmailModal}
-                      disabled={isSubmitting || isTwoFactorSubmitting}
-                    >
-                      {t("btn.changeEmail")}
-                    </Button>
-                  }
-                  disabled={isSubmitting || isTwoFactorSubmitting}
-                />
-
-                <Row
-                  label={t("field.password")}
-                  value={
-                    <>
-                      {t("field.lastChange")} {lastChangeLabel}
-                    </>
-                  }
-                  action={
-                    <Button
-                      variant="outline"
-                      onClick={openPasswordModal}
-                      disabled={isSubmitting || isTwoFactorSubmitting}
-                    >
-                      {t("btn.changePassword")}
-                    </Button>
-                  }
-                  disabled={isSubmitting || isTwoFactorSubmitting}
-                />
-
-                <Row
-                  label={t("field.twoFactor")}
-                  value={
-                    security
-                      ? currentTwoFactorEnabled
-                        ? t("field.enabled")
-                        : t("field.disabled")
-                      : t("field.unavailable")
-                  }
-                  action={
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={currentTwoFactorEnabled}
-                        onChange={handleTwoFactorCheckboxChange}
-                        disabled={!security || isSubmitting || isTwoFactorSubmitting}
-                      />
-                    </div>
-                  }
-                  disabled={!security || isSubmitting || isTwoFactorSubmitting}
-                />
-              </div>
-            </div>
-          </section>
+            </section>
+          </PermissionMiddleware>
         </div>
 
         {modalMode && (

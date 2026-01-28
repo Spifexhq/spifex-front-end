@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
@@ -19,6 +18,7 @@ import GroupModal from "./GroupModal";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
 
 import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "@/models/auth/rbac";
 
@@ -34,6 +34,17 @@ type ModalState =
 /* --------------------------- Page Component -------------------------------- */
 const GroupSettings: React.FC = () => {
   const { t, i18n } = useTranslation("groupSettings");
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewGroups = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_group");
+  }, [isOwner, permissions]);
+
+  const canViewPermissions = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_permission");
+  }, [isOwner, permissions]);
 
   useEffect(() => {
     document.title = t("title");
@@ -43,33 +54,24 @@ const GroupSettings: React.FC = () => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  const { isOwner } = useAuthContext();
-
-  // Flags (standardized)
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isBackgroundSync, setIsBackgroundSync] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
-  // Snackbar
   const [snack, setSnack] = useState<Snack>(null);
 
-  // Data
   const [groups, setGroups] = useState<GroupListItem[]>([]);
 
-  // Selection & edits
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
   const [originalCodes, setOriginalCodes] = useState<Set<string>>(new Set<string>());
 
-  // Group search
   const [groupSearch, setGroupSearch] = useState("");
 
-  // Modal (create/rename)
   const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", initialName: "" });
 
-  // Confirm Toast
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
@@ -82,6 +84,19 @@ const GroupSettings: React.FC = () => {
 
   const fetchAll = useCallback(
     async (opts: { background?: boolean } = {}) => {
+      if (!canViewGroups) {
+        setGroups([]);
+        setSelectedGroupId(null);
+        setSelectedGroupDetail(null);
+        setSelectedCodes(new Set<string>());
+        setOriginalCodes(new Set<string>());
+
+        if (opts.background) setIsBackgroundSync(false);
+        else setIsInitialLoading(false);
+
+        return;
+      }
+
       if (inflightRef.current) return;
       inflightRef.current = true;
 
@@ -101,7 +116,7 @@ const GroupSettings: React.FC = () => {
         inflightRef.current = false;
       }
     },
-    [t]
+    [t, canViewGroups]
   );
 
   useEffect(() => {
@@ -110,7 +125,7 @@ const GroupSettings: React.FC = () => {
 
   /* ------------------------- Load group detail/permissions ----------------- */
   useEffect(() => {
-    if (!selectedGroupId) {
+    if (!canViewGroups || !selectedGroupId) {
       setSelectedGroupDetail(null);
       setSelectedCodes(new Set<string>());
       setOriginalCodes(new Set<string>());
@@ -120,18 +135,20 @@ const GroupSettings: React.FC = () => {
     const load = async () => {
       setIsDetailLoading(true);
       try {
-        const [detailRes, permRes] = await Promise.all([
-          api.getGroup(selectedGroupId),
-          api.getGroupPermissions(selectedGroupId),
-        ]);
-
+        const detailRes = await api.getGroup(selectedGroupId);
         const detail = detailRes.data;
         setSelectedGroupDetail(detail);
 
-        const perms = permRes.data.permissions || [];
-        const activeCodes = new Set<string>(perms.map((p: Permission) => p.code));
-        setSelectedCodes(activeCodes);
-        setOriginalCodes(new Set<string>(activeCodes));
+        if (canViewPermissions) {
+          const permRes = await api.getGroupPermissions(selectedGroupId);
+          const perms = permRes.data.permissions || [];
+          const activeCodes = new Set<string>(perms.map((p: Permission) => p.code));
+          setSelectedCodes(activeCodes);
+          setOriginalCodes(new Set<string>(activeCodes));
+        } else {
+          setSelectedCodes(new Set<string>());
+          setOriginalCodes(new Set<string>());
+        }
       } catch (e) {
         console.error(e);
         setSnack({ message: t("toast.detailError"), severity: "error" });
@@ -141,7 +158,7 @@ const GroupSettings: React.FC = () => {
     };
 
     void load();
-  }, [selectedGroupId, t]);
+  }, [selectedGroupId, t, canViewGroups, canViewPermissions]);
 
   /* ------------------------------- Derived -------------------------------- */
   const filteredGroups = useMemo(() => {
@@ -303,129 +320,137 @@ const GroupSettings: React.FC = () => {
             </div>
           </header>
 
-          <section className="mt-6 grid grid-cols-12 gap-6">
-            {/* LEFT: Groups */}
-            <aside className="col-span-12 lg:col-span-3">
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-                  <div className="text-[11px] uppercase tracking-wide text-gray-700">{t("left.groups")}</div>
-                  {isOwner && (
-                    <Button className="!py-1.5 !px-3" onClick={openCreateModal} disabled={busy}>
-                      {t("left.create")}
-                    </Button>
-                  )}
-                </div>
-
-                <div className="p-3 border-b border-gray-200">
-                  <Input
-                    kind="text"
-                    placeholder={t("left.searchPlaceholder")}
-                    name="groupSearch"
-                    value={groupSearch}
-                    onChange={(e) => setGroupSearch(e.target.value)}
-                    disabled={busy}
-                  />
-                </div>
-
-                <div className="max-h-[380px] overflow-auto divide-y divide-gray-200">
-                  {filteredGroups.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => !busy && setSelectedGroupId((prev) => (prev === g.id ? null : g.id))}
-                      className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 ${
-                        selectedGroupId === g.id ? "bg-gray-50" : ""
-                      } ${busy ? "pointer-events-none opacity-70" : ""}`}
-                    >
-                      <div className="text-[13px] font-medium text-gray-900 truncate">{g.name}</div>
-                      <div className="text-[11px] text-gray-500">
-                        {t("left.meta", { perms: g.permissions_count, members: g.members_count })}
-                      </div>
-                    </button>
-                  ))}
-
-                  {filteredGroups.length === 0 && (
-                    <p className="p-4 text-center text-sm text-gray-500">{t("left.empty")}</p>
-                  )}
-                </div>
-              </div>
-            </aside>
-
-            {/* RIGHT: Permissions panel */}
-            <section className="col-span-12 lg:col-span-9">
-              {!selectedGroupDetail ? (
-                <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
-                  {t("right.selectPrompt")}
-                </div>
-              ) : (
+          <PermissionMiddleware codeName={"view_group"} behavior="lock">
+            <section className="mt-6 grid grid-cols-12 gap-6">
+              {/* LEFT: Groups */}
+              <aside className="col-span-12 lg:col-span-3">
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
-                    <div className="flex flex-col max-w-[70%]">
-                      <label className="text-[11px] uppercase tracking-wide text-gray-700">{t("right.nameLabel")}</label>
-                      <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">{selectedGroupDetail.name}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {isOwner && (
-                        <>
-                          <Button
-                            variant="outline"
-                            className="inline-flex items-center gap-2"
-                            onClick={openRenameModal}
-                            disabled={busy}
-                          >
-                            <Pencil className="h-4 w-4" aria-hidden />
-                            {t("right.rename")}
-                          </Button>
-                          {!selectedGroupDetail.is_system && (
-                            <Button
-                              variant="outline"
-                              onClick={requestDeleteGroup}
-                              disabled={busy}
-                              aria-busy={busy || undefined}
-                            >
-                              {t("right.delete")}
-                            </Button>
-                          )}
-                        </>
-                      )}
-                      <button
-                        type="button"
-                        aria-label={t("right.closePanel")}
-                        className="text-[18px] leading-none px-2 text-gray-400 hover:text-gray-700 disabled:opacity-50"
-                        onClick={() => setSelectedGroupId(null)}
-                        disabled={busy}
-                      >
-                        ×
-                      </button>
-                    </div>
+                  <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                    <div className="text-[11px] uppercase tracking-wide text-gray-700">{t("left.groups")}</div>
+                      <PermissionMiddleware codeName={"add_group"}>
+                        <Button className="!py-1.5 !px-3" onClick={openCreateModal} disabled={busy}>
+                          {t("left.create")}
+                        </Button>
+                      </PermissionMiddleware>
                   </div>
 
-                  <GroupPermissionsTable
-                    selectedCodes={selectedCodes}
-                    disabled={busy || !isOwner}
-                    dirty={dirty}
-                    onToggle={setPermissionChecked}
-                    onUndo={handleDiscard}
-                    onSave={handleSavePermissions}
-                  />
+                  <div className="p-3 border-b border-gray-200">
+                    <Input
+                      kind="text"
+                      placeholder={t("left.searchPlaceholder")}
+                      name="groupSearch"
+                      value={groupSearch}
+                      onChange={(e) => setGroupSearch(e.target.value)}
+                      disabled={busy}
+                    />
+                  </div>
+
+                  <div className="max-h-[380px] overflow-auto divide-y divide-gray-200">
+                    {filteredGroups.map((g) => (
+                      <button
+                        key={g.id}
+                        onClick={() => !busy && setSelectedGroupId((prev) => (prev === g.id ? null : g.id))}
+                        className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 ${
+                          selectedGroupId === g.id ? "bg-gray-50" : ""
+                        } ${busy ? "pointer-events-none opacity-70" : ""}`}
+                      >
+                        <div className="text-[13px] font-medium text-gray-900 truncate">{g.name}</div>
+                        <div className="text-[11px] text-gray-500">
+                          {t("left.meta", { perms: g.permissions_count, members: g.members_count })}
+                        </div>
+                      </button>
+                    ))}
+
+                    {filteredGroups.length === 0 && (
+                      <p className="p-4 text-center text-sm text-gray-500">{t("left.empty")}</p>
+                    )}
+                  </div>
                 </div>
-              )}
+              </aside>
+
+              {/* RIGHT: Permissions panel */}
+              <section className="col-span-12 lg:col-span-9">
+                {!selectedGroupDetail ? (
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+                    {t("right.selectPrompt")}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="p-4 border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+                      <div className="flex flex-col max-w-[70%]">
+                        <label className="text-[11px] uppercase tracking-wide text-gray-700">{t("right.nameLabel")}</label>
+                        <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">{selectedGroupDetail.name}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <>
+                          <PermissionMiddleware codeName={"change_group"}>
+                            <Button
+                              variant="outline"
+                              className="inline-flex items-center gap-2"
+                              onClick={openRenameModal}
+                              disabled={busy}
+                            >
+                              <Pencil className="h-4 w-4" aria-hidden />
+                              {t("right.rename")}
+                            </Button>
+                          </PermissionMiddleware>
+
+                          {!selectedGroupDetail.is_system && (
+                            <PermissionMiddleware codeName={"delete_group"}>
+                              <Button
+                                variant="outline"
+                                onClick={requestDeleteGroup}
+                                disabled={busy}
+                                aria-busy={busy || undefined}
+                              >
+                                {t("right.delete")}
+                              </Button>
+                            </PermissionMiddleware>
+                          )}
+                        </>
+                        <button
+                          type="button"
+                          aria-label={t("right.closePanel")}
+                          className="text-[18px] leading-none px-2 text-gray-400 hover:text-gray-700 disabled:opacity-50"
+                          onClick={() => setSelectedGroupId(null)}
+                          disabled={busy}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+
+                    <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
+                      <GroupPermissionsTable
+                        selectedCodes={selectedCodes}
+                        disabled={busy}
+                        dirty={dirty}
+                        onToggle={setPermissionChecked}
+                        onUndo={handleDiscard}
+                        onSave={handleSavePermissions}
+                      />
+                    </PermissionMiddleware>
+                  </div>
+                )}
+              </section>
             </section>
-          </section>
+          </PermissionMiddleware>
         </div>
 
-        {/* Create/Rename modal (single component) */}
-        <GroupModal
-          isOpen={modal.open}
-          mode={modal.mode}
-          initialName={modal.initialName}
-          busy={busy}
-          onClose={closeModal}
-          onSubmit={async (name) => {
-            if (modal.mode === "create") return handleCreateGroup(name);
-            return handleRenameGroup(name);
-          }}
-        />
+        <PermissionMiddleware codeName={["add_group", "change_group"]}>
+          <GroupModal
+            isOpen={modal.open}
+            mode={modal.mode}
+            initialName={modal.initialName}
+            busy={busy}
+            onClose={closeModal}
+            onSubmit={async (name) => {
+              if (modal.mode === "create") return handleCreateGroup(name);
+              return handleRenameGroup(name);
+            }}
+          />
+        </PermissionMiddleware>
       </main>
 
       {/* Confirm Toast */}

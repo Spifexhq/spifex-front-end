@@ -49,7 +49,8 @@
     "standardSuccess": "Standardplan auf Ihre Konten angewendet.",
     "chooseMode": "Wählen Sie eine Option (CSV/Excel, Manuell oder Standardplan).",
     "saveError": "Fehler beim Erstellen der Konten.",
-    "downloadError": "Fehler beim Herunterladen der Vorlage."
+    "downloadError": "Fehler beim Herunterladen der Vorlage.",
+    "noPermission": "Sie haben keine Berechtigung, diese Aktion auszuführen."
   },
   "misc": {
     "fileNameTemplate": "template_ledger_accounts.csv",
