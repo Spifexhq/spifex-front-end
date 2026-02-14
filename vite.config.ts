@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
   const useHttps = env.VITE_HTTPS === "true";
 
   // IMPORTANT: use `undefined` when disabled (not `false`)
+  
   const https = useHttps ? readHttps() : undefined;
 
   return {
