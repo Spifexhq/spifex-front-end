@@ -1,1 +1,1 @@
-export { default } from "./CumulativeAreaChart";
+export { default } from "@/components/Charts/CumulativeAreaChart";

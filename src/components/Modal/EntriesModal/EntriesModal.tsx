@@ -18,7 +18,7 @@ import type {
   PeriodOption,
   Tab,
   IntervalMonths,
-} from "../Modal.types";
+} from "@/components/Modal/Modal.types";
 
 import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
@@ -26,13 +26,13 @@ import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
 import type { InventoryItem } from "@/models/settings/inventory";
 import type { Entity, EntityTypeValue } from "@/models/settings/entities";
-import type { DocumentType } from "src/models/entries/documentTypes";
+import type { DocumentType } from "@/models/entries/documentTypes";
 
-import DetailsTab from "./Tab.details";
-import CostCentersTab from "./Tab.costCenters";
-import InventoryTab from "./Tab.inventory";
-import EntitiesTab from "./Tab.entities";
-import RecurrenceTab from "./Tab.recurrence";
+import DetailsTab from "@/components/Modal/EntriesModal/Tab.details";
+import CostCentersTab from "@/components/Modal/EntriesModal/Tab.costCenters";
+import InventoryTab from "@/components/Modal/EntriesModal/Tab.inventory";
+import EntitiesTab from "@/components/Modal/EntriesModal/Tab.entities";
+import RecurrenceTab from "@/components/Modal/EntriesModal/Tab.recurrence";
 
 /* ---------------------------------- Types --------------------------------- */
 type DocumentTypeItem = { id: DocumentType["code"]; label: string };

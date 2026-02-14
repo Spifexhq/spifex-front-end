@@ -18,23 +18,23 @@ import Button from "@/shared/ui/Button";
 
 import type { EntryFilters, ChipKey, Visualization, LocalFilters } from "@/models/components/filterBar";
 
-import { useMediaQuery } from "./hooks/useMediaQuery";
-import { useOnClickOutside } from "./hooks/useOnClickOutside";
-import { useBankOptions } from "./hooks/useBankOptions";
-import { useLedgerAccounts } from "./hooks/useLedgerAccounts";
-import { useSavedViews } from "./hooks/useSavedViews";
+import { useMediaQuery } from "@/components/FilterBar/hooks/useMediaQuery";
+import { useOnClickOutside } from "@/components/FilterBar/hooks/useOnClickOutside";
+import { useBankOptions } from "@/components/FilterBar/hooks/useBankOptions";
+import { useLedgerAccounts } from "@/components/FilterBar/hooks/useLedgerAccounts";
+import { useSavedViews } from "@/components/FilterBar/hooks/useSavedViews";
 import { PermissionMiddleware } from "src/middlewares";
 
-import { buildClearedLocalFilters, buildInitialLocalFilters, toEntryFilters } from "./FilterBar.utils";
-import type { FilterDefinition } from "./FilterBar.types";
+import { buildClearedLocalFilters, buildInitialLocalFilters, toEntryFilters } from "@/components/FilterBar/FilterBar.utils";
+import type { FilterDefinition } from "@/components/FilterBar/FilterBar.types";
 
-import { getFilterDefinitions } from "./filters/registry";
-import { ChipsSearchBar } from "./sections/ChipsSearchBar";
-import { Popover } from "./ui/Popover";
-import { Menu, type MenuEntry } from "./ui/Menu";
+import { getFilterDefinitions } from "@/components/FilterBar/filters/registry";
+import { ChipsSearchBar } from "@/components/FilterBar/sections/ChipsSearchBar";
+import { Popover } from "@/components/FilterBar/ui/Popover";
+import { Menu, type MenuEntry } from "@/components/FilterBar/ui/Menu";
 
-import { ViewsConfigModal } from "./modals/ViewsConfigModal";
-import { SaveViewModal } from "./modals/SaveViewModal";
+import { ViewsConfigModal } from "@/components/FilterBar/modals/ViewsConfigModal";
+import { SaveViewModal } from "@/components/FilterBar/modals/SaveViewModal";
 
 /* --------------------------------- Helpers -------------------------------- */
 
