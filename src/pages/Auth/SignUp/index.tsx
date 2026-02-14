@@ -22,7 +22,7 @@ import Checkbox from "@/shared/ui/Checkbox";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
-import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
+import logoBlack from "@/assets/Icons/logo/logo-black.svg";
 
 import { getCountries, CountryOption } from "@/lib/location/countries";
 import { getCurrencies, CurrencyOption } from "@/lib/currency/currencies";
