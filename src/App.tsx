@@ -1,7 +1,7 @@
 // src/App.tsx
 import { useRoutes } from 'react-router-dom';
 import routes from './router';
-import './app.css';
+import './App.css';
 
 import { RequestsProvider } from '@/contexts/RequestsProvider';
 import { AuthProvider } from '@/contexts/AuthProvider';
