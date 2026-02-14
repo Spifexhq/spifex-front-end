@@ -11,7 +11,7 @@
     "dev:http": "vite --mode dev --host 127.0.0.1 --port 5173 --strictPort",
     "dev:https": "vite --mode dev.https --host 127.0.0.1 --port 5173 --strictPort",
 
-    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('node_modules/.tmp',{recursive:true}); console.log('node', process.version); console.log('tmp ok');\" && npx --no-install tsc -b --pretty false --verbose && npx --no-install vite build --mode prod --debug",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('.tsbuildinfo',{recursive:true}); console.log('node', process.version); console.log('tsbuildinfo ok');\" && npx --no-install tsc -b --pretty false --verbose && npx --no-install vite build --mode prod --debug",
 
     "preview": "vite preview --mode prod --host 127.0.0.1 --port 5173 --strictPort",
     "prod": "npm run build && npm run preview",
