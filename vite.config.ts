@@ -27,12 +27,9 @@ function readHttps(): HttpsServerOptions {
   };
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const useHttps = env.VITE_HTTPS === "true";
-
-  // IMPORTANT: use `undefined` when disabled (not `false`)
-  
+  const useHttps = command === "serve" && env.VITE_HTTPS === "true";
   const https = useHttps ? readHttps() : undefined;
 
   return {
