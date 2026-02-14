@@ -10,7 +10,8 @@
     "dev": "vite --mode dev --host 127.0.0.1 --port 5173 --strictPort",
     "dev:http": "vite --mode dev --host 127.0.0.1 --port 5173 --strictPort",
     "dev:https": "vite --mode dev.https --host 127.0.0.1 --port 5173 --strictPort",
-    "build": "tsc -b && vite build --mode prod",
+    "prebuild": "node -e \"require('fs').mkdirSync('node_modules/.tmp', { recursive: true })\"",
+    "build": "node -p \"'node=' + process.version\" && echo \"--- TSC ---\" && tsc -b --pretty false --verbose && echo \"--- VITE ---\" && vite build --mode prod --debug",
     "preview": "vite preview --mode prod --host 127.0.0.1 --port 5173 --strictPort",
     "prod": "npm run build && npm run preview",
     "lint": "eslint ."
