@@ -11,7 +11,7 @@ import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
 
 import signInBackground from "@/assets/Images/background/signin-background.svg";
-import logoBlack from "@/assets/Icons/Logo/logo-black.svg";
+import logoBlack from "@/assets/Icons/logo/logo-black.svg";
 
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
