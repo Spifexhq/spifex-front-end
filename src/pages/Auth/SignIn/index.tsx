@@ -270,7 +270,7 @@ const SignIn: React.FC = () => {
       <div className="flex flex-col w-full md:w-[55%] lg:w-1/2 px-6 py-6 sm:px-10 sm:py-8">
         <header className="flex items-center justify-between mb-8">
           <a
-            href="https://spifex.com"
+            href="https://dashboard.spifex.com"
             className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10 rounded-lg"
           >
             <img src={logoBlack} alt="Spifex logo" className="h-7 w-auto sm:h-8" />
