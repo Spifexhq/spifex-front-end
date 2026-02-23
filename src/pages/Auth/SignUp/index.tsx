@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
-import { validatePassword, useAutoCountry } from "@/lib";
+import { validateEmailFormat, validatePassword, useAutoCountry } from "@/lib";
 
 import Snackbar from "@/shared/ui/Snackbar";
 import Button from "@/shared/ui/Button";
@@ -190,6 +190,12 @@ const SignUp = () => {
     setSelectedCurrency(found ? [found] : []);
   }, [prefs.currency, CURRENCIES]);
 
+  const handleEmailChange =
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/\s/g, "");
+      setForm((prev) => ({ ...prev, email: value }));
+    };
+
   const handleInputChange =
     (field: keyof typeof form) =>
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -220,6 +226,21 @@ const SignUp = () => {
   ) => {
     e.preventDefault();
 
+    const emailCheck = validateEmailFormat(form.email, t);
+
+    if (!emailCheck.isValid) {
+      setSnack({
+        message: emailCheck.message || t("invalidEmailFormat"),
+        severity: "warning",
+      });
+      return;
+    }
+
+    // Keep normalized email in state (optional but recommended)
+    if (emailCheck.normalized !== form.email) {
+      setForm((prev) => ({ ...prev, email: emailCheck.normalized }));
+    }
+
     // STEP 1 – validate and go to step 2
     if (step === 1) {
       if (isStep1Incomplete) {
@@ -240,7 +261,7 @@ const SignUp = () => {
 
       try {
         setIsLoading(true);
-        const res = await api.checkEmailAvailability(form.email);
+        const res = await api.checkEmailAvailability(emailCheck.normalized);
 
         if ("error" in res) {
           setSnack({
@@ -288,10 +309,12 @@ const SignUp = () => {
 
       setIsLoading(true);
 
+      const normalizedEmail = form.email.trim().toLowerCase();
+
       try {
         const payload: SignUpRequest = {
           name: form.name,
-          email: form.email,
+          email: normalizedEmail,
           password: form.password,
           timezone,
           country: prefs.country.toUpperCase(),
@@ -322,8 +345,8 @@ const SignUp = () => {
 
         setSnack({ message: t("signUpSuccess"), severity: "success" });
 
-        const url = computeEmailServiceUrl(form.email);
-        setCreatedEmail(form.email);
+        const url = computeEmailServiceUrl(normalizedEmail);
+        setCreatedEmail(normalizedEmail);
         setEmailServiceUrl(url);
 
         setForm({
@@ -433,7 +456,7 @@ const SignUp = () => {
                         placeholder={t("emailPlaceholder")}
                         type="email"
                         value={form.email}
-                        onChange={handleInputChange("email")}
+                        onChange={handleEmailChange}
                         disabled={isLoading}
                         autoComplete="email"
                         autoCorrect="off"

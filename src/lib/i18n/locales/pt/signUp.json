@@ -52,5 +52,9 @@
   "redirectHeading": "Confira sua caixa de entrada",
   "redirectDescription": "Enviamos um link de verificação para o seu e-mail. Abra-o para ativar sua conta.",
   "redirectSentTo": "Enviamos um e-mail para:",
-  "redirectOpenEmailButton": "Abrir caixa de e-mail"
+  "redirectOpenEmailButton": "Abrir caixa de e-mail",
+
+  "invalidEmailFormat": "Por favor, insira um endereço de e-mail válido.",
+  "disposableEmailNotAllowed": "Por favor, use um endereço de e-mail pessoal ou comercial.",
+  "emailTypoSuggestion": "Este e-mail parece incorreto. Você quis dizer {{suggestedEmail}}?"
 }

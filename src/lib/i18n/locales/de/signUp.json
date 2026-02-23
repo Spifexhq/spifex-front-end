@@ -52,5 +52,9 @@
   "redirectHeading": "Prüfe dein Postfach",
   "redirectDescription": "Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Öffne ihn, um dein Konto zu aktivieren.",
   "redirectSentTo": "Wir haben eine E-Mail gesendet an:",
-  "redirectOpenEmailButton": "E-Mail-Postfach öffnen"
+  "redirectOpenEmailButton": "E-Mail-Postfach öffnen",
+
+  "invalidEmailFormat": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+  "disposableEmailNotAllowed": "Bitte verwenden Sie eine private oder geschäftliche E-Mail-Adresse.",
+  "emailTypoSuggestion": "Diese E-Mail-Adresse scheint falsch zu sein. Meinten Sie {{suggestedEmail}}?"
 }

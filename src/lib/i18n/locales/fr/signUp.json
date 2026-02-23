@@ -52,5 +52,9 @@
   "redirectHeading": "Vérifiez votre boîte de réception",
   "redirectDescription": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Ouvrez-le pour activer votre compte.",
   "redirectSentTo": "Nous avons envoyé un e-mail à :",
-  "redirectOpenEmailButton": "Ouvrir la boîte mail"
+  "redirectOpenEmailButton": "Ouvrir la boîte mail",
+
+  "invalidEmailFormat": "Veuillez saisir une adresse e-mail valide.",
+  "disposableEmailNotAllowed": "Veuillez utiliser une adresse e-mail personnelle ou professionnelle.",
+  "emailTypoSuggestion": "Cette adresse e-mail semble incorrecte. Vouliez-vous dire {{suggestedEmail}} ?"
 }

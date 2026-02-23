@@ -52,5 +52,9 @@
   "redirectHeading": "Check your inbox",
   "redirectDescription": "We sent a verification link to your email address. Open it to activate your account.",
   "redirectSentTo": "We sent an email to:",
-  "redirectOpenEmailButton": "Open email inbox"
+  "redirectOpenEmailButton": "Open email inbox",
+
+  "invalidEmailFormat": "Please enter a valid email address.",
+  "disposableEmailNotAllowed": "Please use a personal or business email address.",
+  "emailTypoSuggestion": "This email looks incorrect. Did you mean {{suggestedEmail}}?"
 }
