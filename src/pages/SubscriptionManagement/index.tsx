@@ -202,8 +202,8 @@ const SubscriptionManagement: React.FC = () => {
           { priceId: "price_1Q0BQ0JP9mPoGRyfvnYKUjCy", label: t("subscription:plan.premium") },
         ]
       : [
-          { priceId: "price_1Q00r4JP9mPoGRyfZjHpSZul", label: t("subscription:plan.basic") },
-          { priceId: "price_1Q6OSrJP9mPoGRyfjaNSlrhX", label: t("subscription:plan.premium") },
+          { priceId: "price_1T3mBKJP9mPoGRyfd6CfQbsT", label: t("subscription:plan.basic") },
+          { priceId: "price_1T3m6OJP9mPoGRyf9fPKl2hC", label: t("subscription:plan.premium") },
         ];
   }, [t]);
 
