@@ -52,7 +52,7 @@ const ResetPassword: React.FC = () => {
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
-      // Basic token sanity
+      // Starter token sanity
       if (!uidb64 || !token) {
         setSnack({ message: t("invalidOrExpiredLink"), severity: "error" });
         return;

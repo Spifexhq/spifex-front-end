@@ -44,6 +44,7 @@ const Statements = lazy(() => import("@/pages/Statements"));
 const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 const FormatSettings = lazy(() => import("@/pages/FormatSettings"));
 const CurrencySettings = lazy(() => import("@/pages/CurrencySettings"));
+const SubscriptionCanceled = lazy(() => import("@/pages/SubscriptionCanceled"));
 
 // Status Pages
 const Status404 = lazy(() => import("@/pages/Status/Status404"));
@@ -177,6 +178,14 @@ const routes: RouteObject[] = [
                     element: (
                     <PermissionMiddleware codeName="view_subscription_management_page" behavior="redirect" redirectTo={'/settings'}>
                         <SubscriptionManagement />
+                    </PermissionMiddleware>
+                    ),
+                },
+                {
+                    path: "subscription",
+                    element: (
+                    <PermissionMiddleware codeName="view_subscription_management_page" behavior="redirect" redirectTo={"/settings"}>
+                        <SubscriptionCanceled />
                     </PermissionMiddleware>
                     ),
                 },

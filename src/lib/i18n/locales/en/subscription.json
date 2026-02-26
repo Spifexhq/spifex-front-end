@@ -32,8 +32,8 @@
     "processing": "Processing…"
   },
   "plan": {
-    "basic": "Basic",
-    "premium": "Premium"
+    "starter": "Starter",
+    "pro": "Pro"
   },
   "btn": {
     "manage": "Manage subscription",

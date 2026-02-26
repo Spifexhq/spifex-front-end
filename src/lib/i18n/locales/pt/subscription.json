@@ -32,8 +32,8 @@
     "processing": "Processando…"
   },
   "plan": {
-    "basic": "Básico",
-    "premium": "Premium"
+    "starter": "Básico",
+    "pro": "Profissional"
   },
   "btn": {
     "manage": "Gerenciar assinatura",

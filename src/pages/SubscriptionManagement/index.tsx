@@ -8,14 +8,21 @@ import { useTranslation } from "react-i18next";
 
 import { useRequireLogin } from "@/hooks/useRequireLogin";
 import { useAuthContext } from "@/hooks/useAuth";
+import { useAutoCountry } from "@/lib/location/getCountryFromLocale";
 
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Button from "@/shared/ui/Button";
 import { api } from "@/api/requests";
-import type { GetSubscriptionStatusResponse } from "@/models/auth/billing";
+import type { PlanCode, GetSubscriptionStatusResponse } from "@/models/auth/billing";
 
 /* ------------------------------ Helpers ------------------------------------ */
+
+const PLAN_CODES = ["starter", "pro"] as const satisfies readonly PlanCode[];
+
+const isPlanCode = (v: unknown): v is PlanCode =>
+  typeof v === "string" && (PLAN_CODES as readonly string[]).includes(v);
+
 const getInitials = (name?: string) => {
   if (!name) return "GP";
   const p = name.split(" ").filter(Boolean);
@@ -153,7 +160,6 @@ const SubscriptionManagement: React.FC = () => {
 
   const [sub, setSub] = useState<GetSubscriptionStatusResponse | null>(null);
 
-  // Raw subscription snapshot from API
   const rawSubscription = sub?.subscription ?? null;
 
   const rawStatusKind: StatusKind = useMemo(() => {
@@ -162,21 +168,16 @@ const SubscriptionManagement: React.FC = () => {
     return isKnownStatus(raw) ? raw : "unknown";
   }, [rawSubscription?.status]);
 
-  // ISO dates (raw)
   const rawAccessUntilIso = toIso(rawSubscription?.current_period_end);
   const rawEndedAtIso = toIso(rawSubscription?.ended_at);
 
-  // UX rule:
-  // If canceled and cancellation is older than 2 months -> behave like "none" (no prior subscription)
   const isStaleCanceled = useMemo(() => {
     if (rawStatusKind !== "canceled") return false;
 
-    // Primary: ended_at. Fallback: period_end.
     const endedRef = rawEndedAtIso ?? rawAccessUntilIso;
     return isOlderThanMonths(endedRef, 2);
   }, [rawStatusKind, rawEndedAtIso, rawAccessUntilIso]);
 
-  // Effective state used by UI
   const subscription = isStaleCanceled ? null : rawSubscription;
 
   const statusKind: StatusKind = isStaleCanceled ? "none" : rawStatusKind;
@@ -190,28 +191,27 @@ const SubscriptionManagement: React.FC = () => {
 
   const cancelAtPeriodEnd = Boolean(subscription?.cancel_at_period_end);
 
-  // NOTE: backend is owner/admin; UI uses owner/superuser. If you have isAdmin in context, add it here.
   const canCheckout = Boolean(isOwner || isSuperUser);
   const canManage = Boolean(hasSubscription && canCheckout);
 
+  const { country } = useAutoCountry({ timeoutMs: 3500 });
+
   const availablePlans = useMemo(() => {
-    const isDev = import.meta.env.DEV;
-    return isDev
-      ? [
-          { priceId: "price_1Q01ZhJP9mPoGRyfBocieoN0", label: t("subscription:plan.basic") },
-          { priceId: "price_1Q0BQ0JP9mPoGRyfvnYKUjCy", label: t("subscription:plan.premium") },
-        ]
-      : [
-          { priceId: "price_1T3mBKJP9mPoGRyfd6CfQbsT", label: t("subscription:plan.basic") },
-          { priceId: "price_1T3m6OJP9mPoGRyf9fPKl2hC", label: t("subscription:plan.premium") },
-        ];
+    return [
+      { code: "starter" as const, label: t("subscription:plan.starter") },
+      { code: "pro" as const, label: t("subscription:plan.pro") },
+    ];
   }, [t]);
 
-  const currentPriceId = toIso(subscription?.plan_price_id);
+  const currentPlanCode: PlanCode | undefined = useMemo(() => {
+    const v = subscription?.plan_code;
+
+    return isPlanCode(v) ? v : undefined;
+  }, [subscription]);
 
   const currentPlanLabel =
-    availablePlans.find((p) => p.priceId === currentPriceId)?.label ??
-    toIso(subscription?.plan_nickname) ??
+    (currentPlanCode ? availablePlans.find((p) => p.code === currentPlanCode)?.label : undefined) ??
+    toIso(subscription?.plan_code) ??
     t("subscription:current.unknown", "Unknown plan");
 
   // ----- Lifecycle -----
@@ -251,11 +251,11 @@ const SubscriptionManagement: React.FC = () => {
 
   // ----- Actions -----
   const startCheckout = useCallback(
-    async (priceId: string) => {
+    async (planCode: PlanCode) => {
       if (!canCheckout || isProcessing) return;
       setIsProcessing(true);
       try {
-        const resp = await api.createCheckoutSession(priceId);
+        const resp = await api.createCheckoutSession(planCode, country || undefined);
         const url = toIso(resp?.data?.url);
         if (url) window.location.href = url;
         else alert(t("subscription:errors.noRedirect", "Couldn't redirect to the payment page."));
@@ -266,7 +266,7 @@ const SubscriptionManagement: React.FC = () => {
         setIsProcessing(false);
       }
     },
-    [canCheckout, isProcessing, t],
+    [canCheckout, isProcessing, country, t],
   );
 
   const openCustomerPortal = useCallback(async () => {
@@ -302,16 +302,15 @@ const SubscriptionManagement: React.FC = () => {
       </Button>
     );
 
-    const reactivateBtn =
-      currentPriceId != null ? (
-        <Button disabled={!canCheckout || isProcessing} onClick={() => startCheckout(currentPriceId)}>
-          {t("subscription:btn.reactivate", "Reactivate")}
-        </Button>
-      ) : (
-        <Button disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
-          {t("subscription:btn.reactivate", "Reactivate")}
-        </Button>
-      );
+    const reactivateBtn = currentPlanCode ? (
+      <Button disabled={!canCheckout || isProcessing} onClick={() => startCheckout(currentPlanCode)}>
+        {t("subscription:btn.reactivate", "Reactivate")}
+      </Button>
+    ) : (
+      <Button disabled={!canManage || isProcessing} onClick={openCustomerPortal}>
+        {t("subscription:btn.reactivate", "Reactivate")}
+      </Button>
+    );
 
     switch (statusKind) {
       case "none":
@@ -415,12 +414,12 @@ const SubscriptionManagement: React.FC = () => {
     }
   };
 
-  const renderPlanAction = (planPriceId: string) => {
-    const isCurrent = planPriceId === currentPriceId;
+  const renderPlanAction = (planCode: PlanCode) => {
+    const isCurrent = planCode === currentPlanCode;
 
     if (statusKind === "none") {
       return (
-        <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
+        <Button onClick={() => startCheckout(planCode)} disabled={!canCheckout || isProcessing}>
           {t("subscription:btn.subscribe", "Subscribe")}
         </Button>
       );
@@ -428,7 +427,7 @@ const SubscriptionManagement: React.FC = () => {
 
     if (statusKind === "canceled") {
       return (
-        <Button onClick={() => startCheckout(planPriceId)} disabled={!canCheckout || isProcessing}>
+        <Button onClick={() => startCheckout(planCode)} disabled={!canCheckout || isProcessing}>
           {isCurrent ? t("subscription:btn.reactivate", "Reactivate") : t("subscription:btn.subscribe", "Subscribe")}
         </Button>
       );
@@ -483,7 +482,6 @@ const SubscriptionManagement: React.FC = () => {
 
         <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
           <div className="max-w-5xl mx-auto">
-            {/* Header card */}
             <header className="bg-white border border-gray-200 rounded-lg">
               <div className="px-5 py-4 flex items-center gap-3">
                 <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -501,11 +499,13 @@ const SubscriptionManagement: React.FC = () => {
               </div>
             </header>
 
-            {/* Restricted access message */}
             <section className="mt-6">
               <div className="rounded-lg border border-gray-200 bg-white p-4">
                 <p className="text-[13px] text-gray-700 mb-4">
-                  {t("subscription:errors.ownerOnly", "Only organization owners can manage subscription and billing settings.")}
+                  {t(
+                    "subscription:errors.ownerOnly",
+                    "Only organization owners can manage subscription and billing settings.",
+                  )}
                 </p>
                 <Button variant="outline" onClick={() => navigate("/settings/limits")}>
                   {t("subscription:btn.checkLimits", "Check your limits")}
@@ -545,7 +545,6 @@ const SubscriptionManagement: React.FC = () => {
 
       <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* Header card */}
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
@@ -568,10 +567,8 @@ const SubscriptionManagement: React.FC = () => {
             </div>
           </header>
 
-          {/* Main card */}
           <section className="mt-6">
             <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              {/* Top bar */}
               <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
                   {hasSubscription
@@ -584,10 +581,8 @@ const SubscriptionManagement: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Status note */}
               <div className="px-4 py-3">{renderStatusNotice()}</div>
 
-              {/* Summary row */}
               <div className="px-4 py-3 border-b border-gray-200">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <div className="text-[13px]">
@@ -618,10 +613,9 @@ const SubscriptionManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Plans */}
               <div className="flex flex-col">
                 {availablePlans.map((plan) => (
-                  <Row key={plan.priceId} left={plan.label} right={renderPlanAction(plan.priceId)} />
+                  <Row key={plan.code} left={plan.label} right={renderPlanAction(plan.code)} />
                 ))}
               </div>
             </div>

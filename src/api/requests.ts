@@ -12,7 +12,8 @@ import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from
 import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
 import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, CreateCustomerPortalSessionRequest,
   CreateCustomerPortalSessionResponse, 
-  GetSubscriptionStatusResponse} from '@/models/auth/billing';
+  GetSubscriptionStatusResponse,
+  PlanCode} from '@/models/auth/billing';
 import type { GetNotificationPreferencesResponse, UpdateNotificationPreferencesRequest,
   UpdateNotificationPreferencesResponse } from '@/models/auth/notifications';
 import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, GetGroupResponse,
@@ -190,9 +191,10 @@ export const api = {
   getSubscriptionStatus: () =>
     request<GetSubscriptionStatusResponse>("billing/subscription/", "GET"),
 
-  createCheckoutSession: (price_id: string) =>
+  createCheckoutSession: (plan_code: PlanCode, country_code?: string) =>
     request<CreateCheckoutSessionResponse>("billing/checkout-session/", "POST", {
-      price_id
+      plan_code,
+      country_code,
     } satisfies CreateCheckoutSessionRequest),
 
   createCustomerPortalSession: () =>

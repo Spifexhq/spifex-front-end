@@ -11,13 +11,18 @@ export type SubscriptionStatus =
   | "unpaid"
   | string;
 
+export type PlanCode = "starter" | "pro";
+
+export interface PlanRef {
+  plan_code: PlanCode;
+}
+
 export interface Subscription {
   status: SubscriptionStatus;
 
-  plan_price_id: string | null;
+  plan_code: string | null;
   plan_nickname: string | null;
 
-  // ISO strings (nullable because Stripe/webhooks can be temporarily partial)
   current_period_start: string | null;
   current_period_end: string | null;
 
@@ -38,7 +43,8 @@ export interface GetSubscriptionStatusResponse {
 /* ------------------------------ Checkout / Portal ------------------------------ */
 
 export interface CreateCheckoutSessionRequest {
-  price_id: string;
+  plan_code: PlanCode;
+  country_code?: string;
 }
 
 export interface CreateCheckoutSessionResponse {

@@ -32,8 +32,8 @@
     "processing": "Traitement…"
   },
   "plan": {
-    "basic": "Basic",
-    "premium": "Premium"
+    "starter": "Démarreur",
+    "pro": "Professionnel"
   },
   "btn": {
     "manage": "Gérer l’abonnement",
