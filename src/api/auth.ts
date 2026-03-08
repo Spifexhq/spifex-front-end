@@ -1,6 +1,6 @@
 // src/api/auth.ts
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import type { RootState } from "@/redux/store";
@@ -44,8 +44,8 @@ const TAB_ID_KEY = "spifex:tab-id";
 
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
 
-// Helps in React strict-mode / remounts
 let AUTH_BOOTSTRAP_STARTED = false;
+let AUTH_BOOTSTRAP_PROMISE: Promise<void> | null = null;
 
 export const handleGetAccessToken = () => getAccess();
 
@@ -65,8 +65,6 @@ function shouldHardSignOut(err: unknown): boolean {
 
   if (err instanceof Error) {
     if (/(^|\s)401(\s|$)/.test(err.message)) return true;
-
-    // Reasons emitted by http.ts refresh layer
     if (err.message === "refresh_failed") return true;
     if (err.message === "refresh_user_mismatch") return true;
     if (err.message === "refresh_user_missing") return true;
@@ -89,7 +87,7 @@ function setAuthHintActive(): void {
   try {
     localStorage.setItem(AUTH_HINT_KEY, "active");
   } catch {
-    // ignore
+    //
   }
 }
 
@@ -97,7 +95,7 @@ function clearAuthHint(): void {
   try {
     localStorage.removeItem(AUTH_HINT_KEY);
   } catch {
-    // ignore
+    //
   }
 }
 
@@ -105,7 +103,7 @@ function clearBootstrapFailedFlag(): void {
   try {
     sessionStorage.removeItem(AUTH_BOOTSTRAP_FAILED_KEY);
   } catch {
-    // ignore
+    //
   }
 }
 
@@ -132,11 +130,7 @@ function isMfaRequiredPayload(value: unknown): value is MfaRequiredPayload {
   return v.mfa_required === true && typeof v.challenge_id === "string" && v.challenge_id.trim().length > 0;
 }
 
-/* ---------------------------------------------------------------------------
- * Cross-tab token bridge (BroadcastChannel)
- * - Bridges access token + orgExternalId + userId
- * - Refuses cross-user bridging
- * -------------------------------------------------------------------------- */
+/* ------------------------ Cross-tab token bridge --------------------------- */
 
 type AuthBCReq = { type: "REQ_TOKENS"; from: string };
 type AuthBCTok = { type: "TOKENS"; to: string; access: string; orgExternalId?: string; userId: string };
@@ -148,7 +142,9 @@ function getTabId(): string {
     if (existing) return existing;
 
     const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto && typeof crypto.randomUUID === "function"
+      typeof crypto !== "undefined" &&
+      "randomUUID" in crypto &&
+      typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -169,29 +165,33 @@ function startAuthTokenResponder(): () => void {
   const ch = openAuthChannel();
   if (!ch) return () => {};
 
-  const channel: BroadcastChannel = ch;
+  const channel = ch;
 
   const onMessage = (ev: MessageEvent<AuthBCMsg>) => {
     const msg = ev.data;
     if (!msg || typeof msg !== "object") return;
 
-    // Another tab is asking for tokens.
     if (msg.type === "REQ_TOKENS") {
       const access = getAccess();
       if (!access) return;
 
       const userId = (getUserIdStored() || "").trim();
-      if (!userId) return; // do not bridge tokens if identity not locked
+      if (!userId) return;
 
-      // IMPORTANT: read from token storage helper, not some random sessionStorage key.
       const orgExternalId = (getOrgExternalIdStored() || "").trim() || undefined;
 
-      const reply: AuthBCTok = { type: "TOKENS", to: msg.from, access, orgExternalId, userId };
+      const reply: AuthBCTok = {
+        type: "TOKENS",
+        to: msg.from,
+        access,
+        orgExternalId,
+        userId,
+      };
+
       channel.postMessage(reply);
       return;
     }
 
-    // This tab is receiving tokens.
     if (msg.type === "TOKENS" && msg.to === getTabId()) {
       const incomingAccess = typeof msg.access === "string" ? msg.access : "";
       const incomingUserId = typeof msg.userId === "string" ? msg.userId.trim() : "";
@@ -227,7 +227,7 @@ async function requestTokensFromOtherTabs(timeoutMs = 800): Promise<boolean> {
     const ch = openAuthChannel();
     if (!ch) return false;
 
-    const channel: BroadcastChannel = ch;
+    const channel = ch;
     const me = getTabId();
 
     return await new Promise<boolean>((resolve) => {
@@ -288,6 +288,8 @@ export const useAuth = () => {
   const auth = useSelector((s: RootState) => s.auth);
   const dispatch = useDispatch();
 
+  const [isAuthResolved, setIsAuthResolved] = useState(false);
+
   const authUserRef = useRef(auth.user);
   useEffect(() => {
     authUserRef.current = auth.user;
@@ -308,6 +310,7 @@ export const useAuth = () => {
 
       const orgExt = payload.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
+
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
 
@@ -326,6 +329,8 @@ export const useAuth = () => {
     clearAuthHint();
 
     AUTH_BOOTSTRAP_STARTED = false;
+    AUTH_BOOTSTRAP_PROMISE = null;
+
     emitAuthSync("signed_out");
   }, [dispatch]);
 
@@ -333,15 +338,18 @@ export const useAuth = () => {
     try {
       await api.signOut();
     } catch {
-      // ignore
+      //
     } finally {
       clearClientSession();
+      setIsAuthResolved(true);
     }
   }, [clearClientSession]);
 
   const syncAuth = useCallback(
     async (opts?: { force?: boolean; reason?: string }) => {
-      if (!getAuthHintActive()) return;
+      if (!getAuthHintActive() && !getAccess()) {
+        return;
+      }
 
       const mustFetch = Boolean(opts?.force) || authUserRef.current == null;
       if (!mustFetch) return;
@@ -378,7 +386,12 @@ export const useAuth = () => {
   );
 
   const handleInitUser = useCallback(async () => {
-    await syncAuth({ force: authUserRef.current == null, reason: "init_user" });
+    try {
+      if (!getAuthHintActive() && !getAccess()) return;
+      await syncAuth({ force: authUserRef.current == null, reason: "init_user" });
+    } finally {
+      setIsAuthResolved(true);
+    }
   }, [syncAuth]);
 
   const applySignInSnapshot = useCallback(
@@ -386,7 +399,6 @@ export const useAuth = () => {
       const access = data.access;
       if (!access) throw new Error("Missing access token");
 
-      // On explicit sign-in, we accept the new identity.
       const uid = String(data.user?.id || "").trim();
       if (uid) setUserIdStored(uid);
       else clearUserIdStored();
@@ -402,10 +414,12 @@ export const useAuth = () => {
 
       const orgExt = data.organization?.organization?.id ?? null;
       dispatch(setOrgExternalId(orgExt));
+
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
 
       emitAuthSync("signed_in");
+      setIsAuthResolved(true);
     },
     [dispatch],
   );
@@ -417,6 +431,7 @@ export const useAuth = () => {
       if (isMfaRequiredPayload(res.data)) {
         setAuthHintActive();
         clearBootstrapFailedFlag();
+        setIsAuthResolved(true);
         return res;
       }
 
@@ -449,15 +464,15 @@ export const useAuth = () => {
 
   useEffect(() => startAuthTokenResponder(), []);
 
-  // Cross-tab: react to auth + identity changes.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (!e.key) return;
 
-      // Auth status on/off
       if (e.key === AUTH_HINT_KEY) {
         if (e.newValue === "active") {
-          void syncAuth({ force: true, reason: "storage_active" });
+          void syncAuth({ force: true, reason: "storage_active" }).finally(() => {
+            setIsAuthResolved(true);
+          });
           return;
         }
 
@@ -467,14 +482,17 @@ export const useAuth = () => {
           clearOrgExternalIdStored();
           clearUserIdStored();
           clearHttpCaches();
+          setIsAuthResolved(true);
         }
+
         return;
       }
 
-      // Org/user identity changes (tenant/uid) should refresh auth snapshot in other tabs.
       if (e.key === ORG_EXTERNAL_ID_STORAGE_KEY || e.key === USER_ID_STORAGE_KEY) {
         if (getAuthHintActive()) {
-          void syncAuth({ force: true, reason: "storage_identity_change" });
+          void syncAuth({ force: true, reason: "storage_identity_change" }).finally(() => {
+            setIsAuthResolved(true);
+          });
         }
       }
     };
@@ -484,13 +502,25 @@ export const useAuth = () => {
   }, [dispatch, syncAuth]);
 
   useEffect(() => {
-    if (AUTH_BOOTSTRAP_STARTED) return;
-    AUTH_BOOTSTRAP_STARTED = true;
+    if (AUTH_BOOTSTRAP_STARTED) {
+      if (AUTH_BOOTSTRAP_PROMISE) {
+        void AUTH_BOOTSTRAP_PROMISE.finally(() => setIsAuthResolved(true));
+      } else {
+        setIsAuthResolved(true);
+      }
+      return;
+    }
 
-    void Promise.resolve(handleInitUser()).catch(() => undefined);
+    AUTH_BOOTSTRAP_STARTED = true;
+    AUTH_BOOTSTRAP_PROMISE = Promise.resolve(handleInitUser())
+      .catch(() => undefined)
+      .finally(() => {
+        setIsAuthResolved(true);
+      });
+
+    void AUTH_BOOTSTRAP_PROMISE;
   }, [handleInitUser]);
 
-  // In-tab events (refresh failures / Redis-session invalid / subscription blocked)
   useEffect(() => {
     const onAuthSync = (e: Event) => {
       const ce = e as CustomEvent;
@@ -528,6 +558,7 @@ export const useAuth = () => {
       organization: auth.organization,
       isSubscribed: auth.isSubscribed,
       isLogged: auth.user != null,
+      isAuthResolved,
 
       handleInitUser,
       handlePermissionExists,
@@ -543,6 +574,7 @@ export const useAuth = () => {
       auth.user,
       auth.organization,
       auth.isSubscribed,
+      isAuthResolved,
       handleInitUser,
       handlePermissionExists,
       handleSignIn,

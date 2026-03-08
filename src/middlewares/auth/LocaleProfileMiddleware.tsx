@@ -9,44 +9,39 @@ import { isSupportedTimezone } from "@/lib/location/timezonesList";
 type Status = "idle" | "loading" | "ready" | "redirecting";
 
 const LOCALE_PAGE = "/locale-setup";
-const ALLOWLIST_PREFIXES = [LOCALE_PAGE];
-
-function isAllowlisted(pathname: string) {
-  return ALLOWLIST_PREFIXES.some((p) => pathname.startsWith(p));
-}
+const DEFAULT_REDIRECT_AFTER_READY = "/cashflow";
 
 export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children }) => {
   const [status, setStatus] = useState<Status>("idle");
   const [shouldRenderChildren, setShouldRenderChildren] = useState(false);
-  const didCheck = useRef(false);
+  const didCheckKey = useRef<string | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
 
+  const currentPath = location.pathname + (location.search || "");
+  const isLocalePage = location.pathname === LOCALE_PAGE;
+
   const returnTo = useMemo(() => {
-    const current = location.pathname + (location.search || "");
-    return encodeURIComponent(current);
-  }, [location.pathname, location.search]);
+    return encodeURIComponent(currentPath);
+  }, [currentPath]);
 
   useEffect(() => {
     let mounted = true;
+    const checkKey = currentPath;
 
-    if (isAllowlisted(location.pathname)) {
-      setStatus("ready");
-      setShouldRenderChildren(true);
-      return;
-    }
+    if (didCheckKey.current === checkKey) return;
+    didCheckKey.current = checkKey;
+
+    setShouldRenderChildren(false);
+    setStatus("loading");
 
     (async () => {
-      if (didCheck.current) return;
-      didCheck.current = true;
-
-      setStatus("loading");
       try {
         const res = await api.getPersonalSettings();
 
-        const tz = (res?.data?.timezone || "").trim();
-        const country = (res?.data?.country || "").trim();
+        const tz = String(res?.data?.timezone || "").trim();
+        const country = String(res?.data?.country || "").trim().toUpperCase();
 
         const tzOk =
           tz.length > 0 &&
@@ -57,28 +52,34 @@ export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children 
 
         const ok = tzOk && countryOk;
 
-        if (!ok) {
+        if (!mounted) return;
+
+        if (isLocalePage && ok) {
+          setStatus("redirecting");
+          navigate(DEFAULT_REDIRECT_AFTER_READY, { replace: true });
+          return;
+        }
+
+        if (!isLocalePage && !ok) {
           setStatus("redirecting");
           navigate(`${LOCALE_PAGE}?step=locale&return=${returnTo}`, { replace: true });
           return;
         }
 
-        if (mounted) {
-          setStatus("ready");
-          setShouldRenderChildren(true);
-        }
+        setStatus("ready");
+        setShouldRenderChildren(true);
       } catch {
-        if (mounted) {
-          setStatus("ready");
-          setShouldRenderChildren(true);
-        }
+        if (!mounted) return;
+
+        setStatus("ready");
+        setShouldRenderChildren(true);
       }
     })();
 
     return () => {
       mounted = false;
     };
-  }, [location.pathname, navigate, returnTo]);
+  }, [currentPath, isLocalePage, navigate, returnTo]);
 
   if (status === "loading" || status === "redirecting") {
     return <TopProgress active variant="center" />;

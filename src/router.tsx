@@ -9,7 +9,7 @@ import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
 //import Loader from "@/components/Loaders/LazyLoader";
 
 // Middlewares
-import { AuthMiddleware, PermissionMiddleware, SubscriptionMiddleware } from "@/middlewares";
+import { PermissionMiddleware, SubscriptionMiddleware, GuestOnlyMiddleware } from "@/middlewares";
 
 // Auth Pages
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
@@ -67,14 +67,26 @@ const routes: RouteObject[] = [
         path: '/',
         element: <BaseLayout />,
         children: [
+            {
+                index: true,
+                element: <Navigate to="/cashflow" replace />,
+            },
             // Auth
             {
-                path: 'signup',
-                element: <SignUp />
+            path: 'signup',
+            element: (
+                    <GuestOnlyMiddleware redirectTo="/cashflow">
+                        <SignUp />
+                    </GuestOnlyMiddleware>
+                ),
             },
             {
-                path: 'signin',
-                element: <SignIn />
+            path: 'signin',
+            element: (
+                    <GuestOnlyMiddleware redirectTo="/cashflow">
+                        <SignIn />
+                    </GuestOnlyMiddleware>
+                ),
             },
             {
                 path: 'verify-email/:uidb64/:token/',
@@ -96,24 +108,16 @@ const routes: RouteObject[] = [
                 path: "verify-pending-password/:uidb64/:token/",
                 element: <PasswordVerification />,
             },
-            {
-                path: '',
-                element: <Navigate to="/cashflow" replace />
-            },
-            {
-                path: 'locale-setup',
-                element: (
-                    <AuthMiddleware>
-                    <PersonalLocaleSetup />
-                    </AuthMiddleware>
-                ),
-            },
         ]
     },
     {
         path: '/',
         element: <SpifexLayout />,
         children: [
+            {
+                path: 'locale-setup',
+                element: <PersonalLocaleSetup />
+            },
             // Dashboard
             {
                 path: 'home',

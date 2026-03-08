@@ -1,6 +1,4 @@
 // src/pages/PersonalLocaleSetup/index.tsx
-/* Standalone page: /locale-setup */
-
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
