@@ -1,4 +1,3 @@
-// src/layouts/SpifexLayout.tsx
 import { useState, useEffect, FC } from "react";
 import { Outlet } from "react-router-dom";
 
@@ -15,21 +14,33 @@ export const SpifexLayout: FC = () => {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      try { await handleInitUser(); }
-      finally { if (mounted) setLoadingAuth(false); }
+      try {
+        await handleInitUser();
+      } finally {
+        if (mounted) setLoadingAuth(false);
+      }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [handleInitUser]);
 
-  if (loadingAuth) return <TopProgress active={true} variant='center' />;
+  if (loadingAuth) return <TopProgress active={true} variant="center" />;
 
   return (
     <AuthMiddleware>
       <LocaleProfileMiddleware>
-        <Navbar />
-        <div className="min-h-screen pt-16 bg-white text-gray-900">
-          <Outlet />
+        <div className="h-[100dvh] overflow-hidden bg-white text-gray-900">
+          
+          <Navbar />
+
+          <div className="h-full pt-16">
+            <main className="h-[calc(100dvh-64px)] overflow-y-auto">
+              <Outlet />
+            </main>
+          </div>
         </div>
+
         <CookieBanner />
       </LocaleProfileMiddleware>
     </AuthMiddleware>
