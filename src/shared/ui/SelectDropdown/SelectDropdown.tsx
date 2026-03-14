@@ -6,6 +6,7 @@ import {
   useId,
   useMemo,
   KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
@@ -17,6 +18,7 @@ function cn(...classes: Array<string | undefined | false | null>) {
 }
 
 type SelectDropdownSize = "xs" | "sm" | "md" | "lg" | "xl";
+type DropdownPlacement = "bottom" | "top";
 
 /**
  * SelectDropdown — Minimal & Fluid
@@ -124,6 +126,7 @@ function SelectDropdown<T>({
   const [hasTopShadow, setHasTopShadow] = useState(false);
   const [hasBottomShadow, setHasBottomShadow] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [placement, setPlacement] = useState<DropdownPlacement>("bottom");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -190,14 +193,12 @@ function SelectDropdown<T>({
     [selected, getItemKey]
   );
 
-  // Filtering
   const filteredItems = useMemo(() => {
     const st = searchTerm.trim().toLowerCase();
     if (!st) return items;
     return items.filter((item) => (getItemLabel(item) || "").toLowerCase().includes(st));
   }, [items, searchTerm, getItemLabel]);
 
-  // Optional grouping
   const groupedItems: Record<string, T[]> = useMemo(() => {
     if (!groupBy) return {};
     const acc: Record<string, T[]> = {};
@@ -208,20 +209,17 @@ function SelectDropdown<T>({
     return acc;
   }, [filteredItems, groupBy]);
 
-  // Flat list for nav/virtualization
   const flatItems: T[] = useMemo(
     () => (groupBy ? Object.values(groupedItems).flat() : filteredItems),
     [groupedItems, filteredItems, groupBy]
   );
 
-  // key -> index map
   const flatKeyIndexMap = useMemo(() => {
     const map = new Map<string, number>();
     flatItems.forEach((it, i) => map.set(keyToStr(getItemKey(it)), i));
     return map;
   }, [flatItems, getItemKey]);
 
-  // “last interaction wins” (mouse vs keyboard)
   const lastSourceRef = useRef<"keyboard" | "mouse" | null>(null);
   const suppressMouseUntilTsRef = useRef(0);
 
@@ -231,11 +229,39 @@ function SelectDropdown<T>({
     if (source === "keyboard") suppressMouseUntilTsRef.current = performance.now() + 120;
   };
 
+  const computePlacement = useCallback(() => {
+    const wrapper = dropdownRef.current;
+    if (!wrapper || typeof window === "undefined") return;
+
+    const rect = wrapper.getBoundingClientRect();
+    const vh = window.innerHeight;
+
+    const maxHeightFromStyles =
+      typeof customStyles.maxHeight === "number"
+        ? customStyles.maxHeight
+        : typeof customStyles.maxHeight === "string" && customStyles.maxHeight.endsWith("px")
+        ? parseFloat(customStyles.maxHeight)
+        : null;
+
+    const estimatedPanelHeight = Math.min(
+      maxHeightFromStyles ?? Math.round(vh * 0.44),
+      Math.round(vh * 0.5)
+    );
+
+    const gap = 8;
+    const spaceBelow = vh - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+
+    setPlacement(spaceBelow >= estimatedPanelHeight || spaceBelow >= spaceAbove ? "bottom" : "top");
+  }, [customStyles.maxHeight]);
+
   // ---------------------------------------------------------------------------
   // Open/close
   // ---------------------------------------------------------------------------
   const toggleDropdown = () => {
-    if (!disabled) setIsOpen((p) => !p);
+    if (disabled) return;
+    if (!isOpen) computePlacement();
+    setIsOpen((p) => !p);
   };
 
   useEffect(() => {
@@ -250,12 +276,16 @@ function SelectDropdown<T>({
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("resize", computePlacement);
+      window.addEventListener("scroll", computePlacement, true);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", computePlacement);
+      window.removeEventListener("scroll", computePlacement, true);
     };
-  }, [isOpen, onChange, clearOnClickOutside]);
+  }, [isOpen, onChange, clearOnClickOutside, computePlacement]);
 
   window.useGlobalEsc(isOpen, () => {
     setIsOpen(false);
@@ -279,15 +309,14 @@ function SelectDropdown<T>({
     }
     setActiveIndex(idx);
 
-    // Desktop: focus filter when available
-    // Mobile: do not force focus the input to avoid opening keyboard immediately
+    computePlacement();
+
     if (!isMobileViewport && !hideFilter && searchInputRef.current) {
       searchInputRef.current.focus?.({ preventScroll: true });
     } else {
       panelRef.current?.focus?.({ preventScroll: true });
     }
 
-    // Reset virtual scroll & shadows
     setScrollTop(0);
     requestAnimationFrame(() => {
       const p = panelRef.current;
@@ -298,7 +327,6 @@ function SelectDropdown<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Keep active item visible
   useEffect(() => {
     if (!isOpen || activeIndex == null) return;
     const panel = panelRef.current;
@@ -329,7 +357,6 @@ function SelectDropdown<T>({
     }
   }, [activeIndex, isOpen, flatItems.length, effectiveRowHeight, virtualize, virtualThreshold, groupBy]);
 
-  // Clamp activeIndex when list length changes
   useEffect(() => {
     if (activeIndex == null) return;
     if (flatItems.length === 0) setActiveIndex(null);
@@ -431,12 +458,16 @@ function SelectDropdown<T>({
     if (disabled) return;
     if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
+      computePlacement();
       setIsOpen(true);
     }
   };
 
   const handleButtonFocus = () => {
-    if (!disabled && lastFocusByTabRef.current) setIsOpen(true);
+    if (!disabled && lastFocusByTabRef.current) {
+      computePlacement();
+      setIsOpen(true);
+    }
   };
 
   const handlePanelKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -495,7 +526,7 @@ function SelectDropdown<T>({
   // ---------------------------------------------------------------------------
   const renderItem = (item: T, flatIndex: number) => {
     const k = keyToStr(getItemKey(item));
-    const label = getItemLabel(item);
+    const itemLabel = getItemLabel(item);
     const isChecked = selectedKeys.has(k);
     const isActive = activeIndex === flatIndex;
     const optionId = `${id}-opt-${flatIndex}`;
@@ -540,7 +571,7 @@ function SelectDropdown<T>({
             size="small"
           />
         )}
-        <span className="truncate">{label}</span>
+        <span className="truncate">{itemLabel}</span>
       </div>
     );
   };
@@ -552,7 +583,6 @@ function SelectDropdown<T>({
       ? getItemLabel(selected[0])
       : `${t("count.selected", { count: selected.length })}`;
 
-  // Virtualization only for flat lists
   const hasGroup = !!groupBy;
   const shouldVirtualize = virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
 
@@ -657,11 +687,14 @@ function SelectDropdown<T>({
         {/* Panel */}
         <div
           className={cn(
-            "absolute left-0 right-0 top-full origin-top rounded-md shadow-lg mt-1 border border-gray-200 bg-white z-[60]",
+            "absolute left-0 right-0 origin-top rounded-md shadow-lg border border-gray-200 bg-white z-[60]",
+            placement === "bottom" ? "top-full mt-1" : "bottom-full mb-1",
             "transition-all duration-150 ease-out",
             isOpen
               ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 -translate-y-1 pointer-events-none"
+              : placement === "bottom"
+              ? "opacity-0 -translate-y-1 pointer-events-none"
+              : "opacity-0 translate-y-1 pointer-events-none"
           )}
           style={{ maxWidth: 360 }}
         >
@@ -681,7 +714,6 @@ function SelectDropdown<T>({
             className="max-h-[44vh] overflow-y-auto outline-none"
             style={panelStyle}
           >
-            {/* Sticky controls */}
             {!effectiveSingleSelect && !hideCheckboxes && (
               <div className="sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 border-b border-gray-200">
                 <div className="flex gap-1 p-2">
@@ -752,7 +784,6 @@ function SelectDropdown<T>({
               </div>
             )}
 
-            {/* Empty / List */}
             <div className="py-1">
               {flatItems.length === 0 ? (
                 <div className="px-3 py-8 text-center text-[12px] text-gray-500">
