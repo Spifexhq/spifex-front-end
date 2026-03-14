@@ -477,7 +477,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
           </div>
 
           <footer
-            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
