@@ -556,7 +556,7 @@ const MemberSettings: React.FC = () => {
     <>
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
 
-      <main className="min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
+      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto">
           <header className="bg-white border border-gray-200 rounded-lg">
             <div className="px-5 py-4 flex items-center gap-3">

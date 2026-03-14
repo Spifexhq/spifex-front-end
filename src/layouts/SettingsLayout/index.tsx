@@ -115,7 +115,7 @@ export const SettingsLayout: FC = () => {
         </button>
       )}
 
-      <div className="md:ml-64">
+      <div className="md:ml-64 pb-16 md:pb-0">
         <Outlet />
       </div>
     </>
