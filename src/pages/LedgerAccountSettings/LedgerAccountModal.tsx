@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -148,14 +149,21 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     setShowCloseConfirm(false);
     setWarning(null);
 
-    setTimeout(() => accountRef.current?.focus(), 60);
+    requestAnimationFrame(() => accountRef.current?.focus());
   }, [isOpen, initial]);
 
   useEffect(() => {
     if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
     };
   }, [isOpen]);
 
@@ -191,19 +199,22 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        attemptClose();
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         if (effectiveBusy) return;
         (document.getElementById(IDS.form) as HTMLFormElement | null)?.requestSubmit();
-        return;
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose, effectiveBusy]);
-
-  window.useGlobalEsc(isOpen, onClose);
 
   const handleCategoryChange = useCallback((items: { label: string; value: CategoryKey }[]) => {
     const sel = items[0];
@@ -228,8 +239,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
       e.preventDefault();
       if (effectiveBusy) return;
 
-      const ok =
-        !!form.account.trim() && !!form.category && !!form.subcategory.trim();
+      const ok = !!form.account.trim() && !!form.category && !!form.subcategory.trim();
 
       if (!ok) {
         setWarning({
@@ -240,8 +250,8 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
           focusId: !form.account.trim()
             ? IDS.accountInput
             : !form.category
-              ? IDS.categoryWrap
-              : IDS.subgroupWrap,
+            ? IDS.categoryWrap
+            : IDS.subgroupWrap,
         });
         return;
       }
@@ -274,9 +284,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
         <>
           {t("modal.defaultTxLabel", { defaultValue: "Default transaction:" })}{" "}
           <b>
-            {selectedCategory.inferredTx === "credit"
-              ? t("tags.credit")
-              : t("tags.debit")}
+            {selectedCategory.inferredTx === "credit" ? t("tags.credit") : t("tags.debit")}
           </b>
         </>
       );
@@ -287,17 +295,34 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          attemptClose();
+        }
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-white border border-gray-200 rounded-lg shadow-xl w-[820px] max-w-[95vw] h-[520px] max-h-[90vh] flex flex-col"
+        aria-labelledby="ledger-account-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+        className={[
+          "relative bg-white shadow-2xl flex flex-col w-full",
+          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
+          "md:static md:w-[820px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
+          "md:rounded-lg md:border md:border-gray-200",
+        ].join(" ")}
       >
-        {/* Header (EntriesModal-like) */}
-        <header className="border-b border-gray-200 bg-white">
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
+        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                 GL
               </div>
 
@@ -305,30 +330,26 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">
                   {t("title", { defaultValue: "Ledger Accounts" })}
                 </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+                <h1 id="ledger-account-modal-title" className="text-[16px] font-semibold text-gray-900 leading-snug">
                   {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                 </h1>
               </div>
             </div>
 
             <button
-              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none disabled:opacity-50"
+              type="button"
+              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
               onClick={attemptClose}
               aria-label={t("buttons.cancel")}
               disabled={effectiveBusy}
             >
-              &times;
+              <X size={18} />
             </button>
           </div>
         </header>
 
-        {/* Body */}
-        <form
-          id={IDS.form}
-          className="flex-1 flex flex-col"
-          onSubmit={submit}
-        >
-          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
+        <form id={IDS.form} className="flex flex-1 min-h-0 flex-col md:block md:flex-none" onSubmit={submit}>
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
                 kind="text"
@@ -357,9 +378,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                   label={t("filters.category")}
                   items={categoryOptions.map((c) => ({ label: c.label, value: c.key }))}
                   selected={
-                    form.category
-                      ? [{ label: t(`categories.${form.category}`), value: form.category }]
-                      : []
+                    form.category ? [{ label: t(`categories.${form.category}`), value: form.category }] : []
                   }
                   onChange={handleCategoryChange}
                   getItemKey={(i) => i.value}
@@ -373,7 +392,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                 />
               </div>
 
-              <div className="md:col-span-2 grid grid-cols-[1fr_auto] gap-2 items-end">
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 items-end">
                 <div id={IDS.subgroupWrap}>
                   {addingNewSubgroup ? (
                     <Input
@@ -389,11 +408,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                     <SelectDropdown<{ label: string; value: string }>
                       label={t("modal.subcategory")}
                       items={subgroupOptions}
-                      selected={
-                        form.subcategory
-                          ? [{ label: form.subcategory, value: form.subcategory }]
-                          : []
-                      }
+                      selected={form.subcategory ? [{ label: form.subcategory, value: form.subcategory }] : []}
                       onChange={handleSubgroupChange}
                       getItemKey={(i) => i.value}
                       getItemLabel={(i) => i.label}
@@ -416,6 +431,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                     setTimeout(() => focusFirstInteractive(IDS.subgroupWrap), 0);
                   }}
                   disabled={effectiveBusy || !form.category}
+                  className="w-full md:w-auto"
                 >
                   {addingNewSubgroup ? t("buttons.toggleNewSubCancel") : t("buttons.toggleNewSub")}
                 </Button>
@@ -434,54 +450,52 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
             </div>
           </div>
 
-          {/* Footer (EntriesModal-like) */}
-          <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
-            <p className="text-[12px] text-gray-600">
-              {footerLeft}
-              <span className="ml-3 text-gray-400">
-                {t("footer.shortcuts", {
-                  defaultValue: "Shortcuts: Esc close • Ctrl/⌘+S save",
-                })}
-              </span>
-            </p>
+          <footer
+            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-[12px] text-gray-600 hidden md:block">
+                {footerLeft}
+                <span className="ml-3 text-gray-400">
+                  {t("footer.shortcuts", {
+                    defaultValue: "Shortcuts: Esc close • Ctrl/⌘+S save",
+                  })}
+                </span>
+              </p>
 
-            <div className="flex gap-2">
-              <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy}>
-                {t("buttons.cancel")}
-              </Button>
-              <Button type="submit" disabled={!canSave}>
-                {effectiveBusy
-                  ? t("buttons.saving", { defaultValue: "Saving…" })
-                  : t("buttons.save")}
-              </Button>
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
+                <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy} className="w-full md:w-auto">
+                  {t("buttons.cancel")}
+                </Button>
+                <Button type="submit" disabled={!canSave} className="w-full md:w-auto">
+                  {effectiveBusy ? t("buttons.saving", { defaultValue: "Saving…" }) : t("buttons.save")}
+                </Button>
+              </div>
             </div>
           </footer>
         </form>
 
-        {/* Close confirm overlay (EntriesModal-like) */}
         {showCloseConfirm && (
-          <div
-            className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
-            aria-modal="true"
-            role="alertdialog"
-            aria-labelledby="close-confirm-title"
-            aria-describedby="close-confirm-desc"
-          >
-            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
-                <h2 id="close-confirm-title" className="text-[15px] font-semibold text-gray-900">
+                <h2 className="text-[15px] font-semibold text-gray-900">
                   {t("confirmDiscard.title", { defaultValue: "Discard changes?" })}
                 </h2>
-                <p id="close-confirm-desc" className="mt-1 text-[12px] text-gray-600">
+                <p className="mt-1 text-[12px] text-gray-600">
                   {t("confirmDiscard.message", {
                     defaultValue: "You have unsaved changes. Do you want to discard them?",
                   })}
                 </p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+              <div
+                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="outline"
-                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowCloseConfirm(false)}
                   disabled={effectiveBusy}
                 >
@@ -489,7 +503,7 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
                 </Button>
                 <Button
                   variant="danger"
-                  className="!bg-red-500 hover:!bg-red-600"
+                  className="w-full md:w-auto !bg-red-500 hover:!bg-red-600"
                   onClick={handleClose}
                   disabled={effectiveBusy}
                 >
@@ -500,27 +514,20 @@ const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
           </div>
         )}
 
-        {/* Warning overlay (EntriesModal-like) */}
         {warning && (
-          <div
-            className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
-            aria-modal="true"
-            role="alertdialog"
-            aria-labelledby="warn-title"
-            aria-describedby="warn-desc"
-          >
-            <div className="w-full max-w-md rounded-lg border border-amber-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
-                <h2 id="warn-title" className="text-[15px] font-semibold text-amber-800">
-                  {warning.title}
-                </h2>
-                <p id="warn-desc" className="mt-1 text-[12px] text-amber-700">
-                  {warning.message}
-                </p>
+                <h2 className="text-[15px] font-semibold text-amber-800">{warning.title}</h2>
+                <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+              <div
+                className="px-5 py-4 flex justify-end"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="primary"
+                  className="w-full md:w-auto"
                   onClick={() => {
                     const fId = warning.focusId;
                     setWarning(null);

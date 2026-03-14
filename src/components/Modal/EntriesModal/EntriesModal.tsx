@@ -1,8 +1,7 @@
-// src/components/Modal/EntriesModal.tsx
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Spinner from "@/shared/ui/Loaders/Spinner";
@@ -58,6 +57,8 @@ type EntryDiffable = {
 
 /* ------------------------------ Stable constants ------------------------------ */
 const IDS = {
+  form: "EntriesModalForm",
+  modalTitle: "entries-modal-title",
   ledgerWrap: "ledger-select-wrap",
   installmentsInput: "installments-input",
   inventoryQty: "inventory-qty-input",
@@ -179,7 +180,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 }) => {
   const { t } = useTranslation(["entriesModal"]);
 
-  /* ----------------------------- Translated lists ---------------------------- */
   const PERIOD_OPTIONS = useMemo(
     () => PERIOD_OPTIONS_BASE.map((p) => ({ ...p, label: t(p.label) })),
     [t]
@@ -205,7 +205,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       }));
   }, [docTypes, t]);
 
-  /* -------------------------------- State -------------------------------- */
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [formData, setFormData] = useState<FormData>(getEmptyFormData);
 
@@ -223,7 +222,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
 
-  /* ------------------------------ Locks & derived ------------------------------ */
   const lastSettledOnStr = useMemo(() => {
     if (!initialEntry) return null;
     const ie = initialEntry as unknown as { last_settled_on?: string | null };
@@ -251,7 +249,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     return Math.round(total * 100) / 100;
   }, [formData.costCenters.department_percentage]);
 
-  /* ------------------------- Flag: meaningful data ------------------------- */
   const hasMeaningfulData = useMemo(() => {
     if (formData.details.amount > "") return true;
 
@@ -262,8 +259,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       d.notes.trim() ||
       d.ledgerAccount ||
       d.documentType
-    )
+    ) {
       return true;
+    }
 
     const cc = formData.costCenters;
     if (cc.departments.length > 0 || cc.projects) return true;
@@ -275,16 +273,16 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     if (ent.entityType || ent.entity) return true;
 
     const rec = formData.recurrence;
-    if (rec.recurrence === 1 || !!rec.installments || !!rec.weekend || Number(rec.periods) !== 1) return true;
+    if (rec.recurrence === 1 || !!rec.installments || !!rec.weekend || Number(rec.periods) !== 1) {
+      return true;
+    }
 
     return false;
   }, [formData]);
 
-  /* ------------------------- Reset / close helpers ------------------------- */
   const resetInternalState = useCallback(() => {
     setFormData(getEmptyFormData());
     setActiveTab("details");
-
     setWarning(null);
     setShowCloseConfirm(false);
   }, []);
@@ -296,6 +294,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   const attemptClose = useCallback(() => {
     if (isDropdownOpen()) return;
+    if (isSubmitting) return;
 
     if (hasMeaningfulData) {
       setShowCloseConfirm(true);
@@ -303,9 +302,11 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     }
 
     handleClose();
-  }, [hasMeaningfulData, handleClose]);
+  }, [hasMeaningfulData, handleClose, isSubmitting]);
 
   const onEsc = useCallback(() => {
+    if (isSubmitting) return;
+
     if (warning) {
       setWarning(null);
       return;
@@ -316,11 +317,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     }
     if (closeTransientOverlays()) return;
     attemptClose();
-  }, [attemptClose, showCloseConfirm, warning]);
+  }, [attemptClose, showCloseConfirm, warning, isSubmitting]);
 
-  window.useGlobalEsc(isOpen, onEsc);
-
-  /* --------------------------- Fetch helpers --------------------------- */
   const fetchAllLedgerAccounts = useCallback(async () => {
     const all = await fetchAllCursor<LedgerAccount>(api.getLedgerAccounts);
     const wanted = type === "credit" ? "credit" : "debit";
@@ -333,10 +331,10 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions), []);
   const fetchAllDocumentTypes = useCallback(() => fetchAllCursor<DocumentType>(api.getDocumentTypes), []);
 
-  /* --------------------------- Load sources on open --------------------------- */
   useEffect(() => {
     if (!isOpen) return;
     let alive = true;
+
     (async () => {
       try {
         const [la, deps, prjs, invs, ents, dts] = await Promise.all([
@@ -360,6 +358,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       }
 
       if (!alive) return;
+
       if (!initialEntry) {
         setFormData((prev) => ({
           ...prev,
@@ -367,7 +366,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         }));
       }
 
-      setTimeout(() => amountRef.current?.focus(), 50);
+      requestAnimationFrame(() => amountRef.current?.focus());
     })();
 
     return () => {
@@ -384,7 +383,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     fetchAllDocumentTypes,
   ]);
 
-  /* ------------------------ Fill form when editing ------------------------- */
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
@@ -396,7 +394,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
     const rawDeps = (ie.departments ?? []) as Array<{ department_id: string; percent: string | number }>;
     const depIds = rawDeps.map((d) => String(d.department_id));
-    const depPercs = rawDeps.map((d) => (typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent)));
+    const depPercs = rawDeps.map((d) =>
+      typeof d.percent === "number" ? d.percent.toFixed(2) : String(d.percent)
+    );
 
     setFormData({
       details: {
@@ -427,10 +427,28 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     });
   }, [isOpen, initialEntry]);
 
-  /* ---------------------------- Validations ---------------------------- */
-  type ValidationResult = { ok: boolean; tab?: Tab; focusId?: string; title?: string; message?: string };
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const validateAll = useCallback((): ValidationResult => {
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [isOpen]);
+
+  const validateAll = useCallback((): {
+    ok: boolean;
+    tab?: Tab;
+    focusId?: string;
+    title?: string;
+    message?: string;
+  } => {
     if (formData.details.amount <= "") {
       return {
         ok: false,
@@ -518,7 +536,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     return { ok: true };
   }, [formData, isRecurrenceLocked, percentageSum, t]);
 
-  /* ----------------------- Keyboard: ESC, Ctrl/⌘+S, Ctrl+Alt+←/→ ----------------------- */
   const goTabRelative = useCallback(
     (delta: number) => {
       const idx = TAB_LIST.findIndex((x) => x.id === activeTab);
@@ -533,19 +550,23 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/⌘ + S => submit
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onEsc();
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         if (warning || showCloseConfirm) return;
         if (hasTransientOverlayOpen()) return;
 
         e.preventDefault();
 
-        const el = document.getElementById("modalForm");
+        const el = document.getElementById(IDS.form);
         if (el instanceof HTMLFormElement) el.requestSubmit();
         return;
       }
 
-      // Ctrl + Alt + Arrow => tab switch
       if (e.ctrlKey && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         if (warning || showCloseConfirm) return;
         if (hasTransientOverlayOpen()) return;
@@ -557,9 +578,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, goTabRelative, showCloseConfirm, warning]);
+  }, [isOpen, goTabRelative, showCloseConfirm, warning, onEsc]);
 
-  /* ------------------------------ Submit helpers ------------------------------ */
   const buildDepartmentsPayload = useCallback(() => {
     if (!formData.costCenters.departments.length) return undefined;
 
@@ -579,7 +599,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     return [{ item_id: formData.inventory.product, quantity: String(q) }];
   }, [formData.inventory.product, formData.inventory.quantity]);
 
-  /* ------------------------ Submit --------------------------- */
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -643,11 +662,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           const changes: Partial<EditEntryRequest> = {};
 
           if (formData.details.dueDate !== ie.due_date) changes.due_date = formData.details.dueDate;
-          if ((formData.details.description || "") !== (ie.description || ""))
+          if ((formData.details.description || "") !== (ie.description || "")) {
             changes.description = formData.details.description || "";
-          if ((formData.details.observation || "") !== (ie.observation || ""))
+          }
+          if ((formData.details.observation || "") !== (ie.observation || "")) {
             changes.observation = formData.details.observation || "";
-          if ((formData.details.notes || "") !== (ie.notes || "")) changes.notes = formData.details.notes || "";
+          }
+          if ((formData.details.notes || "") !== (ie.notes || "")) {
+            changes.notes = formData.details.notes || "";
+          }
 
           if (!isFinancialLocked && formData.details.amount !== ie.amount) {
             changes.amount = formData.details.amount;
@@ -738,7 +761,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     ]
   );
 
-  /* ---------------------------- UI derivations ------------------------- */
   const isAmountValid = formData.details.amount > "";
   const isLedgerValid = !!formData.details.ledgerAccount;
 
@@ -766,9 +788,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     !isInventoryValid ||
     !areDepartmentsValid;
 
-  /* -------------------------------- Tabs -------------------------------- */
   const Tabs = () => (
-    <nav className="flex gap-3 overflow-x-auto">
+    <nav className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar">
       {TAB_LIST.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -776,7 +797,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-2 text-[13px] border-b-2 ${
+            className={`shrink-0 px-3 py-2 text-[13px] border-b-2 ${
               isActive
                 ? "border-[color:var(--accentPrimary)] text-[color:var(--accentPrimary)]"
                 : "border-transparent text-gray-600 hover:text-gray-800"
@@ -790,7 +811,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     </nav>
   );
 
-  /* ---------------------------- Render tab content ------------------------- */
   const renderTabContent = () => {
     switch (activeTab) {
       case "details":
@@ -867,22 +887,41 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          attemptClose();
+        }
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-white border border-gray-200 rounded-lg shadow-xl w-[1100px] max-w-[95vw] h-[580px] max-h-[90vh] overflow-hidden flex flex-col"
+        aria-labelledby={IDS.modalTitle}
+        onMouseDown={(event) => event.stopPropagation()}
+        className={[
+          "relative bg-white shadow-2xl flex flex-col w-full",
+          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
+          "md:static md:w-[1100px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
+          "md:rounded-lg md:border md:border-gray-200",
+        ].join(" ")}
       >
-        {/* Header */}
-        <header className="border-b border-gray-200 bg-white">
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
+        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                 {type === "credit" ? t("entriesModal:header.badgeIn") : t("entriesModal:header.badgeOut")}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("entriesModal:header.entry")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("entriesModal:header.entry")}
+                </div>
+                <h1 id={IDS.modalTitle} className="text-[16px] font-semibold text-gray-900 leading-snug">
                   {type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
                 </h1>
                 {isFinancialLocked && formattedLastSettledOn && (
@@ -894,24 +933,25 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             </div>
 
             <button
-              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
+              type="button"
+              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center shrink-0"
               onClick={attemptClose}
               aria-label={t("entriesModal:aria.close")}
+              disabled={isSubmitting}
             >
-              &times;
+              <X size={18} />
             </button>
           </div>
 
-          <div className="px-5 pb-2">
+          <div className="px-4 md:px-5 pb-2">
             <Tabs />
           </div>
         </header>
 
-        {/* Body */}
-        <form id="modalForm" className="flex-1 flex flex-col" onSubmit={handleSubmit}>
-          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
+        <form id={IDS.form} className="flex flex-1 min-h-0 flex-col md:block md:flex-none" onSubmit={handleSubmit}>
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
             {isLoadingEntry ? (
-              <div className="w-full h-full flex items-center justify-center">
+              <div className="w-full h-full min-h-[280px] flex items-center justify-center">
                 <Spinner />
               </div>
             ) : (
@@ -919,40 +959,43 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             )}
           </div>
 
-          {/* Footer */}
-          <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
-            <p className="text-[12px] text-gray-600">
-              {formData.details.amount > "" ? (
-                <>
-                  {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount)}</b>
-                </>
-              ) : (
-                <>{t("entriesModal:footer.enterValue")}</>
-              )}
-              <span className="ml-3 text-gray-400">{t("entriesModal:footer.shortcuts")}</span>
-            </p>
+          <footer
+            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-[12px] text-gray-600 hidden md:block">
+                {formData.details.amount > "" ? (
+                  <>
+                    {t("entriesModal:footer.value")} <b>{formatCurrency(formData.details.amount)}</b>
+                  </>
+                ) : (
+                  <>{t("entriesModal:footer.enterValue")}</>
+                )}
+                <span className="ml-3 text-gray-400">{t("entriesModal:footer.shortcuts")}</span>
+              </p>
 
-            <div className="flex gap-2">
-              <Button variant="cancel" type="button" onClick={attemptClose}>
-                {t("entriesModal:actions.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSaveDisabled}>
-                {isSubmitting ? t("entriesModal:actions.saving") : t("entriesModal:actions.save")}
-              </Button>
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
+                <Button variant="cancel" type="button" onClick={attemptClose} disabled={isSubmitting} className="w-full md:w-auto">
+                  {t("entriesModal:actions.cancel")}
+                </Button>
+                <Button type="submit" disabled={isSaveDisabled} className="w-full md:w-auto">
+                  {isSubmitting ? t("entriesModal:actions.saving") : t("entriesModal:actions.save")}
+                </Button>
+              </div>
             </div>
           </footer>
         </form>
 
-        {/* Close confirm overlay */}
         {showCloseConfirm && (
           <div
-            className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
+            className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4"
             aria-modal="true"
             role="alertdialog"
             aria-labelledby="close-confirm-title"
             aria-describedby="close-confirm-desc"
           >
-            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 id="close-confirm-title" className="text-[15px] font-semibold text-gray-900">
                   {t("entriesModal:confirmDiscard.title")}
@@ -961,15 +1004,22 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                   {t("entriesModal:confirmDiscard.message")}
                 </p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+              <div
+                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="outline"
-                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowCloseConfirm(false)}
                 >
                   {t("entriesModal:actions.back")}
                 </Button>
-                <Button variant="danger" className="!bg-red-500 hover:!bg-red-600" onClick={handleClose}>
+                <Button
+                  variant="danger"
+                  className="w-full md:w-auto !bg-red-500 hover:!bg-red-600"
+                  onClick={handleClose}
+                >
                   {t("entriesModal:actions.discard")}
                 </Button>
               </div>
@@ -977,16 +1027,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           </div>
         )}
 
-        {/* Warning overlay */}
         {warning && (
           <div
-            className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
+            className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4"
             aria-modal="true"
             role="alertdialog"
             aria-labelledby="warn-title"
             aria-describedby="warn-desc"
           >
-            <div className="w-full max-w-md rounded-lg border border-amber-200 bg-white shadow-2xl">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
                 <h2 id="warn-title" className="text-[15px] font-semibold text-amber-800">
                   {warning.title}
@@ -995,9 +1044,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                   {warning.message}
                 </p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+              <div
+                className="px-5 py-4 flex justify-end"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="primary"
+                  className="w-full md:w-auto"
                   onClick={() => {
                     const fId = warning.focusId;
                     setWarning(null);
