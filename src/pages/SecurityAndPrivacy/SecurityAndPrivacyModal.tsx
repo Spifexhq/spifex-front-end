@@ -151,7 +151,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
         </div>
 
-        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+        <header className="border-b border-gray-200 bg-white shrink-0">
           <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>

@@ -362,7 +362,7 @@ const BankModal: React.FC<BankModalProps> = ({
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
         </div>
 
-        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+        <header className="border-b border-gray-200 bg-white shrink-0">
           <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
