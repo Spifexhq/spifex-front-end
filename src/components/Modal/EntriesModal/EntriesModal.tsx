@@ -911,7 +911,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
         </div>
 
-        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+        <header className="border-b border-gray-200 bg-white shrink-0">
           <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
@@ -960,7 +960,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           </div>
 
           <footer
-            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
