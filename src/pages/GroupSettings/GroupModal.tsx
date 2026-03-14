@@ -1,12 +1,10 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/pages/GroupSettings/GroupModal.tsx                                */
-/* i18n: namespace "groupSettings"                                            */
-/* Modal: create/rename only (no tabs)                                        */
-/* UX: Esc close • Ctrl/⌘+S save • discard confirm if dirty                   */
+/* File: src/pages/GroupSettings/GroupModal.tsx                               */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -35,7 +33,14 @@ const ModalSkeleton: React.FC = () => (
   </div>
 );
 
-const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "", busy = false, onClose, onSubmit }) => {
+const GroupModal: React.FC<GroupModalProps> = ({
+  isOpen,
+  mode,
+  initialName = "",
+  busy = false,
+  onClose,
+  onSubmit,
+}) => {
   const { t } = useTranslation("groupSettings");
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,41 +78,58 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
   }, [onClose, resetState]);
 
   const attemptClose = useCallback(() => {
+    if (effectiveBusy) return;
+
     if (warning) {
       setWarning(null);
       return;
     }
+
     if (showCloseConfirm) return;
 
     if (isDirty) {
       setShowCloseConfirm(true);
       return;
     }
+
     hardClose();
-  }, [hardClose, isDirty, showCloseConfirm, warning]);
+  }, [effectiveBusy, warning, showCloseConfirm, isDirty, hardClose]);
 
   useEffect(() => {
     if (!isOpen) return;
+
     resetState();
 
-    // focus after open paint
-    setTimeout(() => inputRef.current?.focus(), 60);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   }, [isOpen, resetState]);
 
-  /* lock body scroll */
   useEffect(() => {
     if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
     };
   }, [isOpen]);
 
-  /* keyboard shortcuts */
   useEffect(() => {
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        attemptClose();
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("groupModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -118,26 +140,32 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose]);
 
-  window.useGlobalEsc(isOpen, onClose);
-
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (effectiveBusy) return;
 
       const trimmed = name.trim();
+
       if (!trimmed) {
-        setWarning({ title: t("errors.validationTitle"), message: t("errors.validationNameRequired") });
+        setWarning({
+          title: t("errors.validationTitle"),
+          message: t("errors.validationNameRequired"),
+        });
         return;
       }
 
       setIsSubmitting(true);
+
       try {
         await onSubmit(trimmed);
         hardClose();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : t("errors.submitFailed");
-        setWarning({ title: t("errors.submitFailed"), message: msg });
+        const message = err instanceof Error ? err.message : t("errors.submitFailed");
+        setWarning({
+          title: t("errors.submitFailed"),
+          message,
+        });
       } finally {
         setIsSubmitting(false);
       }
@@ -148,39 +176,68 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          attemptClose();
+        }
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-white border border-gray-200 rounded-lg shadow-xl w-[720px] max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col"
+        aria-labelledby="group-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+        className={[
+          "relative bg-white shadow-2xl flex flex-col w-full",
+          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
+          "md:static md:w-[720px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
+          "md:rounded-lg md:border md:border-gray-200",
+        ].join(" ")}
       >
-        {/* Header */}
-        <header className="border-b border-gray-200 bg-white">
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
+        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                 GR
               </div>
+
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                <h2 className="text-[16px] font-semibold text-gray-900 leading-snug truncate">{title}</h2>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("header.settings")}
+                </div>
+                <h2
+                  id="group-modal-title"
+                  className="text-[16px] font-semibold text-gray-900 leading-snug truncate"
+                >
+                  {title}
+                </h2>
               </div>
             </div>
 
             <button
-              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none disabled:opacity-50"
+              type="button"
+              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
               onClick={attemptClose}
               aria-label={t("modal.close")}
               disabled={effectiveBusy}
             >
-              &times;
+              <X size={18} />
             </button>
           </div>
         </header>
 
-        {/* Body */}
-        <form id="groupModalForm" className="flex-1 flex flex-col" onSubmit={submit}>
-          <div className="px-5 py-4 flex-1">
+        <form
+          id="groupModalForm"
+          className="flex flex-1 min-h-0 flex-col md:block md:flex-none"
+          onSubmit={submit}
+        >
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
             {effectiveBusy && mode === "rename" ? (
               <ModalSkeleton />
             ) : (
@@ -197,36 +254,55 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
             )}
           </div>
 
-          {/* Footer */}
-          <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
-            <p className="text-[12px] text-gray-600">
-              {t("modal.shortcuts")}
-            </p>
+          <footer
+            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-[12px] text-gray-600 hidden md:block">{t("modal.shortcuts")}</p>
 
-            <div className="flex gap-2">
-              <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy}>
-                {t("btn.cancel")}
-              </Button>
-              <Button type="submit" disabled={effectiveBusy || !name.trim()}>
-                {t("btn.save")}
-              </Button>
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
+                <Button
+                  variant="cancel"
+                  type="button"
+                  onClick={attemptClose}
+                  disabled={effectiveBusy}
+                  className="w-full md:w-auto"
+                >
+                  {t("btn.cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={effectiveBusy || !name.trim()}
+                  className="w-full md:w-auto"
+                >
+                  {t("btn.save")}
+                </Button>
+              </div>
             </div>
           </footer>
         </form>
 
-        {/* Discard confirm overlay */}
         {showCloseConfirm && (
-          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4" role="alertdialog">
-            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h3 className="text-[15px] font-semibold text-gray-900">{t("confirmDiscard.title")}</h3>
                 <p className="mt-1 text-[12px] text-gray-600">{t("confirmDiscard.message")}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowCloseConfirm(false)}>
+
+              <div
+                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
+                <Button variant="outline" onClick={() => setShowCloseConfirm(false)} className="w-full md:w-auto">
                   {t("btn.cancel")}
                 </Button>
-                <Button variant="danger" className="!bg-red-500 hover:!bg-red-600" onClick={hardClose}>
+                <Button
+                  variant="danger"
+                  className="w-full md:w-auto !bg-red-500 hover:!bg-red-600"
+                  onClick={hardClose}
+                >
                   {t("actions.discard")}
                 </Button>
               </div>
@@ -234,20 +310,24 @@ const GroupModal: React.FC<GroupModalProps> = ({ isOpen, mode, initialName = "",
           </div>
         )}
 
-        {/* Warning overlay */}
         {warning && (
-          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4" role="alertdialog">
-            <div className="w-full max-w-md rounded-lg border border-amber-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
                 <h3 className="text-[15px] font-semibold text-amber-800">{warning.title}</h3>
                 <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+
+              <div
+                className="px-5 py-4 flex justify-end"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="primary"
+                  className="w-full md:w-auto"
                   onClick={() => {
                     setWarning(null);
-                    setTimeout(() => inputRef.current?.focus(), 0);
+                    requestAnimationFrame(() => inputRef.current?.focus());
                   }}
                 >
                   {t("actions.ok")}

@@ -1,9 +1,10 @@
 /* -------------------------------------------------------------------------- */
-/* File: src/pages/EntitySettings/EntityModal.tsx                              */
+/* File: src/pages/EntitySettings/EntityModal.tsx                             */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -188,7 +189,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
 }) => {
   const { t } = useTranslation("entitySettings");
 
-  // IMPORTANT: primitive dep, avoids redundant `entity?.id` in hook deps.
   const entityId = entity?.id ?? null;
 
   const [activeTab, setActiveTab] = useState<Tab>("general");
@@ -225,6 +225,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
   }, [formData.entity_type]);
 
   const title = mode === "create" ? t("modal.createTitle") : t("modal.editTitle");
+  const effectiveBusy = isSubmitting || isDetailLoading;
 
   const isDirty = useMemo(() => {
     const now = JSON.stringify(normalizeDirtyComparable(formData));
@@ -232,10 +233,10 @@ const EntityModal: React.FC<EntityModalProps> = ({
   }, [formData]);
 
   const isSaveDisabled = useMemo(() => {
-    if (isSubmitting || isDetailLoading) return true;
+    if (effectiveBusy) return true;
     if (!formData.full_name.trim()) return true;
     return false;
-  }, [formData.full_name, isSubmitting, isDetailLoading]);
+  }, [formData.full_name, effectiveBusy]);
 
   const resetInternalState = useCallback(() => {
     setActiveTab("general");
@@ -253,6 +254,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
   }, [onClose, resetInternalState]);
 
   const attemptClose = useCallback(() => {
+    if (effectiveBusy) return;
     if (isDropdownOpen()) return;
 
     if (warning) {
@@ -268,7 +270,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
     }
 
     handleClose();
-  }, [handleClose, isDirty, showCloseConfirm, warning]);
+  }, [effectiveBusy, handleClose, isDirty, showCloseConfirm, warning]);
 
   const goTabRelative = useCallback(
     (delta: number) => {
@@ -282,7 +284,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
     [activeTab, TAB_LIST]
   );
 
-  /* ------------------------------ Load detail on open ------------------------------ */
   useEffect(() => {
     if (!isOpen) return;
 
@@ -291,9 +292,8 @@ const EntityModal: React.FC<EntityModalProps> = ({
     (async () => {
       resetInternalState();
 
-      // focus + baseline (create)
       if (mode === "create") {
-        setTimeout(() => fullNameRef.current?.focus(), 60);
+        requestAnimationFrame(() => fullNameRef.current?.focus());
         return;
       }
 
@@ -333,11 +333,10 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
         setFormData(next);
         baselineRef.current = JSON.stringify(normalizeDirtyComparable(next));
-        setTimeout(() => fullNameRef.current?.focus(), 60);
+        requestAnimationFrame(() => fullNameRef.current?.focus());
       } catch {
         if (!alive) return;
 
-        // fallback to partial entity (if provided)
         const fallback: FormState = {
           ...emptyForm,
           full_name: entity?.full_name ?? "",
@@ -368,7 +367,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
         baselineRef.current = JSON.stringify(normalizeDirtyComparable(fallback));
         onNotify?.({ message: t("errors.detailError"), severity: "error" });
 
-        setTimeout(() => fullNameRef.current?.focus(), 60);
+        requestAnimationFrame(() => fullNameRef.current?.focus());
       } finally {
         if (alive) setIsDetailLoading(false);
       }
@@ -379,20 +378,31 @@ const EntityModal: React.FC<EntityModalProps> = ({
     };
   }, [isOpen, mode, entityId, resetInternalState, onNotify, t, entity]);
 
-  /* ------------------------------ Body scroll lock ------------------------------ */
   useEffect(() => {
     if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
     };
   }, [isOpen]);
 
-  /* ------------------------------ Keyboard: ESC, Ctrl/⌘+S, Ctrl+Alt+←/→ ------------------------------ */
   useEffect(() => {
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        attemptClose();
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         (document.getElementById("entityModalForm") as HTMLFormElement | null)?.requestSubmit();
@@ -411,8 +421,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose, goTabRelative, warning, showCloseConfirm]);
 
-  window.useGlobalEsc(isOpen, onClose);
-
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
@@ -424,6 +432,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+
       if (!formData.full_name.trim()) {
         setActiveTab("general");
         setWarning({
@@ -436,7 +445,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
       const payload = {
         ...formData,
-        // server expects nullable when empty
         ssn_tax_id: formData.ssn_tax_id.trim() || null,
         ein_tax_id: formData.ein_tax_id.trim() || null,
 
@@ -475,7 +483,6 @@ const EntityModal: React.FC<EntityModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    // NOTE: entityId is the only entity-related dependency (fixes your lint warning)
     [formData, mode, entityId, onNotify, onSaved, handleClose, t]
   );
 
@@ -518,7 +525,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -529,7 +536,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="alias_name"
                 value={formData.alias_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -548,7 +555,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 singleSelect
                 hideCheckboxes
                 buttonLabel={t("field.entity_type")}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -559,7 +566,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -570,16 +577,16 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
-            <label className="col-span-1 flex items-center gap-2 text-sm pt-6">
+            <label className="col-span-1 flex items-center gap-2 text-sm pt-0 md:pt-6">
               <Checkbox
                 size="small"
                 checked={!!formData.is_active}
                 onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
               {t("field.is_active")}
             </label>
@@ -596,7 +603,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="ssn_tax_id"
                 value={formData.ssn_tax_id}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -607,7 +614,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="ein_tax_id"
                 value={formData.ein_tax_id}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
           </div>
@@ -623,7 +630,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="street"
                 value={formData.street}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -634,7 +641,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="street_number"
                 value={formData.street_number}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -645,7 +652,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -656,7 +663,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -667,7 +674,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="postal_code"
                 value={formData.postal_code}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -678,7 +685,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
           </div>
@@ -694,7 +701,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="bank_name"
                 value={formData.bank_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -705,7 +712,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="bank_branch"
                 value={formData.bank_branch}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -716,7 +723,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="checking_account"
                 value={formData.checking_account}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -727,7 +734,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="account_holder_tax_id"
                 value={formData.account_holder_tax_id}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
 
@@ -738,7 +745,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
                 name="account_holder_name"
                 value={formData.account_holder_name}
                 onChange={handleChange}
-                disabled={isSubmitting || isDetailLoading}
+                disabled={effectiveBusy}
               />
             </div>
           </div>
@@ -752,98 +759,117 @@ const EntityModal: React.FC<EntityModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          attemptClose();
+        }
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-white border border-gray-200 rounded-lg shadow-xl w-[1100px] max-w-[95vw] h-[580px] max-h-[90vh] overflow-hidden flex flex-col"
+        aria-labelledby="entity-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+        className={[
+          "relative bg-white shadow-2xl flex flex-col w-full",
+          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
+          "md:static md:w-[1100px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
+          "md:rounded-lg md:border md:border-gray-200",
+        ].join(" ")}
       >
-        {/* Header */}
-        <header className="border-b border-gray-200 bg-white">
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
+        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                 {badgeText}
               </div>
 
               <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug truncate">{title}</h1>
+                <h1 id="entity-modal-title" className="text-[16px] font-semibold text-gray-900 leading-snug truncate">
+                  {title}
+                </h1>
               </div>
             </div>
 
             <button
-              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none disabled:opacity-50"
+              type="button"
+              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
               onClick={attemptClose}
               aria-label={t("modal.close")}
-              disabled={isSubmitting || isDetailLoading}
+              disabled={effectiveBusy}
             >
-              &times;
+              <X size={18} />
             </button>
           </div>
 
-          <div className="px-5 pb-2">
+          <div className="px-4 md:px-5 pb-2">
             <Tabs />
           </div>
         </header>
 
-        {/* Body */}
-        <form id="entityModalForm" className="flex-1 flex flex-col" onSubmit={submit}>
-          <div className="relative z-10 px-5 py-4 overflow-visible flex-1">
+        <form
+          id="entityModalForm"
+          className="flex flex-1 min-h-0 flex-col md:block md:flex-none"
+          onSubmit={submit}
+        >
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
             {mode === "edit" && isDetailLoading ? <ModalSkeleton /> : renderTabContent()}
           </div>
 
-          {/* Footer */}
-          <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
-            <p className="text-[12px] text-gray-600">
-              {formData.full_name.trim() ? (
-                <>
-                  {t("footer.entity")} <b>{formData.full_name.trim()}</b>
-                </>
-              ) : (
-                <>{t("footer.enterName")}</>
-              )}
-              <span className="ml-3 text-gray-400">{t("footer.shortcuts")}</span>
-            </p>
+          <footer
+            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-[12px] text-gray-600 hidden md:block">
+                {formData.full_name.trim() ? (
+                  <>
+                    {t("footer.entity")} <b>{formData.full_name.trim()}</b>
+                  </>
+                ) : (
+                  <>{t("footer.enterName")}</>
+                )}
+                <span className="ml-3 text-gray-400">{t("footer.shortcuts")}</span>
+              </p>
 
-            <div className="flex gap-2">
-              <Button variant="cancel" type="button" onClick={attemptClose} disabled={isSubmitting || isDetailLoading}>
-                {t("btn.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSaveDisabled}>
-                {isSubmitting ? t("btn.saving", { defaultValue: "Saving..." }) : t("btn.save")}
-              </Button>
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
+                <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy} className="w-full md:w-auto">
+                  {t("btn.cancel")}
+                </Button>
+                <Button type="submit" disabled={isSaveDisabled} className="w-full md:w-auto">
+                  {isSubmitting ? t("btn.saving", { defaultValue: "Saving..." }) : t("btn.save")}
+                </Button>
+              </div>
             </div>
           </footer>
         </form>
 
-        {/* Close confirm overlay */}
         {showCloseConfirm && (
-          <div
-            className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
-            aria-modal="true"
-            role="alertdialog"
-            aria-labelledby="close-confirm-title"
-            aria-describedby="close-confirm-desc"
-          >
-            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
-                <h2 id="close-confirm-title" className="text-[15px] font-semibold text-gray-900">
-                  {t("confirmDiscard.title")}
-                </h2>
-                <p id="close-confirm-desc" className="mt-1 text-[12px] text-gray-600">
-                  {t("confirmDiscard.message")}
-                </p>
+                <h2 className="text-[15px] font-semibold text-gray-900">{t("confirmDiscard.title")}</h2>
+                <p className="mt-1 text-[12px] text-gray-600">{t("confirmDiscard.message")}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+              <div
+                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="outline"
-                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowCloseConfirm(false)}
                 >
                   {t("btn.cancel")}
                 </Button>
-                <Button variant="danger" className="!bg-red-500 hover:!bg-red-600" onClick={handleClose}>
+                <Button variant="danger" className="w-full md:w-auto !bg-red-500 hover:!bg-red-600" onClick={handleClose}>
                   {t("actions.discard")}
                 </Button>
               </div>
@@ -851,27 +877,20 @@ const EntityModal: React.FC<EntityModalProps> = ({
           </div>
         )}
 
-        {/* Warning overlay */}
         {warning && (
-          <div
-            className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4"
-            aria-modal="true"
-            role="alertdialog"
-            aria-labelledby="warn-title"
-            aria-describedby="warn-desc"
-          >
-            <div className="w-full max-w-md rounded-lg border border-amber-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
-                <h2 id="warn-title" className="text-[15px] font-semibold text-amber-800">
-                  {warning.title}
-                </h2>
-                <p id="warn-desc" className="mt-1 text-[12px] text-amber-700">
-                  {warning.message}
-                </p>
+                <h2 className="text-[15px] font-semibold text-amber-800">{warning.title}</h2>
+                <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+              <div
+                className="px-5 py-4 flex justify-end"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="primary"
+                  className="w-full md:w-auto"
                   onClick={() => {
                     const wrap = warning.focusWrapId;
                     setWarning(null);

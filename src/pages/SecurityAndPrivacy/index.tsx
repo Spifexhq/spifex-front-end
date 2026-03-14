@@ -1,6 +1,6 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/SecurityAndPrivacy.tsx
- * -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/SecurityAndPrivacy.tsx                                     */
+/* -------------------------------------------------------------------------- */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
-import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
 import Checkbox from "@/shared/ui/Checkbox";
@@ -21,17 +20,20 @@ import { validatePassword } from "@/lib";
 import type { ApiErrorBody } from "@/models/Api";
 import type { SecurityStatusResponse } from "@/models/auth/security";
 import { PermissionMiddleware } from "src/middlewares";
+import SecurityAndPrivacyModal from "./SecurityAndPrivacyModal";
 
 /* ------------------------------- Types ----------------------------------- */
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
+type ModalMode = "password" | "email" | "twofactor" | null;
+
 /* -------------------------------- Helpers -------------------------------- */
 function getInitials(name?: string) {
   if (!name) return "SC";
-  const p = name.split(" ").filter(Boolean);
-  return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
+  const parts = name.split(" ").filter(Boolean);
+  return ((parts[0]?.[0] || "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
 const Row = ({
@@ -46,15 +48,30 @@ const Row = ({
   disabled?: boolean;
 }) => (
   <div
-    className={`flex items-center justify-between px-4 py-2.5 ${
+    className={`flex items-start sm:items-center justify-between gap-3 px-4 py-3 ${
       disabled ? "opacity-70 pointer-events-none" : ""
     }`}
   >
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">{value}</p>
+      <p className="text-[13px] font-medium text-gray-900 break-words sm:truncate">{value}</p>
     </div>
-    {action}
+    {action ? <div className="shrink-0">{action}</div> : null}
+  </div>
+);
+
+const SectionCard = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+      <span className="text-[11px] uppercase tracking-wide text-gray-700">{title}</span>
+    </div>
+    {children}
   </div>
 );
 
@@ -98,7 +115,6 @@ const SecurityAndPrivacy: React.FC = () => {
   const { t, i18n } = useTranslation("securityAndPrivacy");
   const { user: authUser } = useAuthContext();
 
-  /* ----------------------------- Title + lang ------------------------------ */
   useEffect(() => {
     document.title = t("title");
   }, [t]);
@@ -107,7 +123,6 @@ const SecurityAndPrivacy: React.FC = () => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  /* ----------------------------- date-fns locale --------------------------- */
   const dateLocale = useMemo(() => {
     const base = (i18n.language || "en").split("-")[0];
     switch (base) {
@@ -130,14 +145,11 @@ const SecurityAndPrivacy: React.FC = () => {
     return "MMM d, yyyy";
   }, [i18n.language]);
 
-  /* ------------------------------ Flags/State ------------------------------ */
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Single source of truth for this page.
   const [security, setSecurity] = useState<SecurityStatusResponse | null>(null);
 
-  const [modalMode, setModalMode] = useState<"password" | "email" | "twofactor" | null>(null);
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
   const [pwData, setPwData] = useState({
@@ -152,12 +164,10 @@ const SecurityAndPrivacy: React.FC = () => {
     current_password: "",
   });
 
-  /* ------------------------------ 2FA -------------------------------------- */
   const [twoFactorIntentEnabled, setTwoFactorIntentEnabled] = useState<boolean | null>(null);
   const [twoFactorConfirm, setTwoFactorConfirm] = useState({ email: "", password: "" });
   const [isTwoFactorSubmitting, setIsTwoFactorSubmitting] = useState(false);
 
-  /* ----------------------- Password validation (UI) ------------------------ */
   const pwValidation = useMemo(() => {
     if (!pwData.new_password) return { isValid: false, message: "" as React.ReactNode };
     return validatePassword(pwData.new_password);
@@ -188,27 +198,26 @@ const SecurityAndPrivacy: React.FC = () => {
     pwValidation.isValid,
   ]);
 
-  /* ----------------------- Email validation (UI) ------------------------ */
   const canSubmitEmail = useMemo(() => {
-    const cur = (emailData.current_email || "").trim();
-    const next = (emailData.new_email || "").trim();
-    const pw = (emailData.current_password || "").trim();
-    if (!cur || !next || !pw) return false;
-    if (cur.toLowerCase() === next.toLowerCase()) return false;
+    const currentEmail = (emailData.current_email || "").trim();
+    const nextEmail = (emailData.new_email || "").trim();
+    const password = (emailData.current_password || "").trim();
+
+    if (!currentEmail || !nextEmail || !password) return false;
+    if (currentEmail.toLowerCase() === nextEmail.toLowerCase()) return false;
     return true;
   }, [emailData.current_email, emailData.new_email, emailData.current_password]);
 
   const currentTwoFactorEnabled = !!security?.two_factor_enabled;
 
-  /* ------------------------------ Bootstrap -------------------------------- */
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
-        const sec = await api.getSecurityStatus();
+        const response = await api.getSecurityStatus();
         if (!mounted) return;
-        setSecurity(sec.data);
+        setSecurity(response.data);
       } finally {
         if (mounted) setIsInitialLoading(false);
       }
@@ -219,13 +228,12 @@ const SecurityAndPrivacy: React.FC = () => {
     };
   }, []);
 
-  /* ------------------------------- Handlers -------------------------------- */
   const refreshSecurity = useCallback(async () => {
     try {
-      const sec = await api.getSecurityStatus();
-      setSecurity(sec.data);
+      const response = await api.getSecurityStatus();
+      setSecurity(response.data);
     } catch {
-      /* silent */
+      // silent
     }
   }, []);
 
@@ -267,12 +275,12 @@ const SecurityAndPrivacy: React.FC = () => {
 
   const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setPwData((p) => ({ ...p, [name]: value }));
+    setPwData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEmailData((p) => ({ ...p, [name]: value }));
+    setEmailData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
   const handlePasswordSubmit = useCallback(async () => {
@@ -282,6 +290,7 @@ const SecurityAndPrivacy: React.FC = () => {
       setSnack({ message: t("toast.passwordMismatch"), severity: "error" });
       return;
     }
+
     if (current_password === new_password) {
       setSnack({ message: t("toast.samePassword"), severity: "error" });
       return;
@@ -297,26 +306,29 @@ const SecurityAndPrivacy: React.FC = () => {
     }
 
     setIsSubmitting(true);
+
     try {
-      const res = await api.passwordChange({ current_password, new_password });
+      const response = await api.passwordChange({ current_password, new_password });
+
       closeModal();
       setSnack({
         message:
-          (res as { data?: { message?: string } })?.data?.message ||
+          (response as { data?: { message?: string } })?.data?.message ||
           t("toast.passwordChangeRequested"),
         severity: "success",
       });
 
       await refreshSecurity();
-    } catch (err: unknown) {
-      if (isApiErrorBody(err)) {
+    } catch (error: unknown) {
+      if (isApiErrorBody(error)) {
         const message =
-          err.code === "invalid_password"
+          error.code === "invalid_password"
             ? t("toast.invalidCurrentPassword")
-            : getApiErrorMessage(err) ?? t("toast.changeError");
+            : getApiErrorMessage(error) ?? t("toast.changeError");
+
         setSnack({ message, severity: "error" });
-      } else if (err instanceof Error) {
-        setSnack({ message: err.message, severity: "error" });
+      } else if (error instanceof Error) {
+        setSnack({ message: error.message, severity: "error" });
       } else {
         setSnack({ message: t("toast.unexpected"), severity: "error" });
       }
@@ -339,22 +351,24 @@ const SecurityAndPrivacy: React.FC = () => {
     }
 
     setIsSubmitting(true);
+
     try {
       await api.emailChange({ current_email, new_email, current_password });
+
       closeModal();
       setSnack({ message: t("toast.emailChangeRequested"), severity: "success" });
 
       await refreshSecurity();
-    } catch (err: unknown) {
-      if (isApiErrorBody(err)) {
+    } catch (error: unknown) {
+      if (isApiErrorBody(error)) {
         let message: string;
 
-        switch (err.code) {
+        switch (error.code) {
           case "email_unavailable":
-            message = getApiErrorMessage(err) ?? t("toast.emailInUse");
+            message = getApiErrorMessage(error) ?? t("toast.emailInUse");
             break;
           case "same_email":
-            message = getApiErrorMessage(err) ?? t("toast.sameEmail");
+            message = getApiErrorMessage(error) ?? t("toast.sameEmail");
             break;
           case "invalid_credentials":
             message = t("toast.invalidCurrentPassword");
@@ -363,12 +377,12 @@ const SecurityAndPrivacy: React.FC = () => {
             message = t("toast.currentEmailMismatch");
             break;
           default:
-            message = getApiErrorMessage(err) ?? t("toast.emailChangeError");
+            message = getApiErrorMessage(error) ?? t("toast.emailChangeError");
         }
 
         setSnack({ message, severity: "error" });
-      } else if (err instanceof Error) {
-        setSnack({ message: err.message, severity: "error" });
+      } else if (error instanceof Error) {
+        setSnack({ message: error.message, severity: "error" });
       } else {
         setSnack({ message: t("toast.unexpected"), severity: "error" });
       }
@@ -387,7 +401,7 @@ const SecurityAndPrivacy: React.FC = () => {
 
   const handleTwoFactorConfirmChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setTwoFactorConfirm((p) => (name === "email" ? { ...p, email: value } : { ...p, password: value }));
+    setTwoFactorConfirm((prev) => (name === "email" ? { ...prev, email: value } : { ...prev, password: value }));
   }, []);
 
   const handleTwoFactorSubmit = useCallback(async () => {
@@ -408,6 +422,7 @@ const SecurityAndPrivacy: React.FC = () => {
     }
 
     setIsTwoFactorSubmitting(true);
+
     try {
       await api.updateTwoFactorSettings({
         enabled: twoFactorIntentEnabled,
@@ -422,15 +437,16 @@ const SecurityAndPrivacy: React.FC = () => {
       });
 
       await refreshSecurity();
-    } catch (err: unknown) {
-      if (isApiErrorBody(err)) {
+    } catch (error: unknown) {
+      if (isApiErrorBody(error)) {
         const message =
-          err.code === "invalid_password"
+          error.code === "invalid_password"
             ? t("toast.invalidCurrentPassword")
-            : getApiErrorMessage(err) ?? t("toast.changeError");
+            : getApiErrorMessage(error) ?? t("toast.changeError");
+
         setSnack({ message, severity: "error" });
-      } else if (err instanceof Error) {
-        setSnack({ message: err.message, severity: "error" });
+      } else if (error instanceof Error) {
+        setSnack({ message: error.message, severity: "error" });
       } else {
         setSnack({ message: t("toast.unexpected"), severity: "error" });
       }
@@ -448,38 +464,6 @@ const SecurityAndPrivacy: React.FC = () => {
     refreshSecurity,
   ]);
 
-  /* ------------------------------- UX hooks -------------------------------- */
-  const closeTransientOverlays = useCallback((): boolean => {
-    if (typeof document === "undefined") return false;
-
-    const hasOpen = !!document.querySelector(
-      '[data-select-open="true"],[data-menu-open="true"],[data-popover-open="true"]'
-    );
-    if (!hasOpen) return false;
-
-    const target = document.body || document.documentElement;
-    target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-    return true;
-  }, []);
-
-  const onEsc = useCallback(() => {
-    if (!modalMode) return;
-    if (isSubmitting || isTwoFactorSubmitting) return;
-    if (closeTransientOverlays()) return;
-    closeModal();
-  }, [modalMode, isSubmitting, isTwoFactorSubmitting, closeTransientOverlays, closeModal]);
-
-  // Global ESC stack (topmost wins)
-  window.useGlobalEsc(!!modalMode, onEsc);
-
-  useEffect(() => {
-    document.body.style.overflow = modalMode ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalMode]);
-
-  /* ----------------------------- Loading UI -------------------------------- */
   if (isInitialLoading) {
     return (
       <>
@@ -489,7 +473,6 @@ const SecurityAndPrivacy: React.FC = () => {
     );
   }
 
-  /* ---------------------------------- UI ---------------------------------- */
   const lastChangeLabel = security?.last_password_change
     ? format(new Date(security.last_password_change), datePattern, { locale: dateLocale })
     : t("field.never");
@@ -503,18 +486,14 @@ const SecurityAndPrivacy: React.FC = () => {
       <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto">
           <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+            <div className="px-4 sm:px-5 py-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                   {getInitials(authUser?.name)}
                 </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.title")}
-                  </h1>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
                 </div>
               </div>
             </div>
@@ -522,13 +501,7 @@ const SecurityAndPrivacy: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_security_and_privacy_page"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                    {t("section.access")}
-                  </span>
-                </div>
-
+              <SectionCard title={t("section.access")}>
                 <div className="flex flex-col">
                   <Row
                     label={t("field.primaryEmail")}
@@ -585,214 +558,33 @@ const SecurityAndPrivacy: React.FC = () => {
                     disabled={!security || isSubmitting || isTwoFactorSubmitting}
                   />
                 </div>
-              </div>
+              </SectionCard>
             </section>
           </PermissionMiddleware>
         </div>
 
-        {modalMode && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {modalMode === "password"
-                    ? t("modal.title")
-                    : modalMode === "email"
-                    ? t("modal.emailTitle")
-                    : twoFactorIntentEnabled
-                    ? t("modal.twoFactorEnableTitle")
-                    : t("modal.twoFactorDisableTitle")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("modal.close")}
-                  disabled={isSubmitting || isTwoFactorSubmitting}
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form
-                className={`space-y-3 ${
-                  isSubmitting || isTwoFactorSubmitting ? "opacity-70 pointer-events-none" : ""
-                }`}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (modalMode === "password") void handlePasswordSubmit();
-                  else if (modalMode === "email") void handleEmailSubmit();
-                  else void handleTwoFactorSubmit();
-                }}
-              >
-                {modalMode === "password" ? (
-                  <>
-                    <Input
-                      kind="text"
-                      label={t("field.current")}
-                      name="current_password"
-                      type="password"
-                      value={pwData.current_password}
-                      onChange={handlePasswordChange}
-                      showTogglePassword
-                      autoComplete="current-password"
-                      required
-                    />
-
-                    <Input
-                      kind="text"
-                      label={t("field.new")}
-                      name="new_password"
-                      type="password"
-                      value={pwData.new_password}
-                      onChange={handlePasswordChange}
-                      showTogglePassword
-                      autoComplete="new-password"
-                      required
-                    />
-
-                    {pwData.new_password && !pwValidation.isValid && (
-                      <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                        {pwValidation.message ? (
-                          <div className="text-[12px] text-gray-800">{pwValidation.message}</div>
-                        ) : (
-                          <div className="text-[12px] text-gray-800">{t("toast.weakPassword")}</div>
-                        )}
-                      </div>
-                    )}
-
-                    {pwSameAsCurrent && (
-                      <p className="text-[12px] text-red-600">{t("toast.samePassword")}</p>
-                    )}
-
-                    <Input
-                      kind="text"
-                      label={t("field.confirm")}
-                      name="confirm"
-                      type="password"
-                      value={pwData.confirm}
-                      onChange={handlePasswordChange}
-                      showTogglePassword
-                      autoComplete="new-password"
-                      required
-                      onPaste={(e) => e.preventDefault()}
-                      onDrop={(e) => e.preventDefault()}
-                      onDragOver={(e) => e.preventDefault()}
-                    />
-
-                    {pwMismatch && (
-                      <p className="text-[12px] text-red-600">{t("toast.passwordMismatch")}</p>
-                    )}
-                  </>
-                ) : modalMode === "email" ? (
-                  <>
-                    <Input
-                      kind="text"
-                      label={t("field.currentEmail")}
-                      name="current_email"
-                      type="email"
-                      value={emailData.current_email}
-                      onChange={handleEmailChange}
-                      autoComplete="email"
-                      required
-                    />
-
-                    <Input
-                      kind="text"
-                      label={t("field.newEmail")}
-                      name="new_email"
-                      type="email"
-                      value={emailData.new_email}
-                      onChange={handleEmailChange}
-                      autoComplete="email"
-                      required
-                    />
-
-                    <Input
-                      kind="text"
-                      label={t("field.currentPassword")}
-                      name="current_password"
-                      type="password"
-                      value={emailData.current_password}
-                      onChange={handleEmailChange}
-                      showTogglePassword
-                      autoComplete="current-password"
-                      required
-                    />
-                  </>
-                ) : (
-                  <>
-                    <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                      <div className="text-[12px] text-gray-800">
-                        {twoFactorIntentEnabled
-                          ? t("modal.twoFactorEnableHelp")
-                          : t("modal.twoFactorDisableHelp")}
-                      </div>
-                    </div>
-
-                    <Input
-                      kind="text"
-                      label={t("field.confirmEmail")}
-                      name="email"
-                      type="email"
-                      value={twoFactorConfirm.email}
-                      onChange={handleTwoFactorConfirmChange}
-                      autoComplete="email"
-                      required
-                    />
-
-                    <Input
-                      kind="text"
-                      label={t("field.currentPassword")}
-                      name="password"
-                      type="password"
-                      value={twoFactorConfirm.password}
-                      onChange={handleTwoFactorConfirmChange}
-                      showTogglePassword
-                      autoComplete="current-password"
-                      required
-                    />
-                  </>
-                )}
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button
-                    variant="cancel"
-                    type="button"
-                    onClick={closeModal}
-                    disabled={isSubmitting || isTwoFactorSubmitting}
-                  >
-                    {t("btn.cancel")}
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    disabled={
-                      isSubmitting ||
-                      isTwoFactorSubmitting ||
-                      (modalMode === "password"
-                        ? !canSubmitPassword
-                        : modalMode === "email"
-                        ? !canSubmitEmail
-                        : !twoFactorConfirm.email ||
-                          !twoFactorConfirm.password ||
-                          twoFactorIntentEnabled === null)
-                    }
-                  >
-                    {modalMode === "password"
-                      ? t("btn.save")
-                      : modalMode === "email"
-                      ? t("btn.saveEmail")
-                      : t("btn.confirm")}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <SecurityAndPrivacyModal
+          isOpen={!!modalMode}
+          modalMode={modalMode}
+          isSubmitting={isSubmitting}
+          isTwoFactorSubmitting={isTwoFactorSubmitting}
+          pwData={pwData}
+          emailData={emailData}
+          twoFactorConfirm={twoFactorConfirm}
+          twoFactorIntentEnabled={twoFactorIntentEnabled}
+          pwValidation={pwValidation}
+          pwMismatch={pwMismatch}
+          pwSameAsCurrent={pwSameAsCurrent}
+          canSubmitPassword={canSubmitPassword}
+          canSubmitEmail={canSubmitEmail}
+          onClose={closeModal}
+          onPasswordChange={handlePasswordChange}
+          onEmailChange={handleEmailChange}
+          onTwoFactorConfirmChange={handleTwoFactorConfirmChange}
+          onPasswordSubmit={handlePasswordSubmit}
+          onEmailSubmit={handleEmailSubmit}
+          onTwoFactorSubmit={handleTwoFactorSubmit}
+        />
       </main>
 
       <Snackbar

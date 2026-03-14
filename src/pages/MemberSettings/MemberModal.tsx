@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -39,28 +40,32 @@ const emptyForm: FormState = {
   groups: [],
 };
 
-function normalizeComparable(f: FormState) {
-  const trim = (v: string) => (v ?? "").trim();
-  const groupIds = (f.groups ?? []).map((g) => g.id).slice().sort();
+function normalizeComparable(form: FormState) {
+  const trim = (value: string) => (value ?? "").trim();
+  const groupIds = (form.groups ?? [])
+    .map((group) => group.id)
+    .slice()
+    .sort();
+
   return {
-    name: trim(f.name),
-    email: trim(f.email),
-    password: f.password,
-    confirmPassword: f.confirmPassword,
+    name: trim(form.name),
+    email: trim(form.email),
+    password: form.password,
+    confirmPassword: form.confirmPassword,
     groupIds,
   };
 }
 
 const ModalSkeleton: React.FC = () => (
-  <div className="py-1 grid grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <Shimmer className="h-10 rounded-md" />
     <Shimmer className="h-10 rounded-md" />
     <Shimmer className="h-10 rounded-md" />
     <Shimmer className="h-10 rounded-md" />
-    <div className="col-span-2">
+    <div className="md:col-span-2">
       <Shimmer className="h-10 rounded-md" />
     </div>
-    <div className="col-span-2 flex justify-end gap-3 pt-1">
+    <div className="md:col-span-2 flex justify-end gap-3 pt-1">
       <Shimmer className="h-9 w-24 rounded-md" />
       <Shimmer className="h-9 w-28 rounded-md" />
     </div>
@@ -71,9 +76,7 @@ export type MemberModalProps = {
   isOpen: boolean;
   mode: Mode;
   member?: Member | null;
-
   allGroups: GroupListItem[];
-
   onClose: () => void;
   onNotify?: (snack: Snack) => void;
   onSaved?: (res: { mode: Mode; memberId?: string }) => void;
@@ -101,12 +104,12 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
   const baselineRef = useRef<string>(JSON.stringify(normalizeComparable(emptyForm)));
   const nameRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const title = mode === "create" ? t("modal.createTitle") : t("modal.editTitle");
 
   const isDirty = useMemo(() => {
-    const now = JSON.stringify(normalizeComparable(formData));
-    return now !== baselineRef.current;
+    return JSON.stringify(normalizeComparable(formData)) !== baselineRef.current;
   }, [formData]);
 
   const busy = isSubmitting || isDetailLoading;
@@ -116,16 +119,14 @@ const MemberModal: React.FC<MemberModalProps> = ({
     const nameOk = formData.name.trim().length > 0;
     const emailOk = formData.email.trim().length > 0;
 
-    // create requires password + confirm
     if (mode === "create") {
-      const pwOk = formData.password.trim().length > 0;
-      const cpwOk = formData.confirmPassword.trim().length > 0;
-      return nameOk && emailOk && pwOk && cpwOk;
+      const passwordOk = formData.password.trim().length > 0;
+      const confirmPasswordOk = formData.confirmPassword.trim().length > 0;
+      return nameOk && emailOk && passwordOk && confirmPasswordOk;
     }
 
-    // edit does not require passwords
     return nameOk && emailOk;
-  }, [formData.name, formData.email, formData.password, formData.confirmPassword, mode]);
+  }, [formData, mode]);
 
   const canSubmit = !busy && requiredFilled;
 
@@ -144,39 +145,49 @@ const MemberModal: React.FC<MemberModalProps> = ({
   }, [hardReset, onClose]);
 
   const attemptClose = useCallback(() => {
+    if (busy) return;
+
     if (warning) {
       setWarning(null);
       return;
     }
+
     if (showDiscardConfirm) return;
 
     if (isDirty) {
       setShowDiscardConfirm(true);
       return;
     }
-    closeNow();
-  }, [warning, showDiscardConfirm, isDirty, closeNow]);
 
-  /* ----------------------- load detail on open (edit) ---------------------- */
+    closeNow();
+  }, [busy, warning, showDiscardConfirm, isDirty, closeNow]);
+
+  const focusNameInput = useCallback(() => {
+    requestAnimationFrame(() => {
+      nameRef.current?.focus();
+    });
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
 
     let alive = true;
 
-    (async () => {
+    const run = async () => {
       hardReset();
 
       if (mode === "create") {
-        setTimeout(() => nameRef.current?.focus(), 80);
+        focusNameInput();
         return;
       }
 
       if (!memberId) return;
 
       setIsDetailLoading(true);
+
       try {
-        const res = await api.getMember(memberId);
-        const detail = res.data.member as Member;
+        const response = await api.getMember(memberId);
+        const detail = response.data.member as Member;
 
         if (!alive) return;
 
@@ -190,41 +201,53 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
         setFormData(next);
         baselineRef.current = JSON.stringify(normalizeComparable(next));
-        setTimeout(() => nameRef.current?.focus(), 80);
+        focusNameInput();
       } catch {
         if (!alive) return;
-
         onNotify?.({ message: t("errors.loadMemberError"), severity: "error" });
         closeNow();
       } finally {
         if (alive) setIsDetailLoading(false);
       }
-    })();
+    };
+
+    void run();
 
     return () => {
       alive = false;
     };
-  }, [isOpen, mode, memberId, hardReset, onNotify, t, closeNow]);
+  }, [isOpen, mode, memberId, hardReset, onNotify, t, closeNow, focusNameInput]);
 
-  /* --------------------------- body scroll lock ---------------------------- */
   useEffect(() => {
     if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
     };
   }, [isOpen]);
 
-  /* ---------------------- keyboard: ESC, Ctrl/⌘+S -------------------------- */
   useEffect(() => {
     if (!isOpen) return;
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-          if (canSubmit) {
-            (document.getElementById("memberModalForm") as HTMLFormElement | null)?.requestSubmit();
-          }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        attemptClose();
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        if (canSubmit) {
+          (document.getElementById("memberModalForm") as HTMLFormElement | null)?.requestSubmit();
+        }
       }
     };
 
@@ -232,39 +255,45 @@ const MemberModal: React.FC<MemberModalProps> = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, attemptClose, canSubmit]);
 
-  window.useGlobalEsc(isOpen, onClose);
-
-  /* ------------------------------ submit ---------------------------------- */
   const submit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+
       const name = formData.name.trim();
       const email = formData.email.trim();
 
       if (!name || !email) {
-        setWarning({ title: t("errors.validationTitle"), message: t("errors.validationRequired") });
+        setWarning({
+          title: t("errors.validationTitle"),
+          message: t("errors.validationRequired"),
+        });
         return;
       }
 
       if (mode === "create") {
         if (formData.password !== formData.confirmPassword) {
-          onNotify?.({ message: t("toast.passwordMismatch"), severity: "warning" });
-          setWarning({ title: t("errors.validationTitle"), message: t("toast.passwordMismatch") });
+          const message = t("toast.passwordMismatch");
+          onNotify?.({ message, severity: "warning" });
+          setWarning({ title: t("errors.validationTitle"), message });
           return;
         }
 
         const { isValid, message } = validatePassword(formData.password);
         if (!isValid) {
-          const msg = (message as string | undefined) || t("toast.weakPassword");
-          onNotify?.({ message: msg, severity: "warning" });
-          setWarning({ title: t("errors.validationTitle"), message: msg });
+          const warningMessage = (message as string | undefined) || t("toast.weakPassword");
+          onNotify?.({ message: warningMessage, severity: "warning" });
+          setWarning({
+            title: t("errors.validationTitle"),
+            message: warningMessage,
+          });
           return;
         }
       }
 
-      const group_ids = (formData.groups ?? []).map((g) => g.id);
+      const group_ids = (formData.groups ?? []).map((group) => group.id);
 
       setIsSubmitting(true);
+
       try {
         if (mode === "create") {
           await api.addMember({
@@ -286,7 +315,10 @@ const MemberModal: React.FC<MemberModalProps> = ({
         closeNow();
       } catch {
         onNotify?.({ message: t("errors.saveError"), severity: "error" });
-        setWarning({ title: t("errors.saveErrorTitle"), message: t("errors.saveError") });
+        setWarning({
+          title: t("errors.saveErrorTitle"),
+          message: t("errors.saveError"),
+        });
       } finally {
         setIsSubmitting(false);
       }
@@ -297,50 +329,92 @@ const MemberModal: React.FC<MemberModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[9999] grid place-items-center">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
+      aria-hidden={false}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          attemptClose();
+        }
+      }}
+    >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
-        className="relative bg-white border border-gray-200 rounded-lg shadow-xl w-[860px] max-w-[95vw] max-h-[90vh] flex flex-col"
+        aria-labelledby="member-modal-title"
+        className={[
+          "relative bg-white shadow-2xl flex flex-col",
+          "w-full",
+          "h-[100dvh] max-h-[100dvh]",
+          "rounded-none border-0",
+          "fixed inset-x-0 bottom-0",
+          "md:static md:w-[860px] md:max-w-[95vw]",
+          "md:h-auto md:max-h-[calc(100vh-4rem)]",
+          "md:rounded-lg md:border md:border-gray-200",
+        ].join(" ")}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+        }}
       >
-        {/* Header */}
-        <header className="border-b border-gray-200 bg-white">
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
+          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
+        </div>
+
+        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shrink-0">
+          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                 FN
               </div>
+
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug truncate">{title}</h1>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                  {t("header.settings")}
+                </div>
+                <h1
+                  id="member-modal-title"
+                  className="text-[16px] font-semibold text-gray-900 leading-snug truncate"
+                >
+                  {title}
+                </h1>
               </div>
             </div>
 
             <button
-              className="text-[20px] text-gray-400 hover:text-gray-700 leading-none disabled:opacity-50"
+              type="button"
+              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
               onClick={attemptClose}
               aria-label={t("modal.close")}
               disabled={busy}
             >
-              &times;
+              <X size={18} />
             </button>
           </div>
         </header>
 
-        {/* Body */}
-        <form id="memberModalForm" className="flex-1 flex flex-col" onSubmit={submit}>
-          <div className="px-5 py-4 flex-1">
+        <form
+          id="memberModalForm"
+          className="flex flex-1 min-h-0 flex-col md:block md:flex-none"
+          onSubmit={submit}
+        >
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
             {mode === "edit" && isDetailLoading ? (
               <ModalSkeleton />
             ) : (
-              <div className={`grid grid-cols-2 gap-4 ${disableForm ? "opacity-70 pointer-events-none" : ""}`}>
+              <div
+                className={[
+                  "grid grid-cols-1 md:grid-cols-2 gap-4",
+                  disableForm ? "opacity-70 pointer-events-none" : "",
+                ].join(" ")}
+              >
                 <Input
                   kind="text"
                   label={t("field.name")}
                   name="name"
                   ref={nameRef}
                   value={formData.name}
-                  onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   required
                 />
 
@@ -350,7 +424,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                   name="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                   required
                 />
 
@@ -362,17 +436,20 @@ const MemberModal: React.FC<MemberModalProps> = ({
                       name="password"
                       type="password"
                       value={formData.password}
-                      onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
                       showTogglePassword
                       required
                     />
+
                     <Input
                       kind="text"
                       label={t("field.confirmPassword")}
                       name="confirmPassword"
                       type="password"
                       value={formData.confirmPassword}
-                      onChange={(e) => setFormData((p) => ({ ...p, confirmPassword: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                      }
                       showTogglePassword
                       required
                     />
@@ -380,14 +457,14 @@ const MemberModal: React.FC<MemberModalProps> = ({
                 )}
 
                 <PermissionMiddleware codeName={"view_group"}>
-                  <div className="col-span-1">
+                  <div className="md:col-span-2">
                     <SelectDropdown<GroupListItem>
                       label={t("field.groups")}
                       items={allGroups}
                       selected={formData.groups}
-                      onChange={(items) => setFormData((p) => ({ ...p, groups: items }))}
-                      getItemKey={(g) => g.id}
-                      getItemLabel={(g) => g.name}
+                      onChange={(items) => setFormData((prev) => ({ ...prev, groups: items }))}
+                      getItemKey={(group) => group.id}
+                      getItemLabel={(group) => group.name}
                       buttonLabel={t("btnLabel.groups")}
                       hideCheckboxes={false}
                       clearOnClickOutside={false}
@@ -399,40 +476,57 @@ const MemberModal: React.FC<MemberModalProps> = ({
             )}
           </div>
 
-          {/* Footer */}
-          <footer className="border-t border-gray-200 bg-white px-5 py-3 flex items-center justify-between">
-            <p className="text-[12px] text-gray-600">
-              {t("footer.shortcuts")}
-            </p>
+          <footer
+            className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:static md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-[12px] text-gray-600 hidden md:block">{t("footer.shortcuts")}</p>
 
-            <div className="flex gap-2">
-              <Button variant="cancel" type="button" onClick={attemptClose} disabled={busy}>
-                {t("btn.cancel")}
-              </Button>
-              <Button type="submit" disabled={!canSubmit}>
-                {t("btn.save")}
-              </Button>
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
+                <Button
+                  variant="cancel"
+                  type="button"
+                  onClick={attemptClose}
+                  disabled={busy}
+                  className="w-full md:w-auto"
+                >
+                  {t("btn.cancel")}
+                </Button>
+
+                <Button type="submit" disabled={!canSubmit} className="w-full md:w-auto">
+                  {t("btn.save")}
+                </Button>
+              </div>
             </div>
           </footer>
         </form>
 
-        {/* Discard changes overlay */}
         {showDiscardConfirm && (
-          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="text-[15px] font-semibold text-gray-900">{t("confirmDiscard.title")}</h2>
                 <p className="mt-1 text-[12px] text-gray-600">{t("confirmDiscard.message")}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+
+              <div
+                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="outline"
-                  className="!border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
                   onClick={() => setShowDiscardConfirm(false)}
                 >
                   {t("btn.cancel")}
                 </Button>
-                <Button variant="danger" className="!bg-red-500 hover:!bg-red-600" onClick={closeNow}>
+
+                <Button
+                  variant="danger"
+                  className="w-full md:w-auto !bg-red-500 hover:!bg-red-600"
+                  onClick={closeNow}
+                >
                   {t("actions.discard")}
                 </Button>
               </div>
@@ -440,20 +534,24 @@ const MemberModal: React.FC<MemberModalProps> = ({
           </div>
         )}
 
-        {/* Warning overlay */}
         {warning && (
-          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-lg border border-amber-200 bg-white shadow-2xl">
+          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-amber-100">
                 <h2 className="text-[15px] font-semibold text-amber-800">{warning.title}</h2>
                 <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
               </div>
-              <div className="px-5 py-4 flex items-center justify-end gap-2">
+
+              <div
+                className="px-5 py-4 flex justify-end"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
                 <Button
                   variant="primary"
+                  className="w-full md:w-auto"
                   onClick={() => {
                     setWarning(null);
-                    setTimeout(() => nameRef.current?.focus(), 0);
+                    focusNameInput();
                   }}
                 >
                   {t("actions.ok")}

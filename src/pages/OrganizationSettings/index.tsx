@@ -1,16 +1,13 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/OrganizationSettings/index.tsx
- * -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/OrganizationSettings/index.tsx                             */
+/* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
-import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
-import Checkbox from "@/shared/ui/Checkbox";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
@@ -21,6 +18,10 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { TIMEZONES, formatTimezoneLabel } from "@/lib/location";
 import { getCountries, type CountryOption } from "@/lib/location/countries";
 import type { Organization } from "@/models/auth/organization";
+import OrganizationSettingsModal, {
+  type EditableOrgField,
+  type OrgFormData,
+} from "./OrganizationSettingsModal";
 
 /* ----------------------------- Snackbar type ----------------------------- */
 type Snack =
@@ -28,26 +29,29 @@ type Snack =
   | null;
 
 /* ----------------------------- Helpers/Types ----------------------------- */
-type EditableOrgField = "name" | "timezone" | "line1" | "line2" | "city" | "country" | "postal_code";
-
-type OrgFormData = {
-  name: string;
-  timezone: string;
-  line1: string;
-  line2: string;
-  city: string;
-  country: string;
-  postal_code: string;
-};
-
 function pickField<T, K extends keyof T>(obj: T, key: K): Pick<T, K> {
   return { [key]: obj[key] } as Pick<T, K>;
 }
 
 function getInitials(name?: string) {
   if (!name) return "OR";
-  const p = name.split(" ").filter(Boolean);
-  return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
+  const parts = name.split(" ").filter(Boolean);
+  return ((parts[0]?.[0] || "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
+
+const normalizeCountry = (value: unknown) => (value ?? "").toString().toUpperCase().trim();
+
+function toFormData(org: Organization | null): OrgFormData {
+  const countryCode = normalizeCountry(org?.country ?? "");
+  return {
+    name: org?.name ?? "",
+    timezone: org?.timezone ?? "",
+    line1: (org?.line1 ?? "") || "",
+    line2: (org?.line2 ?? "") || "",
+    city: (org?.city ?? "") || "",
+    country: countryCode,
+    postal_code: (org?.postal_code ?? "") || "",
+  };
 }
 
 const Row = ({
@@ -59,29 +63,29 @@ const Row = ({
   value: React.ReactNode;
   action?: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-between px-4 py-2.5">
+  <div className="flex items-start sm:items-center justify-between gap-3 px-4 py-3">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">{value || "—"}</p>
+      <p className="text-[13px] font-medium text-gray-900 break-words sm:truncate">{value || "—"}</p>
     </div>
-    {action}
+    {action ? <div className="shrink-0">{action}</div> : null}
   </div>
 );
 
-const normalizeCountry = (v: unknown) => (v ?? "").toString().toUpperCase().trim();
-
-function toFormData(o: Organization | null): OrgFormData {
-  const cc = normalizeCountry(o?.country ?? "");
-  return {
-    name: o?.name ?? "",
-    timezone: o?.timezone ?? "",
-    line1: (o?.line1 ?? "") || "",
-    line2: (o?.line2 ?? "") || "",
-    city: (o?.city ?? "") || "",
-    country: cc,
-    postal_code: (o?.postal_code ?? "") || "",
-  };
-}
+const SectionCard = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+      <span className="text-[11px] uppercase tracking-wide text-gray-700">{title}</span>
+    </div>
+    {children}
+  </div>
+);
 
 const OrganizationSettings: React.FC = () => {
   const { t, i18n } = useTranslation("organizationSettings");
@@ -96,11 +100,9 @@ const OrganizationSettings: React.FC = () => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  /* ------------------------------ Flags ------------------------------ */
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* ------------------------------ State ------------------------------ */
   const [org, setOrg] = useState<Organization | null>(null);
   const orgRef = useRef<Organization | null>(null);
 
@@ -112,39 +114,31 @@ const OrganizationSettings: React.FC = () => {
   const [editingField, setEditingField] = useState<EditableOrgField | null>(null);
   const [snack, setSnack] = useState<Snack>(null);
 
-  // Timezone (apenas no modal)
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const countries = useMemo<CountryOption[]>(() => getCountries(i18n.language), [i18n.language]);
+
   const [useDeviceTz, setUseDeviceTz] = useState(true);
   const [selectedTimezone, setSelectedTimezone] = useState<{ label: string; value: string }[]>([]);
-
-  // Countries
-  const COUNTRIES = useMemo<CountryOption[]>(
-    () => getCountries(i18n.language),
-    [i18n.language]
-  );
   const [selectedCountry, setSelectedCountry] = useState<CountryOption[]>([]);
-
   const [formData, setFormData] = useState<OrgFormData>(() => toFormData(null));
 
   const hydrateSelectionsFrom = useCallback(
-    (o: Organization | null) => {
-      const next = toFormData(o);
+    (currentOrg: Organization | null) => {
+      const next = toFormData(currentOrg);
       setFormData(next);
 
-      // TZ selection state
       setUseDeviceTz((next.timezone ?? "") === deviceTz);
-      const tzObj = TIMEZONES.find((z) => z.value === (next.timezone ?? ""));
+
+      const tzObj = TIMEZONES.find((item) => item.value === (next.timezone ?? ""));
       setSelectedTimezone(tzObj ? [tzObj] : []);
 
-      // Country selection state
-      const cc = normalizeCountry(next.country);
-      const cObj = COUNTRIES.find((c) => c.value === cc);
-      setSelectedCountry(cObj ? [cObj] : []);
+      const countryCode = normalizeCountry(next.country);
+      const countryObj = countries.find((item) => item.value === countryCode);
+      setSelectedCountry(countryObj ? [countryObj] : []);
     },
-    [COUNTRIES, deviceTz]
+    [countries, deviceTz]
   );
 
-  /* ------------------------------ Load ------------------------------ */
   useEffect(() => {
     if (!isOwner) {
       setIsInitialLoading(false);
@@ -165,25 +159,23 @@ const OrganizationSettings: React.FC = () => {
     })();
   }, [hydrateSelectionsFrom, isOwner, t]);
 
-  /* ------------------------------ Modal ------------------------------ */
   const openModal = (field?: EditableOrgField) => {
-    const current = orgRef.current;
-    hydrateSelectionsFrom(current);
+    const currentOrg = orgRef.current;
+    hydrateSelectionsFrom(currentOrg);
     setEditingField(field ?? null);
     setModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
-    const current = orgRef.current;
-    hydrateSelectionsFrom(current);
+    const currentOrg = orgRef.current;
+    hydrateSelectionsFrom(currentOrg);
     setEditingField(null);
     setModalOpen(false);
   }, [hydrateSelectionsFrom]);
 
-  /* ------------------------------ Handlers ------------------------------ */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async () => {
@@ -212,19 +204,18 @@ const OrganizationSettings: React.FC = () => {
     }
 
     setIsSubmitting(true);
+
     try {
-      const { data } = await api.editOrganization(payload); // PUT (partial payload allowed on backend)
+      const { data } = await api.editOrganization(payload);
 
       setOrg(data);
       orgRef.current = data;
-
-      // Rehydrate inputs + selection states from server response
       hydrateSelectionsFrom(data);
 
       closeModal();
       setSnack({ message: t("toast.orgUpdateOk"), severity: "success" });
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setSnack({ message: t("toast.orgUpdateError"), severity: "error" });
     } finally {
       setIsSubmitting(false);
@@ -235,21 +226,6 @@ const OrganizationSettings: React.FC = () => {
     navigate("/settings/manage-currency");
   };
 
-  /* ------------------------------ Modal UX ------------------------------ */
-  const onEsc = useCallback(() => {
-    closeModal();
-  }, [closeModal]);
-
-  window.useGlobalEsc(modalOpen, onEsc);
-
-  useEffect(() => {
-    document.body.style.overflow = modalOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalOpen]);
-
-  /* ------------------------------ Loading UI ------------------------------ */
   if (isInitialLoading) {
     return (
       <>
@@ -261,7 +237,7 @@ const OrganizationSettings: React.FC = () => {
 
   if (!isOwner) {
     return (
-      <main className="min-h-[calc(100vh-64px)] px-6 py-8 text-gray-900">
+      <main className="min-h-[calc(100vh-64px)] px-4 sm:px-6 py-6 sm:py-8 text-gray-900">
         <div className="max-w-3xl mx-auto">
           <div className="rounded-lg border border-gray-200 bg-white p-4">
             <p className="text-[13px] text-gray-700">{t("errors.ownerOnly")}</p>
@@ -271,10 +247,10 @@ const OrganizationSettings: React.FC = () => {
     );
   }
 
-  /* -------------------------------- Render -------------------------------- */
   const countryCode = normalizeCountry(org?.country ?? "");
-  const countryLabel =
-    countryCode ? (COUNTRIES.find((c) => c.value === countryCode)?.label ?? countryCode) : "";
+  const countryLabel = countryCode
+    ? (countries.find((item) => item.value === countryCode)?.label ?? countryCode)
+    : "";
 
   const timezoneLabel = formatTimezoneLabel(org?.timezone ?? "");
 
@@ -285,23 +261,20 @@ const OrganizationSettings: React.FC = () => {
       <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-5xl mx-auto">
           <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
+            <div className="px-4 sm:px-5 py-4 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
                 {getInitials(org?.name)}
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
                 <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.organization")}</h1>
               </div>
             </div>
           </header>
 
-          <section className="mt-6 grid grid-cols-12 gap-6">
-            <div className="col-span-12 lg:col-span-7 space-y-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.orgInfo")}</span>
-                </div>
+          <section className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7 space-y-6">
+              <SectionCard title={t("section.orgInfo")}>
                 <div className="flex flex-col">
                   <Row
                     label={t("field.name")}
@@ -313,12 +286,9 @@ const OrganizationSettings: React.FC = () => {
                     }
                   />
                 </div>
-              </div>
+              </SectionCard>
 
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.address")}</span>
-                </div>
+              <SectionCard title={t("section.address")}>
                 <div className="flex flex-col">
                   <Row
                     label={t("field.address1")}
@@ -366,31 +336,25 @@ const OrganizationSettings: React.FC = () => {
                     }
                   />
                 </div>
-              </div>
+              </SectionCard>
             </div>
 
-            <div className="col-span-12 lg:col-span-5 space-y-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.timezone")}</span>
-                </div>
+            <div className="lg:col-span-5 space-y-6">
+              <SectionCard title={t("section.timezone")}>
                 <div className="px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-start sm:items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wide text-gray-600">{t("label.currentTz")}</p>
-                      <p className="text-[13px] font-medium text-gray-900">{timezoneLabel}</p>
+                      <p className="text-[13px] font-medium text-gray-900 break-words">{timezoneLabel}</p>
                     </div>
                     <Button variant="outline" onClick={() => openModal("timezone")} disabled={isSubmitting}>
                       {t("btn.updateTimezone")}
                     </Button>
                   </div>
                 </div>
-              </div>
+              </SectionCard>
 
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">{t("section.currency")}</span>
-                </div>
+              <SectionCard title={t("section.currency")}>
                 <div className="px-4 py-3">
                   <p className="text-[12px] text-gray-700">{t("description.currency")}</p>
                   <div className="mt-3">
@@ -399,162 +363,29 @@ const OrganizationSettings: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </SectionCard>
             </div>
           </section>
         </div>
 
-        {/* ------------------------------ Modal ------------------------------ */}
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">{t("modal.title")}</h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("modal.close")}
-                  disabled={isSubmitting}
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form
-                className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSubmit();
-                }}
-              >
-                {(editingField === null || editingField === "name") && (
-                  <Input
-                    kind="text"
-                    label={t("field.orgNameInput")}
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                )}
-
-                {(editingField === null || editingField === "line1") && (
-                  <Input
-                    kind="text"
-                    label={t("field.address1")}
-                    name="line1"
-                    value={formData.line1}
-                    onChange={handleChange} />
-                )}
-
-                {(editingField === null || editingField === "line2") && (
-                  <Input
-                    kind="text"
-                    label={t("field.address2")}
-                    name="line2"
-                    value={formData.line2}
-                    onChange={handleChange} />
-                )}
-
-                {(editingField === null || editingField === "city") && (
-                  <Input
-                    kind="text"
-                    label={t("field.city")}
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange} />
-                )}
-
-                {(editingField === null || editingField === "postal_code") && (
-                  <Input
-                    kind="text"
-                    label={t("field.postalCode")}
-                    name="postal_code"
-                    value={formData.postal_code}
-                    onChange={handleChange}
-                  />
-                )}
-
-                {(editingField === null || editingField === "country") && (
-                  <SelectDropdown<CountryOption>
-                    label={t("field.country")}
-                    items={COUNTRIES}
-                    selected={selectedCountry}
-                    onChange={(items) => {
-                      const v = normalizeCountry(items[0]?.value);
-                      setSelectedCountry(items);
-                      setFormData((p) => ({ ...p, country: v }));
-                    }}
-                    getItemKey={(item) => item.value}
-                    getItemLabel={(item) => item.label}
-                    singleSelect
-                    hideCheckboxes
-                    clearOnClickOutside={false}
-                    buttonLabel={t("field.country")}
-                    customStyles={{ maxHeight: "260px" }}
-                  />
-                )}
-
-                {(editingField === null || editingField === "timezone") && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <label className="text-[12px] text-gray-700">{t("modal.useDeviceTz")}</label>
-                      <Checkbox
-                        checked={useDeviceTz}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setUseDeviceTz(checked);
-                          setFormData((p) => ({
-                            ...p,
-                            timezone: checked ? deviceTz : p.timezone,
-                          }));
-                          if (checked) {
-                            const tzObj = TIMEZONES.find((tt) => tt.value === deviceTz);
-                            setSelectedTimezone(tzObj ? [tzObj] : []);
-                          }
-                        }}
-                        size="sm"
-                        colorClass="defaultColor"
-                      />
-                    </div>
-
-                    <SelectDropdown
-                      label={t("modal.tzLabel")}
-                      items={TIMEZONES}
-                      selected={selectedTimezone}
-                      onChange={(tz) => {
-                        setSelectedTimezone(tz);
-                        if (tz.length > 0) setFormData((p) => ({ ...p, timezone: tz[0].value }));
-                      }}
-                      getItemKey={(item) => item.value}
-                      getItemLabel={(item) => item.label}
-                      singleSelect
-                      hideCheckboxes
-                      clearOnClickOutside={false}
-                      buttonLabel={t("btnLabel.tz")}
-                      customStyles={{ maxHeight: "250px" }}
-                      disabled={useDeviceTz}
-                    />
-                  </>
-                )}
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="cancel" type="button" onClick={closeModal} disabled={isSubmitting}>
-                    {t("btn.cancel")}
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {t("btn.save")}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <OrganizationSettingsModal
+          isOpen={modalOpen}
+          editingField={editingField}
+          isSubmitting={isSubmitting}
+          formData={formData}
+          onChange={handleChange}
+          onClose={closeModal}
+          onSubmit={handleSubmit}
+          useDeviceTz={useDeviceTz}
+          setUseDeviceTz={setUseDeviceTz}
+          deviceTz={deviceTz}
+          selectedTimezone={selectedTimezone}
+          setSelectedTimezone={setSelectedTimezone}
+          selectedCountry={selectedCountry}
+          setSelectedCountry={setSelectedCountry}
+          countries={countries}
+          setFormData={setFormData}
+        />
       </main>
 
       <Snackbar
