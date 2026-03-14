@@ -1,6 +1,10 @@
 // src/components/ui/SelectDropdown.tsx
 import {
-  useState, useRef, useEffect, useId, useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useId,
+  useMemo,
   KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -48,11 +52,7 @@ function SelectDropdown<T>({
   const { t } = useTranslation("selectDropdown");
 
   // ---------------------------------------------------------------------------
-  // Size tokens (Button-like keys, SelectDropdown-specific mapping)
-  // Notes:
-  // - Your current trigger is h-10 + text-xs + px-3. We keep that as "md"
-  //   to avoid shrinking existing pages when you start using size props.
-  // - You can tweak these later without touching component logic.
+  // Size tokens
   // ---------------------------------------------------------------------------
   const SIZE: Record<
     SelectDropdownSize,
@@ -85,7 +85,6 @@ function SelectDropdown<T>({
       rowHeight: 34,
     },
     md: {
-      // ✅ keep your current look by default
       trigger: "h-10 px-3 text-xs",
       chevron: "w-4 h-4",
       badge: "min-w-[1.5rem] h-5 px-1.5 text-[10px]",
@@ -124,6 +123,7 @@ function SelectDropdown<T>({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hasTopShadow, setHasTopShadow] = useState(false);
   const [hasBottomShadow, setHasBottomShadow] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -138,15 +138,41 @@ function SelectDropdown<T>({
   const panelId = `${id}-panel`;
   const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
+  // detect viewport
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const media = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsMobileViewport(media.matches);
+
+    sync();
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", sync);
+      return () => media.removeEventListener("change", sync);
+    }
+
+    media.addListener(sync);
+    return () => media.removeListener(sync);
+  }, []);
+
   // detect focus by Tab (auto-open on focus)
   const lastFocusByTabRef = useRef(false);
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Tab") lastFocusByTabRef.current = true; };
-    const onKeyUp = (e: KeyboardEvent) => { if (e.key === "Tab") lastFocusByTabRef.current = false; };
-    const onMouseDown = () => { lastFocusByTabRef.current = false; };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Tab") lastFocusByTabRef.current = true;
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Tab") lastFocusByTabRef.current = false;
+    };
+    const onMouseDown = () => {
+      lastFocusByTabRef.current = false;
+    };
+
     window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("keyup", onKeyUp, true);
     window.addEventListener("mousedown", onMouseDown, true);
+
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp, true);
@@ -158,6 +184,7 @@ function SelectDropdown<T>({
   // Helpers
   // ---------------------------------------------------------------------------
   const keyToStr = (k: string | number) => String(k);
+
   const selectedKeys = useMemo(
     () => new Set(selected.map((s) => keyToStr(getItemKey(s)))),
     [selected, getItemKey]
@@ -197,6 +224,7 @@ function SelectDropdown<T>({
   // “last interaction wins” (mouse vs keyboard)
   const lastSourceRef = useRef<"keyboard" | "mouse" | null>(null);
   const suppressMouseUntilTsRef = useRef(0);
+
   const setActiveFrom = (idx: number | null, source: "keyboard" | "mouse") => {
     lastSourceRef.current = source;
     setActiveIndex(idx);
@@ -206,7 +234,9 @@ function SelectDropdown<T>({
   // ---------------------------------------------------------------------------
   // Open/close
   // ---------------------------------------------------------------------------
-  const toggleDropdown = () => { if (!disabled) setIsOpen((p) => !p); };
+  const toggleDropdown = () => {
+    if (!disabled) setIsOpen((p) => !p);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -221,6 +251,7 @@ function SelectDropdown<T>({
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -248,8 +279,9 @@ function SelectDropdown<T>({
     }
     setActiveIndex(idx);
 
-    // Prefer focusing filter; otherwise the panel to keep roving focus
-    if (!hideFilter && searchInputRef.current) {
+    // Desktop: focus filter when available
+    // Mobile: do not force focus the input to avoid opening keyboard immediately
+    if (!isMobileViewport && !hideFilter && searchInputRef.current) {
       searchInputRef.current.focus?.({ preventScroll: true });
     } else {
       panelRef.current?.focus?.({ preventScroll: true });
@@ -274,8 +306,7 @@ function SelectDropdown<T>({
 
     const rowH = effectiveRowHeight;
     const hasGroup = !!groupBy;
-    const shouldVirtualize =
-      virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
+    const shouldVirtualize = virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
 
     if (shouldVirtualize) {
       const panelH = panel.clientHeight || 320;
@@ -338,13 +369,20 @@ function SelectDropdown<T>({
     }
   };
 
-  const selectAll = () => { if (!effectiveSingleSelect) onChange([...items]); };
-  const deselectAll = () => { if (!effectiveSingleSelect) onChange([]); };
+  const selectAll = () => {
+    if (!effectiveSingleSelect) onChange([...items]);
+  };
+
+  const deselectAll = () => {
+    if (!effectiveSingleSelect) onChange([]);
+  };
 
   const handleGroupToggle = (groupItems: T[]) => {
     if (effectiveSingleSelect) return;
+
     const allSelected = groupItems.every((it) => selectedKeys.has(keyToStr(getItemKey(it))));
     let updated: T[];
+
     if (allSelected) {
       const groupSet = new Set(groupItems.map((it) => keyToStr(getItemKey(it))));
       updated = selected.filter((sel) => !groupSet.has(keyToStr(getItemKey(sel))));
@@ -353,11 +391,12 @@ function SelectDropdown<T>({
       const newOnes = groupItems.filter((it) => !existing.has(keyToStr(getItemKey(it))));
       updated = [...selected, ...newOnes];
     }
+
     onChange(updated);
   };
 
   // ---------------------------------------------------------------------------
-  // Tab accessibility (leaving dropdown goes to neighbors of trigger)
+  // Tab accessibility
   // ---------------------------------------------------------------------------
   const TABBABLE_SELECTOR =
     'a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -380,7 +419,9 @@ function SelectDropdown<T>({
     const tabbables = getTabbables(dialogScope);
     const idx = tabbables.indexOf(trigger);
     const target = tabbables[idx + dir];
-    setTimeout(() => { target?.focus(); }, 0);
+    setTimeout(() => {
+      target?.focus();
+    }, 0);
   };
 
   // ---------------------------------------------------------------------------
@@ -401,7 +442,6 @@ function SelectDropdown<T>({
   const handlePanelKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (!isOpen) return;
 
-    // Tab / Shift+Tab → move focus around trigger
     if (e.key === "Tab") {
       e.preventDefault();
       setIsOpen(false);
@@ -417,28 +457,35 @@ function SelectDropdown<T>({
     if (flatItems.length === 0) return;
 
     const lastIdx = flatItems.length - 1;
-    const page = Math.max(
-      1,
-      Math.floor((panelRef.current?.clientHeight || 240) / effectiveRowHeight)
-    );
+    const page = Math.max(1, Math.floor((panelRef.current?.clientHeight || 240) / effectiveRowHeight));
 
-    if (e.key === "Home") { setActiveFrom(0, "keyboard"); return; }
-    if (e.key === "End") { setActiveFrom(lastIdx, "keyboard"); return; }
+    if (e.key === "Home") {
+      setActiveFrom(0, "keyboard");
+      return;
+    }
+    if (e.key === "End") {
+      setActiveFrom(lastIdx, "keyboard");
+      return;
+    }
     if (e.key === "PageDown") {
       const next = Math.min((activeIndex ?? -1) + page, lastIdx);
-      setActiveFrom(next < 0 ? 0 : next, "keyboard"); return;
+      setActiveFrom(next < 0 ? 0 : next, "keyboard");
+      return;
     }
     if (e.key === "PageUp") {
       const prev = Math.max((activeIndex ?? flatItems.length) - page, 0);
-      setActiveFrom(prev, "keyboard"); return;
+      setActiveFrom(prev, "keyboard");
+      return;
     }
     if (e.key === "ArrowDown") {
       const next = activeIndex == null ? 0 : Math.min(activeIndex + 1, lastIdx);
-      setActiveFrom(next, "keyboard"); return;
+      setActiveFrom(next, "keyboard");
+      return;
     }
     if (e.key === "ArrowUp") {
       const prev = activeIndex == null ? lastIdx : Math.max(activeIndex - 1, 0);
-      setActiveFrom(prev, "keyboard"); return;
+      setActiveFrom(prev, "keyboard");
+      return;
     }
     if (e.key === "Enter" && activeIndex != null) handleCheckboxChange(flatItems[activeIndex]);
   };
@@ -458,6 +505,7 @@ function SelectDropdown<T>({
       if (now < suppressMouseUntilTsRef.current) return;
       setActiveFrom(flatIndex, "mouse");
     };
+
     const handleMouseMove = () => {
       const now = performance.now();
       if (now < suppressMouseUntilTsRef.current) return;
@@ -506,13 +554,11 @@ function SelectDropdown<T>({
 
   // Virtualization only for flat lists
   const hasGroup = !!groupBy;
-  const shouldVirtualize =
-    virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
+  const shouldVirtualize = virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
 
   const onPanelScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (shouldVirtualize) setScrollTop(e.currentTarget.scrollTop);
 
-    // Scroll-shadows toggling
     const p = e.currentTarget;
     setHasTopShadow(p.scrollTop > 0);
     setHasBottomShadow(p.scrollHeight - p.clientHeight - p.scrollTop > 1);
@@ -520,13 +566,14 @@ function SelectDropdown<T>({
 
   const panelStyle = {
     ...customStyles,
-    // subtle scroll-shadows via mask to keep it minimal
-    WebkitMaskImage: hasTopShadow || hasBottomShadow
-      ? `linear-gradient(to bottom, rgba(0,0,0,${hasTopShadow ? 0 : 1}) 0, rgba(0,0,0,1) 12px, rgba(0,0,0,1) calc(100% - 12px), rgba(0,0,0,${hasBottomShadow ? 0 : 1}) 100%)`
-      : undefined,
-    maskImage: hasTopShadow || hasBottomShadow
-      ? `linear-gradient(to bottom, rgba(0,0,0,${hasTopShadow ? 0 : 1}) 0, rgba(0,0,0,1) 12px, rgba(0,0,0,1) calc(100% - 12px), rgba(0,0,0,${hasBottomShadow ? 0 : 1}) 100%)`
-      : undefined,
+    WebkitMaskImage:
+      hasTopShadow || hasBottomShadow
+        ? `linear-gradient(to bottom, rgba(0,0,0,${hasTopShadow ? 0 : 1}) 0, rgba(0,0,0,1) 12px, rgba(0,0,0,1) calc(100% - 12px), rgba(0,0,0,${hasBottomShadow ? 0 : 1}) 100%)`
+        : undefined,
+    maskImage:
+      hasTopShadow || hasBottomShadow
+        ? `linear-gradient(to bottom, rgba(0,0,0,${hasTopShadow ? 0 : 1}) 0, rgba(0,0,0,1) 12px, rgba(0,0,0,1) calc(100% - 12px), rgba(0,0,0,${hasBottomShadow ? 0 : 1}) 100%)`
+        : undefined,
   } as React.CSSProperties;
 
   const hasSelection = selected.length > 0;
@@ -679,7 +726,9 @@ function SelectDropdown<T>({
                       "w-full rounded border border-gray-200 outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300",
                       SIZE[size].filterInput
                     )}
-                    onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.preventDefault();
+                    }}
                     aria-label={t("filter.aria")}
                   />
                   <svg
