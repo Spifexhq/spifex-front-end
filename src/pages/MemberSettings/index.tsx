@@ -36,8 +36,6 @@ type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-/* ---------------------------- In-memory guards --------------------------- */
-let INFLIGHT_FETCH = false;
 
 const getInitials = () => "FN";
 
@@ -354,9 +352,6 @@ const MemberSettings: React.FC = () => {
         return;
       }
 
-      if (INFLIGHT_FETCH) return;
-      INFLIGHT_FETCH = true;
-
       const seq = ++fetchSeqRef.current;
 
       if (opts.background) setIsBackgroundSync(true);
@@ -374,39 +369,42 @@ const MemberSettings: React.FC = () => {
         let grpList: GroupListItem[] = [];
 
         if (canViewMembers && canViewGroups) {
-          const [memResp, grpResp] = await Promise.all([api.getMembers(params), api.getGroups()]);
+          const [memResp, grpResp] = await Promise.all([
+            api.getMembers(params),
+            api.getGroups(),
+          ]);
+
           if (seq !== fetchSeqRef.current || !mountedRef.current) return;
 
           memList = memResp.data.members || [];
           grpList = grpResp.data.results || [];
         } else if (canViewMembers) {
           const memResp = await api.getMembers(params);
+
           if (seq !== fetchSeqRef.current || !mountedRef.current) return;
 
           memList = memResp.data.members || [];
-          grpList = [];
         } else {
           const grpResp = await api.getGroups();
+
           if (seq !== fetchSeqRef.current || !mountedRef.current) return;
 
-          memList = [];
           grpList = grpResp.data.results || [];
         }
 
         normalizeAndSet(memList, grpList);
-      } catch (err: unknown) {
+      } catch (err) {
         if (mountedRef.current) {
           console.error("Fetch members/groups failed", err);
           setSnack({ message: t("errors.fetchError"), severity: "error" });
         }
       } finally {
-        if (mountedRef.current) {
-          if (opts.background) setIsBackgroundSync(false);
-          else setIsInitialLoading(false);
+          if (mountedRef.current) {
+            if (opts.background) setIsBackgroundSync(false);
+            else setIsInitialLoading(false);
+          }
         }
-        INFLIGHT_FETCH = false;
-      }
-    },
+      },
     [
       canViewMembers,
       canViewGroups,

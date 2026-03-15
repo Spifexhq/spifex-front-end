@@ -51,6 +51,16 @@
     "status": { "all": "All", "active": "Active", "inactive": "Inactive" }
   },
 
+  "field": {
+    "sku": "SKU",
+    "name": "Name",
+    "description": "Description",
+    "uom": "Unit (UoM)",
+    "uomPlaceholder": "e.g.: ea, box, kg, l…",
+    "qty": "Quantity on hand",
+    "isActive": "Active"
+  },
+
   "modal": {
     "createTitle": "Add item",
     "editTitle": "Edit item",

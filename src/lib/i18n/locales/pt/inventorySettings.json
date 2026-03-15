@@ -51,6 +51,16 @@
     "status": { "all": "Todos", "active": "Ativo", "inactive": "Inativo" }
   },
 
+  "field": {
+    "sku": "SKU",
+    "name": "Nome",
+    "description": "Descrição",
+    "uom": "Unidade",
+    "uomPlaceholder": "ex.: un, cx, kg, l…",
+    "qty": "Quantidade em estoque",
+    "isActive": "Ativo"
+  },
+
   "modal": {
     "createTitle": "Adicionar item",
     "editTitle": "Editar item",
