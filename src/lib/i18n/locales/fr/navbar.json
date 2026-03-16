@@ -12,6 +12,7 @@
   "links": {
     "cashflow": "Flux de trésorerie",
     "settled": "Réglé",
-    "reports": "Rapports"
+    "reports": "Rapports",
+    "cta": "Terminer la configuration"
   }
 }

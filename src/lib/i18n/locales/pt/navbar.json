@@ -12,6 +12,7 @@
   "links": {
     "cashflow": "Fluxo de Caixa",
     "settled": "Realizado",
-    "reports": "Relatórios"
+    "reports": "Relatórios",
+    "cta": "Concluir configuração"
   }
 }

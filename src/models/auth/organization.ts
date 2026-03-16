@@ -13,6 +13,7 @@ export interface Organization {
   line2?: string | null;
   country?: string | null;
   city?: string | null;
+  region?: string | null;
   postal_code?: string | null;
   owner: Owner;
 }

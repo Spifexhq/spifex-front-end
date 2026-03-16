@@ -8,6 +8,7 @@ import type { CookieConsentRequest, CookieConsentResponse } from '@/models/auth/
 import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest, VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse, 
   TwoFactorSettingsResponse, TwoFactorSettingsUpdateRequest, SecurityStatusResponse} from '@/models/auth/security';
 import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from '@/models/auth/user';
+import type { OnboardingStatus } from "@/models/auth/onboarding";
 import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from '@/models/auth/organization';
 import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
 import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, CreateCustomerPortalSessionRequest,
@@ -169,6 +170,9 @@ export const api = {
 
   getSecurityStatus: () =>
     request<SecurityStatusResponse>("identity/profile/security-status/", "GET"),
+
+  getOnboardingStatus: () =>
+    request<OnboardingStatus>("identity/profile/onboarding-status/", "GET"),
 
   /* --- Organization --- */
   getOrganization: () =>

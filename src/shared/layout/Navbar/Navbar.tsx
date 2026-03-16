@@ -8,8 +8,8 @@ import { useLocation } from "react-router-dom";
 import SimulatedAI from "@/components/SimulatedAI";
 import NavbarDesktop from "./Navbar.desktop";
 import NavbarMobile from "./Navbar.mobile";
+import type { OnboardingStatus } from "@/models/auth/onboarding";
 
-/* -------------------------------- Helpers -------------------------------- */
 function useMediaQuery(query: string): boolean {
   const getMatch = () => {
     if (typeof window === "undefined") return false;
@@ -43,7 +43,15 @@ function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-const Navbar: React.FC = () => {
+type NavbarProps = {
+  onboarding?: OnboardingStatus | null;
+  showOnboardingWarning?: boolean;
+};
+
+const Navbar: React.FC<NavbarProps> = ({
+  onboarding = null,
+  showOnboardingWarning = false,
+}) => {
   const location = useLocation();
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -135,6 +143,8 @@ const Navbar: React.FC = () => {
           onCloseDrawer={closeDrawer}
           onOpenHelp={openHelp}
           userMenuRef={userMenuRef}
+          onboarding={onboarding}
+          showOnboardingWarning={showOnboardingWarning}
         />
       ) : (
         <NavbarDesktop
@@ -143,6 +153,8 @@ const Navbar: React.FC = () => {
           onCloseUserMenu={closeUserMenu}
           onOpenHelp={openHelp}
           userMenuRef={userMenuRef}
+          onboarding={onboarding}
+          showOnboardingWarning={showOnboardingWarning}
         />
       )}
 

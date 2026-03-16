@@ -12,6 +12,7 @@
   "links": {
     "cashflow": "Cash Flow",
     "settled": "Settled",
-    "reports": "Reports"
+    "reports": "Reports",
+    "cta": "Complete setup"
   }
 }

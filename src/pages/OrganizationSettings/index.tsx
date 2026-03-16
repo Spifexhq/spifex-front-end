@@ -49,8 +49,9 @@ function toFormData(org: Organization | null): OrgFormData {
     line1: (org?.line1 ?? "") || "",
     line2: (org?.line2 ?? "") || "",
     city: (org?.city ?? "") || "",
-    country: countryCode,
+    region: (org?.region ?? "") || "",
     postal_code: (org?.postal_code ?? "") || "",
+    country: countryCode,
   };
 }
 
@@ -198,8 +199,9 @@ const OrganizationSettings: React.FC = () => {
         line1: formData.line1,
         line2: formData.line2,
         city: formData.city,
-        country: normalizeCountry(formData.country),
+        region: formData.region,
         postal_code: formData.postal_code,
+        country: normalizeCountry(formData.country),
       };
     }
 
@@ -318,11 +320,11 @@ const OrganizationSettings: React.FC = () => {
                     }
                   />
                   <Row
-                    label={t("field.country")}
-                    value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
+                    label={t("field.region")}
+                    value={org?.region ?? ""}
                     action={
-                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>
-                        {t("btn.updateCountry")}
+                      <Button variant="outline" onClick={() => openModal("region")} disabled={isSubmitting}>
+                        {t("btn.updateRegion")}
                       </Button>
                     }
                   />
@@ -332,6 +334,15 @@ const OrganizationSettings: React.FC = () => {
                     action={
                       <Button variant="outline" onClick={() => openModal("postal_code")} disabled={isSubmitting}>
                         {t("btn.updatePostalCode")}
+                      </Button>
+                    }
+                  />
+                  <Row
+                    label={t("field.country")}
+                    value={countryLabel ? `${countryLabel} (${countryCode})` : "—"}
+                    action={
+                      <Button variant="outline" onClick={() => openModal("country")} disabled={isSubmitting}>
+                        {t("btn.updateCountry")}
                       </Button>
                     }
                   />

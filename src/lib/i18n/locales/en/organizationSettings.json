@@ -8,8 +8,9 @@
     "address1": "Address line 1",
     "address2": "Address line 2",
     "city": "City",
-    "country": "Country",
-    "postalCode": "Postal code"
+    "region": "Region",
+    "postalCode": "Postal code",
+    "country": "Country"
   },
   "btn": {
     "save": "Save",
@@ -19,8 +20,9 @@
     "updateAddress1": "Update address line 1",
     "updateAddress2": "Update address line 2",
     "updateCity": "Update city",
-    "updateCountry": "Update country",
+    "updateRegion": "Update region",
     "updatePostalCode": "Update postal code",
+    "updateCountry": "Update country",
     "manageCurrency": "Manage currency"
   },
   "label": { "currentTz": "Current" },

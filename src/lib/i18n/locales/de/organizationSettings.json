@@ -8,8 +8,9 @@
     "address1": "Adresszeile 1",
     "address2": "Adresszeile 2",
     "city": "Stadt",
-    "country": "Land",
-    "postalCode": "Postleitzahl"
+    "region": "Region",
+    "postalCode": "Postleitzahl",
+    "country": "Land"
   },
   "btn": {
     "save": "Speichern",
@@ -19,8 +20,9 @@
     "updateAddress1": "Adresszeile 1 ändern",
     "updateAddress2": "Adresszeile 2 ändern",
     "updateCity": "Stadt ändern",
-    "updateCountry": "Land ändern",
+    "updateRegion": "Region ändern",
     "updatePostalCode": "Postleitzahl ändern",
+    "updateCountry": "Land ändern",
     "manageCurrency": "Währung verwalten"
   },
   "label": { "currentTz": "Aktuell" },

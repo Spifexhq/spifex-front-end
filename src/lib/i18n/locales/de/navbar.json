@@ -12,6 +12,7 @@
   "links": {
     "cashflow": "Cashflow",
     "settled": "Abgerechnet",
-    "reports": "Berichte"
+    "reports": "Berichte",
+    "cta": "Einrichtung abschließen"
   }
 }

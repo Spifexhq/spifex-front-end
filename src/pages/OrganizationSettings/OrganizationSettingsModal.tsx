@@ -16,8 +16,9 @@ export type EditableOrgField =
   | "line1"
   | "line2"
   | "city"
-  | "country"
-  | "postal_code";
+  | "region"
+  | "postal_code"
+  | "country";
 
 export type OrgFormData = {
   name: string;
@@ -25,8 +26,9 @@ export type OrgFormData = {
   line1: string;
   line2: string;
   city: string;
-  country: string;
+  region: string;
   postal_code: string;
+  country: string;
 };
 
 type OrganizationSettingsModalProps = {
@@ -121,6 +123,8 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
         return t("btn.updateAddress2");
       case "city":
         return t("btn.updateCity");
+      case "region":
+        return t("btn.updateRegion");
       case "country":
         return t("btn.updateCountry");
       case "postal_code":
@@ -231,6 +235,16 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
                   label={t("field.city")}
                   name="city"
                   value={formData.city}
+                  onChange={onChange}
+                />
+              )}
+
+              {showField("region") && (
+                <Input
+                  kind="text"
+                  label={t("field.region")}
+                  name="region"
+                  value={formData.region}
                   onChange={onChange}
                 />
               )}

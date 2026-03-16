@@ -8,8 +8,9 @@
     "address1": "Adresse (ligne 1)",
     "address2": "Adresse (ligne 2)",
     "city": "Ville",
-    "country": "Pays",
-    "postalCode": "Code postal"
+    "region": "Région",
+    "postalCode": "Code postal",
+    "country": "Pays"
   },
   "btn": {
     "save": "Enregistrer",
@@ -19,8 +20,9 @@
     "updateAddress1": "Modifier l’adresse (ligne 1)",
     "updateAddress2": "Modifier l’adresse (ligne 2)",
     "updateCity": "Modifier la ville",
-    "updateCountry": "Modifier le pays",
+    "updateRegion": "Modifier la région",
     "updatePostalCode": "Modifier le code postal",
+    "updateCountry": "Modifier le pays",
     "manageCurrency": "Gérer la devise"
   },
   "label": { "currentTz": "Actuel" },

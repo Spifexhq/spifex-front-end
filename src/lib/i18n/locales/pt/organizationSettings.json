@@ -8,8 +8,9 @@
     "address1": "Linha de morada 1",
     "address2": "Linha de morada 2",
     "city": "Cidade",
-    "country": "País",
-    "postalCode": "Código postal"
+    "region": "Região",
+    "postalCode": "Código postal",
+    "country": "País"
   },
   "btn": {
     "save": "Guardar",
@@ -19,8 +20,9 @@
     "updateAddress1": "Atualizar morada (linha 1)",
     "updateAddress2": "Atualizar morada (linha 2)",
     "updateCity": "Atualizar cidade",
-    "updateCountry": "Atualizar país",
+    "updateRegion": "Atualizar região",
     "updatePostalCode": "Atualizar código postal",
+    "updateCountry": "Atualizar país",
     "manageCurrency": "Gerir moeda"
   },
   "label": { "currentTz": "Atual" },
