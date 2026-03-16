@@ -51,7 +51,8 @@ export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAu
         t === "payment.failed" ||
         t === "payment.succeeded" ||
         t === "permissions.updated" ||
-        t === "profile.updated";
+        t === "profile.updated" ||
+        t === "onboarding.updated";
 
       if (!shouldSync) return;
 

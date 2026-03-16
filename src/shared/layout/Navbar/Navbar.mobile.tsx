@@ -64,17 +64,18 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({
   onboarding,
   showOnboardingWarning = false,
 }) => {
-  const { t } = useTranslation(["navbar", "onboardingBanner"]);
+  const { t } = useTranslation("navbar");
   const { isSuperUser, isSubscribed } = useAuthContext();
   const navigate = useNavigate();
 
   const drawerId = useMemo(() => "mobile-nav-drawer", []);
 
   const onboardingRedirectPath = useMemo(() => {
-    if (!onboarding?.locale_profile_setup) return "/locale-setup?step=locale";
+    if (!onboarding?.personal_locale_setup) return "/locale-setup?step=locale";
     if (!onboarding?.personal_info_setup) return "/settings/personal";
+    if (!onboarding?.org_locale_setup || !onboarding?.org_info_setup) return "/settings/organization-settings";
     if (!onboarding?.ledger_accounts_setup) return "/settings/ledger-accounts";
-    return "/locale-setup?step=locale";
+    return "/settings/personal";
   }, [onboarding]);
 
   const startX = useRef<number | null>(null);

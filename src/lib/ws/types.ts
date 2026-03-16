@@ -9,6 +9,7 @@ export type LiveSyncEventType =
   | "payment.succeeded"
   | "permissions.updated"
   | "profile.updated"
+  | "onboarding.updated"
   | "notification.created"
   | "admin.action";
 

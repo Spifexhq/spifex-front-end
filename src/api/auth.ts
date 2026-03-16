@@ -368,6 +368,8 @@ export const useAuth = () => {
 
           const res = await api.getUser();
           applyUserSnapshot(res.data);
+
+          emitAuthSync(opts?.reason || "sync_auth");
         } catch (err) {
           console.warn("Auth sync failed:", opts?.reason || "unknown", err);
 

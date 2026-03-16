@@ -1,4 +1,4 @@
-import { useState, useEffect, FC, useMemo } from "react";
+import { useState, useEffect, FC, useMemo, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 
 import { useAuthContext } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { Navbar } from "@/shared/layout/Navbar";
 import { CookieBanner } from "@/components/Cookies/CookieBanner";
 import { api } from "@/api/requests";
 import type { OnboardingStatus } from "@/models/auth/onboarding";
+import { AUTH_SYNC_EVENT } from "@/lib/http";
 
 const NAVBAR_HEIGHT = 64;
 
@@ -16,6 +17,11 @@ export const SpifexLayout: FC = () => {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingOnboarding, setLoadingOnboarding] = useState(true);
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+
+  const loadOnboarding = useCallback(async () => {
+    const { data } = await api.getOnboardingStatus();
+    setOnboarding(data);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -54,6 +60,19 @@ export const SpifexLayout: FC = () => {
       mounted = false;
     };
   }, [loadingAuth]);
+
+  useEffect(() => {
+    const onAuthSync = () => {
+      void loadOnboarding().catch((error) => {
+        console.error("Failed to refresh onboarding status:", error);
+      });
+    };
+
+    window.addEventListener(AUTH_SYNC_EVENT, onAuthSync as EventListener);
+    return () => {
+      window.removeEventListener(AUTH_SYNC_EVENT, onAuthSync as EventListener);
+    };
+  }, [loadOnboarding]);
 
   const showOnboardingWarning = useMemo(() => {
     return !loadingOnboarding && !!onboarding && onboarding.completed !== true;

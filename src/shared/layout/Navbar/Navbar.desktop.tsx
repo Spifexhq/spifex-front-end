@@ -1,7 +1,3 @@
-/* --------------------------------------------------------------------------
- * File: src/components/Navbar.desktop.tsx   (DESKTOP — keep as-is)
- * -------------------------------------------------------------------------- */
-
 import React, { useMemo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -32,21 +28,22 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
   onboarding,
   showOnboardingWarning = false,
 }) => {
-  const { t } = useTranslation(["navbar", "onboardingBanner"]);
+  const { t } = useTranslation("navbar");
   const { isSuperUser, isSubscribed } = useAuthContext();
   const navigate = useNavigate();
 
   const onboardingRedirectPath = useMemo(() => {
-    if (!onboarding?.locale_profile_setup) return "/locale-setup?step=locale";
+    if (!onboarding?.personal_locale_setup) return "/locale-setup?step=locale";
     if (!onboarding?.personal_info_setup) return "/settings/personal";
+    if (!onboarding?.org_locale_setup || !onboarding?.org_info_setup) return "/settings/organization-settings";
     if (!onboarding?.ledger_accounts_setup) return "/settings/ledger-accounts";
-    return "/locale-setup?step=locale";
+    return "/settings/personal";
   }, [onboarding]);
 
   return (
     <nav
       className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-[9999]"
-      aria-label={t("navbar:aria.mainNav")}
+      aria-label={t("aria.mainNav")}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 gap-4">
@@ -67,7 +64,7 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
                   }`
                 }
               >
-                {t("navbar:links.cashflow")}
+                {t("links.cashflow")}
               </NavLink>
             </PermissionMiddleware>
 
@@ -80,7 +77,7 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
                   }`
                 }
               >
-                {t("navbar:links.settled")}
+                {t("links.settled")}
               </NavLink>
             </PermissionMiddleware>
 
@@ -94,7 +91,7 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
                     }`
                   }
                 >
-                  {t("navbar:links.reports")}
+                  {t("links.reports")}
                 </NavLink>
               </PermissionMiddleware>
             )}
@@ -106,11 +103,11 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
                 type="button"
                 onClick={() => navigate(onboardingRedirectPath)}
                 className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100 transition-colors"
+                title={t("links.cta")}
+                aria-label={t("links.cta")}
               >
                 <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="hidden lg:inline">
-                  {t("navbar:links.cta")}
-                </span>
+                <span className="hidden lg:inline">{t("links.cta")}</span>
               </button>
             )}
 
@@ -120,9 +117,9 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
                 className="cursor-pointer flex items-center justify-center px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 text-sm font-medium focus:outline-none"
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
-                aria-label={t("navbar:actions.menu")}
+                aria-label={t("actions.menu")}
               >
-                {t("navbar:actions.menu")}
+                {t("actions.menu")}
                 <svg
                   className={`h-4 w-4 ml-2 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`}
                   fill="none"
