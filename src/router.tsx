@@ -25,6 +25,7 @@ const CashFlow = lazy(() => import("@/pages/CashFlow"));
 const SettledEntries = lazy(() => import("@/pages/SettledEntries"));
 const Reports = lazy(() => import("@/pages/Reports"));
 const PersonalLocaleSetup = lazy(() => import("@/pages/PersonalLocaleSetup"));
+const OnboardingPage = lazy(() => import("@/pages/Onboarding"));
 
 // Settings
 const Personal = lazy(() => import("@/pages/PersonalSettings"));
@@ -114,9 +115,15 @@ const routes: RouteObject[] = [
         path: '/',
         element: <SpifexLayout />,
         children: [
+            // Locale Setup
             {
                 path: 'locale-setup',
                 element: <PersonalLocaleSetup />
+            },
+            // Onboarding
+            {
+            path: "onboarding",
+            element: <OnboardingPage />
             },
             // Dashboard
             {

@@ -8,6 +8,7 @@
   "fieldTimezone": "Fuso horário",
   "fieldCountry": "País",
   "modalUseDeviceTz": "Usar fuso horário do dispositivo",
+  "modalUseDeviceCountry": "Usar país do dispositivo",
   "modalTzLabel": "Selecione o fuso horário",
   "btnLabelTz": "Fuso horário",
   "btnCancel": "Cancelar",

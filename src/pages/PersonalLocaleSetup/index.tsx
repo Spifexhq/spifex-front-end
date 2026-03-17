@@ -16,6 +16,7 @@ import { TIMEZONES } from "@/lib/location/timezonesList";
 import { formatTimezoneLabel } from "@/lib/location/formatTimezoneLabel";
 import type { TimezoneOption } from "@/lib/location/timezonesList";
 import { getCountries, CountryOption } from "@/lib/location/countries";
+import { fetchCountryByIP } from "@/lib/location/getCountryFromLocale";
 
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
@@ -54,9 +55,25 @@ const PersonalLocaleSetup: React.FC = () => {
   const [cancelling, setCancelling] = useState(false);
 
   const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Detected via GeoIP (ipapi.co + ipwho.is in parallel, first non-null wins).
+  // Stays null until the async fetch resolves, so the checkbox is hidden until ready.
+  const [deviceCountry, setDeviceCountry] = useState<string | null>(null);
+
+  // Fetch real country from IP (race between two GeoIP providers, 3.5 s timeout).
+  useEffect(() => {
+    let mounted = true;
+    fetchCountryByIP().then((cc) => {
+      if (mounted && cc) setDeviceCountry(cc.toUpperCase());
+    });
+    return () => { mounted = false; };
+  }, []);
+
   const COUNTRIES = useMemo<CountryOption[]>(() => getCountries(i18n.language), [i18n.language]);
 
   const [useDeviceTz, setUseDeviceTz] = useState(true);
+  const [useDeviceCountry, setUseDeviceCountry] = useState(false);
+
   const [tzSelected, setTzSelected] = useState<TimezoneOption[]>([]);
   const [countrySelected, setCountrySelected] = useState<CountryOption[]>([]);
   const [form, setForm] = useState<PersonalSettingsModel>({ timezone: "", country: "" });
@@ -100,6 +117,14 @@ const PersonalLocaleSetup: React.FC = () => {
     };
   }, [deviceTz, t, COUNTRIES]);
 
+  // Once the GeoIP result arrives, auto-tick if it matches what's already saved.
+  useEffect(() => {
+    if (!deviceCountry || loading) return;
+    if (form.country && form.country.toUpperCase() === deviceCountry) {
+      setUseDeviceCountry(true);
+    }
+  }, [deviceCountry, loading, form.country]);
+
   const updateField = (name: keyof PersonalSettingsModel, value: string) =>
     setForm((p) => ({ ...p, [name]: value }));
 
@@ -139,7 +164,7 @@ const PersonalLocaleSetup: React.FC = () => {
         return;
       }
 
-      setSnack({ message: t("toastUpdateOk"), severity: "success" });
+      navigate("/cashflow", { replace: true });
     } catch (e) {
       console.error(e);
       setSnack({ message: t("toastUpdateError"), severity: "error" });
@@ -258,7 +283,33 @@ const PersonalLocaleSetup: React.FC = () => {
                   <p className="text-[13px] font-medium text-gray-900">
                     {countryLabel ? `${countryLabel} (${form.country})` : "—"}
                   </p>
+
+                  {/* "Use device country" — only rendered when GeoIP has resolved */}
+                  {deviceCountry && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <label className="text-[12px] text-gray-700">
+                        {t("modalUseDeviceCountry")}
+                      </label>
+                      <Checkbox
+                        checked={useDeviceCountry}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setUseDeviceCountry(checked);
+                          if (checked) {
+                            const cc = deviceCountry.toUpperCase();
+                            updateField("country", cc);
+                            const countryObj = COUNTRIES.find((c) => c.value === cc);
+                            setCountrySelected(countryObj ? [countryObj] : []);
+                          }
+                        }}
+                        size="sm"
+                        colorClass="defaultColor"
+                        disabled={saving || cancelling}
+                      />
+                    </div>
+                  )}
                 </div>
+
                 <div className="w-80">
                   <SelectDropdown<CountryOption>
                     label={t("fieldCountry")}
@@ -268,6 +319,8 @@ const PersonalLocaleSetup: React.FC = () => {
                       const v = (items[0]?.value ?? "").toString().toUpperCase();
                       setCountrySelected(items);
                       updateField("country", v);
+                      // Untick "use device" when the user picks a different country manually
+                      setUseDeviceCountry(!!deviceCountry && v === deviceCountry);
                     }}
                     getItemKey={(item) => item.value}
                     getItemLabel={(item) => item.label}

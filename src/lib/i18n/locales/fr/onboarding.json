@@ -1,0 +1,90 @@
+{
+  "documentTitle": "Onboarding • Spifex",
+  "header": {
+    "title": "Finalisez la configuration de votre compte",
+    "subtitle": "Complétez les informations obligatoires manquantes pour débloquer complètement le système."
+  },
+  "steps": {
+    "personal": "Informations personnelles",
+    "organization": "Informations de l’organisation",
+    "ledger": "Comptes comptables"
+  },
+  "personal": {
+    "title": "Informations personnelles",
+    "subtitle": "Complétez uniquement les champs obligatoires manquants de votre profil."
+  },
+  "organization": {
+    "title": "Informations de l’organisation",
+    "subtitle": "Complétez les informations obligatoires de localisation et d’adresse de l’organisation."
+  },
+  "ledger": {
+    "title": "Initialiser les comptes comptables",
+    "subtitle": "Choisissez le moyen le plus rapide de créer votre première structure comptable.",
+    "csvTitle": "Import CSV / XLSX",
+    "manualTitle": "Saisie manuelle",
+    "standardTitle": "Configuration standard",
+    "downloadCsv": "Télécharger le modèle CSV",
+    "downloadXlsx": "Télécharger le modèle XLSX",
+    "uploadLabel": "Téléverser un CSV ou XLSX",
+    "manualPlaceholder": "Collez un compte comptable par ligne...",
+    "personalPlan": "Personnel",
+    "businessPlan": "Entreprise"
+  },
+  "fields": {
+    "phoneRequired": "Téléphone *",
+    "nationalIdRequired": "Identifiant national *",
+    "timezoneRequired": "Fuseau horaire *",
+    "countryRequired": "Pays *",
+    "addressLine1Required": "Adresse ligne 1 *",
+    "addressLine2Required": "Adresse ligne 2 *",
+    "orgTimezoneRequired": "Fuseau horaire de l’organisation *",
+    "orgCountryRequired": "Pays de l’organisation *",
+    "orgAddressLine1Required": "Adresse de l’organisation ligne 1 *",
+    "orgAddressLine2Required": "Adresse de l’organisation ligne 2 *"
+  },
+  "placeholders": {
+    "phone": "Saisissez votre téléphone",
+    "nationalId": "Saisissez votre identifiant national",
+    "timezone": "Sélectionnez le fuseau horaire",
+    "country": "Sélectionnez le pays",
+    "address1": "Rue, numéro...",
+    "address2": "Appartement, complément..."
+  },
+  "validations": {
+    "phone": "Le téléphone est requis.",
+    "nationalId": "L’identifiant national est requis.",
+    "timezone": "Le fuseau horaire est requis.",
+    "country": "Le pays est requis.",
+    "personalAddress": "Renseignez au moins une ligne d’adresse personnelle.",
+    "orgTimezone": "Le fuseau horaire de l’organisation est requis.",
+    "orgCountry": "Le pays de l’organisation est requis.",
+    "orgAddress": "Renseignez au moins une ligne d’adresse de l’organisation."
+  },
+  "actions": {
+    "saveContinue": "Enregistrer et continuer",
+    "finishSetup": "Terminer la configuration",
+    "choose": "Choisir"
+  },
+  "success": {
+    "personal": "Informations personnelles mises à jour.",
+    "organization": "Informations de l’organisation mises à jour.",
+    "ledger": "Comptes comptables initialisés avec succès."
+  },
+  "errors": {
+    "load": "Échec du chargement des informations d’onboarding.",
+    "personalInvalid": "Remplissez tous les champs personnels obligatoires avant de continuer.",
+    "organizationInvalid": "Remplissez tous les champs obligatoires de l’organisation avant de continuer.",
+    "personalSave": "Échec de la mise à jour des informations personnelles.",
+    "organizationSave": "Échec de la mise à jour des informations de l’organisation.",
+    "ledgerFile": "Sélectionnez d’abord un fichier CSV ou XLSX.",
+    "ledgerManual": "Collez d’abord vos comptes comptables.",
+    "ledgerStandard": "Choisissez d’abord un plan standard.",
+    "ledgerMode": "Choisissez d’abord un mode d’importation.",
+    "ledgerSave": "Échec de l’initialisation des comptes comptables."
+  },
+  "done": {
+    "title": "Onboarding terminé",
+    "subtitle": "Votre compte est prêt. Vous pouvez continuer dans le système.",
+    "cta": "Aller vers Cash Flow"
+  }
+}

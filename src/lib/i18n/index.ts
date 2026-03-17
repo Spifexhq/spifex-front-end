@@ -194,6 +194,11 @@ import enPersonalLocaleSetup from "./locales/en/personalLocaleSetup.json";
 import frPersonalLocaleSetup from "./locales/fr/personalLocaleSetup.json";
 import dePersonalLocaleSetup from "./locales/de/personalLocaleSetup.json";
 
+import ptOnboarding from "./locales/pt/onboarding.json";
+import enOnboarding from "./locales/en/onboarding.json";
+import frOnboarding from "./locales/fr/onboarding.json";
+import deOnboarding from "./locales/de/onboarding.json";
+
 import ptPersonalSettings from "./locales/pt/personalSettings.json";
 import enPersonalSettings from "./locales/en/personalSettings.json";
 import frPersonalSettings from "./locales/fr/personalSettings.json";
@@ -357,6 +362,7 @@ const NAMESPACES = [
   "notificationSettings",
   "formatSettings",
   "personalLocaleSetup",
+  "onboarding",
   "personalSettings",
   "organizationSettings",
   "groupSettings",
@@ -433,6 +439,7 @@ const resources: Resource = {
     notificationSettings: ptNotificationSettings,
     formatSettings: ptFormatSettings,
     personalLocaleSetup: ptPersonalLocaleSetup,
+    onboarding: ptOnboarding,
     personalSettings: ptPersonalSettings,
     organizationSettings: ptOrganizationSettings,
     groupSettings: ptGroupSettings,
@@ -500,6 +507,7 @@ const resources: Resource = {
     notificationSettings: enNotificationSettings,
     formatSettings: enFormatSettings,
     personalLocaleSetup: enPersonalLocaleSetup,
+    onboarding: enOnboarding,
     personalSettings: enPersonalSettings,
     organizationSettings: enOrganizationSettings,
     groupSettings: enGroupSettings,
@@ -567,6 +575,7 @@ const resources: Resource = {
     notificationSettings: frNotificationSettings,
     formatSettings: frFormatSettings,
     personalLocaleSetup: frPersonalLocaleSetup,
+    onboarding: frOnboarding,
     personalSettings: frPersonalSettings,
     organizationSettings: frOrganizationSettings,
     groupSettings: frGroupSettings,
@@ -634,6 +643,7 @@ const resources: Resource = {
     notificationSettings: deNotificationSettings,
     formatSettings: deFormatSettings,
     personalLocaleSetup: dePersonalLocaleSetup,
+    onboarding: deOnboarding,
     personalSettings: dePersonalSettings,
     organizationSettings: deOrganizationSettings,
     groupSettings: deGroupSettings,

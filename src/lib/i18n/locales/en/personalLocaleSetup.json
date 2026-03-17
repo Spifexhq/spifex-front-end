@@ -8,12 +8,13 @@
   "fieldTimezone": "Timezone",
   "fieldCountry": "Country",
   "modalUseDeviceTz": "Use device timezone",
+  "modalUseDeviceCountry": "Use device country",
   "modalTzLabel": "Select timezone",
   "btnLabelTz": "Timezone",
   "btnCancel": "Cancel",
   "btnSave": "Save",
   "btnSaveContinue": "Save & Continue",
-  "toastLoadError": "Couldn’t load your settings.",
+  "toastLoadError": "Couldn't load your settings.",
   "toastUpdateOk": "Updated successfully.",
-  "toastUpdateError": "Couldn’t update your settings."
+  "toastUpdateError": "Couldn't update your settings."
 }

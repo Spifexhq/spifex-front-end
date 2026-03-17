@@ -1,0 +1,90 @@
+{
+  "documentTitle": "Onboarding • Spifex",
+  "header": {
+    "title": "Schließen Sie die Einrichtung Ihres Kontos ab",
+    "subtitle": "Vervollständigen Sie die fehlenden Pflichtangaben, um das System vollständig freizuschalten."
+  },
+  "steps": {
+    "personal": "Persönliche Informationen",
+    "organization": "Organisationsinformationen",
+    "ledger": "Sachkonten"
+  },
+  "personal": {
+    "title": "Persönliche Informationen",
+    "subtitle": "Ergänzen Sie nur die fehlenden Pflichtfelder Ihres Profils."
+  },
+  "organization": {
+    "title": "Organisationsinformationen",
+    "subtitle": "Ergänzen Sie die erforderlichen Organisationsdaten zu Standort und Adresse."
+  },
+  "ledger": {
+    "title": "Sachkonten initialisieren",
+    "subtitle": "Wählen Sie den schnellsten Weg, um Ihre erste Kontenstruktur anzulegen.",
+    "csvTitle": "CSV / XLSX Import",
+    "manualTitle": "Manuelles Einfügen",
+    "standardTitle": "Standardkonfiguration",
+    "downloadCsv": "CSV-Vorlage herunterladen",
+    "downloadXlsx": "XLSX-Vorlage herunterladen",
+    "uploadLabel": "CSV oder XLSX hochladen",
+    "manualPlaceholder": "Fügen Sie ein Sachkonto pro Zeile ein...",
+    "personalPlan": "Privat",
+    "businessPlan": "Geschäftlich"
+  },
+  "fields": {
+    "phoneRequired": "Telefon *",
+    "nationalIdRequired": "Nationale ID *",
+    "timezoneRequired": "Zeitzone *",
+    "countryRequired": "Land *",
+    "addressLine1Required": "Adresszeile 1 *",
+    "addressLine2Required": "Adresszeile 2 *",
+    "orgTimezoneRequired": "Zeitzone der Organisation *",
+    "orgCountryRequired": "Land der Organisation *",
+    "orgAddressLine1Required": "Adresszeile der Organisation 1 *",
+    "orgAddressLine2Required": "Adresszeile der Organisation 2 *"
+  },
+  "placeholders": {
+    "phone": "Telefon eingeben",
+    "nationalId": "Nationale ID eingeben",
+    "timezone": "Zeitzone auswählen",
+    "country": "Land auswählen",
+    "address1": "Straße, Nummer...",
+    "address2": "Wohnung, Zusatz..."
+  },
+  "validations": {
+    "phone": "Telefon ist erforderlich.",
+    "nationalId": "Nationale ID ist erforderlich.",
+    "timezone": "Zeitzone ist erforderlich.",
+    "country": "Land ist erforderlich.",
+    "personalAddress": "Füllen Sie mindestens eine persönliche Adresszeile aus.",
+    "orgTimezone": "Die Zeitzone der Organisation ist erforderlich.",
+    "orgCountry": "Das Land der Organisation ist erforderlich.",
+    "orgAddress": "Füllen Sie mindestens eine Adresszeile der Organisation aus."
+  },
+  "actions": {
+    "saveContinue": "Speichern und fortfahren",
+    "finishSetup": "Einrichtung abschließen",
+    "choose": "Auswählen"
+  },
+  "success": {
+    "personal": "Persönliche Informationen aktualisiert.",
+    "organization": "Organisationsinformationen aktualisiert.",
+    "ledger": "Sachkonten erfolgreich initialisiert."
+  },
+  "errors": {
+    "load": "Die Onboarding-Informationen konnten nicht geladen werden.",
+    "personalInvalid": "Füllen Sie alle erforderlichen persönlichen Felder aus, bevor Sie fortfahren.",
+    "organizationInvalid": "Füllen Sie alle erforderlichen Organisationsfelder aus, bevor Sie fortfahren.",
+    "personalSave": "Die persönlichen Informationen konnten nicht aktualisiert werden.",
+    "organizationSave": "Die Organisationsinformationen konnten nicht aktualisiert werden.",
+    "ledgerFile": "Wählen Sie zuerst eine CSV- oder XLSX-Datei aus.",
+    "ledgerManual": "Fügen Sie zuerst Ihre Sachkonten ein.",
+    "ledgerStandard": "Wählen Sie zuerst einen Standardplan aus.",
+    "ledgerMode": "Wählen Sie zuerst einen Importmodus aus.",
+    "ledgerSave": "Die Sachkonten konnten nicht initialisiert werden."
+  },
+  "done": {
+    "title": "Onboarding abgeschlossen",
+    "subtitle": "Ihr Konto ist bereit. Sie können jetzt im System fortfahren.",
+    "cta": "Zu Cash Flow"
+  }
+}

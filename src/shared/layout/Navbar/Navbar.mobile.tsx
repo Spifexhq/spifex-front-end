@@ -61,7 +61,6 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({
   onCloseDrawer,
   onOpenHelp,
   userMenuRef,
-  onboarding,
   showOnboardingWarning = false,
 }) => {
   const { t } = useTranslation("navbar");
@@ -70,13 +69,7 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({
 
   const drawerId = useMemo(() => "mobile-nav-drawer", []);
 
-  const onboardingRedirectPath = useMemo(() => {
-    if (!onboarding?.personal_locale_setup) return "/locale-setup?step=locale";
-    if (!onboarding?.personal_info_setup) return "/settings/personal";
-    if (!onboarding?.org_locale_setup || !onboarding?.org_info_setup) return "/settings/organization-settings";
-    if (!onboarding?.ledger_accounts_setup) return "/settings/ledger-accounts";
-    return "/settings/personal";
-  }, [onboarding]);
+  const onboardingRedirectPath = "/onboarding";
 
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);

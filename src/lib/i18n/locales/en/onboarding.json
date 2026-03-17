@@ -1,0 +1,90 @@
+{
+  "documentTitle": "Onboarding • Spifex",
+  "header": {
+    "title": "Finish your account setup",
+    "subtitle": "Complete the missing required information to unlock the full system."
+  },
+  "steps": {
+    "personal": "Personal information",
+    "organization": "Organization information",
+    "ledger": "Ledger accounts"
+  },
+  "personal": {
+    "title": "Personal information",
+    "subtitle": "Complete only the required missing fields from your profile."
+  },
+  "organization": {
+    "title": "Organization information",
+    "subtitle": "Complete the required organization locale and address details."
+  },
+  "ledger": {
+    "title": "Initialize ledger accounts",
+    "subtitle": "Choose the fastest way to create your first ledger structure.",
+    "csvTitle": "CSV / XLSX import",
+    "manualTitle": "Manual paste",
+    "standardTitle": "Standard setup",
+    "downloadCsv": "Download CSV template",
+    "downloadXlsx": "Download XLSX template",
+    "uploadLabel": "Upload CSV or XLSX",
+    "manualPlaceholder": "Paste one ledger account per line...",
+    "personalPlan": "Personal",
+    "businessPlan": "Business"
+  },
+  "fields": {
+    "phoneRequired": "Phone *",
+    "nationalIdRequired": "National ID *",
+    "timezoneRequired": "Timezone *",
+    "countryRequired": "Country *",
+    "addressLine1Required": "Address line 1 *",
+    "addressLine2Required": "Address line 2 *",
+    "orgTimezoneRequired": "Organization timezone *",
+    "orgCountryRequired": "Organization country *",
+    "orgAddressLine1Required": "Organization address line 1 *",
+    "orgAddressLine2Required": "Organization address line 2 *"
+  },
+  "placeholders": {
+    "phone": "Enter your phone",
+    "nationalId": "Enter your national ID",
+    "timezone": "Select timezone",
+    "country": "Select country",
+    "address1": "Street, number...",
+    "address2": "Apartment, suite, complement..."
+  },
+  "validations": {
+    "phone": "Phone is required.",
+    "nationalId": "National ID is required.",
+    "timezone": "Timezone is required.",
+    "country": "Country is required.",
+    "personalAddress": "Fill at least one personal address line.",
+    "orgTimezone": "Organization timezone is required.",
+    "orgCountry": "Organization country is required.",
+    "orgAddress": "Fill at least one organization address line."
+  },
+  "actions": {
+    "saveContinue": "Save and continue",
+    "finishSetup": "Finish setup",
+    "choose": "Choose"
+  },
+  "success": {
+    "personal": "Personal information updated.",
+    "organization": "Organization information updated.",
+    "ledger": "Ledger accounts initialized successfully."
+  },
+  "errors": {
+    "load": "Failed to load onboarding information.",
+    "personalInvalid": "Fill all required personal fields before continuing.",
+    "organizationInvalid": "Fill all required organization fields before continuing.",
+    "personalSave": "Failed to update personal information.",
+    "organizationSave": "Failed to update organization information.",
+    "ledgerFile": "Select a CSV or XLSX file first.",
+    "ledgerManual": "Paste your ledger accounts first.",
+    "ledgerStandard": "Choose a standard plan first.",
+    "ledgerMode": "Choose a ledger import mode first.",
+    "ledgerSave": "Failed to initialize ledger accounts."
+  },
+  "done": {
+    "title": "Onboarding completed",
+    "subtitle": "Your account is ready. You can continue to the system.",
+    "cta": "Go to Cash Flow"
+  }
+}

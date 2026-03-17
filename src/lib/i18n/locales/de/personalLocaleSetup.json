@@ -8,6 +8,7 @@
   "fieldTimezone": "Zeitzone",
   "fieldCountry": "Land",
   "modalUseDeviceTz": "Zeitzone des Geräts verwenden",
+  "modalUseDeviceCountry": "Land des Geräts verwenden",
   "modalTzLabel": "Zeitzone auswählen",
   "btnLabelTz": "Zeitzone",
   "btnCancel": "Abbrechen",

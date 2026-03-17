@@ -8,6 +8,7 @@
   "fieldTimezone": "Fuseau horaire",
   "fieldCountry": "Pays",
   "modalUseDeviceTz": "Utiliser le fuseau du dispositif",
+  "modalUseDeviceCountry": "Utiliser le pays du dispositif",
   "modalTzLabel": "Sélectionner un fuseau horaire",
   "btnLabelTz": "Fuseau horaire",
   "btnCancel": "Annuler",

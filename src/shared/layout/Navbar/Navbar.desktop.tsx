@@ -1,4 +1,3 @@
-import React, { useMemo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle } from "lucide-react";
@@ -25,20 +24,13 @@ const NavbarDesktop: React.FC<NavbarDesktopProps> = ({
   onCloseUserMenu,
   onOpenHelp,
   userMenuRef,
-  onboarding,
   showOnboardingWarning = false,
 }) => {
   const { t } = useTranslation("navbar");
   const { isSuperUser, isSubscribed } = useAuthContext();
   const navigate = useNavigate();
 
-  const onboardingRedirectPath = useMemo(() => {
-    if (!onboarding?.personal_locale_setup) return "/locale-setup?step=locale";
-    if (!onboarding?.personal_info_setup) return "/settings/personal";
-    if (!onboarding?.org_locale_setup || !onboarding?.org_info_setup) return "/settings/organization-settings";
-    if (!onboarding?.ledger_accounts_setup) return "/settings/ledger-accounts";
-    return "/settings/personal";
-  }, [onboarding]);
+  const onboardingRedirectPath = "/onboarding";
 
   return (
     <nav
