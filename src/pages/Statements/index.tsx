@@ -51,16 +51,10 @@ type Snack =
   | null;
 
 /* ------------------------------ UI Limits --------------------------------- */
-/**
- * Keep these aligned with backend:
- * - STATEMENT_UPLOAD_MAX_PDF_BYTES = 25MB
- * - STATEMENT_UPLOAD_MAX_IMAGE_BYTES = 10MB
- * - STATEMENT_PDF_MAX_PAGES = 10
- */
 const LIMITS = {
   PDF_MAX_BYTES: 25 * 1024 * 1024,
   IMAGE_MAX_BYTES: 10 * 1024 * 1024,
-  PDF_MAX_PAGES: 10
+  PDF_MAX_PAGES: 10,
 } as const;
 
 /* ------------------------------ Utilities --------------------------------- */
@@ -75,7 +69,7 @@ const chipClass: Record<StatementStatus, string> = {
   uploaded: "bg-gray-100 text-gray-700",
   processing: "bg-amber-100 text-amber-800",
   ready: "bg-emerald-100 text-emerald-800",
-  failed: "bg-rose-100 text-rose-800"
+  failed: "bg-rose-100 text-rose-800",
 };
 
 const isPDF = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
@@ -139,11 +133,6 @@ const extractApiMessage = (data: unknown, depth = 0): string | null => {
 const getHttpStatus = (err: unknown): number | null =>
   axios.isAxiosError(err) ? (err.response?.status ?? null) : null;
 
-/**
- * Convert server “bytes” messages into dynamic, user-facing messages using:
- * - the actual file size the user selected (row.file.size)
- * - the configured limit (LIMITS.*)
- */
 const normalizeUploadErrorMessage = (
   t: TFunction,
   row: UploadRow,
@@ -151,7 +140,6 @@ const normalizeUploadErrorMessage = (
   serverMessage: string
 ): string => {
   const status = getHttpStatus(err);
-
   const lower = (serverMessage || "").toLowerCase();
 
   const isOversize =
@@ -165,12 +153,12 @@ const normalizeUploadErrorMessage = (
     if (isPDF(row.file)) {
       return t("toast.pdfTooLargeFriendly", {
         size: formatBytes(row.file.size),
-        max: formatBytes(max)
+        max: formatBytes(max),
       });
     }
     return t("toast.imageTooLargeFriendly", {
       size: formatBytes(row.file.size),
-      max: formatBytes(max)
+      max: formatBytes(max),
     });
   }
 
@@ -202,8 +190,192 @@ const getApiErrorMessage = (t: TFunction, err: unknown, fallbackKey: string): st
   return t(fallbackKey);
 };
 
-/* ----------------------- In-memory guard for fetches ---------------------- */
 let INFLIGHT_FETCH = false;
+
+/* ----------------------------- Row components ----------------------------- */
+const UploadQueueCard = ({
+  row,
+  bankItems,
+  globalBusy,
+  t,
+  onBankChange,
+  onSend,
+  onRemove,
+}: {
+  row: UploadRow;
+  bankItems: { label: string; value: string }[];
+  globalBusy: boolean;
+  t: TFunction;
+  onBankChange: (items: { label: string; value: string }[]) => void;
+  onSend: () => void;
+  onRemove: () => void;
+}) => {
+  const rowBusy = globalBusy;
+
+  return (
+    <li className={`p-4 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-gray-900 truncate">{row.file.name}</p>
+          <p className="mt-1 text-[12px] text-gray-600">{formatBytes(row.file.size)}</p>
+        </div>
+
+        <div className="mt-3 h-2 bg-gray-100 rounded" aria-label={t("aria.progress")}>
+          <div
+            className="h-2 bg-gray-300 rounded"
+            style={{ width: `${row.progress}%` }}
+            aria-valuenow={row.progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            role="progressbar"
+          />
+        </div>
+
+        {row.error && <p className="mt-2 text-[12px] text-rose-700">{row.error}</p>}
+
+        <div className="mt-4">
+          <SelectDropdown
+            label={t("row.accountOptional")}
+            items={bankItems}
+            selected={row.bankAccount ? [row.bankAccount] : []}
+            onChange={onBankChange}
+            getItemKey={(i) => i.value}
+            getItemLabel={(i) => i.label}
+            singleSelect
+            hideCheckboxes
+            buttonLabel={t("row.accountButton")}
+            disabled={rowBusy || !!row.error}
+          />
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button variant="outline" onClick={onSend} disabled={rowBusy || !!row.error} className="w-full">
+            {t("btn.send")}
+          </Button>
+          <Button variant="cancel" onClick={onRemove} disabled={rowBusy} className="w-full">
+            {t("btn.remove")}
+          </Button>
+        </div>
+      </div>
+    </li>
+  );
+};
+
+const StatementCard = ({
+  s,
+  rowBusy,
+  canDownloadJson,
+  t,
+  onDownload,
+  onDownloadJson,
+  onAnalyze,
+  onDelete,
+  globalBusy,
+}: {
+  s: Statement;
+  rowBusy: boolean;
+  canDownloadJson: boolean;
+  t: TFunction;
+  onDownload: () => void;
+  onDownloadJson: () => void;
+  onAnalyze: () => void;
+  onDelete: () => void;
+  globalBusy: boolean;
+}) => {
+  return (
+    <li className={`${rowBusy ? "opacity-70 pointer-events-none" : ""}`}>
+      <div className="p-4 md:hidden">
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
+              <p className="mt-1 text-[12px] text-gray-600">
+                {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág
+              </p>
+              <p className="mt-1 text-[12px] text-gray-600">{new Date(s.created_at).toLocaleString()}</p>
+            </div>
+
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] shrink-0 ${chipClass[s.status]}`}>
+              {t(`meta.chip.${s.status}`)}
+            </span>
+          </div>
+
+          <div className="mt-4">
+            <p className="text-[11px] uppercase tracking-wide text-gray-500">{t("filters.bank")}</p>
+            <p className="mt-1 text-[13px] text-gray-900">{s.bank_account_label ?? "—"}</p>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <PermissionMiddleware codeName={"change_statement"}>
+              <Button variant="outline" onClick={onDownload} disabled={globalBusy} className="w-full">
+                {t("actions.download")}
+              </Button>
+
+              <Button variant="outline" onClick={onDownloadJson} disabled={!canDownloadJson || globalBusy} className="w-full">
+                {t("actions.downloadJson")}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={onAnalyze}
+                disabled={s.status === "processing" || globalBusy}
+                className="w-full"
+              >
+                {t("actions.analyze")}
+              </Button>
+            </PermissionMiddleware>
+
+            <PermissionMiddleware codeName={"delete_statement"}>
+              <Button variant="cancel" onClick={onDelete} disabled={globalBusy} className="w-full">
+                {t("actions.delete")}
+              </Button>
+            </PermissionMiddleware>
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden md:grid px-4 py-3 grid-cols-12 gap-3">
+        <div className="col-span-4 min-w-0">
+          <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
+          <p className="text-[12px] text-gray-600">
+            {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág · {new Date(s.created_at).toLocaleString()}
+          </p>
+        </div>
+
+        <div className="col-span-3">
+          <p className="text-[12px] text-gray-600">{t("filters.bank")}</p>
+          <p className="text-[13px] text-gray-900">{s.bank_account_label ?? "—"}</p>
+        </div>
+
+        <div className="col-span-5 flex items-center gap-2 justify-end">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}>
+            {t(`meta.chip.${s.status}`)}
+          </span>
+
+          <PermissionMiddleware codeName={"change_statement"}>
+            <Button variant="outline" onClick={onDownload} disabled={globalBusy}>
+              {t("actions.download")}
+            </Button>
+
+            <Button variant="outline" onClick={onDownloadJson} disabled={!canDownloadJson || globalBusy}>
+              {t("actions.downloadJson")}
+            </Button>
+
+            <Button variant="outline" onClick={onAnalyze} disabled={s.status === "processing" || globalBusy}>
+              {t("actions.analyze")}
+            </Button>
+          </PermissionMiddleware>
+
+          <PermissionMiddleware codeName={"delete_statement"}>
+            <Button variant="cancel" onClick={onDelete} disabled={globalBusy}>
+              {t("actions.delete")}
+            </Button>
+          </PermissionMiddleware>
+        </div>
+      </div>
+    </li>
+  );
+};
 
 /* --------------------------------- Page ----------------------------------- */
 const Statements: React.FC = () => {
@@ -244,7 +416,6 @@ const Statements: React.FC = () => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
 
-  /* ------------------------------ Flags/State ------------------------------ */
   const [snack, setSnack] = useState<Snack>(null);
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -256,7 +427,7 @@ const Statements: React.FC = () => {
     () =>
       banks.map((b) => ({
         label: `${b.institution} • ${b.branch ?? "-"} / ${b.account_number ?? "-"}`,
-        value: b.id
+        value: b.id,
       })),
     [banks]
   );
@@ -275,7 +446,6 @@ const Statements: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /* ------------------------------ Fetching -------------------------------- */
   const refreshBanks = useCallback(async () => {
     if (isAccessLocked || !canViewBanks) return;
 
@@ -305,7 +475,7 @@ const Statements: React.FC = () => {
         const { data } = await api.getStatements({
           q: q || undefined,
           status: statusFilter || undefined,
-          bank: bankFilter || undefined
+          bank: bankFilter || undefined,
         });
         setStatements(data?.results ?? []);
       } catch (err: unknown) {
@@ -356,7 +526,6 @@ const Statements: React.FC = () => {
     return () => window.clearInterval(timer);
   }, [statements, refreshStatements, isAccessLocked, canViewStatements]);
 
-  /* ------------------------------- Upload --------------------------------- */
   const buildTooLargeRowError = (file: File) => {
     const max = maxBytesForFile(file);
     if (isPDF(file)) {
@@ -372,7 +541,7 @@ const Statements: React.FC = () => {
       if (!isSupported(file)) {
         setSnack({
           message: t("toast.nonPdfIgnored", { name: file.name }),
-          severity: "warning"
+          severity: "warning",
         });
         return;
       }
@@ -402,10 +571,12 @@ const Statements: React.FC = () => {
     if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
     dndRef.current?.classList.remove("ring-2", "ring-gray-300");
   };
+
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dndRef.current?.classList.add("ring-2", "ring-gray-300");
   };
+
   const onDragLeave = () => dndRef.current?.classList.remove("ring-2", "ring-gray-300");
 
   const removeFromQueue = (id: string) => setQueue((prev) => prev.filter((r) => r.id !== id));
@@ -451,7 +622,6 @@ const Statements: React.FC = () => {
     for (const row of queue) if (!row.error) await uploadOne(row);
   };
 
-  /* ----------------------------- Actions list ------------------------------ */
   const requestDelete = (id: string) => {
     setDeleteTargetId(id);
     setConfirmOpen(true);
@@ -512,7 +682,6 @@ const Statements: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [isAccessLocked]);
 
-  /* ------------------------------ Loading UI ------------------------------- */
   if (isAuthLoading) return <TopProgress active variant="center" />;
 
   const shouldBlockOnStatements = !isAccessLocked && canViewStatements;
@@ -539,43 +708,46 @@ const Statements: React.FC = () => {
     { label: t("statuses.uploaded"), value: "uploaded" },
     { label: t("statuses.processing"), value: "processing" },
     { label: t("statuses.ready"), value: "ready" },
-    { label: t("statuses.failed"), value: "failed" }
+    { label: t("statuses.failed"), value: "failed" },
   ];
 
   const globalBusy = isSubmitting || isBackgroundSync || confirmBusy;
 
-  /* --------------------------------- UI ----------------------------------- */
   return (
     <>
       <TopProgress active={isBackgroundSync && !isAccessLocked} variant="top" topOffset={64} />
 
-      <main className="relative min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-6 py-8">
-        {/* Disable interactions under paywall */}
+      <main className="relative min-h-[calc(100vh-64px)] bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
         <div className={isAccessLocked ? "pointer-events-none select-none" : ""} aria-hidden={isAccessLocked || undefined}>
           <div className="max-w-5xl mx-auto">
             <header className="bg-white border border-gray-200 rounded-lg">
-              <div className="px-5 py-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                  EX
-                </div>
-                <div className="flex items-center gap-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                    <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
+              <div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
+                    EX
                   </div>
-                  {headerBadge}
+
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
+                      {headerBadge}
+                    </div>
+                  </div>
                 </div>
-                <div className="ml-auto flex items-center gap-2">
+
+                <div className="sm:ml-auto">
                   <PermissionMiddleware codeName={"add_statement"}>
                     <Button
                       onClick={() => fileInputRef.current?.click()}
-                      className="!py-1.5"
+                      className="w-full sm:w-auto !py-1.5"
                       aria-label={t("aria.uploadTrigger")}
                       disabled={globalBusy}
                     >
                       {t("btn.upload")}
                     </Button>
                   </PermissionMiddleware>
+
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -595,7 +767,7 @@ const Statements: React.FC = () => {
                   onDrop={onDrop}
                   onDragOver={onDragOver}
                   onDragLeave={onDragLeave}
-                  className="bg-white border border-dashed border-gray-300 rounded-lg p-6 text-center"
+                  className="bg-white border border-dashed border-gray-300 rounded-lg p-5 sm:p-6 text-center"
                   aria-busy={globalBusy || undefined}
                 >
                   <p className="text-[13px] text-gray-700">
@@ -613,16 +785,17 @@ const Statements: React.FC = () => {
                 </div>
 
                 {queue.length > 0 && (
-                  <div className="mt-4 border border-gray-200 bg-white rounded-lg">
-                    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                  <div className="mt-4 border border-gray-200 bg-white rounded-lg overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <span className="text-[11px] uppercase tracking-wide text-gray-700">
                         {t("queue.title", { count: queue.length })}
                       </span>
-                      <div className="flex gap-2">
-                        <Button variant="cancel" onClick={() => setQueue([])} disabled={globalBusy}>
+
+                      <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+                        <Button variant="cancel" onClick={() => setQueue([])} disabled={globalBusy} className="w-full sm:w-auto">
                           {t("btn.clearQueue")}
                         </Button>
-                        <Button onClick={uploadAll} disabled={globalBusy}>
+                        <Button onClick={uploadAll} disabled={globalBusy} className="w-full sm:w-auto">
                           {t("btn.sendAll")}
                         </Button>
                       </div>
@@ -630,56 +803,20 @@ const Statements: React.FC = () => {
 
                     <ul className="divide-y divide-gray-200">
                       {queue.map((row) => (
-                        <li
+                        <UploadQueueCard
                           key={row.id}
-                          className={`px-4 py-3 flex items-end gap-3 ${globalBusy ? "opacity-70 pointer-events-none" : ""}`}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-medium text-gray-900 truncate">{row.file.name}</p>
-                            <p className="text-[12px] text-gray-600">{formatBytes(row.file.size)}</p>
-
-                            <div className="mt-2 h-2 bg-gray-100 rounded" aria-label={t("aria.progress")}>
-                              <div
-                                className="h-2 bg-gray-300 rounded"
-                                style={{ width: `${row.progress}%` }}
-                                aria-valuenow={row.progress}
-                                aria-valuemin={0}
-                                aria-valuemax={100}
-                                role="progressbar"
-                              />
-                            </div>
-
-                            {row.error && <p className="mt-2 text-[12px] text-rose-700">{row.error}</p>}
-                          </div>
-
-                          <div className="w-72">
-                            <SelectDropdown
-                              label={t("row.accountOptional")}
-                              items={bankItems}
-                              selected={row.bankAccount ? [row.bankAccount] : []}
-                              onChange={(items) =>
-                                setQueue((prev) =>
-                                  prev.map((r) => (r.id === row.id ? { ...r, bankAccount: items?.[0] ?? null } : r))
-                                )
-                              }
-                              getItemKey={(i) => i.value}
-                              getItemLabel={(i) => i.label}
-                              singleSelect
-                              hideCheckboxes
-                              buttonLabel={t("row.accountButton")}
-                              disabled={globalBusy || !!row.error}
-                            />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => uploadOne(row)} disabled={globalBusy || !!row.error}>
-                              {t("btn.send")}
-                            </Button>
-                            <Button variant="cancel" onClick={() => removeFromQueue(row.id)} disabled={globalBusy}>
-                              {t("btn.remove")}
-                            </Button>
-                          </div>
-                        </li>
+                          row={row}
+                          bankItems={bankItems}
+                          globalBusy={globalBusy}
+                          t={t}
+                          onBankChange={(items) =>
+                            setQueue((prev) =>
+                              prev.map((r) => (r.id === row.id ? { ...r, bankAccount: items?.[0] ?? null } : r))
+                            )
+                          }
+                          onSend={() => uploadOne(row)}
+                          onRemove={() => removeFromQueue(row.id)}
+                        />
                       ))}
                     </ul>
                   </div>
@@ -700,6 +837,7 @@ const Statements: React.FC = () => {
                       placeholder={t("filters.placeholder")}
                       disabled={globalBusy}
                     />
+
                     <SelectDropdown
                       label={t("filters.status")}
                       items={statusOptions}
@@ -714,7 +852,9 @@ const Statements: React.FC = () => {
                       singleSelect
                       hideCheckboxes
                       buttonLabel={t("filters.statusPick")}
+                      disabled={globalBusy}
                     />
+
                     <SelectDropdown
                       label={t("filters.bank")}
                       items={bankItems}
@@ -725,7 +865,9 @@ const Statements: React.FC = () => {
                       singleSelect
                       hideCheckboxes
                       buttonLabel={t("filters.bankPick")}
+                      disabled={globalBusy}
                     />
+
                     <div className="flex items-end gap-2">
                       <Button onClick={() => refreshStatements({ background: true })} className="!w-full" disabled={globalBusy}>
                         {t("btn.applyFilters")}
@@ -764,68 +906,18 @@ const Statements: React.FC = () => {
                         const canDownloadJson = s.status === "ready" && (s.json_ready ?? true);
 
                         return (
-                          <li
+                          <StatementCard
                             key={s.id}
-                            className={`px-4 py-3 grid grid-cols-12 gap-3 ${rowBusy ? "opacity-70 pointer-events-none" : ""}`}
-                          >
-                            <div className="col-span-4 min-w-0">
-                              <p className="text-[13px] font-medium text-gray-900 truncate">{s.original_filename}</p>
-                              <p className="text-[12px] text-gray-600">
-                                {formatBytes(s.size_bytes)} · {s.pages ?? "-"} pág · {new Date(s.created_at).toLocaleString()}
-                              </p>
-                            </div>
-
-                            <div className="col-span-3">
-                              <p className="text-[12px] text-gray-600">{t("filters.bank")}</p>
-                              <p className="text-[13px] text-gray-900">{s.bank_account_label ?? "—"}</p>
-                            </div>
-
-                            <div className="col-span-5 flex items-center gap-2 justify-end">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] ${chipClass[s.status]}`}>
-                                {t(`meta.chip.${s.status}`)}
-                              </span>
-
-                              <PermissionMiddleware codeName={"change_statement"}>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => api.downloadStatement(s.id)}
-                                  title={t("actions.download")}
-                                  disabled={globalBusy}
-                                >
-                                  {t("actions.download")}
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  onClick={() => downloadJson(s.id)}
-                                  title={t("actions.downloadJson")}
-                                  disabled={!canDownloadJson || globalBusy}
-                                >
-                                  {t("actions.downloadJson")}
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  onClick={() => triggerAnalysis(s.id)}
-                                  disabled={s.status === "processing" || globalBusy}
-                                  title={t("actions.analyze")}
-                                >
-                                  {t("actions.analyze")}
-                                </Button>
-                              </PermissionMiddleware>
-
-                              <PermissionMiddleware codeName={"delete_statement"}>
-                                <Button
-                                  variant="cancel"
-                                  onClick={() => requestDelete(s.id)}
-                                  title={t("actions.delete")}
-                                  disabled={globalBusy}
-                                >
-                                  {t("actions.delete")}
-                                </Button>
-                              </PermissionMiddleware>
-                            </div>
-                          </li>
+                            s={s}
+                            rowBusy={rowBusy}
+                            canDownloadJson={canDownloadJson}
+                            t={t}
+                            globalBusy={globalBusy}
+                            onDownload={() => api.downloadStatement(s.id)}
+                            onDownloadJson={() => downloadJson(s.id)}
+                            onAnalyze={() => triggerAnalysis(s.id)}
+                            onDelete={() => requestDelete(s.id)}
+                          />
                         );
                       })}
                     </ul>
@@ -860,7 +952,6 @@ const Statements: React.FC = () => {
           />
         </div>
 
-        {/* Paywall overlay: bottom-up blur + message */}
         {isAccessLocked && (
           <div className="absolute inset-0 z-50 pointer-events-auto">
             <div className="absolute inset-0 bg-white/10" />
@@ -871,24 +962,25 @@ const Statements: React.FC = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white/85 via-white/45 to-transparent" />
 
-            <div className="absolute inset-0 flex items-end justify-center px-6 pb-10">
-              <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white/90 backdrop-blur-md shadow-lg p-6">
+            <div className="absolute inset-0 flex items-end justify-center px-4 sm:px-6 pb-6 sm:pb-10">
+              <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white/90 backdrop-blur-md shadow-lg p-5 sm:p-6">
                 <div className="text-[11px] uppercase tracking-wide text-gray-500">{t("paywall.badge")}</div>
                 <h2 className="mt-1 text-[16px] font-semibold text-gray-900">{t("paywall.title")}</h2>
                 <p className="mt-2 text-[13px] text-gray-700">{t("paywall.body")}</p>
 
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button
                     onClick={() =>
                       navigate("/settings/subscription-management", {
                         replace: true,
-                        state: { from: location.pathname }
+                        state: { from: location.pathname },
                       })
                     }
+                    className="w-full"
                   >
                     {t("paywall.cta")}
                   </Button>
-                  <Button variant="outline" onClick={() => navigate(-1)}>
+                  <Button variant="outline" onClick={() => navigate(-1)} className="w-full">
                     {t("paywall.back")}
                   </Button>
                 </div>
