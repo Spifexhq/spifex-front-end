@@ -192,7 +192,26 @@ export type StatementImportLookups = {
   inventory_items: LookupOption[];
 };
 
+export type GetStatementsParams = {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  bank_account_id?: string;
+  import_status?: ImportSessionStatus | "";
+  ordering?: string;
+};
+
 export type GetStatementsResponse = Paginated<Statement>;
+
+export type UploadStatementResponse = Statement;
+
+export type TriggerStatementAnalysisResponse = {
+  id?: string;
+  status: "uploaded" | "processing" | "ready" | "failed";
+  started_at?: string;
+  finished_at?: string | null;
+  error_message?: string;
+};
 
 export type LatestStatementAnalysisResponse = {
   id: string;
@@ -202,12 +221,44 @@ export type LatestStatementAnalysisResponse = {
   error_message: string;
 };
 
+export type PrepareStatementImportRequest = {
+  bank_account_id?: string;
+  force_rebuild?: boolean;
+};
+
 export type PrepareStatementImportResponse = {
   session_id: string;
   status: string;
 };
 
 export type StatementImportRowsResponse = Paginated<StatementImportRow>;
+
+export type UpdateStatementImportRowRequest = Partial<{
+  due_date: string | null;
+  amount_minor: number | null;
+  description: string;
+  observation: string;
+  notes: string;
+  tx_type: number | null;
+  document_type: string | null;
+  entity_id: string | null;
+  entity_type: string;
+  ledger_account_id: string | null;
+  project_id: string | null;
+  departments: StatementImportDepartment[];
+  items: StatementImportItem[];
+  installment_count: number;
+  interval_months: number;
+  weekend_action: number;
+  status: ImportRowStatus;
+  review_notes: string;
+  apply_to_installment_family: boolean;
+}>;
+
+export type BulkUpdateStatementImportRowsRequest = {
+  ids: string[];
+  data: UpdateStatementImportRowRequest;
+};
 
 export type AcceptConfidentStatementImportRowsResponse = {
   accepted: number;
