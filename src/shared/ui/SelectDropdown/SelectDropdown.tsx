@@ -265,23 +265,24 @@ function SelectDropdown<T>({
   };
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setSearchTerm("");
-        setActiveIndex(null);
-        if (clearOnClickOutside) onChange([]);
-      }
+      const target = event.target as Node;
+      if (dropdownRef.current?.contains(target)) return;
+
+      setIsOpen(false);
+      setSearchTerm("");
+      setActiveIndex(null);
+      if (clearOnClickOutside) onChange([]);
     };
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      window.addEventListener("resize", computePlacement);
-      window.addEventListener("scroll", computePlacement, true);
-    }
+    document.addEventListener("mousedown", handleClickOutside, true);
+    window.addEventListener("resize", computePlacement);
+    window.addEventListener("scroll", computePlacement, true);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside, true);
       window.removeEventListener("resize", computePlacement);
       window.removeEventListener("scroll", computePlacement, true);
     };

@@ -1,6 +1,6 @@
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
-import type { AxiosProgressEvent, AxiosResponse } from 'axios'
+import type { AxiosProgressEvent } from 'axios'
 import type { MfaRequiredPayload, SignInRequest, SignInResend2FARequest,
   SignInResend2FAResponse, SignInResponse, SignInVerify2FARequest, SignOutResponse,
   SignUpRequest, SignUpResponse } from '@/models/auth/auth'
@@ -48,7 +48,23 @@ import type { AddInventoryItemRequest, EditInventoryItemRequest, GetInventoryIte
   InventoryItem, InventoryItemsBulkRequest, InventoryItemsBulkResponse } from '@/models/settings/inventory';
 import type { AddEntityRequest, EditEntityRequest, EntitiesBulkRequest, EntitiesBulkResponse, Entity,
   GetEntitiesParams, GetEntitiesResponse, GetEntityResponse } from '@/models/settings/entities';
-import { GetStatementsParams, GetStatementsResponse, TriggerStatementAnalysisResponse, UploadStatementResponse } from '@/models/settings/statements';
+import type {
+  GetStatementsParams,
+  GetStatementsResponse,
+  TriggerStatementAnalysisResponse,
+  UploadStatementResponse,
+  StatementImportLookups,
+  StatementImportSession,
+  StatementImportRow,
+  StatementImportRowsResponse,
+  LatestStatementAnalysisResponse,
+  PrepareStatementImportRequest,
+  PrepareStatementImportResponse,
+  AcceptConfidentStatementImportRowsResponse,
+  CommitStatementImportSessionResponse,
+  BulkUpdateStatementImportRowsRequest,
+  UpdateStatementImportRowRequest,
+} from "@/models/settings/statements";
 
 
 async function downloadTemplate(path: string, filename: string) {
@@ -557,47 +573,141 @@ export const api = {
   deleteEntity: (id: string) =>
     request<void>(`crm/entities/${id}/`, "DELETE"),
 
-  // -------------- Statements (PDF) --------------
-  getStatements: (params?: GetStatementsParams) =>
-    request<GetStatementsResponse>(`banking/statements/`, "GET", params),
-
-  uploadStatement: (form: FormData, onProgress?: (pct: number) => void) => {
-    return http.post(`banking/statements/`, form,
-      {
-        onUploadProgress: (evt: AxiosProgressEvent) => {
-          if (!onProgress || !evt.total) return;
-          onProgress(Math.round((evt.loaded * 100) / evt.total));
-        },
-      }
-    )
-    .then((r: AxiosResponse) => r.data as UploadStatementResponse);
+  // -------------- Statements / AI Import Flow --------------
+  getStatements: async (params?: GetStatementsParams) => {
+    const res = await request<GetStatementsResponse>("banking/statements/", "GET", params);
+    return res.data;
   },
 
-  deleteStatement: (statementId: string) =>
-    request<void>(`banking/statements/${statementId}/`, "DELETE"),
+  uploadStatement: async (form: FormData, onProgress?: (pct: number) => void) => {
+    const res = await http.post("banking/statements/", form, {
+      onUploadProgress: (evt: AxiosProgressEvent) => {
+        if (!onProgress || !evt.total) return;
+        onProgress(Math.round((evt.loaded * 100) / evt.total));
+      },
+    });
 
-  triggerStatementAnalysis: (statementId: string) =>
-    request<TriggerStatementAnalysisResponse>(`banking/statements/${statementId}/analyze/`, "POST", {}),
+    return (res.data?.data ?? res.data) as UploadStatementResponse;
+  },
+
+  deleteStatement: async (statementId: string) => {
+    await request<void>(`banking/statements/${statementId}/`, "DELETE");
+  },
+
+  triggerStatementAnalysis: async (statementId: string) => {
+    const res = await request<TriggerStatementAnalysisResponse>(
+      `banking/statements/${statementId}/analyze/`,
+      "POST",
+      {}
+    );
+    return res.data;
+  },
+
+  getLatestStatementAnalysis: async (statementId: string) => {
+    const res = await request<LatestStatementAnalysisResponse>(
+      `banking/statements/${statementId}/analysis/latest/`,
+      "GET"
+    );
+    return res.data;
+  },
+
+  prepareStatementImport: async (
+    statementId: string,
+    payload?: PrepareStatementImportRequest
+  ) => {
+    const res = await request<PrepareStatementImportResponse>(
+      `banking/statements/${statementId}/prepare-import/`,
+      "POST",
+      payload ?? {}
+    );
+    return res.data;
+  },
+
+  getStatementImportSession: async (sessionId: string) => {
+    const res = await request<StatementImportSession>(
+      `banking/statement-import-sessions/${sessionId}/`,
+      "GET"
+    );
+    return res.data;
+  },
+
+  getStatementImportRows: async (
+    sessionId: string,
+    params?: Record<string, string | number | boolean | undefined>
+  ) => {
+    const res = await request<StatementImportRowsResponse>(
+      `banking/statement-import-sessions/${sessionId}/rows/`,
+      "GET",
+      params
+    );
+    return res.data;
+  },
+
+  updateStatementImportRow: async (
+    sessionId: string,
+    rowId: string,
+    payload: UpdateStatementImportRowRequest
+  ) => {
+    const res = await request<StatementImportRow>(
+      `banking/statement-import-sessions/${sessionId}/rows/${rowId}/`,
+      "PATCH",
+      payload
+    );
+    return res.data;
+  },
+
+  bulkUpdateStatementImportRows: async (
+    sessionId: string,
+    payload: BulkUpdateStatementImportRowsRequest
+  ) => {
+    const res = await request<StatementImportRow[]>(
+      `banking/statement-import-sessions/${sessionId}/rows/bulk/`,
+      "PATCH",
+      payload
+    );
+    return res.data;
+  },
+
+  acceptConfidentStatementImportRows: async (sessionId: string) => {
+    const res = await request<AcceptConfidentStatementImportRowsResponse>(
+      `banking/statement-import-sessions/${sessionId}/accept-confident/`,
+      "POST",
+      {}
+    );
+    return res.data;
+  },
+
+  commitStatementImportSession: async (sessionId: string) => {
+    const res = await request<CommitStatementImportSessionResponse>(
+      `banking/statement-import-sessions/${sessionId}/commit/`,
+      "POST",
+      {}
+    );
+    return res.data;
+  },
+
+  getStatementImportLookups: async (sessionId: string) => {
+    const res = await request<StatementImportLookups>(
+      `banking/statement-import-sessions/${sessionId}/lookups/`,
+      "GET"
+    );
+    return res.data;
+  },
 
   downloadStatement: async (statementId: string) => {
     const res = await http.get(`banking/statements/${statementId}/download/`, {
       responseType: "blob",
-      validateStatus: (s: number) => s >= 200 && s < 300
-    });
-
-    downloadBlob(res.data as Blob, "extrato.pdf");
-  },
-
-  downloadStatementJson: async (statementId: string) => {
-    const res = await http.get(`banking/statements/${statementId}/download-json/`, {
-      responseType: "blob",
-      validateStatus: (s: number) => s >= 200 && s < 300
+      validateStatus: (s: number) => s >= 200 && s < 300,
     });
 
     const cd = res.headers?.["content-disposition"] as string | undefined;
-    const filename = filenameFromContentDisposition(cd, `statement_${statementId}.json`);
+    const filename = filenameFromContentDisposition(cd, `statement_${statementId}.pdf`);
 
-    downloadBlob(new Blob([res.data], { type: "application/json" }), filename);
+    downloadBlob(res.data as Blob, filename);
   },
+
+
+
+
 
 }

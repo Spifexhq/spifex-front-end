@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -6,56 +6,25 @@ import { PermissionMiddleware } from "@/middlewares";
 import type { ModalType } from "@/components/Modal/Modal.types";
 import type { SidebarProps } from "./Sidebar";
 
-const MOBILE_SIDEBAR_EVENT = "spifex:mobileSidebar:setHidden";
+type Props = SidebarProps & { handleOpenStatementImportModal: () => void };
 
-type IconProps = { className?: string };
+const MOBILE_SIDEBAR_EVENT = "spifex:mobileSidebar:setHidden";
 
 type ActionButtonProps = {
   ariaLabel: string;
   onClick: () => void;
-  Icon: React.FC<IconProps>;
+  children: React.ReactNode;
 };
 
-const ActionButton: React.FC<ActionButtonProps> = ({ ariaLabel, onClick, Icon }) => {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      onClick={onClick}
-      className={[
-        "inline-flex h-11 w-11 items-center justify-center rounded-2xl",
-        "transition-colors",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
-        "text-gray-700 hover:bg-gray-100 active:bg-gray-200",
-      ].join(" ")}
-    >
-      <Icon className="h-5 w-5" />
-    </button>
-  );
-};
-
-const IconCredit: React.FC<IconProps> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-    <rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" />
-    <path strokeWidth="1.75" strokeLinecap="round" d="M12 8.5v7" />
-    <path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" />
-  </svg>
-);
-
-const IconDebit: React.FC<IconProps> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-    <rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" />
-    <path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" />
-  </svg>
-);
-
-const IconTransfer: React.FC<IconProps> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-    <path d="M5 9h14" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M17 7l2 2-2 2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M19 15H5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M7 13l-2 2 2 2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+const ActionButton: React.FC<ActionButtonProps> = ({ ariaLabel, onClick, children }) => (
+  <button
+    type="button"
+    aria-label={ariaLabel}
+    onClick={onClick}
+    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200"
+  >
+    {children}
+  </button>
 );
 
 declare global {
@@ -64,76 +33,52 @@ declare global {
   }
 }
 
-const SidebarMobile: React.FC<SidebarProps> = ({ handleOpenModal, handleOpenTransferenceModal, mode }) => {
+const SidebarMobile: React.FC<Props> = ({ handleOpenModal, handleOpenTransferenceModal, handleOpenStatementImportModal, mode }) => {
   const { t } = useTranslation(["sidebar"]);
-
   const [mounted, setMounted] = useState(false);
-  const [hiddenBySelection, setHiddenBySelection] = useState<boolean>(() => Boolean(window.__SPX_MOBILE_SIDEBAR_HIDDEN__));
-
-  useEffect(() => setMounted(true), []);
+  const [hidden, setHidden] = useState<boolean>(() => !!window.__SPX_MOBILE_SIDEBAR_HIDDEN__);
 
   useEffect(() => {
-    const handler = (ev: Event) => {
-      const e = ev as CustomEvent<{ hidden?: boolean }>;
-      const next = Boolean(e.detail?.hidden);
-      setHiddenBySelection(next);
-      window.__SPX_MOBILE_SIDEBAR_HIDDEN__ = next;
+    setMounted(true);
+    const listener = (ev: Event) => {
+      const custom = ev as CustomEvent<{ hidden?: boolean }>;
+      const nextHidden = !!custom.detail?.hidden;
+      window.__SPX_MOBILE_SIDEBAR_HIDDEN__ = nextHidden;
+      setHidden(nextHidden);
     };
-
-    window.addEventListener(MOBILE_SIDEBAR_EVENT, handler as EventListener);
-    return () => window.removeEventListener(MOBILE_SIDEBAR_EVENT, handler as EventListener);
+    window.addEventListener(MOBILE_SIDEBAR_EVENT, listener as EventListener);
+    return () => window.removeEventListener(MOBILE_SIDEBAR_EVENT, listener as EventListener);
   }, []);
 
-  const portalTarget = useMemo(() => (mounted ? document.body : null), [mounted]);
+  if (!mounted || hidden || mode === "settled") return null;
 
-  if (mode === "settled") return null;
-  if (hiddenBySelection) return null;
-  if (!portalTarget) return null;
-
-  const node = (
-    <nav
-      aria-label={t("sidebar:sidebar.aria.nav")}
-      className={[
-        "sm:hidden",
-        "fixed left-1/2 -translate-x-1/2",
-        "bottom-[calc(1rem+env(safe-area-inset-bottom))]",
-        "z-[70]",
-      ].join(" ")}
-    >
-      <div
-        className={[
-          "flex items-center gap-1 rounded-2xl",
-          "border border-gray-200 bg-white/90 px-2 py-2 shadow-lg backdrop-blur",
-        ].join(" ")}
-      >
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 bottom-3 z-[90] flex justify-center px-3 sm:hidden">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-[22px] border border-gray-200 bg-white/95 px-3 py-2 shadow-xl backdrop-blur">
         <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
-          <ActionButton
-            ariaLabel={t("sidebar:sidebar.items.credit")}
-            onClick={() => handleOpenModal("credit" as ModalType)}
-            Icon={IconCredit}
-          />
+          <ActionButton ariaLabel={t("sidebar:sidebar.items.credit")} onClick={() => handleOpenModal("credit" as ModalType)}>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" /><path strokeWidth="1.75" strokeLinecap="round" d="M12 8.5v7" /><path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" /></svg>
+          </ActionButton>
         </PermissionMiddleware>
-
         <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
-          <ActionButton
-            ariaLabel={t("sidebar:sidebar.items.debit")}
-            onClick={() => handleOpenModal("debit" as ModalType)}
-            Icon={IconDebit}
-          />
+          <ActionButton ariaLabel={t("sidebar:sidebar.items.debit")} onClick={() => handleOpenModal("debit" as ModalType)}>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" /><path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" /></svg>
+          </ActionButton>
         </PermissionMiddleware>
-
         <PermissionMiddleware codeName={["add_transference"]} requireAll>
-          <ActionButton
-            ariaLabel={t("sidebar:sidebar.items.transfer")}
-            onClick={handleOpenTransferenceModal}
-            Icon={IconTransfer}
-          />
+          <ActionButton ariaLabel={t("sidebar:sidebar.items.transfer")} onClick={handleOpenTransferenceModal}>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 9h14" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" /><path d="M17 7l2 2-2 2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" /><path d="M19 15H5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" /><path d="M7 13l-2 2 2 2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </ActionButton>
+        </PermissionMiddleware>
+        <PermissionMiddleware codeName={["change_statement"]} requireAll>
+          <ActionButton ariaLabel="Import statement" onClick={handleOpenStatementImportModal}>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12" strokeWidth="1.75" strokeLinecap="round"/><path d="M8 11l4 4 4-4" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/><rect x="4" y="17" width="16" height="4" rx="1.5" strokeWidth="1.75"/></svg>
+          </ActionButton>
         </PermissionMiddleware>
       </div>
-    </nav>
+    </div>,
+    document.body
   );
-
-  return createPortal(node, portalTarget);
 };
 
 export default SidebarMobile;
