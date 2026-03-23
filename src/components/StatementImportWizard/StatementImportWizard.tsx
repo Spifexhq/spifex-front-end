@@ -1,8 +1,18 @@
-// src/components/StatementImportWizard/StatementImportWizard.tsx
+/* -------------------------------------------------------------------------- */
+/* File: src/components/StatementImportWizard/StatementImportWizard.tsx       */
+/* -------------------------------------------------------------------------- */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import axios from "axios";
-import { ArrowLeft, CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileUp,
+  Loader2,
+  Sparkles,
+  UploadCloud,
+  X,
+} from "lucide-react";
 
 import { api } from "@/api/requests";
 import type {
@@ -44,7 +54,7 @@ type Props = {
 };
 
 type Snack =
-  | { message: string; severity: "success" | "error" | "warning" | "info" }
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
 type RowDraft = {
@@ -273,6 +283,39 @@ function areDraftsEqual(a: RowDraft, b: RowDraft) {
   return JSON.stringify(buildPatchPayloadFromDraft(a)) === JSON.stringify(buildPatchPayloadFromDraft(b));
 }
 
+function isDraftAmountValid(draft?: RowDraft | null) {
+  if (!draft) return false;
+  const normalized = String(draft.amount || "").replace(",", ".").trim();
+  if (!normalized) return false;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed);
+}
+
+function isDraftLedgerValid(draft?: RowDraft | null) {
+  return !!String(draft?.ledger_account_id || "").trim();
+}
+
+function getEffectiveDraft(
+  row: StatementImportRow,
+  draftsByRowId: Record<string, RowDraft>
+) {
+  return draftsByRowId[row.id] || createDraftFromRow(row);
+}
+
+function getRowMandatoryMissingLabel(draft?: RowDraft | null) {
+  const missingAmount = !isDraftAmountValid(draft);
+  const missingLedger = !isDraftLedgerValid(draft);
+
+  if (missingAmount && missingLedger) return "Missing amount and ledger account";
+  if (missingAmount) return "Missing amount";
+  if (missingLedger) return "Missing ledger account";
+  return "";
+}
+
+function hasDraggedFiles(event: React.DragEvent<HTMLElement>) {
+  return Array.from(event.dataTransfer?.types || []).includes("Files");
+}
+
 const StatementImportWizard: React.FC<Props> = ({
   statement,
   initialStatementId,
@@ -282,12 +325,14 @@ const StatementImportWizard: React.FC<Props> = ({
   registerBeforeClose,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const dragDepthRef = React.useRef(0);
 
   const [snack, setSnack] = useState<Snack>(null);
   const [busy, setBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [polling, setPolling] = useState(false);
   const [savingField, setSavingField] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const [, setStatementItem] = useState<Statement | null>(statement || null);
   const [statementId, setStatementId] = useState<string | null>(
@@ -328,7 +373,8 @@ const StatementImportWizard: React.FC<Props> = ({
       if (search) {
         const q = search.toLowerCase();
         const draft = draftsByRowId[row.id];
-        const effectiveDescription = draft?.description || row.resolved_description || row.source_description || "";
+        const effectiveDescription =
+          draft?.description || row.resolved_description || row.source_description || "";
         return (
           row.source_description.toLowerCase().includes(q) ||
           effectiveDescription.toLowerCase().includes(q)
@@ -704,46 +750,55 @@ const StatementImportWizard: React.FC<Props> = ({
     [applyDraftToFamilyLocally, selectedDraft, selectedRow]
   );
 
-  const handleAcceptConfident = useCallback(async () => {
-    if (!session) return;
+  const invalidRowsForCreation = useMemo(() => {
+    if (!session) return [];
 
-    setBusy(true);
-    try {
-      const pendingRows = session.rows.filter((row) => {
-        const draft = draftsByRowId[row.id];
-        if (!draft) return false;
-        return !areDraftsEqual(draft, createDraftFromRow(row));
-      });
+    return session.rows.filter((row) => {
+      const draft = getEffectiveDraft(row, draftsByRowId);
+      const localStatus = draft.status || row.status;
 
-      for (const row of pendingRows) {
-        const draft = draftsByRowId[row.id];
-        if (draft) {
-          await persistRowDraft(row, draft);
-        }
-      }
+      if (localStatus === "excluded") return false;
 
-      const result = (await api.acceptConfidentStatementImportRows(
-        session.id
-      )) as AcceptConfidentStatementImportRowsResponse;
+      return !isDraftAmountValid(draft) || !isDraftLedgerValid(draft);
+    });
+  }, [draftsByRowId, session]);
 
-      await loadSession(session.id);
+  const canCreateEntries = useMemo(() => {
+    if (!session) return false;
+    if (busy || uploadBusy || polling) return false;
 
-      setSnack({
-        message: `${result.accepted} row(s) moved to ready.`,
-        severity: "success",
-      });
-    } catch (err) {
-      setSnack({
-        message: getErrorMessage(err, "Could not accept confident rows."),
-        severity: "error",
-      });
-    } finally {
-      setBusy(false);
+    const includedRows = session.rows.filter((row) => {
+      const draft = getEffectiveDraft(row, draftsByRowId);
+      return (draft.status || row.status) !== "excluded";
+    });
+
+    if (!includedRows.length) return false;
+    return invalidRowsForCreation.length === 0;
+  }, [busy, draftsByRowId, invalidRowsForCreation.length, polling, session, uploadBusy]);
+
+  const createEntriesHint = useMemo(() => {
+    if (!session) {
+      return "Upload a statement and review the rows first.";
     }
-  }, [draftsByRowId, loadSession, persistRowDraft, session]);
+    if (!session.rows.length) {
+      return "There are no rows available for creation.";
+    }
+    if (!canCreateEntries) {
+      return "All non-excluded rows must have amount and ledger account before creating entries.";
+    }
+    return "Saves all local edits first, then creates the final cashflow entries.";
+  }, [canCreateEntries, session]);
 
   const handleCommit = useCallback(async () => {
     if (!session) return;
+
+    if (!canCreateEntries) {
+      setSnack({
+        message: "Mandatory fields missing.",
+        severity: "warning",
+      });
+      return;
+    }
 
     setBusy(true);
     try {
@@ -793,6 +848,7 @@ const StatementImportWizard: React.FC<Props> = ({
       setBusy(false);
     }
   }, [
+    canCreateEntries,
     draftsByRowId,
     getFamilyRows,
     loadSession,
@@ -802,6 +858,103 @@ const StatementImportWizard: React.FC<Props> = ({
     session,
     statementId,
   ]);
+
+  const handleAcceptConfident = useCallback(async () => {
+    if (!session) return;
+
+    setBusy(true);
+    try {
+      const pendingRows = session.rows.filter((row) => {
+        const draft = draftsByRowId[row.id];
+        if (!draft) return false;
+        return !areDraftsEqual(draft, createDraftFromRow(row));
+      });
+
+      for (const row of pendingRows) {
+        const draft = draftsByRowId[row.id];
+        if (draft) {
+          await persistRowDraft(row, draft);
+        }
+      }
+
+      const result = (await api.acceptConfidentStatementImportRows(
+        session.id
+      )) as AcceptConfidentStatementImportRowsResponse;
+
+      await loadSession(session.id);
+
+      setSnack({
+        message: `${result.accepted} row(s) moved to ready.`,
+        severity: "success",
+      });
+    } catch (err) {
+      setSnack({
+        message: getErrorMessage(err, "Could not accept confident rows."),
+        severity: "error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [draftsByRowId, loadSession, persistRowDraft, session]);
+
+  const resetDragState = useCallback(() => {
+    dragDepthRef.current = 0;
+    setDragActive(false);
+  }, []);
+
+  const handleDragEnter = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!hasDraggedFiles(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragDepthRef.current += 1;
+      setDragActive(true);
+    },
+    []
+  );
+
+  const handleDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!hasDraggedFiles(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = selectedBankId ? "copy" : "none";
+      setDragActive(true);
+    },
+    [selectedBankId]
+  );
+
+  const handleDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (!hasDraggedFiles(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragDepthRef.current = Math.max(dragDepthRef.current - 1, 0);
+    if (dragDepthRef.current === 0) {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    async (event: React.DragEvent<HTMLDivElement>) => {
+      if (!hasDraggedFiles(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      resetDragState();
+
+      if (hasActiveReview) {
+        setSnack({
+          message: "Finish or close the current review before uploading another statement.",
+          severity: "warning",
+        });
+        return;
+      }
+
+      const file = event.dataTransfer.files?.[0];
+      if (!file) return;
+      await handleUpload(file);
+    },
+    [handleUpload, hasActiveReview, resetDragState]
+  );
 
   useEffect(() => {
     if (!statement?.import_session_id) return;
@@ -936,15 +1089,43 @@ const StatementImportWizard: React.FC<Props> = ({
   );
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col bg-gray-50">
+    <div
+      className="relative flex h-full min-h-0 flex-col bg-gray-50"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={(e) => {
+        void handleDrop(e);
+      }}
+    >
       <TopProgress
         active={busy || uploadBusy || polling || !!savingField}
         variant="top"
         topOffset={0}
       />
 
+      {dragActive && !hasActiveReview ? (
+        <div className="pointer-events-none absolute inset-0 z-40">
+          <div className="absolute inset-0 bg-emerald-500/10 backdrop-blur-[1px]" />
+          <div className="absolute inset-4 rounded-3xl border-2 border-dashed border-emerald-400 bg-white/65 shadow-lg" />
+          <div className="absolute inset-0 grid place-items-center px-6 text-center">
+            <div className="rounded-3xl border border-emerald-200 bg-white/90 px-8 py-8 shadow-xl">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+                <UploadCloud size={28} />
+              </div>
+              <div className="mt-4 text-[18px] font-semibold text-gray-900">
+                Drop statement to upload
+              </div>
+              <div className="mt-2 text-[13px] text-gray-600">
+                PDF, image, CSV, OFX or XML
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="border-b border-gray-200 bg-white px-4 py-4 md:px-5">
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto] xl:items-end">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,340px)_1fr]">
             <SelectDropdown<SelectItem>
               label="Bank account"
@@ -964,12 +1145,40 @@ const StatementImportWizard: React.FC<Props> = ({
               disabled={hasActiveReview}
             />
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] text-gray-600">
-              <div className="font-medium text-gray-800">Flow</div>
-              <div className="mt-1">
-                1. Select bank • 2. Upload file • 3. AI reads document • 4. Review locally • 5. Save on explicit action
+            {!hasActiveReview ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadBusy || !selectedBankId}
+                className={[
+                  "flex min-h-[88px] items-center justify-between rounded-2xl border border-dashed px-4 py-4 text-left transition",
+                  selectedBankId
+                    ? "border-emerald-300 bg-emerald-50/60 hover:bg-emerald-50"
+                    : "border-gray-300 bg-gray-50 opacity-80",
+                ].join(" ")}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-[13px] font-semibold text-gray-900">
+                    <FileUp size={16} className="text-emerald-600" />
+                    Upload or drag a statement here
+                  </div>
+                  <div className="mt-1 text-[12px] text-gray-600">
+                    PDF, PNG, JPG, WEBP, CSV, OFX or XML
+                  </div>
+                </div>
+
+                <div className="text-[12px] font-medium text-emerald-700">
+                  {selectedBankId ? "Choose file" : "Select bank first"}
+                </div>
+              </button>
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] text-gray-600">
+                <div className="font-medium text-gray-800">Flow</div>
+                <div className="mt-1">
+                  1. Select bank • 2. Upload file • 3. AI reads document • 4. Review locally • 5. Save on explicit action
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="flex items-center justify-end gap-2">
@@ -1057,19 +1266,19 @@ const StatementImportWizard: React.FC<Props> = ({
                   <Button
                     variant="primary"
                     onClick={handleCommit}
-                    disabled={
-                      !session ||
-                      busy ||
-                      uploadBusy ||
-                      polling ||
-                      !session?.summary?.ready_rows
-                    }
+                    disabled={!canCreateEntries}
                   >
                     Create entries
                   </Button>
-                  <InfoHint text="Saves all local edits first, then creates the final cashflow entries." />
+                  <InfoHint text={createEntriesHint} />
                 </div>
               </div>
+
+              {invalidRowsForCreation.length > 0 ? (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[12px] text-amber-800">
+                  <div className="font-semibold">Mandatory fields missing</div>
+                </div>
+              ) : null}
 
               {session ? (
                 <div className="mt-4 grid grid-cols-2 gap-2 text-[12px]">
@@ -1103,9 +1312,14 @@ const StatementImportWizard: React.FC<Props> = ({
                 <ul className="divide-y divide-gray-200">
                   {rows.map((row) => {
                     const localDraft = draftsByRowId[row.id];
+                    const effectiveDraft = localDraft || createDraftFromRow(row);
                     const localDescription =
-                      localDraft?.description || row.resolved_description || row.source_description;
-                    const localStatus = localDraft?.status || row.status;
+                      effectiveDraft.description || row.resolved_description || row.source_description;
+                    const localStatus = effectiveDraft.status || row.status;
+                    const rowMissingLabel =
+                      localStatus !== "excluded"
+                        ? getRowMandatoryMissingLabel(effectiveDraft)
+                        : "";
 
                     return (
                       <li key={row.id}>
@@ -1130,9 +1344,23 @@ const StatementImportWizard: React.FC<Props> = ({
                                 {localDescription}
                               </div>
                               <div className="mt-1 text-[12px] text-gray-600">
-                                {formatMoney(row.resolved_amount_minor)} •{" "}
-                                {row.resolved_due_date || "No due date"}
+                                {formatMoney(
+                                  isDraftAmountValid(effectiveDraft)
+                                    ? Math.round(
+                                        Number(
+                                          String(effectiveDraft.amount).replace(",", ".")
+                                        ) * 100
+                                      )
+                                    : row.resolved_amount_minor
+                                )}{" "}
+                                • {row.resolved_due_date || "No due date"}
                               </div>
+
+                              {rowMissingLabel ? (
+                                <div className="mt-1 text-[11px] font-medium text-amber-700">
+                                  {rowMissingLabel}
+                                </div>
+                              ) : null}
                             </div>
 
                             <div className="flex flex-col items-end gap-1">
@@ -1171,9 +1399,38 @@ const StatementImportWizard: React.FC<Props> = ({
           } xl:block min-h-0 overflow-y-auto`}
         >
           {!selectedRow || !selectedDraft ? (
-            <div className="grid h-full place-items-center px-6 text-center text-[14px] text-gray-600">
-              Select a row to review its fields and suggestions.
-            </div>
+            session && (busy || uploadBusy || polling || !session.rows?.length) ? (
+              <div className="grid h-full place-items-center px-6">
+                <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
+                      <Loader2 size={22} className="animate-spin" />
+                    </div>
+
+                    <div>
+                      <div className="text-[15px] font-semibold text-gray-900">
+                        Loading review
+                      </div>
+                      <div className="text-[12px] text-gray-600">
+                        Preparing rows, suggestions and classifications.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    <div className="h-3 w-40 animate-pulse rounded-full bg-gray-200" />
+                    <div className="h-12 animate-pulse rounded-2xl bg-gray-100" />
+                    <div className="h-12 animate-pulse rounded-2xl bg-gray-100" />
+                    <div className="h-12 animate-pulse rounded-2xl bg-gray-100" />
+                    <div className="h-24 animate-pulse rounded-2xl bg-gray-100" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid h-full place-items-center px-6 text-center text-[14px] text-gray-600">
+                Select a row to review its fields and suggestions.
+              </div>
+            )
           ) : (
             <div className="flex min-h-full flex-col">
               {editorHeader}
@@ -1280,19 +1537,26 @@ const StatementImportWizard: React.FC<Props> = ({
                       }
                     />
 
-                    <Input
-                      kind="amount"
-                      id={`statement-import-amount-${selectedRow.id}`}
-                      label="Amount"
-                      value={selectedDraft.amount}
-                      onValueChange={(next: string) => {
-                        updateDraft(selectedRow.id, (prev) => ({
-                          ...prev,
-                          amount: next,
-                        }));
-                      }}
-                      zeroAsEmpty
-                    />
+                    <div>
+                      <Input
+                        kind="amount"
+                        id={`statement-import-amount-${selectedRow.id}`}
+                        label="Amount"
+                        value={selectedDraft.amount}
+                        onValueChange={(next: string) => {
+                          updateDraft(selectedRow.id, (prev) => ({
+                            ...prev,
+                            amount: next,
+                          }));
+                        }}
+                        zeroAsEmpty
+                      />
+                      {!isDraftAmountValid(selectedDraft) ? (
+                        <div className="mt-2 text-[11px] font-medium text-amber-700">
+                          Amount is mandatory to create entries.
+                        </div>
+                      ) : null}
+                    </div>
 
                     <div>
                       <SelectDropdown<SelectItem>
@@ -1515,6 +1779,12 @@ const StatementImportWizard: React.FC<Props> = ({
                           }));
                         }
                       )}
+
+                      {!isDraftLedgerValid(selectedDraft) ? (
+                        <div className="mt-2 text-[11px] font-medium text-amber-700">
+                          Ledger account is mandatory to create entries.
+                        </div>
+                      ) : null}
                     </div>
 
                     <div>
@@ -1682,24 +1952,25 @@ const StatementImportWizard: React.FC<Props> = ({
               variant="primary"
               className="flex-1"
               onClick={() => void handleCommit()}
-              disabled={
-                busy || uploadBusy || polling || !session?.summary?.ready_rows
-              }
+              disabled={!canCreateEntries}
             >
               Create entries
             </Button>
-            <InfoHint text="Saves local edits first, then creates the final cashflow entries." />
+            <InfoHint text={createEntriesHint} />
           </div>
         </div>
       </div>
 
       <Snackbar
         open={!!snack}
-        severity={snack?.severity || "info"}
         onClose={() => setSnack(null)}
-      >
-        {snack?.message || ""}
-      </Snackbar>
+        autoHideDuration={6000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
     </div>
   );
 };
