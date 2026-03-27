@@ -3,6 +3,7 @@
  * -------------------------------------------------------------------------- */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -48,6 +49,7 @@ const formatBytes = (n: number) => {
 };
 
 const Statements: React.FC = () => {
+  const { t } = useTranslation("statements");
   const { handleInitUser, isSuperUser, isSubscribed, permissions, isOwner } =
     useAuthContext();
 
@@ -96,14 +98,17 @@ const Statements: React.FC = () => {
       setBanks(res.data?.results ?? []);
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not load bank accounts."),
+        message: getErrorMessage(err, t("toast.banksFetchError")),
         severity: "error",
       });
     }
-  }, [canViewBanks, isAccessLocked]);
+  }, [canViewBanks, isAccessLocked, t]);
 
   const refreshStatements = useCallback(async () => {
-    if (isAccessLocked || !canViewStatements) return;
+    if (isAccessLocked || !canViewStatements) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -111,13 +116,13 @@ const Statements: React.FC = () => {
       setRows(res.results ?? []);
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not load statements."),
+        message: getErrorMessage(err, t("toast.listFetchError")),
         severity: "error",
       });
     } finally {
       setLoading(false);
     }
-  }, [canViewStatements, isAccessLocked]);
+  }, [canViewStatements, isAccessLocked, t]);
 
   useEffect(() => {
     refreshBanks().catch(() => undefined);
@@ -156,19 +161,39 @@ const Statements: React.FC = () => {
     [rows, selectedStatementId]
   );
 
-  const handleDownload = useCallback(async (statement: Statement) => {
-    try {
-      await api.downloadStatement(statement.id);
-    } catch (err) {
-      setSnack({
-        message: getErrorMessage(err, "Could not download statement."),
-        severity: "error",
-      });
-    }
-  }, []);
+  const handleDownload = useCallback(
+    async (statement: Statement) => {
+      if (isAccessLocked) {
+        setSnack({
+          message: t("paywall.body"),
+          severity: "warning",
+        });
+        return;
+      }
+
+      try {
+        await api.downloadStatement(statement.id);
+      } catch (err) {
+        setSnack({
+          message: getErrorMessage(err, t("toast.downloadJsonFail")),
+          severity: "error",
+        });
+      }
+    },
+    [isAccessLocked, t]
+  );
 
   const handleDelete = useCallback(async () => {
     if (!confirmDeleteId) return;
+
+    if (isAccessLocked) {
+      setSnack({
+        message: t("paywall.body"),
+        severity: "warning",
+      });
+      setConfirmDeleteId(null);
+      return;
+    }
 
     setBusy(true);
     try {
@@ -180,19 +205,19 @@ const Statements: React.FC = () => {
       }
 
       setSnack({
-        message: "Statement deleted.",
+        message: t("toast.deleteOk"),
         severity: "success",
       });
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not delete statement."),
+        message: getErrorMessage(err, t("toast.deleteFail")),
         severity: "error",
       });
     } finally {
       setBusy(false);
       setConfirmDeleteId(null);
     }
-  }, [confirmDeleteId, selectedStatementId]);
+  }, [confirmDeleteId, isAccessLocked, selectedStatementId, t]);
 
   if (isAuthLoading || loading) {
     return (
@@ -213,164 +238,211 @@ const Statements: React.FC = () => {
             <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
               <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  Banking
+                  {t("header.settings")}
                 </div>
                 <h1 className="text-[16px] font-semibold leading-snug text-gray-900">
-                  Statements
+                  {t("header.title")}
                 </h1>
-                <p className="mt-1 text-[12px] text-gray-600">
-                  Upload a bank file, review the imported rows, and create cashflow
-                  entries.
-                </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => refreshStatements().catch(() => undefined)}
+                  disabled={busy || isAccessLocked}
                 >
-                  Refresh
+                  {t("badge.syncing")}
                 </Button>
 
                 <PermissionMiddleware codeName={"add_statement"}>
                   <Button
                     variant="primary"
+                    disabled={isAccessLocked}
                     onClick={() => {
+                      if (isAccessLocked) {
+                        setSnack({
+                          message: t("paywall.body"),
+                          severity: "warning",
+                        });
+                        return;
+                      }
+
                       setSelectedStatementId(null);
                       setImportOpen(true);
                     }}
                   >
-                    Import statement
+                    {t("btn.upload")}
                   </Button>
                 </PermissionMiddleware>
               </div>
             </div>
           </header>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="grid grid-cols-1 gap-3 border-b border-gray-200 px-4 py-4 sm:px-5 lg:grid-cols-[1.1fr_320px]">
-              <Input
-                label="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filename or bank"
-              />
-
-              <SelectDropdown<SelectItem>
-                label="Bank account"
-                items={bankOptions}
-                selected={
-                  bankFilter
-                    ? bankOptions.filter((o) => o.value === bankFilter)
-                    : []
-                }
-                onChange={(items) => setBankFilter(items[0]?.value || "")}
-                getItemKey={(i) => i.value}
-                getItemLabel={(i) => i.label}
-                singleSelect
-                hideCheckboxes
-                buttonLabel="All bank accounts"
-                customStyles={{ maxHeight: "220px" }}
-              />
-            </div>
-
-            <div className="divide-y divide-gray-200">
-              {filteredRows.length === 0 ? (
-                <div className="px-5 py-10 text-sm text-gray-600">
-                  No statements found.
+          {isAccessLocked ? (
+            <section className="rounded-lg border border-amber-200 bg-amber-50">
+              <div className="px-5 py-10 text-center">
+                <div className="text-[12px] font-semibold uppercase tracking-wide text-amber-700">
+                  {t("paywall.badge")}
                 </div>
-              ) : (
-                filteredRows.map((s) => (
-                  <div key={s.id} className="px-4 py-4 sm:px-5">
-                    <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[1.2fr_220px_220px_auto]">
-                      <div className="min-w-0">
-                        <p className="truncate text-[13px] font-medium text-gray-900">
-                          {s.original_filename}
-                        </p>
-                        <p className="mt-1 text-[12px] text-gray-600">
-                          {formatBytes(s.size_bytes)} • {s.pages ?? "-"} page(s)
-                        </p>
-                        <p className="mt-1 text-[12px] text-gray-500">
-                          {new Date(s.created_at).toLocaleString()}
-                        </p>
-                        {s.error_message ? (
-                          <p className="mt-2 text-[12px] text-rose-700">
-                            {s.error_message}
+                <h2 className="mt-2 text-[18px] font-semibold text-amber-900">
+                  {t("paywall.title")}
+                </h2>
+                <p className="mx-auto mt-2 max-w-2xl text-[13px] text-amber-800">
+                  {t("paywall.body")}
+                </p>
+                <p className="mt-3 text-[12px] text-amber-700">{t("paywall.note")}</p>
+              </div>
+            </section>
+          ) : (
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="grid grid-cols-1 gap-3 border-b border-gray-200 px-4 py-4 sm:px-5 lg:grid-cols-[1.1fr_320px]">
+                <Input
+                  label={t("filters.searchLabel")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("filters.placeholder")}
+                />
+
+                <SelectDropdown<SelectItem>
+                  label={t("filters.bank")}
+                  items={bankOptions}
+                  selected={
+                    bankFilter
+                      ? bankOptions.filter((o) => o.value === bankFilter)
+                      : []
+                  }
+                  onChange={(items) => setBankFilter(items[0]?.value || "")}
+                  getItemKey={(i) => i.value}
+                  getItemLabel={(i) => i.label}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel={t("filters.bankPick")}
+                  customStyles={{ maxHeight: "220px" }}
+                />
+              </div>
+
+              <div className="divide-y divide-gray-200">
+                {filteredRows.length === 0 ? (
+                  <div className="px-5 py-10 text-sm text-gray-600">
+                    {t("list.empty")}
+                  </div>
+                ) : (
+                  filteredRows.map((s) => (
+                    <div key={s.id} className="px-4 py-4 sm:px-5">
+                      <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[1.2fr_220px_220px_auto]">
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-medium text-gray-900">
+                            {s.original_filename}
                           </p>
-                        ) : null}
-                      </div>
+                          <p className="mt-1 text-[12px] text-gray-600">
+                            {formatBytes(s.size_bytes)} • {s.pages ?? "-"} page(s)
+                          </p>
+                          <p className="mt-1 text-[12px] text-gray-500">
+                            {new Date(s.created_at).toLocaleString()}
+                          </p>
+                          {s.error_message ? (
+                            <p className="mt-2 text-[12px] text-rose-700">
+                              {s.error_message}
+                            </p>
+                          ) : null}
+                        </div>
 
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                          Bank account
-                        </p>
-                        <p className="text-[13px] text-gray-900">
-                          {s.bank_account_label || "—"}
-                        </p>
-                      </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                            {t("filters.bank")}
+                          </p>
+                          <p className="text-[13px] text-gray-900">
+                            {s.bank_account_label || "—"}
+                          </p>
+                        </div>
 
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                          Import session
-                        </p>
-                        <p className="text-[13px] text-gray-900">
-                          {s.import_status
-                            ? String(s.import_status)
-                                .replace(/_/g, " ")
-                                .replace(/\b\w/g, (c) => c.toUpperCase())
-                            : "Not prepared yet"}
-                        </p>
-                      </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                            {t("filters.status")}
+                          </p>
+                          <p className="text-[13px] text-gray-900">
+                            {s.import_status
+                              ? t(`statuses.${s.import_status}`, {
+                                  defaultValue: String(s.import_status)
+                                    .replace(/_/g, " ")
+                                    .replace(/\b\w/g, (c) => c.toUpperCase()),
+                                })
+                              : "—"}
+                          </p>
+                        </div>
 
-                      <div className="flex flex-wrap gap-2 lg:justify-end">
-                        <PermissionMiddleware codeName={"change_statement"}>
-                          <Button
-                            variant="outline"
-                            onClick={() => handleDownload(s)}
-                            disabled={busy}
-                          >
-                            Download
-                          </Button>
+                        <div className="flex flex-wrap gap-2 lg:justify-end">
+                          <PermissionMiddleware codeName={"change_statement"}>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleDownload(s)}
+                              disabled={busy || isAccessLocked}
+                            >
+                              {t("actions.download")}
+                            </Button>
 
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedStatementId(s.id);
-                              setImportOpen(true);
-                            }}
-                            disabled={busy}
-                          >
-                            Open review
-                          </Button>
-                        </PermissionMiddleware>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                if (isAccessLocked) {
+                                  setSnack({
+                                    message: t("paywall.body"),
+                                    severity: "warning",
+                                  });
+                                  return;
+                                }
 
-                        <PermissionMiddleware codeName={"delete_statement"}>
-                          <Button
-                            variant="cancel"
-                            onClick={() => setConfirmDeleteId(s.id)}
-                            disabled={busy}
-                          >
-                            Delete
-                          </Button>
-                        </PermissionMiddleware>
+                                setSelectedStatementId(s.id);
+                                setImportOpen(true);
+                              }}
+                              disabled={busy || isAccessLocked}
+                            >
+                              {t("actions.analyze")}
+                            </Button>
+                          </PermissionMiddleware>
+
+                          <PermissionMiddleware codeName={"delete_statement"}>
+                            <Button
+                              variant="cancel"
+                              onClick={() => {
+                                if (isAccessLocked) {
+                                  setSnack({
+                                    message: t("paywall.body"),
+                                    severity: "warning",
+                                  });
+                                  return;
+                                }
+
+                                setConfirmDeleteId(s.id);
+                              }}
+                              disabled={busy || isAccessLocked}
+                            >
+                              {t("actions.delete")}
+                            </Button>
+                          </PermissionMiddleware>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
+                  ))
+                )}
+              </div>
+            </section>
+          )}
         </div>
       </main>
 
       <StatementImportModal
-        open={importOpen}
+        open={importOpen && !isAccessLocked}
         statement={selectedStatement}
         bankOptions={bankOptions}
         onClose={() => setImportOpen(false)}
         onStatementCreated={(created) => {
           setRows((prev) => [created, ...prev.filter((item) => item.id !== created.id)]);
           setSelectedStatementId(created.id);
+          setSnack({
+            message: t("toast.uploadOk"),
+            severity: "success",
+          });
         }}
         onCommitted={({ createdCount }) => {
           setSnack({
@@ -385,10 +457,10 @@ const Statements: React.FC = () => {
       />
 
       <ConfirmToast
-        open={!!confirmDeleteId}
-        text="Delete this statement?"
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        open={!!confirmDeleteId && !isAccessLocked}
+        text={t("confirm.deleteText")}
+        confirmLabel={t("confirm.confirmLabel")}
+        cancelLabel={t("confirm.cancelLabel")}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDeleteId(null)}
         busy={busy}

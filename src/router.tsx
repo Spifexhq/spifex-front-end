@@ -153,7 +153,7 @@ const routes: RouteObject[] = [
                 path: 'reports',
                 element: (
                     <SubscriptionMiddleware redirectTo="/settings">
-                        <PermissionMiddleware codeName="view_report_page" behavior="lock" redirectTo={'/settings'}>
+                        <PermissionMiddleware codeName="view_report_page" requireSubscription behavior="lock" redirectTo={'/settings'}>
                             <Reports />
                         </PermissionMiddleware>
                     </SubscriptionMiddleware>

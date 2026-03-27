@@ -1,12 +1,7 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/Settled/index.tsx
- * -------------------------------------------------------------------------- */
-
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/shared/layout/Sidebar";
-import { EntriesModal, TransferenceModal } from "@/components/Modal";
 import { SettledEntriesTable, type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
 import FilterBar from "@/components/FilterBar";
 import KpiCards from "@/components/KpiCards";
@@ -18,7 +13,6 @@ import { PermissionMiddleware } from "@/middlewares";
 
 import type { SettledEntry } from "@/models/entries/settlements";
 import type { EntryFilters } from "@/models/components/filterBar";
-import { type ModalType } from "@/components/Modal/Modal.types";
 
 const DEFAULT_FILTERS: EntryFilters = {
   bank_id: [],
@@ -41,10 +35,6 @@ const Settled = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<ModalType | null>(null);
-
   const [banksKey, setBanksKey] = useState(0);
   const [tableKey, setTableKey] = useState(0);
   const [kpiRefresh, setKpiRefresh] = useState(0);
@@ -66,17 +56,9 @@ const Settled = () => {
 
   const tableRef = useRef<SettledEntriesTableHandle>(null);
 
-  const filterBarHotkeysEnabled = useMemo(
-    () => !isModalOpen && !isTransferenceModalOpen,
-    [isModalOpen, isTransferenceModalOpen],
-  );
+  const filterBarHotkeysEnabled = useMemo(() => true, []);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-
-  const handleOpenModal = (type: ModalType) => {
-    setModalType(type);
-    setIsModalOpen(true);
-  };
 
   const handleApplyFilters = useCallback(
     ({ filters: newFilters }: { filters: EntryFilters }) => {
@@ -93,14 +75,13 @@ const Settled = () => {
 
   const hasSelection = selectedIds.length > 0;
 
-  // Map SettledEntry -> MinimalEntry for SelectionActionsBar stats display
   const selectedAsMinimal: MinimalEntry[] = useMemo(
     () =>
-      selectedEntries.map((e) => ({
-        amount: e.amount,
-        transaction_type: e.tx_type?.toLowerCase().includes("credit") ? "credit" : "debit",
-        due_date: e.value_date,
-        settlement_due_date: e.value_date,
+      selectedEntries.map((entry) => ({
+        amount: entry.amount,
+        transaction_type: entry.tx_type?.toLowerCase().includes("credit") ? "credit" : "debit",
+        due_date: entry.value_date,
+        settlement_due_date: entry.value_date,
       })),
     [selectedEntries],
   );
@@ -109,17 +90,24 @@ const Settled = () => {
     <div className="flex">
       <TopProgress active={isReturning} variant="top" topOffset={64} />
 
-      <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries", "add_transference"]}>
-        <div className="shrink-0">
-          <Sidebar
-            isOpen={isSidebarOpen}
-            toggleSidebar={toggleSidebar}
-            handleOpenModal={handleOpenModal}
-            handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
-            mode="default"
-          />
-        </div>
-      </PermissionMiddleware>
+      <div className="shrink-0">
+        <Sidebar
+          isOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          mode="default"
+          onEntriesSaved={() => {
+            bumpTable();
+            bumpKpis();
+          }}
+          onTransferenceSaved={() => {
+            bumpBanks();
+          }}
+          onStatementImportSaved={() => {
+            bumpTable();
+            bumpKpis();
+          }}
+        />
+      </div>
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <div
@@ -190,34 +178,6 @@ const Settled = () => {
             />
           )}
         </div>
-
-        {modalType && (
-          <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>
-            <EntriesModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              type={modalType}
-              onSave={() => {
-                setIsModalOpen(false);
-                bumpTable();
-                bumpKpis();
-              }}
-            />
-          </PermissionMiddleware>
-        )}
-
-        {isTransferenceModalOpen && (
-          <PermissionMiddleware codeName={"add_transference"}>
-            <TransferenceModal
-              isOpen={isTransferenceModalOpen}
-              onClose={() => setIsTransferenceModalOpen(false)}
-              onSave={() => {
-                setIsTransferenceModalOpen(false);
-                bumpBanks();
-              }}
-            />
-          </PermissionMiddleware>
-        )}
       </div>
     </div>
   );

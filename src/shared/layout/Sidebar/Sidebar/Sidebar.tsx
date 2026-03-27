@@ -1,61 +1,186 @@
-import React, { useEffect, useState } from "react";
-import type { ModalType } from "@/components/Modal/Modal.types";
+import React, { useEffect, useMemo, useState } from "react";
+import { PermissionMiddleware } from "@/middlewares";
 
 import SidebarDesktop from "./Sidebar.desktop";
 import SidebarMobile from "./Sidebar.mobile";
-import { StatementImportModal } from "@/components/Modal";
+
+import { EntriesModal, StatementImportModal, TransferenceModal } from "@/components/Modal";
+import type { ModalType } from "@/components/Modal/Modal.types";
+
 import { api } from "@/api/requests";
+import { fetchAllCursor } from "@/lib/list";
+
 import type { BankAccount } from "@/models/settings/banking";
+import type { Entry } from "@/models/entries/entries";
+
+export type SidebarMode = "default" | "settled";
+
+export type SidebarEntryModalState = {
+  isOpen: boolean;
+  type: ModalType | null;
+  initialEntry?: Entry | null;
+  isLoadingEntry?: boolean;
+};
 
 export interface SidebarProps {
   isOpen: boolean;
-  handleOpenModal: (type: ModalType) => void;
-  handleOpenTransferenceModal: () => void;
   toggleSidebar: () => void;
-  mode: string;
+  mode: SidebarMode;
+
+  onEntriesSaved?: () => void;
+  onTransferenceSaved?: () => void;
+  onStatementImportSaved?: () => void;
+
+  entryModalState?: SidebarEntryModalState;
+  onEntryModalClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = (props) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  toggleSidebar,
+  mode,
+  onEntriesSaved,
+  onTransferenceSaved,
+  entryModalState,
+  onEntryModalClose,
+}) => {
   const [isMobile, setIsMobile] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
+
+  const [localEntryOpen, setLocalEntryOpen] = useState(false);
+  const [localEntryType, setLocalEntryType] = useState<ModalType | null>(null);
+
+  const [isTransferenceOpen, setIsTransferenceOpen] = useState(false);
+  const [isStatementImportOpen, setIsStatementImportOpen] = useState(false);
+
   const [banks, setBanks] = useState<BankAccount[]>([]);
 
   useEffect(() => {
-    const mql = window.matchMedia("(max-width: 639px)");
-    const apply = () => setIsMobile(mql.matches);
-    apply();
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", apply);
-      return () => mql.removeEventListener("change", apply);
-    }
-    const legacy = mql as unknown as {
-      addListener?: (cb: () => void) => void;
-      removeListener?: (cb: () => void) => void;
+    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    const update = (event?: MediaQueryListEvent) => {
+      setIsMobile(event ? event.matches : mediaQuery.matches);
     };
-    if (typeof legacy.addListener === "function") legacy.addListener(apply);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+
     return () => {
-      if (typeof legacy.removeListener === "function") legacy.removeListener(apply);
+      mediaQuery.removeEventListener("change", update);
     };
   }, []);
 
   useEffect(() => {
-    if (!importOpen) return;
-    api.getBanks().then(({ data }) => setBanks(data?.results || [])).catch(() => setBanks([]));
-  }, [importOpen]);
+    if (!isStatementImportOpen) return;
 
-  const sidebarProps = {
-    ...props,
-    handleOpenStatementImportModal: () => setImportOpen(true),
+    let alive = true;
+
+    (async () => {
+      try {
+        const allBanks = await fetchAllCursor<BankAccount>((params?: { cursor?: string }) =>
+          api.getBanks({ cursor: params?.cursor, active: "true" }),
+        );
+
+        if (!alive) return;
+        setBanks(allBanks);
+      } catch {
+        if (!alive) return;
+        setBanks([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [isStatementImportOpen]);
+
+  const controlledEntryOpen = !!entryModalState?.isOpen && !!entryModalState?.type;
+  const entryType = controlledEntryOpen ? entryModalState?.type ?? null : localEntryType;
+  const entryInitial = controlledEntryOpen ? entryModalState?.initialEntry ?? null : null;
+  const entryLoading = controlledEntryOpen ? !!entryModalState?.isLoadingEntry : false;
+  const entryOpen = controlledEntryOpen ? true : localEntryOpen;
+
+  const bankOptions = useMemo(
+    () =>
+      banks.map((bank) => ({
+        label: `${bank.institution} • ${bank.branch ?? "-"} / ${bank.account_number ?? "-"}`,
+        value: bank.id,
+      })),
+    [banks],
+  );
+
+  const openEntryModal = (type: ModalType) => {
+    setLocalEntryType(type);
+    setLocalEntryOpen(true);
+  };
+
+  const closeEntryModal = () => {
+    if (controlledEntryOpen) {
+      onEntryModalClose?.();
+      return;
+    }
+
+    setLocalEntryOpen(false);
+    setLocalEntryType(null);
+  };
+
+  const handleEntrySave = () => {
+    closeEntryModal();
+    onEntriesSaved?.();
+  };
+
+  const handleTransferenceSave = () => {
+    setIsTransferenceOpen(false);
+    onTransferenceSaved?.();
+  };
+
+  const handleStatementImportClose = () => {
+    setIsStatementImportOpen(false);
+  };
+
+  const actionProps = {
+    isOpen,
+    toggleSidebar,
+    mode,
+    handleOpenModal: openEntryModal,
+    handleOpenTransferenceModal: () => setIsTransferenceOpen(true),
+    handleOpenStatementImportModal: () => setIsStatementImportOpen(true),
   };
 
   return (
     <>
-      {isMobile ? <SidebarMobile {...sidebarProps} /> : <SidebarDesktop {...sidebarProps} />}
-      <StatementImportModal
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        bankOptions={banks.map((b) => ({ label: `${b.institution} • ${b.branch ?? "-"} / ${b.account_number ?? "-"}`, value: b.id }))}
-      />
+      {isMobile ? <SidebarMobile {...actionProps} /> : <SidebarDesktop {...actionProps} />}
+
+      {entryType && (
+        <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>
+          <EntriesModal
+            isOpen={entryOpen}
+            onClose={closeEntryModal}
+            type={entryType}
+            initialEntry={entryInitial}
+            isLoadingEntry={entryLoading}
+            onSave={handleEntrySave}
+          />
+        </PermissionMiddleware>
+      )}
+
+      {isTransferenceOpen && (
+        <PermissionMiddleware codeName={"add_transference"}>
+          <TransferenceModal
+            isOpen={isTransferenceOpen}
+            onClose={() => setIsTransferenceOpen(false)}
+            onSave={handleTransferenceSave}
+          />
+        </PermissionMiddleware>
+      )}
+
+      {isStatementImportOpen && (
+        <PermissionMiddleware codeName={"add_statement"} requireSubscription>
+          <StatementImportModal
+            open={isStatementImportOpen}
+            onClose={handleStatementImportClose}
+            bankOptions={bankOptions}
+          />
+        </PermissionMiddleware>
+      )}
     </>
   );
 };

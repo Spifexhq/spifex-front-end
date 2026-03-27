@@ -1,12 +1,9 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/CashFlow/index.tsx
- * -------------------------------------------------------------------------- */
-
 import { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/shared/layout/Sidebar";
-import { EntriesModal, TransferenceModal, SettlementModal } from "@/components/Modal";
+import type { SidebarEntryModalState } from "@/shared/layout/Sidebar/Sidebar";
+import { SettlementModal } from "@/components/Modal";
 import { CashFlowTable, type CashFlowTableHandle } from "@/components/Table/CashFlowTable";
 import FilterBar from "@/components/FilterBar";
 import KpiCards from "@/components/KpiCards";
@@ -58,11 +55,7 @@ const CashFlow = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTransferenceModalOpen, setIsTransferenceModalOpen] = useState(false);
   const [isSettlementModalOpen, setIsSettlementModalOpen] = useState(false);
-
-  const [modalType, setModalType] = useState<ModalType | null>(null);
 
   const [banksKey, setBanksKey] = useState(0);
   const [cashflowKey, setCashflowKey] = useState(0);
@@ -79,6 +72,8 @@ const CashFlow = () => {
 
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [isEditingEntryLoading, setIsEditingEntryLoading] = useState(false);
+  const [editingModalType, setEditingModalType] = useState<ModalType | null>(null);
+  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
@@ -89,13 +84,10 @@ const CashFlow = () => {
   const [filters, setFilters] = useState<EntryFilters>(() => DEFAULT_FILTERS);
 
   const filterBarHotkeysEnabled = useMemo(
-    () => !isModalOpen && !isTransferenceModalOpen && !isSettlementModalOpen,
-    [isModalOpen, isTransferenceModalOpen, isSettlementModalOpen],
+    () => !isEditingModalOpen && !isSettlementModalOpen,
+    [isEditingModalOpen, isSettlementModalOpen],
   );
 
-  /* ---------------------------------------------------------------------- */
-  /* Full banks list for SettlementModal (uses getBanks, not getBanksTable)  */
-  /* ---------------------------------------------------------------------- */
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [banksLoading, setBanksLoading] = useState(false);
   const [banksError, setBanksError] = useState<string | null>(null);
@@ -109,8 +101,9 @@ const CashFlow = () => {
 
       try {
         const all = await fetchAllCursor<BankAccount>((p?: { cursor?: string }) =>
-          api.getBanks({ cursor: p?.cursor, active: "true" })
+          api.getBanks({ cursor: p?.cursor, active: "true" }),
         );
+
         if (!alive) return;
         setBanks(all);
       } catch (err) {
@@ -129,16 +122,11 @@ const CashFlow = () => {
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  const handleOpenModal = (type: ModalType) => {
-    setModalType(type);
-    setIsModalOpen(true);
-  };
-
   const handleEditEntry = useCallback(
     async (entry: Entry) => {
-      setModalType(entry.tx_type as ModalType);
+      setEditingModalType(entry.tx_type as ModalType);
       setEditingEntry(null);
-      setIsModalOpen(true);
+      setIsEditingModalOpen(true);
       setIsEditingEntryLoading(true);
 
       try {
@@ -146,12 +134,13 @@ const CashFlow = () => {
         const fullEntry = res.data as Entry;
 
         setEditingEntry(fullEntry);
-        setModalType(fullEntry.tx_type as ModalType);
+        setEditingModalType(fullEntry.tx_type as ModalType);
       } catch (err) {
         console.error("Error fetching entry:", err);
         alert(getErrorMessage(err, t("cashFlow:errors.loadEntryDetailsUnexpected")));
-        setIsModalOpen(false);
+        setIsEditingModalOpen(false);
         setEditingEntry(null);
+        setEditingModalType(null);
       } finally {
         setIsEditingEntryLoading(false);
       }
@@ -159,10 +148,27 @@ const CashFlow = () => {
     [t],
   );
 
-  const handleApplyFilters = useCallback(({ filters: newFilters }: { filters: EntryFilters }) => {
-    setFilters(newFilters);
-    bumpAll();
-  }, [bumpAll]);
+  const handleCloseEditingModal = useCallback(() => {
+    setIsEditingModalOpen(false);
+    setEditingEntry(null);
+    setEditingModalType(null);
+    setIsEditingEntryLoading(false);
+  }, []);
+
+  const editingEntryModalState: SidebarEntryModalState = {
+    isOpen: isEditingModalOpen,
+    type: editingModalType,
+    initialEntry: editingEntry,
+    isLoadingEntry: isEditingEntryLoading,
+  };
+
+  const handleApplyFilters = useCallback(
+    ({ filters: newFilters }: { filters: EntryFilters }) => {
+      setFilters(newFilters);
+      bumpAll();
+    },
+    [bumpAll],
+  );
 
   const handleSelectionChange = useCallback((ids: string[], rows: Entry[]) => {
     setSelectedIds(ids);
@@ -175,17 +181,27 @@ const CashFlow = () => {
     <div className="flex">
       <TopProgress active={banksLoading} variant="top" topOffset={64} />
 
-      <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries", "add_transference"]}>
-        <div className="shrink-0">
-          <Sidebar
-            isOpen={isSidebarOpen}
-            toggleSidebar={toggleSidebar}
-            handleOpenModal={handleOpenModal}
-            handleOpenTransferenceModal={() => setIsTransferenceModalOpen(true)}
-            mode="default"
-          />
-        </div>
-      </PermissionMiddleware>
+      <div className="shrink-0">
+        <Sidebar
+          isOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          mode="default"
+          onEntriesSaved={() => {
+            handleCloseEditingModal();
+            bumpCashflow();
+            bumpKpis();
+          }}
+          onTransferenceSaved={() => {
+            bumpBanks();
+          }}
+          onStatementImportSaved={() => {
+            bumpCashflow();
+            bumpKpis();
+          }}
+          entryModalState={editingEntryModalState}
+          onEntryModalClose={handleCloseEditingModal}
+        />
+      </div>
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <div
@@ -237,8 +253,11 @@ const CashFlow = () => {
 
                 setIsDeleting(true);
                 try {
-                  if (selectedIds.length > 1) await api.deleteEntriesBulk(selectedIds as string[]);
-                  else await api.deleteEntry(selectedIds[0] as string);
+                  if (selectedIds.length > 1) {
+                    await api.deleteEntriesBulk(selectedIds as string[]);
+                  } else {
+                    await api.deleteEntry(selectedIds[0] as string);
+                  }
 
                   bumpCashflow();
                   bumpKpis();
@@ -256,40 +275,6 @@ const CashFlow = () => {
             />
           )}
         </div>
-
-        {modalType && (
-          <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>
-            <EntriesModal
-              isOpen={isModalOpen}
-              onClose={() => {
-                setIsModalOpen(false);
-                setEditingEntry(null);
-              }}
-              type={modalType}
-              initialEntry={editingEntry}
-              isLoadingEntry={isEditingEntryLoading}
-              onSave={() => {
-                setIsModalOpen(false);
-                setEditingEntry(null);
-                bumpCashflow();
-                bumpKpis();
-              }}
-            />
-          </PermissionMiddleware>
-        )}
-
-        {isTransferenceModalOpen && (
-          <PermissionMiddleware codeName={"add_transference"}>
-            <TransferenceModal
-              isOpen={isTransferenceModalOpen}
-              onClose={() => setIsTransferenceModalOpen(false)}
-              onSave={() => {
-                setIsTransferenceModalOpen(false);
-                bumpBanks();
-              }}
-            />
-          </PermissionMiddleware>
-        )}
       </div>
 
       {isSettlementModalOpen && (
@@ -302,6 +287,8 @@ const CashFlow = () => {
               setIsSettlementModalOpen(false);
               bumpAll();
               setSelectedIds([]);
+              setSelectedEntries([]);
+              tableRef.current?.clearSelection();
             }}
             banksData={{
               banks,
