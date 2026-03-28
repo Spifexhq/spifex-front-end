@@ -246,14 +246,6 @@ const Statements: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => refreshStatements().catch(() => undefined)}
-                  disabled={busy || isAccessLocked}
-                >
-                  {t("badge.syncing")}
-                </Button>
-
                 <PermissionMiddleware codeName={"add_statement"}>
                   <Button
                     variant="primary"

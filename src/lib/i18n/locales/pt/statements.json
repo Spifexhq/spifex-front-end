@@ -4,7 +4,6 @@
     "settings": "Finanças",
     "title": "Extratos bancários"
   },
-  "badge": { "syncing": "A sincronizar…" },
   "btn": {
     "upload": "Carregar ficheiros",
     "send": "Enviar",

@@ -4,7 +4,6 @@
     "settings": "Finanzen",
     "title": "Kontoauszüge"
   },
-  "badge": { "syncing": "Synchronisiere…" },
   "btn": {
     "upload": "Dateien hochladen",
     "send": "Senden",

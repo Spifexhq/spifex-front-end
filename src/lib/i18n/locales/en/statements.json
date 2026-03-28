@@ -4,7 +4,6 @@
     "settings": "Finance",
     "title": "Bank statements"
   },
-  "badge": { "syncing": "Syncing…" },
   "btn": {
     "upload": "Upload files",
     "send": "Send",

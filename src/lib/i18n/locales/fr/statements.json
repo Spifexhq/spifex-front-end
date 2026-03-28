@@ -4,7 +4,6 @@
     "settings": "Finance",
     "title": "Relevés bancaires"
   },
-  "badge": { "syncing": "Synchronisation…" },
   "btn": {
     "upload": "Importer des fichiers",
     "send": "Envoyer",
