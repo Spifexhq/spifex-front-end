@@ -1,21 +1,15 @@
-// src/models/components/reports.ts
-
 export enum TxType {
   DEBIT = -1,
   CREDIT = 1,
 }
 
-/**
- * API sends decimal strings ("123.45") but some legacy paths may still emit numbers.
- * Keep union for compatibility; normalize in UI if needed.
- */
 export type Money = number | string;
 
 export interface ReportsSummaryTotals {
   in: Money;
   out_abs: Money;
   net: Money;
-  settlement_rate: number; // 0..1
+  settlement_rate: number;
 }
 
 export interface ReportsSummaryMonthlyBar {
@@ -39,18 +33,34 @@ export interface ReportsSummaryPieItem {
 
 export interface ReportsSummaryOverdueItem {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   desc: string;
-  tx_type: TxType; // -1 / 1
+  tx_type: TxType;
   amount: Money;
+}
+
+export interface ReportsSummaryMiniItem {
+  id: string;
+  date: string;
+  desc: string;
+  amount: Money;
+  tx_type?: TxType;
+}
+
+export interface ReportsSummaryCounts {
+  overdue_items: number;
+  next7_items: number;
+  next30_items: number;
+}
+
+export interface ReportsSummaryLiquidity {
+  avg_monthly_outflow_abs: Money;
 }
 
 export interface ReportsSummary {
   totals: ReportsSummaryTotals;
-
   mtd: { in: Money; out: Money; net: Money };
   mom: { change: number | null; infinite: boolean; prev_net: Money };
-
   overdue: { rec: Money; pay: Money; net: Money };
   next7: { rec: Money; pay: Money; net: Money };
   next30: { rec: Money; pay: Money; net: Money };
@@ -61,8 +71,13 @@ export interface ReportsSummary {
   };
 
   pie: ReportsSummaryPieItem[];
-
   overdue_items: ReportsSummaryOverdueItem[];
+
+  counts?: ReportsSummaryCounts;
+  liquidity?: ReportsSummaryLiquidity;
+  largest_overdue_pay?: ReportsSummaryMiniItem | null;
+  largest_overdue_rec?: ReportsSummaryMiniItem | null;
+  next_due_items?: ReportsSummaryMiniItem[];
 }
 
 export interface ReportsSummaryResponse {
@@ -70,12 +85,10 @@ export interface ReportsSummaryResponse {
   meta?: { request_id?: string | null };
 }
 
-/* ------------------------------- Query params ------------------------------- */
-
 export interface ReportsSummaryParams {
   description?: string;
   observation?: string;
-  ledger_account?: string;        // comma-separated external_ids
-  date_from?: string; // YYYY-MM-DD
-  date_to?: string;   // YYYY-MM-DD
+  ledger_account_id?: string;
+  date_from?: string;
+  date_to?: string;
 }

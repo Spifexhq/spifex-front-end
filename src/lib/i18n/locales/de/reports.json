@@ -1,63 +1,49 @@
 {
   "pageTitle": "Berichte",
-  "title": "Cashflow-Berichte",
-  "buttons": { "refresh": "Aktualisieren" },
-  "loading": "Berichtsdaten werden geladen…",
-  "errors": { "fetch": "Berichtsdaten konnten nicht geladen werden." },
+  "title": "Berichte",
+  "loading": "Berichte werden geladen…",
+  "buttons": {
+    "refresh": "Aktualisieren"
+  },
+  "errors": {
+    "fetch": "Berichtszusammenfassung konnte nicht geladen werden.",
+    "fetchBanksTotal": "Banksummen konnten nicht geladen werden."
+  },
   "kpis": {
     "consolidatedBalance": "Konsolidierter Saldo",
-    "bankSum": "Summe der Bankkonten",
-    "inPeriod": "Zuflüsse (Zeitraum)",
-    "outPeriod": "Abflüsse (Zeitraum)",
-    "netPeriod": "Netto (Zeitraum)",
-    "mom": "M/M",
-    "mtdIn": "MTD: Zuflüsse",
-    "mtdOut": "MTD: Abflüsse",
-    "mtdNet": "MTD: Netto",
-    "currentMonth": "Aktueller Monat",
-    "in": "Zufluss",
-    "out": "Abfluss",
+    "bankSum": "Summe aktiver Banksalden",
+    "inPeriod": "Im Zeitraum ein",
+    "outPeriod": "Im Zeitraum aus",
+    "netPeriod": "Netto im Zeitraum",
+    "mtdIn": "MTD Zufluss",
+    "mtdOut": "MTD Abfluss",
+    "mtdNet": "MTD Netto",
     "settlementRate": "Ausgleichsquote",
-    "loadedUniverse": "Im geladenen Datenumfang"
-  },
-  "alerts": {
-    "overdueTitle": "Überfällig (nicht ausgeglichen)",
-    "toReceive": "Forderungen",
-    "toPay": "Verbindlichkeiten",
-    "next7": "Nächste 7 Tage",
-    "next30": "Nächste 30 Tage"
-  },
-  "runway": {
-    "avgOutflow": "Durchschnittlicher monatlicher Abfluss",
-    "estimated": "Geschätzte Reichweite",
-    "months": "{{value}} Monat(e)"
+    "loadedUniverse": "Aktuell gefilterte Basis",
+    "currentMonth": "Aktueller Monat",
+    "mom": "MoM",
+    "in": "Ein",
+    "out": "Aus"
   },
   "charts": {
-    "cumulativeTitle": "Kumuliertes Saldo (Periodenabgrenzung)",
-    "barsTitle": "Zufluss vs Abfluss (monatlich)",
-    "pieTitle": "Ausgabenverteilung nach Kategorie",
-    "inflow": "Zufluss",
-    "outflow": "Abfluss",
-    "net": "Netto"
+    "cumulativeTitle": "Cash-Verlauf",
+    "barsTitle": "Zufluss vs. Abfluss",
+    "pieTitle": "Ausgabenstruktur",
+    "pieSubtitle": "Top-Kategorien nach Abfluss",
+    "inflow": "Ein",
+    "outflow": "Aus"
   },
   "tables": {
-    "overdueTitle": "Top 10 überfällige Buchungen",
-    "date": "Datum",
-    "description": "Beschreibung",
-    "type": "Typ",
-    "amount": "Betrag",
-    "noOverdue": "Keine überfälligen Buchungen",
-    "payLabel": "Zahlen",
-    "receiveLabel": "Erhalten"
+    "overdueTitle": "Überfällige Posten",
+    "overdueSubtitle": "Höchste überfällige Einträge"
   },
   "insights": {
-    "title": "Erkenntnisse",
-    "runwayLow": "Geschätzte Reichweite unter 3 Monaten. Erwägen Sie, Abflüsse zu senken oder Liquidität zu stärken.",
-    "runwayHigh": "Komfortable Reichweite (≥ 6 Monate). Sie können Investitionen vorsichtig vorziehen.",
-    "mtdNegative": "Negatives Ergebnis in diesem Monat. Prüfen Sie die Ausgabenstruktur und gehen Sie die größten Kategorien an.",
-    "mtdPositive": "Positives Ergebnis in diesem Monat. Behalten Sie erwartete Forderungen im Blick, um das Tempo zu halten.",
-    "overduePressure": "Überfällige Verbindlichkeiten übersteigen Forderungen — Risiko kurzfristiger Liquiditätsbelastung.",
-    "overdueReceivables": "Relevante überfällige Forderungen. Priorisieren Sie das Inkasso bei den 10 größten Verzögerungen.",
-    "mom": "Monat-zu-Monat-Änderung des Monatsergebnisses: {{value}}."
+    "runwayLow": "Die Reichweite liegt auf Basis des durchschnittlichen monatlichen Abflusses unter 3 Monaten.",
+    "runwayHigh": "Die Reichweite liegt auf Basis des durchschnittlichen monatlichen Abflusses über 6 Monaten.",
+    "mtdNegative": "Das Monat-bis-heute-Netto ist negativ.",
+    "mtdPositive": "Das Monat-bis-heute-Netto ist positiv.",
+    "overduePressure": "Überfällige Verbindlichkeiten sind höher als überfällige Forderungen.",
+    "overdueReceivables": "Es gibt überfällige Forderungen zur Nachverfolgung.",
+    "mom": "Veränderung zum Vormonat: {{value}}"
   }
 }

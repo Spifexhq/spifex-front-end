@@ -1,63 +1,49 @@
 {
   "pageTitle": "Relatórios",
-  "title": "Relatórios de Fluxo de Caixa",
-  "buttons": { "refresh": "Atualizar" },
-  "loading": "Carregando dados do relatório…",
-  "errors": { "fetch": "Falha ao carregar os dados do relatório." },
+  "title": "Relatórios",
+  "loading": "A carregar relatórios…",
+  "buttons": {
+    "refresh": "Atualizar"
+  },
+  "errors": {
+    "fetch": "Falha ao carregar o resumo dos relatórios.",
+    "fetchBanksTotal": "Falha ao carregar os totais bancários."
+  },
   "kpis": {
     "consolidatedBalance": "Saldo consolidado",
-    "bankSum": "Soma das contas bancárias",
-    "inPeriod": "Entradas (período)",
-    "outPeriod": "Saídas (período)",
-    "netPeriod": "Resultado (período)",
-    "mom": "M/M",
-    "mtdIn": "MTD: Entradas",
-    "mtdOut": "MTD: Saídas",
-    "mtdNet": "MTD: Resultado",
-    "currentMonth": "Mês atual",
-    "in": "Entradas",
-    "out": "Saídas",
+    "bankSum": "Soma dos saldos bancários ativos",
+    "inPeriod": "Entradas no período",
+    "outPeriod": "Saídas no período",
+    "netPeriod": "Líquido no período",
+    "mtdIn": "Entradas MTD",
+    "mtdOut": "Saídas MTD",
+    "mtdNet": "Líquido MTD",
     "settlementRate": "Taxa de liquidação",
-    "loadedUniverse": "No universo carregado"
-  },
-  "alerts": {
-    "overdueTitle": "Em atraso (não liquidado)",
-    "toReceive": "A receber",
-    "toPay": "A pagar",
-    "next7": "Próximos 7 dias",
-    "next30": "Próximos 30 dias"
-  },
-  "runway": {
-    "avgOutflow": "Saída média mensal",
-    "estimated": "Runway estimado",
-    "months": "{{value}} mês(es)"
+    "loadedUniverse": "Universo filtrado atual",
+    "currentMonth": "Mês atual",
+    "mom": "MoM",
+    "in": "Entradas",
+    "out": "Saídas"
   },
   "charts": {
-    "cumulativeTitle": "Saldo acumulado (competência)",
-    "barsTitle": "Entradas vs Saídas (mensal)",
-    "pieTitle": "Distribuição de despesas por categoria",
+    "cumulativeTitle": "Trajetória de caixa",
+    "barsTitle": "Entradas vs saídas",
+    "pieTitle": "Composição de despesas",
+    "pieSubtitle": "Principais categorias por saída",
     "inflow": "Entradas",
-    "outflow": "Saídas",
-    "net": "Resultado"
+    "outflow": "Saídas"
   },
   "tables": {
-    "overdueTitle": "Top 10 lançamentos em atraso",
-    "date": "Data",
-    "description": "Descrição",
-    "type": "Tipo",
-    "amount": "Valor",
-    "noOverdue": "Sem lançamentos em atraso",
-    "payLabel": "Pagar",
-    "receiveLabel": "Receber"
+    "overdueTitle": "Itens vencidos",
+    "overdueSubtitle": "Entradas vencidas com maior valor"
   },
   "insights": {
-    "title": "Insights",
-    "runwayLow": "Runway estimado abaixo de 3 meses. Considere reduzir saídas ou reforçar o caixa.",
-    "runwayHigh": "Runway confortável (≥ 6 meses). Considere avançar investimentos com cautela.",
-    "mtdNegative": "Resultado negativo neste mês. Revise as despesas para atacar as maiores categorias.",
-    "mtdPositive": "Resultado positivo neste mês. Acompanhe recebíveis previstos para manter o ritmo.",
-    "overduePressure": "A pagar em atraso supera a receber — risco de pressão de caixa no curto prazo.",
-    "overdueReceivables": "Há recebíveis relevantes em atraso. Foque cobrança nos 10 maiores atrasos.",
-    "mom": "Variação mês a mês do resultado do mês: {{value}}."
+    "runwayLow": "A autonomia está abaixo de 3 meses com base na saída média mensal.",
+    "runwayHigh": "A autonomia está acima de 6 meses com base na saída média mensal.",
+    "mtdNegative": "O líquido do mês até à data está negativo.",
+    "mtdPositive": "O líquido do mês até à data está positivo.",
+    "overduePressure": "Os pagamentos vencidos são superiores aos recebimentos vencidos.",
+    "overdueReceivables": "Existem recebimentos vencidos que exigem acompanhamento.",
+    "mom": "Variação face ao mês anterior: {{value}}"
   }
 }

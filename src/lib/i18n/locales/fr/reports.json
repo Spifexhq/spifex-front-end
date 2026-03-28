@@ -1,63 +1,49 @@
 {
   "pageTitle": "Rapports",
-  "title": "Rapports de trésorerie",
-  "buttons": { "refresh": "Actualiser" },
-  "loading": "Chargement des données du rapport…",
-  "errors": { "fetch": "Impossible de récupérer les données du rapport." },
+  "title": "Rapports",
+  "loading": "Chargement des rapports…",
+  "buttons": {
+    "refresh": "Actualiser"
+  },
+  "errors": {
+    "fetch": "Impossible de charger le résumé des rapports.",
+    "fetchBanksTotal": "Impossible de charger les totaux bancaires."
+  },
   "kpis": {
     "consolidatedBalance": "Solde consolidé",
-    "bankSum": "Somme des comptes bancaires",
-    "inPeriod": "Encaissements (période)",
-    "outPeriod": "Décaissements (période)",
-    "netPeriod": "Net (période)",
-    "mom": "M/M",
-    "mtdIn": "MTD : Encaissements",
-    "mtdOut": "MTD : Décaissements",
-    "mtdNet": "MTD : Net",
-    "currentMonth": "Mois en cours",
-    "in": "Encaissements",
-    "out": "Décaissements",
+    "bankSum": "Somme des soldes bancaires actifs",
+    "inPeriod": "Entrées sur la période",
+    "outPeriod": "Sorties sur la période",
+    "netPeriod": "Net sur la période",
+    "mtdIn": "Entrées MTD",
+    "mtdOut": "Sorties MTD",
+    "mtdNet": "Net MTD",
     "settlementRate": "Taux de règlement",
-    "loadedUniverse": "Dans l’univers chargé"
-  },
-  "alerts": {
-    "overdueTitle": "En retard (non réglé)",
-    "toReceive": "Créances",
-    "toPay": "Dettes",
-    "next7": "Prochains 7 jours",
-    "next30": "Prochains 30 jours"
-  },
-  "runway": {
-    "avgOutflow": "Décaissement mensuel moyen",
-    "estimated": "Autonomie estimée",
-    "months": "{{value}} mois"
+    "loadedUniverse": "Périmètre filtré actuel",
+    "currentMonth": "Mois en cours",
+    "mom": "MoM",
+    "in": "Entrées",
+    "out": "Sorties"
   },
   "charts": {
-    "cumulativeTitle": "Solde cumulatif (comptabilité d’exercice)",
-    "barsTitle": "Encaissements vs Décaissements (mensuel)",
-    "pieTitle": "Répartition des dépenses par catégorie",
-    "inflow": "Encaissements",
-    "outflow": "Décaissements",
-    "net": "Net"
+    "cumulativeTitle": "Trajectoire de trésorerie",
+    "barsTitle": "Entrées vs sorties",
+    "pieTitle": "Composition des dépenses",
+    "pieSubtitle": "Principales catégories de sortie",
+    "inflow": "Entrées",
+    "outflow": "Sorties"
   },
   "tables": {
-    "overdueTitle": "Top 10 écritures en retard",
-    "date": "Date",
-    "description": "Description",
-    "type": "Type",
-    "amount": "Montant",
-    "noOverdue": "Aucune écriture en retard",
-    "payLabel": "À payer",
-    "receiveLabel": "À recevoir"
+    "overdueTitle": "Éléments en retard",
+    "overdueSubtitle": "Plus gros éléments en retard"
   },
   "insights": {
-    "title": "Analyses",
-    "runwayLow": "Autonomie estimée inférieure à 3 mois. Envisagez de réduire les sorties ou de renforcer la trésorerie.",
-    "runwayHigh": "Autonomie confortable (≥ 6 mois). Vous pouvez envisager d’accélérer certains investissements avec prudence.",
-    "mtdNegative": "Résultat négatif ce mois-ci. Analysez la structure des dépenses pour agir sur les principales catégories.",
-    "mtdPositive": "Résultat positif ce mois-ci. Suivez les encaissements attendus pour maintenir la dynamique.",
-    "overduePressure": "Les dettes en retard dépassent les créances — risque de tension de trésorerie à court terme.",
-    "overdueReceivables": "Des créances significatives sont en retard. Priorisez les relances sur les 10 plus gros retards.",
-    "mom": "Évolution mois sur mois du résultat mensuel : {{value}}."
+    "runwayLow": "L’autonomie est inférieure à 3 mois sur la base de la sortie mensuelle moyenne.",
+    "runwayHigh": "L’autonomie dépasse 6 mois sur la base de la sortie mensuelle moyenne.",
+    "mtdNegative": "Le net du mois à date est négatif.",
+    "mtdPositive": "Le net du mois à date est positif.",
+    "overduePressure": "Les dettes en retard dépassent les créances en retard.",
+    "overdueReceivables": "Il existe des créances en retard à suivre.",
+    "mom": "Variation mensuelle : {{value}}"
   }
 }

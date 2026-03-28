@@ -1,63 +1,55 @@
 {
+  "title": "Reports",
   "pageTitle": "Reports",
-  "title": "Cash Flow Reports",
-  "buttons": { "refresh": "Refresh" },
-  "loading": "Loading report data…",
-  "errors": { "fetch": "Failed to fetch report data." },
+  "loading": "Loading...",
+  "buttons": {
+    "refresh": "Refresh"
+  },
+  "errors": {
+    "fetch": "Failed to load reports summary.",
+    "fetchBanksTotal": "Failed to load bank totals."
+  },
   "kpis": {
-    "consolidatedBalance": "Consolidated balance",
-    "bankSum": "Sum of bank accounts",
-    "inPeriod": "Inflow (period)",
-    "outPeriod": "Outflow (period)",
-    "netPeriod": "Net (period)",
-    "mom": "M/M",
-    "mtdIn": "MTD: Inflow",
-    "mtdOut": "MTD: Outflow",
-    "mtdNet": "MTD: Net",
-    "currentMonth": "Current month",
-    "in": "Inflow",
-    "out": "Outflow",
+    "balance": "Balance",
+    "balanceHint": "Current consolidated bank balance",
+    "netPeriod": "Net period",
+    "mtdNet": "MTD net",
+    "runway": "Runway",
+    "runwayHint": "Based on average monthly outflow",
+    "months": "mo",
+    "overdueNet": "Overdue net",
+    "next7": "Next 7d",
+    "next30": "Next 30d",
     "settlementRate": "Settlement rate",
-    "loadedUniverse": "Within loaded universe"
+    "settlementHint": "Settled entries over total entries",
+    "mom": "MoM",
+    "in": "In",
+    "out": "Out",
+    "noBaseline": "No previous month baseline"
   },
   "alerts": {
-    "overdueTitle": "Overdue (unsettled)",
-    "toReceive": "Receivables",
-    "toPay": "Payables",
-    "next7": "Next 7 days",
-    "next30": "Next 30 days"
-  },
-  "runway": {
-    "avgOutflow": "Average monthly outflow",
-    "estimated": "Estimated runway",
-    "months": "{{value}} month(s)"
-  },
-  "charts": {
-    "cumulativeTitle": "Cumulative balance (accrual)",
-    "barsTitle": "Inflow vs Outflow (monthly)",
-    "pieTitle": "Expense distribution by category",
-    "inflow": "Inflow",
-    "outflow": "Outflow",
-    "net": "Net"
-  },
-  "tables": {
-    "overdueTitle": "Top 10 overdue entries",
-    "date": "Date",
-    "description": "Description",
-    "type": "Type",
-    "amount": "Amount",
-    "noOverdue": "No overdue entries",
-    "payLabel": "Pay",
-    "receiveLabel": "Receive"
+    "toReceive": "Receive",
+    "toPay": "Pay"
   },
   "insights": {
-    "title": "Insights",
-    "runwayLow": "Estimated runway below 3 months. Consider reducing outflows or reinforcing cash.",
-    "runwayHigh": "Comfortable runway (≥ 6 months). You may consider carefully advancing investments.",
-    "mtdNegative": "Negative result this month. Review the expense mix to attack the largest categories.",
-    "mtdPositive": "Positive result this month. Track expected receivables to keep the pace.",
-    "overduePressure": "Overdue payables exceed receivables — short-term cash pressure risk.",
-    "overdueReceivables": "Relevant overdue receivables. Focus collections on top 10 delays.",
-    "mom": "Month-over-month change of the month result: {{value}}."
+    "runwayLow": "Runway is below 3 months and deserves immediate attention.",
+    "runwayHealthy": "Runway is above 6 months, indicating stronger short-term resilience.",
+    "mtdNegative": "Month-to-date net is negative.",
+    "overduePressure": "Overdue payables exceed overdue receivables.",
+    "next7Pressure": "Upcoming 7-day payables exceed expected receipts.",
+    "momPositive": "Month-over-month net improved by {{value}}.",
+    "momNegative": "Month-over-month net declined by {{value}}."
+  },
+  "charts": {
+    "cashTrajectory": "Cash trajectory",
+    "cashTrajectorySub": "Net accumulated movement over time",
+    "expenseBreakdown": "Expense concentration",
+    "expenseBreakdownSub": "Where the outflow is concentrated",
+    "flowComposition": "Flow composition",
+    "flowCompositionSub": "Monthly inflow, outflow and net side by side"
+  },
+  "tables": {
+    "overdueTitle": "Overdue items",
+    "overdueSubtitle": "Most relevant unresolved overdue entries"
   }
 }
