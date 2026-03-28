@@ -26,8 +26,55 @@ import InsightsCard from "./components/InsightsCard";
 const START_DATE = dayjs().startOf("month").subtract(12, "month").format("YYYY-MM-DD");
 const END_DATE = dayjs().endOf("month").format("YYYY-MM-DD");
 
+const isZeroMoney = (value: unknown): boolean => {
+  const n = parseMoney(value);
+  return (n ?? 0) === 0;
+};
+
+const ReportsEmptyState: React.FC<{
+  title: string;
+  subtitle: string;
+  actionLabel: string;
+  onRefresh: () => void;
+  disabled?: boolean;
+}> = ({ title, subtitle, actionLabel, onRefresh, disabled }) => {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+      <div className="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-8 sm:py-16">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          <svg
+            className="h-7 w-7 text-gray-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.7}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 7h18" />
+            <path d="M6 11h12" />
+            <path d="M9 15h6" />
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+          </svg>
+        </div>
+
+        <h2 className="text-base font-semibold text-gray-900 sm:text-lg">{title}</h2>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">{subtitle}</p>
+
+        <div className="mt-5">
+          <Button variant="outline" onClick={onRefresh} disabled={disabled}>
+            {actionLabel}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const ReportsPage: React.FC = () => {
   const { t } = useTranslation(["reports"]);
+
   const [data, setData] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingBanks, setLoadingBanks] = useState(true);
@@ -44,12 +91,12 @@ const ReportsPage: React.FC = () => {
       date_from: START_DATE,
       date_to: END_DATE,
     }),
-    []
+    [],
   );
 
   const periodLabel = useMemo(
     () => `${dayjs(START_DATE).format("MMM/YY")} → ${dayjs(END_DATE).format("MMM/YY")}`,
-    []
+    [],
   );
 
   const fetchBanksTotal = useCallback(async () => {
@@ -63,7 +110,13 @@ const ReportsPage: React.FC = () => {
     } catch (e) {
       console.error(e);
       setTotalConsolidatedBalance(0);
-      setBanksError(String(t("errors.fetchBanksTotal", { defaultValue: "Failed to load bank totals." })));
+      setBanksError(
+        String(
+          t("errors.fetchBanksTotal", {
+            defaultValue: "Failed to load bank totals.",
+          }),
+        ),
+      );
     } finally {
       setLoadingBanks(false);
     }
@@ -81,7 +134,13 @@ const ReportsPage: React.FC = () => {
       setData(reportsRes.data);
     } catch (e) {
       console.error(e);
-      setError(String(t("errors.fetch", { defaultValue: "Failed to load reports summary." })));
+      setError(
+        String(
+          t("errors.fetch", {
+            defaultValue: "Failed to load reports summary.",
+          }),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -96,7 +155,7 @@ const ReportsPage: React.FC = () => {
       const result = t(key, options as never);
       return typeof result === "string" ? result : String(result);
     },
-    [t]
+    [t],
   );
 
   const vm = useMemo(
@@ -106,18 +165,80 @@ const ReportsPage: React.FC = () => {
         totalConsolidatedBalance,
         t: tr,
       }),
-    [data, totalConsolidatedBalance, tr]
+    [data, totalConsolidatedBalance, tr],
   );
 
   const isBusy = loading || loadingBanks;
 
+  const hasNoData = useMemo(() => {
+    if (!data) return false;
+
+    const monthlyBarsEmpty = !data.monthly?.bars?.length;
+    const monthlyCumulativeEmpty = !data.monthly?.cumulative?.length;
+    const pieEmpty = !data.pie?.length;
+    const overdueItemsEmpty = !data.overdue_items?.length;
+    const nextDueItemsEmpty = !data.next_due_items?.length;
+
+    const totalsEmpty =
+      isZeroMoney(data.totals?.in) &&
+      isZeroMoney(data.totals?.net) &&
+      isZeroMoney(data.totals?.out_abs) &&
+      Number(data.totals?.settlement_rate ?? 0) === 0;
+
+    const mtdEmpty =
+      isZeroMoney(data.mtd?.in) &&
+      isZeroMoney(data.mtd?.out) &&
+      isZeroMoney(data.mtd?.net);
+
+    const overdueEmpty =
+      isZeroMoney(data.overdue?.rec) &&
+      isZeroMoney(data.overdue?.pay) &&
+      isZeroMoney(data.overdue?.net);
+
+    const next7Empty =
+      isZeroMoney(data.next7?.rec) &&
+      isZeroMoney(data.next7?.pay) &&
+      isZeroMoney(data.next7?.net);
+
+    const next30Empty =
+      isZeroMoney(data.next30?.rec) &&
+      isZeroMoney(data.next30?.pay) &&
+      isZeroMoney(data.next30?.net);
+
+    const countsEmpty =
+      Number(data.counts?.overdue_items ?? 0) === 0 &&
+      Number(data.counts?.next7_items ?? 0) === 0 &&
+      Number(data.counts?.next30_items ?? 0) === 0;
+
+    const liquidityEmpty = isZeroMoney(data.liquidity?.avg_monthly_outflow_abs);
+    const balanceEmpty = totalConsolidatedBalance === 0;
+    const noLargestItems = !data.largest_overdue_pay && !data.largest_overdue_rec;
+
+    return (
+      totalsEmpty &&
+      mtdEmpty &&
+      overdueEmpty &&
+      next7Empty &&
+      next30Empty &&
+      monthlyBarsEmpty &&
+      monthlyCumulativeEmpty &&
+      pieEmpty &&
+      overdueItemsEmpty &&
+      nextDueItemsEmpty &&
+      countsEmpty &&
+      liquidityEmpty &&
+      balanceEmpty &&
+      noLargestItems
+    );
+  }, [data, totalConsolidatedBalance]);
+
   return (
-    <div className="flex min-h-screen bg-white text-gray-900">
-      <main className="flex-1 transition-all duration-300">
+    <div className="min-h-screen bg-white text-gray-900">
+      <main className="w-full">
         <TopProgress active={isBusy} variant="top" topOffset={64} />
 
-        <div className="mb-[15px] mt-[15px] w-full space-y-6 px-6 md:px-10">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-4 sm:px-5 md:space-y-6 md:px-8 lg:px-10">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <h1 className="text-xl font-semibold md:text-2xl">
                 {t("title", { defaultValue: "Reports" })}
@@ -125,19 +246,45 @@ const ReportsPage: React.FC = () => {
               <p className="mt-1 text-sm text-gray-500">{periodLabel}</p>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="common" onClick={fetchData} disabled={isBusy}>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                variant="common"
+                onClick={fetchData}
+                disabled={isBusy}
+                className="w-full sm:w-auto"
+              >
                 {t("buttons.refresh", { defaultValue: "Refresh" })}
               </Button>
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {!error && banksError && <p className="text-sm text-red-600">{banksError}</p>}
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {!error && banksError ? <p className="text-sm text-red-600">{banksError}</p> : null}
 
-          {!error && data && (
+          {isBusy && !error && !data ? (
+            <p className="text-sm text-gray-600">
+              {t("loading", { defaultValue: "Loading..." })}
+            </p>
+          ) : null}
+
+          {!error && data && hasNoData ? (
+            <ReportsEmptyState
+              title={t("empty.title", {
+                defaultValue: "No data to show yet",
+              })}
+              subtitle={t("empty.subtitle", {
+                defaultValue:
+                  "There are no transactions, balances, or scheduled items available for this period yet. Once data starts coming in, your reports will appear here.",
+              })}
+              actionLabel={t("buttons.refresh", { defaultValue: "Refresh" })}
+              onRefresh={fetchData}
+              disabled={isBusy}
+            />
+          ) : null}
+
+          {!error && data && !hasNoData ? (
             <>
-              <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4">
                 {vm.metrics.map((metric) => (
                   <KpiCard key={metric.label} {...metric} />
                 ))}
@@ -145,7 +292,9 @@ const ReportsPage: React.FC = () => {
 
               <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1.35fr_0.95fr]">
                 <AnimatedRangeLineChart
-                  title={t("charts.cashTrajectory", { defaultValue: "Cash trajectory" })}
+                  title={t("charts.cashTrajectory", {
+                    defaultValue: "Cash trajectory",
+                  })}
                   subLabel={t("charts.cashTrajectorySub", {
                     defaultValue: "Net accumulated movement over time",
                   })}
@@ -159,7 +308,9 @@ const ReportsPage: React.FC = () => {
                 />
 
                 <ExpenseBreakdownCard
-                  title={t("charts.expenseBreakdown", { defaultValue: "Expense concentration" })}
+                  title={t("charts.expenseBreakdown", {
+                    defaultValue: "Expense concentration",
+                  })}
                   subtitle={t("charts.expenseBreakdownSub", {
                     defaultValue: "Where the outflow is concentrated",
                   })}
@@ -169,7 +320,9 @@ const ReportsPage: React.FC = () => {
 
               <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1.45fr_0.85fr]">
                 <AnimatedSplitBarsChart
-                  title={t("charts.flowComposition", { defaultValue: "Flow composition" })}
+                  title={t("charts.flowComposition", {
+                    defaultValue: "Flow composition",
+                  })}
                   subtitle={t("charts.flowCompositionSub", {
                     defaultValue: "Monthly inflow, outflow and net side by side",
                   })}
@@ -190,7 +343,9 @@ const ReportsPage: React.FC = () => {
 
               <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1.05fr_0.95fr]">
                 <OverdueListCard
-                  title={t("tables.overdueTitle", { defaultValue: "Overdue items" })}
+                  title={t("tables.overdueTitle", {
+                    defaultValue: "Overdue items",
+                  })}
                   subtitle={t("tables.overdueSubtitle", {
                     defaultValue: "Most relevant unresolved overdue entries",
                   })}
@@ -200,11 +355,7 @@ const ReportsPage: React.FC = () => {
                 <InsightsCard insights={vm.insights} />
               </section>
             </>
-          )}
-
-          {isBusy && !error && !data && (
-            <p className="text-sm text-gray-600">{t("loading", { defaultValue: "Loading..." })}</p>
-          )}
+          ) : null}
         </div>
       </main>
     </div>
