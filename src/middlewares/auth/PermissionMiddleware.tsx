@@ -46,6 +46,7 @@ export const PermissionMiddleware = ({
   const {
     user,
     isOwner,
+    isSuperUser,
     permissions,
     isSubscribed,
     handleInitUser,
@@ -66,20 +67,21 @@ export const PermissionMiddleware = ({
   const hasPermission = useMemo(() => {
     if (!authReady || !user) return false;
 
-    if (isOwner) return true;
+    if (isOwner || isSuperUser) return true;
 
     const required = Array.isArray(codeName) ? codeName : [codeName];
 
     return requireAll
       ? required.every((cn) => permissions.includes(cn))
       : required.some((cn) => permissions.includes(cn));
-  }, [authReady, user, isOwner, codeName, requireAll, permissions]);
+  }, [authReady, user, isOwner, isSuperUser, codeName, requireAll, permissions]);
 
   const hasSubscriptionAccess = useMemo(() => {
     if (!authReady || !user) return false;
+    if (isSuperUser) return true;
     if (!requireSubscription) return true;
     return !!isSubscribed;
-  }, [authReady, user, requireSubscription, isSubscribed]);
+  }, [authReady, user, isSuperUser, requireSubscription, isSubscribed]);
 
   const hasAccess = hasPermission && hasSubscriptionAccess;
 
@@ -93,7 +95,10 @@ export const PermissionMiddleware = ({
 
     const message = !hasPermission
       ? t("message")
-      : t("subscriptionMessage", "Your current plan does not include access to this feature.");
+      : t(
+          "subscriptionMessage",
+          "Your current plan does not include access to this feature."
+        );
 
     return (
       <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
