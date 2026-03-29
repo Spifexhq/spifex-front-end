@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Fenêtre de virement bancaire" },
-  "header": { "badge": "TR", "kind": "Virement", "title": "Entre comptes/banques" },
+  "header": { "badge": "TR", "kind": "Virement", "title": "Entre comptes" },
   "fields": {
     "date": "Date",
     "amount": "Montant",

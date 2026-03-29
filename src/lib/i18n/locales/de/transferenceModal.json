@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Überweisungsmodal" },
-  "header": { "badge": "TR", "kind": "Überweisung", "title": "Zwischen Konten/Banken" },
+  "header": { "badge": "TR", "kind": "Überweisung", "title": "Zwischen Konten" },
   "fields": {
     "date": "Datum",
     "amount": "Betrag",

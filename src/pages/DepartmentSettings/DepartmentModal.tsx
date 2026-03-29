@@ -281,7 +281,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
         aria-labelledby="department-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
         className={[
-          "relative bg-white shadow-2xl flex flex-col w-full",
+          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
           "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
           "md:static md:w-[780px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
           "md:rounded-lg md:border md:border-gray-200",

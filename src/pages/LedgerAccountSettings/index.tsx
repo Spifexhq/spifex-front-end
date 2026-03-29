@@ -711,7 +711,7 @@ const LedgerAccountSettings: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_ledger_account"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                   <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div className="flex items-end gap-2">

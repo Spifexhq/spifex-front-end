@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Modal de transferência bancária" },
-  "header": { "badge": "TR", "kind": "Transferência", "title": "Entre contas/bancos" },
+  "header": { "badge": "TR", "kind": "Transferência", "title": "Entre contas" },
   "fields": {
     "date": "Data",
     "amount": "Valor",

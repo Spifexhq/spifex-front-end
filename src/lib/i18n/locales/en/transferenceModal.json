@@ -1,6 +1,6 @@
 {
   "aria": { "dialog": "Bank transference modal" },
-  "header": { "badge": "TR", "kind": "Transference", "title": "Between accounts/banks" },
+  "header": { "badge": "TR", "kind": "Transference", "title": "Between accounts" },
   "fields": {
     "date": "Date",
     "amount": "Amount",
