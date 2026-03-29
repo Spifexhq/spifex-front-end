@@ -9,6 +9,10 @@
     "fetch": "Failed to load reports summary.",
     "fetchBanksTotal": "Failed to load bank totals."
   },
+  "empty": {
+    "title": "No data to show yet",
+    "subtitle": "There are no transactions, balances, or scheduled items available for this period yet. Once data starts coming in, your reports will appear here."
+  },
   "kpis": {
     "balance": "Balance",
     "balanceHint": "Current consolidated bank balance",

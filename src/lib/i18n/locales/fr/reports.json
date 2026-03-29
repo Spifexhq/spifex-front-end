@@ -9,41 +9,51 @@
     "fetch": "Impossible de charger le résumé des rapports.",
     "fetchBanksTotal": "Impossible de charger les totaux bancaires."
   },
+  "empty": {
+    "title": "Aucune donnée à afficher pour le moment",
+    "subtitle": "Aucune transaction, aucun solde ou élément planifié n’est encore disponible pour cette période. Dès que des données seront disponibles, vos rapports apparaîtront ici."
+  },
   "kpis": {
-    "consolidatedBalance": "Solde consolidé",
-    "bankSum": "Somme des soldes bancaires actifs",
-    "inPeriod": "Entrées sur la période",
-    "outPeriod": "Sorties sur la période",
+    "balance": "Solde",
+    "balanceHint": "Solde bancaire consolidé actuel",
     "netPeriod": "Net sur la période",
-    "mtdIn": "Entrées MTD",
-    "mtdOut": "Sorties MTD",
     "mtdNet": "Net MTD",
+    "runway": "Autonomie",
+    "runwayHint": "Basée sur la sortie mensuelle moyenne",
+    "months": "mois",
+    "overdueNet": "Net en retard",
+    "next7": "Prochains 7 j",
+    "next30": "Prochains 30 j",
     "settlementRate": "Taux de règlement",
-    "loadedUniverse": "Périmètre filtré actuel",
-    "currentMonth": "Mois en cours",
+    "settlementHint": "Éléments réglés sur le total des éléments",
     "mom": "MoM",
     "in": "Entrées",
-    "out": "Sorties"
+    "out": "Sorties",
+    "noBaseline": "Aucune base disponible pour le mois précédent"
+  },
+  "alerts": {
+    "toReceive": "À recevoir",
+    "toPay": "À payer"
+  },
+  "insights": {
+    "runwayLow": "L’autonomie est inférieure à 3 mois et demande une attention immédiate.",
+    "runwayHealthy": "L’autonomie dépasse 6 mois, ce qui indique une meilleure résilience à court terme.",
+    "mtdNegative": "Le net du mois à date est négatif.",
+    "overduePressure": "Les dettes en retard dépassent les créances en retard.",
+    "next7Pressure": "Les paiements prévus sur 7 jours dépassent les encaissements attendus.",
+    "momPositive": "Le net mensuel s’est amélioré de {{value}} par rapport au mois précédent.",
+    "momNegative": "Le net mensuel a reculé de {{value}} par rapport au mois précédent."
   },
   "charts": {
-    "cumulativeTitle": "Trajectoire de trésorerie",
-    "barsTitle": "Entrées vs sorties",
-    "pieTitle": "Composition des dépenses",
-    "pieSubtitle": "Principales catégories de sortie",
-    "inflow": "Entrées",
-    "outflow": "Sorties"
+    "cashTrajectory": "Trajectoire de trésorerie",
+    "cashTrajectorySub": "Mouvement net cumulé dans le temps",
+    "expenseBreakdown": "Concentration des dépenses",
+    "expenseBreakdownSub": "Où les sorties se concentrent",
+    "flowComposition": "Composition des flux",
+    "flowCompositionSub": "Entrées, sorties et net mensuels côte à côte"
   },
   "tables": {
     "overdueTitle": "Éléments en retard",
-    "overdueSubtitle": "Plus gros éléments en retard"
-  },
-  "insights": {
-    "runwayLow": "L’autonomie est inférieure à 3 mois sur la base de la sortie mensuelle moyenne.",
-    "runwayHigh": "L’autonomie dépasse 6 mois sur la base de la sortie mensuelle moyenne.",
-    "mtdNegative": "Le net du mois à date est négatif.",
-    "mtdPositive": "Le net du mois à date est positif.",
-    "overduePressure": "Les dettes en retard dépassent les créances en retard.",
-    "overdueReceivables": "Il existe des créances en retard à suivre.",
-    "mom": "Variation mensuelle : {{value}}"
+    "overdueSubtitle": "Éléments en retard non résolus les plus pertinents"
   }
 }

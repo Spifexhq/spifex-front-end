@@ -9,41 +9,51 @@
     "fetch": "Berichtszusammenfassung konnte nicht geladen werden.",
     "fetchBanksTotal": "Banksummen konnten nicht geladen werden."
   },
+  "empty": {
+    "title": "Noch keine Daten vorhanden",
+    "subtitle": "Für diesen Zeitraum sind noch keine Transaktionen, Salden oder geplanten Posten verfügbar. Sobald Daten eingehen, erscheinen Ihre Berichte hier."
+  },
   "kpis": {
-    "consolidatedBalance": "Konsolidierter Saldo",
-    "bankSum": "Summe aktiver Banksalden",
-    "inPeriod": "Im Zeitraum ein",
-    "outPeriod": "Im Zeitraum aus",
+    "balance": "Saldo",
+    "balanceHint": "Aktueller konsolidierter Banksaldo",
     "netPeriod": "Netto im Zeitraum",
-    "mtdIn": "MTD Zufluss",
-    "mtdOut": "MTD Abfluss",
     "mtdNet": "MTD Netto",
+    "runway": "Reichweite",
+    "runwayHint": "Basierend auf dem durchschnittlichen monatlichen Abfluss",
+    "months": "Mon.",
+    "overdueNet": "Überfälliges Netto",
+    "next7": "Nächste 7 Tg.",
+    "next30": "Nächste 30 Tg.",
     "settlementRate": "Ausgleichsquote",
-    "loadedUniverse": "Aktuell gefilterte Basis",
-    "currentMonth": "Aktueller Monat",
+    "settlementHint": "Ausgeglichene Einträge im Verhältnis zur Gesamtzahl",
     "mom": "MoM",
     "in": "Ein",
-    "out": "Aus"
+    "out": "Aus",
+    "noBaseline": "Kein Vormonatswert vorhanden"
+  },
+  "alerts": {
+    "toReceive": "Erhalten",
+    "toPay": "Zahlen"
+  },
+  "insights": {
+    "runwayLow": "Die Reichweite liegt unter 3 Monaten und erfordert sofortige Aufmerksamkeit.",
+    "runwayHealthy": "Die Reichweite liegt über 6 Monaten und deutet auf eine stärkere kurzfristige Stabilität hin.",
+    "mtdNegative": "Das Monat-bis-heute-Netto ist negativ.",
+    "overduePressure": "Überfällige Verbindlichkeiten sind höher als überfällige Forderungen.",
+    "next7Pressure": "Die in den nächsten 7 Tagen fälligen Zahlungen übersteigen die erwarteten Eingänge.",
+    "momPositive": "Das Netto hat sich gegenüber dem Vormonat um {{value}} verbessert.",
+    "momNegative": "Das Netto hat sich gegenüber dem Vormonat um {{value}} verschlechtert."
   },
   "charts": {
-    "cumulativeTitle": "Cash-Verlauf",
-    "barsTitle": "Zufluss vs. Abfluss",
-    "pieTitle": "Ausgabenstruktur",
-    "pieSubtitle": "Top-Kategorien nach Abfluss",
-    "inflow": "Ein",
-    "outflow": "Aus"
+    "cashTrajectory": "Cash-Verlauf",
+    "cashTrajectorySub": "Kumulierte Nettoentwicklung im Zeitverlauf",
+    "expenseBreakdown": "Ausgabenkonzentration",
+    "expenseBreakdownSub": "Wo sich die Abflüsse konzentrieren",
+    "flowComposition": "Zusammensetzung des Flusses",
+    "flowCompositionSub": "Monatliche Ein- und Ausflüsse sowie Netto nebeneinander"
   },
   "tables": {
     "overdueTitle": "Überfällige Posten",
-    "overdueSubtitle": "Höchste überfällige Einträge"
-  },
-  "insights": {
-    "runwayLow": "Die Reichweite liegt auf Basis des durchschnittlichen monatlichen Abflusses unter 3 Monaten.",
-    "runwayHigh": "Die Reichweite liegt auf Basis des durchschnittlichen monatlichen Abflusses über 6 Monaten.",
-    "mtdNegative": "Das Monat-bis-heute-Netto ist negativ.",
-    "mtdPositive": "Das Monat-bis-heute-Netto ist positiv.",
-    "overduePressure": "Überfällige Verbindlichkeiten sind höher als überfällige Forderungen.",
-    "overdueReceivables": "Es gibt überfällige Forderungen zur Nachverfolgung.",
-    "mom": "Veränderung zum Vormonat: {{value}}"
+    "overdueSubtitle": "Wichtigste noch offene überfällige Einträge"
   }
 }

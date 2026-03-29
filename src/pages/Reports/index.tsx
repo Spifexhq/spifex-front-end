@@ -34,10 +34,7 @@ const isZeroMoney = (value: unknown): boolean => {
 const ReportsEmptyState: React.FC<{
   title: string;
   subtitle: string;
-  actionLabel: string;
-  onRefresh: () => void;
-  disabled?: boolean;
-}> = ({ title, subtitle, actionLabel, onRefresh, disabled }) => {
+}> = ({ title, subtitle }) => {
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
       <div className="flex flex-col items-center justify-center px-5 py-12 text-center sm:px-8 sm:py-16">
@@ -61,19 +58,13 @@ const ReportsEmptyState: React.FC<{
 
         <h2 className="text-base font-semibold text-gray-900 sm:text-lg">{title}</h2>
         <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500">{subtitle}</p>
-
-        <div className="mt-5">
-          <Button variant="outline" onClick={onRefresh} disabled={disabled}>
-            {actionLabel}
-          </Button>
-        </div>
       </div>
     </section>
   );
 };
 
 const ReportsPage: React.FC = () => {
-  const { t } = useTranslation(["reports"]);
+  const { t } = useTranslation("reports");
 
   const [data, setData] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +74,7 @@ const ReportsPage: React.FC = () => {
   const [totalConsolidatedBalance, setTotalConsolidatedBalance] = useState(0);
 
   useEffect(() => {
-    document.title = String(t("pageTitle", { defaultValue: "Reports" }));
+    document.title = t("pageTitle");
   }, [t]);
 
   const params = useMemo(
@@ -91,12 +82,12 @@ const ReportsPage: React.FC = () => {
       date_from: START_DATE,
       date_to: END_DATE,
     }),
-    [],
+    []
   );
 
   const periodLabel = useMemo(
     () => `${dayjs(START_DATE).format("MMM/YY")} → ${dayjs(END_DATE).format("MMM/YY")}`,
-    [],
+    []
   );
 
   const fetchBanksTotal = useCallback(async () => {
@@ -110,13 +101,7 @@ const ReportsPage: React.FC = () => {
     } catch (e) {
       console.error(e);
       setTotalConsolidatedBalance(0);
-      setBanksError(
-        String(
-          t("errors.fetchBanksTotal", {
-            defaultValue: "Failed to load bank totals.",
-          }),
-        ),
-      );
+      setBanksError(t("errors.fetchBanksTotal"));
     } finally {
       setLoadingBanks(false);
     }
@@ -134,13 +119,7 @@ const ReportsPage: React.FC = () => {
       setData(reportsRes.data);
     } catch (e) {
       console.error(e);
-      setError(
-        String(
-          t("errors.fetch", {
-            defaultValue: "Failed to load reports summary.",
-          }),
-        ),
-      );
+      setError(t("errors.fetch"));
     } finally {
       setLoading(false);
     }
@@ -152,10 +131,10 @@ const ReportsPage: React.FC = () => {
 
   const tr = useCallback<ReportsTranslator>(
     (key: string, options?: Record<string, unknown>) => {
-      const result = t(key, options as never);
+      const result = t(key, options);
       return typeof result === "string" ? result : String(result);
     },
-    [t],
+    [t]
   );
 
   const vm = useMemo(
@@ -165,7 +144,7 @@ const ReportsPage: React.FC = () => {
         totalConsolidatedBalance,
         t: tr,
       }),
-    [data, totalConsolidatedBalance, tr],
+    [data, totalConsolidatedBalance, tr]
   );
 
   const isBusy = loading || loadingBanks;
@@ -240,9 +219,7 @@ const ReportsPage: React.FC = () => {
         <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-4 sm:px-5 md:space-y-6 md:px-8 lg:px-10">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h1 className="text-xl font-semibold md:text-2xl">
-                {t("title", { defaultValue: "Reports" })}
-              </h1>
+              <h1 className="text-xl font-semibold md:text-2xl">{t("title")}</h1>
               <p className="mt-1 text-sm text-gray-500">{periodLabel}</p>
             </div>
 
@@ -253,7 +230,7 @@ const ReportsPage: React.FC = () => {
                 disabled={isBusy}
                 className="w-full sm:w-auto"
               >
-                {t("buttons.refresh", { defaultValue: "Refresh" })}
+                {t("buttons.refresh")}
               </Button>
             </div>
           </div>
@@ -262,24 +239,11 @@ const ReportsPage: React.FC = () => {
           {!error && banksError ? <p className="text-sm text-red-600">{banksError}</p> : null}
 
           {isBusy && !error && !data ? (
-            <p className="text-sm text-gray-600">
-              {t("loading", { defaultValue: "Loading..." })}
-            </p>
+            <p className="text-sm text-gray-600">{t("loading")}</p>
           ) : null}
 
           {!error && data && hasNoData ? (
-            <ReportsEmptyState
-              title={t("empty.title", {
-                defaultValue: "No data to show yet",
-              })}
-              subtitle={t("empty.subtitle", {
-                defaultValue:
-                  "There are no transactions, balances, or scheduled items available for this period yet. Once data starts coming in, your reports will appear here.",
-              })}
-              actionLabel={t("buttons.refresh", { defaultValue: "Refresh" })}
-              onRefresh={fetchData}
-              disabled={isBusy}
-            />
+            <ReportsEmptyState title={t("empty.title")} subtitle={t("empty.subtitle")} />
           ) : null}
 
           {!error && data && !hasNoData ? (
@@ -292,12 +256,8 @@ const ReportsPage: React.FC = () => {
 
               <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1.35fr_0.95fr]">
                 <AnimatedRangeLineChart
-                  title={t("charts.cashTrajectory", {
-                    defaultValue: "Cash trajectory",
-                  })}
-                  subLabel={t("charts.cashTrajectorySub", {
-                    defaultValue: "Net accumulated movement over time",
-                  })}
+                  title={t("charts.cashTrajectory")}
+                  subLabel={t("charts.cashTrajectorySub")}
                   ranges={vm.lineRanges}
                   defaultRange="12M"
                   stats={{
@@ -308,24 +268,16 @@ const ReportsPage: React.FC = () => {
                 />
 
                 <ExpenseBreakdownCard
-                  title={t("charts.expenseBreakdown", {
-                    defaultValue: "Expense concentration",
-                  })}
-                  subtitle={t("charts.expenseBreakdownSub", {
-                    defaultValue: "Where the outflow is concentrated",
-                  })}
+                  title={t("charts.expenseBreakdown")}
+                  subtitle={t("charts.expenseBreakdownSub")}
                   rows={vm.pieData}
                 />
               </section>
 
               <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1.45fr_0.85fr]">
                 <AnimatedSplitBarsChart
-                  title={t("charts.flowComposition", {
-                    defaultValue: "Flow composition",
-                  })}
-                  subtitle={t("charts.flowCompositionSub", {
-                    defaultValue: "Monthly inflow, outflow and net side by side",
-                  })}
+                  title={t("charts.flowComposition")}
+                  subtitle={t("charts.flowCompositionSub")}
                   ranges={vm.barRanges}
                   defaultRange="12M"
                 />
@@ -343,12 +295,8 @@ const ReportsPage: React.FC = () => {
 
               <section className="grid grid-cols-1 gap-3 xl:grid-cols-[1.05fr_0.95fr]">
                 <OverdueListCard
-                  title={t("tables.overdueTitle", {
-                    defaultValue: "Overdue items",
-                  })}
-                  subtitle={t("tables.overdueSubtitle", {
-                    defaultValue: "Most relevant unresolved overdue entries",
-                  })}
+                  title={t("tables.overdueTitle")}
+                  subtitle={t("tables.overdueSubtitle")}
                   items={vm.overdueItems}
                 />
 

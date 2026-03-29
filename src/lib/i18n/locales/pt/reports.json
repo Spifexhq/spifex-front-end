@@ -9,41 +9,51 @@
     "fetch": "Falha ao carregar o resumo dos relatórios.",
     "fetchBanksTotal": "Falha ao carregar os totais bancários."
   },
+  "empty": {
+    "title": "Ainda não há dados para mostrar",
+    "subtitle": "Ainda não existem transações, saldos ou itens agendados disponíveis para este período. Assim que os dados começarem a entrar, os seus relatórios aparecerão aqui."
+  },
   "kpis": {
-    "consolidatedBalance": "Saldo consolidado",
-    "bankSum": "Soma dos saldos bancários ativos",
-    "inPeriod": "Entradas no período",
-    "outPeriod": "Saídas no período",
+    "balance": "Saldo",
+    "balanceHint": "Saldo bancário consolidado atual",
     "netPeriod": "Líquido no período",
-    "mtdIn": "Entradas MTD",
-    "mtdOut": "Saídas MTD",
     "mtdNet": "Líquido MTD",
+    "runway": "Autonomia",
+    "runwayHint": "Com base na saída média mensal",
+    "months": "meses",
+    "overdueNet": "Líquido vencido",
+    "next7": "Próx. 7d",
+    "next30": "Próx. 30d",
     "settlementRate": "Taxa de liquidação",
-    "loadedUniverse": "Universo filtrado atual",
-    "currentMonth": "Mês atual",
+    "settlementHint": "Entradas liquidadas sobre o total de entradas",
     "mom": "MoM",
     "in": "Entradas",
-    "out": "Saídas"
+    "out": "Saídas",
+    "noBaseline": "Sem base do mês anterior"
+  },
+  "alerts": {
+    "toReceive": "Receber",
+    "toPay": "Pagar"
+  },
+  "insights": {
+    "runwayLow": "A autonomia está abaixo de 3 meses e exige atenção imediata.",
+    "runwayHealthy": "A autonomia está acima de 6 meses, o que indica maior resiliência de curto prazo.",
+    "mtdNegative": "O líquido do mês até à data está negativo.",
+    "overduePressure": "Os pagamentos vencidos são superiores aos recebimentos vencidos.",
+    "next7Pressure": "Os pagamentos previstos para os próximos 7 dias superam os recebimentos esperados.",
+    "momPositive": "O líquido face ao mês anterior melhorou em {{value}}.",
+    "momNegative": "O líquido face ao mês anterior piorou em {{value}}."
   },
   "charts": {
-    "cumulativeTitle": "Trajetória de caixa",
-    "barsTitle": "Entradas vs saídas",
-    "pieTitle": "Composição de despesas",
-    "pieSubtitle": "Principais categorias por saída",
-    "inflow": "Entradas",
-    "outflow": "Saídas"
+    "cashTrajectory": "Trajetória de caixa",
+    "cashTrajectorySub": "Movimento líquido acumulado ao longo do tempo",
+    "expenseBreakdown": "Concentração da despesa",
+    "expenseBreakdownSub": "Onde a saída está concentrada",
+    "flowComposition": "Composição do fluxo",
+    "flowCompositionSub": "Entradas, saídas e líquido mensais lado a lado"
   },
   "tables": {
     "overdueTitle": "Itens vencidos",
-    "overdueSubtitle": "Entradas vencidas com maior valor"
-  },
-  "insights": {
-    "runwayLow": "A autonomia está abaixo de 3 meses com base na saída média mensal.",
-    "runwayHigh": "A autonomia está acima de 6 meses com base na saída média mensal.",
-    "mtdNegative": "O líquido do mês até à data está negativo.",
-    "mtdPositive": "O líquido do mês até à data está positivo.",
-    "overduePressure": "Os pagamentos vencidos são superiores aos recebimentos vencidos.",
-    "overdueReceivables": "Existem recebimentos vencidos que exigem acompanhamento.",
-    "mom": "Variação face ao mês anterior: {{value}}"
+    "overdueSubtitle": "Itens vencidos em aberto mais relevantes"
   }
 }
