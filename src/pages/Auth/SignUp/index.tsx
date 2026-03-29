@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------------
- * File: src/pages/Auth/Signup.tsx
+ * File: src/pages/Auth/SignUp.tsx
  * -------------------------------------------------------------------------- */
 import {
   useEffect,
@@ -9,7 +9,7 @@ import {
   MouseEvent,
   ChangeEvent,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { api } from "@/api/requests";
@@ -36,7 +36,6 @@ type Snack =
   | null;
 
 type Step = 1 | 2 | 3 | 4;
-
 type AppLanguage = "en" | "pt" | "fr" | "de";
 type AppCurrency = string;
 
@@ -49,6 +48,8 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
   { value: "de", label: "Deutsch" },
 ];
 
+const EMAIL_QUERY_PARAM = "email";
+
 const emailProviders: Record<string, string> = {
   "gmail.com": "https://mail.google.com/",
   "outlook.com": "https://outlook.office.com/mail/",
@@ -60,11 +61,11 @@ const emailProviders: Record<string, string> = {
 
 const SignUp = () => {
   const { t, i18n } = useTranslation("signUp");
-  const [step, setStep] = useState<Step>(1);
+  const [searchParams] = useSearchParams();
 
-  useEffect(() => {
-    document.title = t("pageTitle");
-  }, [t]);
+  const [step, setStep] = useState<Step>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [snack, setSnack] = useState<Snack>(null);
 
   // Step 1 – account
   const [form, setForm] = useState({
@@ -92,12 +93,12 @@ const SignUp = () => {
     marketing: false,
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [snack, setSnack] = useState<Snack>(null);
-
-  // For success screen
+  // Success state
   const [emailServiceUrl, setEmailServiceUrl] = useState<string>("");
   const [createdEmail, setCreatedEmail] = useState<string>("");
+
+  // Prevent refilling email repeatedly from URL once the user edits it
+  const [didHydrateEmailFromQuery, setDidHydrateEmailFromQuery] = useState(false);
 
   // Telemetry
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -110,38 +111,96 @@ const SignUp = () => {
       : [];
   const locale = Intl.DateTimeFormat().resolvedOptions().locale;
 
-  // Country dataset and selection
+  // Derived datasets
   const COUNTRIES = useMemo<CountryOption[]>(
     () => getCountries(i18n.language),
     [i18n.language]
   );
-  const [selectedCountry, setSelectedCountry] = useState<CountryOption[]>([]);
 
-  // Currency dataset and selection
   const CURRENCIES = useMemo<CurrencyOption[]>(
     () => getCurrencies(i18n.language),
     [i18n.language]
   );
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyOption[]>([]);
 
-  // Language dropdown selection
+  // Controlled dropdown selections
+  const [selectedCountry, setSelectedCountry] = useState<CountryOption[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyOption[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption[]>([]);
 
   const getApiErrorMessage = (err: unknown) => {
     if (!err || typeof err !== "object") return t("apiFallbackError");
+
     const e = err as { message?: unknown; detail?: unknown };
+
     if (typeof e.message === "string" && e.message) return e.message;
     if (typeof e.detail === "string" && e.detail) return e.detail;
+
     return t("apiFallbackError");
   };
 
-  // Initialize language default from i18n
-  useEffect(() => {
-    const raw = (i18n.language || "en").split("-")[0];
+  const computeEmailServiceUrl = (email: string) => {
+    const domain = email.split("@")[1]?.toLowerCase() || "";
+    return emailProviders[domain] || `mailto:${email}`;
+  };
+
+  const normalizeLanguage = (rawLanguage: string): AppLanguage => {
+    const raw = (rawLanguage || "en").split("-")[0];
     const allowed: AppLanguage[] = ["en", "pt", "fr", "de"];
-    const safeLang: AppLanguage = allowed.includes(raw as AppLanguage)
-      ? (raw as AppLanguage)
-      : "en";
+    return allowed.includes(raw as AppLanguage) ? (raw as AppLanguage) : "en";
+  };
+
+  const showSnack = (
+    message: React.ReactNode,
+    severity: "success" | "error" | "warning" | "info"
+  ) => {
+    setSnack({ message, severity });
+  };
+
+  const isStep1Incomplete =
+    !form.name.trim() ||
+    !form.email.trim() ||
+    !form.password ||
+    !form.confirmPassword;
+
+  const isStep2Incomplete =
+    !prefs.language || !prefs.country || !prefs.currency;
+
+  const isStep3Incomplete = !consents.privacy || !consents.tos;
+
+  useEffect(() => {
+    document.title = t("pageTitle");
+  }, [t]);
+
+  // Hydrate email from query string: /signup?email=someone@example.com
+  useEffect(() => {
+    if (didHydrateEmailFromQuery) return;
+
+    const emailFromUrl = searchParams.get(EMAIL_QUERY_PARAM)?.trim() || "";
+    if (!emailFromUrl) {
+      setDidHydrateEmailFromQuery(true);
+      return;
+    }
+
+    const emailCheck = validateEmailFormat(emailFromUrl, t);
+    if (!emailCheck.isValid || !emailCheck.normalized) {
+      setDidHydrateEmailFromQuery(true);
+      return;
+    }
+
+    setForm((prev) => {
+      if (prev.email.trim()) return prev;
+      return {
+        ...prev,
+        email: emailCheck.normalized,
+      };
+    });
+
+    setDidHydrateEmailFromQuery(true);
+  }, [didHydrateEmailFromQuery, searchParams, t]);
+
+  // Initialize language from current i18n language
+  useEffect(() => {
+    const safeLang = normalizeLanguage(i18n.language);
 
     setPrefs((prev) => ({
       ...prev,
@@ -149,219 +208,69 @@ const SignUp = () => {
     }));
   }, [i18n.language]);
 
-  // Keep language dropdown in sync with prefs.language
-  useEffect(() => {
-    if (!prefs.language) {
-      setSelectedLanguage([]);
-      return;
-    }
-    const found = LANGUAGE_OPTIONS.find((opt) => opt.value === prefs.language);
-    setSelectedLanguage(found ? [found] : []);
-  }, [prefs.language]);
-
-  // Initialize country default from autoCountry
+  // Initialize country from autoCountry
   useEffect(() => {
     if (!autoCountry) return;
+
     setPrefs((prev) => ({
       ...prev,
       country: prev.country || autoCountry.toUpperCase(),
     }));
   }, [autoCountry]);
 
-  // Keep country dropdown in sync with prefs.country
+  // Sync selected language dropdown
+  useEffect(() => {
+    if (!prefs.language) {
+      setSelectedLanguage([]);
+      return;
+    }
+
+    const found = LANGUAGE_OPTIONS.find((opt) => opt.value === prefs.language);
+    setSelectedLanguage(found ? [found] : []);
+  }, [prefs.language]);
+
+  // Sync selected country dropdown
   useEffect(() => {
     if (!prefs.country) {
       setSelectedCountry([]);
       return;
     }
+
     const code = prefs.country.toUpperCase();
-    const found = COUNTRIES.find((c) => c.value === code);
+    const found = COUNTRIES.find((country) => country.value === code);
     setSelectedCountry(found ? [found] : []);
   }, [prefs.country, COUNTRIES]);
 
-  // Keep currency dropdown in sync with prefs.currency
+  // Sync selected currency dropdown
   useEffect(() => {
     if (!prefs.currency) {
       setSelectedCurrency([]);
       return;
     }
+
     const code = prefs.currency.toUpperCase();
-    const found = CURRENCIES.find((c) => c.value === code);
+    const found = CURRENCIES.find((currency) => currency.value === code);
     setSelectedCurrency(found ? [found] : []);
   }, [prefs.currency, CURRENCIES]);
 
-  const handleEmailChange =
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/\s/g, "");
-      setForm((prev) => ({ ...prev, email: value }));
-    };
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\s/g, "");
+    setForm((prev) => ({ ...prev, email: value }));
+  };
 
   const handleInputChange =
-    (field: keyof typeof form) =>
-    (e: ChangeEvent<HTMLInputElement>) => {
+    (field: keyof typeof form) => (e: ChangeEvent<HTMLInputElement>) => {
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
   const handleConsentChange =
-    (field: keyof typeof consents) =>
-    (e: ChangeEvent<HTMLInputElement>) => {
+    (field: keyof typeof consents) => (e: ChangeEvent<HTMLInputElement>) => {
       const checked = e.target.checked;
       setConsents((prev) => ({ ...prev, [field]: checked }));
     };
 
-  const isStep1Incomplete =
-    !form.name || !form.email || !form.password || !form.confirmPassword;
-
-  const isStep2Incomplete = !prefs.language || !prefs.country || !prefs.currency;
-
-  const isStep3Incomplete = !consents.privacy || !consents.tos;
-
-  const computeEmailServiceUrl = (email: string) => {
-    const domain = email.split("@")[1]?.toLowerCase() || "";
-    return emailProviders[domain] || `mailto:${email}`;
-  };
-
-  const handleSubmit = async (
-    e: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>
-  ) => {
-    e.preventDefault();
-
-    const emailCheck = validateEmailFormat(form.email, t);
-
-    if (!emailCheck.isValid) {
-      setSnack({
-        message: emailCheck.message || t("invalidEmailFormat"),
-        severity: "warning",
-      });
-      return;
-    }
-
-    // Keep normalized email in state (optional but recommended)
-    if (emailCheck.normalized !== form.email) {
-      setForm((prev) => ({ ...prev, email: emailCheck.normalized }));
-    }
-
-    // STEP 1 – validate and go to step 2
-    if (step === 1) {
-      if (isStep1Incomplete) {
-        setSnack({ message: t("fillAllFields"), severity: "warning" });
-        return;
-      }
-
-      if (form.password !== form.confirmPassword) {
-        setSnack({ message: t("passwordsDontMatch"), severity: "warning" });
-        return;
-      }
-
-      const { isValid, message } = validatePassword(form.password);
-      if (!isValid) {
-        setSnack({ message, severity: "warning" });
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const res = await api.checkEmailAvailability(emailCheck.normalized);
-
-        if ("error" in res) {
-          setSnack({
-            message: getApiErrorMessage(res.error),
-            severity: "error",
-          });
-          return;
-        }
-
-        if (!res.data.available) {
-          setSnack({ message: t("emailAlreadyInUse"), severity: "warning" });
-          return;
-        }
-
-        setStep(2);
-      } catch {
-        setSnack({ message: t("signUpUnexpectedError"), severity: "error" });
-      } finally {
-        setIsLoading(false);
-      }
-
-      return;
-    }
-
-    // STEP 2 – validate and go to step 3
-    if (step === 2) {
-      if (isStep2Incomplete) {
-        setSnack({ message: t("fillAllFields"), severity: "warning" });
-        return;
-      }
-
-      setStep(3);
-      return;
-    }
-
-    // STEP 3 – final validations + API call
-    if (step === 3) {
-      if (isStep3Incomplete) {
-        setSnack({
-          message: t("mustAcceptRequiredConsents"),
-          severity: "warning",
-        });
-        return;
-      }
-
-      setIsLoading(true);
-
-      const normalizedEmail = form.email.trim().toLowerCase();
-
-      try {
-        const payload: SignUpRequest = {
-          name: form.name,
-          email: normalizedEmail,
-          password: form.password,
-          timezone,
-          country: prefs.country.toUpperCase(),
-
-          language: prefs.language || undefined,
-          currency: prefs.currency,
-
-          browser_language: browserLanguage,
-          browser_languages: browserLanguages,
-          locale,
-
-          consents: {
-            privacy_policy: consents.privacy,
-            terms_of_service: consents.tos,
-            marketing: consents.marketing,
-          },
-        };
-
-        const res = await api.signUp(payload);
-
-        if ("error" in res) {
-          setSnack({
-            message: getApiErrorMessage(res.error),
-            severity: "error",
-          });
-          return;
-        }
-
-        setSnack({ message: t("signUpSuccess"), severity: "success" });
-
-        const url = computeEmailServiceUrl(normalizedEmail);
-        setCreatedEmail(normalizedEmail);
-        setEmailServiceUrl(url);
-
-        setForm({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-        setStep(4);
-      } catch {
-        setSnack({ message: t("signUpUnexpectedError"), severity: "error" });
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const goToNextStep = () => {
+    setStep((prev) => (prev < 4 ? ((prev + 1) as Step) : prev));
   };
 
   const handleBack = () => {
@@ -373,14 +282,159 @@ const SignUp = () => {
   };
 
   const handleOpenEmail = () => {
-    if (emailServiceUrl) {
-      window.open(emailServiceUrl, "_blank", "noopener,noreferrer");
+    if (!emailServiceUrl) return;
+    window.open(emailServiceUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const validateStep1 = async () => {
+    const emailCheck = validateEmailFormat(form.email, t);
+
+    if (isStep1Incomplete) {
+      showSnack(t("fillAllFields"), "warning");
+      return false;
+    }
+
+    if (!emailCheck.isValid) {
+      showSnack(emailCheck.message || t("invalidEmailFormat"), "warning");
+      return false;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      showSnack(t("passwordsDontMatch"), "warning");
+      return false;
+    }
+
+    const passwordValidation = validatePassword(form.password);
+    if (!passwordValidation.isValid) {
+      showSnack(passwordValidation.message, "warning");
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+
+      if (emailCheck.normalized !== form.email) {
+        setForm((prev) => ({ ...prev, email: emailCheck.normalized }));
+      }
+
+      const res = await api.checkEmailAvailability(emailCheck.normalized);
+
+      if ("error" in res) {
+        showSnack(getApiErrorMessage(res.error), "error");
+        return false;
+      }
+
+      if (!res.data.available) {
+        showSnack(t("emailAlreadyInUse"), "warning");
+        return false;
+      }
+
+      return true;
+    } catch {
+      showSnack(t("signUpUnexpectedError"), "error");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const validateStep2 = () => {
+    if (isStep2Incomplete) {
+      showSnack(t("fillAllFields"), "warning");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (isStep3Incomplete) {
+      showSnack(t("mustAcceptRequiredConsents"), "warning");
+      return false;
+    }
+
+    return true;
+  };
+
+  const submitSignUp = async () => {
+    const normalizedEmail = form.email.trim().toLowerCase();
+
+    try {
+      setIsLoading(true);
+
+      const payload: SignUpRequest = {
+        name: form.name.trim(),
+        email: normalizedEmail,
+        password: form.password,
+        timezone,
+        country: prefs.country.toUpperCase(),
+        language: prefs.language || undefined,
+        currency: prefs.currency,
+        browser_language: browserLanguage,
+        browser_languages: browserLanguages,
+        locale,
+        consents: {
+          privacy_policy: consents.privacy,
+          terms_of_service: consents.tos,
+          marketing: consents.marketing,
+        },
+      };
+
+      const res = await api.signUp(payload);
+
+      if ("error" in res) {
+        showSnack(getApiErrorMessage(res.error), "error");
+        return;
+      }
+
+      showSnack(t("signUpSuccess"), "success");
+
+      const emailUrl = computeEmailServiceUrl(normalizedEmail);
+      setCreatedEmail(normalizedEmail);
+      setEmailServiceUrl(emailUrl);
+
+      setForm({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setStep(4);
+    } catch {
+      showSnack(t("signUpUnexpectedError"), "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (
+    e: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>
+  ) => {
+    e.preventDefault();
+
+    if (step === 1) {
+      const isValid = await validateStep1();
+      if (isValid) goToNextStep();
+      return;
+    }
+
+    if (step === 2) {
+      const isValid = validateStep2();
+      if (isValid) goToNextStep();
+      return;
+    }
+
+    if (step === 3) {
+      const isValid = validateStep3();
+      if (!isValid) return;
+      await submitSignUp();
     }
   };
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      {/* Left section (image) */}
+      {/* Left section */}
       <div className="hidden md:flex md:w-1/2 relative overflow-hidden bg-slate-900">
         <img
           src={signUpBackground}
@@ -390,13 +444,12 @@ const SignUp = () => {
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/80 to-slate-800/60" />
       </div>
 
-      {/* Right section (form + success) */}
+      {/* Right section */}
       <div className="flex flex-col w-full md:w-1/2 px-6 py-6 sm:px-10 sm:py-8">
-        {/* Logo */}
         <header className="flex items-center justify-between mb-8">
           <a
             href="https://www.spifex.com/"
-            className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10 rounded-lg"
+            className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10"
           >
             <img
               src={logoBlack}
@@ -414,9 +467,11 @@ const SignUp = () => {
                   <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
                     {t("heading")}
                   </h1>
+
                   <p className="mt-2 text-sm text-slate-500">
                     {t("subheading")}
                   </p>
+
                   <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                     {[1, 2, 3].map((s) => (
                       <div
@@ -431,7 +486,7 @@ const SignUp = () => {
 
                 <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="relative min-h-[220px]">
-                    {/* STEP 1 – account */}
+                    {/* STEP 1 */}
                     <div
                       className={`space-y-4 transition-opacity duration-300 ${
                         step === 1
@@ -447,7 +502,7 @@ const SignUp = () => {
                         value={form.name}
                         onChange={handleInputChange("name")}
                         disabled={isLoading}
-                        autoComplete="off"
+                        autoComplete="name"
                       />
 
                       <Input
@@ -460,6 +515,7 @@ const SignUp = () => {
                         disabled={isLoading}
                         autoComplete="email"
                         autoCorrect="off"
+                        autoCapitalize="none"
                       />
 
                       <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
@@ -477,6 +533,7 @@ const SignUp = () => {
                             autoCorrect="off"
                           />
                         </div>
+
                         <div className="flex-1">
                           <Input
                             kind="text"
@@ -496,7 +553,7 @@ const SignUp = () => {
                       </div>
                     </div>
 
-                    {/* STEP 2 – preferences */}
+                    {/* STEP 2 */}
                     <div
                       className={`space-y-4 transition-opacity duration-300 ${
                         step === 2
@@ -533,11 +590,11 @@ const SignUp = () => {
                         items={COUNTRIES}
                         selected={selectedCountry}
                         onChange={(items) => {
-                          const v = (items[0]?.value ?? "")
+                          const next = (items[0]?.value ?? "")
                             .toString()
                             .toUpperCase();
                           setSelectedCountry(items);
-                          setPrefs((prev) => ({ ...prev, country: v }));
+                          setPrefs((prev) => ({ ...prev, country: next }));
                         }}
                         getItemKey={(item) => item.value}
                         getItemLabel={(item) => item.label}
@@ -556,11 +613,11 @@ const SignUp = () => {
                         items={CURRENCIES}
                         selected={selectedCurrency}
                         onChange={(items) => {
+                          const next = items[0]?.value ?? "";
                           setSelectedCurrency(items);
-                          const value = items[0]?.value ?? "";
                           setPrefs((prev) => ({
                             ...prev,
-                            currency: value || prev.currency,
+                            currency: next || prev.currency,
                           }));
                         }}
                         getItemKey={(item) => item.value}
@@ -576,7 +633,7 @@ const SignUp = () => {
                       />
                     </div>
 
-                    {/* STEP 3 – consents */}
+                    {/* STEP 3 */}
                     <div
                       className={`space-y-4 transition-opacity duration-300 ${
                         step === 3
@@ -654,8 +711,8 @@ const SignUp = () => {
 
                     <Button
                       variant="primary"
-                      onClick={handleSubmit}
                       type="submit"
+                      onClick={handleSubmit}
                       isLoading={isLoading}
                       disabled={
                         isLoading ||
@@ -685,6 +742,7 @@ const SignUp = () => {
                 <h1 className="text-2xl font-semibold text-slate-900 mb-4">
                   {t("redirectHeading")}
                 </h1>
+
                 <p className="text-sm text-slate-500 mb-6">
                   {t("redirectDescription")}
                 </p>
