@@ -1,4 +1,3 @@
-// src\pages\LedgerAccountSettings\LedgerAccountsGate.tsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +25,9 @@ type Props = {
   ledgerMode: LedgerMode;
   compact: boolean;
   languageCode?: string | null;
+  embedded?: boolean;
+  onSuccess?: () => void | Promise<void>;
+  successRedirectTo?: string | null;
 };
 
 const templateKey = (item: TemplateOption) => item.value;
@@ -63,6 +65,9 @@ const LedgerAccountsGate: React.FC<Props> = ({
   ledgerMode,
   compact,
   languageCode,
+  embedded = false,
+  onSuccess,
+  successRedirectTo = "/settings/ledger-accounts",
 }) => {
   const navigate = useNavigate();
   const { isOwner, permissions } = useAuthContext();
@@ -127,8 +132,12 @@ const LedgerAccountsGate: React.FC<Props> = ({
         throw new Error(messages.setup.chooseModeError);
       }
 
+      await onSuccess?.();
       setSnack({ message: messages.setup.success, severity: "success" });
-      navigate("/settings/ledger-accounts", { replace: true });
+
+      if (successRedirectTo) {
+        navigate(successRedirectTo, { replace: true });
+      }
     } catch (e) {
       setSnack({
         message: (e as Error)?.message || messages.setup.genericError,
@@ -139,9 +148,9 @@ const LedgerAccountsGate: React.FC<Props> = ({
     }
   };
 
-  return (
-    <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-6xl space-y-6">
+  const content = (
+    <>
+      {!embedded ? (
         <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
           <div className="grid gap-5 px-4 py-4 sm:px-5 lg:grid-cols-[1.4fr_0.9fr]">
             <div>
@@ -185,133 +194,145 @@ const LedgerAccountsGate: React.FC<Props> = ({
             </div>
           </div>
         </section>
+      ) : null}
 
-        <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+        {!embedded ? (
           <div className="border-b border-gray-200 px-4 py-3 sm:px-5">
             <div className="text-[11px] uppercase tracking-wide text-gray-700">
               {messages.setup.setupMethod}
             </div>
           </div>
+        ) : null}
 
-          <div className="px-4 py-4 sm:px-5">
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <Surface
-                active={setupMode === "standard"}
-                onClick={() => setSetupMode("standard")}
-                title={messages.setup.standardTitle}
-                description={messages.setup.standardDescription}
-              />
-              <Surface
-                active={setupMode === "csv"}
-                onClick={() => setSetupMode("csv")}
-                title={messages.setup.uploadTitle}
-                description={messages.setup.uploadDescription}
-              />
-              <Surface
-                active={setupMode === "manual"}
-                onClick={() => setSetupMode("manual")}
-                title={messages.setup.manualTitle}
-                description={messages.setup.manualDescription}
-              />
-            </div>
+        <div className={embedded ? "space-y-4" : "px-4 py-4 sm:px-5"}>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <Surface
+              active={setupMode === "standard"}
+              onClick={() => setSetupMode("standard")}
+              title={messages.setup.standardTitle}
+              description={messages.setup.standardDescription}
+            />
+            <Surface
+              active={setupMode === "csv"}
+              onClick={() => setSetupMode("csv")}
+              title={messages.setup.uploadTitle}
+              description={messages.setup.uploadDescription}
+            />
+            <Surface
+              active={setupMode === "manual"}
+              onClick={() => setSetupMode("manual")}
+              title={messages.setup.manualTitle}
+              description={messages.setup.manualDescription}
+            />
+          </div>
 
-            <div className="mt-6 space-y-4">
-              {setupMode === "standard" ? (
-                <div className="grid gap-4 lg:grid-cols-[1.2fr_auto_auto]">
-                  <SelectDropdown<TemplateOption>
-                    label={messages.setup.templateLabel}
-                    items={templateOptions}
-                    selected={templateOptions.filter((x) => x.value === standardPlan)}
-                    onChange={(items) =>
-                      setStandardPlan(
-                        items[0]?.value ??
-                          (ledgerMode === "personal" ? "personal" : "organizational")
-                      )
-                    }
-                    getItemKey={templateKey}
-                    getItemLabel={templateLabel}
-                    singleSelect
-                    hideCheckboxes
-                    buttonLabel={messages.setup.templateLabel}
-                  />
+          <div className="space-y-4">
+            {setupMode === "standard" ? (
+              <div className="grid gap-4 lg:grid-cols-[1.2fr_auto_auto]">
+                <SelectDropdown<TemplateOption>
+                  label={messages.setup.templateLabel}
+                  items={templateOptions}
+                  selected={templateOptions.filter((x) => x.value === standardPlan)}
+                  onChange={(items) =>
+                    setStandardPlan(
+                      items[0]?.value ??
+                        (ledgerMode === "personal" ? "personal" : "organizational")
+                    )
+                  }
+                  getItemKey={templateKey}
+                  getItemLabel={templateLabel}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel={messages.setup.templateLabel}
+                />
 
-                  <div className="lg:self-end">
-                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
-                      {messages.setup.downloadCsv}
-                    </Button>
-                  </div>
-
-                  <div className="lg:self-end">
-                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
-                      {messages.setup.downloadXlsx}
-                    </Button>
-                  </div>
+                <div className="lg:self-end">
+                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
+                    {messages.setup.downloadCsv}
+                  </Button>
                 </div>
-              ) : null}
 
-              {setupMode === "csv" ? (
-                <div className="grid gap-4 lg:grid-cols-[1fr_auto_auto]">
-                  <label className="block">
-                    <span className="mb-1.5 block text-sm font-medium text-gray-700">
-                      {messages.setup.fileLabel}
-                    </span>
-                    <input
-                      type="file"
-                      accept=".csv,.xlsx"
-                      onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
-                      className="block w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none file:mr-3 file:rounded-xl file:border file:border-gray-200 file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-gray-700"
-                    />
-                  </label>
-
-                  <div className="lg:self-end">
-                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
-                      {messages.setup.downloadCsv}
-                    </Button>
-                  </div>
-
-                  <div className="lg:self-end">
-                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
-                      {messages.setup.downloadXlsx}
-                    </Button>
-                  </div>
+                <div className="lg:self-end">
+                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
+                    {messages.setup.downloadXlsx}
+                  </Button>
                 </div>
-              ) : null}
+              </div>
+            ) : null}
 
-              {setupMode === "manual" ? (
+            {setupMode === "csv" ? (
+              <div className="grid gap-4 lg:grid-cols-[1fr_auto_auto]">
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium text-gray-700">
-                    {messages.setup.manualLabel}
+                    {messages.setup.fileLabel}
                   </span>
-
-                  <textarea
-                    className="min-h-[240px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
-                    value={textBlock}
-                    onChange={(e) => setTextBlock(e.target.value)}
-                    placeholder={messages.setup.manualPlaceholder}
+                  <input
+                    type="file"
+                    accept=".csv,.xlsx"
+                    onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
+                    className="block w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none file:mr-3 file:rounded-xl file:border file:border-gray-200 file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-gray-700"
                   />
                 </label>
-              ) : null}
-            </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button onClick={() => void submit()} disabled={busy}>
-                {busy ? messages.setup.submitting : messages.setup.submit}
-              </Button>
-            </div>
+                <div className="lg:self-end">
+                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
+                    {messages.setup.downloadCsv}
+                  </Button>
+                </div>
+
+                <div className="lg:self-end">
+                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
+                    {messages.setup.downloadXlsx}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {setupMode === "manual" ? (
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-gray-700">
+                  {messages.setup.manualLabel}
+                </span>
+
+                <textarea
+                  className="min-h-[240px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+                  value={textBlock}
+                  onChange={(e) => setTextBlock(e.target.value)}
+                  placeholder={messages.setup.manualPlaceholder}
+                />
+              </label>
+            ) : null}
           </div>
-        </section>
 
-        <Snackbar
-          open={!!snack}
-          onClose={() => setSnack(null)}
-          autoHideDuration={5000}
-          message={snack?.message}
-          severity={snack?.severity}
-          anchor={{ vertical: "bottom", horizontal: "center" }}
-          pauseOnHover
-          showCloseButton
-        />
-      </div>
+          <div className="flex justify-end">
+            <Button onClick={() => void submit()} disabled={busy}>
+              {busy ? messages.setup.submitting : messages.setup.submit}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <Snackbar
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={5000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
+    </>
+  );
+
+  if (embedded) {
+    return <>{content}</>;
+  }
+
+  return (
+    <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-6xl space-y-6">{content}</div>
     </main>
   );
 };

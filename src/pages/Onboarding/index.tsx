@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Building2, CheckCircle2, CreditCard, UserRound } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  CheckCircle2,
+  CreditCard,
+  FolderTree,
+  RefreshCcw,
+  Settings2,
+  UserRound,
+} from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -15,14 +24,17 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { TIMEZONES } from "@/lib/location/timezonesList";
 import { formatTimezoneLabel } from "@/lib/location/formatTimezoneLabel";
 import { getCountries, type CountryOption } from "@/lib/location/countries";
+import LedgerAccountsGate from "@/pages/LedgerAccountSettings/LedgerAccountsGate";
+
 import type { OnboardingStatus } from "@/models/auth/onboarding";
 import type { EditPersonalSettingsRequest } from "@/models/auth/user";
+import type { LedgerMode } from "@/models/settings/ledgerAccounts";
 
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
   | null;
 
-type StepKey = "personal" | "organization" | "ledger";
+type StepKey = "personal" | "organization" | "accounting";
 
 type PersonalForm = {
   phone: string;
@@ -40,7 +52,8 @@ type OrgForm = {
   line2: string;
 };
 
-type Mode = "csv" | "manual" | "standard" | null;
+const DEFAULT_LEDGER_MODE: LedgerMode = "organizational";
+const CATEGORY_SETTINGS_PATH = "/settings/accounting";
 
 const normalize = (v: unknown) => (v ?? "").toString().trim();
 const normalizeCountry = (v: unknown) => normalize(v).toUpperCase();
@@ -124,6 +137,50 @@ const StepBadge = ({
 const missingBlockClass = (missing: boolean) =>
   missing ? "rounded-xl border border-amber-300 bg-amber-50/40 p-2" : "";
 
+const RequirementRow = ({
+  done,
+  title,
+  description,
+  icon,
+}: {
+  done: boolean;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) => (
+  <div
+    className={[
+      "flex items-start gap-3 rounded-2xl border px-4 py-4",
+      done ? "border-emerald-200 bg-emerald-50" : "border-gray-200 bg-white",
+    ].join(" ")}
+  >
+    <div
+      className={[
+        "mt-0.5 rounded-xl border p-2",
+        done ? "border-emerald-200 bg-white text-emerald-700" : "border-gray-200 bg-white text-gray-700",
+      ].join(" ")}
+    >
+      {icon}
+    </div>
+
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center gap-2">
+        <h3 className="text-[14px] font-semibold text-gray-900">{title}</h3>
+        {done ? (
+          <span className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+            Done
+          </span>
+        ) : (
+          <span className="rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-700">
+            Required
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-[13px] text-gray-600">{description}</p>
+    </div>
+  </div>
+);
+
 const OnboardingPage: React.FC = () => {
   const { t, i18n } = useTranslation("onboarding");
   const navigate = useNavigate();
@@ -133,7 +190,6 @@ const OnboardingPage: React.FC = () => {
   const [savingPersonal, setSavingPersonal] = useState(false);
   const [savingOrg, setSavingOrg] = useState(false);
   const [loadingOnboarding, setLoadingOnboarding] = useState(false);
-  const [ledgerSubmitting, setLedgerSubmitting] = useState(false);
 
   const [snack, setSnack] = useState<Snack>(null);
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
@@ -161,14 +217,10 @@ const OnboardingPage: React.FC = () => {
   const [selectedOrgCountry, setSelectedOrgCountry] = useState<CountryOption[]>([]);
 
   const [step, setStep] = useState(0);
-  const [ledgerMode, setLedgerMode] = useState<Mode>(null);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [textBlock, setTextBlock] = useState("");
-  const [stdChoice, setStdChoice] = useState<"personal" | "business" | null>(null);
 
   const canViewPersonal = isOwner || permissions.includes("view_personal_settings_page");
   const canViewOrganization = isOwner || permissions.includes("view_organization_settings_page");
-  const canUseLedger =
+  const canUseAccounting =
     isOwner ||
     (permissions.includes("view_ledger_accounts_page") &&
       permissions.includes("add_ledger_account"));
@@ -264,6 +316,8 @@ const OnboardingPage: React.FC = () => {
   );
   const orgDone = Boolean(onboarding?.org_locale_setup && onboarding?.org_info_setup);
   const ledgerDone = Boolean(onboarding?.ledger_accounts_setup);
+  const categoriesDone = Boolean(onboarding?.cashflow_categories_setup);
+  const accountingDone = Boolean(onboarding?.accounting_foundation_setup);
 
   const steps = useMemo(() => {
     const arr: { key: StepKey; label: string; done: boolean }[] = [];
@@ -273,11 +327,15 @@ const OnboardingPage: React.FC = () => {
     if (canViewOrganization && !orgDone) {
       arr.push({ key: "organization", label: t("steps.organization"), done: false });
     }
-    if (canUseLedger && !ledgerDone) {
-      arr.push({ key: "ledger", label: t("steps.ledger"), done: false });
+    if (canUseAccounting && !accountingDone) {
+      arr.push({
+        key: "accounting",
+        label: t("steps.accounting", { defaultValue: "Accounting foundation" }),
+        done: false,
+      });
     }
     return arr;
-  }, [canUseLedger, canViewOrganization, canViewPersonal, ledgerDone, orgDone, personalDone, t]);
+  }, [accountingDone, canUseAccounting, canViewOrganization, canViewPersonal, orgDone, personalDone, t]);
 
   useEffect(() => {
     if (!steps.length) return;
@@ -377,52 +435,6 @@ const OnboardingPage: React.FC = () => {
     }
   };
 
-  const submitLedger = async () => {
-    try {
-      setLedgerSubmitting(true);
-
-      if (ledgerMode === "csv") {
-        if (!csvFile) {
-          setSnack({ message: t("errors.ledgerFile"), severity: "warning" });
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("mode", "csv");
-        formData.append("file", csvFile);
-        await api.importLedgerAccounts(formData);
-      } else if (ledgerMode === "manual") {
-        if (!textBlock.trim()) {
-          setSnack({ message: t("errors.ledgerManual"), severity: "warning" });
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("mode", "manual");
-        formData.append("manual_text", textBlock);
-        await api.importLedgerAccounts(formData);
-      } else if (ledgerMode === "standard") {
-        if (!stdChoice) {
-          setSnack({ message: t("errors.ledgerStandard"), severity: "warning" });
-          return;
-        }
-
-        await api.importStandardLedgerAccounts(stdChoice);
-      } else {
-        setSnack({ message: t("errors.ledgerMode"), severity: "info" });
-        return;
-      }
-
-      await refreshOnboarding();
-      setSnack({ message: t("success.ledger"), severity: "success" });
-    } catch (e) {
-      console.error(e);
-      setSnack({ message: t("errors.ledgerSave"), severity: "error" });
-    } finally {
-      setLedgerSubmitting(false);
-    }
-  };
-
   if (loading) {
     return (
       <>
@@ -455,7 +467,7 @@ const OnboardingPage: React.FC = () => {
   return (
     <>
       <TopProgress
-        active={savingPersonal || savingOrg || ledgerSubmitting || loadingOnboarding}
+        active={savingPersonal || savingOrg || loadingOnboarding}
         variant="top"
         topOffset={64}
       />
@@ -740,133 +752,114 @@ const OnboardingPage: React.FC = () => {
                 </SectionCard>
               )}
 
-              {currentStep?.key === "ledger" && (
+              {currentStep?.key === "accounting" && (
                 <SectionCard
-                  title={t("ledger.title")}
-                  subtitle={t("ledger.subtitle")}
+                  title={t("accounting.title", { defaultValue: "Accounting foundation" })}
+                  subtitle={t("accounting.subtitle", {
+                    defaultValue:
+                      "Finish the accounting base by setting up ledger accounts and at least one active cashflow category.",
+                  })}
                   icon={<CreditCard className="h-5 w-5" />}
                 >
-                  <div className="space-y-5">
-                    <div className="rounded-xl border border-gray-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-[14px] font-semibold text-gray-900">
-                          {t("ledger.csvTitle")}
-                        </h3>
-                        <label className="text-[13px] flex items-center gap-2 text-gray-700">
-                          <input
-                            type="radio"
-                            name="ledger-mode"
-                            checked={ledgerMode === "csv"}
-                            onChange={() => setLedgerMode("csv")}
-                            disabled={ledgerSubmitting}
-                          />
-                          {t("actions.choose")}
-                        </label>
-                      </div>
-
-                      {ledgerMode === "csv" && (
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => api.downloadLedgerCsvTemplate()}
-                            >
-                              {t("ledger.downloadCsv")}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => api.downloadLedgerXlsxTemplate()}
-                            >
-                              {t("ledger.downloadXlsx")}
-                            </Button>
-                          </div>
-
-                          <Input
-                            kind="text"
-                            type="file"
-                            label={t("ledger.uploadLabel")}
-                            onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
-                            accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="rounded-xl border border-gray-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-[14px] font-semibold text-gray-900">
-                          {t("ledger.manualTitle")}
-                        </h3>
-                        <label className="text-[13px] flex items-center gap-2 text-gray-700">
-                          <input
-                            type="radio"
-                            name="ledger-mode"
-                            checked={ledgerMode === "manual"}
-                            onChange={() => setLedgerMode("manual")}
-                            disabled={ledgerSubmitting}
-                          />
-                          {t("actions.choose")}
-                        </label>
-                      </div>
-
-                      {ledgerMode === "manual" && (
-                        <textarea
-                          className="w-full min-h-[160px] rounded-xl border border-gray-200 p-3 text-[14px] outline-none focus:ring-2 focus:ring-gray-200"
-                          placeholder={t("ledger.manualPlaceholder")}
-                          value={textBlock}
-                          onChange={(e) => setTextBlock(e.target.value)}
+                  <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.65fr] gap-5">
+                    <div className="space-y-5">
+                      <div className="rounded-2xl border border-gray-200 p-4">
+                        <RequirementRow
+                          done={ledgerDone}
+                          title={t("accounting.ledgerTitle", { defaultValue: "Ledger accounts" })}
+                          description={t("accounting.ledgerDescription", {
+                            defaultValue:
+                              "Import a standard chart, upload a file, or paste your own chart of accounts.",
+                          })}
+                          icon={<CreditCard className="h-4 w-4" />}
                         />
-                      )}
-                    </div>
 
-                    <div className="rounded-xl border border-gray-200 p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-[14px] font-semibold text-gray-900">
-                          {t("ledger.standardTitle")}
-                        </h3>
-                        <label className="text-[13px] flex items-center gap-2 text-gray-700">
-                          <input
-                            type="radio"
-                            name="ledger-mode"
-                            checked={ledgerMode === "standard"}
-                            onChange={() => setLedgerMode("standard")}
-                            disabled={ledgerSubmitting}
-                          />
-                          {t("actions.choose")}
-                        </label>
+                        {!ledgerDone ? (
+                          <div className="mt-4">
+                            <LedgerAccountsGate
+                              ledgerMode={DEFAULT_LEDGER_MODE}
+                              compact
+                              languageCode={i18n.language}
+                              embedded
+                              successRedirectTo={null}
+                              onSuccess={refreshOnboarding}
+                            />
+                          </div>
+                        ) : null}
                       </div>
 
-                      {ledgerMode === "standard" && (
-                        <div className="flex flex-wrap gap-4">
-                          <label className="flex items-center gap-2 text-[13px] text-gray-700">
-                            <input
-                              type="radio"
-                              name="std"
-                              checked={stdChoice === "personal"}
-                              onChange={() => setStdChoice("personal")}
-                              disabled={ledgerSubmitting}
-                            />
-                            {t("ledger.personalPlan")}
-                          </label>
+                      <div className="rounded-2xl border border-gray-200 p-4">
+                        <RequirementRow
+                          done={categoriesDone}
+                          title={t("accounting.categoriesTitle", {
+                            defaultValue: "Cashflow categories",
+                          })}
+                          description={t("accounting.categoriesDescription", {
+                            defaultValue:
+                              "At least one active operational category is required so entries can be classified before accounting consumes them.",
+                          })}
+                          icon={<FolderTree className="h-4 w-4" />}
+                        />
 
-                          <label className="flex items-center gap-2 text-[13px] text-gray-700">
-                            <input
-                              type="radio"
-                              name="std"
-                              checked={stdChoice === "business"}
-                              onChange={() => setStdChoice("business")}
-                              disabled={ledgerSubmitting}
+                        {!categoriesDone ? (
+                          <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50/40 p-4">
+                            <MissingFieldNotice
+                              text={t("accounting.categoryRequired", {
+                                defaultValue:
+                                  "At least one active cashflow category is still missing.",
+                              })}
                             />
-                            {t("ledger.businessPlan")}
-                          </label>
-                        </div>
-                      )}
+
+                            <div className="mt-4 flex flex-wrap items-center gap-3">
+                              <Button
+                                variant="outline"
+                                onClick={() => navigate(CATEGORY_SETTINGS_PATH)}
+                              >
+                                <span className="inline-flex items-center gap-2">
+                                  <Settings2 className="h-4 w-4" />
+                                  <span>
+                                    {t("accounting.openCategorySettings", {
+                                      defaultValue: "Open accounting settings",
+                                    })}
+                                  </span>
+                                </span>
+                              </Button>
+
+                              <Button variant="outline" onClick={() => void refreshOnboarding()}>
+                                <span className="inline-flex items-center gap-2">
+                                  <RefreshCcw className="h-4 w-4" />
+                                  <span>
+                                    {t("accounting.refreshStatus", {
+                                      defaultValue: "Refresh status",
+                                    })}
+                                  </span>
+                                </span>
+                              </Button>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-3">
-                      <Button onClick={submitLedger} isLoading={ledgerSubmitting}>
-                        {t("actions.finishSetup")}
-                      </Button>
+                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-600">
+                        {t("accounting.checklistLabel", { defaultValue: "Checklist" })}
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        <RequirementRow
+                          done={ledgerDone}
+                          title={t("accounting.ledgerTitle", { defaultValue: "Ledger accounts" })}
+                          description={ledgerDone ? "Configured" : "Still required"}
+                          icon={<CreditCard className="h-4 w-4" />}
+                        />
+                        <RequirementRow
+                          done={categoriesDone}
+                          title={t("accounting.categoriesTitle", { defaultValue: "Cashflow categories" })}
+                          description={categoriesDone ? "Configured" : "Still required"}
+                          icon={<FolderTree className="h-4 w-4" />}
+                        />
+                      </div>
                     </div>
                   </div>
                 </SectionCard>

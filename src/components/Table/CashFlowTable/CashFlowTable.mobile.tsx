@@ -475,11 +475,17 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const ledger_account =
-        f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
+      const cashflow_category =
+        Array.isArray(f?.cashflow_category_id) && f.cashflow_category_id.length
+          ? f.cashflow_category_id.map(String).join(",")
+          : undefined;
 
       const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
-      const bank = Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.join(",") : undefined;
+
+      const bank =
+        Array.isArray(f?.bank_id) && f.bank_id.length
+          ? f.bank_id.map(String).join(",")
+          : undefined;
 
       const base: GetEntryRequest = {
         date_from: f?.start_date || undefined,
@@ -487,7 +493,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         description: f?.description || undefined,
         observation: f?.observation || undefined,
         q,
-        ledger_account,
+        cashflow_category,
         tx_type,
         amount_min: parseOptionalAmount(f?.amount_min),
         amount_max: parseOptionalAmount(f?.amount_max),

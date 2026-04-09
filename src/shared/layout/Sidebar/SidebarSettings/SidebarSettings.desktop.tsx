@@ -133,6 +133,7 @@ const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
           { id: "projects", icon: "projects", label: t("items.projects"), permission: "view_project_settings_page" },
           { id: "inventory", icon: "inventory", label: t("items.inventory"), permission: "view_inventory_settings_page" },
           { id: "entities", icon: "entities", label: t("items.entities"), permission: "view_entity_settings_page" },
+          { id: "departments", icon: "departments", label: t("items.departments"), permission: "view_department_settings_page" },
         ],
       },
       {
@@ -141,7 +142,6 @@ const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
         items: [
           { id: "ledger-accounts", icon: "ledger", label: t("items.ledger-accounts"), permission: "view_ledger_accounts_page" },
           { id: "accounting", icon: "ledger", label: t("items.accounting"), permission: "view_ledger_accounts_page" },
-          { id: "departments", icon: "departments", label: t("items.departments"), permission: "view_department_settings_page" },
         ],
       },
     ],
