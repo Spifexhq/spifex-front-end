@@ -330,14 +330,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-      aria-hidden={false}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          attemptClose();
-        }
-      }}
-    >
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center" >
       <div
         ref={panelRef}
         role="dialog"

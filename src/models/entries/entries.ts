@@ -1,33 +1,65 @@
-// src/models/entries/entries.ts
 import type { Paginated } from "@/models/Api";
 
 import type { DepartmentAllocation } from "../settings/departments";
 import type { InventoryAllocation } from "@/models/settings/inventory";
+import type { AccountingReadiness } from "./accountingReadiness";
 
-/* ---------------------------------- List ---------------------------------- */
+export interface CashflowCategoryOption {
+  id: string;
+  parent_id?: string | null;
+  code?: string;
+  name: string;
+  description?: string;
+  tx_type_hint?: number | null;
+  is_active?: boolean;
+  sort_order?: number;
+  metadata?: Record<string, unknown>;
+}
 
+export interface GetCashflowCategoriesParams {
+  cursor?: string;
+  page_size?: number;
+  active?: "true" | "false";
+  q?: string;
+  parent_id?: string;
+  tx_type_hint?: number;
+}
 
-/** Matches /<org>/cashflow/entries/ query params */
+export type GetCashflowCategoriesResponse =
+  | Paginated<CashflowCategoryOption>
+  | CashflowCategoryOption[]
+  | {
+      results?: CashflowCategoryOption[];
+      items?: CashflowCategoryOption[];
+      data?: CashflowCategoryOption[];
+      next?: string | null;
+      previous?: string | null;
+    };
+
+export type EntryAccountingPatch = {
+  accounting?: AccountingReadiness | null;
+};
+
 export interface GetEntryRequest {
   page_size?: number;
   cursor?: string;
 
-  date_from?: string; // YYYY-MM-DD
-  date_to?: string;   // YYYY-MM-DD
-  q?: string;         // free text over description/observation/notes
+  date_from?: string;
+  date_to?: string;
+  q?: string;
 
-  description?: string; // backend supports icontains on description
-  observation?: string; // backend supports icontains on observation
+  description?: string;
+  observation?: string;
 
-  ledger_account?: string;       // GL external_id (CSV if multiple)
-  project?: string;  // Project external_id
-  entity?: string;   // Entity external_id
+  cashflow_category?: string;
+  project?: string;
+  entity?: string;
 
   amount_min?: number;
   amount_max?: number;
 
-  group?: string;    // installment_group_id
-  tx_type?: number;  // backend accepts TxType enum ints (e.g., -1/1) if used
+  group?: string;
+  tx_type?: number;
 
   bank?: string;
   total_consolidated_balance?: string;
@@ -35,22 +67,16 @@ export interface GetEntryRequest {
 
 export type GetEntryResponse = Paginated<Entry>;
 
-/* ---------------------------------- Read ---------------------------------- */
-/**
- * Entry coming from EntryReadSerializer
- * - id is the entry external_id (string)
- * - relateds are flat external_ids (strings) instead of nested objects
- * - departments/items are snapshot arrays
- */
 export interface Entry {
-  id: string;               // entry.external_id
-  due_date: string;         // YYYY-MM-DD
+  id: string;
+  due_date: string;
   description: string;
   observation: string | null;
   notes: string | null;
 
-  amount: string;           // decimal as string
-  tx_type: string;          // "credit"/"debit" label
+  amount: string;
+  open_amount?: string;
+  tx_type: string;
 
   installment_group_id: string | null;
   installment_index: number | null;
@@ -59,61 +85,57 @@ export interface Entry {
   interval_months: number;
   weekend_action: number;
 
-  last_settled_on: string | null;       // ISO datetime or null
-  settlement_value_date: string | null; // YYYY-MM-DD or null
+  last_settled_on: string | null;
+  settlement_value_date: string | null;
   is_settled: boolean;
 
-  ledger_account: string | null; // GL external_id
-  project: string | null;    // Project external_id
-  entity: string | null;     // Entity external_id
-  transfer_id: string | null; // Transfer external_id
+  cashflow_category: string | null;
+  project: string | null;
+  entity: string | null;
+  transfer_id: string | null;
 
-  departments: DepartmentAllocation[]; // snapshot list
-  items: InventoryAllocation[];        // snapshot list
+  departments: DepartmentAllocation[];
+  items: InventoryAllocation[];
 
   running_balance?: string | null;
+  accounting?: AccountingReadiness | null;
 }
-
-/* ---------------------------------- Write ---------------------------------- */
 
 export type EntryTxTypeLabel = "credit" | "debit" | string;
 
-/** Matches EntryWriteSerializer (create/update) */
 export interface EntryPayloadBase {
-  due_date: string; // YYYY-MM-DD
+  due_date: string;
   description?: string;
   observation?: string | null;
   notes?: string | null;
 
-  amount: string; // "1234.56"
-  tx_type: EntryTxTypeLabel; // server is flexible on strings
+  amount: string;
+  tx_type: EntryTxTypeLabel;
 
   installment_count?: number | null;
   installment_index?: number | null;
 
-  interval_months?: number; // int choice
-  weekend_action?: number;  // int choice
+  interval_months?: number;
+  weekend_action?: number;
 
-  ledger_account: string;        // GL external_id (required on create)
+  cashflow_category?: string | null;
   document_type?: string | null;
-  project?: string | null;   // Project external_id
-  entity?: string | null;    // Entity external_id
+  project?: string | null;
+  entity?: string | null;
 
   departments?: Array<{
-    department_id: string; // Department external_id
-    percent: string;       // "100.00"
+    department_id: string;
+    percent: string;
   }>;
 
   items?: Array<{
-    item_id: string;   // InventoryItem external_id
-    quantity: string;  // "1.000"
+    item_id: string;
+    quantity: string;
   }>;
 }
 
 export type AddEntryRequest = EntryPayloadBase;
 export type EditEntryRequest = Partial<EntryPayloadBase>;
-
-/* ------------------------------ Bulk operations ------------------------------ */
 
 export interface GetEntriesBulkRequest {
   ids: string[];
@@ -146,7 +168,4 @@ export interface EditEntriesBulkPartial {
 }
 
 export type EditEntriesBulkResponse = EditEntriesBulkSuccess | EditEntriesBulkPartial;
-
-/* --------------------------- Create/Edit response union --------------------------- */
-
 export type EntryWriteResponse = Entry | Entry[];

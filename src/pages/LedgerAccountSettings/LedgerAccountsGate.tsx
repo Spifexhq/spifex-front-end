@@ -1,368 +1,318 @@
-/* --------------------------------------------------------------------------
- * File: src/pages/LedgerAccountSettings/LedgerAccountsGate.tsx
- * -------------------------------------------------------------------------- */
-
-import React, { useEffect, useMemo, useState } from "react";
+// src\pages\LedgerAccountSettings\LedgerAccountsGate.tsx
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "@/shared/ui/Button";
-import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
-import { PermissionMiddleware } from "src/middlewares";
-import { useTranslation } from "react-i18next";
+import { getLedgerMessages } from "./messages";
+
+import type { LedgerMode } from "@/models/settings/ledgerAccounts";
 
 type Snack =
-  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | {
+      message: React.ReactNode;
+      severity: "success" | "error" | "warning" | "info";
+    }
   | null;
 
-type Mode = "csv" | "manual" | "standard" | null;
+type SetupMode = "csv" | "manual" | "standard" | null;
+type TemplateOption = { label: string; value: "personal" | "organizational" };
 
-function getInitials() {
-  return "GL";
-}
+type Props = {
+  ledgerMode: LedgerMode;
+  compact: boolean;
+  languageCode?: string | null;
+};
 
-const LedgerAccountsGate: React.FC = () => {
+const templateKey = (item: TemplateOption) => item.value;
+const templateLabel = (item: TemplateOption) => item.label;
+
+const Surface = ({
+  title,
+  description,
+  active,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={[
+      "rounded-2xl border p-4 text-left transition-colors",
+      active
+        ? "border-gray-900 bg-gray-900 text-white"
+        : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50",
+    ].join(" ")}
+  >
+    <div className="text-sm font-semibold">{title}</div>
+    <p className={["mt-1 text-sm", active ? "text-gray-100" : "text-gray-600"].join(" ")}>
+      {description}
+    </p>
+  </button>
+);
+
+const LedgerAccountsGate: React.FC<Props> = ({
+  ledgerMode,
+  compact,
+  languageCode,
+}) => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation("ledgerAccountsGate");
   const { isOwner, permissions } = useAuthContext();
+  const messages = getLedgerMessages(languageCode);
 
-  const canAddLedgerAccounts = useMemo(() => {
-    if (isOwner) return true;
-    return permissions.includes("add_ledger_account");
-  }, [isOwner, permissions]);
+  const canAddLedgerAccounts = useMemo(
+    () => isOwner || permissions.includes("add_ledger_account"),
+    [isOwner, permissions]
+  );
 
-  useEffect(() => {
-    document.title = t("pageTitle");
-  }, [t]);
-
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
-  /* --------- Flags --------- */
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  /* --------- UI state --------- */
-  const [mode, setMode] = useState<Mode>(null);
+  const [setupMode, setSetupMode] = useState<SetupMode>("standard");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [textBlock, setTextBlock] = useState("");
-  const [stdChoice, setStdChoice] = useState<"personal" | "business" | null>(null);
+  const [standardPlan, setStandardPlan] = useState<"personal" | "organizational">(
+    ledgerMode === "personal" ? "personal" : "organizational"
+  );
   const [snack, setSnack] = useState<Snack>(null);
+  const [busy, setBusy] = useState(false);
 
-  /* --------- Template downloads (backend) --------- */
-
-  const guardNoPermission = () => {
-    setSnack({
-      message: t("snackbar.noPermission"),
-      severity: "error",
-    });
-  };
-
-  const downloadCsvTemplate = async () => {
-    if (!canAddLedgerAccounts) {
-      guardNoPermission();
-      return;
-    }
-
-    try {
-      await api.downloadLedgerCsvTemplate();
-    } catch (e) {
-      const msg =
-        (e as { message?: string })?.message ||
-        (t("snackbar.downloadError") as string) ||
-        "Error while downloading template.";
-      setSnack({ message: msg, severity: "error" });
-    }
-  };
-
-  const downloadXlsxTemplate = async () => {
-    if (!canAddLedgerAccounts) {
-      guardNoPermission();
-      return;
-    }
-
-    try {
-      await api.downloadLedgerXlsxTemplate();
-    } catch (e) {
-      const msg =
-        (e as { message?: string })?.message ||
-        (t("snackbar.downloadError") as string) ||
-        "Error while downloading template.";
-      setSnack({ message: msg, severity: "error" });
-    }
-  };
-
-  const handleUploadCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setCsvFile(file);
-  };
-
-  const addStandardPlan = async (): Promise<boolean> => {
-    if (!canAddLedgerAccounts) {
-      guardNoPermission();
-      return false;
-    }
-
-    if (!stdChoice) {
-      setSnack({
-        message: t("snackbar.standardRequired"),
-        severity: "warning",
-      });
-      return false;
-    }
-
-    await api.importStandardLedgerAccounts(stdChoice);
-    return true;
-  };
+  const templateOptions = useMemo<TemplateOption[]>(
+    () => [
+      {
+        label: messages.setup.templatePersonal,
+        value: "personal",
+      },
+      {
+        label: messages.setup.templateOrganizational,
+        value: "organizational",
+      },
+    ],
+    [messages]
+  );
 
   const submit = async () => {
     if (!canAddLedgerAccounts) {
-      guardNoPermission();
+      setSnack({ message: messages.setup.permissionError, severity: "error" });
       return;
     }
 
     try {
-      setIsSubmitting(true);
+      setBusy(true);
 
-      if (mode === "csv") {
-        if (!csvFile) {
-          setSnack({ message: t("snackbar.selectCsv"), severity: "warning" });
-          return;
-        }
+      if (setupMode === "csv") {
+        if (!csvFile) throw new Error(messages.setup.selectFileError);
 
         const formData = new FormData();
         formData.append("mode", "csv");
         formData.append("file", csvFile);
 
         await api.importLedgerAccounts(formData);
-
-        setSnack({ message: t("snackbar.csvSuccess"), severity: "success" });
-      } else if (mode === "manual") {
-        if (!textBlock.trim()) {
-          setSnack({ message: t("snackbar.manualRequired"), severity: "warning" });
-          return;
-        }
+      } else if (setupMode === "manual") {
+        if (!textBlock.trim()) throw new Error(messages.setup.manualError);
 
         const formData = new FormData();
         formData.append("mode", "manual");
         formData.append("manual_text", textBlock);
 
         await api.importLedgerAccounts(formData);
-
-        setSnack({ message: t("snackbar.manualSuccess"), severity: "success" });
-      } else if (mode === "standard") {
-        const ok = await addStandardPlan();
-        if (!ok) return;
-
-        setSnack({ message: t("snackbar.standardSuccess"), severity: "success" });
+      } else if (setupMode === "standard") {
+        await api.importStandardLedgerAccounts(standardPlan);
       } else {
-        setSnack({ message: t("snackbar.chooseMode"), severity: "info" });
-        return;
+        throw new Error(messages.setup.chooseModeError);
       }
 
+      setSnack({ message: messages.setup.success, severity: "success" });
       navigate("/settings/ledger-accounts", { replace: true });
     } catch (e) {
-      const msg = (e as { message?: string })?.message || (t("snackbar.saveError") as string);
-      setSnack({ message: msg, severity: "error" });
+      setSnack({
+        message: (e as Error)?.message || messages.setup.genericError,
+        severity: "error",
+      });
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
   };
 
-  /* --------- Render --------- */
   return (
-    <>
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials()}
+    <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          <div className="grid gap-5 px-4 py-4 sm:px-5 lg:grid-cols-[1.4fr_0.9fr]">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                {messages.setup.pageLabel}
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("header.settings")}
-                </div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {t("title")}
-                </h1>
-                <p className="mt-1 text-[11px] text-gray-600">
-                  {t("header.categoriesInfo")}
-                </p>
+
+              <h1 className="mt-1 text-[16px] font-semibold text-gray-900 sm:text-[18px]">
+                {ledgerMode === "personal"
+                  ? messages.setup.titlePersonal
+                  : messages.setup.titleOrganizational}
+              </h1>
+
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">
+                {compact
+                  ? messages.setup.descriptionCompact
+                  : ledgerMode === "personal"
+                  ? messages.setup.descriptionPersonal
+                  : messages.setup.descriptionOrganizational}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-4">
+              <div className="text-[11px] uppercase tracking-wide text-gray-700">
+                {messages.setup.currentProfile}
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700">
+                  {messages.setup.modeLabel}:{" "}
+                  {ledgerMode === "personal"
+                    ? messages.setup.personal
+                    : messages.setup.organizational}
+                </span>
+
+                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700">
+                  {messages.setup.viewLabel}:{" "}
+                  {compact ? messages.setup.compact : messages.setup.full}
+                </span>
               </div>
             </div>
-          </header>
+          </div>
+        </section>
 
-          {/* Content */}
-          <PermissionMiddleware codeName={"add_ledger_account"} behavior="lock">
-            <section className="mt-6">
-              <div className="max-w-3xl mx-auto p-6 md:p-8 border border-gray-200 rounded-lg bg-white space-y-6">
-                <p className="text-sm text-gray-600">{t("subtitle")}</p>
+        <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+          <div className="border-b border-gray-200 px-4 py-3 sm:px-5">
+            <div className="text-[11px] uppercase tracking-wide text-gray-700">
+              {messages.setup.setupMethod}
+            </div>
+          </div>
 
-                {/* CSV / XLSX */}
-                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-medium">{t("modes.csv.title")}</h2>
-                    <label className="text-sm flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="mode"
-                        checked={mode === "csv"}
-                        onChange={() => setMode("csv")}
-                        disabled={isSubmitting}
-                      />
-                      {t("modes.csv.choose")}
-                    </label>
+          <div className="px-4 py-4 sm:px-5">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <Surface
+                active={setupMode === "standard"}
+                onClick={() => setSetupMode("standard")}
+                title={messages.setup.standardTitle}
+                description={messages.setup.standardDescription}
+              />
+              <Surface
+                active={setupMode === "csv"}
+                onClick={() => setSetupMode("csv")}
+                title={messages.setup.uploadTitle}
+                description={messages.setup.uploadDescription}
+              />
+              <Surface
+                active={setupMode === "manual"}
+                onClick={() => setSetupMode("manual")}
+                title={messages.setup.manualTitle}
+                description={messages.setup.manualDescription}
+              />
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {setupMode === "standard" ? (
+                <div className="grid gap-4 lg:grid-cols-[1.2fr_auto_auto]">
+                  <SelectDropdown<TemplateOption>
+                    label={messages.setup.templateLabel}
+                    items={templateOptions}
+                    selected={templateOptions.filter((x) => x.value === standardPlan)}
+                    onChange={(items) =>
+                      setStandardPlan(
+                        items[0]?.value ??
+                          (ledgerMode === "personal" ? "personal" : "organizational")
+                      )
+                    }
+                    getItemKey={templateKey}
+                    getItemLabel={templateLabel}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel={messages.setup.templateLabel}
+                  />
+
+                  <div className="lg:self-end">
+                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
+                      {messages.setup.downloadCsv}
+                    </Button>
                   </div>
 
-                  {mode === "csv" && (
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" onClick={downloadCsvTemplate} disabled={isSubmitting}>
-                          {t("modes.csv.downloadTemplate")}
-                        </Button>
-                        <Button variant="outline" onClick={downloadXlsxTemplate} disabled={isSubmitting}>
-                          {t("modes.csv.downloadXlsxTemplate")}
-                        </Button>
-                      </div>
-
-                      <Input
-                        kind="text"
-                        type="file"
-                        label={t("modes.csv.uploadLabel")}
-                        onChange={handleUploadCSV}
-                        accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-                        disabled={isSubmitting}
-                      />
-
-                      <p className="text-[12px] text-gray-500">
-                        {t("modes.csv.hintHeaderRow")} · {t("modes.csv.hintColumns")}
-                      </p>
-                      <p className="text-[11px] text-gray-500">{t("modes.csv.hintCategories")}</p>
-                      <p className="text-[11px] text-gray-400">{t("modes.csv.hintXlsxMeta")}</p>
-                    </div>
-                  )}
+                  <div className="lg:self-end">
+                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
+                      {messages.setup.downloadXlsx}
+                    </Button>
+                  </div>
                 </div>
+              ) : null}
 
-                {/* Manual */}
-                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-medium">{t("modes.manual.title")}</h2>
-                    <label className="text-sm flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="mode"
-                        checked={mode === "manual"}
-                        onChange={() => setMode("manual")}
-                        disabled={isSubmitting}
-                      />
-                      {t("modes.manual.choose")}
-                    </label>
+              {setupMode === "csv" ? (
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto_auto]">
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm font-medium text-gray-700">
+                      {messages.setup.fileLabel}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".csv,.xlsx"
+                      onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
+                      className="block w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none file:mr-3 file:rounded-xl file:border file:border-gray-200 file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-gray-700"
+                    />
+                  </label>
+
+                  <div className="lg:self-end">
+                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
+                      {messages.setup.downloadCsv}
+                    </Button>
                   </div>
 
-                  {mode === "manual" && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-500">{t("modes.manual.instructions")}</p>
-
-                      <textarea
-                        className="w-full border border-gray-200 rounded p-2 resize-y min-h-[140px] outline-none focus:ring-2 focus:ring-gray-200"
-                        placeholder={t("modes.manual.placeholder")}
-                        value={textBlock}
-                        onChange={(e) => setTextBlock(e.target.value)}
-                        disabled={isSubmitting}
-                      />
-
-                      <p className="text-[11px] text-gray-500">{t("modes.manual.hintCategories")}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Standard */}
-                <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-medium">{t("modes.standard.title")}</h2>
-                    <label className="text-sm flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="mode"
-                        checked={mode === "standard"}
-                        onChange={() => setMode("standard")}
-                        disabled={isSubmitting}
-                      />
-                      {t("modes.standard.choose")}
-                    </label>
+                  <div className="lg:self-end">
+                    <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
+                      {messages.setup.downloadXlsx}
+                    </Button>
                   </div>
-
-                  {mode === "standard" && (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="radio"
-                            name="std"
-                            checked={stdChoice === "personal"}
-                            onChange={() => setStdChoice("personal")}
-                            disabled={isSubmitting}
-                          />
-                          {t("modes.standard.personal")}
-                        </label>
-
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="radio"
-                            name="std"
-                            checked={stdChoice === "business"}
-                            onChange={() => setStdChoice("business")}
-                            disabled={isSubmitting}
-                          />
-                          {t("modes.standard.business")}
-                        </label>
-                      </div>
-
-                      <p className="text-[12px] text-gray-500">{t("modes.standard.hint")}</p>
-                    </div>
-                  )}
                 </div>
+              ) : null}
 
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setMode(null);
-                      setCsvFile(null);
-                      setTextBlock("");
-                      setStdChoice(null);
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    {t("buttons.clear")}
-                  </Button>
+              {setupMode === "manual" ? (
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium text-gray-700">
+                    {messages.setup.manualLabel}
+                  </span>
 
-                  <Button onClick={submit} disabled={isSubmitting}>
-                    {isSubmitting ? t("buttons.finishing") : t("buttons.finish")}
-                  </Button>
-                </div>
-              </div>
-            </section>
-          </PermissionMiddleware>
-        </div>
-      </main>
+                  <textarea
+                    className="min-h-[240px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+                    value={textBlock}
+                    onChange={(e) => setTextBlock(e.target.value)}
+                    placeholder={messages.setup.manualPlaceholder}
+                  />
+                </label>
+              ) : null}
+            </div>
 
-      <Snackbar
-        open={!!snack}
-        onClose={() => setSnack(null)}
-        autoHideDuration={5000}
-        message={snack?.message}
-        severity={snack?.severity}
-        anchor={{ vertical: "bottom", horizontal: "center" }}
-        pauseOnHover
-        showCloseButton
-      />
-    </>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => void submit()} disabled={busy}>
+                {busy ? messages.setup.submitting : messages.setup.submit}
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <Snackbar
+          open={!!snack}
+          onClose={() => setSnack(null)}
+          autoHideDuration={5000}
+          message={snack?.message}
+          severity={snack?.severity}
+          anchor={{ vertical: "bottom", horizontal: "center" }}
+          pauseOnHover
+          showCloseButton
+        />
+      </div>
+    </main>
   );
 };
 

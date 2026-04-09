@@ -12,7 +12,7 @@
     "addFilter": "Filter hinzufügen +",
     "date": "Zeitraum",
     "bank": "Bank",
-    "accounts": "Hauptbuchkonto",
+    "categories": "Kategorien",
     "observation": "Bemerkung",
     "txType": "Typ (Einnahme/Ausgabe)",
     "amount": "Betrag (min/max)",
@@ -21,7 +21,7 @@
   "chips": {
     "date": "Daten:",
     "bank": "Bank:",
-    "accounts": "Hauptbuchkonto:",
+    "categories": "Kategorie:",
     "type": "Typ:",
     "credit": "Einnahme",
     "debit": "Ausgabe",
@@ -40,7 +40,7 @@
       "thisYear": "Jahr"
     },
     "banks": { "label": "Banken", "button": "Banken auswählen" },
-    "accounts": { "label": "Hauptbuchkonten", "button": "Konten auswählen" },
+    "categories": { "label": "Kategorie", "button": "Kategorien auswählen" },
     "observation": { "placeholder": "Bemerkung eingeben..." },
     "txType": { "credit": "Einnahme", "debit": "Ausgabe" },
     "amount": {

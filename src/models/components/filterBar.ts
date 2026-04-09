@@ -1,38 +1,43 @@
 // src/models/components/filterBar.ts
 
-export type EntryFilters = {
+export interface EntryFilters {
+  settlement_status?: boolean;
   start_date?: string;
   end_date?: string;
   description?: string;
   observation?: string;
-  ledger_account_id?: string[];
-  bank_id?: string[];
   tx_type?: "credit" | "debit";
   amount_min?: string;
   amount_max?: string;
-  settlement_status?: boolean;
-};
+  bank_id?: string[];
+  cashflow_category_id?: string[];
+}
 
 export type ChipKey =
   | "date"
   | "banks"
-  | "accounts"
+  | "categories"
   | "observation"
   | "tx_type"
   | "amount";
 
-export type LocalFilters =
-  Omit<EntryFilters, "ledger_account_id" | "bank_id" | "amount_min" | "amount_max"> & {
-    ledger_account_id: string[];
-    bank_id: string[];
-    amount_min?: string;
-    amount_max?: string;
-  };
+export interface LocalFilters {
+  settlement_status: boolean;
+  start_date: string;
+  end_date: string;
+  description: string;
+  observation: string;
+  tx_type?: "credit" | "debit";
+  amount_min: string;
+  amount_max: string;
+  bank_id: string[];
+  cashflow_category_id: string[];
+}
 
 export type Visualization = {
   id: string;
   name: string;
-  is_default: boolean;
-  filters: LocalFilters;
-  settlement_status: boolean;
+  is_default?: boolean;
+  settlement_status?: boolean;
+  filters: EntryFilters;
 };

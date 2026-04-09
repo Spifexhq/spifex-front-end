@@ -22,11 +22,6 @@ export function isPositiveMajor(value?: string): boolean {
   return n !== null && n > 0;
 }
 
-/**
- * Date utilities (rolling ranges forward from today):
- * - Anchor at local noon to avoid DST boundary drift.
- * - Rolling: week = +7 days, month = +1 month, quarter = +3 months, year = +12 months.
- */
 export function dateAtNoonLocal(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
 }
@@ -45,10 +40,6 @@ export function addDaysLocal(base: Date, days: number): Date {
   return d;
 }
 
-/**
- * Month add that clamps to last valid day of target month.
- * Example: Jan 31 + 1 month => Feb 28/29.
- */
 export function addMonthsLocal(base: Date, months: number): Date {
   const b = dateAtNoonLocal(base);
   const desiredDay = b.getDate();
@@ -82,8 +73,10 @@ export function amountChipLabel(minMajor?: string, maxMajor?: string, t?: (k: st
 export function extractArray<T>(data: unknown): T[] {
   if (Array.isArray(data)) return data as T[];
   if (data && typeof data === "object") {
-    const maybe = data as { results?: unknown };
+    const maybe = data as { results?: unknown; items?: unknown; data?: unknown };
     if (Array.isArray(maybe.results)) return maybe.results as T[];
+    if (Array.isArray(maybe.items)) return maybe.items as T[];
+    if (Array.isArray(maybe.data)) return maybe.data as T[];
   }
   return [];
 }
@@ -94,7 +87,7 @@ export function buildInitialLocalFilters(initial: EntryFilters | undefined, cont
     end_date: initial?.end_date ?? "",
     description: initial?.description ?? "",
     observation: initial?.observation ?? "",
-    ledger_account_id: normalizeStringArray(initial?.ledger_account_id),
+    cashflow_category_id: normalizeStringArray(initial?.cashflow_category_id),
     bank_id: normalizeStringArray(initial?.bank_id),
     tx_type: initial?.tx_type,
     amount_min: initial?.amount_min ? String(initial.amount_min) : "",
@@ -109,7 +102,7 @@ export function buildClearedLocalFilters(contextSettlement: boolean): LocalFilte
     end_date: "",
     description: "",
     observation: "",
-    ledger_account_id: [],
+    cashflow_category_id: [],
     bank_id: [],
     tx_type: undefined,
     amount_min: "",
@@ -127,7 +120,7 @@ export function toEntryFilters(local: LocalFilters): EntryFilters {
     end_date: local.end_date || undefined,
     description: local.description || undefined,
     observation: local.observation || undefined,
-    ledger_account_id: local.ledger_account_id.length ? local.ledger_account_id : undefined,
+    cashflow_category_id: local.cashflow_category_id.length ? local.cashflow_category_id : undefined,
     bank_id: local.bank_id.length ? local.bank_id : undefined,
     tx_type: local.tx_type,
     amount_min: min,

@@ -1,0 +1,22 @@
+{
+  "pageTitle": "Área de contabilidade",
+  "title": "Área de contabilidade",
+  "subtitle": "Gerir a estrutura contabilística do razão separadamente da vista operacional de categorização de cashflow.",
+  "buttons": {
+    "backToLedger": "Voltar ao espaço do razão",
+    "addAccount": "Adicionar conta",
+    "search": "Pesquisar",
+    "clear": "Limpar"
+  },
+  "sections": {
+    "structure": {
+      "title": "Estrutura contabilística",
+      "description": "Refine a hierarquia, os grupos de reporte, a visibilidade e o alinhamento com demonstrações."
+    },
+    "views": {
+      "title": "Vistas",
+      "cashflow": "Vista de cashflow",
+      "accounting": "Vista contabilística"
+    }
+  }
+}

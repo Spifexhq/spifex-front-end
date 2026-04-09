@@ -27,5 +27,14 @@
   },
   "hints": {
     "escToCancel": "Dica: pressione"
+  },
+  "review": {
+    "title": "Revisão contábil disponível",
+    "subtitle": "{{count}} lançamento selecionado está pronto para revisão de integração.",
+    "subtitle_plural": "{{count}} lançamentos selecionados estão prontos para revisão de integração.",
+    "subtitleShort": "{{count}} lançamento selecionado pronto para revisão.",
+    "subtitleShort_plural": "{{count}} lançamentos selecionados prontos para revisão.",
+    "action": "Revisar contábil",
+    "actionShort": "Revisar"
   }
 }

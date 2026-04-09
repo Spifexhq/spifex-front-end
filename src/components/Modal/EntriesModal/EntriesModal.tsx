@@ -19,8 +19,12 @@ import type {
   IntervalMonths,
 } from "@/components/Modal/Modal.types";
 
-import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
-import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type {
+  AddEntryRequest,
+  EditEntryRequest,
+  CashflowCategoryOption,
+} from "@/models/entries/entries";
+import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
 import type { InventoryItem } from "@/models/settings/inventory";
@@ -34,6 +38,7 @@ import EntitiesTab from "@/components/Modal/EntriesModal/Tab.entities";
 import RecurrenceTab from "@/components/Modal/EntriesModal/Tab.recurrence";
 
 /* ---------------------------------- Types --------------------------------- */
+
 type DocumentTypeItem = { id: DocumentType["code"]; label: string };
 
 type EntryDiffable = {
@@ -44,7 +49,7 @@ type EntryDiffable = {
   notes?: string | null;
   amount: string;
   tx_type: "credit" | "debit";
-  ledger_account?: string | null;
+  cashflow_category?: string | null;
   document_type?: string | null;
   project?: string | null;
   entity?: string | null;
@@ -53,13 +58,15 @@ type EntryDiffable = {
   weekend_action?: number | null;
   last_settled_on?: string | null;
   departments?: Array<{ department_id: string; percent: string | number }>;
+  accounting?: AccountingReadiness | null;
 };
 
 /* ------------------------------ Stable constants ------------------------------ */
+
 const IDS = {
   form: "EntriesModalForm",
   modalTitle: "entries-modal-title",
-  ledgerWrap: "ledger-select-wrap",
+  categoryWrap: "cashflow-category-select-wrap",
   installmentsInput: "installments-input",
   inventoryQty: "inventory-qty-input",
   entityTypeWrap: "entity-type-wrap",
@@ -104,7 +111,7 @@ function getEmptyFormData(): FormData {
       description: "",
       observation: "",
       amount: "",
-      ledgerAccount: "",
+      cashflowCategory: "",
       documentType: "",
       notes: "",
     },
@@ -168,6 +175,25 @@ function closeTransientOverlays() {
   return true;
 }
 
+function extractCollection<T>(input: unknown): T[] {
+  if (Array.isArray(input)) return input as T[];
+  if (!input || typeof input !== "object") return [];
+
+  const obj = input as Record<string, unknown>;
+
+  for (const key of ["results", "items", "data", "categories"]) {
+    const value = obj[key];
+    if (Array.isArray(value)) return value as T[];
+  }
+
+  if (obj.data && obj.data !== input) {
+    const nested = extractCollection<T>(obj.data);
+    if (nested.length || Array.isArray(obj.data)) return nested;
+  }
+
+  return [];
+}
+
 /* -------------------------------- Component -------------------------------- */
 
 const EntriesModal: React.FC<EntriesModalProps> = ({
@@ -214,9 +240,12 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
-  const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
+  const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(
+    null
+  );
 
-  const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
+  const [cashflowCategories, setCashflowCategories] = useState<CashflowCategoryOption[]>([]);
+  const [accounting, setAccounting] = useState<AccountingReadiness | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -257,7 +286,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       d.description.trim() ||
       d.observation.trim() ||
       d.notes.trim() ||
-      d.ledgerAccount ||
+      d.cashflowCategory ||
       d.documentType
     ) {
       return true;
@@ -285,6 +314,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     setActiveTab("details");
     setWarning(null);
     setShowCloseConfirm(false);
+    setAccounting(null);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -319,10 +349,23 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     attemptClose();
   }, [attemptClose, showCloseConfirm, warning, isSubmitting]);
 
-  const fetchAllLedgerAccounts = useCallback(async () => {
-    const all = await fetchAllCursor<LedgerAccount>(api.getLedgerAccounts);
-    const wanted = type === "credit" ? "credit" : "debit";
-    return all.filter((a) => (a?.default_tx || "").toLowerCase() === wanted);
+  const fetchAllCashflowCategories = useCallback(async () => {
+    const response = await api.getCashflowCategories();
+    const categories = extractCollection<CashflowCategoryOption>(
+      (response as { data?: unknown })?.data ?? response
+    );
+
+    const wantedType = type === "credit" ? 1 : -1;
+
+    return categories
+      .filter((c) => c.is_active !== false)
+      .filter((c) => c.tx_type_hint == null || Number(c.tx_type_hint) === wantedType)
+      .sort((a, b) => {
+        const ac = a.code || "";
+        const bc = b.code || "";
+        if (ac && bc && ac !== bc) return ac.localeCompare(bc, "en", { numeric: true });
+        return (a.name || "").localeCompare(b.name || "", "en");
+      });
   }, [type]);
 
   const fetchAllDepartments = useCallback(() => fetchAllCursor<Department>(api.getDepartmentsOptions), []);
@@ -331,14 +374,24 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions), []);
   const fetchAllDocumentTypes = useCallback(() => fetchAllCursor<DocumentType>(api.getDocumentTypes), []);
 
+  const refreshAccountingReadiness = useCallback(async (entryId: string) => {
+    try {
+      const res = await api.getEntryAccountingReadiness(entryId);
+      const envelope = (res as { data?: { accounting?: AccountingReadiness } }).data;
+      setAccounting(envelope?.accounting ?? null);
+    } catch {
+      setAccounting(null);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     let alive = true;
 
     (async () => {
       try {
-        const [la, deps, prjs, invs, ents, dts] = await Promise.all([
-          fetchAllLedgerAccounts(),
+        const [ca, deps, prjs, invs, ents, dts] = await Promise.all([
+          fetchAllCashflowCategories(),
           fetchAllDepartments(),
           fetchAllProjects(),
           fetchAllInventoryItems(),
@@ -347,7 +400,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         ]);
 
         if (!alive) return;
-        setLedgerAccounts(la);
+        setCashflowCategories(ca);
         setDepartments(deps);
         setProjects(prjs);
         setInventoryItems(invs);
@@ -375,7 +428,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   }, [
     isOpen,
     initialEntry,
-    fetchAllLedgerAccounts,
+    fetchAllCashflowCategories,
     fetchAllDepartments,
     fetchAllProjects,
     fetchAllInventoryItems,
@@ -404,7 +457,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         description: ie.description ?? "",
         observation: ie.observation ?? "",
         amount: ie.amount ?? "",
-        ledgerAccount: ie.ledger_account || "",
+        cashflowCategory: ie.cashflow_category || "",
         documentType: ie.document_type || "",
         notes: ie.notes ?? "",
       },
@@ -425,7 +478,19 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         weekend: weekendNum === 1 ? 1 : weekendNum === -1 ? -1 : "",
       },
     });
+
+    setAccounting(ie.accounting ?? null);
   }, [isOpen, initialEntry]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialEntry?.id) {
+      void refreshAccountingReadiness(initialEntry.id);
+    } else {
+      setAccounting(null);
+    }
+  }, [isOpen, initialEntry?.id, refreshAccountingReadiness]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -459,13 +524,17 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       };
     }
 
-    if (!formData.details.ledgerAccount) {
+    if (!formData.details.cashflowCategory) {
       return {
         ok: false,
         tab: "details",
-        focusId: IDS.ledgerWrap,
-        title: t("entriesModal:errors.ledger_account.title"),
-        message: t("entriesModal:errors.ledger_account.message"),
+        focusId: IDS.categoryWrap,
+        title: t("entriesModal:errors.cashflow_category.title", {
+          defaultValue: t("entriesModal:errors.ledger_account.title"),
+        }),
+        message: t("entriesModal:errors.cashflow_category.message", {
+          defaultValue: t("entriesModal:errors.ledger_account.message"),
+        }),
       };
     }
 
@@ -508,7 +577,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     if (formData.costCenters.departments.length > 0) {
       const percs = formData.costCenters.department_percentage;
 
-      for (let i = 0; i < percs.length; i++) {
+      for (let i = 0; i < percs.length; i += 1) {
         const raw = String(percs[i] ?? "").trim();
         const n = Number(raw.replace(",", "."));
         if (!raw || !Number.isFinite(n) || n <= 0) {
@@ -637,14 +706,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             amount: formData.details.amount || "",
             tx_type: type,
 
-            ledger_account: formData.details.ledgerAccount,
+            cashflow_category: formData.details.cashflowCategory,
 
             ...(formData.details.documentType ? { document_type: formData.details.documentType } : {}),
             ...(formData.costCenters.projects ? { project: formData.costCenters.projects } : {}),
             ...(formData.entities.entity ? { entity: formData.entities.entity } : {}),
             ...(deps ? { departments: deps } : {}),
             ...(items ? { items } : {}),
-
             ...(isRecurring && installmentCount > 1
               ? {
                   installment_count: installmentCount,
@@ -662,12 +730,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           const changes: Partial<EditEntryRequest> = {};
 
           if (formData.details.dueDate !== ie.due_date) changes.due_date = formData.details.dueDate;
+
           if ((formData.details.description || "") !== (ie.description || "")) {
             changes.description = formData.details.description || "";
           }
+
           if ((formData.details.observation || "") !== (ie.observation || "")) {
             changes.observation = formData.details.observation || "";
           }
+
           if ((formData.details.notes || "") !== (ie.notes || "")) {
             changes.notes = formData.details.notes || "";
           }
@@ -676,9 +747,10 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             changes.amount = formData.details.amount;
           }
 
-          const initialGl = ie.ledger_account || "";
-          if (!isFinancialLocked && formData.details.ledgerAccount && formData.details.ledgerAccount !== initialGl) {
-            changes.ledger_account = formData.details.ledgerAccount;
+          const initialCategory = ie.cashflow_category || "";
+          const newCategory = formData.details.cashflowCategory || "";
+          if (!isFinancialLocked && newCategory !== initialCategory) {
+            changes.cashflow_category = newCategory || null;
           }
 
           const initialDocType = ie.document_type || "";
@@ -762,12 +834,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   );
 
   const isAmountValid = formData.details.amount > "";
-  const isLedgerValid = !!formData.details.ledgerAccount;
+  const isCategoryValid = !!formData.details.cashflowCategory;
 
   const isRecurrenceValid =
     isRecurrenceLocked ||
     formData.recurrence.recurrence !== 1 ||
-    (Number.isInteger(Number(formData.recurrence.installments)) && Number(formData.recurrence.installments) > 0);
+    (Number.isInteger(Number(formData.recurrence.installments)) &&
+      Number(formData.recurrence.installments) > 0);
 
   const isInventoryValid =
     !formData.inventory.product ||
@@ -778,12 +851,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     (formData.costCenters.department_percentage.every((raw) => {
       const n = Number(String(raw).replace(",", "."));
       return !!String(raw).trim() && Number.isFinite(n) && n > 0;
-    }) && Math.abs(percentageSum - 100) <= 0.001);
+    }) &&
+      Math.abs(percentageSum - 100) <= 0.001);
 
   const isSaveDisabled =
     isSubmitting ||
     !isAmountValid ||
-    !isLedgerValid ||
+    !isCategoryValid ||
     !isRecurrenceValid ||
     !isInventoryValid ||
     !areDepartmentsValid;
@@ -821,10 +895,14 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             setFormData={setFormData}
             amountRef={amountRef}
             descriptionRef={descriptionRef}
-            ledgerAccounts={ledgerAccounts}
-            ledgerWrapId={IDS.ledgerWrap}
+            cashflowCategories={cashflowCategories}
+            categoryWrapId={IDS.categoryWrap}
             documentTypes={DOCUMENT_TYPES}
             isFinancialLocked={isFinancialLocked}
+            accounting={accounting}
+            onOpenAccountingReason={
+              initialEntry?.id ? () => void refreshAccountingReadiness(initialEntry.id) : undefined
+            }
           />
         );
 
@@ -887,14 +965,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          attemptClose();
-        }
-      }}
-    >
+    <div className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center">
       <div
         role="dialog"
         aria-modal="true"
@@ -976,7 +1047,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
               </p>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
-                <Button variant="cancel" type="button" onClick={attemptClose} disabled={isSubmitting} className="w-full md:w-auto">
+                <Button
+                  variant="cancel"
+                  type="button"
+                  onClick={attemptClose}
+                  disabled={isSubmitting}
+                  className="w-full md:w-auto"
+                >
                   {t("entriesModal:actions.cancel")}
                 </Button>
                 <Button type="submit" disabled={isSaveDisabled} className="w-full md:w-auto">

@@ -9,7 +9,8 @@ import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, Pa
   TwoFactorSettingsResponse, TwoFactorSettingsUpdateRequest, SecurityStatusResponse} from '@/models/auth/security';
 import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from '@/models/auth/user';
 import type { OnboardingStatus } from "@/models/auth/onboarding";
-import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest } from '@/models/auth/organization';
+import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest, OrgLedgerProfileResponse,
+  UpdateOrgLedgerProfileRequest } from '@/models/auth/organization';
 import type { GetEntitlementLimitsResponse } from '@/models/auth/entitlements';
 import type { CreateCheckoutSessionRequest, CreateCheckoutSessionResponse, CreateCustomerPortalSessionRequest,
   CreateCustomerPortalSessionResponse, 
@@ -27,7 +28,7 @@ import type { AddViewPresetRequest, AddViewPresetResponse, EditViewPresetRequest
   GetViewPresetsResponse } from '@/models/components/viewPresets';
 import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest, GetEntriesBulkResponse,
   GetEntryRequest, EditEntriesBulkResponse, EditEntryRequest, GetEntryResponse,
-  DeleteEntriesBulkRequest } from '@/models/entries/entries';
+  DeleteEntriesBulkRequest, GetCashflowCategoriesParams, GetCashflowCategoriesResponse } from '@/models/entries/entries';
 import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, BulkSettleItem, BulkSettleResponse,
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from '@/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
@@ -36,10 +37,38 @@ import type { AddBankRequest, AddBankResponse, EditBankRequest, EditBankResponse
   GetBanksBulkRequest, GetBanksBulkResponse, GetBanksParams, GetBanksResponse, 
   GetBanksTableParams,
   GetBanksTableResponse} from '@/models/settings/banking';
-import type { AddLedgerAccountRequest, DeleteAllLedgerAccountsRequest, DeleteAllLedgerAccountsResponse,
-  EditLedgerAccountRequest, GetLedgerAccountsRequest, GetLedgerAccountsResponse, ImportLedgerAccountsResponse,
-  ImportStandardLedgerAccountsRequest, ImportStandardLedgerAccountsResponse, LedgerAccount, LedgerAccountsBulkRequest,
-  LedgerAccountsBulkResponse, LedgerAccountsExistsResponse } from '@/models/settings/ledgerAccounts';
+import type {
+  AddLedgerAccountRequest,
+  DeleteAllLedgerAccountsRequest,
+  DeleteAllLedgerAccountsResponse,
+  EditLedgerAccountRequest,
+  GetLedgerAccountsRequest,
+  GetLedgerAccountsResponse,
+  ImportLedgerAccountsResponse,
+  ImportStandardLedgerAccountsRequest,
+  ImportStandardLedgerAccountsResponse,
+  LedgerAccount,
+  LedgerAccountsBulkRequest,
+  LedgerAccountsBulkResponse,
+  LedgerAccountsExistsResponse,
+  GetLedgerAccountsTreeRequest,
+  GetLedgerAccountsTreeResponse,
+} from '@/models/settings/ledgerAccounts';
+import type {
+  AccountingBook,
+  AddAccountingBookRequest,
+  EditAccountingBookRequest,
+  CategoryPostingPolicy,
+  UpsertCategoryPostingPolicyRequest,
+  BankAccountLedgerMap,
+  UpsertBankAccountLedgerMapRequest,
+  JournalEntry,
+  AddJournalEntryRequest,
+  ReverseJournalEntryRequest,
+  GetJournalEntriesParams,
+  GetTrialBalanceParams,
+  GetTrialBalanceResponse,
+} from '@/models/settings/accounting';
 import type { AddDepartmentRequest, Department, DepartmentsBulkRequest, DepartmentsBulkResponse, EditDepartmentRequest,
   GetDepartmentResponse, GetDepartmentsParams, GetDepartmentsResponse } from '@/models/settings/departments';
 import type { AddProjectRequest, EditProjectRequest, GetProjectsParams, GetProjectsResponse, Project,
@@ -65,24 +94,26 @@ import type {
   BulkUpdateStatementImportRowsRequest,
   UpdateStatementImportRowRequest,
 } from "@/models/settings/statements";
+import type {
+  EntryAccountingPreviewEnvelope,
+  EntryAccountingReadinessEnvelope,
+} from '@/models/entries/accountingReadiness';
 
 
 async function downloadTemplate(path: string, filename: string) {
   const res = await http.get(path, {
-    responseType: "blob",
+    responseType: 'blob',
     validateStatus: (s: number) => s >= 200 && s < 300,
   });
 
   const blob = res.data as Blob;
   const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
-
   URL.revokeObjectURL(url);
 }
 
@@ -202,6 +233,12 @@ export const api = {
 
   updateOrgCurrency: (payload: UpdateOrgCurrencyRequest) =>
     request<OrgCurrencyResponse>("organizations/current/currency/", "PUT", payload),
+
+  getOrgLedgerProfile: () =>
+    request<OrgLedgerProfileResponse>('organizations/current/ledger-profile/', 'GET'),
+
+  updateOrgLedgerProfile: (payload: UpdateOrgLedgerProfileRequest) =>
+    request<OrgLedgerProfileResponse>('organizations/current/ledger-profile/', 'PUT', payload),
 
   /* --- Entitlements --- */
   getEntitlementLimits:() =>
@@ -430,49 +467,100 @@ export const api = {
 
   /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>
-    request<GetLedgerAccountsResponse>(`ledger/accounts/`, "GET", params),
+    request<GetLedgerAccountsResponse>('ledger/accounts/', 'GET', params),
 
   getLedgerAccountsBulk: (ids: string[]) =>
-    request<LedgerAccountsBulkResponse>(`ledger/accounts/bulk/get/`, "POST", {
-      ids
+    request<LedgerAccountsBulkResponse>('ledger/accounts/bulk/get/', 'POST', {
+      ids,
     } satisfies LedgerAccountsBulkRequest),
 
   getLedgerAccount: (ledgerAccountId: string) =>
-    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, "GET"),
+    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, 'GET'),
 
   getLedgerAccountsExists: () =>
-    request<LedgerAccountsExistsResponse>(`ledger/accounts/exists/`, "GET"),
+    request<LedgerAccountsExistsResponse>('ledger/accounts/exists/', 'GET'),
 
-  importLedgerAccounts: (formData: FormData) =>
-    request<ImportLedgerAccountsResponse>(`ledger/accounts/import/`, "POST", formData),
-
-  importStandardLedgerAccounts: (plan: "personal" | "business") =>
-    request<ImportStandardLedgerAccountsResponse>(`ledger/accounts/import-standard/`, "POST", {
-      plan
-    } satisfies ImportStandardLedgerAccountsRequest),
-
-  downloadLedgerCsvTemplate: () =>
-    downloadTemplate(`ledger/accounts/template/csv/`, "template_ledger_accounts.csv"),
-
-  downloadLedgerXlsxTemplate: () =>
-    downloadTemplate(`ledger/accounts/template/xlsx/`, "template_ledger_accounts.xlsx"),
+  getLedgerAccountsTree: (params?: GetLedgerAccountsTreeRequest) =>
+    request<GetLedgerAccountsTreeResponse>('ledger/accounts/tree/', 'GET', params),
 
   addLedgerAccount: (payload: AddLedgerAccountRequest) =>
-    request<LedgerAccount>(`ledger/accounts/`, "POST", payload),
+    request<LedgerAccount>('ledger/accounts/', 'POST', payload),
 
   addLedgerAccountsBulk: (payload: AddLedgerAccountRequest[]) =>
-    request<LedgerAccount[]>(`ledger/accounts/bulk/create/`, "POST", payload),
+    request<LedgerAccount[]>('ledger/accounts/bulk/create/', 'POST', payload),
 
   editLedgerAccount: (ledgerAccountId: string, payload: EditLedgerAccountRequest) =>
-    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, "PATCH", payload),
+    request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, 'PATCH', payload),
 
   deleteAllLedgerAccounts: () =>
-    request<DeleteAllLedgerAccountsResponse>(`ledger/accounts/delete/all/`, "DELETE", {
-      confirm_delete_all: true
+    request<DeleteAllLedgerAccountsResponse>('ledger/accounts/delete/all/', 'DELETE', {
+      confirm_delete_all: true,
     } satisfies DeleteAllLedgerAccountsRequest),
 
   deleteLedgerAccount: (ledgerAccountId: string) =>
-    request<void>(`ledger/accounts/${ledgerAccountId}/`, "DELETE"),
+    request<void>(`ledger/accounts/${ledgerAccountId}/`, 'DELETE'),
+
+  importLedgerAccounts: (formData: FormData) =>
+    request<ImportLedgerAccountsResponse>("ledger/accounts/import/", "POST", formData),
+
+  importStandardLedgerAccounts: (plan: "personal" | "organizational" | "default") =>
+    request<ImportStandardLedgerAccountsResponse>("ledger/accounts/import-standard/", "POST", {
+      plan,
+    } satisfies ImportStandardLedgerAccountsRequest),
+
+  downloadLedgerCsvTemplate: () =>
+    downloadTemplate("ledger/accounts/template/csv/", "template_ledger_accounts.csv"),
+
+  downloadLedgerXlsxTemplate: () =>
+    downloadTemplate("ledger/accounts/template/xlsx/", "template_ledger_accounts.xlsx"),
+
+  /* --- Accounting --- */
+  getAccountingBooks: () => request<AccountingBook[]>('ledger/books/', 'GET'),
+
+  addAccountingBook: (payload: AddAccountingBookRequest) =>
+    request<AccountingBook>('ledger/books/', 'POST', payload),
+
+  editAccountingBook: (bookId: string, payload: EditAccountingBookRequest) =>
+    request<AccountingBook>(`ledger/books/${bookId}/`, 'PATCH', payload),
+
+  getCategoryPostingPolicies: () =>
+    request<CategoryPostingPolicy[]>('ledger/category-policies/', 'GET'),
+
+  upsertCategoryPostingPolicy: (payload: UpsertCategoryPostingPolicyRequest) =>
+    request<CategoryPostingPolicy>('ledger/category-policies/', 'POST', payload),
+
+  getBankAccountLedgerMaps: () =>
+    request<BankAccountLedgerMap[]>('ledger/bank-account-maps/', 'GET'),
+
+  upsertBankAccountLedgerMap: (payload: UpsertBankAccountLedgerMapRequest) =>
+    request<BankAccountLedgerMap>('ledger/bank-account-maps/', 'POST', payload),
+
+  getJournalEntries: (params?: GetJournalEntriesParams) =>
+    request<JournalEntry[]>('ledger/journals/', 'GET', params),
+
+  getJournalEntry: (journalId: string) =>
+    request<JournalEntry>(`ledger/journals/${journalId}/`, 'GET'),
+
+  createJournalEntry: (payload: AddJournalEntryRequest) =>
+    request<JournalEntry>('ledger/journals/', 'POST', payload),
+
+  reverseJournalEntry: (journalId: string, payload: ReverseJournalEntryRequest = {}) =>
+    request<JournalEntry>(`ledger/journals/${journalId}/reverse/`, 'POST', payload),
+
+  getTrialBalance: (params?: GetTrialBalanceParams) =>
+    request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', params),
+
+  getCashflowCategories: (params?: GetCashflowCategoriesParams) =>
+    request<GetCashflowCategoriesResponse>("cashflow/entries/categories/", "GET", params),
+
+  getEntryAccountingReadiness: (entryId: string) =>
+    request<EntryAccountingReadinessEnvelope>(`cashflow/entries/${entryId}/accounting-readiness/`, 'GET'),
+
+  getEntriesAccountingReadinessBulk: (ids: string[]) =>
+    request<EntryAccountingReadinessEnvelope[]>(`cashflow/entries/accounting-readiness/bulk/`, 'POST', { ids }),
+
+  previewEntryAccounting: (entryId: string) =>
+    request<EntryAccountingPreviewEnvelope>(`cashflow/entries/${entryId}/accounting-preview/`, 'GET'),
 
   /* --- Departments --- */
   getDepartments: (params?: GetDepartmentsParams) =>
@@ -705,8 +793,6 @@ export const api = {
 
     downloadBlob(res.data as Blob, filename);
   },
-
-
 
 
 

@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import type { FilterDefinition } from "../FilterBar.types";
 import type { LocalFilters, ChipKey } from "@/models/components/filterBar";
 import type { BankAccountTableRow } from "@/models/settings/banking";
-import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type { CashflowCategoryOption } from "@/models/entries/entries";
 
 import { Chip } from "../ui/Chip";
 
@@ -14,9 +14,8 @@ export const ChipsSearchBar: React.FC<{
   filterDefs: FilterDefinition[];
   localFilters: LocalFilters;
   selectedBanks: BankAccountTableRow[];
-  selectedAccounts: LedgerAccount[];
+  selectedCategories: CashflowCategoryOption[];
 
-  openEditor: ChipKey | null;
   onToggleEditor: (key: ChipKey) => void;
   onRemoveChip: (key: ChipKey) => void;
 
@@ -28,8 +27,7 @@ export const ChipsSearchBar: React.FC<{
   filterDefs,
   localFilters,
   selectedBanks,
-  selectedAccounts,
-  openEditor,
+  selectedCategories,
   onToggleEditor,
   onRemoveChip,
   searchInputRef,
@@ -42,9 +40,7 @@ export const ChipsSearchBar: React.FC<{
         "flex-1",
         "flex flex-wrap items-center gap-2",
         "border border-gray-300 rounded-md px-2",
-        // allow the container to grow if it wraps
         "min-h-10 sm:min-h-8 py-1",
-        // IMPORTANT: remove nowrap + horizontal scroll
         "bg-white",
       ].join(" ")}
     >
@@ -55,8 +51,8 @@ export const ChipsSearchBar: React.FC<{
             key={d.key}
             t={t}
             icon={d.icon}
-            label={d.getChipLabel({ t, filters: localFilters, selectedBanks, selectedAccounts })}
-            onClick={() => onToggleEditor(openEditor === d.key ? d.key : d.key)}
+            label={d.getChipLabel({ t, filters: localFilters, selectedBanks, selectedCategories })}
+            onClick={() => onToggleEditor(d.key)}
             onRemove={() => onRemoveChip(d.key)}
           />
         ))}
@@ -64,7 +60,6 @@ export const ChipsSearchBar: React.FC<{
       <input
         ref={searchInputRef}
         className={[
-          // take remaining space on the current line, but allow wrapping
           "flex-1",
           "min-w-[160px] sm:min-w-[200px]",
           "h-7 sm:h-6",

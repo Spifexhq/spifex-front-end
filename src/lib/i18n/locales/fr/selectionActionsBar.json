@@ -27,5 +27,14 @@
   },
   "hints": {
     "escToCancel": "Astuce : appuyez sur"
+  },
+  "review": {
+    "title": "Révision comptable disponible",
+    "subtitle": "{{count}} écriture sélectionnée est prête pour une révision du rapprochement.",
+    "subtitle_plural": "{{count}} écritures sélectionnées sont prêtes pour une révision du rapprochement.",
+    "subtitleShort": "{{count}} écriture sélectionnée prête à être révisée.",
+    "subtitleShort_plural": "{{count}} écritures sélectionnées prêtes à être révisées.",
+    "action": "Réviser la comptabilité",
+    "actionShort": "Réviser"
   }
 }

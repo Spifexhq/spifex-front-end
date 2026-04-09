@@ -1,4 +1,3 @@
-// src/models/entries/settlements.ts
 import type { Paginated } from "@/models/Api";
 import type { Entry } from "./entries";
 import type { BankAccount } from "@/models/settings/banking";
@@ -17,7 +16,7 @@ export interface GetSettledEntryRequest {
   description?: string;
   observation?: string;
 
-  ledger_account?: string;
+  cashflow_category?: string;
   project?: string;
   entity?: string;
 
@@ -59,7 +58,7 @@ export interface SettledEntry {
   interval_months: number;
   weekend_action: number;
 
-  ledger_account: string | null;
+  cashflow_category: string | null;
   project: string | null;
   entity: string | null;
   transfer_id: string | null;

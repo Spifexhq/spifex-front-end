@@ -98,9 +98,9 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     navigate("/settings/banks");
   }, [navigate]);
 
-  const ledgerAccountParam = useMemo(
-    () => (filters?.ledger_account_id?.length ? filters.ledger_account_id.join(",") : undefined),
-    [filters?.ledger_account_id],
+  const cashflowCategoryParam = useMemo(
+    () => (filters?.cashflow_category_id?.length ? filters.cashflow_category_id.join(",") : undefined),
+    [filters?.cashflow_category_id],
   );
 
   const bankParam = useMemo(
@@ -118,9 +118,10 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           const { data } = await api.getSettledKpis({
             description: filters?.description,
             observation: filters?.observation,
-            ledger_account: ledgerAccountParam,
+            cashflow_category_id: cashflowCategoryParam,
             bank_id: bankParam,
           });
+
           if (mounted) {
             setSt(data);
             setCf(null);
@@ -129,8 +130,9 @@ const KpiCards: React.FC<KpiCardsProps> = ({
           const { data } = await api.getCashflowKpis({
             description: filters?.description,
             observation: filters?.observation,
-            ledger_account: ledgerAccountParam,
+            cashflow_category_id: cashflowCategoryParam,
           });
+
           if (mounted) {
             setCf(data);
             setSt(null);
@@ -150,7 +152,23 @@ const KpiCards: React.FC<KpiCardsProps> = ({
     return () => {
       mounted = false;
     };
-  }, [contextSettlement, ledgerAccountParam, bankParam, filters?.description, filters?.observation, refreshToken]);
+  }, [
+    contextSettlement,
+    cashflowCategoryParam,
+    bankParam,
+    filters?.description,
+    filters?.observation,
+    refreshToken,
+  ]);
+
+  const categoryHint = useMemo(() => {
+    const count = filters?.cashflow_category_id?.length ?? 0;
+    if (!count) return undefined;
+    return tr("kpiCards:common.filteredByCategories", {
+      count,
+      defaultValue: `Filtered by ${count} categor${count === 1 ? "y" : "ies"}`,
+    });
+  }, [filters?.cashflow_category_id, tr]);
 
   const cashflowKpis: KpiItem[] = useMemo(() => {
     if (!cf) {
@@ -181,10 +199,15 @@ const KpiCards: React.FC<KpiCardsProps> = ({
         key: "mtdNet",
         label: tr("kpiCards:cashflow.labels.mtdNet"),
         value: signedCurrencyFromDecimal(cf.mtd.net),
-        hint: tr("kpiCards:cashflow.hints.mtd", {
-          inAmt: currencyFromDecimal(cf.mtd.in),
-          outAmt: currencyFromDecimal(cf.mtd.out),
-        }),
+        hint: [
+          tr("kpiCards:cashflow.hints.mtd", {
+            inAmt: currencyFromDecimal(cf.mtd.in),
+            outAmt: currencyFromDecimal(cf.mtd.out),
+          }),
+          categoryHint,
+        ]
+          .filter(Boolean)
+          .join(" • "),
         delta: {
           value: tr("kpiCards:delta.mom", { value: `${mtdNetN >= 0 ? "+" : ""}${momLabel}` }),
           positive: momPositive,
@@ -194,22 +217,32 @@ const KpiCards: React.FC<KpiCardsProps> = ({
         key: "overdueNet",
         label: tr("kpiCards:cashflow.labels.overdueNet"),
         value: signedCurrencyFromDecimal(cf.overdue.net),
-        hint: tr("kpiCards:cashflow.hints.overdue", {
-          recAmt: currencyFromDecimal(cf.overdue.rec),
-          payAmt: currencyFromDecimal(cf.overdue.pay),
-        }),
+        hint: [
+          tr("kpiCards:cashflow.hints.overdue", {
+            recAmt: currencyFromDecimal(cf.overdue.rec),
+            payAmt: currencyFromDecimal(cf.overdue.pay),
+          }),
+          categoryHint,
+        ]
+          .filter(Boolean)
+          .join(" • "),
       },
       {
         key: "next7Net",
         label: tr("kpiCards:cashflow.labels.next7Net"),
         value: currencyFromDecimal(cf.next7.net),
-        hint: tr("kpiCards:cashflow.hints.next7", {
-          recAmt: currencyFromDecimal(cf.next7.rec),
-          payAmt: currencyFromDecimal(cf.next7.pay),
-        }),
+        hint: [
+          tr("kpiCards:cashflow.hints.next7", {
+            recAmt: currencyFromDecimal(cf.next7.rec),
+            payAmt: currencyFromDecimal(cf.next7.pay),
+          }),
+          categoryHint,
+        ]
+          .filter(Boolean)
+          .join(" • "),
       },
     ];
-  }, [cf, tr]);
+  }, [cf, tr, categoryHint]);
 
   const settledKpis: KpiItem[] = useMemo(() => {
     if (!st) {
@@ -240,10 +273,15 @@ const KpiCards: React.FC<KpiCardsProps> = ({
         key: "mtdSettledNet",
         label: tr("kpiCards:settled.labels.mtdSettledNet"),
         value: signedCurrencyFromDecimal(st.mtd.net),
-        hint: tr("kpiCards:settled.hints.mtd", {
-          recAmt: currencyFromDecimal(st.mtd.in),
-          payAmt: currencyFromDecimal(st.mtd.out),
-        }),
+        hint: [
+          tr("kpiCards:settled.hints.mtd", {
+            recAmt: currencyFromDecimal(st.mtd.in),
+            payAmt: currencyFromDecimal(st.mtd.out),
+          }),
+          categoryHint,
+        ]
+          .filter(Boolean)
+          .join(" • "),
         delta: {
           value: tr("kpiCards:delta.mom", { value: `${mtdNetN >= 0 ? "+" : ""}${momLabel}` }),
           positive: momPositive,
@@ -253,22 +291,32 @@ const KpiCards: React.FC<KpiCardsProps> = ({
         key: "prevSettledNet",
         label: tr("kpiCards:settled.labels.prevSettledNet"),
         value: signedCurrencyFromDecimal(st.prev.net),
-        hint: tr("kpiCards:settled.hints.prev", {
-          recAmt: currencyFromDecimal(st.prev.in),
-          payAmt: currencyFromDecimal(st.prev.out),
-        }),
+        hint: [
+          tr("kpiCards:settled.hints.prev", {
+            recAmt: currencyFromDecimal(st.prev.in),
+            payAmt: currencyFromDecimal(st.prev.out),
+          }),
+          categoryHint,
+        ]
+          .filter(Boolean)
+          .join(" • "),
       },
       {
         key: "last7Settled",
         label: tr("kpiCards:settled.labels.last7Settled"),
         value: signedCurrencyFromDecimal(st.last7.net),
-        hint: tr("kpiCards:settled.hints.last7", {
-          recAmt: currencyFromDecimal(st.last7.in),
-          payAmt: currencyFromDecimal(st.last7.out),
-        }),
+        hint: [
+          tr("kpiCards:settled.hints.last7", {
+            recAmt: currencyFromDecimal(st.last7.in),
+            payAmt: currencyFromDecimal(st.last7.out),
+          }),
+          categoryHint,
+        ]
+          .filter(Boolean)
+          .join(" • "),
       },
     ];
-  }, [st, tr]);
+  }, [st, tr, categoryHint]);
 
   const autoKpis = contextSettlement ? settledKpis : cashflowKpis;
 

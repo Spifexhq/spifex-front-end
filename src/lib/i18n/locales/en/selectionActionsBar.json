@@ -27,5 +27,14 @@
   },
   "hints": {
     "escToCancel": "Tip: press"
+  },
+  "review": {
+    "title": "Accounting review available",
+    "subtitle": "{{count}} selected entry is ready for a bridge review.",
+    "subtitle_plural": "{{count}} selected entries are ready for a bridge review.",
+    "subtitleShort": "{{count}} selected entry ready for review.",
+    "subtitleShort_plural": "{{count}} selected entries ready for review.",
+    "action": "Review accounting",
+    "actionShort": "Review"
   }
 }

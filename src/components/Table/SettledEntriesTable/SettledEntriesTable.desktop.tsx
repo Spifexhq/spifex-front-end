@@ -1,7 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/components/Table/SettledEntriesTable/SettledEntriesTable.desktop.tsx */
-/* -------------------------------------------------------------------------- */
-
 import React, {
   useEffect,
   useState,
@@ -13,7 +9,6 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 
 import { api } from "@/api/requests";
@@ -26,13 +21,13 @@ import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry } fr
 import type { SettledEntriesTableHandle, SettledEntriesTableProps } from "./SettledEntriesTable";
 
 /* -------------------------------------------------------------------------- */
-/* Helpers (mirror CashFlowTable.desktop naming/behavior)                     */
+/* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
 
 const getId = (e: SettledEntry): string => e.external_id;
 
 const getAmount = (e: SettledEntry): number => {
-  const raw = (e as unknown as { amount?: unknown }).amount;
+  const raw = e.amount;
   if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
 
   const s = String(raw ?? "0").trim();
@@ -46,7 +41,7 @@ const getAmount = (e: SettledEntry): number => {
 const getTxString = (e: SettledEntry): string => String(e.tx_type ?? "").toLowerCase();
 const isCredit = (e: SettledEntry): boolean => getTxString(e).includes("credit");
 
-const getDueDate = (e: SettledEntry): string => e.value_date;
+const getValueDate = (e: SettledEntry): string => e.value_date;
 const getDescription = (e: SettledEntry): string => e.description ?? "";
 
 const getInstallments = (e: SettledEntry) => ({
@@ -74,9 +69,8 @@ const parseOptionalAmount = (v: unknown): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-/** running balance comes as major string/number; return number or null */
 const getServerRunning = (e: SettledEntry): number | null => {
-  const raw = (e as unknown as { running_balance?: unknown }).running_balance;
+  const raw = e.running_balance;
   if (typeof raw === "string" && raw.trim().length) {
     const n = Number(raw);
     return Number.isFinite(n) ? n : null;
@@ -85,22 +79,14 @@ const getServerRunning = (e: SettledEntry): number | null => {
   return null;
 };
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 interface TableRow {
   id: string;
   type: "entry" | "summary";
   entry?: SettledEntry;
   monthlySum?: number;
   runningBalance?: number;
-  displayMonth?: string; // "MM/YYYY"
+  displayMonth?: string;
 }
-
-/* -------------------------------------------------------------------------- */
-/* i18n-aware utils                                                           */
-/* -------------------------------------------------------------------------- */
 
 const getMonthYear = (dateStr: string): string => {
   const d = new Date(dateStr);
@@ -115,7 +101,6 @@ const formatMonthYearSummary = (isoDate: string, monthsShort: string[]): string 
   return `${monthsShort[m]}, ${d.getFullYear()}`;
 };
 
-/** + for credits, - for debits (major units) */
 const getTransactionValue = (entry: SettledEntry): number => {
   const amount = getAmount(entry);
   return isCredit(entry) ? amount : -amount;
@@ -131,6 +116,7 @@ const TableHeader: React.FC<{
   onSelectAll: () => void;
 }> = ({ selectedCount, totalCount, onSelectAll }) => {
   const { t } = useTranslation("settledTable");
+
   return (
     <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
       <div className="flex items-center gap-3 min-w-0">
@@ -141,7 +127,9 @@ const TableHeader: React.FC<{
           aria-label={t("aria.selectAll")}
         />
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[10px] uppercase tracking-wide text-gray-600">{t("labels.settled")}</span>
+          <span className="text-[10px] uppercase tracking-wide text-gray-600">
+            {t("labels.settled")}
+          </span>
           <span className="text-[10px] text-gray-500">({totalCount})</span>
           {selectedCount > 0 && (
             <span className="text-[10px] text-blue-600 font-medium">
@@ -151,7 +139,6 @@ const TableHeader: React.FC<{
         </div>
       </div>
 
-      {/* Desktop-only column headers (do NOT hide sidebar; match CashFlow) */}
       <div className="hidden md:flex items-center text-[10px] uppercase tracking-wide text-gray-600">
         <div className="w-[150px] text-center">{t("columns.amount")}</div>
         <div className="w-[150px] text-center">{t("columns.balance")}</div>
@@ -172,20 +159,16 @@ const EntryRow: React.FC<{
   const transactionValue = getTransactionValue(entry);
   const isPositive = transactionValue >= 0;
 
-  const due = formatDateFromISO(getDueDate(entry));
+  const valueDate = formatDateFromISO(getValueDate(entry));
   const installments = getInstallments(entry);
   const installmentsLabel =
     installments.index || installments.count
       ? `${installments.index ?? "-"}${installments.count ? `/${installments.count}` : ""}`
       : "";
 
-  // Additional settled-specific badges (kept in the secondary line)
   const partialLabel = entry.partial_index != null ? String(entry.partial_index) : "";
   const bankName = entry.bank?.institution ? String(entry.bank.institution) : "";
 
-  // IMPORTANT behavioral change vs current Settled desktop:
-  // - Row click does NOT toggle selection (prevents accidental selection + matches CashFlow).
-  // - Only checkbox click toggles selection.
   return (
     <div className="group flex items-center justify-center h-10.5 max-h-10.5 px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50 border-b border-gray-200">
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -204,7 +187,7 @@ const EntryRow: React.FC<{
               </div>
 
               <div className="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
-                {t("labels.settlement")} {due}
+                {t("labels.settlement")} {valueDate}
                 {installmentsLabel ? <span className="ml-2">• {installmentsLabel}</span> : null}
                 {partialLabel ? <span className="ml-2">• {partialLabel}</span> : null}
                 {bankName ? <span className="ml-2">• {bankName}</span> : null}
@@ -255,7 +238,9 @@ const SummaryRow: React.FC<{
     <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
       <div className="flex items-center gap-2">
         <div className="h-1.5 w-1.5 bg-gray-500 rounded-full" />
-        <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">{label}</span>
+        <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">
+          {label}
+        </span>
       </div>
 
       <div className="flex items-center">
@@ -270,7 +255,9 @@ const SummaryRow: React.FC<{
         </div>
 
         <div className="w-[150px] text-center">
-          <div className="text-[11px] font-semibold tabular-nums text-gray-900">{formatCurrency(runningBalance)}</div>
+          <div className="text-[11px] font-semibold tabular-nums text-gray-900">
+            {formatCurrency(runningBalance)}
+          </div>
         </div>
 
         <div className="w-[32px]" />
@@ -289,7 +276,7 @@ const EmptyState: React.FC = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={1.5}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
       </div>
@@ -297,66 +284,6 @@ const EmptyState: React.FC = () => {
         <p className="text-[13px] font-medium text-gray-800 mb-1">{t("empty.title")}</p>
         <p className="text-[11px] text-gray-500">{t("empty.subtitle")}</p>
       </div>
-    </div>
-  );
-};
-
-/* ------------------------------ Skeletons --------------------------------- */
-
-const SkeletonEntryRow: React.FC = () => (
-  <div className="flex items-center h-10.5 max-h-10.5 px-3 py-1.5 border-b border-gray-200 overflow-hidden">
-    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-      <div className="h-4 w-4 rounded border border-gray-300 bg-gray-200 animate-pulse shrink-0" />
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
-        <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-1" />
-      </div>
-
-      <div className="hidden sm:flex items-center shrink-0">
-        <div className="w-[150px] text-center">
-          <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-        </div>
-        <div className="w-[150px] text-center">
-          <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-        </div>
-        <div className="w-[32px]" />
-      </div>
-    </div>
-  </div>
-);
-
-const SkeletonSummaryRow: React.FC = () => (
-  <div className="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300 overflow-hidden">
-    <div className="flex items-center gap-2 min-w-0">
-      <div className="h-1.5 w-1.5 bg-gray-300 rounded-full shrink-0" />
-      <div className="h-3 w-24 rounded bg-gray-200 animate-pulse" />
-    </div>
-
-    <div className="hidden sm:flex items-center">
-      <div className="w-[150px] text-center">
-        <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-      </div>
-      <div className="w-[150px] text-center">
-        <div className="h-3 w-20 mx-auto rounded bg-gray-200 animate-pulse" />
-      </div>
-      <div className="w-[32px]" />
-    </div>
-  </div>
-);
-
-const TableSkeleton: React.FC<{ rows?: number; showSummariesEvery?: number }> = ({
-  rows = 10,
-  showSummariesEvery = 4,
-}) => {
-  const { t } = useTranslation("settledTable");
-  return (
-    <div className="divide-y divide-gray-200" role="progressbar" aria-label={t("aria.loadingEntries")} aria-busy="true">
-      {Array.from({ length: rows }).map((_, i) => (
-        <React.Fragment key={i}>
-          <SkeletonEntryRow />
-          {(i + 1) % showSummariesEvery === 0 && <SkeletonSummaryRow />}
-        </React.Fragment>
-      ))}
     </div>
   );
 };
@@ -377,14 +304,13 @@ const BottomLoader: React.FC = () => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Main + Virtualization                                                      */
+/* Main                                                                       */
 /* -------------------------------------------------------------------------- */
 
 const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, SettledEntriesTableProps>(
   ({ filters, onSelectionChange }, ref) => {
     const { t } = useTranslation("settledTable");
 
-    // Data
     const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -393,13 +319,9 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
     const [error, setError] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-    // Selection (match CashFlow: selection only via checkbox click)
-    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<SettledEntry, string>(
-      entries,
-      getId,
-    );
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } =
+      useShiftSelect<SettledEntry, string>(entries, getId);
 
-    // Latest for fetch (match CashFlow)
     const latest = useRef<{
       filters: EntryFilters | undefined;
       nextCursor: string | null;
@@ -414,7 +336,6 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
       latest.current = { filters, nextCursor, isFetching };
     }, [filters, nextCursor, isFetching]);
 
-    // notify selection
     useEffect(() => {
       const selectedRows = entries.filter((e) => selectedIds.includes(getId(e)));
       onSelectionChange?.(selectedIds, selectedRows);
@@ -428,11 +349,12 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const bank = Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
+      const bank =
+        Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
 
-      const ledger_account =
-        Array.isArray(f?.ledger_account_id) && f.ledger_account_id.length
-          ? f.ledger_account_id.map(String).join(",")
+      const cashflow_category =
+        Array.isArray(f?.cashflow_category_id) && f.cashflow_category_id.length
+          ? f.cashflow_category_id.map(String).join(",")
           : undefined;
 
       const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
@@ -444,7 +366,7 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
         q,
         description: f?.description || undefined,
         observation: f?.observation || undefined,
-        ledger_account,
+        cashflow_category,
         tx_type,
         amount_min: parseOptionalAmount(f?.amount_min),
         amount_max: parseOptionalAmount(f?.amount_max),
@@ -475,8 +397,8 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
 
             if (reset) {
               merged.sort((a, b) => {
-                const ad = new Date(getDueDate(a)).getTime();
-                const bd = new Date(getDueDate(b)).getTime();
+                const ad = new Date(getValueDate(a)).getTime();
+                const bd = new Date(getValueDate(b)).getTime();
                 if (ad !== bd) return ad - bd;
                 return getId(a).localeCompare(getId(b));
               });
@@ -495,10 +417,9 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
           setIsFetching(false);
         }
       },
-      [buildPayload, t],
+      [buildPayload, t]
     );
 
-    /* ----------------------- Infinite inner scroll ------------------------- */
     const scrollerRef = useRef<HTMLDivElement>(null);
 
     const handleInnerScroll = useCallback(() => {
@@ -509,7 +430,6 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
       if (nearBottom) fetchEntries(false);
     }, [isFetching, hasMore, fetchEntries]);
 
-    // If first page doesn't fill, fetch one more
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
@@ -518,7 +438,6 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
       }
     }, [loading, hasMore, entries.length, fetchEntries]);
 
-    /* ------------------------- Build rows + summaries ---------------------- */
     const tableRows = useMemo((): TableRow[] => {
       if (!entries.length) return [];
       let currentMonth = "";
@@ -527,12 +446,11 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
 
       entries.forEach((entry, index) => {
         const txValue = getTransactionValue(entry);
-        const entryMonth = getMonthYear(getDueDate(entry));
+        const entryMonth = getMonthYear(getValueDate(entry));
 
         if (currentMonth && currentMonth !== entryMonth) {
           const lastRow = rows[rows.length - 1];
           const lastRunning = lastRow?.type === "entry" ? lastRow.runningBalance ?? 0 : 0;
-
           rows.push({
             id: `summary-${currentMonth}-${index}`,
             type: "summary",
@@ -540,7 +458,6 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
             runningBalance: lastRunning,
             displayMonth: currentMonth,
           });
-
           monthlySum = 0;
         }
 
@@ -571,8 +488,7 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
       return rows;
     }, [entries]);
 
-    /* ------------------------------ Virtualization -------------------------- */
-    const ENTRY_ROW_H = 42; // ≈ h-10.5
+    const ENTRY_ROW_H = 42;
     const SUMMARY_ROW_H = 40;
     const OVERSCAN = 8;
 
@@ -590,7 +506,7 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
 
     const rowHeights = useMemo(
       () => tableRows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
-      [tableRows],
+      [tableRows]
     );
 
     const rowOffsets = useMemo(() => {
@@ -613,7 +529,7 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
         }
         return Math.max(0, lo - 1);
       },
-      [rowOffsets],
+      [rowOffsets]
     );
 
     const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
@@ -640,7 +556,7 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
           fetchEntries(true);
         },
       }),
-      [clearSelection, fetchEntries],
+      [clearSelection, fetchEntries]
     );
 
     useEffect(() => {
@@ -648,7 +564,6 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
       fetchEntries(true);
     }, [filters, fetchEntries]);
 
-    /* --------------------------------- UI ---------------------------------- */
     if (error) {
       return (
         <div className="border border-gray-300 rounded-md bg-white overflow-hidden">
@@ -666,9 +581,6 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
             <div className="text-center">
               <p className="text-[13px] font-medium text-red-800 mb-1">{t("errors.title")}</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
-              <Button variant="outline" size="sm" className="text-[11px] font-semibold" onClick={() => fetchEntries(true)}>
-                {t("actions.retry")}
-              </Button>
             </div>
           </div>
         </div>
@@ -680,7 +592,11 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
         aria-label={t("aria.section")}
         className="border border-gray-300 rounded-md bg-white overflow-hidden h-full flex flex-col max-w-full"
       >
-        <TableHeader selectedCount={selectedIds.length} totalCount={entries.length} onSelectAll={handleSelectAll} />
+        <TableHeader
+          selectedCount={selectedIds.length}
+          totalCount={entries.length}
+          onSelectAll={handleSelectAll}
+        />
 
         <div
           ref={scrollerRef}
@@ -690,9 +606,7 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
           }}
           className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative max-w-full"
         >
-          {loading && !entries.length ? (
-            <TableSkeleton rows={Math.max(10, Math.ceil((viewportH || 400) / ENTRY_ROW_H))} />
-          ) : tableRows.length === 0 ? (
+          {loading && !entries.length ? null : tableRows.length === 0 ? (
             <EmptyState />
           ) : (
             <div className="divide-y divide-gray-200 relative max-w-full overflow-x-hidden">
@@ -741,7 +655,9 @@ const SettledEntriesTableDesktop = forwardRef<SettledEntriesTableHandle, Settled
         {loadingMore && <BottomLoader />}
       </section>
     );
-  },
+  }
 );
+
+SettledEntriesTableDesktop.displayName = "SettledEntriesTableDesktop";
 
 export default SettledEntriesTableDesktop;

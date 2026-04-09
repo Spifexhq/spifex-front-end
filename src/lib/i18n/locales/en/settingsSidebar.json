@@ -23,6 +23,7 @@
     "inventory": "Inventory",
     "entities": "Entities",
     "ledger-accounts": "Ledger Accounts",
-    "departments": "Departments"
+    "departments": "Departments",
+    "accounting": "Accounting"
   }
 }

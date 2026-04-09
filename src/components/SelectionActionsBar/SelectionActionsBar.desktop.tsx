@@ -5,7 +5,6 @@ import Button from "@/shared/ui/Button";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "src/middlewares";
 
-/* -------------------------------- Helpers --------------------------------- */
 function safeCurrency(raw: unknown) {
   const v = String(raw ?? "").trim().toUpperCase();
   return v || "USD";
@@ -56,7 +55,6 @@ function formatDateShort(d: Date, locale: string): string {
   }
 }
 
-/* --------------------------------- Types ---------------------------------- */
 export type MinimalEntry = {
   amount?: number | string | null;
   transaction_type?: string | null;
@@ -75,18 +73,16 @@ export type SelectionActionsBarProps = {
 
   onCancel: () => void;
 
-  // CashFlow actions
   onLiquidate?: () => void;
   onDelete?: () => Promise<void> | void;
-
-  // Settled actions
   onReturn?: () => Promise<void> | void;
+
+  onAccountingReview?: () => void;
+  accountingReviewCount?: number;
 
   currency?: string | null;
   className?: string;
 };
-
-/* ------------------------------- Icons ------------------------------------ */
 
 const TrashIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
   <svg
@@ -108,7 +104,23 @@ const TrashIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
   </svg>
 );
 
-/* ------------------------------- Component -------------------------------- */
+const ReviewIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.9}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M3 12h14" />
+    <path d="m13 5 7 7-7 7" />
+  </svg>
+);
+
 const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
   contextSettlement,
   selectedIds,
@@ -118,43 +130,37 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
   onLiquidate,
   onDelete,
   onReturn,
+  onAccountingReview,
+  accountingReviewCount,
   currency,
   className = "",
 }) => {
   const { t, i18n } = useTranslation("selectionActionsBar");
   const { organization: authOrg } = useAuthContext();
 
-  /* Currency (BankSettings logic) */
   const orgCurrency = useMemo(() => safeCurrency(authOrg?.organization?.currency), [authOrg]);
   const resolvedCurrency = useMemo(() => safeCurrency(currency ?? orgCurrency), [currency, orgCurrency]);
 
   const hasSelection = (selectedIds?.length ?? 0) > 0;
   const disableAll = !!isProcessing;
 
-  /* Minimize / Expand */
   const [minimized, setMinimized] = useState(false);
   const prevCountRef = useRef<number>(0);
 
   useEffect(() => {
     const prev = prevCountRef.current;
     const next = selectedIds.length;
-
-    // When a new selection starts, default to expanded
     if (prev === 0 && next > 0) setMinimized(false);
-
     prevCountRef.current = next;
   }, [selectedIds.length]);
 
-  /* ESC to cancel selection */
   window.useGlobalEsc(hasSelection, onCancel);
 
-  /* Compute stats */
   const stats = useMemo(() => {
     let creditAbsSum = 0;
     let debitAbsSum = 0;
     let creditCount = 0;
     let debitCount = 0;
-
     let earliestDue: Date | null = null;
 
     for (const e of selectedEntries ?? []) {
@@ -193,17 +199,17 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
 
   const creditLabel = useMemo(
     () => formatMoney(stats.creditAbsSum, i18n.language, resolvedCurrency),
-    [stats.creditAbsSum, i18n.language, resolvedCurrency],
+    [stats.creditAbsSum, i18n.language, resolvedCurrency]
   );
 
   const debitLabel = useMemo(
     () => formatMoney(stats.debitAbsSum, i18n.language, resolvedCurrency),
-    [stats.debitAbsSum, i18n.language, resolvedCurrency],
+    [stats.debitAbsSum, i18n.language, resolvedCurrency]
   );
 
   const netLabel = useMemo(
     () => formatMoney(stats.net, i18n.language, resolvedCurrency),
-    [stats.net, i18n.language, resolvedCurrency],
+    [stats.net, i18n.language, resolvedCurrency]
   );
 
   const dueLabel = useMemo(() => {
@@ -211,16 +217,15 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
     return formatDateShort(stats.earliestDue, i18n.language);
   }, [stats.earliestDue, i18n.language]);
 
-  /* contextSettlement actions */
   const showLiquidate = !contextSettlement && typeof onLiquidate === "function";
   const showDelete = !contextSettlement && typeof onDelete === "function";
   const showReturn = contextSettlement && typeof onReturn === "function";
+  const showAccountingReview = !contextSettlement && typeof onAccountingReview === "function" && (accountingReviewCount ?? 0) > 0;
 
   const toggleMinimize = useCallback(() => setMinimized((p) => !p), []);
 
   if (!hasSelection) return null;
 
-  /* MINIMIZED FLOATING BOX */
   if (minimized) {
     return (
       <div
@@ -232,15 +237,12 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
           className,
         ].join(" ")}
         role="region"
-        aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
+        aria-label={t("aria.bar")}
       >
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-1">
             <div className="text-xs font-semibold text-gray-900">
-              {t("labels.selected", {
-                defaultValue: "{{count}} selected",
-                count: selectedIds.length,
-              })}
+              {t("labels.selected", { count: selectedIds.length })}
             </div>
             <div className="text-xs text-gray-600">
               <span className="font-semibold text-gray-900">{netLabel}</span>
@@ -252,7 +254,7 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
             onClick={toggleMinimize}
             disabled={disableAll}
             aria-busy={disableAll || undefined}
-            title={t("actions.expand", { defaultValue: "Expand" })}
+            title={t("actions.expand")}
             className="!py-1.5 !px-3 !text-xs"
           >
             <span className="text-sm leading-none">↗</span>
@@ -262,7 +264,6 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
     );
   }
 
-  /* EXPANDED FLOATING BAR */
   return (
     <div
       className={[
@@ -272,186 +273,201 @@ const SelectionActionsBarDesktop: React.FC<SelectionActionsBarProps> = ({
         className,
       ].join(" ")}
       role="region"
-      aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
+      aria-label={t("aria.bar")}
     >
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        {/* INFO */}
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-            <div className="text-xs sm:text-sm font-semibold text-gray-900">
-              {t("labels.selected", {
-                defaultValue: "{{count}} selected",
-                count: selectedIds.length,
-              })}
+      <div className="mx-auto max-w-7xl flex flex-col gap-3">
+        {showAccountingReview ? (
+          <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-[11px] font-semibold text-amber-700">
+              !
+            </span>
+            <div className="min-w-0 text-xs text-amber-900">
+              <span className="font-medium">{t("review.title")}.</span>{" "}
+              <span className="text-amber-800">{t("review.subtitle", { count: accountingReviewCount ?? 0 })}</span>
             </div>
+          </div>
+        ) : null}
 
-            {dueLabel ? (
-              <div className="text-xs text-gray-600 truncate min-w-0">
-                <span className="text-gray-500">{t("labels.dueShort", { defaultValue: "Due:" })}</span>{" "}
-                <span className="font-medium text-gray-800">{dueLabel}</span>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 w-full">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+              <div className="text-xs sm:text-sm font-semibold text-gray-900">
+                {t("labels.selected", { count: selectedIds.length })}
               </div>
-            ) : null}
 
-            <div className="sm:hidden text-xs text-gray-600 truncate min-w-0">
-              <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>{" "}
-              <span className="font-semibold text-gray-900">{netLabel}</span>
+              {dueLabel ? (
+                <div className="text-xs text-gray-600 truncate min-w-0">
+                  <span className="text-gray-500">{t("labels.dueShort")}</span>{" "}
+                  <span className="font-medium text-gray-800">{dueLabel}</span>
+                </div>
+              ) : null}
+
+              <div className="sm:hidden text-xs text-gray-600 truncate min-w-0">
+                <span className="text-gray-500">{t("labels.net")}</span>{" "}
+                <span className="font-semibold text-gray-900">{netLabel}</span>
+              </div>
+            </div>
+
+            <div className="mt-2 hidden sm:flex text-xs text-gray-600 flex-wrap items-center gap-x-4 gap-y-1 min-w-0">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-gray-500">{t("labels.credits")}:</span>
+                <span className="font-medium text-gray-800">{stats.creditCount}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-gray-500">{t("labels.sumCredits")}:</span>
+                <span className="font-medium text-gray-800">{creditLabel}</span>
+              </span>
+
+              <span className="text-gray-300">|</span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-gray-500">{t("labels.debits")}:</span>
+                <span className="font-medium text-gray-800">{stats.debitCount}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-gray-500">{t("labels.sumDebits")}:</span>
+                <span className="font-medium text-gray-800">{debitLabel}</span>
+              </span>
+
+              <span className="text-gray-300">|</span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <span className="text-gray-500">{t("labels.net")}</span>
+                <span className="font-semibold text-gray-900">{netLabel}</span>
+              </span>
+
+              <span className="text-gray-400 text-[11px]">
+                {t("hints.escToCancel")}{" "}
+                <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
+                  Esc
+                </kbd>{" "}
+                {t("actions.cancelSelection").replace("(Esc)", "").trim()}
+              </span>
+            </div>
+
+            <div className="mt-2 sm:hidden text-[11px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+              <span className="inline-flex items-center gap-1 min-w-0">
+                <span className="text-gray-500">{t("labels.credits")}:</span>
+                <span className="font-medium text-gray-800">{stats.creditCount}</span>
+                <span className="text-gray-400">•</span>
+                <span className="font-medium text-gray-800 truncate">{creditLabel}</span>
+              </span>
+
+              <span className="text-gray-300">|</span>
+
+              <span className="inline-flex items-center gap-1 min-w-0">
+                <span className="text-gray-500">{t("labels.debits")}:</span>
+                <span className="font-medium text-gray-800">{stats.debitCount}</span>
+                <span className="text-gray-400">•</span>
+                <span className="font-medium text-gray-800 truncate">{debitLabel}</span>
+              </span>
             </div>
           </div>
 
-          <div className="mt-2 hidden sm:flex text-xs text-gray-600 flex-wrap items-center gap-x-4 gap-y-1 min-w-0">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
-              <span className="font-medium text-gray-800">{stats.creditCount}</span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-500">{t("labels.sumCredits", { defaultValue: "Σ Credits" })}:</span>
-              <span className="font-medium text-gray-800">{creditLabel}</span>
-            </span>
-
-            <span className="text-gray-300">|</span>
-
-            <span className="inline-flex items-center gap-1.5">
-              <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
-              <span className="font-medium text-gray-800">{stats.debitCount}</span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-500">{t("labels.sumDebits", { defaultValue: "Σ Debits" })}:</span>
-              <span className="font-medium text-gray-800">{debitLabel}</span>
-            </span>
-
-            <span className="text-gray-300">|</span>
-
-            <span className="inline-flex items-center gap-1.5">
-              <span className="text-gray-500">{t("labels.net", { defaultValue: "Net balance:" })}</span>
-              <span className="font-semibold text-gray-900">{netLabel}</span>
-            </span>
-
-            <span className="text-gray-400 text-[11px]">
-              {t("hints.escToCancel", { defaultValue: "Tip: press" })}{" "}
-              <kbd className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-700 font-mono text-[10px]">
-                Esc
-              </kbd>{" "}
-              {t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })
-                .replace("(Esc)", "")
-                .trim()}
-            </span>
-          </div>
-
-          <div className="mt-2 sm:hidden text-[11px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-            <span className="inline-flex items-center gap-1 min-w-0">
-              <span className="text-gray-500">{t("labels.credits", { defaultValue: "Credits" })}:</span>
-              <span className="font-medium text-gray-800">{stats.creditCount}</span>
-              <span className="text-gray-400">•</span>
-              <span className="font-medium text-gray-800 truncate">{creditLabel}</span>
-            </span>
-
-            <span className="text-gray-300">|</span>
-
-            <span className="inline-flex items-center gap-1 min-w-0">
-              <span className="text-gray-500">{t("labels.debits", { defaultValue: "Debits" })}:</span>
-              <span className="font-medium text-gray-800">{stats.debitCount}</span>
-              <span className="text-gray-400">•</span>
-              <span className="font-medium text-gray-800 truncate">{debitLabel}</span>
-            </span>
-          </div>
-        </div>
-
-        {/* ACTIONS */}
-        <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 max-w-full">
-          <Button
-            variant="outline"
-            onClick={toggleMinimize}
-            disabled={disableAll}
-            aria-busy={disableAll || undefined}
-            title={t("actions.minimize", { defaultValue: "Minimize" })}
-            className="!py-1.5 !px-3 !text-xs sm:!text-sm"
-          >
-            <span className="inline-flex items-center gap-2 whitespace-nowrap">
-              <span aria-hidden="true" className="text-sm leading-none">
-                ↘
+          <div className="shrink-0 flex flex-wrap items-center justify-end gap-2 max-w-full">
+            <Button
+              variant="outline"
+              onClick={toggleMinimize}
+              disabled={disableAll}
+              aria-busy={disableAll || undefined}
+              title={t("actions.minimize")}
+              className="!py-1.5 !px-3 !text-xs sm:!text-sm"
+            >
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <span aria-hidden="true" className="text-sm leading-none">↘</span>
+                <span className="hidden sm:inline">{t("actions.minimize")}</span>
               </span>
-              <span className="hidden sm:inline">{t("actions.minimize", { defaultValue: "Minimize" })}</span>
-            </span>
-          </Button>
+            </Button>
 
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={disableAll}
-            aria-busy={disableAll || undefined}
-            title={t("actions.cancelSelection", { defaultValue: "Cancel selection (Esc)" })}
-            className="!py-1.5 !px-3 !text-xs sm:!text-sm"
-          >
-            <span className="inline-flex items-center gap-2 whitespace-nowrap">
-              <span aria-hidden="true" className="text-sm leading-none">
-                ✕
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={disableAll}
+              aria-busy={disableAll || undefined}
+              title={t("actions.cancelSelection")}
+              className="!py-1.5 !px-3 !text-xs sm:!text-sm"
+            >
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <span aria-hidden="true" className="text-sm leading-none">✕</span>
+                <span className="hidden sm:inline">{t("actions.cancel")}</span>
               </span>
-              <span className="hidden sm:inline">{t("actions.cancel", { defaultValue: "Cancel" })}</span>
-            </span>
-          </Button>
+            </Button>
 
-          <PermissionMiddleware codeName={["add_settled_entries", "view_cash_flow_entries"]} requireAll>
-            {showLiquidate && (
-              <Button
-                onClick={onLiquidate}
-                disabled={disableAll}
-                aria-busy={disableAll || undefined}
-                title={t("actions.liquidateSelected", { defaultValue: "Settle selected" })}
-                className={[
-                  "!py-1.5 !px-3 !text-xs sm:!text-sm",
-                  "bg-emerald-600 border border-emerald-600 text-white",
-                  "hover:bg-emerald-700 hover:border-emerald-700",
-                  "active:bg-emerald-800 active:border-emerald-800",
-                ].join(" ")}
-              >
-                <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                  <span aria-hidden="true" className="text-sm leading-none">
-                    ✓
-                  </span>
-                  <span>{t("actions.liquidate", { defaultValue: "Settle" })}</span>
-                </span>
-              </Button>
-            )}
-          </PermissionMiddleware>
-
-          <PermissionMiddleware codeName={["delete_settled_entries", "view_settled_entries"]} requireAll>
-            {showReturn && (
-              <Button
-                onClick={onReturn}
-                disabled={disableAll}
-                aria-busy={disableAll || undefined}
-                title={t("actions.return", { defaultValue: "Revert" })}
-                className={[
-                  "!py-1.5 !px-3 !text-xs sm:!text-sm",
-                  "bg-amber-500 border border-amber-500 text-white",
-                  "hover:bg-amber-600 hover:border-amber-600",
-                ].join(" ")}
-              >
-                <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                  <span aria-hidden="true" className="text-sm leading-none">
-                    ↩
-                  </span>
-                  <span>{t("actions.return", { defaultValue: "Revert" })}</span>
-                </span>
-              </Button>
-            )}
-          </PermissionMiddleware>
-
-          <PermissionMiddleware codeName={["delete_cash_flow_entries", "view_cash_flow_entries"]} requireAll>
-            {showDelete && (
+            {showAccountingReview ? (
               <Button
                 variant="outline"
-                onClick={onDelete}
+                onClick={onAccountingReview}
                 disabled={disableAll}
                 aria-busy={disableAll || undefined}
-                title={t("actions.deleteSelected", { defaultValue: "Delete selected" })}
-                className="!py-1.5 !px-3 !text-xs sm:!text-sm border-red-200 text-red-600 hover:bg-red-50"
+                title={t("review.action")}
+                className="!py-1.5 !px-3 !text-xs sm:!text-sm border-amber-300 text-amber-800 hover:bg-amber-50"
               >
                 <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                  <TrashIcon className="h-4 w-4" />
-                  <span>{t("actions.delete", { defaultValue: "Delete" })}</span>
+                  <ReviewIcon className="h-4 w-4" />
+                  <span>{t("review.actionShort")}</span>
                 </span>
               </Button>
-            )}
-          </PermissionMiddleware>
+            ) : null}
+
+            <PermissionMiddleware codeName={["add_settled_entries", "view_cash_flow_entries"]} requireAll>
+              {showLiquidate && (
+                <Button
+                  onClick={onLiquidate}
+                  disabled={disableAll}
+                  aria-busy={disableAll || undefined}
+                  title={t("actions.liquidateSelected")}
+                  className={[
+                    "!py-1.5 !px-3 !text-xs sm:!text-sm",
+                    "bg-emerald-600 border border-emerald-600 text-white",
+                    "hover:bg-emerald-700 hover:border-emerald-700",
+                    "active:bg-emerald-800 active:border-emerald-800",
+                  ].join(" ")}
+                >
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <span aria-hidden="true" className="text-sm leading-none">✓</span>
+                    <span>{t("actions.liquidate")}</span>
+                  </span>
+                </Button>
+              )}
+            </PermissionMiddleware>
+
+            <PermissionMiddleware codeName={["delete_settled_entries", "view_settled_entries"]} requireAll>
+              {showReturn && (
+                <Button
+                  onClick={onReturn}
+                  disabled={disableAll}
+                  aria-busy={disableAll || undefined}
+                  title={t("actions.return")}
+                  className={[
+                    "!py-1.5 !px-3 !text-xs sm:!text-sm",
+                    "bg-amber-500 border border-amber-500 text-white",
+                    "hover:bg-amber-600 hover:border-amber-600",
+                  ].join(" ")}
+                >
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <span aria-hidden="true" className="text-sm leading-none">↩</span>
+                    <span>{t("actions.return")}</span>
+                  </span>
+                </Button>
+              )}
+            </PermissionMiddleware>
+
+            <PermissionMiddleware codeName={["delete_cash_flow_entries", "view_cash_flow_entries"]} requireAll>
+              {showDelete && (
+                <Button
+                  variant="outline"
+                  onClick={onDelete}
+                  disabled={disableAll}
+                  aria-busy={disableAll || undefined}
+                  title={t("actions.deleteSelected")}
+                  className="!py-1.5 !px-3 !text-xs sm:!text-sm border-red-200 text-red-600 hover:bg-red-50"
+                >
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <TrashIcon className="h-4 w-4" />
+                    <span>{t("actions.delete")}</span>
+                  </span>
+                </Button>
+              )}
+            </PermissionMiddleware>
+          </div>
         </div>
       </div>
     </div>

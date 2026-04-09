@@ -1,7 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/components/Table/SettledEntriesTable/SettledEntriesTable.mobile.tsx */
-/* -------------------------------------------------------------------------- */
-
 import React, {
   useEffect,
   useMemo,
@@ -32,13 +28,12 @@ import type { SettledEntriesTableHandle, SettledEntriesTableProps } from "./Sett
 const getId = (e: SettledEntry): string => e.external_id;
 
 const getAmount = (e: SettledEntry): number => {
-  const raw = (e as unknown as { amount?: unknown }).amount;
+  const raw = e.amount;
   if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
 
   const s = String(raw ?? "0").trim();
   if (!s) return 0;
 
-  // tolerate "1,23" and "1.23" (major units)
   const normalized = s.includes(",") && !s.includes(".") ? s.replace(",", ".") : s;
   const n = Number(normalized);
   return Number.isFinite(n) ? n : 0;
@@ -47,7 +42,7 @@ const getAmount = (e: SettledEntry): number => {
 const getTxString = (e: SettledEntry): string => String(e.tx_type ?? "").toLowerCase();
 const isCredit = (e: SettledEntry): boolean => getTxString(e).includes("credit");
 
-const getDueDate = (e: SettledEntry): string => e.value_date;
+const getValueDate = (e: SettledEntry): string => e.value_date;
 const getDescription = (e: SettledEntry): string => e.description ?? "";
 
 const getInstallments = (e: SettledEntry) => ({
@@ -76,7 +71,7 @@ const parseOptionalAmount = (v: unknown): number | undefined => {
 };
 
 const getServerRunning = (e: SettledEntry): number | null => {
-  const raw = (e as unknown as { running_balance?: unknown }).running_balance;
+  const raw = e.running_balance;
 
   if (typeof raw === "string" && raw.trim().length) {
     const n = Number(raw);
@@ -100,7 +95,6 @@ const formatMonthYearSummary = (isoDate: string, monthsShort: string[]): string 
   return `${monthsShort[m]}, ${d.getFullYear()}`;
 };
 
-/** + for credits, - for debits (major units) */
 const getTransactionValue = (entry: SettledEntry): number => {
   const amount = getAmount(entry);
   return isCredit(entry) ? amount : -amount;
@@ -113,10 +107,6 @@ const safeT = (t: TFn, key: string, fallback: string, options?: Record<string, u
   return v === key ? fallback : v;
 };
 
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
 interface TableRow {
   id: string;
   type: "entry" | "summary";
@@ -127,7 +117,7 @@ interface TableRow {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Mobile UI subcomponents                                                    */
+/* Mobile UI                                                                  */
 /* -------------------------------------------------------------------------- */
 
 const MobileHeader: React.FC<{
@@ -249,8 +239,7 @@ const MobileEntryRow: React.FC<{
   const transactionValue = getTransactionValue(entry);
   const positive = transactionValue >= 0;
 
-  const due = formatDateFromISO(getDueDate(entry));
-
+  const valueDate = formatDateFromISO(getValueDate(entry));
   const installments = getInstallments(entry);
   const installmentsLabel =
     installments.index || installments.count
@@ -282,7 +271,6 @@ const MobileEntryRow: React.FC<{
       }}
     >
       <div className="flex items-center gap-2 h-full">
-        {/* indicator only (selection is by row click) */}
         <div aria-hidden="true" className="pointer-events-none">
           <Checkbox checked={isSelected} size="sm" />
         </div>
@@ -293,9 +281,8 @@ const MobileEntryRow: React.FC<{
               <div className="text-[12px] font-semibold text-gray-900 truncate leading-tight">
                 {getDescription(entry)}
               </div>
-
               <div className="text-[10px] text-gray-500 truncate mt-1">
-                {due}
+                {valueDate}
                 {installmentsLabel ? <span className="ml-2">• {installmentsLabel}</span> : null}
                 {partialLabel ? <span className="ml-2">• {partialLabel}</span> : null}
                 {bankName ? <span className="ml-2">• {bankName}</span> : null}
@@ -311,7 +298,6 @@ const MobileEntryRow: React.FC<{
               >
                 {formatCurrency(transactionValue)}
               </div>
-
               <div className="text-[10px] font-semibold tabular-nums text-gray-700 mt-1">
                 {formatCurrency(runningBalance)}
               </div>
@@ -329,7 +315,6 @@ const MobileSummaryRow: React.FC<{
   runningBalance: number;
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
   const { t } = useTranslation("settledTable");
-
   const monthsShort =
     (t("months.short", { returnObjects: true }) as string[]) ??
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -345,13 +330,13 @@ const MobileSummaryRow: React.FC<{
       <div className="flex items-center justify-between h-full">
         <div className="min-w-0 flex items-center gap-2">
           <div className="h-1.5 w-1.5 bg-gray-400 rounded-full shrink-0" />
-          <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wide truncate">{label}</span>
+          <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wide truncate">
+            {label}
+          </span>
         </div>
 
         <div className="shrink-0 flex items-center gap-3">
-          <div
-            className={`text-[10px] font-bold tabular-nums ${sumPositive ? "text-green-900" : "text-red-900"}`}
-          >
+          <div className={`text-[10px] font-bold tabular-nums ${sumPositive ? "text-green-900" : "text-red-900"}`}>
             {formatCurrency(monthlySum)}
           </div>
           <div className="text-[10px] font-bold tabular-nums text-gray-700">{formatCurrency(runningBalance)}</div>
@@ -362,7 +347,7 @@ const MobileSummaryRow: React.FC<{
 };
 
 /* -------------------------------------------------------------------------- */
-/* Main mobile table                                                          */
+/* Main                                                                       */
 /* -------------------------------------------------------------------------- */
 
 const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledEntriesTableProps>(
@@ -371,10 +356,9 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
 
     const hideScrollbarCls = useMemo(
       () => "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-      [],
+      []
     );
 
-    // Data
     const [entries, setEntries] = useState<SettledEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -383,13 +367,9 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
     const [error, setError] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-    // Selection
-    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<SettledEntry, string>(
-      entries,
-      getId,
-    );
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } =
+      useShiftSelect<SettledEntry, string>(entries, getId);
 
-    // Latest for fetch
     const latest = useRef<{
       filters: EntryFilters | undefined;
       nextCursor: string | null;
@@ -404,7 +384,6 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
       latest.current = { filters, nextCursor, isFetching };
     }, [filters, nextCursor, isFetching]);
 
-    // notify selection
     useEffect(() => {
       const selectedRows = entries.filter((e) => selectedIds.includes(getId(e)));
       onSelectionChange?.(selectedIds, selectedRows);
@@ -418,11 +397,12 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const bank = Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
+      const bank =
+        Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.map(String).join(",") : undefined;
 
-      const ledger_account =
-        Array.isArray(f?.ledger_account_id) && f.ledger_account_id.length
-          ? f.ledger_account_id.map(String).join(",")
+      const cashflow_category =
+        Array.isArray(f?.cashflow_category_id) && f.cashflow_category_id.length
+          ? f.cashflow_category_id.map(String).join(",")
           : undefined;
 
       const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
@@ -434,7 +414,7 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
         q,
         description: f?.description || undefined,
         observation: f?.observation || undefined,
-        ledger_account,
+        cashflow_category,
         tx_type,
         amount_min: parseOptionalAmount(f?.amount_min),
         amount_max: parseOptionalAmount(f?.amount_max),
@@ -465,8 +445,8 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
 
             if (reset) {
               merged.sort((a, b) => {
-                const ad = new Date(getDueDate(a)).getTime();
-                const bd = new Date(getDueDate(b)).getTime();
+                const ad = new Date(getValueDate(a)).getTime();
+                const bd = new Date(getValueDate(b)).getTime();
                 if (ad !== bd) return ad - bd;
                 return getId(a).localeCompare(getId(b));
               });
@@ -485,10 +465,9 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
           setIsFetching(false);
         }
       },
-      [buildPayload, t],
+      [buildPayload, t]
     );
 
-    /* ----------------------- Infinite inner scroll ------------------------- */
     const scrollerRef = useRef<HTMLDivElement>(null);
 
     const handleInnerScroll = useCallback(() => {
@@ -499,7 +478,6 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
       if (nearBottom) fetchEntries(false);
     }, [isFetching, hasMore, fetchEntries]);
 
-    // If first page doesn't fill, fetch one more
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
@@ -508,22 +486,19 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
       }
     }, [loading, hasMore, entries.length, fetchEntries]);
 
-    /* ------------------------- Build rows + summaries ---------------------- */
     const tableRows = useMemo((): TableRow[] => {
       if (!entries.length) return [];
-
       let currentMonth = "";
       let monthlySum = 0;
       const rows: TableRow[] = [];
 
       entries.forEach((entry, index) => {
         const txValue = getTransactionValue(entry);
-        const entryMonth = getMonthYear(getDueDate(entry));
+        const entryMonth = getMonthYear(getValueDate(entry));
 
         if (currentMonth && currentMonth !== entryMonth) {
           const lastRow = rows[rows.length - 1];
           const lastRunning = lastRow?.type === "entry" ? lastRow.runningBalance ?? 0 : 0;
-
           rows.push({
             id: `summary-${currentMonth}-${index}`,
             type: "summary",
@@ -531,7 +506,6 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
             runningBalance: lastRunning,
             displayMonth: currentMonth,
           });
-
           monthlySum = 0;
         }
 
@@ -562,7 +536,6 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
       return rows;
     }, [entries]);
 
-    /* ------------------------------ Virtualization -------------------------- */
     const ENTRY_ROW_H = 64;
     const SUMMARY_ROW_H = 44;
     const OVERSCAN = 10;
@@ -581,7 +554,7 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
 
     const rowHeights = useMemo(
       () => tableRows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
-      [tableRows],
+      [tableRows]
     );
 
     const rowOffsets = useMemo(() => {
@@ -604,7 +577,7 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
         }
         return Math.max(0, lo - 1);
       },
-      [rowOffsets],
+      [rowOffsets]
     );
 
     const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
@@ -631,16 +604,14 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
           fetchEntries(true);
         },
       }),
-      [clearSelection, fetchEntries],
+      [clearSelection, fetchEntries]
     );
 
-    // Match CashFlowTable logic: fetch on filters change (no selection mutation here)
     useEffect(() => {
       setNextCursor(null);
       fetchEntries(true);
     }, [filters, fetchEntries]);
 
-    /* --------------------------------- UI ---------------------------------- */
     if (error) {
       return (
         <div className="border border-gray-200 rounded-xl bg-white overflow-hidden shadow-sm">
@@ -658,14 +629,6 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
             <div className="text-center">
               <p className="text-[13px] font-semibold text-red-800 mb-1">{t("errors.title")}</p>
               <p className="text-[11px] text-red-600 mb-3">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-[11px] font-semibold"
-                onClick={() => fetchEntries(true)}
-              >
-                {t("actions.retry")}
-              </Button>
             </div>
           </div>
         </div>
@@ -721,7 +684,7 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
                         <MobileEntryRow
                           key={row.id}
                           entry={row.entry}
-                          runningBalance={row.runningBalance ?? 0}
+                          runningBalance={row.runningBalance!}
                           isSelected={isSelected}
                           onSelect={handleSelectRow}
                         />
@@ -732,9 +695,9 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
                       return (
                         <MobileSummaryRow
                           key={row.id}
-                          displayMonth={row.displayMonth ?? ""}
-                          monthlySum={row.monthlySum ?? 0}
-                          runningBalance={row.runningBalance ?? 0}
+                          displayMonth={row.displayMonth!}
+                          monthlySum={row.monthlySum!}
+                          runningBalance={row.runningBalance!}
                         />
                       );
                     }
@@ -750,7 +713,9 @@ const SettledEntriesTableMobile = forwardRef<SettledEntriesTableHandle, SettledE
         {loadingMore && <BottomLoader />}
       </section>
     );
-  },
+  }
 );
+
+SettledEntriesTableMobile.displayName = "SettledEntriesTableMobile";
 
 export default SettledEntriesTableMobile;

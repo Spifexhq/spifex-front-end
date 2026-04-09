@@ -140,6 +140,7 @@ const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
         id: "acct",
         items: [
           { id: "ledger-accounts", icon: "ledger", label: t("items.ledger-accounts"), permission: "view_ledger_accounts_page" },
+          { id: "accounting", icon: "ledger", label: t("items.accounting"), permission: "view_ledger_accounts_page" },
           { id: "departments", icon: "departments", label: t("items.departments"), permission: "view_department_settings_page" },
         ],
       },

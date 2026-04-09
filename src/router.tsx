@@ -41,6 +41,7 @@ const ProjectSettings = lazy(() => import("@/pages/ProjectSettings"));
 const MemberSettings = lazy(() => import("@/pages/MemberSettings"));
 const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
 const LedgerAccountsRouter = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsRouter"));
+const AccountingSettings = lazy(() => import("@/pages/AccountingSettings"));
 const Statements = lazy(() => import("@/pages/Statements"));
 const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
 const FormatSettings = lazy(() => import("@/pages/FormatSettings"));
@@ -286,6 +287,14 @@ const routes: RouteObject[] = [
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
                         <LedgerAccountsRouter />
                     </PermissionMiddleware>
+                    ),
+                },
+                {
+                    path: 'accounting/*',
+                    element: (
+                        <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
+                        <AccountingSettings />
+                        </PermissionMiddleware>
                     ),
                 },
                 {

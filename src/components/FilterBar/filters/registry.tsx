@@ -4,22 +4,11 @@ import { amountChipLabel, isPositiveMajor } from "../FilterBar.utils";
 
 import { DateEditor } from "../editors/DateEditor";
 import { BanksEditor } from "../editors/BanksEditor";
-import { AccountsEditor } from "../editors/AccountsEditor";
+import { CategoriesEditor } from "../editors/CategoriesEditor";
 import { ObservationEditor } from "../editors/ObservationEditor";
 import { TxTypeEditor } from "../editors/TxTypeEditor";
 import { AmountEditor } from "../editors/AmountEditor";
 
-/**
- * Single source of truth for:
- * - Add Filter menu items
- * - Chips
- * - Editors
- * - Clear logic
- *
- * To add a new filter:
- * 1) Create an Editor component in filters/editors
- * 2) Add an entry below
- */
 export function getFilterDefinitions(): FilterDefinition[] {
   return [
     {
@@ -56,23 +45,21 @@ export function getFilterDefinitions(): FilterDefinition[] {
     },
 
     {
-      key: "accounts",
+      key: "categories",
       icon: "accounts",
       menuGroup: 0,
-      menuLabelKey: "filterBar:menu.accounts",
-      editorTitleKey: "filterBar:menu.accounts",
+      menuLabelKey: "filterBar:menu.categories",
+      editorTitleKey: "filterBar:menu.categories",
       popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[360px] sm:max-w-[360px]",
-      isActive: (f) => f.ledger_account_id.length > 0,
-      getChipLabel: ({ t, selectedAccounts }) =>
-        `${t("filterBar:chips.accounts")}  ${selectedAccounts
+      isActive: (f) => f.cashflow_category_id.length > 0,
+      getChipLabel: ({ t, selectedCategories }) =>
+        `${t("filterBar:chips.categories")}  ${selectedCategories
           .slice(0, 2)
-          .map((a) => a.account)
-          .join(", ")}${selectedAccounts.length > 2 ? ` +${selectedAccounts.length - 2}` : ""}`,
-      clear: (prev) => ({ ...prev, ledger_account_id: [] }),
-      Editor: AccountsEditor,
+          .map((c) => c.name)
+          .join(", ")}${selectedCategories.length > 2 ? ` +${selectedCategories.length - 2}` : ""}`,
+      clear: (prev) => ({ ...prev, cashflow_category_id: [] }),
+      Editor: CategoriesEditor,
     },
-
-    // --- Separator boundary (menuGroup changes) ---
 
     {
       key: "observation",

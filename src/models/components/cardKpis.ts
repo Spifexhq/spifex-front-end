@@ -2,11 +2,24 @@
 
 export type MoneyDecimal = string;
 
+export interface BaseKpiQueryParams {
+  description?: string;
+  observation?: string;
+  cashflow_category_id?: string;
+}
+
+export type CashflowKpiQueryParams = BaseKpiQueryParams;
+
+export type SettledKpiQueryParams = BaseKpiQueryParams & {
+  bank_id?: string;
+};
+
 /**
- * Generic query params used by KPI endpoints.
- * Keep it permissive because you are building params dynamically.
+ * Keep this generic alias if some request helpers still depend on it.
  */
-export type KpiQueryParams = Record<string, string | number | undefined>;
+export type KpiQueryParams =
+  | CashflowKpiQueryParams
+  | SettledKpiQueryParams;
 
 /* ----------------------- Cashflow KPIs (planned / due) ----------------------- */
 
@@ -20,9 +33,7 @@ export type CashflowKpis = {
   mtd: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };
   prev: { net: MoneyDecimal };
 
-  /** Ratio in [-1..+∞) when finite, or null when infinite. */
   mom_change: number | null;
-  /** True when MoM would be ±Infinity (prev == 0 and mtd != 0). */
   mom_infinite: boolean;
 
   next7: { rec: MoneyDecimal; pay: MoneyDecimal; net: MoneyDecimal };
@@ -42,8 +53,6 @@ export type SettledKpis = {
   prev: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };
   last7: { in: MoneyDecimal; out: MoneyDecimal; net: MoneyDecimal };
 
-  /** Ratio in [-1..+∞) when finite, or null when infinite. */
   mom_change: number | null;
-  /** True when MoM would be ±Infinity (prev == 0 and mtd != 0). */
   mom_infinite: boolean;
 };

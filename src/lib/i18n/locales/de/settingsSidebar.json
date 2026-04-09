@@ -23,6 +23,7 @@
     "inventory": "Inventar",
     "entities": "Entitäten",
     "ledger-accounts": "Hauptbuchkonten",
-    "departments": "Abteilungen"
+    "departments": "Abteilungen",
+    "accounting": "Buchhaltung"
   }
 }

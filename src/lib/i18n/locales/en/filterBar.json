@@ -12,7 +12,7 @@
     "addFilter": "Add filter +",
     "date": "Period",
     "bank": "Bank",
-    "accounts": "Ledger account",
+    "categories": "Categories",
     "observation": "Observation",
     "txType": "Type (Income/Expense)",
     "amount": "Amount (min/max)",
@@ -21,7 +21,7 @@
   "chips": {
     "date": "Dates:",
     "bank": "Bank:",
-    "accounts": "Accounts:",
+    "categories": "Category:",
     "type": "Type:",
     "credit": "Income",
     "debit": "Expense",
@@ -40,7 +40,7 @@
       "thisYear": "Year"
     },
     "banks": { "label": "Banks", "button": "Select banks" },
-    "accounts": { "label": "Ledger accounts", "button": "Select accounts" },
+    "categories": { "label": "Categories", "button": "Select category" },
     "observation": { "placeholder": "Type an observation..." },
     "txType": { "credit": "Income", "debit": "Expense" },
     "amount": {

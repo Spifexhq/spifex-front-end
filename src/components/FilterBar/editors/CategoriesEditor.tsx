@@ -3,32 +3,35 @@ import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
 import Button from "@/shared/ui/Button";
 
 import type { FilterEditorProps } from "../FilterBar.types";
-import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type { CashflowCategoryOption } from "@/models/entries/entries";
 
-export const AccountsEditor: React.FC<FilterEditorProps> = ({
+const categoryLabel = (item: CashflowCategoryOption) =>
+  [item.code, item.name].filter(Boolean).join(" — ") || item.name || "—";
+
+export const CategoriesEditor: React.FC<FilterEditorProps> = ({
   t,
-  ledgerAccountsForPicker,
-  selectedAccounts,
+  categoriesForPicker,
+  selectedCategories,
   setLocalFilters,
   onRemove,
   onApply,
 }) => (
   <>
-    <SelectDropdown<LedgerAccount>
-      label={t("filterBar:editors.accounts.label")}
-      items={ledgerAccountsForPicker}
-      selected={selectedAccounts}
+    <SelectDropdown<CashflowCategoryOption>
+      label={t("filterBar:editors.categories.label")}
+      items={categoriesForPicker}
+      selected={selectedCategories}
       onChange={(list) =>
         setLocalFilters((prev) => ({
           ...prev,
-          ledger_account_id: list.map((x) => String(x.id)),
+          cashflow_category_id: list.map((x) => String(x.id)),
         }))
       }
       getItemKey={(item) => item.id}
-      getItemLabel={(item) => (item.code ? `${item.code} — ${item.account}` : item.account)}
-      buttonLabel={t("filterBar:editors.accounts.button")}
+      getItemLabel={categoryLabel}
+      buttonLabel={t("filterBar:editors.categories.button")}
       customStyles={{ maxHeight: "240px" }}
-      groupBy={(i) => (i.subcategory ? `${i.category} / ${i.subcategory}` : String(i.category || ""))}
+      groupBy={(i) => (i.parent_id ? "Child categories" : "Root categories")}
       virtualize
       virtualRowHeight={32}
       virtualThreshold={300}

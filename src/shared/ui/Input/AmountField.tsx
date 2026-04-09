@@ -75,16 +75,16 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
     currency,
     allowNegative = false,
 
+    value,
+    onValueChange,
+    valueType,
+
     ...rest
   } = props;
 
-  const valueType = ("valueType" in props ? props.valueType : undefined) ?? "string";
-  const isNumberMode = valueType === "number";
-
-  const onValueChange =
-    props.onValueChange as unknown as ((v: string) => void) & ((v: number | "") => void);
-
-  const rawValue = props.value as unknown;
+  const resolvedValueType = valueType ?? "string";
+  const isNumberMode = resolvedValueType === "number";
+  const rawValue = value as unknown;
 
   const autoId = useId();
   const inputId = rest.id ?? autoId;

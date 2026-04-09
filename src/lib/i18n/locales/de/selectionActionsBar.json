@@ -27,5 +27,14 @@
   },
   "hints": {
     "escToCancel": "Tipp: Drücke"
+  },
+  "review": {
+    "title": "Buchhaltungsprüfung verfügbar",
+    "subtitle": "{{count}} ausgewählter Eintrag ist für die Abstimmungsprüfung bereit.",
+    "subtitle_plural": "{{count}} ausgewählte Einträge sind für die Abstimmungsprüfung bereit.",
+    "subtitleShort": "{{count}} ausgewählter Eintrag bereit zur Prüfung.",
+    "subtitleShort_plural": "{{count}} ausgewählte Einträge bereit zur Prüfung.",
+    "action": "Buchhaltung prüfen",
+    "actionShort": "Prüfen"
   }
 }

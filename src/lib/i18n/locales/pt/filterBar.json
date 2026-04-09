@@ -12,7 +12,7 @@
     "addFilter": "Adicionar filtro +",
     "date": "Período",
     "bank": "Banco",
-    "accounts": "Conta contábil",
+    "categories": "Categorias",
     "observation": "Observação",
     "txType": "Tipo (Receita/Despesa)",
     "amount": "Valor (mín/máx)",
@@ -21,7 +21,7 @@
   "chips": {
     "date": "Datas:",
     "bank": "Banco:",
-    "accounts": "Conta:",
+    "categories": "Categoria:",
     "type": "Tipo:",
     "credit": "Receita",
     "debit": "Despesa",
@@ -40,7 +40,7 @@
       "thisYear": "Ano"
     },
     "banks": { "label": "Bancos", "button": "Selecionar bancos" },
-    "accounts": { "label": "Contas contábeis", "button": "Selecionar contas" },
+    "categories": { "label": "Categorias", "button": "Selecionar categorias" },
     "observation": { "placeholder": "Digite uma observação…" },
     "txType": { "credit": "Receita", "debit": "Despesa" },
     "amount": {

@@ -1,0 +1,22 @@
+{
+  "pageTitle": "Espace comptable",
+  "title": "Espace comptable",
+  "subtitle": "Gérez la structure comptable du grand livre séparément de la vue opérationnelle de catégorisation de trésorerie.",
+  "buttons": {
+    "backToLedger": "Retour à l’espace du grand livre",
+    "addAccount": "Ajouter un compte",
+    "search": "Rechercher",
+    "clear": "Effacer"
+  },
+  "sections": {
+    "structure": {
+      "title": "Structure comptable",
+      "description": "Affinez la hiérarchie, les groupes de reporting, la visibilité et le rattachement aux états financiers."
+    },
+    "views": {
+      "title": "Vues",
+      "cashflow": "Vue de trésorerie",
+      "accounting": "Vue comptable"
+    }
+  }
+}

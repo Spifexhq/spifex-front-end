@@ -16,6 +16,7 @@ type Props = {
 
 const SidebarDesktop: React.FC<Props> = ({
   isOpen,
+  toggleSidebar,
   handleOpenModal,
   handleOpenTransferenceModal,
   handleOpenStatementImportModal,
@@ -35,14 +36,18 @@ const SidebarDesktop: React.FC<Props> = ({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex h-10 w-full items-center rounded-lg bg-white transition-colors duration-200 hover:bg-gray-100"
+      className="flex h-10 w-full items-center rounded-lg bg-white transition-colors duration-200 hover:bg-gray-100"
       aria-label={label}
+      title={!isOpen ? label : undefined}
     >
-      <div className="flex h-10 w-10 items-center justify-center">{icon}</div>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+        {icon}
+      </div>
+
       <span
         className={[
-          "absolute left-10 whitespace-nowrap text-[14px] transition-all duration-300",
-          isOpen ? "max-w-44 opacity-100" : "pointer-events-none max-w-0 opacity-0",
+          "overflow-hidden whitespace-nowrap text-[14px] transition-all duration-300",
+          isOpen ? "ml-2 max-w-44 opacity-100" : "ml-0 max-w-0 opacity-0",
         ].join(" ")}
       >
         {label}
@@ -58,7 +63,7 @@ const SidebarDesktop: React.FC<Props> = ({
         isOpen ? "w-60" : "w-16",
       ].join(" ")}
     >
-      <div className="flex flex-grow flex-col space-y-1 p-3 select-none">
+      <div className="flex flex-1 flex-col space-y-1 p-3 select-none">
         {mode !== "settled" && (
           <>
             <PermissionMiddleware codeName={["add_cash_flow_entries"]} requireAll>
@@ -66,10 +71,30 @@ const SidebarDesktop: React.FC<Props> = ({
                 onClick={() => handleOpenModal("credit")}
                 label={t("sidebar:sidebar.items.credit")}
                 icon={
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" />
-                    <path strokeWidth="1.75" strokeLinecap="round" d="M12 8.5v7" />
-                    <path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" />
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <rect
+                      x="4.5"
+                      y="4.5"
+                      width="15"
+                      height="15"
+                      rx="4"
+                      strokeWidth="1.75"
+                    />
+                    <path
+                      d="M12 8.5v7"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M8.5 12h7"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 }
               />
@@ -80,9 +105,25 @@ const SidebarDesktop: React.FC<Props> = ({
                 onClick={() => handleOpenModal("debit")}
                 label={t("sidebar:sidebar.items.debit")}
                 icon={
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="4.5" y="4.5" width="15" height="15" rx="4" strokeWidth="1.75" />
-                    <path strokeWidth="1.75" strokeLinecap="round" d="M8.5 12h7" />
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <rect
+                      x="4.5"
+                      y="4.5"
+                      width="15"
+                      height="15"
+                      rx="4"
+                      strokeWidth="1.75"
+                    />
+                    <path
+                      d="M8.5 12h7"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 }
               />
@@ -93,11 +134,36 @@ const SidebarDesktop: React.FC<Props> = ({
                 onClick={handleOpenTransferenceModal}
                 label={t("sidebar:sidebar.items.transfer")}
                 icon={
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M5 9h14" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M17 7l2 2-2 2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M19 15H5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M7 13l-2 2 2 2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      d="M5 9h14"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M17 7l2 2-2 2"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M19 15H5"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M7 13l-2 2 2 2"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 }
               />
@@ -108,16 +174,74 @@ const SidebarDesktop: React.FC<Props> = ({
                 onClick={handleOpenStatementImportModal}
                 label={t("sidebar:sidebar.items.importStatement", "Import statement")}
                 icon={
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M12 3v12" strokeWidth="1.75" strokeLinecap="round" />
-                    <path d="M8 11l4 4 4-4" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                    <rect x="4" y="17" width="16" height="4" rx="1.5" strokeWidth="1.75" />
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      d="M12 3v12"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M8 11l4 4 4-4"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="4"
+                      y="17"
+                      width="16"
+                      height="4"
+                      rx="1.5"
+                      strokeWidth="1.75"
+                    />
                   </svg>
                 }
               />
             </PermissionMiddleware>
           </>
         )}
+      </div>
+
+      <div
+        className={[
+          "flex p-3 pt-0",
+          isOpen ? "justify-end" : "justify-end",
+        ].join(" ")}
+      >
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          className="flex h-10 w-10 items-center justify-center rounded-lg bg-white transition-colors duration-200 hover:bg-gray-100"
+        >
+          <svg
+            className="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            {isOpen ? (
+              <path
+                d="M15 6l-6 6 6 6"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ) : (
+              <path
+                d="M9 6l6 6-6 6"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+          </svg>
+        </button>
       </div>
     </nav>
   );

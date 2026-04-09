@@ -16,7 +16,7 @@ import type { EntryFilters } from "@/models/components/filterBar";
 
 const DEFAULT_FILTERS: EntryFilters = {
   bank_id: [],
-  ledger_account_id: [],
+  cashflow_category_id: [],
   tx_type: undefined,
   start_date: undefined,
   end_date: undefined,
@@ -24,7 +24,7 @@ const DEFAULT_FILTERS: EntryFilters = {
   observation: "",
   amount_min: "",
   amount_max: "",
-} as unknown as EntryFilters;
+} as EntryFilters;
 
 const Settled = () => {
   const { t } = useTranslation(["settled"]);
@@ -65,7 +65,7 @@ const Settled = () => {
       setFilters(newFilters);
       bumpAll();
     },
-    [bumpAll],
+    [bumpAll]
   );
 
   const handleSelectionChange = useCallback((ids: string[], rows: SettledEntry[]) => {
@@ -83,7 +83,7 @@ const Settled = () => {
         due_date: entry.value_date,
         settlement_due_date: entry.value_date,
       })),
-    [selectedEntries],
+    [selectedEntries]
   );
 
   return (
@@ -123,6 +123,7 @@ const Settled = () => {
               bankActive={true}
               contextSettlement={true}
               shortcutsEnabled={filterBarHotkeysEnabled}
+              initial={filters}
             />
           </PermissionMiddleware>
 
@@ -164,7 +165,6 @@ const Settled = () => {
                   }
 
                   bumpAll();
-
                   setSelectedIds([]);
                   setSelectedEntries([]);
                   tableRef.current?.clearSelection();

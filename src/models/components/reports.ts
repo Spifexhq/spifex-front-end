@@ -88,7 +88,7 @@ export interface ReportsSummaryResponse {
 export interface ReportsSummaryParams {
   description?: string;
   observation?: string;
-  ledger_account_id?: string;
+  cashflow_category_id?: string;
   date_from?: string;
   date_to?: string;
 }

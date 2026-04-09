@@ -1,7 +1,4 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/components/Table/CashFlowTable/CashFlowTable.mobile.tsx          */
-/* -------------------------------------------------------------------------- */
-
+// src/components/Table/CashFlowTable/CashFlowTable.mobile.tsx
 import React, {
   useEffect,
   useMemo,
@@ -16,6 +13,8 @@ import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 
+import EntryAccountingStatusCell from "@/components/CashFlowAccounting/EntryAccountingStatusCell";
+
 import { api } from "@/api/requests";
 import { getCursorFromUrl } from "@/lib/list";
 import { useShiftSelect } from "@/hooks/useShiftSelect";
@@ -24,6 +23,7 @@ import { PermissionMiddleware } from "@/middlewares";
 
 import type { EntryFilters } from "@/models/components/filterBar";
 import type { Entry, GetEntryRequest, GetEntryResponse } from "@/models/entries/entries";
+import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -117,6 +117,8 @@ export interface CashFlowTableProps {
   filters?: EntryFilters;
   onEdit(entry: Entry): void;
   onSelectionChange?: (ids: string[], entries: Entry[]) => void;
+  onOpenAccountingReason?: (entry: Entry) => void;
+  accountingStateById?: Record<string, AccountingReadiness>;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -181,6 +183,7 @@ const MobileHeader: React.FC<{
 
 const MobileEmptyState: React.FC = () => {
   const { t } = useTranslation("cashFlowTable");
+
   return (
     <div className="flex flex-col items-center justify-center py-10 px-4">
       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -204,12 +207,13 @@ const MobileEmptyState: React.FC = () => {
 const MobileSkeleton: React.FC<{ rows: number }> = ({ rows }) => (
   <div role="progressbar" aria-busy="true" className="bg-white">
     {Array.from({ length: rows }).map((_, i) => (
-      <div key={i} className="h-[64px] px-3 py-2 border-b border-gray-200 bg-white">
+      <div key={i} className="h-[78px] px-3 py-2 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-2 h-full">
           <div className="h-5 w-5 rounded-full border border-gray-300 bg-gray-200 animate-pulse shrink-0" />
           <div className="min-w-0 flex-1">
             <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
             <div className="h-2 w-1/3 rounded bg-gray-200 animate-pulse mt-2" />
+            <div className="h-5 w-24 rounded-full bg-gray-200 animate-pulse mt-2" />
           </div>
           <div className="shrink-0 text-right">
             <div className="h-3 w-14 rounded bg-gray-200 animate-pulse ml-auto" />
@@ -224,6 +228,7 @@ const MobileSkeleton: React.FC<{ rows: number }> = ({ rows }) => (
 
 const BottomLoader: React.FC = () => {
   const { t } = useTranslation("cashFlowTable");
+
   return (
     <div
       className="flex items-center justify-center gap-2 py-3 border-t border-gray-200 bg-white"
@@ -243,7 +248,17 @@ const MobileEntryRow: React.FC<{
   isSelected: boolean;
   onSelect: (id: string, event: React.MouseEvent) => void;
   onEdit: (entry: Entry) => void;
-}> = ({ entry, runningBalance, isSelected, onSelect, onEdit }) => {
+  onOpenAccountingReason?: (entry: Entry) => void;
+  accounting?: AccountingReadiness | null;
+}> = ({
+  entry,
+  runningBalance,
+  isSelected,
+  onSelect,
+  onEdit,
+  onOpenAccountingReason,
+  accounting,
+}) => {
   const { t } = useTranslation("cashFlowTable");
 
   const transactionValue = getTransactionValue(entry);
@@ -262,7 +277,7 @@ const MobileEntryRow: React.FC<{
   return (
     <div
       className={[
-        "h-[64px] px-3 py-2 border-b border-gray-200 border-l-[3px] box-border",
+        "h-[78px] px-3 py-2 border-b border-gray-200 border-l-[3px] box-border",
         accent,
         selectedCls,
       ].join(" ")}
@@ -278,7 +293,6 @@ const MobileEntryRow: React.FC<{
       }}
     >
       <div className="flex items-center gap-2 h-full">
-        {/* indicator only (selection is by row click) */}
         <div aria-hidden="true" className="pointer-events-none">
           <Checkbox checked={isSelected} size="sm" />
         </div>
@@ -292,6 +306,12 @@ const MobileEntryRow: React.FC<{
               <div className="text-[10px] text-gray-500 truncate mt-1">
                 {due}
                 {installmentsLabel ? <span className="ml-2">• {installmentsLabel}</span> : null}
+              </div>
+              <div className="mt-2">
+                <EntryAccountingStatusCell
+                  accounting={accounting}
+                  onOpen={onOpenAccountingReason ? () => onOpenAccountingReason(entry) : undefined}
+                />
               </div>
             </div>
 
@@ -350,8 +370,20 @@ const MobileSummaryRow: React.FC<{
 }> = ({ displayMonth, monthlySum, runningBalance }) => {
   const { t } = useTranslation("cashFlowTable");
   const monthsShort =
-    (t("months.short", { returnObjects: true }) as string[]) ??
-    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    (t("months.short", { returnObjects: true }) as string[]) ?? [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
 
   const [m, y] = displayMonth.split("/");
   const iso = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1).toISOString();
@@ -371,11 +403,15 @@ const MobileSummaryRow: React.FC<{
 
         <div className="shrink-0 flex items-center gap-3">
           <div
-            className={`text-[10px] font-bold tabular-nums ${sumPositive ? "text-green-900" : "text-red-900"}`}
+            className={`text-[10px] font-bold tabular-nums ${
+              sumPositive ? "text-green-900" : "text-red-900"
+            }`}
           >
             {formatCurrency(monthlySum)}
           </div>
-          <div className="text-[10px] font-bold tabular-nums text-gray-700">{formatCurrency(runningBalance)}</div>
+          <div className="text-[10px] font-bold tabular-nums text-gray-700">
+            {formatCurrency(runningBalance)}
+          </div>
         </div>
       </div>
     </div>
@@ -387,12 +423,12 @@ const MobileSummaryRow: React.FC<{
 /* -------------------------------------------------------------------------- */
 
 const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
-  ({ filters, onEdit, onSelectionChange }, ref) => {
+  ({ filters, onEdit, onSelectionChange, onOpenAccountingReason, accountingStateById }, ref) => {
     const { t } = useTranslation("cashFlowTable");
 
     const hideScrollbarCls = useMemo(
       () => "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-      [],
+      []
     );
 
     // Data
@@ -405,10 +441,10 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
     // Selection
-    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<Entry, string>(
-      entries,
-      getId,
-    );
+    const { selectedIds, handleSelectRow, handleSelectAll, clearSelection } = useShiftSelect<
+      Entry,
+      string
+    >(entries, getId);
 
     // Latest for fetch
     const latest = useRef<{
@@ -439,9 +475,11 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         (f?.observation ? ` ${String(f.observation).trim()}` : "");
       const q = qCombined.trim() || undefined;
 
-      const ledger_account = f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
+      const ledger_account =
+        f?.ledger_account_id && f.ledger_account_id.length ? f.ledger_account_id[0] : undefined;
+
       const tx_type = f?.tx_type === "credit" ? 1 : f?.tx_type === "debit" ? -1 : undefined;
-      const bank = Array.isArray(f?.bank_id) && f!.bank_id!.length ? f!.bank_id!.join(",") : undefined;
+      const bank = Array.isArray(f?.bank_id) && f.bank_id.length ? f.bank_id.join(",") : undefined;
 
       const base: GetEntryRequest = {
         date_from: f?.start_date || undefined,
@@ -486,6 +524,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                 return getId(a).localeCompare(getId(b));
               });
             }
+
             return merged;
           });
 
@@ -500,15 +539,17 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           setIsFetching(false);
         }
       },
-      [buildPayload, t],
+      [buildPayload, t]
     );
 
-    /* ----------------------- Infinite inner scroll ------------------------- */
+    /* ----------------------- Infinite inner scroll ------------------------ */
+
     const scrollerRef = useRef<HTMLDivElement>(null);
 
     const handleInnerScroll = useCallback(() => {
       const el = scrollerRef.current;
       if (!el || isFetching || !hasMore) return;
+
       const threshold = 220;
       const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
       if (nearBottom) fetchEntries(false);
@@ -518,14 +559,17 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
+
       if (!loading && hasMore && el.scrollHeight <= el.clientHeight + 140) {
         fetchEntries(false);
       }
     }, [loading, hasMore, entries.length, fetchEntries]);
 
-    /* ------------------------- Build rows + summaries ---------------------- */
+    /* ------------------------- Build rows + summaries --------------------- */
+
     const tableRows = useMemo((): TableRow[] => {
       if (!entries.length) return [];
+
       let currentMonth = "";
       let monthlySum = 0;
       const rows: TableRow[] = [];
@@ -574,8 +618,9 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
       return rows;
     }, [entries]);
 
-    /* ------------------------------ Virtualization -------------------------- */
-    const ENTRY_ROW_H = 64;
+    /* ------------------------------ Virtualization ------------------------ */
+
+    const ENTRY_ROW_H = 78;
     const SUMMARY_ROW_H = 44;
     const OVERSCAN = 10;
 
@@ -585,21 +630,23 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     useEffect(() => {
       const el = scrollerRef.current;
       if (!el) return;
+
       const ro = new ResizeObserver(() => setViewportH(el.clientHeight));
       ro.observe(el);
       setViewportH(el.clientHeight);
+
       return () => ro.disconnect();
     }, []);
 
     const rowHeights = useMemo(
       () => tableRows.map((r) => (r.type === "entry" ? ENTRY_ROW_H : SUMMARY_ROW_H)),
-      [tableRows],
+      [tableRows]
     );
 
     const rowOffsets = useMemo(() => {
       const off = new Array(rowHeights.length + 1);
       off[0] = 0;
-      for (let i = 0; i < rowHeights.length; i++) off[i + 1] = off[i] + rowHeights[i];
+      for (let i = 0; i < rowHeights.length; i += 1) off[i + 1] = off[i] + rowHeights[i];
       return off;
     }, [rowHeights]);
 
@@ -616,7 +663,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         }
         return Math.max(0, lo - 1);
       },
-      [rowOffsets],
+      [rowOffsets]
     );
 
     const startIndex = useMemo(() => findStartIndex(scrollTop), [scrollTop, findStartIndex]);
@@ -624,7 +671,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
     const endIndex = useMemo(() => {
       const limit = scrollTop + (viewportH || 0);
       let i = startIndex;
-      while (i < rowHeights.length && rowOffsets[i] < limit) i++;
+      while (i < rowHeights.length && rowOffsets[i] < limit) i += 1;
       return Math.min(rowHeights.length - 1, i + OVERSCAN);
     }, [startIndex, scrollTop, viewportH, rowHeights.length, rowOffsets]);
 
@@ -640,18 +687,19 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
           setHasMore(true);
           setError(null);
           setLoading(true);
-          fetchEntries(true);
+          void fetchEntries(true);
         },
       }),
-      [clearSelection, fetchEntries],
+      [clearSelection, fetchEntries]
     );
 
     useEffect(() => {
       setNextCursor(null);
-      fetchEntries(true);
+      void fetchEntries(true);
     }, [filters, fetchEntries]);
 
-    /* --------------------------------- UI ---------------------------------- */
+    /* --------------------------------- UI --------------------------------- */
+
     if (error) {
       return (
         <div className="border border-gray-200 rounded-xl bg-white overflow-hidden shadow-sm">
@@ -673,7 +721,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                 variant="outline"
                 size="sm"
                 className="text-[11px] font-semibold"
-                onClick={() => fetchEntries(true)}
+                onClick={() => void fetchEntries(true)}
               >
                 {t("actions.retry")}
               </Button>
@@ -736,9 +784,12 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                           isSelected={isSelected}
                           onSelect={handleSelectRow}
                           onEdit={onEdit}
+                          onOpenAccountingReason={onOpenAccountingReason}
+                          accounting={accountingStateById?.[row.entry.id] ?? null}
                         />
                       );
                     }
+
                     if (row.type === "summary") {
                       return (
                         <MobileSummaryRow
@@ -749,6 +800,7 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
                         />
                       );
                     }
+
                     return null;
                   })}
                 </div>
@@ -760,7 +812,9 @@ const CashFlowTableMobile = forwardRef<CashFlowTableHandle, CashFlowTableProps>(
         {loadingMore && <BottomLoader />}
       </section>
     );
-  },
+  }
 );
+
+CashFlowTableMobile.displayName = "CashFlowTableMobile";
 
 export default CashFlowTableMobile;

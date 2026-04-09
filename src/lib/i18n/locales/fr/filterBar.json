@@ -12,7 +12,7 @@
     "addFilter": "Ajouter un filtre +",
     "date": "Période",
     "bank": "Banque",
-    "accounts": "Compte du grand livre",
+    "categories": "Catégories",
     "observation": "Observation",
     "txType": "Type (Revenu/Dépense)",
     "amount": "Montant (min/max)",
@@ -21,7 +21,7 @@
   "chips": {
     "date": "Dates:",
     "bank": "Banque:",
-    "accounts": "Compte:",
+    "categories": "Catégorie:",
     "type": "Type:",
     "credit": "Revenu",
     "debit": "Dépense",
@@ -40,7 +40,7 @@
       "thisYear": "Année"
     },
     "banks": { "label": "Banques", "button": "Sélectionner les banques" },
-    "accounts": { "label": "Comptes du grand livre", "button": "Sélectionner les comptes" },
+    "categories": { "label": "Catégorie", "button": "Sélectionner les catégories" },
     "observation": { "placeholder": "Saisir une observation..." },
     "txType": { "credit": "Revenu", "debit": "Dépense" },
     "amount": {

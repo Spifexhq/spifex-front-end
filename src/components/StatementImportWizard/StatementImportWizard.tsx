@@ -1474,12 +1474,12 @@ const StatementImportWizard: React.FC<Props> = ({
                         >
                           <button
                             type="button"
-                            className="absolute right-2 top-2 z-10 rounded-full border border-gray-200 bg-white p-1 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+                            className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center shrink-0"
                             onClick={() => dismissCandidate(selectedRow.id, key)}
                             aria-label="Hide suggestion"
                             title="Hide suggestion"
                           >
-                            <X size={13} />
+                            <X size={18} />
                           </button>
 
                           <button

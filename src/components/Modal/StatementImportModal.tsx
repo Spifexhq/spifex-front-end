@@ -89,13 +89,7 @@ const StatementImportModal: React.FC<Props> = ({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-[9999] bg-black/35 md:grid md:place-items-center"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) {
-            void requestClose();
-          }
-        }}
-      >
+        className="fixed inset-0 z-[9999] bg-black/35 md:grid md:place-items-center" >
         <div
           role="dialog"
           aria-modal="true"

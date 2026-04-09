@@ -2,7 +2,7 @@
 import i18n, { type Resource } from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-// import Backend from "i18next-http-backend"; // option: load via HTTP
+// import Backend from "i18next-http-backend";
 
 /* -------------------------------------------------------------------------- */
 /* Languages                                                                   */
@@ -12,16 +12,18 @@ export const LANGS = ["pt", "en", "fr", "de"] as const;
 export type AppLang = (typeof LANGS)[number];
 
 /* -------------------------------------------------------------------------- */
-/* Locale JSON imports (grouped by domain)                                     */
+/* Common                                                                       */
 /* -------------------------------------------------------------------------- */
 
-/** Common */
 import ptCommon from "./locales/pt/common.json";
 import enCommon from "./locales/en/common.json";
 import frCommon from "./locales/fr/common.json";
 import deCommon from "./locales/de/common.json";
 
-/** Auth */
+/* -------------------------------------------------------------------------- */
+/* Auth                                                                         */
+/* -------------------------------------------------------------------------- */
+
 import ptSignIn from "./locales/pt/signIn.json";
 import enSignIn from "./locales/en/signIn.json";
 import frSignIn from "./locales/fr/signIn.json";
@@ -57,7 +59,10 @@ import enEmailVerification from "./locales/en/emailVerification.json";
 import frEmailVerification from "./locales/fr/emailVerification.json";
 import deEmailVerification from "./locales/de/emailVerification.json";
 
-/** Layout / Navigation */
+/* -------------------------------------------------------------------------- */
+/* Layout                                                                       */
+/* -------------------------------------------------------------------------- */
+
 import ptNavbar from "./locales/pt/navbar.json";
 import enNavbar from "./locales/en/navbar.json";
 import frNavbar from "./locales/fr/navbar.json";
@@ -78,7 +83,10 @@ import enUserMenu from "./locales/en/userMenu.json";
 import frUserMenu from "./locales/fr/userMenu.json";
 import deUserMenu from "./locales/de/userMenu.json";
 
-/** Subscription / Plans */
+/* -------------------------------------------------------------------------- */
+/* Subscription                                                                 */
+/* -------------------------------------------------------------------------- */
+
 import ptSubscription from "./locales/pt/subscription.json";
 import enSubscription from "./locales/en/subscription.json";
 import frSubscription from "./locales/fr/subscription.json";
@@ -89,7 +97,10 @@ import enLimits from "./locales/en/limits.json";
 import frLimits from "./locales/fr/limits.json";
 import deLimits from "./locales/de/limits.json";
 
-/** Pages */
+/* -------------------------------------------------------------------------- */
+/* Main pages                                                                   */
+/* -------------------------------------------------------------------------- */
+
 import ptCashFlow from "./locales/pt/cashFlow.json";
 import enCashFlow from "./locales/en/cashFlow.json";
 import frCashFlow from "./locales/fr/cashFlow.json";
@@ -105,7 +116,10 @@ import enReports from "./locales/en/reports.json";
 import frReports from "./locales/fr/reports.json";
 import deReports from "./locales/de/reports.json";
 
-/** App UI blocks */
+/* -------------------------------------------------------------------------- */
+/* Generic UI                                                                   */
+/* -------------------------------------------------------------------------- */
+
 import ptSelectionActionsBar from "./locales/pt/selectionActionsBar.json";
 import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
 import frSelectionActionsBar from "./locales/fr/selectionActionsBar.json";
@@ -116,7 +130,10 @@ import enSelectDropdown from "./locales/en/selectDropdown.json";
 import frSelectDropdown from "./locales/fr/selectDropdown.json";
 import deSelectDropdown from "./locales/de/selectDropdown.json";
 
-/** Cashflow / Finance UI */
+/* -------------------------------------------------------------------------- */
+/* Cashflow / Finance                                                           */
+/* -------------------------------------------------------------------------- */
+
 import ptFilterBar from "./locales/pt/filterBar.json";
 import enFilterBar from "./locales/en/filterBar.json";
 import frFilterBar from "./locales/fr/filterBar.json";
@@ -162,7 +179,10 @@ import enStatements from "./locales/en/statements.json";
 import frStatements from "./locales/fr/statements.json";
 import deStatements from "./locales/de/statements.json";
 
-/** Misc */
+/* -------------------------------------------------------------------------- */
+/* Misc                                                                         */
+/* -------------------------------------------------------------------------- */
+
 import ptSimulatedAI from "./locales/pt/simulatedAI.json";
 import enSimulatedAI from "./locales/en/simulatedAI.json";
 import frSimulatedAI from "./locales/fr/simulatedAI.json";
@@ -178,7 +198,10 @@ import enHomeDashboard from "./locales/en/homeDashboard.json";
 import frHomeDashboard from "./locales/fr/homeDashboard.json";
 import deHomeDashboard from "./locales/de/homeDashboard.json";
 
-/** Settings / Preferences */
+/* -------------------------------------------------------------------------- */
+/* Settings / Preferences                                                       */
+/* -------------------------------------------------------------------------- */
+
 import ptNotificationSettings from "./locales/pt/notificationSettings.json";
 import enNotificationSettings from "./locales/en/notificationSettings.json";
 import frNotificationSettings from "./locales/fr/notificationSettings.json";
@@ -229,7 +252,10 @@ import enSecurityAndPrivacy from "./locales/en/securityAndPrivacy.json";
 import frSecurityAndPrivacy from "./locales/fr/securityAndPrivacy.json";
 import deSecurityAndPrivacy from "./locales/de/securityAndPrivacy.json";
 
-/** Settings screens (tables/pages) */
+/* -------------------------------------------------------------------------- */
+/* Settings screens                                                             */
+/* -------------------------------------------------------------------------- */
+
 import ptMemberSettings from "./locales/pt/memberSettings.json";
 import enMemberSettings from "./locales/en/memberSettings.json";
 import frMemberSettings from "./locales/fr/memberSettings.json";
@@ -250,15 +276,11 @@ import enProjectSettings from "./locales/en/projectSettings.json";
 import frProjectSettings from "./locales/fr/projectSettings.json";
 import deProjectSettings from "./locales/de/projectSettings.json";
 
-import ptLedgerAccountsSettings from "./locales/pt/ledgerAccountsSettings.json";
-import enLedgerAccountsSettings from "./locales/en/ledgerAccountsSettings.json";
-import frLedgerAccountsSettings from "./locales/fr/ledgerAccountsSettings.json";
-import deLedgerAccountsSettings from "./locales/de/ledgerAccountsSettings.json";
 
-import ptLedgerAccountsGate from "./locales/pt/ledgerAccountsGate.json";
-import enLedgerAccountsGate from "./locales/en/ledgerAccountsGate.json";
-import frLedgerAccountsGate from "./locales/fr/ledgerAccountsGate.json";
-import deLedgerAccountsGate from "./locales/de/ledgerAccountsGate.json";
+import ptLedgerAccounts from "./locales/pt/ledgerAccounts.json";
+import enLedgerAccounts from "./locales/en/ledgerAccounts.json";
+import frLedgerAccounts from "./locales/fr/ledgerAccounts.json";
+import deLedgerAccounts from "./locales/de/ledgerAccounts.json";
 
 import ptInventorySettings from "./locales/pt/inventorySettings.json";
 import enInventorySettings from "./locales/en/inventorySettings.json";
@@ -270,7 +292,10 @@ import enEntitySettings from "./locales/en/entitySettings.json";
 import frEntitySettings from "./locales/fr/entitySettings.json";
 import deEntitySettings from "./locales/de/entitySettings.json";
 
-/** Status */
+/* -------------------------------------------------------------------------- */
+/* Status                                                                       */
+/* -------------------------------------------------------------------------- */
+
 import ptStatusComingSoon from "./locales/pt/statusComingSoon.json";
 import enStatusComingSoon from "./locales/en/statusComingSoon.json";
 import frStatusComingSoon from "./locales/fr/statusComingSoon.json";
@@ -291,7 +316,10 @@ import enStatus500 from "./locales/en/status500.json";
 import frStatus500 from "./locales/fr/status500.json";
 import deStatus500 from "./locales/de/status500.json";
 
-/** Middlewares */
+/* -------------------------------------------------------------------------- */
+/* Middlewares                                                                  */
+/* -------------------------------------------------------------------------- */
+
 import ptPermissionMiddleware from "./locales/pt/permissionMiddleware.json";
 import enPermissionMiddleware from "./locales/en/permissionMiddleware.json";
 import frPermissionMiddleware from "./locales/fr/permissionMiddleware.json";
@@ -308,13 +336,12 @@ import frSubscriptionMiddleware from "./locales/fr/subscriptionMiddleware.json";
 import deSubscriptionMiddleware from "./locales/de/subscriptionMiddleware.json";
 
 /* -------------------------------------------------------------------------- */
-/* Namespaces                                                                  */
+/* Namespaces                                                                   */
 /* -------------------------------------------------------------------------- */
 
 const NAMESPACES = [
   "common",
 
-  // Auth
   "signIn",
   "signUp",
   "passwordValidation",
@@ -323,26 +350,21 @@ const NAMESPACES = [
   "passwordVerification",
   "emailVerification",
 
-  // Layout
   "navbar",
   "sidebar",
   "settingsSidebar",
   "userMenu",
 
-  // Subscription
   "subscription",
   "limits",
 
-  // Pages
   "cashFlow",
   "settled",
   "reports",
 
-  // Generic UI
   "selectionActionsBar",
   "selectDropdown",
 
-  // Cashflow / Finance
   "filterBar",
   "kpiCards",
   "entriesModal",
@@ -353,12 +375,10 @@ const NAMESPACES = [
   "settledTable",
   "statements",
 
-  // App / misc
   "simulatedAI",
   "cookies",
   "homeDashboard",
 
-  // Settings / preferences
   "notificationSettings",
   "formatSettings",
   "personalLocaleSetup",
@@ -370,30 +390,26 @@ const NAMESPACES = [
   "currencySettings",
   "securityAndPrivacy",
 
-  // Settings screens
   "memberSettings",
   "bankSettings",
   "departmentSettings",
   "projectSettings",
-  "ledgerAccountsSettings",
-  "ledgerAccountsGate",
+  "ledgerAccounts",
   "inventorySettings",
   "entitySettings",
 
-  // Status
   "statusComingSoon",
   "statusMaintenance",
   "status404",
   "status500",
 
-  // Middlewares
   "permissionMiddleware",
   "ownerMiddleware",
   "subscriptionMiddleware",
 ] as const;
 
 /* -------------------------------------------------------------------------- */
-/* Resources                                                                   */
+/* Resources                                                                    */
 /* -------------------------------------------------------------------------- */
 
 const resources: Resource = {
@@ -451,8 +467,7 @@ const resources: Resource = {
     bankSettings: ptBankSettings,
     departmentSettings: ptDepartmentSettings,
     projectSettings: ptProjectSettings,
-    ledgerAccountsSettings: ptLedgerAccountsSettings,
-    ledgerAccountsGate: ptLedgerAccountsGate,
+    ledgerAccounts: ptLedgerAccounts,
     inventorySettings: ptInventorySettings,
     entitySettings: ptEntitySettings,
 
@@ -465,6 +480,7 @@ const resources: Resource = {
     ownerMiddleware: ptOwnerMiddleware,
     subscriptionMiddleware: ptSubscriptionMiddleware,
   },
+
   en: {
     common: enCommon,
     signIn: enSignIn,
@@ -519,8 +535,7 @@ const resources: Resource = {
     bankSettings: enBankSettings,
     departmentSettings: enDepartmentSettings,
     projectSettings: enProjectSettings,
-    ledgerAccountsSettings: enLedgerAccountsSettings,
-    ledgerAccountsGate: enLedgerAccountsGate,
+    ledgerAccounts: enLedgerAccounts,
     inventorySettings: enInventorySettings,
     entitySettings: enEntitySettings,
 
@@ -533,6 +548,7 @@ const resources: Resource = {
     ownerMiddleware: enOwnerMiddleware,
     subscriptionMiddleware: enSubscriptionMiddleware,
   },
+
   fr: {
     common: frCommon,
     signIn: frSignIn,
@@ -587,8 +603,7 @@ const resources: Resource = {
     bankSettings: frBankSettings,
     departmentSettings: frDepartmentSettings,
     projectSettings: frProjectSettings,
-    ledgerAccountsSettings: frLedgerAccountsSettings,
-    ledgerAccountsGate: frLedgerAccountsGate,
+    ledgerAccounts: frLedgerAccounts,
     inventorySettings: frInventorySettings,
     entitySettings: frEntitySettings,
 
@@ -601,6 +616,7 @@ const resources: Resource = {
     ownerMiddleware: frOwnerMiddleware,
     subscriptionMiddleware: frSubscriptionMiddleware,
   },
+
   de: {
     common: deCommon,
     signIn: deSignIn,
@@ -655,8 +671,7 @@ const resources: Resource = {
     bankSettings: deBankSettings,
     departmentSettings: deDepartmentSettings,
     projectSettings: deProjectSettings,
-    ledgerAccountsSettings: deLedgerAccountsSettings,
-    ledgerAccountsGate: deLedgerAccountsGate,
+    ledgerAccounts: deLedgerAccounts,
     inventorySettings: deInventorySettings,
     entitySettings: deEntitySettings,
 
@@ -672,7 +687,7 @@ const resources: Resource = {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Init                                                                        */
+/* Init                                                                         */
 /* -------------------------------------------------------------------------- */
 
 i18n
@@ -688,14 +703,18 @@ i18n
     ns: [...NAMESPACES],
     defaultNS: "common",
 
-    interpolation: { escapeValue: false },
+    interpolation: {
+      escapeValue: false,
+    },
 
     detection: {
       order: ["querystring", "localStorage", "navigator"],
       caches: ["localStorage"],
     },
 
-    react: { useSuspense: false },
+    react: {
+      useSuspense: false,
+    },
   });
 
 export default i18n;

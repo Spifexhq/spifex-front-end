@@ -326,13 +326,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          attemptClose();
-        }
-      }}
-    >
+      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center" >
       <div
         role="dialog"
         aria-modal="true"

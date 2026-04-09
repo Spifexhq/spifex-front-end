@@ -1,14 +1,8 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/components/SelectionActionsBar/SelectionActionsBar.mobile.tsx     */
-/* -------------------------------------------------------------------------- */
-
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import { PermissionMiddleware } from "src/middlewares";
-
-/* -------------------------------- Helpers --------------------------------- */
 
 function safeCurrency(raw: unknown) {
   const v = String(raw ?? "").trim().toUpperCase();
@@ -45,8 +39,6 @@ function formatMoney(amount: number, locale: string, currency: string): string {
   }
 }
 
-/* --------------------------------- Types ---------------------------------- */
-
 export type MinimalEntry = {
   amount?: number | string | null;
   transaction_type?: string | null;
@@ -65,18 +57,16 @@ export type SelectionActionsBarProps = {
 
   onCancel: () => void;
 
-  // CashFlow actions
   onLiquidate?: () => void;
   onDelete?: () => Promise<void> | void;
-
-  // Settled actions
   onReturn?: () => Promise<void> | void;
+
+  onAccountingReview?: () => void;
+  accountingReviewCount?: number;
 
   currency?: string | null;
   className?: string;
 };
-
-/* ------------------------- Mobile: shared sidebar signal ------------------- */
 
 const MOBILE_SIDEBAR_EVENT = "spifex:mobileSidebar:setHidden";
 
@@ -90,8 +80,6 @@ const setMobileSidebarHidden = (hidden: boolean) => {
   window.__SPX_MOBILE_SIDEBAR_HIDDEN__ = hidden;
   window.dispatchEvent(new CustomEvent(MOBILE_SIDEBAR_EVENT, { detail: { hidden } }));
 };
-
-/* --------------------------------- Icons ---------------------------------- */
 
 const TrashIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
   <svg
@@ -163,7 +151,22 @@ const ReturnIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
   </svg>
 );
 
-/* ------------------------------- Component -------------------------------- */
+const ReviewIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.9}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M3 12h14" />
+    <path d="m13 5 7 7-7 7" />
+  </svg>
+);
 
 const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
   contextSettlement,
@@ -174,6 +177,8 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
   onLiquidate,
   onDelete,
   onReturn,
+  onAccountingReview,
+  accountingReviewCount,
   currency,
   className = "",
 }) => {
@@ -182,30 +187,22 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
   const hasSelection = (selectedIds?.length ?? 0) > 0;
   const disableAll = Boolean(isProcessing);
 
-  // Expanded/collapsed on mobile (minimal)
   const [collapsed, setCollapsed] = useState(false);
   const prevCountRef = useRef<number>(0);
 
   useEffect(() => {
     const prev = prevCountRef.current;
     const next = selectedIds.length;
-
-    // New selection -> default to expanded
     if (prev === 0 && next > 0) setCollapsed(false);
-
     prevCountRef.current = next;
   }, [selectedIds.length]);
 
-  // ESC cancels (useful on devices with keyboard)
   window.useGlobalEsc(hasSelection, onCancel);
 
-  // Hide the mobile sidebar bar + push layout using CSS var
   useEffect(() => {
     if (!hasSelection) return;
 
     setMobileSidebarHidden(true);
-
-    // This var is consumed by page/container padding
     document.documentElement.style.setProperty(
       "--spx-selection-bar-offset",
       "calc(76px + env(safe-area-inset-bottom))",
@@ -217,7 +214,6 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
     };
   }, [hasSelection]);
 
-  // Minimal totals (net + count). No extra text.
   const resolvedCurrency = useMemo(() => safeCurrency(currency), [currency]);
 
   const net = useMemo(() => {
@@ -237,18 +233,18 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
 
   const netLabel = useMemo(
     () => formatMoney(net, i18n.language, resolvedCurrency),
-    [net, i18n.language, resolvedCurrency],
+    [net, i18n.language, resolvedCurrency]
   );
 
   const showLiquidate = !contextSettlement && typeof onLiquidate === "function";
   const showDelete = !contextSettlement && typeof onDelete === "function";
   const showReturn = contextSettlement && typeof onReturn === "function";
+  const showAccountingReview = !contextSettlement && typeof onAccountingReview === "function" && (accountingReviewCount ?? 0) > 0;
 
   const toggleCollapsed = useCallback(() => setCollapsed((v) => !v), []);
 
   if (!hasSelection) return null;
 
-  // Collapsed pill (bottom-right)
   if (collapsed) {
     return (
       <div
@@ -260,7 +256,7 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
           className,
         ].join(" ")}
         role="region"
-        aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
+        aria-label={t("aria.bar")}
       >
         <button
           type="button"
@@ -279,15 +275,12 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
           <span className="text-[12px] font-semibold tabular-nums">{selectedIds.length}</span>
           <span className="h-4 w-px bg-gray-200" />
           <span className="text-[12px] font-semibold tabular-nums">{netLabel}</span>
-          <span className="ml-1 text-[12px] text-gray-500" aria-hidden="true">
-            ↑
-          </span>
+          <span className="ml-1 text-[12px] text-gray-500" aria-hidden="true">↑</span>
         </button>
       </div>
     );
   }
 
-  // Expanded bar (centered bottom)
   return (
     <nav
       className={[
@@ -297,16 +290,10 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
         "w-[min(92vw,560px)]",
         className,
       ].join(" ")}
-      aria-label={t("aria.bar", { defaultValue: "Selection actions bar" })}
+      aria-label={t("aria.bar")}
     >
-      <div
-        className={[
-          "rounded-2xl border border-gray-200 bg-white/90 shadow-lg backdrop-blur",
-          "px-2 py-2",
-        ].join(" ")}
-      >
+      <div className="rounded-2xl border border-gray-200 bg-white/90 shadow-lg backdrop-blur px-2 py-2">
         <div className="flex items-center justify-between gap-2">
-          {/* Left: count + net */}
           <button
             type="button"
             onClick={toggleCollapsed}
@@ -319,29 +306,39 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
               "disabled:opacity-60",
             ].join(" ")}
-            aria-label={t("actions.minimize", { defaultValue: "Minimize" })}
-            title={t("actions.minimize", { defaultValue: "Minimize" })}
+            aria-label={t("actions.minimize")}
+            title={t("actions.minimize")}
           >
             <span className="text-[12px] font-semibold tabular-nums text-gray-900">{selectedIds.length}</span>
             <span className="h-4 w-px bg-gray-200" />
             <span className="text-[12px] font-semibold tabular-nums text-gray-900">{netLabel}</span>
-            <span className="text-[12px] text-gray-500" aria-hidden="true">
-              ↓
-            </span>
+            <span className="text-[12px] text-gray-500" aria-hidden="true">↓</span>
           </button>
 
-          {/* Right: actions (icons only, minimal text) */}
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
               onClick={onCancel}
               disabled={disableAll}
               aria-busy={disableAll || undefined}
-              title={t("actions.cancel", { defaultValue: "Cancel" })}
+              title={t("actions.cancel")}
               className="!h-10 !w-10 !p-0 rounded-xl"
             >
               <XIcon className="h-4 w-4" />
             </Button>
+
+            {showAccountingReview ? (
+              <Button
+                variant="outline"
+                onClick={onAccountingReview}
+                disabled={disableAll}
+                aria-busy={disableAll || undefined}
+                title={t("review.action")}
+                className="!h-10 !w-10 !p-0 rounded-xl border-amber-300 text-amber-800 hover:bg-amber-50"
+              >
+                <ReviewIcon className="h-4 w-4" />
+              </Button>
+            ) : null}
 
             <PermissionMiddleware codeName={["add_settled_entries", "view_cash_flow_entries"]} requireAll>
               {showLiquidate && (
@@ -349,7 +346,7 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
                   onClick={onLiquidate}
                   disabled={disableAll}
                   aria-busy={disableAll || undefined}
-                  title={t("actions.liquidate", { defaultValue: "Settle" })}
+                  title={t("actions.liquidate")}
                   className={[
                     "!h-10 !w-10 !p-0 rounded-xl",
                     "bg-emerald-600 border border-emerald-600 text-white",
@@ -368,7 +365,7 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
                   onClick={onReturn}
                   disabled={disableAll}
                   aria-busy={disableAll || undefined}
-                  title={t("actions.return", { defaultValue: "Revert" })}
+                  title={t("actions.return")}
                   className={[
                     "!h-10 !w-10 !p-0 rounded-xl",
                     "bg-amber-500 border border-amber-500 text-white",
@@ -387,7 +384,7 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
                   onClick={onDelete}
                   disabled={disableAll}
                   aria-busy={disableAll || undefined}
-                  title={t("actions.delete", { defaultValue: "Delete" })}
+                  title={t("actions.delete")}
                   className="!h-10 !w-10 !p-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
                 >
                   <TrashIcon className="h-4 w-4" />
@@ -396,6 +393,15 @@ const SelectionActionsBarMobile: React.FC<SelectionActionsBarProps> = ({
             </PermissionMiddleware>
           </div>
         </div>
+
+        {showAccountingReview ? (
+          <div className="mt-2 px-1">
+            <div className="text-[11px] text-amber-800">
+              <span className="font-medium">{t("review.title")}.</span>{" "}
+              {t("review.subtitleShort", { count: accountingReviewCount ?? 0 })}
+            </div>
+          </div>
+        ) : null}
       </div>
     </nav>
   );

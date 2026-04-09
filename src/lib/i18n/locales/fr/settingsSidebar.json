@@ -23,6 +23,7 @@
     "inventory": "Inventaire",
     "entities": "Entités",
     "ledger-accounts": "Comptes du grand livre",
-    "departments": "Départements"
+    "departments": "Départements",
+    "accounting": "Comptabilité"
   }
 }

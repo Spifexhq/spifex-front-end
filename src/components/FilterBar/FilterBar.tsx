@@ -1,7 +1,3 @@
-/* --------------------------------------------------------------------------
- * File: src/components/FilterBar/FilterBar.tsx
- * -------------------------------------------------------------------------- */
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,7 +17,7 @@ import type { EntryFilters, ChipKey, Visualization, LocalFilters } from "@/model
 import { useMediaQuery } from "@/components/FilterBar/hooks/useMediaQuery";
 import { useOnClickOutside } from "@/components/FilterBar/hooks/useOnClickOutside";
 import { useBankOptions } from "@/components/FilterBar/hooks/useBankOptions";
-import { useLedgerAccounts } from "@/components/FilterBar/hooks/useLedgerAccounts";
+import { useCashflowCategories } from "src/components/FilterBar/hooks/useCategories";
 import { useSavedViews } from "@/components/FilterBar/hooks/useSavedViews";
 import { PermissionMiddleware } from "src/middlewares";
 
@@ -35,8 +31,6 @@ import { Menu, type MenuEntry } from "@/components/FilterBar/ui/Menu";
 
 import { ViewsConfigModal } from "@/components/FilterBar/modals/ViewsConfigModal";
 import { SaveViewModal } from "@/components/FilterBar/modals/SaveViewModal";
-
-/* --------------------------------- Helpers -------------------------------- */
 
 function normalizeIdArray(v?: string[]): string[] {
   return Array.isArray(v) ? [...v].map(String).sort() : [];
@@ -60,13 +54,11 @@ function filtersSignature(filters: EntryFilters): string {
     amount_min: normalizeNumString(filters.amount_min),
     amount_max: normalizeNumString(filters.amount_max),
     bank_id: normalizeIdArray(filters.bank_id),
-    ledger_account_id: normalizeIdArray(filters.ledger_account_id),
+    cashflow_category_id: normalizeIdArray(filters.cashflow_category_id),
   };
 
   return JSON.stringify(sig);
 }
-
-/* ---------------------------------- Types --------------------------------- */
 
 type FilterBarApplyPayload = { filters: EntryFilters };
 
@@ -77,8 +69,6 @@ interface FilterBarProps {
   contextSettlement: boolean;
   shortcutsEnabled?: boolean;
 }
-
-/* -------------------------------- Component -------------------------------- */
 
 const FilterBar: React.FC<FilterBarProps> = ({
   onApply,
@@ -91,7 +81,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const isMobile = useMediaQuery("(max-width: 639px)");
 
   const bankOptions = useBankOptions(bankActive);
-  const allLedgerAccounts = useLedgerAccounts();
+  const allCategories = useCashflowCategories();
   const { views: savedViews, loaded: viewsLoaded, refresh: refreshViews } = useSavedViews(contextSettlement);
 
   const scopedViews = useMemo(() => savedViews, [savedViews]);
@@ -115,8 +105,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const viewsMenuRef = useRef<HTMLDivElement>(null);
 
   const configPermission = contextSettlement
-  ? "view_settlement_entry_view"
-  : "view_cash_flow_entry_view";
+    ? "view_settlement_entry_view"
+    : "view_cash_flow_entry_view";
 
   useOnClickOutside(addFilterMenuRef, () => setAddFilterMenuOpen(false), addFilterMenuOpen);
   useOnClickOutside(viewsMenuRef, () => setViewsMenuOpen(false), viewsMenuOpen);
@@ -125,9 +115,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-
   const [panelOpen, setPanelOpen] = useState<boolean>(false);
-
   const [lastAppliedSig, setLastAppliedSig] = useState<string | null>(null);
 
   useEffect(() => {
@@ -169,23 +157,25 @@ const FilterBar: React.FC<FilterBarProps> = ({
     return bankOptions.filter((b) => selected.has(String(b.id)));
   }, [bankOptions, localFilters.bank_id]);
 
-  const selectedAccounts = useMemo(() => {
-    const selected = new Set(localFilters.ledger_account_id.map(String));
-    return allLedgerAccounts.filter((a) => selected.has(String(a.id)));
-  }, [allLedgerAccounts, localFilters.ledger_account_id]);
+  const selectedCategories = useMemo(() => {
+    const selected = new Set(localFilters.cashflow_category_id.map(String));
+    return allCategories.filter((c) => selected.has(String(c.id)));
+  }, [allCategories, localFilters.cashflow_category_id]);
 
-  const ledgerAccountsForPicker = useMemo(() => {
-    const selectedIds = new Set(localFilters.ledger_account_id.map(String));
-    const selected = allLedgerAccounts.filter((a) => selectedIds.has(String(a.id)));
+  const categoriesForPicker = useMemo(() => {
+    const selectedIds = new Set(localFilters.cashflow_category_id.map(String));
+    const selected = allCategories.filter((c) => selectedIds.has(String(c.id)));
 
     const wanted = localFilters.tx_type;
-    if (!wanted) return allLedgerAccounts;
+    if (!wanted) return allCategories;
 
-    const filtered = allLedgerAccounts.filter((a) => String(a.default_tx || "").toLowerCase() === wanted);
-    return [...selected, ...filtered.filter((a) => !selectedIds.has(String(a.id)))];
-  }, [allLedgerAccounts, localFilters.ledger_account_id, localFilters.tx_type]);
+    const wantedHint = wanted === "credit" ? 1 : wanted === "debit" ? -1 : null;
+    if (wantedHint === null) return allCategories;
 
-  // "Anything selected to filter" (registry-active OR description)
+    const filtered = allCategories.filter((c) => Number(c.tx_type_hint ?? 0) === wantedHint);
+    return [...selected, ...filtered.filter((c) => !selectedIds.has(String(c.id)))];
+  }, [allCategories, localFilters.cashflow_category_id, localFilters.tx_type]);
+
   const hasActiveFilters = useMemo(() => {
     const anyRegistryActive = filterDefs.some((d) => d.isActive(localFilters));
     return anyRegistryActive || !!localFilters.description;
@@ -196,14 +186,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
     return c + (localFilters.description ? 1 : 0);
   }, [filterDefs, localFilters]);
 
-  // Current canonical signature
   const currentSig = useMemo(() => filtersSignature(toEntryFilters(localFilters)), [localFilters]);
 
-  /**
-   * Apply rules:
-   * - Before first apply (lastAppliedSig === null): only apply if something is selected (hasActiveFilters).
-   * - After that: only apply if filters changed (signature differs).
-   */
   const canApply = useMemo(() => {
     if (lastAppliedSig === null) return hasActiveFilters;
     return currentSig !== lastAppliedSig;
@@ -234,40 +218,22 @@ const FilterBar: React.FC<FilterBarProps> = ({
     setLocalFilters(cleared);
     closeEditorsAndMenus();
 
-    // If already applied, do nothing.
     if (nextSig === lastAppliedSig) return;
 
     onApply({ filters: next });
     setLastAppliedSig(nextSig);
   }, [closeEditorsAndMenus, contextSettlement, lastAppliedSig, onApply]);
 
-  /* Hotkeys */
   const escEnabled =
     shortcutsEnabled &&
     (saveModalOpen || configModalOpen || openEditor !== null || viewsMenuOpen || addFilterMenuOpen);
 
   const onEsc = useCallback(() => {
-    // Close the “topmost” thing inside the FilterBar first
-    if (saveModalOpen) {
-      setSaveModalOpen(false);
-      return;
-    }
-    if (configModalOpen) {
-      setConfigModalOpen(false);
-      return;
-    }
-    if (openEditor !== null) {
-      setOpenEditor(null);
-      return;
-    }
-    if (viewsMenuOpen) {
-      setViewsMenuOpen(false);
-      return;
-    }
-    if (addFilterMenuOpen) {
-      setAddFilterMenuOpen(false);
-      return;
-    }
+    if (saveModalOpen) return void setSaveModalOpen(false);
+    if (configModalOpen) return void setConfigModalOpen(false);
+    if (openEditor !== null) return void setOpenEditor(null);
+    if (viewsMenuOpen) return void setViewsMenuOpen(false);
+    if (addFilterMenuOpen) return void setAddFilterMenuOpen(false);
   }, [addFilterMenuOpen, configModalOpen, openEditor, saveModalOpen, viewsMenuOpen]);
 
   window.useGlobalEsc(escEnabled, onEsc);
@@ -287,7 +253,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
       if (cmdOrCtrl && (e.key === "Enter" || e.code === "Enter")) {
         e.preventDefault();
         void tryApplyCurrentFilters();
-        return;
       }
     };
 
@@ -295,7 +260,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [shortcutsEnabled, panelVisible, tryApplyCurrentFilters]);
 
-  /* Apply default view once per mount */
   const bootstrappedRef = useRef(false);
   useEffect(() => {
     if (bootstrappedRef.current) return;
@@ -324,7 +288,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
     bootstrappedRef.current = true;
   }, [viewsLoaded, scopedViews, onApply, localFilters, contextSettlement]);
 
-  /* View actions (apply to form only) */
   const applyViewToForm = useCallback(
     (view: Visualization) => {
       const next = buildInitialLocalFilters(view.filters, contextSettlement);
@@ -334,7 +297,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
     [contextSettlement]
   );
 
-  /* Build Add Filter menu items from registry */
   const addFilterItems = useMemo<MenuEntry[]>(() => {
     const sorted = [...filterDefs].sort((a, b) => a.menuGroup - b.menuGroup);
     const out: MenuEntry[] = [];
@@ -360,10 +322,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
     setOpenEditor((curr) => (curr === key ? null : key));
   }, []);
 
-  /* Render */
   return (
     <div className="w-full">
-      {/* MOBILE ONLY: Toggle header */}
       {isMobile && (
         <div className="flex items-center gap-2 mb-2">
           <Button
@@ -406,18 +366,15 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       )}
 
-      {/* Panel: always visible on desktop; collapsible on mobile */}
       {panelVisible && (
         <>
-          {/* Top row: chips/search + actions */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <ChipsSearchBar
               t={t}
               filterDefs={filterDefs}
               localFilters={localFilters}
               selectedBanks={selectedBanks}
-              selectedAccounts={selectedAccounts}
-              openEditor={openEditor}
+              selectedCategories={selectedCategories}
               onToggleEditor={(key) => toggleEditorFromChip(key)}
               onRemoveChip={removeChip}
               searchInputRef={searchInputRef}
@@ -425,10 +382,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
               onSearchChange={(value) => setLocalFilters((prev) => ({ ...prev, description: value }))}
             />
 
-            {/* Actions:
-                - Mobile: Apply must be LEFT of Config
-                - Desktop: Apply moved to row 2 (left of Add Filter)
-             */}
             <div className="flex items-center gap-2 justify-end flex-wrap">
               {isMobile && (
                 <Button
@@ -514,10 +467,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             </div>
           </div>
 
-          {/* Second row:
-              - Desktop: Apply LEFT of Add Filter
-              - Mobile: only Add Filter here
-           */}
           <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="relative w-full sm:w-auto" ref={addFilterMenuRef}>
               <Button
@@ -569,7 +518,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             </div>
           </div>
 
-          {/* Editors */}
           <div className="relative">
             {activeEditorDef && (
               <Popover
@@ -585,8 +533,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
                   setLocalFilters={setLocalFilters}
                   bankOptions={bankOptions}
                   selectedBanks={selectedBanks}
-                  ledgerAccountsForPicker={ledgerAccountsForPicker}
-                  selectedAccounts={selectedAccounts}
+                  categoriesForPicker={categoriesForPicker}
+                  selectedCategories={selectedCategories}
                   onRemove={() => removeChip(activeEditorDef.key)}
                   onApply={closeEditorsAndApply}
                 />
@@ -594,7 +542,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             )}
           </div>
 
-          {/* CONFIG MODAL */}
           <ViewsConfigModal
             t={t}
             open={configModalOpen}
@@ -604,7 +551,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             onRefreshViews={refreshViews}
           />
 
-          {/* SAVE MODAL */}
           <SaveViewModal
             t={t}
             open={saveModalOpen}

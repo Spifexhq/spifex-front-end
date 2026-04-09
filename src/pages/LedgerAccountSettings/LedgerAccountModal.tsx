@@ -1,545 +1,538 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/pages/LedgerAccountModal.tsx                                     */
-/* -------------------------------------------------------------------------- */
-
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+// src\pages\LedgerAccountSettings\LedgerAccountModal.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
-import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
+import Input from "@/shared/ui/Input";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
-type TxType = "debit" | "credit";
+import type {
+  AddLedgerAccountRequest,
+  LedgerAccount,
+  LedgerAccountType,
+  LedgerNormalBalance,
+  LedgerStatementSection,
+} from "@/models/settings/ledgerAccounts";
 
-type CategoryKey =
-  | "operationalRevenue"
-  | "nonOperationalRevenue"
-  | "operationalExpense"
-  | "nonOperationalExpense";
-
-type FormState = {
-  account: string;
-  category: CategoryKey | "";
-  subcategory: string;
-  code?: string;
-  is_active?: boolean;
-};
-
-type CategoryOption = {
-  key: CategoryKey;
+type Option<T extends string> = {
   label: string;
-  inferredTx: TxType;
+  value: T;
 };
 
-type SubgroupOption = { label: string; value: string };
-
-export type LedgerAccountModalProps = {
+type Props = {
   isOpen: boolean;
   mode: "create" | "edit";
-  initial: FormState;
-
-  categoryOptions: CategoryOption[];
-  getSubgroupOptions: (category: CategoryKey) => SubgroupOption[];
-
+  initial?: Partial<LedgerAccount> | null;
+  parentOptions: Array<{ label: string; value: string }>;
   busy?: boolean;
-
+  messages: Record<string, string>;
   onClose: () => void;
-  onSubmit: (data: FormState) => Promise<void>;
+  onSubmit: (payload: AddLedgerAccountRequest) => Promise<void>;
 };
 
-/* ------------------------------ Stable helpers ------------------------------ */
+const optionKey = <T extends string>(item: Option<T>) => item.value;
+const optionLabel = <T extends string>(item: Option<T>) => item.label;
 
-const IDS = {
-  form: "LedgerAccountModalForm",
-  categoryWrap: "ledger-category-wrap",
-  subgroupWrap: "ledger-subgroup-wrap",
-  accountInput: "ledger-account-input",
-} as const;
+const DEFAULTS: AddLedgerAccountRequest = {
+  code: "",
+  name: "",
+  description: "",
+  parent_id: null,
+  account_type: "posting",
+  statement_section: "expense",
+  normal_balance: "debit",
+  is_bank_control: false,
+  allows_manual_posting: true,
+  is_active: true,
+  report_group: "",
+  report_subgroup: "",
+  external_ref: "",
+  currency_code: "",
+  metadata: {},
+};
 
-function isDropdownOpen() {
-  return !!document.querySelector('[data-select-open="true"]');
-}
+const sectionOptions: Option<LedgerStatementSection>[] = [
+  { value: "asset", label: "Asset" },
+  { value: "liability", label: "Liability" },
+  { value: "equity", label: "Equity" },
+  { value: "income", label: "Income" },
+  { value: "expense", label: "Expense" },
+  { value: "off_balance", label: "Off balance" },
+  { value: "statistical", label: "Statistical" },
+];
 
-function normalizeForCompare(raw: FormState): Required<FormState> {
-  return {
-    account: (raw.account || "").trim(),
-    category: (raw.category || "") as CategoryKey | "",
-    subcategory: (raw.subcategory || "").trim(),
-    code: (raw.code || "").trim(),
-    is_active: typeof raw.is_active === "boolean" ? raw.is_active : true,
-  };
-}
+const balanceOptions: Option<LedgerNormalBalance>[] = [
+  { value: "debit", label: "Debit" },
+  { value: "credit", label: "Credit" },
+];
 
-function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>) {
-  const ak = Object.keys(a);
-  const bk = Object.keys(b);
-  if (ak.length !== bk.length) return false;
-  for (const k of ak) if (a[k] !== b[k]) return false;
-  return true;
-}
+const FieldGroup = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <section className="rounded-2xl border border-gray-200 bg-white">
+    <div className="border-b border-gray-200 px-4 py-3">
+      <div className="text-[11px] uppercase tracking-wide text-gray-600">{title}</div>
+    </div>
+    <div className="space-y-4 px-4 py-4">{children}</div>
+  </section>
+);
 
-function focusFirstInteractive(wrapId?: string) {
-  if (!wrapId) return;
-  const scope = document.getElementById(wrapId) || document.querySelector<HTMLElement>(`#${wrapId}`);
-  const el = scope?.querySelector<HTMLElement>("input,button,select,[tabindex]") || scope || null;
-  el?.focus();
-}
+const ToggleRow = ({
+  label,
+  checked,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  disabled?: boolean;
+}) => (
+  <label
+    className={[
+      "flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-2.5",
+      disabled ? "bg-gray-50 text-gray-400" : "bg-white text-gray-700",
+    ].join(" ")}
+  >
+    <span className="text-sm">{label}</span>
+    <Checkbox
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      size="sm"
+      colorClass="defaultColor"
+      disabled={disabled}
+    />
+  </label>
+);
 
-const LedgerAccountModal: React.FC<LedgerAccountModalProps> = ({
+const LedgerAccountModal: React.FC<Props> = ({
   isOpen,
   mode,
   initial,
-  categoryOptions,
-  getSubgroupOptions,
+  parentOptions,
   busy = false,
+  messages,
   onClose,
   onSubmit,
 }) => {
-  const { t } = useTranslation("ledgerAccountsSettings");
-
-  const accountRef = useRef<HTMLInputElement>(null);
-  const initialRef = useRef<Required<FormState>>(normalizeForCompare(initial));
-
-  const [form, setForm] = useState<FormState>(initial);
-  const [addingNewSubgroup, setAddingNewSubgroup] = useState(false);
-
-  const [localSubmitting, setLocalSubmitting] = useState(false);
-  const effectiveBusy = busy || localSubmitting;
-
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  const [warning, setWarning] = useState<{ title: string; message: string; focusId?: string } | null>(null);
-
-  const subgroupOptions = useMemo(() => {
-    if (!form.category) return [];
-    return getSubgroupOptions(form.category);
-  }, [form.category, getSubgroupOptions]);
-
-  const selectedCategory = useMemo(() => {
-    if (!form.category) return null;
-    return categoryOptions.find((c) => c.key === form.category) ?? null;
-  }, [form.category, categoryOptions]);
-
-  const canSave = useMemo(() => {
-    return !!form.account.trim() && !!form.category && !!form.subcategory.trim() && !effectiveBusy;
-  }, [form.account, form.category, form.subcategory, effectiveBusy]);
-
-  const isDirty = useMemo(() => {
-    if (!isOpen) return false;
-    const cur = normalizeForCompare(form);
-    return !shallowEqual(cur, initialRef.current);
-  }, [isOpen, form]);
-
-  const resetInternalState = useCallback(() => {
-    setForm(initial);
-    setAddingNewSubgroup(false);
-    setLocalSubmitting(false);
-    setShowCloseConfirm(false);
-    setWarning(null);
-  }, [initial]);
+  const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
+  const [metadataText, setMetadataText] = useState("{}");
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      setMounted(true);
+      setVisible(false);
 
-    initialRef.current = normalizeForCompare(initial);
-    setForm(initial);
-    setAddingNewSubgroup(false);
-    setLocalSubmitting(false);
-    setShowCloseConfirm(false);
-    setWarning(null);
+      const enterId = window.setTimeout(() => {
+        setVisible(true);
+      }, 16);
 
-    requestAnimationFrame(() => accountRef.current?.focus());
-  }, [isOpen, initial]);
+      return () => window.clearTimeout(enterId);
+    }
+
+    setVisible(false);
+    const closeId = window.setTimeout(() => {
+      setMounted(false);
+    }, 240);
+
+    return () => window.clearTimeout(closeId);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!mounted) return;
 
-    const previousOverflow = document.body.style.overflow;
-    const previousTouchAction = document.body.style.touchAction;
-
+    const prevOverflow = document.body.style.overflow;
+    const prevTouchAction = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.touchAction = previousTouchAction;
+      document.body.style.overflow = prevOverflow;
+      document.body.style.touchAction = prevTouchAction;
     };
-  }, [isOpen]);
-
-  const handleClose = useCallback(() => {
-    resetInternalState();
-    onClose();
-  }, [onClose, resetInternalState]);
-
-  const attemptClose = useCallback(() => {
-    if (!isOpen) return;
-    if (effectiveBusy) return;
-    if (isDropdownOpen()) return;
-
-    if (warning) {
-      setWarning(null);
-      return;
-    }
-
-    if (showCloseConfirm) {
-      setShowCloseConfirm(false);
-      return;
-    }
-
-    if (isDirty) {
-      setShowCloseConfirm(true);
-      return;
-    }
-
-    handleClose();
-  }, [isOpen, effectiveBusy, warning, showCloseConfirm, isDirty, handleClose]);
+  }, [mounted]);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        attemptClose();
-        return;
-      }
-
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-        if (effectiveBusy) return;
-        (document.getElementById(IDS.form) as HTMLFormElement | null)?.requestSubmit();
-      }
+    const next: AddLedgerAccountRequest = {
+      ...DEFAULTS,
+      ...(initial ?? {}),
+      code: initial?.code ?? "",
+      name: initial?.name ?? "",
+      description: initial?.description ?? "",
+      report_group: initial?.report_group ?? "",
+      report_subgroup: initial?.report_subgroup ?? "",
+      external_ref: initial?.external_ref ?? "",
+      currency_code: initial?.currency_code ?? "",
+      parent_id: initial?.parent_id ?? null,
+      account_type: initial?.account_type ?? DEFAULTS.account_type,
+      statement_section: initial?.statement_section ?? DEFAULTS.statement_section,
+      normal_balance: initial?.normal_balance ?? DEFAULTS.normal_balance,
+      is_bank_control: initial?.is_bank_control ?? DEFAULTS.is_bank_control,
+      allows_manual_posting:
+        initial?.allows_manual_posting ?? DEFAULTS.allows_manual_posting,
+      is_active: initial?.is_active ?? DEFAULTS.is_active,
+      is_system: initial?.is_system ?? DEFAULTS.is_system,
+      metadata:
+        initial?.metadata &&
+        typeof initial.metadata === "object" &&
+        !Array.isArray(initial.metadata)
+          ? (initial.metadata as Record<string, unknown>)
+          : {},
     };
 
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, attemptClose, effectiveBusy]);
+    setForm(next);
+    setMetadataText(JSON.stringify(next.metadata ?? {}, null, 2));
+    setError(null);
+  }, [isOpen, initial]);
 
-  const handleCategoryChange = useCallback((items: { label: string; value: CategoryKey }[]) => {
-    const sel = items[0];
-    if (!sel) {
-      setForm((p) => ({ ...p, category: "", subcategory: "" }));
-      setAddingNewSubgroup(false);
-      return;
-    }
-    setForm((p) => ({ ...p, category: sel.value, subcategory: "" }));
-    setAddingNewSubgroup(false);
+  useEffect(() => {
+    if (!mounted) return;
 
-    setTimeout(() => focusFirstInteractive(IDS.subgroupWrap), 0);
-  }, []);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
 
-  const handleSubgroupChange = useCallback((items: { label: string; value: string }[]) => {
-    const sel = items[0];
-    setForm((p) => ({ ...p, subcategory: sel ? sel.value : "" }));
-  }, []);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mounted, onClose]);
 
-  const submit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (effectiveBusy) return;
-
-      const ok = !!form.account.trim() && !!form.category && !!form.subcategory.trim();
-
-      if (!ok) {
-        setWarning({
-          title: t("modal.validationTitle", { defaultValue: "Check required fields" }),
-          message: t("modal.validationMessage", {
-            defaultValue: "Account, category and subgroup are required.",
-          }),
-          focusId: !form.account.trim()
-            ? IDS.accountInput
-            : !form.category
-            ? IDS.categoryWrap
-            : IDS.subgroupWrap,
-        });
-        return;
-      }
-
-      setLocalSubmitting(true);
-      try {
-        await onSubmit({
-          ...form,
-          account: form.account.trim(),
-          subcategory: form.subcategory.trim(),
-          code: form.code?.trim() ? form.code.trim() : "",
-          is_active: typeof form.is_active === "boolean" ? form.is_active : true,
-        });
-      } catch (err) {
-        console.error(err);
-        setWarning({
-          title: t("modal.saveErrorTitle", { defaultValue: "Save failed" }),
-          message: t("toast.saveError", { defaultValue: "Failed to save." }),
-        });
-      } finally {
-        setLocalSubmitting(false);
-      }
-    },
-    [effectiveBusy, form, onSubmit, t]
+  const accountTypeOptions = useMemo<Option<LedgerAccountType>[]>(
+    () => [
+      { value: "header", label: messages.header },
+      { value: "posting", label: messages.posting },
+    ],
+    [messages]
   );
 
-  const footerLeft = useMemo(() => {
-    if (selectedCategory) {
-      return (
-        <>
-          {t("modal.defaultTxLabel", { defaultValue: "Default transaction:" })}{" "}
-          <b>
-            {selectedCategory.inferredTx === "credit" ? t("tags.credit") : t("tags.debit")}
-          </b>
-        </>
-      );
-    }
-    return <>{t("modal.defaultTxHint")}</>;
-  }, [selectedCategory, t]);
+  const selectedParent = useMemo(() => {
+    if (!form.parent_id) return [];
+    return parentOptions.filter((item) => item.value === form.parent_id);
+  }, [form.parent_id, parentOptions]);
 
-  if (!isOpen) return null;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!form.code.trim()) {
+      setError(messages.requiredCode);
+      return;
+    }
+
+    if (!form.name.trim()) {
+      setError(messages.requiredName);
+      return;
+    }
+
+    let parsedMetadata: Record<string, unknown> = {};
+    try {
+      parsedMetadata = metadataText.trim() ? JSON.parse(metadataText) : {};
+    } catch {
+      setError(messages.invalidJson);
+      return;
+    }
+
+    await onSubmit({
+      ...form,
+      code: form.code.trim(),
+      name: form.name.trim(),
+      description: form.description?.trim() || "",
+      report_group: form.report_group?.trim() || "",
+      report_subgroup: form.report_subgroup?.trim() || "",
+      external_ref: form.external_ref?.trim() || "",
+      currency_code: form.currency_code?.trim().toUpperCase() || "",
+      parent_id: form.parent_id || null,
+      metadata: parsedMetadata,
+      is_bank_control: form.account_type === "posting" ? !!form.is_bank_control : false,
+      allows_manual_posting:
+        form.account_type === "posting" ? !!form.allows_manual_posting : false,
+    });
+  };
+
+  if (!mounted) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          attemptClose();
-        }
-      }}
-    >
+    <div className="fixed inset-0 z-[9999]">
+      <button
+        type="button"
+        aria-label={messages.cancel}
+        className="absolute inset-0"
+        onClick={onClose}
+      />
+
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="ledger-account-modal-title"
-        onMouseDown={(event) => event.stopPropagation()}
         className={[
-          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
-          "md:static md:w-[820px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
-          "md:rounded-lg md:border md:border-gray-200",
+          "absolute inset-y-0 right-0 flex h-full w-full max-w-[980px] flex-col border-l border-gray-200 bg-white",
+          "transition-transform duration-300 ease-out",
+          visible ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
       >
-        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
-        </div>
-
-        <header className="border-b border-gray-200 bg-white shrink-0">
-          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
-                GL
+        <header className="shrink-0 border-b border-gray-200 bg-white/95 backdrop-blur">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4">
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
+                {mode === "create" ? messages.createTitle : messages.editTitle}
               </div>
-
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("title", { defaultValue: "Ledger Accounts" })}
-                </div>
-                <h1 id="ledger-account-modal-title" className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
-                </h1>
-              </div>
+              <h3
+                id="ledger-account-modal-title"
+                className="mt-1 truncate text-[18px] font-semibold text-gray-900"
+              >
+                {mode === "create" ? messages.createTitle : messages.editTitle}
+              </h3>
             </div>
 
             <button
               type="button"
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
-              onClick={attemptClose}
-              aria-label={t("buttons.cancel")}
-              disabled={effectiveBusy}
+              onClick={onClose}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50"
+              aria-label={messages.cancel}
             >
               <X size={18} />
             </button>
           </div>
         </header>
 
-        <form id={IDS.form} className="flex flex-1 min-h-0 flex-col md:block md:flex-none" onSubmit={submit}>
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Input
-                kind="text"
-                ref={accountRef}
-                id={IDS.accountInput}
-                label={t("modal.account")}
-                name="account"
-                value={form.account}
-                onChange={(e) => setForm((p) => ({ ...p, account: e.target.value }))}
-                required
-                disabled={effectiveBusy}
-              />
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
+            <div className="grid gap-4 xl:grid-cols-2">
+              <FieldGroup title={messages.general}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Input
+                    kind="text"
+                    label={messages.code}
+                    value={form.code}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        code: e.target.value,
+                      }))
+                    }
+                  />
 
-              <Input
-                kind="text"
-                label={t("modal.code")}
-                name="code"
-                value={form.code || ""}
-                onChange={(e) => setForm((p) => ({ ...p, code: e.target.value }))}
-                placeholder={t("modal.codePlaceholder")}
-                disabled={effectiveBusy}
-              />
-
-              <div id={IDS.categoryWrap} className="md:col-span-2">
-                <SelectDropdown<{ label: string; value: CategoryKey }>
-                  label={t("filters.category")}
-                  items={categoryOptions.map((c) => ({ label: c.label, value: c.key }))}
-                  selected={
-                    form.category ? [{ label: t(`categories.${form.category}`), value: form.category }] : []
-                  }
-                  onChange={handleCategoryChange}
-                  getItemKey={(i) => i.value}
-                  getItemLabel={(i) => i.label}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel={t("buttons.selectCategory")}
-                  clearOnClickOutside={false}
-                  customStyles={{ maxHeight: "240px" }}
-                  disabled={effectiveBusy || !form.account.trim()}
-                />
-              </div>
-
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2 items-end">
-                <div id={IDS.subgroupWrap}>
-                  {addingNewSubgroup ? (
-                    <Input
-                      kind="text"
-                      label={t("modal.subcategoryNew")}
-                      name="subcategory"
-                      value={form.subcategory}
-                      onChange={(e) => setForm((p) => ({ ...p, subcategory: e.target.value }))}
-                      disabled={effectiveBusy || !form.category}
-                      required
-                    />
-                  ) : (
-                    <SelectDropdown<{ label: string; value: string }>
-                      label={t("modal.subcategory")}
-                      items={subgroupOptions}
-                      selected={form.subcategory ? [{ label: form.subcategory, value: form.subcategory }] : []}
-                      onChange={handleSubgroupChange}
-                      getItemKey={(i) => i.value}
-                      getItemLabel={(i) => i.label}
-                      singleSelect
-                      hideCheckboxes
-                      buttonLabel={t("buttons.selectSubcategory")}
-                      clearOnClickOutside={false}
-                      customStyles={{ maxHeight: "240px" }}
-                      disabled={effectiveBusy || !form.category}
-                    />
-                  )}
+                  <Input
+                    kind="text"
+                    label={messages.name}
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                  />
                 </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setAddingNewSubgroup((v) => !v);
-                    setForm((p) => ({ ...p, subcategory: "" }));
-                    setTimeout(() => focusFirstInteractive(IDS.subgroupWrap), 0);
-                  }}
-                  disabled={effectiveBusy || !form.category}
-                  className="w-full md:w-auto"
-                >
-                  {addingNewSubgroup ? t("buttons.toggleNewSubCancel") : t("buttons.toggleNewSub")}
-                </Button>
-              </div>
+                <Input
+                  kind="text"
+                  label={messages.description}
+                  value={form.description || ""}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                />
 
-              <div className="md:col-span-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={typeof form.is_active === "boolean" ? form.is_active : true}
-                    onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))}
-                    disabled={effectiveBusy}
+                <SelectDropdown<{ label: string; value: string }>
+                  label={messages.parent}
+                  items={parentOptions}
+                  selected={selectedParent}
+                  onChange={(items) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      parent_id: items[0]?.value ?? null,
+                    }))
+                  }
+                  getItemKey={(item) => item.value}
+                  getItemLabel={(item) => item.label}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel={messages.parentPlaceholder}
+                />
+              </FieldGroup>
+
+              <FieldGroup title={messages.classification}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <SelectDropdown<Option<LedgerAccountType>>
+                    label={messages.accountType}
+                    items={accountTypeOptions}
+                    selected={accountTypeOptions.filter((x) => x.value === form.account_type)}
+                    onChange={(items) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        account_type: items[0]?.value ?? "posting",
+                      }))
+                    }
+                    getItemKey={optionKey}
+                    getItemLabel={optionLabel}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel={messages.selectAccountType}
                   />
-                  {t("modal.active")}
+
+                  <SelectDropdown<Option<LedgerStatementSection>>
+                    label={messages.statementSection}
+                    items={sectionOptions}
+                    selected={sectionOptions.filter((x) => x.value === form.statement_section)}
+                    onChange={(items) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        statement_section: items[0]?.value ?? "expense",
+                      }))
+                    }
+                    getItemKey={optionKey}
+                    getItemLabel={optionLabel}
+                    singleSelect
+                    hideCheckboxes
+                    buttonLabel={messages.selectSection}
+                  />
+                </div>
+
+                <SelectDropdown<Option<LedgerNormalBalance>>
+                  label={messages.normalBalance}
+                  items={balanceOptions}
+                  selected={balanceOptions.filter((x) => x.value === form.normal_balance)}
+                  onChange={(items) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      normal_balance: items[0]?.value ?? "debit",
+                    }))
+                  }
+                  getItemKey={optionKey}
+                  getItemLabel={optionLabel}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel={messages.selectBalance}
+                />
+              </FieldGroup>
+
+              <FieldGroup title={messages.controls}>
+                <ToggleRow
+                  label={messages.active}
+                  checked={!!form.is_active}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      is_active: value,
+                    }))
+                  }
+                />
+
+                <ToggleRow
+                  label={messages.bankControl}
+                  checked={!!form.is_bank_control}
+                  disabled={form.account_type !== "posting"}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      is_bank_control: value,
+                    }))
+                  }
+                />
+
+                <ToggleRow
+                  label={messages.manualPosting}
+                  checked={!!form.allows_manual_posting}
+                  disabled={form.account_type !== "posting"}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      allows_manual_posting: value,
+                    }))
+                  }
+                />
+              </FieldGroup>
+
+              <FieldGroup title={messages.advanced}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Input
+                    kind="text"
+                    label={messages.reportGroup}
+                    value={form.report_group || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        report_group: e.target.value,
+                      }))
+                    }
+                  />
+
+                  <Input
+                    kind="text"
+                    label={messages.reportSubgroup}
+                    value={form.report_subgroup || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        report_subgroup: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Input
+                    kind="text"
+                    label={messages.externalRef}
+                    value={form.external_ref || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        external_ref: e.target.value,
+                      }))
+                    }
+                  />
+
+                  <Input
+                    kind="text"
+                    label={messages.currencyCode}
+                    value={form.currency_code || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        currency_code: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium text-gray-700">
+                    {messages.metadata}
+                  </span>
+                  <textarea
+                    className="min-h-[180px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+                    value={metadataText}
+                    onChange={(e) => setMetadataText(e.target.value)}
+                  />
                 </label>
-              </div>
+              </FieldGroup>
             </div>
+
+            {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
           </div>
 
-          <footer
-            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-          >
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <p className="text-[12px] text-gray-600 hidden md:block">
-                {footerLeft}
-                <span className="ml-3 text-gray-400">
-                  {t("footer.shortcuts", {
-                    defaultValue: "Shortcuts: Esc close • Ctrl/⌘+S save",
-                  })}
-                </span>
-              </p>
-
-              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
-                <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy} className="w-full md:w-auto">
-                  {t("buttons.cancel")}
-                </Button>
-                <Button type="submit" disabled={!canSave} className="w-full md:w-auto">
-                  {effectiveBusy ? t("buttons.saving", { defaultValue: "Saving…" }) : t("buttons.save")}
-                </Button>
-              </div>
+          <footer className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 md:px-6">
+            <div className="flex items-center justify-end gap-2">
+              <Button type="submit" disabled={busy}>
+                {mode === "create" ? messages.saveCreate : messages.saveEdit}
+              </Button>
             </div>
           </footer>
         </form>
-
-        {showCloseConfirm && (
-          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
-            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
-              <div className="px-5 py-4 border-b border-gray-100">
-                <h2 className="text-[15px] font-semibold text-gray-900">
-                  {t("confirmDiscard.title", { defaultValue: "Discard changes?" })}
-                </h2>
-                <p className="mt-1 text-[12px] text-gray-600">
-                  {t("confirmDiscard.message", {
-                    defaultValue: "You have unsaved changes. Do you want to discard them?",
-                  })}
-                </p>
-              </div>
-              <div
-                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
-                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-              >
-                <Button
-                  variant="outline"
-                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                  onClick={() => setShowCloseConfirm(false)}
-                  disabled={effectiveBusy}
-                >
-                  {t("actions.back", { defaultValue: "Back" })}
-                </Button>
-                <Button
-                  variant="danger"
-                  className="w-full md:w-auto !bg-red-500 hover:!bg-red-600"
-                  onClick={handleClose}
-                  disabled={effectiveBusy}
-                >
-                  {t("actions.discard", { defaultValue: "Discard" })}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {warning && (
-          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
-            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
-              <div className="px-5 py-4 border-b border-amber-100">
-                <h2 className="text-[15px] font-semibold text-amber-800">{warning.title}</h2>
-                <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
-              </div>
-              <div
-                className="px-5 py-4 flex justify-end"
-                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-              >
-                <Button
-                  variant="primary"
-                  className="w-full md:w-auto"
-                  onClick={() => {
-                    const fId = warning.focusId;
-                    setWarning(null);
-                    setTimeout(() => focusFirstInteractive(fId), 0);
-                  }}
-                >
-                  {t("actions.ok", { defaultValue: "OK" })}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

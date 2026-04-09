@@ -1,0 +1,22 @@
+{
+  "pageTitle": "Buchhaltungsbereich",
+  "title": "Buchhaltungsbereich",
+  "subtitle": "Verwalten Sie die buchhalterische Struktur des Hauptbuchs getrennt von der operativen Cashflow-Kategorisierung.",
+  "buttons": {
+    "backToLedger": "Zurück zum Hauptbuchbereich",
+    "addAccount": "Add account",
+    "search": "Search",
+    "clear": "Clear"
+  },
+  "sections": {
+    "structure": {
+      "title": "Buchhaltungsstruktur",
+      "description": "Verfeinern Sie Hierarchie, Berichtsgruppen, Sichtbarkeit und Abschlusszuordnung."
+    },
+    "views": {
+      "title": "Ansichten",
+      "cashflow": "Cashflow view",
+      "accounting": "Accounting view"
+    }
+  }
+}

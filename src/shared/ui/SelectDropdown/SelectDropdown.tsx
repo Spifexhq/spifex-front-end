@@ -20,15 +20,6 @@ function cn(...classes: Array<string | undefined | false | null>) {
 type SelectDropdownSize = "xs" | "sm" | "md" | "lg" | "xl";
 type DropdownPlacement = "bottom" | "top";
 
-/**
- * SelectDropdown — Minimal & Fluid
- * - Compact visual language, no heavy shadows, light borders only.
- * - Sticky filter + actions, scroll-shadows for context.
- * - Smooth open/close with transform/opacity, no layout jank.
- * - Better focus ring, clearer states, no hover flicker.
- * - Virtualization preserved for large lists.
- * - Keeps your prop API intact.
- */
 function SelectDropdown<T>({
   label,
   items,
@@ -53,9 +44,6 @@ function SelectDropdown<T>({
 }: SelectDropdownProps<T> & { size?: SelectDropdownSize }) {
   const { t } = useTranslation("selectDropdown");
 
-  // ---------------------------------------------------------------------------
-  // Size tokens
-  // ---------------------------------------------------------------------------
   const SIZE: Record<
     SelectDropdownSize,
     {
@@ -117,9 +105,6 @@ function SelectDropdown<T>({
 
   const effectiveRowHeight = virtualRowHeight ?? SIZE[size].rowHeight;
 
-  // ---------------------------------------------------------------------------
-  // State & refs
-  // ---------------------------------------------------------------------------
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -134,14 +119,12 @@ function SelectDropdown<T>({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const itemElsRef = useRef<Array<HTMLDivElement | null>>([]);
 
-  // Virtual scroll
   const [scrollTop, setScrollTop] = useState(0);
 
   const id = useId();
   const panelId = `${id}-panel`;
   const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
-  // detect viewport
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -159,7 +142,6 @@ function SelectDropdown<T>({
     return () => media.removeListener(sync);
   }, []);
 
-  // detect focus by Tab (auto-open on focus)
   const lastFocusByTabRef = useRef(false);
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -183,9 +165,6 @@ function SelectDropdown<T>({
     };
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
   const keyToStr = (k: string | number) => String(k);
 
   const selectedKeys = useMemo(
@@ -255,9 +234,6 @@ function SelectDropdown<T>({
     setPlacement(spaceBelow >= estimatedPanelHeight || spaceBelow >= spaceAbove ? "bottom" : "top");
   }, [customStyles.maxHeight]);
 
-  // ---------------------------------------------------------------------------
-  // Open/close
-  // ---------------------------------------------------------------------------
   const toggleDropdown = () => {
     if (disabled) return;
     if (!isOpen) computePlacement();
@@ -294,7 +270,6 @@ function SelectDropdown<T>({
     setActiveIndex(null);
   });
 
-  // set active item & focus on open
   useEffect(() => {
     if (!isOpen) return;
 
@@ -364,9 +339,6 @@ function SelectDropdown<T>({
     else if (activeIndex > flatItems.length - 1) setActiveIndex(flatItems.length - 1);
   }, [flatItems, activeIndex]);
 
-  // ---------------------------------------------------------------------------
-  // Selection
-  // ---------------------------------------------------------------------------
   const handleCheckboxChange = (item: T) => {
     const k = keyToStr(getItemKey(item));
     const isCurrentlySelected = selectedKeys.has(k);
@@ -423,9 +395,6 @@ function SelectDropdown<T>({
     onChange(updated);
   };
 
-  // ---------------------------------------------------------------------------
-  // Tab accessibility
-  // ---------------------------------------------------------------------------
   const TABBABLE_SELECTOR =
     'a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
@@ -452,9 +421,6 @@ function SelectDropdown<T>({
     }, 0);
   };
 
-  // ---------------------------------------------------------------------------
-  // Keyboard interaction
-  // ---------------------------------------------------------------------------
   const handleButtonKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
     if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
@@ -491,14 +457,8 @@ function SelectDropdown<T>({
     const lastIdx = flatItems.length - 1;
     const page = Math.max(1, Math.floor((panelRef.current?.clientHeight || 240) / effectiveRowHeight));
 
-    if (e.key === "Home") {
-      setActiveFrom(0, "keyboard");
-      return;
-    }
-    if (e.key === "End") {
-      setActiveFrom(lastIdx, "keyboard");
-      return;
-    }
+    if (e.key === "Home") { setActiveFrom(0, "keyboard"); return; }
+    if (e.key === "End") { setActiveFrom(lastIdx, "keyboard"); return; }
     if (e.key === "PageDown") {
       const next = Math.min((activeIndex ?? -1) + page, lastIdx);
       setActiveFrom(next < 0 ? 0 : next, "keyboard");
@@ -522,9 +482,6 @@ function SelectDropdown<T>({
     if (e.key === "Enter" && activeIndex != null) handleCheckboxChange(flatItems[activeIndex]);
   };
 
-  // ---------------------------------------------------------------------------
-  // Render helpers
-  // ---------------------------------------------------------------------------
   const renderItem = (item: T, flatIndex: number) => {
     const k = keyToStr(getItemKey(item));
     const itemLabel = getItemLabel(item);
@@ -685,159 +642,157 @@ function SelectDropdown<T>({
           </span>
         </button>
 
-        {/* Panel */}
-        <div
-          className={cn(
-            "absolute left-0 right-0 origin-top rounded-md shadow-lg border border-gray-200 bg-white z-[60]",
-            placement === "bottom" ? "top-full mt-1" : "bottom-full mb-1",
-            "transition-all duration-150 ease-out",
-            isOpen
-              ? "opacity-100 translate-y-0 pointer-events-auto"
-              : placement === "bottom"
-              ? "opacity-0 -translate-y-1 pointer-events-none"
-              : "opacity-0 translate-y-1 pointer-events-none"
-          )}
-          style={{ maxWidth: 360 }}
-        >
+        {/* Panel — only rendered when open to prevent inflating scrollHeight of ancestor scroll containers */}
+        {isOpen && (
           <div
-            id={panelId}
-            role="listbox"
-            aria-labelledby={id}
-            aria-label={t("aria.listbox")}
-            aria-multiselectable={!effectiveSingleSelect || undefined}
-            aria-activedescendant={
-              isOpen && activeIndex != null && flatItems.length > 0 ? `${id}-opt-${activeIndex}` : undefined
-            }
-            ref={panelRef}
-            tabIndex={isOpen ? 0 : -1}
-            onKeyDown={handlePanelKeyDown}
-            onScroll={onPanelScroll}
-            className="max-h-[44vh] overflow-y-auto outline-none"
-            style={panelStyle}
+            className={cn(
+              "absolute left-0 right-0 origin-top rounded-md shadow-lg border border-gray-200 bg-white z-[60]",
+              placement === "bottom" ? "top-full mt-1" : "bottom-full mb-1",
+              "transition-all duration-150 ease-out",
+              "opacity-100 translate-y-0 pointer-events-auto"
+            )}
+            style={{ maxWidth: 360 }}
           >
-            {!effectiveSingleSelect && !hideCheckboxes && (
-              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 border-b border-gray-200">
-                <div className="flex gap-1 p-2">
-                  <button
-                    type="button"
-                    onClick={selectAll}
-                    className={cn(
-                      "rounded border border-gray-200 font-medium hover:bg-gray-50",
-                      SIZE[size].actionBtn
-                    )}
-                    tabIndex={-1}
-                    aria-label={t("actions.selectAll")}
-                  >
-                    {t("actions.selectAll")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={deselectAll}
-                    className={cn(
-                      "rounded border border-gray-200 font-medium hover:bg-gray-50",
-                      SIZE[size].actionBtn
-                    )}
-                    tabIndex={-1}
-                    aria-label={t("actions.clearAll")}
-                  >
-                    {t("actions.clearAll")}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {!hideFilter && (
-              <div className="sticky top-[var(--sticky-offset,0px)] z-10 bg-white border-b border-gray-200 px-2 py-2">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder={t("filter.placeholder")}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    ref={searchInputRef}
-                    className={cn(
-                      "w-full rounded border border-gray-200 outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300",
-                      SIZE[size].filterInput
-                    )}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.preventDefault();
-                    }}
-                    aria-label={t("filter.aria")}
-                  />
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    className={cn(
-                      "absolute left-2 top-1/2 -translate-y-1/2 text-gray-400",
-                      size === "xl" ? "w-5 h-5" : "w-4 h-4"
-                    )}
-                    fill="none"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            )}
-
-            <div className="py-1">
-              {flatItems.length === 0 ? (
-                <div className="px-3 py-8 text-center text-[12px] text-gray-500">
-                  {searchTerm ? t("empty.search") : t("empty.default")}
-                </div>
-              ) : shouldVirtualize ? (
-                (() => {
-                  const panelH = panelRef.current?.clientHeight || 320;
-                  const rowH = effectiveRowHeight;
-                  const overscan = 8;
-
-                  const total = flatItems.length;
-                  const totalHeight = total * rowH;
-
-                  const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
-                  const visibleCount = Math.ceil(panelH / rowH) + overscan * 2;
-                  const end = Math.min(total, start + visibleCount);
-
-                  const slice = flatItems.slice(start, end);
-
-                  return (
-                    <div style={{ height: totalHeight, position: "relative" }}>
-                      <div style={{ position: "absolute", top: start * rowH, left: 0, right: 0 }}>
-                        {slice.map((item, idx) => renderItem(item, start + idx))}
-                      </div>
-                    </div>
-                  );
-                })()
-              ) : groupBy ? (
-                Object.entries(groupedItems).map(([groupName, groupItems]) => (
-                  <div key={groupName}>
-                    <div
+            <div
+              id={panelId}
+              role="listbox"
+              aria-labelledby={id}
+              aria-label={t("aria.listbox")}
+              aria-multiselectable={!effectiveSingleSelect || undefined}
+              aria-activedescendant={
+                activeIndex != null && flatItems.length > 0 ? `${id}-opt-${activeIndex}` : undefined
+              }
+              ref={panelRef}
+              tabIndex={0}
+              onKeyDown={handlePanelKeyDown}
+              onScroll={onPanelScroll}
+              className="max-h-[44vh] overflow-y-auto outline-none"
+              style={panelStyle}
+            >
+              {!effectiveSingleSelect && !hideCheckboxes && (
+                <div className="sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 border-b border-gray-200">
+                  <div className="flex gap-1 p-2">
+                    <button
+                      type="button"
+                      onClick={selectAll}
                       className={cn(
-                        "font-semibold text-gray-600",
-                        size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]",
-                        !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : ""
+                        "rounded border border-gray-200 font-medium hover:bg-gray-50",
+                        SIZE[size].actionBtn
                       )}
-                      onClick={() => handleGroupToggle(groupItems)}
+                      tabIndex={-1}
+                      aria-label={t("actions.selectAll")}
                     >
-                      {groupName}
-                    </div>
-                    {groupItems.map((item) => {
-                      const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
-                      return idx >= 0 ? renderItem(item, idx) : null;
-                    })}
+                      {t("actions.selectAll")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={deselectAll}
+                      className={cn(
+                        "rounded border border-gray-200 font-medium hover:bg-gray-50",
+                        SIZE[size].actionBtn
+                      )}
+                      tabIndex={-1}
+                      aria-label={t("actions.clearAll")}
+                    >
+                      {t("actions.clearAll")}
+                    </button>
                   </div>
-                ))
-              ) : (
-                flatItems.map((item, idx) => renderItem(item, idx))
+                </div>
               )}
+
+              {!hideFilter && (
+                <div className="sticky top-[var(--sticky-offset,0px)] z-10 bg-white border-b border-gray-200 px-2 py-2">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={t("filter.placeholder")}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      ref={searchInputRef}
+                      className={cn(
+                        "w-full rounded border border-gray-200 outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300",
+                        SIZE[size].filterInput
+                      )}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") e.preventDefault();
+                      }}
+                      aria-label={t("filter.aria")}
+                    />
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className={cn(
+                        "absolute left-2 top-1/2 -translate-y-1/2 text-gray-400",
+                        size === "xl" ? "w-5 h-5" : "w-4 h-4"
+                      )}
+                      fill="none"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              )}
+
+              <div className="py-1">
+                {flatItems.length === 0 ? (
+                  <div className="px-3 py-8 text-center text-[12px] text-gray-500">
+                    {searchTerm ? t("empty.search") : t("empty.default")}
+                  </div>
+                ) : shouldVirtualize ? (
+                  (() => {
+                    const panelH = panelRef.current?.clientHeight || 320;
+                    const rowH = effectiveRowHeight;
+                    const overscan = 8;
+
+                    const total = flatItems.length;
+                    const totalHeight = total * rowH;
+
+                    const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
+                    const visibleCount = Math.ceil(panelH / rowH) + overscan * 2;
+                    const end = Math.min(total, start + visibleCount);
+
+                    const slice = flatItems.slice(start, end);
+
+                    return (
+                      <div style={{ height: totalHeight, position: "relative" }}>
+                        <div style={{ position: "absolute", top: start * rowH, left: 0, right: 0 }}>
+                          {slice.map((item, idx) => renderItem(item, start + idx))}
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : groupBy ? (
+                  Object.entries(groupedItems).map(([groupName, groupItems]) => (
+                    <div key={groupName}>
+                      <div
+                        className={cn(
+                          "font-semibold text-gray-600",
+                          size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]",
+                          !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : ""
+                        )}
+                        onClick={() => handleGroupToggle(groupItems)}
+                      >
+                        {groupName}
+                      </div>
+                      {groupItems.map((item) => {
+                        const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
+                        return idx >= 0 ? renderItem(item, idx) : null;
+                      })}
+                    </div>
+                  ))
+                ) : (
+                  flatItems.map((item, idx) => renderItem(item, idx))
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

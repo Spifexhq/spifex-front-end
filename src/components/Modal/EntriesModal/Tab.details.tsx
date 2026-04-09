@@ -1,13 +1,13 @@
-// src/components/Modal/Tab.details.tsx
-
 import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import EntryAccountingStatusCell from "@/components/CashFlowAccounting/EntryAccountingStatusCell";
 
 import type { FormData } from "../Modal.types";
-import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
+import type { CashflowCategoryOption } from "@/models/entries/entries";
 import type { DocumentType } from "src/models/entries/documentTypes";
 
 type DocumentTypeItem = { id: DocumentType["code"]; label: string };
@@ -21,12 +21,14 @@ type Props = {
   amountRef: React.RefObject<HTMLInputElement>;
   descriptionRef: React.RefObject<HTMLInputElement>;
 
-  ledgerAccounts: LedgerAccount[];
-  ledgerWrapId: string;
+  cashflowCategories: CashflowCategoryOption[];
+  categoryWrapId: string;
 
   documentTypes: DocumentTypeItem[];
 
   isFinancialLocked: boolean;
+  accounting?: AccountingReadiness | null;
+  onOpenAccountingReason?: () => void;
 };
 
 const DetailsTab: React.FC<Props> = ({
@@ -35,23 +37,28 @@ const DetailsTab: React.FC<Props> = ({
   setFormData,
   amountRef,
   descriptionRef,
-  ledgerAccounts,
-  ledgerWrapId,
+  cashflowCategories,
+  categoryWrapId,
   documentTypes,
   isFinancialLocked,
+  accounting,
+  onOpenAccountingReason,
 }) => {
-  const selectedLedgerAccounts = useMemo(() => {
-    const id = String(formData.details.ledgerAccount || "");
+  const selectedCategories = useMemo(() => {
+    const id = String((formData.details as Record<string, unknown>).cashflowCategory || "");
     if (!id) return [];
-    const found = ledgerAccounts.find((a) => String(a.id) === id);
+    const found = cashflowCategories.find((a) => String(a.id) === id);
     return found ? [found] : [];
-  }, [ledgerAccounts, formData.details.ledgerAccount]);
+  }, [cashflowCategories, formData.details]);
 
-  const handleLedgerAccountChange = useCallback(
-    (updated: LedgerAccount[]) => {
+  const handleCategoryChange = useCallback(
+    (updated: CashflowCategoryOption[]) => {
       if (isFinancialLocked) return;
       const id = updated.length ? String(updated[0].id) : "";
-      setFormData((p) => ({ ...p, details: { ...p.details, ledgerAccount: id } }));
+      setFormData((p) => ({
+        ...p,
+        details: { ...p.details, cashflowCategory: id },
+      }));
     },
     [isFinancialLocked, setFormData]
   );
@@ -63,7 +70,6 @@ const DetailsTab: React.FC<Props> = ({
     const found = documentTypes.find((d) => String(d.id) === id);
     if (found) return [found];
 
-    // fallback (e.g. async load or missing list item)
     return [
       {
         id: id as DocumentType["code"],
@@ -116,8 +122,13 @@ const DetailsTab: React.FC<Props> = ({
     [setFormData]
   );
 
+  const getCategoryLabel = useCallback(
+    (i: CashflowCategoryOption) => (i.code ? `${i.code} — ${i.name}` : i.name || "—"),
+    []
+  );
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
       <Input
         kind="date"
         label={t("entriesModal:details.dueDate")}
@@ -136,25 +147,31 @@ const DetailsTab: React.FC<Props> = ({
         zeroAsEmpty
       />
 
-      <div id={ledgerWrapId}>
-        <SelectDropdown<LedgerAccount>
-          label={t("entriesModal:details.ledgerAccount")}
-          items={ledgerAccounts}
-          selected={selectedLedgerAccounts}
-          onChange={handleLedgerAccountChange}
+      <div id={categoryWrapId} className="space-y-1.5">
+        <SelectDropdown<CashflowCategoryOption>
+          label={t("entriesModal:details.cashflowCategory", { defaultValue: "Category" })}
+          items={cashflowCategories}
+          selected={selectedCategories}
+          onChange={handleCategoryChange}
           getItemKey={(i) => i.id}
-          getItemLabel={(i) => (i.code ? `${i.code} — ${i.account}` : i.account)}
-          buttonLabel={t("entriesModal:details.ledgerAccountBtn")}
+          getItemLabel={getCategoryLabel}
+          buttonLabel={t("entriesModal:details.cashflowCategoryBtn", { defaultValue: "Choose category" })}
           singleSelect
-          customStyles={{ maxHeight: "200px" }}
-          groupBy={(i) =>
-            i.subcategory ? `${i.category} / ${i.subcategory}` : i.category || t("entriesModal:misc.others")
-          }
+          customStyles={{ maxHeight: "220px" }}
           virtualize
           virtualRowHeight={32}
           virtualThreshold={300}
           disabled={isFinancialLocked}
         />
+
+        {accounting ? (
+          <div className="flex items-center justify-between gap-2 px-0.5">
+            <span className="text-[10px] text-gray-500">
+              {t("entriesModal:details.accountingStatus", { defaultValue: "Accounting" })}
+            </span>
+            <EntryAccountingStatusCell accounting={accounting} onOpen={onOpenAccountingReason} />
+          </div>
+        ) : null}
       </div>
 
       <div className="md:col-span-3">

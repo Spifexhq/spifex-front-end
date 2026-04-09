@@ -6,6 +6,7 @@ import CashFlowTableMobile from "./CashFlowTable.mobile";
 
 import type { EntryFilters } from "@/models/components/filterBar";
 import type { Entry } from "@/models/entries/entries";
+import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 
 export type CashFlowTableHandle = {
   clearSelection: () => void;
@@ -16,6 +17,8 @@ export interface CashFlowTableProps {
   filters?: EntryFilters;
   onEdit(entry: Entry): void;
   onSelectionChange?: (ids: string[], entries: Entry[]) => void;
+  onOpenAccountingReason?: (entry: Entry) => void;
+  accountingStateById?: Record<string, AccountingReadiness>;
 }
 
 const MOBILE_MQL = "(max-width: 639px)";
@@ -39,7 +42,6 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>((props
       return () => mql.removeEventListener("change", apply);
     }
 
-    // legacy fallback
     const legacy = mql as unknown as {
       addListener?: (cb: () => void) => void;
       removeListener?: (cb: () => void) => void;
@@ -51,7 +53,13 @@ const CashFlowTable = forwardRef<CashFlowTableHandle, CashFlowTableProps>((props
     };
   }, []);
 
-  return isMobile ? <CashFlowTableMobile ref={ref} {...props} /> : <CashFlowTableDesktop ref={ref} {...props} />;
+  return isMobile ? (
+    <CashFlowTableMobile ref={ref} {...props} />
+  ) : (
+    <CashFlowTableDesktop ref={ref} {...props} />
+  );
 });
+
+CashFlowTable.displayName = "CashFlowTable";
 
 export default CashFlowTable;

@@ -1,0 +1,22 @@
+{
+  "pageTitle": "Accounting workspace",
+  "title": "Accounting workspace",
+  "subtitle": "Manage the accounting structure of the ledger separately from the day-to-day cashflow categorization view.",
+  "buttons": {
+    "backToLedger": "Back to ledger workspace",
+    "addAccount": "Konto hinzufügen",
+    "search": "Suchen",
+    "clear": "Zurücksetzen"
+  },
+  "sections": {
+    "structure": {
+      "title": "Accounting structure",
+      "description": "Refine hierarchy, reporting groups, visibility, and statement alignment."
+    },
+    "views": {
+      "title": "Views",
+      "cashflow": "Cashflow-Sicht",
+      "accounting": "Buchhaltungssicht"
+    }
+  }
+}
