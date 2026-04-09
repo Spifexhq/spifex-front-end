@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/*  File: src/lib/pdf/ledgerAccountPdfGenerator.ts
+/*  File: src/lib/pdf/ledgerAccountPdfGenerator.ts                            */
 /* -------------------------------------------------------------------------- */
 
 import { jsPDF } from "jspdf";
@@ -9,60 +9,48 @@ import i18next from "i18next";
 import { api } from "@/api/requests";
 import { fetchAllCursor } from "@/lib/list";
 
-import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
+import type {
+  LedgerAccount,
+  LedgerAccountType,
+  LedgerNormalBalance,
+  LedgerStatementSection,
+} from "@/models/settings/ledgerAccounts";
 
 /* --------------------------------- Types --------------------------------- */
+
 interface PDFGeneratorOptions {
-  companyName?: string; // already translated by caller (recommended) or fallback via i18n
-  title?: string; // already translated by caller (recommended) or fallback via i18n
+  companyName?: string;
+  title?: string;
+  activeOnly?: boolean;
 }
+
 interface PDFGeneratorResult {
   success: boolean;
   message: string;
   filename?: string;
 }
+
 interface AutoTableData {
   finalY: number;
 }
 
-type TxType = "debit" | "credit";
-type CategoryKey =
-  | "operationalRevenue"
-  | "nonOperationalRevenue"
-  | "operationalExpense"
-  | "nonOperationalExpense";
-type CategoryValue = 1 | 2 | 3 | 4;
-
-/* ---------------------------- Shared mappings ---------------------------- */
-
-const CATEGORY_VALUE_TO_KEY: Record<CategoryValue, CategoryKey> = {
-  1: "operationalRevenue",
-  2: "nonOperationalRevenue",
-  3: "operationalExpense",
-  4: "nonOperationalExpense",
-};
-
-const CATEGORY_DEFAULT_TX: Record<CategoryValue, TxType> = {
-  1: "credit",
-  2: "credit",
-  3: "debit",
-  4: "debit",
-};
-
-/** Tolerant read type (matches LedgerAccountSettings behavior) */
-type GLX = LedgerAccount & {
-  category?: number | string | null;
-  default_tx?: TxType | string | null;
-  external_id?: string;
-};
-
-/* ------------------------------- i18n helpers ------------------------------ */
+/* -------------------------------- Constants ------------------------------- */
 
 const NS = "ledgerAccountsSettings";
 
+const STATEMENT_SECTION_ORDER: LedgerStatementSection[] = [
+  "asset",
+  "liability",
+  "equity",
+  "income",
+  "expense",
+  "off_balance",
+  "statistical",
+];
+
+/* ------------------------------- i18n helpers ------------------------------ */
+
 function t(key: string, opts?: Record<string, unknown>): string {
-  // Prefer explicit namespaced keys so this works outside React hooks.
-  // Example: t("pdf.title") => i18next.t("ledgerAccountsSettings:pdf.title")
   const fullKey = `${NS}:${key}`;
   const out = i18next?.t ? i18next.t(fullKey, opts) : fullKey;
   return typeof out === "string" ? out : String(out ?? "");
@@ -70,11 +58,10 @@ function t(key: string, opts?: Record<string, unknown>): string {
 
 function getLocale(): string {
   const lng = (i18next?.language || "en").trim();
-  // common normalization: "pt" -> "pt-BR" (optional), keep region if present
   if (lng === "pt") return "pt-BR";
   if (lng === "de") return "de-DE";
   if (lng === "fr") return "fr-FR";
-  return lng; // "en", "en-US", etc.
+  return lng;
 }
 
 function collator() {
@@ -90,63 +77,78 @@ function toNonEmpty(v: unknown): string | null {
   return s ? s : null;
 }
 
-/* ----------------------- LedgerAccountSettings-aligned ---------------------- */
+/* ------------------------------- Formatting ------------------------------- */
 
-function getCategoryValue(acc: GLX): CategoryValue | undefined {
-  const c = acc.category;
-  if (typeof c === "number" && [1, 2, 3, 4].includes(c)) return c as CategoryValue;
-  if (typeof c === "string" && c) {
-    const n = Number(c);
-    if ([1, 2, 3, 4].includes(n)) return n as CategoryValue;
-  }
-  return undefined;
+function sectionLabel(section: LedgerStatementSection): string {
+  const labels: Record<LedgerStatementSection, string> = {
+    asset: t("pdf.statementSection.asset") || "Assets",
+    liability: t("pdf.statementSection.liability") || "Liabilities",
+    equity: t("pdf.statementSection.equity") || "Equity",
+    income: t("pdf.statementSection.income") || "Income",
+    expense: t("pdf.statementSection.expense") || "Expenses",
+    off_balance: t("pdf.statementSection.off_balance") || "Off-balance",
+    statistical: t("pdf.statementSection.statistical") || "Statistical",
+  };
+
+  return labels[section] || section;
 }
 
-function getCategoryKeyFromAccount(acc: GLX): CategoryKey | undefined {
-  const v = getCategoryValue(acc);
-  return v ? CATEGORY_VALUE_TO_KEY[v] : undefined;
+function accountTypeLabel(type: LedgerAccountType): string {
+  if (type === "header") return t("pdf.accountType.header") || "Header";
+  return t("pdf.accountType.posting") || "Posting";
 }
 
-function getDefaultTx(acc: GLX): TxType | "" {
-  const dt = acc.default_tx;
-  if (dt === "credit" || dt === "debit") return dt;
-  const v = getCategoryValue(acc);
-  return v ? CATEGORY_DEFAULT_TX[v] : "";
+function normalBalanceLabel(balance: LedgerNormalBalance): string {
+  if (balance === "debit") return t("pdf.normalBalance.debit") || "Debit";
+  return t("pdf.normalBalance.credit") || "Credit";
 }
 
-function resolveCategoryLabel(acc: GLX): string {
-  const key = getCategoryKeyFromAccount(acc);
-  if (key) {
-    const label = t(`categories.${key}`);
-    return label || key;
-  }
-  return t("pdf.placeholders.noCategory") || "(No category)";
+function statusLabel(isActive: boolean): string {
+  return isActive ? t("pdf.status.active") || "Active" : t("pdf.status.inactive") || "Inactive";
 }
 
-function resolveSubgroupLabel(acc: GLX): string {
-  return toNonEmpty(acc.subcategory) ?? (t("pdf.placeholders.noSubgroup") || "(No subgroup)");
+function boolLabel(v: boolean): string {
+  return v ? t("pdf.boolean.yes") || "Yes" : t("pdf.boolean.no") || "No";
 }
 
-function txLabel(tx: TxType | "" | undefined): string {
-  if (tx === "credit") return t("pdf.tx.credit") || "Credit";
-  if (tx === "debit") return t("pdf.tx.debit") || "Debit";
-  return t("pdf.tx.none") || "-";
+function indentName(account: LedgerAccount): string {
+  const depth = Math.max(0, Number(account.depth || 0));
+  const prefix = depth > 0 ? `${"  ".repeat(depth)}↳ ` : "";
+  return `${prefix}${safeStr(account.name) || "-"}`;
 }
 
-function statusLabel(isActive?: boolean): string {
-  return isActive === false ? (t("pdf.status.inactive") || "Inactive") : (t("pdf.status.active") || "Active");
-}
-
-function sortByCodeThenName(a: LedgerAccount, b: LedgerAccount) {
+function sortByHierarchy(a: LedgerAccount, b: LedgerAccount) {
   const c = collator();
+
+  const pa = safeStr(a.path);
+  const pb = safeStr(b.path);
+  if (pa && pb && pa !== pb) return c.compare(pa, pb);
+  if (pa && !pb) return -1;
+  if (!pa && pb) return 1;
+
   const ca = safeStr(a.code);
   const cb = safeStr(b.code);
-
   if (ca && cb && ca !== cb) return c.compare(ca, cb);
   if (ca && !cb) return -1;
   if (!ca && cb) return 1;
 
-  return c.compare(safeStr(a.account), safeStr(b.account));
+  return c.compare(safeStr(a.name), safeStr(b.name));
+}
+
+function groupAccountsBySection(accounts: LedgerAccount[]) {
+  const grouped = new Map<LedgerStatementSection, LedgerAccount[]>();
+
+  for (const section of STATEMENT_SECTION_ORDER) {
+    grouped.set(section, []);
+  }
+
+  for (const account of accounts) {
+    const section = account.statement_section;
+    if (!grouped.has(section)) grouped.set(section, []);
+    grouped.get(section)!.push(account);
+  }
+
+  return grouped;
 }
 
 /* -------------------------- PDF Generator Class --------------------------- */
@@ -158,7 +160,7 @@ export class LedgerAccountPdfGenerator {
 
   constructor() {
     this.doc = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
@@ -168,26 +170,27 @@ export class LedgerAccountPdfGenerator {
 
   public async generatePDF(options: PDFGeneratorOptions = {}): Promise<PDFGeneratorResult> {
     const companyName = options.companyName || t("pdf.company") || "Spifex";
-    const title = options.title || t("pdf.title") || "Chart of Accounts";
+    const title = options.title || t("pdf.title") || "Ledger Accounts";
 
     try {
-      const accounts = await this.fetchAllLedgerAccounts();
+      const accounts = await this.fetchAllLedgerAccounts(options.activeOnly ?? false);
+
       if (!accounts.length) {
-        return { success: false, message: t("pdf.messages.empty") || "No ledger accounts found." };
+        return {
+          success: false,
+          message: t("pdf.messages.empty") || "No ledger accounts found.",
+        };
       }
 
       this.setupDocument(title, companyName);
 
-      // Group by translated category label, then subgroup label
-      let y = 40;
+      let y = 34;
+      const grouped = groupAccountsBySection(accounts);
 
-      const accX = accounts.map((a) => a as GLX);
-
-      const categoryLabels = this.unique(accX.map(resolveCategoryLabel)).sort((a, b) => collator().compare(a, b));
-
-      for (const categoryLabel of categoryLabels) {
-        const inCategory = accX.filter((a) => resolveCategoryLabel(a) === categoryLabel);
-        y = this.renderCategory(categoryLabel, inCategory, y);
+      for (const section of STATEMENT_SECTION_ORDER) {
+        const sectionAccounts = (grouped.get(section) || []).slice().sort(sortByHierarchy);
+        if (!sectionAccounts.length) continue;
+        y = this.renderSection(section, sectionAccounts, y);
       }
 
       this.addFooter();
@@ -195,9 +198,12 @@ export class LedgerAccountPdfGenerator {
       const filename = this.generateFilename();
       this.doc.save(filename);
 
-      return { success: true, message: t("pdf.messages.ok") || "PDF generated successfully!", filename };
+      return {
+        success: true,
+        message: t("pdf.messages.ok") || "PDF generated successfully!",
+        filename,
+      };
     } catch (error: unknown) {
-      // Keep logs English-only
       console.error("Error generating ledger accounts PDF:", error);
       return {
         success: false,
@@ -208,27 +214,30 @@ export class LedgerAccountPdfGenerator {
 
   /* ---------------------------------- API ---------------------------------- */
 
-  private async fetchAllLedgerAccounts(): Promise<LedgerAccount[]> {
-    const all = await fetchAllCursor<LedgerAccount>(api.getLedgerAccounts);
-    return all.slice().sort(sortByCodeThenName);
+  private async fetchAllLedgerAccounts(activeOnly: boolean): Promise<LedgerAccount[]> {
+    const all = await fetchAllCursor<LedgerAccount>((params) =>
+      api.getLedgerAccounts({
+        ...params,
+        ...(activeOnly ? { active: "true" } : {}),
+      })
+    );
+
+    return all.slice().sort(sortByHierarchy);
   }
 
   /* ------------------------------- PDF layout ------------------------------ */
 
   private setupDocument(title: string, companyName: string): void {
-    // Company
     if (companyName) {
-      this.doc.setFontSize(12);
+      this.doc.setFontSize(11);
       this.doc.setFont("helvetica", "normal");
-      this.doc.text(companyName, 15, 15);
+      this.doc.text(companyName, 14, 12);
     }
 
-    // Title
-    this.doc.setFontSize(20);
+    this.doc.setFontSize(18);
     this.doc.setFont("helvetica", "bold");
-    this.doc.text(title, this.pageWidth / 2, 20, { align: "center" });
+    this.doc.text(title, this.pageWidth / 2, 14, { align: "center" });
 
-    // Generated at
     const dateStr = new Date().toLocaleString(getLocale(), {
       year: "numeric",
       month: "2-digit",
@@ -237,98 +246,91 @@ export class LedgerAccountPdfGenerator {
       minute: "2-digit",
     });
 
-    this.doc.setFontSize(10);
+    this.doc.setFontSize(9);
     this.doc.setFont("helvetica", "normal");
-    this.doc.text(t("pdf.generatedAt", { date: dateStr }) || `Generated at: ${dateStr}`, this.pageWidth / 2, 28, {
-      align: "center",
-    });
-
-    // Separator line
-    this.doc.setDrawColor(200, 200, 200);
-    this.doc.line(15, 32, this.pageWidth - 15, 32);
-  }
-
-  private renderCategory(categoryLabel: string, accountsInCategory: GLX[], startY: number) {
-    let y = startY;
-
-    if (y > this.pageHeight - 80) {
-      this.doc.addPage();
-      y = 25;
-    }
-
-    // Category title
-    this.doc.setFontSize(14);
-    this.doc.setFont("helvetica", "bold");
-    this.doc.setTextColor(33, 37, 41);
-    this.doc.text(categoryLabel, 15, y);
-    y += 10;
-
-    // Subgroups
-    const subgroupLabels = this.unique(accountsInCategory.map(resolveSubgroupLabel)).sort((a, b) =>
-      collator().compare(a, b)
+    this.doc.text(
+      t("pdf.generatedAt", { date: dateStr }) || `Generated at: ${dateStr}`,
+      this.pageWidth / 2,
+      21,
+      { align: "center" }
     );
 
-    for (const subgroupLabel of subgroupLabels) {
-      const inSub = accountsInCategory
-        .filter((a) => resolveSubgroupLabel(a) === subgroupLabel)
-        .slice()
-        .sort(sortByCodeThenName);
-
-      y = this.renderSubgroup(subgroupLabel, inSub, y);
-    }
-
-    return y + 6;
+    this.doc.setDrawColor(200, 200, 200);
+    this.doc.line(14, 25, this.pageWidth - 14, 25);
   }
 
-  private renderSubgroup(subgroupLabel: string, accounts: GLX[], startY: number) {
+  private renderSection(
+    section: LedgerStatementSection,
+    accounts: LedgerAccount[],
+    startY: number
+  ) {
     let y = startY;
 
-    if (y > this.pageHeight - 60) {
+    if (y > this.pageHeight - 50) {
       this.doc.addPage();
-      y = 25;
+      y = 20;
     }
 
-    // Subgroup title
-    this.doc.setFontSize(12);
+    this.doc.setFontSize(13);
     this.doc.setFont("helvetica", "bold");
-    this.doc.setTextColor(73, 80, 87);
-    this.doc.text(`• ${subgroupLabel}`, 20, y);
+    this.doc.setTextColor(33, 37, 41);
+    this.doc.text(sectionLabel(section), 14, y);
     y += 6;
 
-    const body: RowInput[] = accounts.map((a) => {
-      const tx = getDefaultTx(a);
-      return [
-        safeStr(a.code) || "-", // Code
-        safeStr(a.account) || "-", // Ledger account
-        txLabel(tx), // Default type
-        statusLabel(a.is_active), // Status
-      ];
-    });
+    const body: RowInput[] = accounts.map((account) => [
+      safeStr(account.code) || "-",
+      indentName(account),
+      accountTypeLabel(account.account_type),
+      normalBalanceLabel(account.normal_balance),
+      toNonEmpty(account.report_group) || "—",
+      toNonEmpty(account.report_subgroup) || "—",
+      boolLabel(account.is_bank_control),
+      boolLabel(account.allows_manual_posting),
+      statusLabel(account.is_active),
+    ]);
 
     autoTable(this.doc, {
       startY: y,
-      head: [[t("pdf.table.code") || "Code", t("pdf.table.account") || "Ledger account", t("pdf.table.defaultType") || "Default type", t("pdf.table.status") || "Status"]],
+      head: [[
+        t("pdf.table.code") || "Code",
+        t("pdf.table.name") || "Name",
+        t("pdf.table.accountType") || "Type",
+        t("pdf.table.normalBalance") || "Normal balance",
+        t("pdf.table.reportGroup") || "Report group",
+        t("pdf.table.reportSubgroup") || "Report subgroup",
+        t("pdf.table.bankControl") || "Bank control",
+        t("pdf.table.manualPosting") || "Manual posting",
+        t("pdf.table.status") || "Status",
+      ]],
       body,
       theme: "striped",
       styles: {
-        fontSize: 9,
-        cellPadding: 3,
+        fontSize: 8,
+        cellPadding: 2.5,
         textColor: [33, 37, 41],
         overflow: "linebreak",
+        valign: "middle",
       },
       headStyles: {
         fillColor: [52, 144, 220],
         textColor: [255, 255, 255],
         fontStyle: "bold",
-        fontSize: 10,
+        fontSize: 9,
       },
-      alternateRowStyles: { fillColor: [248, 249, 250] },
-      margin: { left: 15, right: 15 },
+      alternateRowStyles: {
+        fillColor: [248, 249, 250],
+      },
+      margin: { left: 14, right: 14 },
       columnStyles: {
-        0: { cellWidth: 24 }, // Code
-        2: { cellWidth: 26, halign: "center" }, // Default type
-        3: { cellWidth: 24, halign: "center" }, // Status
-        // Column 1 auto width, linebreak enabled
+        0: { cellWidth: 22 },
+        1: { cellWidth: 58 },
+        2: { cellWidth: 20, halign: "center" },
+        3: { cellWidth: 25, halign: "center" },
+        4: { cellWidth: 33 },
+        5: { cellWidth: 33 },
+        6: { cellWidth: 21, halign: "center" },
+        7: { cellWidth: 25, halign: "center" },
+        8: { cellWidth: 18, halign: "center" },
       },
     });
 
@@ -338,41 +340,45 @@ export class LedgerAccountPdfGenerator {
 
   private addFooter(): void {
     const totalPages = this.doc.getNumberOfPages();
+
     for (let i = 1; i <= totalPages; i++) {
       this.doc.setPage(i);
       this.doc.setFontSize(8);
       this.doc.setFont("helvetica", "normal");
       this.doc.setTextColor(108, 117, 125);
 
-      const footer = t("pdf.footer.page", { current: i, total: totalPages }) || `Page ${i} of ${totalPages}`;
-      this.doc.text(footer, this.pageWidth / 2, this.pageHeight - 10, { align: "center" });
+      const footer =
+        t("pdf.footer.page", { current: i, total: totalPages }) ||
+        `Page ${i} of ${totalPages}`;
+
+      this.doc.text(footer, this.pageWidth / 2, this.pageHeight - 8, {
+        align: "center",
+      });
 
       this.doc.setDrawColor(220, 220, 220);
-      this.doc.line(15, this.pageHeight - 15, this.pageWidth - 15, this.pageHeight - 15);
+      this.doc.line(14, this.pageHeight - 12, this.pageWidth - 14, this.pageHeight - 12);
     }
   }
 
-  private unique<T>(arr: T[]): T[] {
-    return Array.from(new Set(arr));
-  }
-
   private generateFilename(): string {
-    const prefix = (t("pdf.filenamePrefix") || "chart-of-accounts")
+    const prefix = (t("pdf.filenamePrefix") || "ledger-accounts")
       .trim()
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9\-_.]/gi, "");
 
     const now = new Date();
-    const d = now.toISOString().slice(0, 10); // YYYY-MM-DD
-    const tm = now.toTimeString().slice(0, 8).replace(/:/g, "-"); // HH-MM-SS
+    const d = now.toISOString().slice(0, 10);
+    const tm = now.toTimeString().slice(0, 8).replace(/:/g, "-");
     return `${prefix}-${d}-${tm}.pdf`;
   }
 }
 
 /* -------------------------- Convenience function -------------------------- */
 
-export const generateLedgerAccountsPDF = async (options?: PDFGeneratorOptions): Promise<PDFGeneratorResult> => {
+export const generateLedgerAccountsPDF = async (
+  options?: PDFGeneratorOptions
+): Promise<PDFGeneratorResult> => {
   const generator = new LedgerAccountPdfGenerator();
   return generator.generatePDF(options || {});
 };
