@@ -159,19 +159,21 @@ function normalizeLedgerLocale(input?: string | null): LedgerLocale {
   return "en";
 }
 
-function mapNestedKeys<T extends readonly string[]>(
+function mapNestedKeys<const T extends readonly string[]>(
   group: string,
   keys: T,
   lng: LedgerLocale
 ): Record<T[number], string> {
-  return keys.reduce((acc, key) => {
-    acc[key] = i18n.t(`${group}.${key}`, {
+  const entries = keys.map((key) => [
+    key,
+    i18n.t(`${group}.${key}`, {
       lng,
       ns: "ledgerAccounts",
       defaultValue: key,
-    });
-    return acc;
-  }, {} as Record<T[number], string>);
+    }),
+  ]) as [T[number], string][];
+
+  return Object.fromEntries(entries) as Record<T[number], string>;
 }
 
 export function getLedgerMessages(languageCode?: string | null): LedgerMessages {
