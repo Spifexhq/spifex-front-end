@@ -12,6 +12,7 @@ import AccountingBankMappingsPage from "./pages/AccountingBankMappingsPage";
 import AccountingPostingPoliciesPage from "./pages/AccountingPostingPoliciesPage";
 import AccountingJournalsPage from "./pages/AccountingJournalsPage";
 import AccountingReconciliationPage from "./pages/AccountingReconciliationPage";
+import AccountingCorrelationsPage from "./pages/AccountingCorrelationsPage";
 
 import type { OrgLedgerProfileResponse } from "@/models/auth/organization";
 
@@ -93,6 +94,7 @@ const AccountingSettings: React.FC = () => {
           <Route path="posting-policies" element={<AccountingPostingPoliciesPage />} />
           <Route path="journals" element={<AccountingJournalsPage />} />
           <Route path="reconciliation" element={<AccountingReconciliationPage />} />
+          <Route path="correlation" element={<AccountingCorrelationsPage />} />
         </Routes>
       </div>
     </main>

@@ -7,6 +7,7 @@ const items = [
   { to: "/settings/accounting/bank-mappings", label: "Bank mappings" },
   { to: "/settings/accounting/posting-policies", label: "Posting policies" },
   { to: "/settings/accounting/journals", label: "Journals" },
+  { to: "/settings/accounting/correlation", label: "Correlation" },
   { to: "/settings/accounting/reconciliation", label: "Reconciliation" },
 ];
 
