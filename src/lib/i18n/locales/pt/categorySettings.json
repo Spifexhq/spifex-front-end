@@ -1,0 +1,79 @@
+{
+  "common": {
+    "yes": "Sim",
+    "no": "Não",
+    "empty": "—"
+  },
+  "header": {
+    "eyebrow": "Definições de cashflow",
+    "title": "Categorias",
+    "description": "Gerir as categorias operacionais que classificam os lançamentos de cashflow e funcionam como camada de ligação para as políticas contabilísticas."
+  },
+  "stats": {
+    "total": "Total",
+    "totalHelp": "Categorias disponíveis nesta organização.",
+    "active": "Ativas",
+    "activeHelp": "Categorias ativas para uso operacional.",
+    "credit": "Indicação de crédito",
+    "creditHelp": "Categorias orientadas para fluxos de entrada.",
+    "debit": "Indicação de débito",
+    "debitHelp": "Categorias orientadas para fluxos de saída."
+  },
+  "filters": {
+    "search": "Pesquisar",
+    "transactionHint": "Indicação de transação",
+    "includeInactive": "Incluir inativas",
+    "any": "Qualquer",
+    "credit": "Crédito",
+    "debit": "Débito"
+  },
+  "table": {
+    "code": "Código",
+    "name": "Nome",
+    "parent": "Pai",
+    "txHint": "Indicação",
+    "entries": "Lançamentos",
+    "sort": "Ordem",
+    "active": "Ativa",
+    "actions": "Ações",
+    "empty": "Nenhuma categoria encontrada."
+  },
+  "modal": {
+    "createTitle": "Nova categoria",
+    "editTitle": "Editar categoria",
+    "subtitle": "Defina a categoria operacional usada na classificação do cashflow e no mapeamento das políticas contabilísticas.",
+    "code": "Código",
+    "name": "Nome",
+    "description": "Descrição",
+    "parent": "Categoria pai",
+    "noParent": "Sem pai",
+    "txHint": "Indicação de transação",
+    "noHint": "Sem indicação",
+    "sortOrder": "Ordem",
+    "active": "Ativa",
+    "metadata": "Metadados (JSON)"
+  },
+  "actions": {
+    "new": "Nova categoria",
+    "apply": "Aplicar",
+    "clear": "Limpar",
+    "edit": "Editar",
+    "delete": "Apagar",
+    "deleting": "A apagar...",
+    "cancel": "Cancelar",
+    "saving": "A guardar...",
+    "saveChanges": "Guardar alterações",
+    "createCategory": "Criar categoria"
+  },
+  "feedback": {
+    "loadError": "Não foi possível carregar as categorias de cashflow.",
+    "nameRequired": "O nome é obrigatório.",
+    "invalidJson": "Os metadados têm de ser JSON válido.",
+    "created": "Categoria criada.",
+    "updated": "Categoria atualizada.",
+    "deleted": "Categoria apagada.",
+    "saveError": "Não foi possível guardar a categoria.",
+    "deleteError": "Não foi possível apagar a categoria.",
+    "deleteConfirm": "Apagar a categoria {{name}}?"
+  }
+}

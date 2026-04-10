@@ -7,7 +7,7 @@ import EntryAccountingStatusCell from "@/components/CashFlowAccounting/EntryAcco
 
 import type { FormData } from "../Modal.types";
 import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
-import type { CashflowCategoryOption } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 import type { DocumentType } from "src/models/entries/documentTypes";
 
 type DocumentTypeItem = { id: DocumentType["code"]; label: string };
@@ -21,7 +21,7 @@ type Props = {
   amountRef: React.RefObject<HTMLInputElement>;
   descriptionRef: React.RefObject<HTMLInputElement>;
 
-  cashflowCategories: CashflowCategoryOption[];
+  cashflowCategories: CashflowCategory[];
   categoryWrapId: string;
 
   documentTypes: DocumentTypeItem[];
@@ -52,7 +52,7 @@ const DetailsTab: React.FC<Props> = ({
   }, [cashflowCategories, formData.details]);
 
   const handleCategoryChange = useCallback(
-    (updated: CashflowCategoryOption[]) => {
+    (updated: CashflowCategory[]) => {
       if (isFinancialLocked) return;
       const id = updated.length ? String(updated[0].id) : "";
       setFormData((p) => ({
@@ -123,7 +123,7 @@ const DetailsTab: React.FC<Props> = ({
   );
 
   const getCategoryLabel = useCallback(
-    (i: CashflowCategoryOption) => (i.code ? `${i.code} — ${i.name}` : i.name || "—"),
+    (i: CashflowCategory) => (i.code ? `${i.code} — ${i.name}` : i.name || "—"),
     []
   );
 
@@ -148,7 +148,7 @@ const DetailsTab: React.FC<Props> = ({
       />
 
       <div id={categoryWrapId} className="space-y-1.5">
-        <SelectDropdown<CashflowCategoryOption>
+        <SelectDropdown<CashflowCategory>
           label={t("entriesModal:details.cashflowCategory", { defaultValue: "Category" })}
           items={cashflowCategories}
           selected={selectedCategories}

@@ -1,0 +1,79 @@
+{
+  "common": {
+    "yes": "Ja",
+    "no": "Nein",
+    "empty": "—"
+  },
+  "header": {
+    "eyebrow": "Cashflow-Einstellungen",
+    "title": "Kategorien",
+    "description": "Verwalte die operativen Kategorien, die Cashflow-Einträge klassifizieren und als Verbindungsschicht für Buchungsrichtlinien dienen."
+  },
+  "stats": {
+    "total": "Gesamt",
+    "totalHelp": "In dieser Organisation verfügbare Kategorien.",
+    "active": "Aktiv",
+    "activeHelp": "Für den operativen Einsatz aktive Kategorien.",
+    "credit": "Kredit-Hinweis",
+    "creditHelp": "Kategorien mit Schwerpunkt auf eingehenden Flüssen.",
+    "debit": "Debit-Hinweis",
+    "debitHelp": "Kategorien mit Schwerpunkt auf ausgehenden Flüssen."
+  },
+  "filters": {
+    "search": "Suche",
+    "transactionHint": "Transaktionshinweis",
+    "includeInactive": "Inaktive einbeziehen",
+    "any": "Alle",
+    "credit": "Kredit",
+    "debit": "Debit"
+  },
+  "table": {
+    "code": "Code",
+    "name": "Name",
+    "parent": "Übergeordnet",
+    "txHint": "Hinweis",
+    "entries": "Einträge",
+    "sort": "Sortierung",
+    "active": "Aktiv",
+    "actions": "Aktionen",
+    "empty": "Keine Kategorien gefunden."
+  },
+  "modal": {
+    "createTitle": "Neue Kategorie",
+    "editTitle": "Kategorie bearbeiten",
+    "subtitle": "Definiere die operative Kategorie für die Cashflow-Klassifizierung und das Mapping von Buchungsrichtlinien.",
+    "code": "Code",
+    "name": "Name",
+    "description": "Beschreibung",
+    "parent": "Übergeordnete Kategorie",
+    "noParent": "Kein Elternteil",
+    "txHint": "Transaktionshinweis",
+    "noHint": "Kein Hinweis",
+    "sortOrder": "Sortierung",
+    "active": "Aktiv",
+    "metadata": "Metadaten (JSON)"
+  },
+  "actions": {
+    "new": "Neue Kategorie",
+    "apply": "Anwenden",
+    "clear": "Zurücksetzen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleting": "Wird gelöscht...",
+    "cancel": "Abbrechen",
+    "saving": "Speichern...",
+    "saveChanges": "Änderungen speichern",
+    "createCategory": "Kategorie erstellen"
+  },
+  "feedback": {
+    "loadError": "Cashflow-Kategorien konnten nicht geladen werden.",
+    "nameRequired": "Name ist erforderlich.",
+    "invalidJson": "Metadaten müssen gültiges JSON sein.",
+    "created": "Kategorie erstellt.",
+    "updated": "Kategorie aktualisiert.",
+    "deleted": "Kategorie gelöscht.",
+    "saveError": "Kategorie konnte nicht gespeichert werden.",
+    "deleteError": "Kategorie konnte nicht gelöscht werden.",
+    "deleteConfirm": "Kategorie {{name}} löschen?"
+  }
+}

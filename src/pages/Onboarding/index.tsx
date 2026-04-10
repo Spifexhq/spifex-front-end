@@ -8,7 +8,6 @@ import {
   CreditCard,
   FolderTree,
   RefreshCcw,
-  Settings2,
   UserRound,
 } from "lucide-react";
 
@@ -53,7 +52,7 @@ type OrgForm = {
 };
 
 const DEFAULT_LEDGER_MODE: LedgerMode = "organizational";
-const CATEGORY_SETTINGS_PATH = "/settings/accounting";
+const CATEGORY_SETTINGS_PATH = "/settings/categories";
 
 const normalize = (v: unknown) => (v ?? "").toString().trim();
 const normalizeCountry = (v: unknown) => normalize(v).toUpperCase();
@@ -114,8 +113,8 @@ const StepBadge = ({
       active
         ? "border-gray-900 bg-gray-900 text-white"
         : done
-        ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-        : "border-gray-200 bg-white text-gray-700",
+          ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+          : "border-gray-200 bg-white text-gray-700",
     ].join(" ")}
   >
     <div
@@ -124,8 +123,8 @@ const StepBadge = ({
         active
           ? "bg-white/15 text-white"
           : done
-          ? "bg-emerald-100 text-emerald-800"
-          : "bg-gray-100 text-gray-700",
+            ? "bg-emerald-100 text-emerald-800"
+            : "bg-gray-100 text-gray-700",
       ].join(" ")}
     >
       {done ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
@@ -816,10 +815,10 @@ const OnboardingPage: React.FC = () => {
                                 onClick={() => navigate(CATEGORY_SETTINGS_PATH)}
                               >
                                 <span className="inline-flex items-center gap-2">
-                                  <Settings2 className="h-4 w-4" />
+                                  <FolderTree className="h-4 w-4" />
                                   <span>
                                     {t("accounting.openCategorySettings", {
-                                      defaultValue: "Open accounting settings",
+                                      defaultValue: "Open category settings",
                                     })}
                                   </span>
                                 </span>

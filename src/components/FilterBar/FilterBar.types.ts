@@ -3,7 +3,7 @@ import type { TFunction } from "i18next";
 
 import type { ChipKey, LocalFilters } from "@/models/components/filterBar";
 import type { BankAccountTableRow } from "@/models/settings/banking";
-import type { CashflowCategoryOption } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 
 export type FilterIcon = "calendar" | "bank" | "accounts" | "note";
 
@@ -17,8 +17,8 @@ export type FilterEditorProps = {
   bankOptions: BankAccountTableRow[];
   selectedBanks: BankAccountTableRow[];
 
-  categoriesForPicker: CashflowCategoryOption[];
-  selectedCategories: CashflowCategoryOption[];
+  categoriesForPicker: CashflowCategory[];
+  selectedCategories: CashflowCategory[];
 
   onRemove: () => void;
   onApply: () => void;
@@ -39,7 +39,7 @@ export type FilterDefinition = {
     t: TFunction;
     filters: LocalFilters;
     selectedBanks: BankAccountTableRow[];
-    selectedCategories: CashflowCategoryOption[];
+    selectedCategories: CashflowCategory[];
   }) => string;
 
   clear: (prev: LocalFilters) => LocalFilters;

@@ -25,11 +25,13 @@ import {
   Landmark,
   CreditCard,
   BookOpen,
+  BookOpenText,
   UsersRound,
   Network,
   Boxes,
   FolderKanban,
   IdCard,
+  ListTree,
 } from "lucide-react";
 
 import { useAuthContext } from "@/hooks/useAuth";
@@ -68,16 +70,18 @@ const Icons = {
 
   // Banking
   bank: <Landmark className={iconClass} aria-hidden="true" />,
+  category: <ListTree className={iconClass} aria-hidden="true" />,
   card: <CreditCard className={iconClass} aria-hidden="true" />,
 
   // Accounting / structure
   ledger: <BookOpen className={iconClass} aria-hidden="true" />,
-  departments: <Network className={iconClass} aria-hidden="true" />,
-
+  accounting: <BookOpenText className={iconClass} aria-hidden="true" />,
+  
   // Management
   entities: <IdCard className={iconClass} aria-hidden="true" />,
   inventory: <Boxes className={iconClass} aria-hidden="true" />,
   projects: <FolderKanban className={iconClass} aria-hidden="true" />,
+  departments: <Network className={iconClass} aria-hidden="true" />,
 } as const;
 
 type IconKey = keyof typeof Icons;
@@ -123,6 +127,7 @@ const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
         id: "banking",
         items: [
           { id: "banks", icon: "bank", label: t("items.banks"), permission: "view_bank_settings_page" },
+          { id: "categories", icon: "category", label: t("items.categories"), permission: "view_bank_settings_page" }, // view_category_settings_page
           { id: "bank-statements", icon: "card", label: t("items.bank-statements"), permission: "view_statements_page" },
         ],
       },
@@ -141,7 +146,7 @@ const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
         id: "acct",
         items: [
           { id: "ledger-accounts", icon: "ledger", label: t("items.ledger-accounts"), permission: "view_ledger_accounts_page" },
-          { id: "accounting", icon: "ledger", label: t("items.accounting"), permission: "view_ledger_accounts_page" },
+          { id: "accounting", icon: "accounting", label: t("items.accounting"), permission: "view_ledger_accounts_page" }, // view_accounting_accounts_page
         ],
       },
     ],

@@ -28,7 +28,7 @@ import type { AddViewPresetRequest, AddViewPresetResponse, EditViewPresetRequest
   GetViewPresetsResponse } from '@/models/components/viewPresets';
 import type { AddEntryRequest, Entry, EntryWriteResponse, GetEntriesBulkRequest, GetEntriesBulkResponse,
   GetEntryRequest, EditEntriesBulkResponse, EditEntryRequest, GetEntryResponse,
-  DeleteEntriesBulkRequest, GetCashflowCategoriesParams, GetCashflowCategoriesResponse } from '@/models/entries/entries';
+  DeleteEntriesBulkRequest } from '@/models/entries/entries';
 import type { GetSettledEntryRequest, GetSettledEntryResponse, SettledEntry, BulkSettleItem, BulkSettleResponse,
   EditSettledEntryRequest, DeleteSettledEntriesBulkRequest } from '@/models/entries/settlements';
 import type { AddTransferenceRequest, Transference } from "@/models/entries/transferences";
@@ -77,6 +77,13 @@ import type { AddInventoryItemRequest, EditInventoryItemRequest, GetInventoryIte
   InventoryItem, InventoryItemsBulkRequest, InventoryItemsBulkResponse } from '@/models/settings/inventory';
 import type { AddEntityRequest, EditEntityRequest, EntitiesBulkRequest, EntitiesBulkResponse, Entity,
   GetEntitiesParams, GetEntitiesResponse, GetEntityResponse } from '@/models/settings/entities';
+import type {
+  AddCashflowCategoryRequest,
+  CashflowCategory,
+  EditCashflowCategoryRequest,
+  GetCashflowCategoriesParams,
+  GetCashflowCategoriesResponse,
+} from '@/models/settings/categories';
 import type {
   GetStatementsParams,
   GetStatementsResponse,
@@ -551,7 +558,19 @@ export const api = {
     request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', params),
 
   getCashflowCategories: (params?: GetCashflowCategoriesParams) =>
-    request<GetCashflowCategoriesResponse>("cashflow/entries/categories/", "GET", params),
+    request<GetCashflowCategoriesResponse>("cashflow/categories/", "GET", params),
+
+  getCashflowCategory: (categoryId: string) =>
+    request<CashflowCategory>(`cashflow/categories/${categoryId}/`, "GET"),
+
+  addCashflowCategory: (payload: AddCashflowCategoryRequest) =>
+    request<CashflowCategory>("cashflow/categories/", "POST", payload),
+
+  editCashflowCategory: (categoryId: string, payload: EditCashflowCategoryRequest) =>
+    request<CashflowCategory>(`cashflow/categories/${categoryId}/`, "PATCH", payload),
+
+  deleteCashflowCategory: (categoryId: string) =>
+    request<void>(`cashflow/categories/${categoryId}/`, "DELETE"),
 
   getEntryAccountingReadiness: (entryId: string) =>
     request<EntryAccountingReadinessEnvelope>(`cashflow/entries/${entryId}/accounting-readiness/`, 'GET'),

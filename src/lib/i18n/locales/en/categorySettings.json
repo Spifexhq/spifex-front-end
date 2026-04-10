@@ -1,0 +1,79 @@
+{
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "empty": "—"
+  },
+  "header": {
+    "eyebrow": "Cashflow settings",
+    "title": "Categories",
+    "description": "Manage the operational categories that classify cashflow entries and act as the connector layer for accounting posting policies."
+  },
+  "stats": {
+    "total": "Total",
+    "totalHelp": "Categories available in this organization.",
+    "active": "Active",
+    "activeHelp": "Categories enabled for operational use.",
+    "credit": "Credit hint",
+    "creditHelp": "Categories biased toward inbound flows.",
+    "debit": "Debit hint",
+    "debitHelp": "Categories biased toward outbound flows."
+  },
+  "filters": {
+    "search": "Search",
+    "transactionHint": "Transaction hint",
+    "includeInactive": "Include inactive",
+    "any": "Any",
+    "credit": "Credit",
+    "debit": "Debit"
+  },
+  "table": {
+    "code": "Code",
+    "name": "Name",
+    "parent": "Parent",
+    "txHint": "Tx hint",
+    "entries": "Entries",
+    "sort": "Sort",
+    "active": "Active",
+    "actions": "Actions",
+    "empty": "No categories found."
+  },
+  "modal": {
+    "createTitle": "New category",
+    "editTitle": "Edit category",
+    "subtitle": "Define the operational category used in cashflow classification and accounting policy mapping.",
+    "code": "Code",
+    "name": "Name",
+    "description": "Description",
+    "parent": "Parent category",
+    "noParent": "No parent",
+    "txHint": "Transaction hint",
+    "noHint": "No hint",
+    "sortOrder": "Sort order",
+    "active": "Active",
+    "metadata": "Metadata (JSON)"
+  },
+  "actions": {
+    "new": "New category",
+    "apply": "Apply",
+    "clear": "Clear",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "createCategory": "Create category"
+  },
+  "feedback": {
+    "loadError": "Failed to load cashflow categories.",
+    "nameRequired": "Name is required.",
+    "invalidJson": "Metadata must be valid JSON.",
+    "created": "Category created.",
+    "updated": "Category updated.",
+    "deleted": "Category deleted.",
+    "saveError": "Failed to save category.",
+    "deleteError": "Failed to delete category.",
+    "deleteConfirm": "Delete category {{name}}?"
+  }
+}

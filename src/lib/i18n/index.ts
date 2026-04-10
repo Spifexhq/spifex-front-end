@@ -282,6 +282,11 @@ import enLedgerAccounts from "./locales/en/ledgerAccounts.json";
 import frLedgerAccounts from "./locales/fr/ledgerAccounts.json";
 import deLedgerAccounts from "./locales/de/ledgerAccounts.json";
 
+import ptCategorySettings from "./locales/pt/categorySettings.json";
+import enCategorySettings from "./locales/en/categorySettings.json";
+import frCategorySettings from "./locales/fr/categorySettings.json";
+import deCategorySettings from "./locales/de/categorySettings.json";
+
 import ptInventorySettings from "./locales/pt/inventorySettings.json";
 import enInventorySettings from "./locales/en/inventorySettings.json";
 import frInventorySettings from "./locales/fr/inventorySettings.json";
@@ -395,6 +400,7 @@ const NAMESPACES = [
   "departmentSettings",
   "projectSettings",
   "ledgerAccounts",
+  "categorySettings",
   "inventorySettings",
   "entitySettings",
 
@@ -468,6 +474,7 @@ const resources: Resource = {
     departmentSettings: ptDepartmentSettings,
     projectSettings: ptProjectSettings,
     ledgerAccounts: ptLedgerAccounts,
+    categorySettings: ptCategorySettings,
     inventorySettings: ptInventorySettings,
     entitySettings: ptEntitySettings,
 
@@ -536,6 +543,7 @@ const resources: Resource = {
     departmentSettings: enDepartmentSettings,
     projectSettings: enProjectSettings,
     ledgerAccounts: enLedgerAccounts,
+    categorySettings: enCategorySettings,
     inventorySettings: enInventorySettings,
     entitySettings: enEntitySettings,
 
@@ -604,6 +612,7 @@ const resources: Resource = {
     departmentSettings: frDepartmentSettings,
     projectSettings: frProjectSettings,
     ledgerAccounts: frLedgerAccounts,
+    categorySettings: frCategorySettings,
     inventorySettings: frInventorySettings,
     entitySettings: frEntitySettings,
 
@@ -672,6 +681,7 @@ const resources: Resource = {
     departmentSettings: deDepartmentSettings,
     projectSettings: deProjectSettings,
     ledgerAccounts: deLedgerAccounts,
+    categorySettings: deCategorySettings,
     inventorySettings: deInventorySettings,
     entitySettings: deEntitySettings,
 

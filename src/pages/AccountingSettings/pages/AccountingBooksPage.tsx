@@ -49,6 +49,24 @@ function extractCollection<T>(input: unknown): T[] {
   return [];
 }
 
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
+    </article>
+  );
+}
+
 const BASIS_OPTIONS: AccountingBookBasis[] = ["management", "cash", "accrual", "tax"];
 
 const EMPTY_FORM: BookFormState = {
@@ -111,8 +129,8 @@ const AccountingBooksPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!form.code.trim() || !form.name.trim() || !form.currency_code.trim()) {
       setSnackbar({ severity: "error", message: "Code, name, and currency are required." });
@@ -154,77 +172,95 @@ const AccountingBooksPage: React.FC = () => {
 
   return (
     <>
-      <section className="rounded-[28px] border border-gray-200 bg-white p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Accounting books</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Control the accounting basis, primary book, and posting currency.
-            </p>
+      <section className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Accounting books</div>
           </div>
-          <Button type="button" onClick={openCreate}>
-            New book
-          </Button>
+
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-[16px] font-semibold text-gray-900">Book registry</h2>
+                <p className="mt-1 text-[13px] leading-6 text-gray-600">
+                  Maintain the accounting books used for posting basis, primary selection,
+                  and transaction currency.
+                </p>
+              </div>
+
+              <Button type="button" onClick={openCreate}>
+                New book
+              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <MetricCard
+                label="Books"
+                value={items.length}
+                detail="Total books currently configured."
+              />
+              <MetricCard
+                label="Primary"
+                value={items.filter((item) => item.is_primary).length}
+                detail="Books marked as the primary accounting base."
+              />
+              <MetricCard
+                label="Active"
+                value={items.filter((item) => item.is_active).length}
+                detail="Books available for operational posting flows."
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Books</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">{items.length}</div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Primary books</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {items.filter((item) => item.is_primary).length}
-            </div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Active books</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {items.filter((item) => item.is_active).length}
-            </div>
-          </article>
-        </div>
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Book list</div>
+          </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-gray-200">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
-                <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Basis</th>
-                <th className="px-4 py-3">Currency</th>
-                <th className="px-4 py-3">Primary</th>
-                <th className="px-4 py-3">Active</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.code}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.basis}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.currency_code}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.is_primary ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.is_active ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
-                      Edit
-                    </Button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200 text-left">
+                  {["Code", "Name", "Basis", "Currency", "Primary", "Active", "Actions"].map((column) => (
+                    <th
+                      key={column}
+                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
+                    >
+                      {column}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-              {!items.length ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-500">
-                    No accounting books found.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
+                    <td className="px-4 py-3 text-[13px] font-medium text-gray-900">{item.code || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-900">{item.name || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.basis || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.currency_code || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_primary ? "Yes" : "No"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_active ? "Yes" : "No"}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+
+                {!items.length ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
+                      No accounting books found.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {snackbar ? (
           <Snackbar
@@ -246,69 +282,92 @@ const AccountingBooksPage: React.FC = () => {
         title={form.id ? "Edit accounting book" : "New accounting book"}
         subtitle="Create or update the accounting basis and posting currency."
       >
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              kind="text"
-              label="Code"
-              value={form.code}
-              onChange={(e) => setForm((p) => ({ ...p, code: e.target.value }))}
-            />
-            <Input
-              kind="text"
-              label="Name"
-              value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-            />
-          </div>
+        <form onSubmit={submit} className="space-y-5">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">Identity</div>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <SelectDropdown<AccountingBookBasis>
-              label="Basis"
-              items={BASIS_OPTIONS}
-              selected={selectedBasis}
-              onChange={(selected: AccountingBookBasis[]) =>
-                setForm((p) => ({
-                  ...p,
-                  basis: (selected[0] ?? "management") as AccountingBookBasis,
-                }))
-              }
-              getItemKey={(item: AccountingBookBasis) => item}
-              getItemLabel={(item: AccountingBookBasis) => item.charAt(0).toUpperCase() + item.slice(1)}
-              buttonLabel="Select basis"
-              singleSelect
-              hideCheckboxes
-            />
-
-            <Input
-              kind="text"
-              label="Currency"
-              value={form.currency_code}
-              onChange={(e) => setForm((p) => ({ ...p, currency_code: e.target.value.toUpperCase() }))}
-            />
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-700">
-              <Checkbox
-                checked={form.is_primary}
-                onChange={(e) => setForm((p) => ({ ...p, is_primary: e.target.checked }))}
-                size="small"
+            <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
+              <Input
+                kind="text"
+                label="Code"
+                value={form.code}
+                onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
               />
-              <span>Primary book</span>
-            </label>
-
-            <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-700">
-              <Checkbox
-                checked={form.is_active}
-                onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))}
-                size="small"
+              <Input
+                kind="text"
+                label="Name"
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
               />
-              <span>Active</span>
-            </label>
-          </div>
+            </div>
+          </section>
 
-          <div className="flex items-center justify-end gap-3 pt-2 pb-4 md:pb-6">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">Configuration</div>
+            </div>
+
+            <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
+              <SelectDropdown<AccountingBookBasis>
+                label="Basis"
+                items={BASIS_OPTIONS}
+                selected={selectedBasis}
+                onChange={(selected: AccountingBookBasis[]) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    basis: (selected[0] ?? "management") as AccountingBookBasis,
+                  }))
+                }
+                getItemKey={(item: AccountingBookBasis) => item}
+                getItemLabel={(item: AccountingBookBasis) =>
+                  item.charAt(0).toUpperCase() + item.slice(1)
+                }
+                buttonLabel="Select basis"
+                singleSelect
+                hideCheckboxes
+              />
+
+              <Input
+                kind="text"
+                label="Currency"
+                value={form.currency_code}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    currency_code: event.target.value.toUpperCase(),
+                  }))
+                }
+              />
+            </div>
+
+            <div className="grid gap-3 px-4 pb-4 md:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-700">
+                <Checkbox
+                  checked={form.is_primary}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, is_primary: event.target.checked }))
+                  }
+                  size="small"
+                />
+                <span className="font-medium text-gray-900">Primary book</span>
+              </label>
+
+              <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-700">
+                <Checkbox
+                  checked={form.is_active}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, is_active: event.target.checked }))
+                  }
+                  size="small"
+                />
+                <span className="font-medium text-gray-900">Active</span>
+              </label>
+            </div>
+          </section>
+
+          <div className="flex items-center justify-end gap-3 pt-1">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>

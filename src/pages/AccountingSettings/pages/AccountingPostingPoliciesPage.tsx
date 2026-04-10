@@ -10,7 +10,7 @@ import { fetchAllCursor } from "@/lib/list";
 
 import type { CategoryPostingPolicy, AccountingBook } from "@/models/settings/accounting";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
-import type { CashflowCategoryOption } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 
 type SnackbarState = {
   severity: "error" | "success";
@@ -52,6 +52,24 @@ function extractCollection<T>(input: unknown): T[] {
   return [];
 }
 
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
+    </article>
+  );
+}
+
 const EMPTY_FORM: PolicyFormState = {
   cashflow_category_id: "",
   book_id: "",
@@ -87,7 +105,7 @@ const pairValue = (
   return "—";
 };
 
-const categoryLabel = (category: CashflowCategoryOption): string =>
+const categoryLabel = (category: CashflowCategory): string =>
   [category.code, category.name].filter(Boolean).join(" — ") || category.name || "—";
 
 const accountLabel = (account: LedgerAccount): string =>
@@ -107,7 +125,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
   const [books, setBooks] = React.useState<AccountingBook[]>([]);
   const [ledgerAccounts, setLedgerAccounts] = React.useState<LedgerAccount[]>([]);
-  const [categories, setCategories] = React.useState<CashflowCategoryOption[]>([]);
+  const [categories, setCategories] = React.useState<CashflowCategory[]>([]);
   const [lookupsLoading, setLookupsLoading] = React.useState(false);
 
   const selectedCategory = React.useMemo(
@@ -156,14 +174,14 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
       const [booksResponse, allAccounts, categoriesResponse] = await Promise.all([
         api.getAccountingBooks(),
-        fetchAllCursor<LedgerAccount>((p?: { cursor?: string }) =>
+        fetchAllCursor<LedgerAccount>((params?: { cursor?: string }) =>
           api.getLedgerAccounts({
-            cursor: p?.cursor,
+            cursor: params?.cursor,
             active: "true",
             account_type: "posting",
           })
         ),
-        api.getCashflowCategories?.()
+        api.getCashflowCategories?.(),
       ]);
 
       setBooks(
@@ -171,7 +189,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       );
       setLedgerAccounts(allAccounts);
       setCategories(
-        extractCollection<CashflowCategoryOption>(
+        extractCollection<CashflowCategory>(
           (categoriesResponse as { data?: unknown })?.data ?? categoriesResponse
         )
       );
@@ -184,7 +202,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
   React.useEffect(() => {
     void load();
-  }, [load]);
+    void loadLookups();
+  }, [load, loadLookups]);
 
   const openCreate = async () => {
     setForm(EMPTY_FORM);
@@ -210,8 +229,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!form.cashflow_category_id.trim() || !form.book_id) {
       setSnackbar({ severity: "error", message: "Category and book are required." });
@@ -248,105 +267,120 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
   return (
     <>
-      <section className="rounded-[28px] border border-gray-200 bg-white p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Category posting policies</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Bridge operational categories to settlement, accrual, and clearing accounting accounts.
-            </p>
+      <section className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting policies</div>
           </div>
-          <Button type="button" onClick={() => void openCreate()}>
-            New policy
-          </Button>
+
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-[16px] font-semibold text-gray-900">Category-to-accounting bridge</h2>
+                <p className="mt-1 text-[13px] leading-6 text-gray-600">
+                  Define how each operational cashflow category translates into settlement,
+                  accrual, and clearing accounts inside each accounting book.
+                </p>
+              </div>
+
+              <Button type="button" onClick={() => void openCreate()}>
+                New policy
+              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                label="Policies"
+                value={items.length}
+                detail="Total configured category policies."
+              />
+              <MetricCard
+                label="Settlement-ready"
+                value={items.filter((item) => item.settlement_debit_account_id && item.settlement_credit_account_id).length}
+                detail="Policies with full settlement pair mapping."
+              />
+              <MetricCard
+                label="Accrual-ready"
+                value={items.filter((item) => item.accrual_debit_account_id && item.accrual_credit_account_id).length}
+                detail="Policies with full accrual pair mapping."
+              />
+              <MetricCard
+                label="With clearing"
+                value={items.filter((item) => item.clearing_account_id).length}
+                detail="Policies already linked to a clearing account."
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-4">
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Policies</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">{items.length}</div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Settlement-ready</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {items.filter((item) => item.settlement_debit_account_id && item.settlement_credit_account_id).length}
-            </div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Accrual-ready</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {items.filter((item) => item.accrual_debit_account_id && item.accrual_credit_account_id).length}
-            </div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">With clearing</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {items.filter((item) => item.clearing_account_id).length}
-            </div>
-          </article>
-        </div>
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Policy list</div>
+          </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-gray-200">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Book</th>
-                <th className="px-4 py-3">Settlement</th>
-                <th className="px-4 py-3">Accrual</th>
-                <th className="px-4 py-3">Clearing</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {displayValue(item.cashflow_category_label, item.cashflow_category_id)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {displayValue(item.book_label, item.book_id)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {pairValue(
-                      item.settlement_debit_account_label,
-                      item.settlement_debit_account_id,
-                      item.settlement_credit_account_label,
-                      item.settlement_credit_account_id
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {pairValue(
-                      item.accrual_debit_account_label,
-                      item.accrual_debit_account_id,
-                      item.accrual_credit_account_label,
-                      item.accrual_credit_account_id
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {displayValue(item.clearing_account_label, item.clearing_account_id)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.status}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
-                      Edit
-                    </Button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200 text-left">
+                  {["Category", "Book", "Settlement", "Accrual", "Clearing", "Status", "Actions"].map((column) => (
+                    <th
+                      key={column}
+                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
+                    >
+                      {column}
+                    </th>
+                  ))}
                 </tr>
-              ))}
+              </thead>
 
-              {!items.length ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-500">
-                    No posting policies found.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
+                    <td className="px-4 py-3 text-[13px] text-gray-900">
+                      {displayValue(item.cashflow_category_label, item.cashflow_category_id)}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {displayValue(item.book_label, item.book_id)}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {pairValue(
+                        item.settlement_debit_account_label,
+                        item.settlement_debit_account_id,
+                        item.settlement_credit_account_label,
+                        item.settlement_credit_account_id
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {pairValue(
+                        item.accrual_debit_account_label,
+                        item.accrual_debit_account_id,
+                        item.accrual_credit_account_label,
+                        item.accrual_credit_account_id
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {displayValue(item.clearing_account_label, item.clearing_account_id)}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.status}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+
+                {!items.length ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
+                      No posting policies found.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {snackbar ? (
           <Snackbar
@@ -371,66 +405,82 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         {lookupsLoading ? (
           <PageSkeleton rows={5} />
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <SelectDropdown<CashflowCategoryOption>
-              label="Cashflow category"
-              items={sortedCategories}
-              selected={selectedCategory}
-              onChange={(selected: CashflowCategoryOption[]) =>
-                setForm((p) => ({
-                  ...p,
-                  cashflow_category_id: selected[0]?.id ?? "",
-                }))
-              }
-              getItemKey={(category: CashflowCategoryOption) => category.id}
-              getItemLabel={categoryLabel}
-              buttonLabel="Select category"
-              singleSelect
-              hideCheckboxes
-            />
+          <form onSubmit={submit} className="space-y-5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Scope</div>
+              </div>
 
-            <SelectDropdown<AccountingBook>
-              label="Book"
-              items={books}
-              selected={selectedBook}
-              onChange={(selected: AccountingBook[]) =>
-                setForm((p) => ({
-                  ...p,
-                  book_id: selected[0]?.id ?? "",
-                }))
-              }
-              getItemKey={(book: AccountingBook) => book.id}
-              getItemLabel={bookLabel}
-              buttonLabel="Select book"
-              singleSelect
-              hideCheckboxes
-            />
-
-            {ACCOUNT_FIELDS.map(({ field, label }) => {
-              const selectedAccount = ledgerAccounts.filter((account) => account.id === form[field]);
-
-              return (
-                <SelectDropdown<LedgerAccount>
-                  key={field}
-                  label={label}
-                  items={ledgerAccounts}
-                  selected={selectedAccount}
-                  onChange={(selected: LedgerAccount[]) =>
-                    setForm((p) => ({
-                      ...p,
-                      [field]: selected[0]?.id ?? "",
+              <div className="grid gap-4 px-4 py-4">
+                <SelectDropdown<CashflowCategory>
+                  label="Cashflow category"
+                  items={sortedCategories}
+                  selected={selectedCategory}
+                  onChange={(selected: CashflowCategory[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      cashflow_category_id: selected[0]?.id ?? "",
                     }))
                   }
-                  getItemKey={(account: LedgerAccount) => account.id}
-                  getItemLabel={accountLabel}
-                  buttonLabel={`Select ${label.toLowerCase()} account`}
+                  getItemKey={(category: CashflowCategory) => category.id}
+                  getItemLabel={categoryLabel}
+                  buttonLabel="Select category"
                   singleSelect
                   hideCheckboxes
                 />
-              );
-            })}
 
-            <div className="flex items-center justify-end gap-3 pt-2 pb-4 md:pb-6">
+                <SelectDropdown<AccountingBook>
+                  label="Book"
+                  items={books}
+                  selected={selectedBook}
+                  onChange={(selected: AccountingBook[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      book_id: selected[0]?.id ?? "",
+                    }))
+                  }
+                  getItemKey={(book: AccountingBook) => book.id}
+                  getItemLabel={bookLabel}
+                  buttonLabel="Select book"
+                  singleSelect
+                  hideCheckboxes
+                />
+              </div>
+            </section>
+
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Account mapping</div>
+              </div>
+
+              <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
+                {ACCOUNT_FIELDS.map(({ field, label }) => {
+                  const selectedAccount = ledgerAccounts.filter((account) => account.id === form[field]);
+
+                  return (
+                    <SelectDropdown<LedgerAccount>
+                      key={field}
+                      label={label}
+                      items={ledgerAccounts}
+                      selected={selectedAccount}
+                      onChange={(selected: LedgerAccount[]) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          [field]: selected[0]?.id ?? "",
+                        }))
+                      }
+                      getItemKey={(account: LedgerAccount) => account.id}
+                      getItemLabel={accountLabel}
+                      buttonLabel={`Select ${label.toLowerCase()} account`}
+                      singleSelect
+                      hideCheckboxes
+                    />
+                  );
+                })}
+              </div>
+            </section>
+
+            <div className="flex items-center justify-end gap-3 pt-1">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancel
               </Button>

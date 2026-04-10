@@ -41,6 +41,24 @@ function extractCollection<T>(input: unknown): T[] {
   return [];
 }
 
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
+    </article>
+  );
+}
+
 const EMPTY_FORM: MappingFormState = {
   bank_account_id: "",
   book_id: "",
@@ -76,6 +94,36 @@ const AccountingBankMappingsPage: React.FC = () => {
     [ledgerAccounts, form.ledger_account_id]
   );
 
+  const bookMap = React.useMemo(
+    () =>
+      new Map(
+        books.map((book) => [book.id, [book.code, book.name].filter(Boolean).join(" — ") || book.id])
+      ),
+    [books]
+  );
+
+  const bankMap = React.useMemo(
+    () =>
+      new Map(
+        banks.map((bank) => [
+          bank.id,
+          [bank.institution, bank.branch, bank.account_number].filter(Boolean).join(" — ") || bank.id,
+        ])
+      ),
+    [banks]
+  );
+
+  const accountMap = React.useMemo(
+    () =>
+      new Map(
+        ledgerAccounts.map((account) => [
+          account.id,
+          [account.code, account.name].filter(Boolean).join(" — ") || account.id,
+        ])
+      ),
+    [ledgerAccounts]
+  );
+
   const load = React.useCallback(async () => {
     try {
       setLoading(true);
@@ -98,12 +146,12 @@ const AccountingBankMappingsPage: React.FC = () => {
 
       const [booksResponse, allBanks, allAccounts] = await Promise.all([
         api.getAccountingBooks(),
-        fetchAllCursor<BankAccount>((p?: { cursor?: string }) =>
-          api.getBanks({ cursor: p?.cursor, active: "true" })
+        fetchAllCursor<BankAccount>((params?: { cursor?: string }) =>
+          api.getBanks({ cursor: params?.cursor, active: "true" })
         ),
-        fetchAllCursor<LedgerAccount>((p?: { cursor?: string }) =>
+        fetchAllCursor<LedgerAccount>((params?: { cursor?: string }) =>
           api.getLedgerAccounts({
-            cursor: p?.cursor,
+            cursor: params?.cursor,
             active: "true",
             account_type: "posting",
             is_bank_control: "true",
@@ -111,7 +159,9 @@ const AccountingBankMappingsPage: React.FC = () => {
         ),
       ]);
 
-      setBooks(extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse));
+      setBooks(
+        extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse)
+      );
       setBanks(allBanks);
       setLedgerAccounts(allAccounts);
     } catch {
@@ -123,7 +173,8 @@ const AccountingBankMappingsPage: React.FC = () => {
 
   React.useEffect(() => {
     void load();
-  }, [load]);
+    void loadLookups();
+  }, [load, loadLookups]);
 
   const openCreate = async () => {
     setForm(EMPTY_FORM);
@@ -145,8 +196,8 @@ const AccountingBankMappingsPage: React.FC = () => {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!form.bank_account_id || !form.book_id || !form.ledger_account_id) {
       setSnackbar({ severity: "error", message: "Bank, book, and ledger account are required." });
@@ -176,75 +227,101 @@ const AccountingBankMappingsPage: React.FC = () => {
 
   return (
     <>
-      <section className="rounded-[28px] border border-gray-200 bg-white p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Bank to ledger mappings</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Map each bank account to a bank-control ledger account for settlement and transfer posting.
-            </p>
+      <section className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Bank mappings</div>
           </div>
-          <Button type="button" onClick={() => void openCreate()}>
-            Map bank account
-          </Button>
+
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-[16px] font-semibold text-gray-900">Bank control mapping</h2>
+                <p className="mt-1 text-[13px] leading-6 text-gray-600">
+                  Link each operational bank account to the accounting book and bank-control ledger
+                  account used during posting, settlement, and transfer flows.
+                </p>
+              </div>
+
+              <Button type="button" onClick={() => void openCreate()}>
+                Map bank account
+              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <MetricCard
+                label="Active mappings"
+                value={items.filter((item) => item.is_active).length}
+                detail="Mappings available for posting operations."
+              />
+              <MetricCard
+                label="Books covered"
+                value={new Set(items.map((item) => item.book_id)).size}
+                detail="Accounting books already linked to banks."
+              />
+              <MetricCard
+                label="Unique banks"
+                value={new Set(items.map((item) => item.bank_account_id)).size}
+                detail="Operational bank accounts with mapping coverage."
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Active mappings</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {items.filter((item) => item.is_active).length}
-            </div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Books covered</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {new Set(items.map((item) => item.book_id)).size}
-            </div>
-          </article>
-          <article className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-gray-500">Unique banks</div>
-            <div className="mt-2 text-2xl font-semibold text-gray-900">
-              {new Set(items.map((item) => item.bank_account_id)).size}
-            </div>
-          </article>
-        </div>
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Mapping list</div>
+          </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-gray-200">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
-                <th className="px-4 py-3">Bank account</th>
-                <th className="px-4 py-3">Book</th>
-                <th className="px-4 py-3">Ledger account</th>
-                <th className="px-4 py-3">Active</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                  <td className="px-4 py-3 text-sm text-gray-900">{item.bank_account_id}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.book_id}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.ledger_account_id}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.is_active ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
-                      Edit
-                    </Button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200 text-left">
+                  {["Bank account", "Book", "Ledger account", "Active", "Actions"].map((column) => (
+                    <th
+                      key={column}
+                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
+                    >
+                      {column}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-              {!items.length ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-sm text-gray-500">
-                    No bank mappings found.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
+                    <td className="px-4 py-3 text-[13px] text-gray-900">
+                      {bankMap.get(item.bank_account_id) || item.bank_account_id}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {bookMap.get(item.book_id) || item.book_id}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {accountMap.get(item.ledger_account_id) || item.ledger_account_id}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {item.is_active ? "Yes" : "No"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+
+                {!items.length ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-gray-500">
+                      No bank mappings found.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {snackbar ? (
           <Snackbar
@@ -264,66 +341,78 @@ const AccountingBankMappingsPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Bank mapping"
-        subtitle="Choose the bank account, accounting book, and the bank-control ledger account."
+        subtitle="Choose the operational bank account, accounting book, and bank-control ledger account."
       >
         {lookupsLoading ? (
           <PageSkeleton rows={4} />
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <SelectDropdown<BankAccount>
-              label="Bank account"
-              items={banks}
-              selected={selectedBank}
-              onChange={(selected: BankAccount[]) =>
-                setForm((p) => ({
-                  ...p,
-                  bank_account_id: selected[0]?.id ?? "",
-                }))
-              }
-              getItemKey={(bank: BankAccount) => bank.id}
-              getItemLabel={(bank: BankAccount) =>
-                [bank.institution, bank.branch, bank.account_number].filter(Boolean).join(" — ") || bank.id
-              }
-              buttonLabel="Select bank"
-              singleSelect
-              hideCheckboxes
-            />
+          <form onSubmit={submit} className="space-y-5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Mapping definition</div>
+              </div>
 
-            <SelectDropdown<AccountingBook>
-              label="Book"
-              items={books}
-              selected={selectedBook}
-              onChange={(selected: AccountingBook[]) =>
-                setForm((p) => ({
-                  ...p,
-                  book_id: selected[0]?.id ?? "",
-                }))
-              }
-              getItemKey={(book: AccountingBook) => book.id}
-              getItemLabel={(book: AccountingBook) => [book.code, book.name].filter(Boolean).join(" — ")}
-              buttonLabel="Select book"
-              singleSelect
-              hideCheckboxes
-            />
+              <div className="grid gap-4 px-4 py-4">
+                <SelectDropdown<BankAccount>
+                  label="Bank account"
+                  items={banks}
+                  selected={selectedBank}
+                  onChange={(selected: BankAccount[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      bank_account_id: selected[0]?.id ?? "",
+                    }))
+                  }
+                  getItemKey={(bank: BankAccount) => bank.id}
+                  getItemLabel={(bank: BankAccount) =>
+                    [bank.institution, bank.branch, bank.account_number].filter(Boolean).join(" — ") || bank.id
+                  }
+                  buttonLabel="Select bank"
+                  singleSelect
+                  hideCheckboxes
+                />
 
-            <SelectDropdown<LedgerAccount>
-              label="Ledger account"
-              items={ledgerAccounts}
-              selected={selectedLedgerAccount}
-              onChange={(selected: LedgerAccount[]) =>
-                setForm((p) => ({
-                  ...p,
-                  ledger_account_id: selected[0]?.id ?? "",
-                }))
-              }
-              getItemKey={(account: LedgerAccount) => account.id}
-              getItemLabel={(account: LedgerAccount) => [account.code, account.name].filter(Boolean).join(" — ")}
-              buttonLabel="Select ledger account"
-              singleSelect
-              hideCheckboxes
-            />
+                <SelectDropdown<AccountingBook>
+                  label="Book"
+                  items={books}
+                  selected={selectedBook}
+                  onChange={(selected: AccountingBook[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      book_id: selected[0]?.id ?? "",
+                    }))
+                  }
+                  getItemKey={(book: AccountingBook) => book.id}
+                  getItemLabel={(book: AccountingBook) =>
+                    [book.code, book.name].filter(Boolean).join(" — ")
+                  }
+                  buttonLabel="Select book"
+                  singleSelect
+                  hideCheckboxes
+                />
 
-            <div className="flex items-center justify-end gap-3 pt-2 pb-4 md:pb-6">
+                <SelectDropdown<LedgerAccount>
+                  label="Ledger account"
+                  items={ledgerAccounts}
+                  selected={selectedLedgerAccount}
+                  onChange={(selected: LedgerAccount[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      ledger_account_id: selected[0]?.id ?? "",
+                    }))
+                  }
+                  getItemKey={(account: LedgerAccount) => account.id}
+                  getItemLabel={(account: LedgerAccount) =>
+                    [account.code, account.name].filter(Boolean).join(" — ")
+                  }
+                  buttonLabel="Select ledger account"
+                  singleSelect
+                  hideCheckboxes
+                />
+              </div>
+            </section>
+
+            <div className="flex items-center justify-end gap-3 pt-1">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancel
               </Button>

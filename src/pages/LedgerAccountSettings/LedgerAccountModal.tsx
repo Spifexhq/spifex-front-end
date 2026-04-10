@@ -1,6 +1,7 @@
 // src\pages\LedgerAccountSettings\LedgerAccountModal.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
@@ -25,14 +26,11 @@ type Props = {
   mode: "create" | "edit";
   initial?: Partial<LedgerAccount> | null;
   parentOptions: Array<{ label: string; value: string }>;
+  languageCode?: string | null;
   busy?: boolean;
-  messages: Record<string, string>;
   onClose: () => void;
   onSubmit: (payload: AddLedgerAccountRequest) => Promise<void>;
 };
-
-const optionKey = <T extends string>(item: Option<T>) => item.value;
-const optionLabel = <T extends string>(item: Option<T>) => item.label;
 
 const DEFAULTS: AddLedgerAccountRequest = {
   code: "",
@@ -52,20 +50,27 @@ const DEFAULTS: AddLedgerAccountRequest = {
   metadata: {},
 };
 
-const sectionOptions: Option<LedgerStatementSection>[] = [
-  { value: "asset", label: "Asset" },
-  { value: "liability", label: "Liability" },
-  { value: "equity", label: "Equity" },
-  { value: "income", label: "Income" },
-  { value: "expense", label: "Expense" },
-  { value: "off_balance", label: "Off balance" },
-  { value: "statistical", label: "Statistical" },
-];
+const optionKey = <T extends string>(item: Option<T>) => item.value;
+const optionLabel = <T extends string>(item: Option<T>) => item.label;
 
-const balanceOptions: Option<LedgerNormalBalance>[] = [
-  { value: "debit", label: "Debit" },
-  { value: "credit", label: "Credit" },
-];
+const sectionLabel = (value: LedgerStatementSection) => {
+  switch (value) {
+    case "asset":
+      return "Asset";
+    case "liability":
+      return "Liability";
+    case "equity":
+      return "Equity";
+    case "income":
+      return "Income";
+    case "expense":
+      return "Expense";
+    case "off_balance":
+      return "Off balance";
+    case "statistical":
+      return "Statistical";
+  }
+};
 
 const FieldGroup = ({
   title,
@@ -74,9 +79,9 @@ const FieldGroup = ({
   title: string;
   children: React.ReactNode;
 }) => (
-  <section className="rounded-2xl border border-gray-200 bg-white">
-    <div className="border-b border-gray-200 px-4 py-3">
-      <div className="text-[11px] uppercase tracking-wide text-gray-600">{title}</div>
+  <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{title}</div>
     </div>
     <div className="space-y-4 px-4 py-4">{children}</div>
   </section>
@@ -95,16 +100,17 @@ const ToggleRow = ({
 }) => (
   <label
     className={[
-      "flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-2.5",
-      disabled ? "bg-gray-50 text-gray-400" : "bg-white text-gray-700",
+      "flex items-center justify-between gap-3 rounded-md border px-3 py-3",
+      disabled
+        ? "border-gray-200 bg-gray-50 text-gray-400"
+        : "border-gray-300 bg-white text-gray-700",
     ].join(" ")}
   >
-    <span className="text-sm">{label}</span>
+    <span className="text-[13px] font-medium">{label}</span>
     <Checkbox
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
-      size="sm"
-      colorClass="defaultColor"
+      size="small"
       disabled={disabled}
     />
   </label>
@@ -115,50 +121,99 @@ const LedgerAccountModal: React.FC<Props> = ({
   mode,
   initial,
   parentOptions,
+  languageCode,
   busy = false,
-  messages,
   onClose,
   onSubmit,
 }) => {
+  const { i18n } = useTranslation("ledgerAccounts");
+  const t = React.useCallback(
+    (key: string, defaultValue: string) =>
+      String(
+        i18n.t(key, {
+          ns: "ledgerAccounts",
+          lng: languageCode || i18n.resolvedLanguage || i18n.language,
+          defaultValue,
+        })
+      ),
+    [i18n, languageCode]
+  );
+
   const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
   const [metadataText, setMetadataText] = useState("{}");
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(isOpen);
+  const [visible, setVisible] = useState(isOpen);
+
+  const sectionOptions = useMemo<Option<LedgerStatementSection>[]>(
+    () => [
+      { value: "asset", label: sectionLabel("asset") },
+      { value: "liability", label: sectionLabel("liability") },
+      { value: "equity", label: sectionLabel("equity") },
+      { value: "income", label: sectionLabel("income") },
+      { value: "expense", label: sectionLabel("expense") },
+      { value: "off_balance", label: sectionLabel("off_balance") },
+      { value: "statistical", label: sectionLabel("statistical") },
+    ],
+    []
+  );
+
+  const balanceOptions = useMemo<Option<LedgerNormalBalance>[]>(
+    () => [
+      { value: "debit", label: "Debit" },
+      { value: "credit", label: "Credit" },
+    ],
+    []
+  );
+
+  const accountTypeOptions = useMemo<Option<LedgerAccountType>[]>(
+    () => [
+      { value: "header", label: t("modal.header", "Header") },
+      { value: "posting", label: t("modal.posting", "Posting") },
+    ],
+    [t]
+  );
 
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
       setVisible(false);
 
-      const enterId = window.setTimeout(() => {
-        setVisible(true);
-      }, 16);
-
-      return () => window.clearTimeout(enterId);
+      const id = window.setTimeout(() => setVisible(true), 16);
+      return () => window.clearTimeout(id);
     }
 
     setVisible(false);
-    const closeId = window.setTimeout(() => {
-      setMounted(false);
-    }, 240);
 
-    return () => window.clearTimeout(closeId);
+    const id = window.setTimeout(() => setMounted(false), 300);
+    return () => window.clearTimeout(id);
   }, [isOpen]);
 
   useEffect(() => {
     if (!mounted) return;
 
     const prevOverflow = document.body.style.overflow;
-    const prevTouchAction = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
 
     return () => {
       document.body.style.overflow = prevOverflow;
-      document.body.style.touchAction = prevTouchAction;
     };
   }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mounted, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -169,10 +224,6 @@ const LedgerAccountModal: React.FC<Props> = ({
       code: initial?.code ?? "",
       name: initial?.name ?? "",
       description: initial?.description ?? "",
-      report_group: initial?.report_group ?? "",
-      report_subgroup: initial?.report_subgroup ?? "",
-      external_ref: initial?.external_ref ?? "",
-      currency_code: initial?.currency_code ?? "",
       parent_id: initial?.parent_id ?? null,
       account_type: initial?.account_type ?? DEFAULTS.account_type,
       statement_section: initial?.statement_section ?? DEFAULTS.statement_section,
@@ -181,7 +232,10 @@ const LedgerAccountModal: React.FC<Props> = ({
       allows_manual_posting:
         initial?.allows_manual_posting ?? DEFAULTS.allows_manual_posting,
       is_active: initial?.is_active ?? DEFAULTS.is_active,
-      is_system: initial?.is_system ?? DEFAULTS.is_system,
+      report_group: initial?.report_group ?? "",
+      report_subgroup: initial?.report_subgroup ?? "",
+      external_ref: initial?.external_ref ?? "",
+      currency_code: initial?.currency_code ?? "",
       metadata:
         initial?.metadata &&
         typeof initial.metadata === "object" &&
@@ -193,43 +247,24 @@ const LedgerAccountModal: React.FC<Props> = ({
     setForm(next);
     setMetadataText(JSON.stringify(next.metadata ?? {}, null, 2));
     setError(null);
-  }, [isOpen, initial]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mounted, onClose]);
-
-  const accountTypeOptions = useMemo<Option<LedgerAccountType>[]>(
-    () => [
-      { value: "header", label: messages.header },
-      { value: "posting", label: messages.posting },
-    ],
-    [messages]
-  );
+  }, [initial, isOpen]);
 
   const selectedParent = useMemo(() => {
     if (!form.parent_id) return [];
     return parentOptions.filter((item) => item.value === form.parent_id);
   }, [form.parent_id, parentOptions]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
 
     if (!form.code.trim()) {
-      setError(messages.requiredCode);
+      setError(t("modal.requiredCode", "Code is required."));
       return;
     }
 
     if (!form.name.trim()) {
-      setError(messages.requiredName);
+      setError(t("modal.requiredName", "Name is required."));
       return;
     }
 
@@ -237,7 +272,7 @@ const LedgerAccountModal: React.FC<Props> = ({
     try {
       parsedMetadata = metadataText.trim() ? JSON.parse(metadataText) : {};
     } catch {
-      setError(messages.invalidJson);
+      setError(t("modal.invalidJson", "Metadata must be valid JSON."));
       return;
     }
 
@@ -262,56 +297,65 @@ const LedgerAccountModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[9999]">
-      <button
-        type="button"
-        aria-label={messages.cancel}
-        className="absolute inset-0"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="ledger-account-modal-title"
         className={[
-          "absolute inset-y-0 right-0 flex h-full w-full max-w-[980px] flex-col border-l border-gray-200 bg-white",
+          "absolute inset-y-0 right-0 flex h-full w-full max-w-[880px] flex-col border-l border-gray-200 bg-white",
           "transition-transform duration-300 ease-out",
           visible ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
+        onClick={(event) => event.stopPropagation()}
       >
         <header className="shrink-0 border-b border-gray-200 bg-white/95 backdrop-blur">
           <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4">
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
-                {mode === "create" ? messages.createTitle : messages.editTitle}
+                {t("workspace.pageLabel", "Settings")}
               </div>
               <h3
                 id="ledger-account-modal-title"
                 className="mt-1 truncate text-[18px] font-semibold text-gray-900"
               >
-                {mode === "create" ? messages.createTitle : messages.editTitle}
+                {mode === "create"
+                  ? t("modal.createTitle", "Create ledger account")
+                  : t("modal.editTitle", "Edit ledger account")}
               </h3>
+              <p className="mt-1 text-sm text-gray-600">
+                {mode === "create"
+                  ? t(
+                      "modal.createSubtitle",
+                      "Create a ledger account with structure, classification, and posting controls."
+                    )
+                  : t(
+                      "modal.editSubtitle",
+                      "Update the ledger account structure, classification, and posting controls."
+                    )}
+              </p>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50"
-              aria-label={messages.cancel}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+              aria-label={t("modal.cancel", "Cancel")}
             >
               <X size={18} />
             </button>
           </div>
         </header>
 
-        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 md:px-6 md:pt-6">
+          <form onSubmit={submit} className="flex flex-col gap-4 pb-4 md:pb-6">
             <div className="grid gap-4 xl:grid-cols-2">
-              <FieldGroup title={messages.general}>
+              <FieldGroup title={t("modal.general", "General")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
                     kind="text"
-                    label={messages.code}
+                    label={t("modal.code", "Code")}
                     value={form.code}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -323,7 +367,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
                   <Input
                     kind="text"
-                    label={messages.name}
+                    label={t("modal.name", "Name")}
                     value={form.name}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -336,7 +380,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
                 <Input
                   kind="text"
-                  label={messages.description}
+                  label={t("modal.description", "Description")}
                   value={form.description || ""}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -347,7 +391,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
 
                 <SelectDropdown<{ label: string; value: string }>
-                  label={messages.parent}
+                  label={t("modal.parent", "Parent account")}
                   items={parentOptions}
                   selected={selectedParent}
                   onChange={(items) =>
@@ -360,16 +404,16 @@ const LedgerAccountModal: React.FC<Props> = ({
                   getItemLabel={(item) => item.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel={messages.parentPlaceholder}
+                  buttonLabel={t("modal.parentPlaceholder", "No parent")}
                 />
               </FieldGroup>
 
-              <FieldGroup title={messages.classification}>
+              <FieldGroup title={t("modal.classification", "Classification")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <SelectDropdown<Option<LedgerAccountType>>
-                    label={messages.accountType}
+                    label={t("modal.accountType", "Account type")}
                     items={accountTypeOptions}
-                    selected={accountTypeOptions.filter((x) => x.value === form.account_type)}
+                    selected={accountTypeOptions.filter((item) => item.value === form.account_type)}
                     onChange={(items) =>
                       setForm((prev) => ({
                         ...prev,
@@ -380,13 +424,13 @@ const LedgerAccountModal: React.FC<Props> = ({
                     getItemLabel={optionLabel}
                     singleSelect
                     hideCheckboxes
-                    buttonLabel={messages.selectAccountType}
+                    buttonLabel={t("modal.selectAccountType", "Select account type")}
                   />
 
                   <SelectDropdown<Option<LedgerStatementSection>>
-                    label={messages.statementSection}
+                    label={t("modal.statementSection", "Statement section")}
                     items={sectionOptions}
-                    selected={sectionOptions.filter((x) => x.value === form.statement_section)}
+                    selected={sectionOptions.filter((item) => item.value === form.statement_section)}
                     onChange={(items) =>
                       setForm((prev) => ({
                         ...prev,
@@ -397,14 +441,14 @@ const LedgerAccountModal: React.FC<Props> = ({
                     getItemLabel={optionLabel}
                     singleSelect
                     hideCheckboxes
-                    buttonLabel={messages.selectSection}
+                    buttonLabel={t("modal.selectSection", "Select section")}
                   />
                 </div>
 
                 <SelectDropdown<Option<LedgerNormalBalance>>
-                  label={messages.normalBalance}
+                  label={t("modal.normalBalance", "Normal balance")}
                   items={balanceOptions}
-                  selected={balanceOptions.filter((x) => x.value === form.normal_balance)}
+                  selected={balanceOptions.filter((item) => item.value === form.normal_balance)}
                   onChange={(items) =>
                     setForm((prev) => ({
                       ...prev,
@@ -415,13 +459,13 @@ const LedgerAccountModal: React.FC<Props> = ({
                   getItemLabel={optionLabel}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel={messages.selectBalance}
+                  buttonLabel={t("modal.selectBalance", "Select balance")}
                 />
               </FieldGroup>
 
-              <FieldGroup title={messages.controls}>
+              <FieldGroup title={t("modal.controls", "Controls")}>
                 <ToggleRow
-                  label={messages.active}
+                  label={t("modal.active", "Active")}
                   checked={!!form.is_active}
                   onChange={(value) =>
                     setForm((prev) => ({
@@ -432,7 +476,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
 
                 <ToggleRow
-                  label={messages.bankControl}
+                  label={t("modal.bankControl", "Bank control account")}
                   checked={!!form.is_bank_control}
                   disabled={form.account_type !== "posting"}
                   onChange={(value) =>
@@ -444,7 +488,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
 
                 <ToggleRow
-                  label={messages.manualPosting}
+                  label={t("modal.manualPosting", "Allow manual posting")}
                   checked={!!form.allows_manual_posting}
                   disabled={form.account_type !== "posting"}
                   onChange={(value) =>
@@ -456,11 +500,11 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
               </FieldGroup>
 
-              <FieldGroup title={messages.advanced}>
+              <FieldGroup title={t("modal.advanced", "Advanced")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
                     kind="text"
-                    label={messages.reportGroup}
+                    label={t("modal.reportGroup", "Report group")}
                     value={form.report_group || ""}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -472,7 +516,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
                   <Input
                     kind="text"
-                    label={messages.reportSubgroup}
+                    label={t("modal.reportSubgroup", "Report subgroup")}
                     value={form.report_subgroup || ""}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -486,7 +530,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
                     kind="text"
-                    label={messages.externalRef}
+                    label={t("modal.externalRef", "External reference")}
                     value={form.external_ref || ""}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -498,7 +542,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
                   <Input
                     kind="text"
-                    label={messages.currencyCode}
+                    label={t("modal.currencyCode", "Currency code")}
                     value={form.currency_code || ""}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -510,29 +554,36 @@ const LedgerAccountModal: React.FC<Props> = ({
                 </div>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-gray-700">
-                    {messages.metadata}
+                  <span className="mb-2 block text-[12px] font-semibold text-gray-700">
+                    {t("modal.metadata", "Metadata (JSON)")}
                   </span>
                   <textarea
-                    className="min-h-[180px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
                     value={metadataText}
                     onChange={(e) => setMetadataText(e.target.value)}
+                    className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-400"
                   />
                 </label>
               </FieldGroup>
             </div>
 
-            {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-          </div>
+            {error ? (
+              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+                {error}
+              </div>
+            ) : null}
 
-          <footer className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 md:px-6">
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t("modal.cancel", "Cancel")}
+              </Button>
               <Button type="submit" disabled={busy}>
-                {mode === "create" ? messages.saveCreate : messages.saveEdit}
+                {mode === "create"
+                  ? t("modal.saveCreate", "Create account")
+                  : t("modal.saveEdit", "Save changes")}
               </Button>
             </div>
-          </footer>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

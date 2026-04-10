@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "@/api/requests";
-import type { CashflowCategoryOption } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 
 function extractCollection<T>(input: unknown): T[] {
   if (Array.isArray(input)) return input as T[];
@@ -20,7 +20,7 @@ function extractCollection<T>(input: unknown): T[] {
 }
 
 export function useCashflowCategories() {
-  const [categories, setCategories] = useState<CashflowCategoryOption[]>([]);
+  const [categories, setCategories] = useState<CashflowCategory[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -28,7 +28,7 @@ export function useCashflowCategories() {
     (async () => {
       try {
         const response = await api.getCashflowCategories({ active: "true" });
-        const items = extractCollection<CashflowCategoryOption>(
+        const items = extractCollection<CashflowCategory>(
           (response as { data?: unknown })?.data ?? response
         );
         if (!alive) return;

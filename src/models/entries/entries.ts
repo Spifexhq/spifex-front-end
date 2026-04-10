@@ -4,42 +4,6 @@ import type { DepartmentAllocation } from "../settings/departments";
 import type { InventoryAllocation } from "@/models/settings/inventory";
 import type { AccountingReadiness } from "./accountingReadiness";
 
-export interface CashflowCategoryOption {
-  id: string;
-  parent_id?: string | null;
-  code?: string;
-  name: string;
-  description?: string;
-  tx_type_hint?: number | null;
-  is_active?: boolean;
-  sort_order?: number;
-  metadata?: Record<string, unknown>;
-}
-
-export interface GetCashflowCategoriesParams {
-  cursor?: string;
-  page_size?: number;
-  active?: "true" | "false";
-  q?: string;
-  parent_id?: string;
-  tx_type_hint?: number;
-}
-
-export type GetCashflowCategoriesResponse =
-  | Paginated<CashflowCategoryOption>
-  | CashflowCategoryOption[]
-  | {
-      results?: CashflowCategoryOption[];
-      items?: CashflowCategoryOption[];
-      data?: CashflowCategoryOption[];
-      next?: string | null;
-      previous?: string | null;
-    };
-
-export type EntryAccountingPatch = {
-  accounting?: AccountingReadiness | null;
-};
-
 export interface GetEntryRequest {
   page_size?: number;
   cursor?: string;

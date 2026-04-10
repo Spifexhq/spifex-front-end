@@ -1,5 +1,7 @@
+// src\pages\LedgerAccountSettings\LedgerAccountsGate.tsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
@@ -7,7 +9,6 @@ import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
-import { getLedgerMessages } from "./messages";
 
 import type { LedgerMode } from "@/models/settings/ledgerAccounts";
 
@@ -33,31 +34,32 @@ type Props = {
 const templateKey = (item: TemplateOption) => item.value;
 const templateLabel = (item: TemplateOption) => item.label;
 
-const Surface = ({
+const SetupOptionCard = ({
   title,
   description,
   active,
   onClick,
+  embedded = false,
 }: {
   title: string;
   description: string;
   active: boolean;
   onClick: () => void;
+  embedded?: boolean;
 }) => (
   <button
     type="button"
     onClick={onClick}
     className={[
-      "rounded-2xl border p-4 text-left transition-colors",
+      "rounded-lg border bg-white text-left transition-colors",
+      embedded ? "min-h-[168px] px-5 py-5" : "p-4",
       active
-        ? "border-gray-900 bg-gray-900 text-white"
-        : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50",
+        ? "border-gray-900 text-gray-900"
+        : "border-gray-200 text-gray-900 hover:bg-gray-50",
     ].join(" ")}
   >
-    <div className="text-sm font-semibold">{title}</div>
-    <p className={["mt-1 text-sm", active ? "text-gray-100" : "text-gray-600"].join(" ")}>
-      {description}
-    </p>
+    <div className="text-[14px] font-semibold">{title}</div>
+    <p className="mt-2 text-[12px] leading-7 text-gray-600">{description}</p>
   </button>
 );
 
@@ -70,9 +72,20 @@ const LedgerAccountsGate: React.FC<Props> = ({
   successRedirectTo = "/settings/ledger-accounts",
 }) => {
   const navigate = useNavigate();
-  const { isOwner, permissions } = useAuthContext();
-  const messages = getLedgerMessages(languageCode);
+  const { i18n } = useTranslation("ledgerAccounts");
+  const t = React.useCallback(
+    (key: string, defaultValue: string) =>
+      String(
+        i18n.t(key, {
+          ns: "ledgerAccounts",
+          lng: languageCode || i18n.resolvedLanguage || i18n.language,
+          defaultValue,
+        })
+      ),
+    [i18n, languageCode]
+  );
 
+  const { isOwner, permissions } = useAuthContext();
   const canAddLedgerAccounts = useMemo(
     () => isOwner || permissions.includes("add_ledger_account"),
     [isOwner, permissions]
@@ -90,20 +103,23 @@ const LedgerAccountsGate: React.FC<Props> = ({
   const templateOptions = useMemo<TemplateOption[]>(
     () => [
       {
-        label: messages.setup.templatePersonal,
+        label: t("setup.templatePersonal", "Personal starter template"),
         value: "personal",
       },
       {
-        label: messages.setup.templateOrganizational,
+        label: t("setup.templateOrganizational", "Organizational starter template"),
         value: "organizational",
       },
     ],
-    [messages]
+    [t]
   );
 
   const submit = async () => {
     if (!canAddLedgerAccounts) {
-      setSnack({ message: messages.setup.permissionError, severity: "error" });
+      setSnack({
+        message: t("setup.permissionError", "You do not have permission to manage ledger accounts."),
+        severity: "error",
+      });
       return;
     }
 
@@ -111,36 +127,43 @@ const LedgerAccountsGate: React.FC<Props> = ({
       setBusy(true);
 
       if (setupMode === "csv") {
-        if (!csvFile) throw new Error(messages.setup.selectFileError);
+        if (!csvFile) {
+          throw new Error(t("setup.selectFileError", "Select a CSV/XLSX file."));
+        }
 
         const formData = new FormData();
         formData.append("mode", "csv");
         formData.append("file", csvFile);
-
         await api.importLedgerAccounts(formData);
       } else if (setupMode === "manual") {
-        if (!textBlock.trim()) throw new Error(messages.setup.manualError);
+        if (!textBlock.trim()) {
+          throw new Error(t("setup.manualError", "Enter account rows first."));
+        }
 
         const formData = new FormData();
         formData.append("mode", "manual");
         formData.append("manual_text", textBlock);
-
         await api.importLedgerAccounts(formData);
       } else if (setupMode === "standard") {
         await api.importStandardLedgerAccounts(standardPlan);
       } else {
-        throw new Error(messages.setup.chooseModeError);
+        throw new Error(t("setup.chooseModeError", "Choose a setup mode."));
       }
 
       await onSuccess?.();
-      setSnack({ message: messages.setup.success, severity: "success" });
+      setSnack({
+        message: t("setup.success", "Ledger accounts configured."),
+        severity: "success",
+      });
 
       if (successRedirectTo) {
         navigate(successRedirectTo, { replace: true });
       }
-    } catch (e) {
+    } catch (error) {
       setSnack({
-        message: (e as Error)?.message || messages.setup.genericError,
+        message:
+          (error as Error)?.message ||
+          t("setup.genericError", "Could not configure ledger accounts."),
         severity: "error",
       });
     } finally {
@@ -148,92 +171,115 @@ const LedgerAccountsGate: React.FC<Props> = ({
     }
   };
 
+  const embeddedShellClass = embedded
+    ? "rounded-lg border border-gray-200 bg-gray-50 p-4 md:p-5"
+    : "rounded-lg border border-gray-200 bg-white overflow-hidden";
+
+  const bodyClass = embedded ? "space-y-5" : "px-4 py-4 sm:px-5 space-y-4";
+  const optionGridClass = embedded
+    ? "grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3"
+    : "grid grid-cols-1 gap-3 lg:grid-cols-3";
+
+  const modePanelClass = embedded
+    ? "rounded-lg border border-gray-200 bg-white p-4 md:p-5"
+    : "rounded-lg border border-gray-200 bg-white p-4";
+
+  const actionRowClass = embedded
+    ? "mt-4 flex justify-end border-t border-gray-200 pt-4"
+    : "flex justify-end pt-4";
+
   const content = (
     <>
       {!embedded ? (
-        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <div className="grid gap-5 px-4 py-4 sm:px-5 lg:grid-cols-[1.4fr_0.9fr]">
-            <div>
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                {messages.setup.pageLabel}
-              </div>
+        <header className="rounded-lg border border-gray-200 bg-white">
+          <div className="flex items-start gap-3 px-5 py-4">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-gray-200 bg-gray-50 text-[11px] font-semibold text-gray-700">
+              LA
+            </div>
 
-              <h1 className="mt-1 text-[16px] font-semibold text-gray-900 sm:text-[18px]">
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">
+                {t("setup.pageLabel", "Settings")}
+              </div>
+              <h1 className="text-[16px] font-semibold leading-snug text-gray-900">
                 {ledgerMode === "personal"
-                  ? messages.setup.titlePersonal
-                  : messages.setup.titleOrganizational}
+                  ? t("setup.titlePersonal", "Set up your personal ledger")
+                  : t("setup.titleOrganizational", "Set up your organizational ledger")}
               </h1>
 
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">
+              <p className="mt-2 max-w-3xl text-[13px] leading-6 text-gray-600">
                 {compact
-                  ? messages.setup.descriptionCompact
+                  ? t(
+                      "setup.descriptionCompact",
+                      "Compact cashflow view is enabled. Start with a smaller chart and expand later if needed."
+                    )
                   : ledgerMode === "personal"
-                  ? messages.setup.descriptionPersonal
-                  : messages.setup.descriptionOrganizational}
+                    ? t(
+                        "setup.descriptionPersonal",
+                        "Start with a clean personal structure and adapt it only where you need more detail."
+                      )
+                    : t(
+                        "setup.descriptionOrganizational",
+                        "Start with a practical business-ready chart of accounts and then refine it for your organization."
+                      )}
               </p>
             </div>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-4">
-              <div className="text-[11px] uppercase tracking-wide text-gray-700">
-                {messages.setup.currentProfile}
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700">
-                  {messages.setup.modeLabel}:{" "}
-                  {ledgerMode === "personal"
-                    ? messages.setup.personal
-                    : messages.setup.organizational}
-                </span>
-
-                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700">
-                  {messages.setup.viewLabel}:{" "}
-                  {compact ? messages.setup.compact : messages.setup.full}
-                </span>
-              </div>
-            </div>
           </div>
-        </section>
+        </header>
       ) : null}
 
-      <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      <section className={embeddedShellClass}>
         {!embedded ? (
-          <div className="border-b border-gray-200 px-4 py-3 sm:px-5">
-            <div className="text-[11px] uppercase tracking-wide text-gray-700">
-              {messages.setup.setupMethod}
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">
+              {t("setup.setupMethod", "Setup method")}
             </div>
           </div>
         ) : null}
 
-        <div className={embedded ? "space-y-4" : "px-4 py-4 sm:px-5"}>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-            <Surface
+        <div className={bodyClass}>
+          <div className={optionGridClass}>
+            <SetupOptionCard
+              embedded={embedded}
               active={setupMode === "standard"}
               onClick={() => setSetupMode("standard")}
-              title={messages.setup.standardTitle}
-              description={messages.setup.standardDescription}
+              title={t("setup.standardTitle", "Use a standard template")}
+              description={t(
+                "setup.standardDescription",
+                "Load a generic chart of accounts designed as a strong starting point."
+              )}
             />
-            <Surface
+
+            <SetupOptionCard
+              embedded={embedded}
               active={setupMode === "csv"}
               onClick={() => setSetupMode("csv")}
-              title={messages.setup.uploadTitle}
-              description={messages.setup.uploadDescription}
+              title={t("setup.uploadTitle", "Import CSV or XLSX")}
+              description={t(
+                "setup.uploadDescription",
+                "Upload a chart using the provided template headers."
+              )}
             />
-            <Surface
+
+            <SetupOptionCard
+              embedded={embedded}
               active={setupMode === "manual"}
               onClick={() => setSetupMode("manual")}
-              title={messages.setup.manualTitle}
-              description={messages.setup.manualDescription}
+              title={t("setup.manualTitle", "Paste rows manually")}
+              description={t(
+                "setup.manualDescription",
+                "Paste delimited rows when you want to bootstrap quickly from text."
+              )}
             />
           </div>
 
-          <div className="space-y-4">
-            {setupMode === "standard" ? (
-              <div className="grid gap-4 lg:grid-cols-[1.2fr_auto_auto]">
+          {setupMode === "standard" ? (
+            <div className={modePanelClass}>
+              <div className="max-w-[420px]">
                 <SelectDropdown<TemplateOption>
-                  label={messages.setup.templateLabel}
+                  label={t("setup.templateLabel", "Template")}
                   items={templateOptions}
-                  selected={templateOptions.filter((x) => x.value === standardPlan)}
+                  selected={templateOptions.filter((item) => item.value === standardPlan)}
                   onChange={(items) =>
                     setStandardPlan(
                       items[0]?.value ??
@@ -244,72 +290,93 @@ const LedgerAccountsGate: React.FC<Props> = ({
                   getItemLabel={templateLabel}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel={messages.setup.templateLabel}
+                  buttonLabel={t("setup.templateLabel", "Template")}
                 />
-
-                <div className="lg:self-end">
-                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
-                    {messages.setup.downloadCsv}
-                  </Button>
-                </div>
-
-                <div className="lg:self-end">
-                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
-                    {messages.setup.downloadXlsx}
-                  </Button>
-                </div>
               </div>
-            ) : null}
 
-            {setupMode === "csv" ? (
-              <div className="grid gap-4 lg:grid-cols-[1fr_auto_auto]">
+              <div className={actionRowClass}>
+                <Button onClick={() => void submit()} disabled={busy}>
+                  {busy
+                    ? t("setup.submitting", "Configuring...")
+                    : t("setup.submit", "Configure ledger")}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {setupMode === "csv" ? (
+            <div className={modePanelClass}>
+              <div className="space-y-4">
                 <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-gray-700">
-                    {messages.setup.fileLabel}
+                  <span className="mb-1.5 block text-[12px] font-semibold text-gray-700">
+                    {t("setup.fileLabel", "File")}
                   </span>
                   <input
                     type="file"
                     accept=".csv,.xlsx"
-                    onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
-                    className="block w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none file:mr-3 file:rounded-xl file:border file:border-gray-200 file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-gray-700"
+                    onChange={(event) => setCsvFile(event.target.files?.[0] ?? null)}
+                    className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-900 outline-none file:mr-3 file:rounded-md file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-[13px] file:text-gray-700"
                   />
                 </label>
 
-                <div className="lg:self-end">
-                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerCsvTemplate()}>
-                    {messages.setup.downloadCsv}
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => void api.downloadLedgerCsvTemplate()}
+                  >
+                    {t("setup.downloadCsv", "Download CSV template")}
                   </Button>
-                </div>
 
-                <div className="lg:self-end">
-                  <Button variant="outline" className="h-10" onClick={() => void api.downloadLedgerXlsxTemplate()}>
-                    {messages.setup.downloadXlsx}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => void api.downloadLedgerXlsxTemplate()}
+                  >
+                    {t("setup.downloadXlsx", "Download XLSX template")}
                   </Button>
                 </div>
               </div>
-            ) : null}
 
-            {setupMode === "manual" ? (
+              <div className={actionRowClass}>
+                <Button onClick={() => void submit()} disabled={busy}>
+                  {busy
+                    ? t("setup.submitting", "Configuring...")
+                    : t("setup.submit", "Configure ledger")}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {setupMode === "manual" ? (
+            <div className={modePanelClass}>
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-gray-700">
-                  {messages.setup.manualLabel}
+                <span className="mb-1.5 block text-[12px] font-semibold text-gray-700">
+                  {t("setup.manualLabel", "Rows")}
                 </span>
 
                 <textarea
-                  className="min-h-[240px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+                  className="min-h-[240px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-[13px] text-gray-900 outline-none focus:border-gray-400"
                   value={textBlock}
-                  onChange={(e) => setTextBlock(e.target.value)}
-                  placeholder={messages.setup.manualPlaceholder}
+                  onChange={(event) => setTextBlock(event.target.value)}
+                  placeholder={t(
+                    "setup.manualPlaceholder",
+                    "code,name,parent_code,description,account_type,statement_section,normal_balance,..."
+                  )}
                 />
               </label>
-            ) : null}
-          </div>
 
-          <div className="flex justify-end">
-            <Button onClick={() => void submit()} disabled={busy}>
-              {busy ? messages.setup.submitting : messages.setup.submit}
-            </Button>
-          </div>
+              <div className={actionRowClass}>
+                <Button onClick={() => void submit()} disabled={busy}>
+                  {busy
+                    ? t("setup.submitting", "Configuring...")
+                    : t("setup.submit", "Configure ledger")}
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -326,9 +393,7 @@ const LedgerAccountsGate: React.FC<Props> = ({
     </>
   );
 
-  if (embedded) {
-    return <>{content}</>;
-  }
+  if (embedded) return <>{content}</>;
 
   return (
     <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">

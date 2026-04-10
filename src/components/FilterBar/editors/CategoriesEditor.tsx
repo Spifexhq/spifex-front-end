@@ -3,9 +3,9 @@ import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
 import Button from "@/shared/ui/Button";
 
 import type { FilterEditorProps } from "../FilterBar.types";
-import type { CashflowCategoryOption } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 
-const categoryLabel = (item: CashflowCategoryOption) =>
+const categoryLabel = (item: CashflowCategory) =>
   [item.code, item.name].filter(Boolean).join(" — ") || item.name || "—";
 
 export const CategoriesEditor: React.FC<FilterEditorProps> = ({
@@ -17,7 +17,7 @@ export const CategoriesEditor: React.FC<FilterEditorProps> = ({
   onApply,
 }) => (
   <>
-    <SelectDropdown<CashflowCategoryOption>
+    <SelectDropdown<CashflowCategory>
       label={t("filterBar:editors.categories.label")}
       items={categoriesForPicker}
       selected={selectedCategories}

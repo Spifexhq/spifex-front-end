@@ -1,31 +1,14 @@
 // src\pages\LedgerAccountSettings\components\LedgerTreePanel.tsx
-import React, { useMemo, useState } from 'react';
-import type { LedgerAccount } from '@/models/settings/ledgerAccounts';
+import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-type ViewMode = 'tree' | 'list';
+import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
 
-type Messages = {
-  treeTitle: string;
-  treeSubtitle: string;
-  viewTree: string;
-  viewList: string;
-  edit: string;
-  delete: string;
-  inactive: string;
-  system: string;
-  header: string;
-  posting: string;
-  bankControlYes: string;
-  bankControlNo: string;
-  manualAllowed: string;
-  manualBlocked: string;
-  emptyTitle: string;
-  emptySubtitle: string;
-};
+type ViewMode = "tree" | "list";
 
 type Props = {
   items: LedgerAccount[];
-  messages: Messages;
+  languageCode?: string | null;
   onEdit?: (acc: LedgerAccount) => void;
   onDelete?: (acc: LedgerAccount) => void;
   editable?: boolean;
@@ -36,40 +19,79 @@ type Props = {
 type TreeNode = LedgerAccount & { children: TreeNode[] };
 
 const sortAccounts = (a: LedgerAccount, b: LedgerAccount) => {
-  const ca = (a.code || '').toString();
-  const cb = (b.code || '').toString();
-  if (ca && cb && ca !== cb) return ca.localeCompare(cb, 'en', { numeric: true });
-  return `${a.name || ''}`.localeCompare(`${b.name || ''}`, 'en');
+  const ca = String(a.code || "");
+  const cb = String(b.code || "");
+
+  if (ca && cb && ca !== cb) {
+    return ca.localeCompare(cb, undefined, { numeric: true });
+  }
+
+  return String(a.name || "").localeCompare(String(b.name || ""), undefined, {
+    numeric: true,
+  });
 };
 
-const sectionLabel = (value: LedgerAccount['statement_section']) =>
-  value.replace(/_/g, ' ');
+const sectionLabel = (value: LedgerAccount["statement_section"]) => {
+  switch (value) {
+    case "asset":
+      return "Asset";
+    case "liability":
+      return "Liability";
+    case "equity":
+      return "Equity";
+    case "income":
+      return "Income";
+    case "expense":
+      return "Expense";
+    case "off_balance":
+      return "Off balance";
+    case "statistical":
+      return "Statistical";
+  }
+};
 
-const toneBadge = (label: string) => (
+const ToneBadge = ({ children }: { children: React.ReactNode }) => (
   <span className="inline-flex items-center rounded-full border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-    {label}
+    {children}
   </span>
 );
 
 const LedgerTreePanel: React.FC<Props> = ({
   items,
-  messages,
+  languageCode,
   onEdit,
   onDelete,
   editable = true,
   viewMode,
   onViewModeChange,
 }) => {
+  const { i18n } = useTranslation("ledgerAccounts");
+  const t = React.useCallback(
+    (key: string, defaultValue: string) =>
+      String(
+        i18n.t(key, {
+          ns: "ledgerAccounts",
+          lng: languageCode || i18n.resolvedLanguage || i18n.language,
+          defaultValue,
+        })
+      ),
+    [i18n, languageCode]
+  );
+
   const sorted = useMemo(() => [...items].sort(sortAccounts), [items]);
 
   const tree = useMemo<TreeNode[]>(() => {
     const map = new Map<string, TreeNode>();
     const roots: TreeNode[] = [];
 
-    sorted.forEach((item) => map.set(item.id, { ...item, children: [] }));
+    sorted.forEach((item) => {
+      map.set(item.id, { ...item, children: [] });
+    });
+
     sorted.forEach((item) => {
       const node = map.get(item.id);
       if (!node) return;
+
       if (item.parent_id && map.has(item.parent_id)) {
         map.get(item.parent_id)?.children.push(node);
       } else {
@@ -94,7 +116,7 @@ const LedgerTreePanel: React.FC<Props> = ({
 
   const [openIds, setOpenIds] = useState<Set<string>>(initialOpen);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setOpenIds(initialOpen);
   }, [initialOpen]);
 
@@ -109,24 +131,26 @@ const LedgerTreePanel: React.FC<Props> = ({
 
   const renderActions = (acc: LedgerAccount) => {
     if (!editable) return null;
+
     return (
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
-          className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-md border border-gray-300 px-3 py-1.5 text-[12px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
           onClick={() => onEdit?.(acc)}
         >
-          {messages.edit}
+          {t("workspace.edit", "Edit")}
         </button>
-        {!acc.is_system && (
+
+        {!acc.is_system ? (
           <button
             type="button"
-            className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+            className="rounded-md border border-red-200 px-3 py-1.5 text-[12px] font-medium text-red-600 transition-colors hover:bg-red-50"
             onClick={() => onDelete?.(acc)}
           >
-            {messages.delete}
+            {t("workspace.delete", "Delete")}
           </button>
-        )}
+        ) : null}
       </div>
     );
   };
@@ -134,130 +158,183 @@ const LedgerTreePanel: React.FC<Props> = ({
   const renderTreeNode = (node: TreeNode, depth = 0) => {
     const hasChildren = node.children.length > 0;
     const isOpen = openIds.has(node.id);
-    const typeLabel = node.account_type === 'header' ? messages.header : messages.posting;
+    const typeLabel =
+      node.account_type === "header"
+        ? t("workspace.header", "Header")
+        : t("workspace.posting", "Posting");
 
     return (
-      <div key={node.id}>
-        <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
+      <div key={node.id} className="border-b border-gray-100 last:border-b-0">
+        <div className="flex items-start justify-between gap-3 px-4 py-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-2">
-              <div className="flex items-center gap-2" style={{ paddingLeft: `${depth * 18}px` }}>
+            <div className="flex items-start gap-3" style={{ paddingLeft: `${depth * 18}px` }}>
+              <div className="pt-0.5">
                 {hasChildren ? (
                   <button
                     type="button"
                     onClick={() => toggle(node.id)}
-                    className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
-                    aria-label={isOpen ? 'Collapse group' : 'Expand group'}
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-gray-300 text-[11px] text-gray-700 transition-colors hover:bg-gray-50"
+                    aria-label={isOpen ? "Collapse group" : "Expand group"}
                   >
-                    {isOpen ? '−' : '+'}
+                    {isOpen ? "−" : "+"}
                   </button>
                 ) : (
-                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded border border-transparent text-[11px] text-gray-300">
+                  <span className="inline-flex h-5 w-5 items-center justify-center text-[11px] text-gray-300">
                     •
                   </span>
                 )}
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[13px] font-medium text-gray-900 break-words">{node.name || '—'}</p>
-                    {node.code ? toneBadge(node.code) : null}
-                    {node.is_active === false ? toneBadge(messages.inactive) : null}
-                    {toneBadge(typeLabel)}
-                    {node.is_system ? toneBadge(messages.system) : null}
-                    {toneBadge(node.is_bank_control ? messages.bankControlYes : messages.bankControlNo)}
-                    {toneBadge(node.allows_manual_posting ? messages.manualAllowed : messages.manualBlocked)}
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-600">
-                    <span>{sectionLabel(node.statement_section)}</span>
-                    <span>•</span>
-                    <span>{node.normal_balance}</span>
-                    {node.report_group ? (
-                      <>
-                        <span>•</span>
-                        <span>{node.report_group}</span>
-                      </>
-                    ) : null}
-                  </div>
-                  {(node.report_subgroup || node.path || node.external_ref) && (
-                    <p className="mt-1 text-[12px] text-gray-500">
-                      {[node.report_subgroup, node.path, node.external_ref].filter(Boolean).join(' • ')}
-                    </p>
-                  )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {node.code ? (
+                    <span className="text-[13px] font-medium text-gray-900">{node.code}</span>
+                  ) : null}
+                  <p className="min-w-0 text-[13px] font-medium text-gray-900">{node.name || "—"}</p>
+                  <ToneBadge>{typeLabel}</ToneBadge>
+                  {node.is_system ? (
+                    <ToneBadge>{t("workspace.system", "System")}</ToneBadge>
+                  ) : null}
+                  {node.is_active === false ? (
+                    <ToneBadge>{t("workspace.inactive", "Inactive")}</ToneBadge>
+                  ) : null}
+                  {node.is_bank_control ? (
+                    <ToneBadge>{t("workspace.bankControlYes", "Bank control")}</ToneBadge>
+                  ) : null}
+                  {!node.allows_manual_posting ? (
+                    <ToneBadge>{t("workspace.manualBlocked", "No manual posting")}</ToneBadge>
+                  ) : null}
                 </div>
+
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-600">
+                  <span>{sectionLabel(node.statement_section)}</span>
+                  <span>•</span>
+                  <span>{node.normal_balance}</span>
+                  {node.report_group ? (
+                    <>
+                      <span>•</span>
+                      <span>{node.report_group}</span>
+                    </>
+                  ) : null}
+                </div>
+
+                {(node.report_subgroup || node.path || node.external_ref) ? (
+                  <p className="mt-1 text-[12px] text-gray-500">
+                    {[node.report_subgroup, node.path, node.external_ref]
+                      .filter(Boolean)
+                      .join(" • ")}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
+
           {renderActions(node)}
         </div>
 
         {hasChildren && isOpen ? (
-          <div className="border-l border-gray-100 ml-7">{node.children.map((child) => renderTreeNode(child, depth + 1))}</div>
+          <div>{node.children.map((child) => renderTreeNode(child, depth + 1))}</div>
         ) : null}
       </div>
     );
   };
 
-  const listRows = sorted.map((acc) => (
-    <tr key={acc.id} className="border-t border-gray-100">
-      <td className="px-4 py-3 text-sm text-gray-900">{acc.code}</td>
-      <td className="px-4 py-3 text-sm text-gray-900">{acc.name}</td>
-      <td className="px-4 py-3 text-sm text-gray-600">{acc.account_type}</td>
-      <td className="px-4 py-3 text-sm text-gray-600">{acc.statement_section}</td>
-      <td className="px-4 py-3 text-sm text-gray-600">{acc.normal_balance}</td>
-      <td className="px-4 py-3 text-sm text-gray-600">{acc.is_bank_control ? messages.bankControlYes : messages.bankControlNo}</td>
-      <td className="px-4 py-3 text-sm text-gray-600">{acc.allows_manual_posting ? messages.manualAllowed : messages.manualBlocked}</td>
-      <td className="px-4 py-3 text-right">{renderActions(acc)}</td>
-    </tr>
-  ));
-
   return (
-    <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">{messages.treeTitle}</h2>
-            <p className="mt-1 text-sm text-gray-600">{messages.treeSubtitle}</p>
+            <h2 className="text-[14px] font-semibold text-gray-900">
+              {t("workspace.treeTitle", "Chart of accounts")}
+            </h2>
+            <p className="mt-1 text-[12px] text-gray-600">
+              {t("workspace.treeSubtitle", "A unified view of your accounting structure.")}
+            </p>
           </div>
-          <div className="inline-flex items-center rounded-xl border border-gray-200 bg-white p-1">
-            {(['tree', 'list'] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => onViewModeChange(mode)}
-                className={[
-                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                  viewMode === mode ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-50',
-                ].join(' ')}
-              >
-                {mode === 'tree' ? messages.viewTree : messages.viewList}
-              </button>
-            ))}
+
+          <div className="inline-flex rounded-md border border-gray-300 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => onViewModeChange("tree")}
+              className={[
+                "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
+                viewMode === "tree"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-700 hover:bg-gray-50",
+              ].join(" ")}
+            >
+              {t("workspace.viewTree", "Tree")}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onViewModeChange("list")}
+              className={[
+                "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
+                viewMode === "list"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-700 hover:bg-gray-50",
+              ].join(" ")}
+            >
+              {t("workspace.viewList", "List")}
+            </button>
           </div>
         </div>
       </div>
 
       {items.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <h3 className="text-sm font-semibold text-gray-900">{messages.emptyTitle}</h3>
-          <p className="mt-2 text-sm text-gray-600">{messages.emptySubtitle}</p>
+          <h3 className="text-[14px] font-semibold text-gray-900">
+            {t("workspace.emptyTitle", "No accounts found")}
+          </h3>
+          <p className="mt-2 text-[12px] text-gray-600">
+            {t("workspace.emptySubtitle", "Try adjusting filters or create the first account.")}
+          </p>
         </div>
-      ) : viewMode === 'tree' ? (
+      ) : viewMode === "tree" ? (
         <div>{tree.map((node) => renderTreeNode(node))}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full">
-            <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+            <thead className="bg-gray-50 text-left text-[10px] uppercase tracking-wide text-gray-600">
               <tr>
-                <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Section</th>
-                <th className="px-4 py-3">Balance</th>
-                <th className="px-4 py-3">Bank</th>
-                <th className="px-4 py-3">Manual</th>
-                <th className="px-4 py-3"></th>
+                <th className="px-4 py-3">{t("modal.code", "Code")}</th>
+                <th className="px-4 py-3">{t("modal.name", "Name")}</th>
+                <th className="px-4 py-3">{t("modal.accountType", "Account type")}</th>
+                <th className="px-4 py-3">{t("modal.statementSection", "Statement section")}</th>
+                <th className="px-4 py-3">{t("modal.normalBalance", "Normal balance")}</th>
+                <th className="px-4 py-3">{t("workspace.bankControlLabel", "Bank control")}</th>
+                <th className="px-4 py-3">{t("workspace.manualPostingLabel", "Manual posting")}</th>
+                <th className="px-4 py-3 text-right">{t("workspace.moreActions", "More actions")}</th>
               </tr>
             </thead>
-            <tbody>{listRows}</tbody>
+
+            <tbody>
+              {sorted.map((acc) => (
+                <tr key={acc.id} className="border-t border-gray-100">
+                  <td className="px-4 py-3 text-[13px] font-medium text-gray-900">
+                    {acc.code || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-[13px] text-gray-900">{acc.name || "—"}</td>
+                  <td className="px-4 py-3 text-[13px] text-gray-700">{acc.account_type}</td>
+                  <td className="px-4 py-3 text-[13px] text-gray-700">
+                    {sectionLabel(acc.statement_section)}
+                  </td>
+                  <td className="px-4 py-3 text-[13px] text-gray-700">{acc.normal_balance}</td>
+                  <td className="px-4 py-3 text-[13px] text-gray-700">
+                    {acc.is_bank_control
+                      ? t("workspace.bankControlYes", "Bank control")
+                      : t("workspace.bankControlNo", "Not bank control")}
+                  </td>
+                  <td className="px-4 py-3 text-[13px] text-gray-700">
+                    {acc.allows_manual_posting
+                      ? t("workspace.manualAllowed", "Manual posting")
+                      : t("workspace.manualBlocked", "No manual posting")}
+                  </td>
+                  <td className="px-4 py-3 text-right">{renderActions(acc)}</td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )}

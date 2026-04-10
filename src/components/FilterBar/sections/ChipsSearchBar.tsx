@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import type { FilterDefinition } from "../FilterBar.types";
 import type { LocalFilters, ChipKey } from "@/models/components/filterBar";
 import type { BankAccountTableRow } from "@/models/settings/banking";
-import type { CashflowCategoryOption } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 
 import { Chip } from "../ui/Chip";
 
@@ -14,7 +14,7 @@ export const ChipsSearchBar: React.FC<{
   filterDefs: FilterDefinition[];
   localFilters: LocalFilters;
   selectedBanks: BankAccountTableRow[];
-  selectedCategories: CashflowCategoryOption[];
+  selectedCategories: CashflowCategory[];
 
   onToggleEditor: (key: ChipKey) => void;
   onRemoveChip: (key: ChipKey) => void;

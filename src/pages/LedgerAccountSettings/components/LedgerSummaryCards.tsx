@@ -1,5 +1,5 @@
 // src\pages\LedgerAccountSettings\components\LedgerSummaryCards.tsx
-import React from 'react';
+import React from "react";
 
 type Card = {
   title: string;
@@ -17,14 +17,17 @@ const LedgerSummaryCards: React.FC<Props> = ({ items }) => {
       {items.map((item) => (
         <article
           key={item.title}
-          className="overflow-hidden rounded-2xl border border-gray-200 bg-white"
+          className="rounded-lg border border-gray-200 bg-white overflow-hidden"
         >
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[11px] uppercase tracking-wide text-gray-700">{item.title}</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">
+              {item.title}
+            </div>
           </div>
+
           <div className="px-4 py-4">
-            <div className="text-2xl font-semibold text-gray-900">{item.value}</div>
-            <p className="mt-1 text-sm text-gray-600">{item.subtitle}</p>
+            <div className="text-[20px] font-semibold text-gray-900">{item.value}</div>
+            <p className="mt-1 text-[12px] text-gray-600">{item.subtitle}</p>
           </div>
         </article>
       ))}

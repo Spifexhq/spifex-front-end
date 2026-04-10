@@ -40,6 +40,7 @@ const InventorySettings = lazy(() => import("@/pages/InventorySettings"));
 const ProjectSettings = lazy(() => import("@/pages/ProjectSettings"));
 const MemberSettings = lazy(() => import("@/pages/MemberSettings"));
 const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
+const CategorySettings = lazy(() => import("@/pages/CategorySettings"));
 const LedgerAccountsRouter = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsRouter"));
 const AccountingSettings = lazy(() => import("@/pages/AccountingSettings"));
 const Statements = lazy(() => import("@/pages/Statements"));
@@ -270,6 +271,14 @@ const routes: RouteObject[] = [
                     element: (
                     <PermissionMiddleware codeName="view_group_settings_page" behavior="redirect" redirectTo={'/settings'}>
                         <GroupSettings />
+                    </PermissionMiddleware>
+                    ),
+                },
+                {
+                    path: 'categories',
+                    element: (
+                    <PermissionMiddleware codeName="view_cash_flow_page" behavior="redirect" redirectTo={'/settings'}>
+                        <CategorySettings />
                     </PermissionMiddleware>
                     ),
                 },

@@ -19,11 +19,8 @@ import type {
   IntervalMonths,
 } from "@/components/Modal/Modal.types";
 
-import type {
-  AddEntryRequest,
-  EditEntryRequest,
-  CashflowCategoryOption,
-} from "@/models/entries/entries";
+import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
+import type { CashflowCategory } from "@/models/settings/categories";
 import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
@@ -244,7 +241,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     null
   );
 
-  const [cashflowCategories, setCashflowCategories] = useState<CashflowCategoryOption[]>([]);
+  const [cashflowCategories, setCashflowCategories] = useState<CashflowCategory[]>([]);
   const [accounting, setAccounting] = useState<AccountingReadiness | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -351,7 +348,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   const fetchAllCashflowCategories = useCallback(async () => {
     const response = await api.getCashflowCategories();
-    const categories = extractCollection<CashflowCategoryOption>(
+    const categories = extractCollection<CashflowCategory>(
       (response as { data?: unknown })?.data ?? response
     );
 

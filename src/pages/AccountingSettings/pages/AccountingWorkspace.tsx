@@ -93,12 +93,12 @@ const workspaceModes: Array<{ id: WorkspaceMode; title: string; description: str
   {
     id: "chart",
     title: "Chart designer",
-    description: "Tree-first workspace for structure, hierarchy, and account maintenance.",
+    description: "Tree-first workspace for hierarchy and account maintenance.",
   },
   {
     id: "rules",
     title: "Posting rules",
-    description: "Focus on posting permissions, bank-control scope, and operational discipline.",
+    description: "Focus on controls, bank scope, and posting permissions.",
   },
   {
     id: "reporting",
@@ -144,22 +144,17 @@ function MetricCard({
   description: string;
 }) {
   return (
-    <article className="rounded-3xl border border-gray-200 bg-white p-4">
-      <div className="text-[11px] uppercase tracking-[0.18em] text-gray-500">{label}</div>
-      <div className="mt-3 text-3xl font-semibold text-gray-900">{value}</div>
-      <p className="mt-2 text-sm leading-6 text-gray-600">{description}</p>
+    <article className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <p className="mt-1 text-[12px] leading-5 text-gray-600">{description}</p>
     </article>
   );
 }
 
-function Pill({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+function StatusPill({ children }: { children: React.ReactNode }) {
   return (
-    <span
-      className={[
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium",
-        dark ? "border-white/20 bg-white/10 text-white" : "border-gray-200 bg-white text-gray-700",
-      ].join(" ")}
-    >
+    <span className="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-1 text-[12px] text-gray-700">
       {children}
     </span>
   );
@@ -181,14 +176,14 @@ function WorkspaceTab({
       type="button"
       onClick={onClick}
       className={[
-        "rounded-3xl border p-4 text-left transition-colors",
-        active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50",
+        "rounded-lg border px-4 py-3 text-left transition-colors",
+        active
+          ? "border-gray-900 bg-white text-gray-900"
+          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50",
       ].join(" ")}
     >
-      <div className="text-sm font-semibold">{title}</div>
-      <div className={["mt-2 text-sm leading-6", active ? "text-gray-100" : "text-gray-600"].join(" ")}>
-        {description}
-      </div>
+      <div className="text-[13px] font-semibold">{title}</div>
+      <div className="mt-1 text-[12px] leading-5 text-gray-600">{description}</div>
     </button>
   );
 }
@@ -216,81 +211,92 @@ function TreeRow({
   const isOpen = openIds.has(node.id);
   const isSelected = selectedId === node.id;
 
+  const handleSelect = () => onSelect(node);
+
+  const handleRowKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelect(node);
+    }
+  };
+
   return (
     <div>
       <div
+        role="button"
+        tabIndex={0}
+        onClick={handleSelect}
+        onKeyDown={handleRowKeyDown}
+        aria-pressed={isSelected}
         className={[
-          "group flex items-start justify-between gap-3 rounded-2xl border px-3 py-3 transition-colors",
+          "group flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
           isSelected
-            ? "border-gray-900 bg-gray-900 text-white"
+            ? "border-gray-300 bg-gray-50"
             : "border-transparent bg-white hover:border-gray-200 hover:bg-gray-50",
         ].join(" ")}
       >
         <div className="flex min-w-0 flex-1 items-start gap-3">
-          <div className="flex items-center gap-2 pt-0.5" style={{ paddingLeft: `${depth * 16}px` }}>
+          <div
+            className="flex items-center gap-2 pt-0.5"
+            style={{ paddingLeft: `${depth * 14}px` }}
+          >
             {hasChildren ? (
               <button
                 type="button"
-                className={[
-                  "inline-flex h-5 w-5 items-center justify-center rounded border text-[11px]",
-                  isSelected ? "border-white/30 text-white" : "border-gray-200 text-gray-700",
-                ].join(" ")}
-                onClick={() => onToggle(node.id)}
+                className="inline-flex h-5 w-5 items-center justify-center rounded border border-gray-200 text-[11px] text-gray-700"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggle(node.id);
+                }}
                 aria-label={isOpen ? "Collapse group" : "Expand group"}
               >
                 {isOpen ? "−" : "+"}
               </button>
             ) : (
-              <span
-                className={[
-                  "inline-flex h-5 w-5 items-center justify-center text-xs",
-                  isSelected ? "text-white/80" : "text-gray-300",
-                ].join(" ")}
-              >
+              <span className="inline-flex h-5 w-5 items-center justify-center text-xs text-gray-300">
                 •
               </span>
             )}
           </div>
 
-          <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onSelect(node)}>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-semibold">{node.code || "—"}</span>
-                <span className="text-sm">{node.name}</span>
-                {node.is_system ? <Pill dark={isSelected}>system</Pill> : null}
-                {!node.is_active ? <Pill dark={isSelected}>inactive</Pill> : null}
-              </div>
-
-              <div className={["mt-1 flex flex-wrap items-center gap-2 text-xs", isSelected ? "text-white/80" : "text-gray-600"].join(" ")}>
-                <span>{sectionLabelMap[node.statement_section]}</span>
-                <span>•</span>
-                <span>{node.account_type}</span>
-                <span>•</span>
-                <span>{node.normal_balance}</span>
-                {treeMode === "detailed" ? (
-                  <>
-                    <span>•</span>
-                    <span>{node.is_bank_control ? "bank control" : "regular account"}</span>
-                    <span>•</span>
-                    <span>{node.allows_manual_posting ? "manual allowed" : "manual blocked"}</span>
-                  </>
-                ) : null}
-              </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[13px] font-semibold text-gray-900">{node.code || "—"}</span>
+              <span className="text-[13px] text-gray-900">{node.name}</span>
+              {node.is_system ? <StatusPill>System</StatusPill> : null}
+              {!node.is_active ? <StatusPill>Inactive</StatusPill> : null}
             </div>
-          </button>
+
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-600">
+              <span>{sectionLabelMap[node.statement_section]}</span>
+              <span>•</span>
+              <span>{node.account_type}</span>
+              <span>•</span>
+              <span>{node.normal_balance}</span>
+              {treeMode === "detailed" ? (
+                <>
+                  <span>•</span>
+                  <span>{node.is_bank_control ? "bank control" : "regular account"}</span>
+                  <span>•</span>
+                  <span>{node.allows_manual_posting ? "manual allowed" : "manual blocked"}</span>
+                </>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
+          <Button
             type="button"
-            onClick={() => onQuickEdit(node)}
-            className={[
-              "rounded-xl border px-3 py-1.5 text-xs font-medium",
-              isSelected ? "border-white/30 text-white hover:bg-white/10" : "border-gray-200 text-gray-700 hover:bg-gray-50",
-            ].join(" ")}
+            variant="outline"
+            size="sm"
+            onClick={(event) => {
+              event.stopPropagation();
+              onQuickEdit(node);
+            }}
           >
             Edit
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -374,12 +380,28 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
         nextCursor,
       };
     },
-    [canView, appliedSearch, appliedActive, appliedSection, appliedAccountType, appliedBankControl, appliedManualPosting]
+    [
+      canView,
+      appliedSearch,
+      appliedActive,
+      appliedSection,
+      appliedAccountType,
+      appliedBankControl,
+      appliedManualPosting,
+    ]
   );
 
   const pager = useCursorPager<LedgerAccount>(fetchPage, {
     autoLoadFirst: canView,
-    deps: [canView, appliedSearch, appliedActive, appliedSection, appliedAccountType, appliedBankControl, appliedManualPosting],
+    deps: [
+      canView,
+      appliedSearch,
+      appliedActive,
+      appliedSection,
+      appliedAccountType,
+      appliedBankControl,
+      appliedManualPosting,
+    ],
   });
 
   const tree = useMemo<TreeNode[]>(() => {
@@ -624,7 +646,10 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
       closeModal();
       await pager.refresh();
     } catch (error) {
-      setSnackbar({ message: (error as Error)?.message || "Unable to save the account.", severity: "error" });
+      setSnackbar({
+        message: (error as Error)?.message || "Unable to save the account.",
+        severity: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -639,7 +664,10 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
       setSnackbar({ message: "Account deleted successfully.", severity: "success" });
       await pager.refresh();
     } catch (error) {
-      setSnackbar({ message: (error as Error)?.message || "Unable to delete the account.", severity: "error" });
+      setSnackbar({
+        message: (error as Error)?.message || "Unable to delete the account.",
+        severity: "error",
+      });
     }
   };
 
@@ -655,53 +683,96 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
   if (!canView) return <PageSkeleton rows={8} />;
 
   return (
-    <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
+    <>
       {pager.loading && pager.items.length === 0 ? <TopProgress active variant="top" topOffset={64} /> : null}
 
-      <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-[28px] border border-gray-200 bg-white p-5 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Accounting settings</div>
-              <h1 className="mt-2 text-2xl font-semibold text-gray-900 sm:text-[30px]">Accounting control center</h1>
-              <p className="mt-3 text-sm leading-7 text-gray-600 sm:text-[15px]">
-                Move all accounting logic into one clean workspace with a synthetic tree, focused edit modal, and dedicated views for structure,
-                posting rules, and reporting consistency.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Pill>{ledgerProfile.mode === "personal" ? "personal profile" : "organizational profile"}</Pill>
-                <Pill>{ledgerProfile.use_compact_cashflow_view ? "compact cashflow view" : "full cashflow view"}</Pill>
-              </div>
-            </div>
-
-            {canManage ? (
-              <div className="flex shrink-0 items-center gap-3">
-                <Button variant="outline" type="button" onClick={() => setTreeMode((prev) => (prev === "compact" ? "detailed" : "compact"))}>
-                  {treeMode === "compact" ? "Detailed tree" : "Compact tree"}
-                </Button>
-                <Button type="button" className="border border-gray-900 bg-gray-900 text-white hover:bg-black" onClick={openCreateModal}>
-                  New account
-                </Button>
-              </div>
-            ) : null}
+      <section className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Ledger workspace</div>
           </div>
-        </section>
 
-        <section className="rounded-[28px] border border-gray-200 bg-white p-4 sm:p-5">
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="text-sm font-semibold text-gray-900">Filters</div>
-              <div className="mt-1 text-sm text-gray-600">Refine the accounting structure before navigating the tree.</div>
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-[16px] font-semibold text-gray-900">Chart of accounts</h2>
+                <p className="mt-1 text-[13px] leading-6 text-gray-600">
+                  Maintain structure, posting controls, and reporting mapping in one compact workspace.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <StatusPill>
+                    {ledgerProfile.mode === "personal" ? "Personal profile" : "Organizational profile"}
+                  </StatusPill>
+                  <StatusPill>
+                    {ledgerProfile.use_compact_cashflow_view ? "Compact cashflow view" : "Full cashflow view"}
+                  </StatusPill>
+                </div>
+              </div>
+
+              {canManage ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() =>
+                      setTreeMode((prev) => (prev === "compact" ? "detailed" : "compact"))
+                    }
+                  >
+                    {treeMode === "compact" ? "Detailed tree" : "Compact tree"}
+                  </Button>
+                  <Button type="button" onClick={openCreateModal}>
+                    New account
+                  </Button>
+                </div>
+              ) : null}
             </div>
 
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                label="Total accounts"
+                value={counters.total}
+                description="Accounts visible under the current filter set."
+              />
+              <MetricCard
+                label="Posting accounts"
+                value={counters.posting}
+                description="Accounts able to receive journal lines."
+              />
+              <MetricCard
+                label="Headers"
+                value={counters.headers}
+                description="Structural nodes used to organize the chart."
+              />
+              <MetricCard
+                label="Max depth"
+                value={counters.maxDepth}
+                description="Deepest hierarchy level in the current view."
+              />
+            </div>
+          </div>
+        </div>
+
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Filters</div>
+          </div>
+
+          <div className="space-y-4 px-4 py-4">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-              <Input kind="text" label="Search" value={draftSearch} onChange={(e) => setDraftSearch(e.target.value)} />
+              <Input
+                kind="text"
+                label="Search"
+                value={draftSearch}
+                onChange={(event) => setDraftSearch(event.target.value)}
+              />
 
               <SelectDropdown<Option<LedgerStatementSection>>
                 label="Section"
                 items={sectionOptions}
                 selected={sectionOptions.filter((item) => item.value === draftSection)}
-                onChange={(items: Option<LedgerStatementSection>[]) => setDraftSection(items[0]?.value ?? "")}
+                onChange={(items: Option<LedgerStatementSection>[]) =>
+                  setDraftSection(items[0]?.value ?? "")
+                }
                 getItemKey={optionKey}
                 getItemLabel={optionLabel}
                 singleSelect
@@ -713,7 +784,9 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                 label="Account type"
                 items={accountTypeOptions}
                 selected={accountTypeOptions.filter((item) => item.value === draftAccountType)}
-                onChange={(items: Option<LedgerAccountType>[]) => setDraftAccountType(items[0]?.value ?? "")}
+                onChange={(items: Option<LedgerAccountType>[]) =>
+                  setDraftAccountType(items[0]?.value ?? "")
+                }
                 getItemKey={optionKey}
                 getItemLabel={optionLabel}
                 singleSelect
@@ -725,7 +798,9 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                 label="Bank control"
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftBankControl)}
-                onChange={(items: Option<"true" | "false">[]) => setDraftBankControl(items[0]?.value ?? "")}
+                onChange={(items: Option<"true" | "false">[]) =>
+                  setDraftBankControl(items[0]?.value ?? "")
+                }
                 getItemKey={optionKey}
                 getItemLabel={optionLabel}
                 singleSelect
@@ -737,7 +812,9 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                 label="Manual posting"
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftManualPosting)}
-                onChange={(items: Option<"true" | "false">[]) => setDraftManualPosting(items[0]?.value ?? "")}
+                onChange={(items: Option<"true" | "false">[]) =>
+                  setDraftManualPosting(items[0]?.value ?? "")
+                }
                 getItemKey={optionKey}
                 getItemLabel={optionLabel}
                 singleSelect
@@ -761,7 +838,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" className="border border-gray-900 bg-gray-900 text-white hover:bg-black" onClick={applyFilters}>
+              <Button type="button" onClick={applyFilters}>
                 Apply
               </Button>
               <Button variant="outline" type="button" onClick={clearFilters}>
@@ -769,13 +846,6 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
               </Button>
             </div>
           </div>
-        </section>
-
-        <section className="grid gap-4 xl:grid-cols-4">
-          <MetricCard label="Total accounts" value={counters.total} description="Accounts visible under the current filter set." />
-          <MetricCard label="Posting accounts" value={counters.posting} description="Accounts able to receive journal lines." />
-          <MetricCard label="Headers" value={counters.headers} description="Structural nodes used to organize the chart." />
-          <MetricCard label="Max depth" value={counters.maxDepth} description="Deepest hierarchy level in the current view." />
         </section>
 
         <section className="grid gap-3 md:grid-cols-3">
@@ -790,20 +860,22 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
           ))}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <section className="rounded-[28px] border border-gray-200 bg-white p-4 sm:p-5">
-            <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Chart tree</h2>
-                <p className="mt-1 text-sm text-gray-600">Synthetic hierarchy view with fast node scanning and direct editing.</p>
+                <h3 className="text-[14px] font-semibold text-gray-900">Tree</h3>
+                <p className="mt-1 text-[12px] text-gray-600">
+                  Hierarchy view with direct selection and quick editing.
+                </p>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span>{pager.items.length} visible</span>
-                {pager.loading ? <span>• refreshing</span> : null}
+
+              <div className="text-[12px] text-gray-600">
+                {pager.items.length} visible {pager.loading ? "• refreshing" : ""}
               </div>
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div className="space-y-2 px-4 py-4">
               {tree.length ? (
                 tree.map((node) => (
                   <TreeRow
@@ -819,127 +891,152 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                   />
                 ))
               ) : (
-                <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-5 py-10 text-center text-sm text-gray-500">
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-10 text-center text-[13px] text-gray-500">
                   No accounts found for the current filter set.
                 </div>
               )}
-            </div>
 
-            {pager.canNext ? (
-              <div className="mt-5 flex justify-center">
-                <Button variant="outline" type="button" disabled={pager.loading} onClick={pager.next}>
-                  {pager.loading ? "Loading..." : "Load more"}
-                </Button>
-              </div>
-            ) : null}
+              {pager.canNext ? (
+                <div className="flex justify-center pt-3">
+                  <Button variant="outline" type="button" disabled={pager.loading} onClick={pager.next}>
+                    {pager.loading ? "Loading..." : "Load more"}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           </section>
 
           <aside className="space-y-4">
-            <div className="rounded-[28px] border border-gray-200 bg-white p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-gray-500">Inspector</div>
-                  <h2 className="mt-1 text-lg font-semibold text-gray-900">{selectedAccount?.name || "No account selected"}</h2>
-                </div>
-                {selectedAccount && canManage ? (
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" type="button" onClick={() => openEditModal(selectedAccount)}>
-                      Edit
-                    </Button>
-                    {!selectedAccount.is_system ? (
-                      <Button variant="outline" type="button" onClick={() => handleDelete(selectedAccount)}>
-                        Delete
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Inspector</div>
               </div>
 
-              {selectedAccount ? (
-                <div className="mt-5 space-y-5">
-                  <div className="flex flex-wrap gap-2">
-                    <Pill>{selectedAccount.code || "—"}</Pill>
-                    <Pill>{sectionLabelMap[selectedAccount.statement_section]}</Pill>
-                    <Pill>{selectedAccount.account_type}</Pill>
-                    <Pill>{selectedAccount.normal_balance}</Pill>
-                    {selectedAccount.is_bank_control ? <Pill>bank control</Pill> : null}
-                    {selectedAccount.allows_manual_posting ? <Pill>manual posting</Pill> : null}
-                    {!selectedAccount.is_active ? <Pill>inactive</Pill> : null}
+              <div className="space-y-4 px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-gray-900">
+                      {selectedAccount?.name || "No account selected"}
+                    </h3>
+                    <p className="mt-1 text-[12px] text-gray-600">
+                      {selectedAccount?.code || "Select an account in the tree to inspect it."}
+                    </p>
                   </div>
 
-                  <dl className="space-y-3 text-sm">
-                    <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
-                      <dt className="text-gray-500">Description</dt>
-                      <dd className="text-gray-900">{selectedAccount.description || "—"}</dd>
+                  {selectedAccount && canManage ? (
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" type="button" size="sm" onClick={() => openEditModal(selectedAccount)}>
+                        Edit
+                      </Button>
+                      {!selectedAccount.is_system ? (
+                        <Button variant="outline" type="button" size="sm" onClick={() => handleDelete(selectedAccount)}>
+                          Delete
+                        </Button>
+                      ) : null}
                     </div>
-                    <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
-                      <dt className="text-gray-500">Path</dt>
-                      <dd className="break-words text-gray-900">{selectedAccount.path || "—"}</dd>
-                    </div>
-                    <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
-                      <dt className="text-gray-500">Group</dt>
-                      <dd className="text-gray-900">{selectedAccount.report_group || "—"}</dd>
-                    </div>
-                    <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
-                      <dt className="text-gray-500">Subgroup</dt>
-                      <dd className="text-gray-900">{selectedAccount.report_subgroup || "—"}</dd>
-                    </div>
-                    <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
-                      <dt className="text-gray-500">External ref</dt>
-                      <dd className="text-gray-900">{selectedAccount.external_ref || "—"}</dd>
-                    </div>
-                    <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3">
-                      <dt className="text-gray-500">Currency</dt>
-                      <dd className="text-gray-900">{selectedAccount.currency_code || "—"}</dd>
-                    </div>
-                  </dl>
+                  ) : null}
                 </div>
-              ) : (
-                <div className="mt-4 rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-sm text-gray-500">
-                  Select an account in the tree to inspect its accounting properties.
-                </div>
-              )}
-            </div>
+
+                {selectedAccount ? (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusPill>{selectedAccount.code || "—"}</StatusPill>
+                      <StatusPill>{sectionLabelMap[selectedAccount.statement_section]}</StatusPill>
+                      <StatusPill>{selectedAccount.account_type}</StatusPill>
+                      <StatusPill>{selectedAccount.normal_balance}</StatusPill>
+                      {selectedAccount.is_bank_control ? <StatusPill>Bank control</StatusPill> : null}
+                      {selectedAccount.allows_manual_posting ? <StatusPill>Manual posting</StatusPill> : null}
+                      {!selectedAccount.is_active ? <StatusPill>Inactive</StatusPill> : null}
+                    </div>
+
+                    <dl className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+                      {[
+                        ["Description", selectedAccount.description || "—"],
+                        ["Path", selectedAccount.path || "—"],
+                        ["Group", selectedAccount.report_group || "—"],
+                        ["Subgroup", selectedAccount.report_subgroup || "—"],
+                        ["External ref", selectedAccount.external_ref || "—"],
+                        ["Currency", selectedAccount.currency_code || "—"],
+                      ].map(([label, value]) => (
+                        <div key={label} className="flex items-start justify-between gap-3 px-4 py-3">
+                          <dt className="text-[10px] uppercase tracking-wide text-gray-600">{label}</dt>
+                          <dd className="max-w-[65%] break-words text-right text-[13px] font-medium text-gray-900">
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-[13px] text-gray-500">
+                    Select an account in the tree to inspect its accounting properties.
+                  </div>
+                )}
+              </div>
+            </section>
 
             {workspaceMode === "rules" ? (
-              <div className="rounded-[28px] border border-gray-200 bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900">Posting controls summary</h3>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                  <MetricCard label="Manual allowed" value={counters.manualAllowed} description="Accounts still open for direct manual posting." />
-                  <MetricCard label="Bank control" value={counters.bankControl} description="Accounts dedicated to bank control and settlement logic." />
-                  <MetricCard label="Active" value={counters.active} description="Active accounts currently available in the chart." />
+              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
                 </div>
-              </div>
+
+                <div className="grid gap-3 px-4 py-4">
+                  <MetricCard
+                    label="Manual allowed"
+                    value={counters.manualAllowed}
+                    description="Accounts still open for direct manual posting."
+                  />
+                  <MetricCard
+                    label="Bank control"
+                    value={counters.bankControl}
+                    description="Accounts dedicated to settlement and bank control."
+                  />
+                  <MetricCard
+                    label="Active"
+                    value={counters.active}
+                    description="Accounts currently available in the chart."
+                  />
+                </div>
+              </section>
             ) : null}
 
             {workspaceMode === "reporting" ? (
-              <div className="rounded-[28px] border border-gray-200 bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900">Reporting coverage</h3>
-                <p className="mt-1 text-sm text-gray-600">Mapped accounts and dominant reporting groups in the current slice.</p>
-
-                <div className="mt-4 grid gap-4">
-                  <MetricCard label="Mapped accounts" value={counters.reportingMapped} description="Accounts with report group or subgroup assigned." />
+              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting coverage</div>
                 </div>
 
-                <div className="mt-5 space-y-3">
-                  {reportingGroups.length ? (
-                    reportingGroups.slice(0, 6).map(([group, count]) => (
-                      <div key={group} className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 px-3 py-2.5">
-                        <span className="truncate text-sm text-gray-700">{group}</span>
-                        <span className="shrink-0 text-sm font-semibold text-gray-900">{count}</span>
+                <div className="space-y-4 px-4 py-4">
+                  <MetricCard
+                    label="Mapped accounts"
+                    value={counters.reportingMapped}
+                    description="Accounts with report group or subgroup assigned."
+                  />
+
+                  <div className="space-y-2">
+                    {reportingGroups.length ? (
+                      reportingGroups.slice(0, 6).map(([group, count]) => (
+                        <div
+                          key={group}
+                          className="flex items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2.5"
+                        >
+                          <span className="truncate text-[13px] text-gray-700">{group}</span>
+                          <span className="shrink-0 text-[13px] font-semibold text-gray-900">{count}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-[13px] text-gray-500">
+                        No reporting groups found.
                       </div>
-                    ))
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-500">
-                      No reporting groups found.
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              </section>
             ) : null}
           </aside>
         </section>
-      </div>
+      </section>
 
       <AccountingSideModal
         isOpen={modalOpen}
@@ -948,187 +1045,234 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
         subtitle="Maintain structure, posting rules, and reporting classification from a dedicated side modal."
         contentClassName="pb-4 md:pb-6"
       >
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="space-y-5">
-            <section className="rounded-3xl border border-gray-200 bg-white p-4">
-              <div className="mb-4 text-sm font-semibold text-gray-900">Identity</div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input kind="text" label="Code" value={form.code} onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value }))} />
-                <Input kind="text" label="Name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
-              </div>
-              <div className="mt-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">Identity</div>
+            </div>
+
+            <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
+              <Input
+                kind="text"
+                label="Code"
+                value={form.code}
+                onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
+              />
+              <Input
+                kind="text"
+                label="Name"
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+              />
+              <div className="sm:col-span-2">
                 <Input
                   kind="text"
                   label="Description"
                   value={form.description || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, description: event.target.value }))
+                  }
                 />
               </div>
-            </section>
+            </div>
+          </section>
 
-            <section className="rounded-3xl border border-gray-200 bg-white p-4">
-              <div className="mb-4 text-sm font-semibold text-gray-900">Structure</div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <SelectDropdown<Option<LedgerAccountType>>
-                  label="Account type"
-                  items={accountTypeOptions}
-                  selected={selectedFormAccountType}
-                  onChange={(items: Option<LedgerAccountType>[]) =>
-                    setForm((prev) => ({ ...prev, account_type: items[0]?.value ?? "posting" }))
-                  }
-                  getItemKey={optionKey}
-                  getItemLabel={optionLabel}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel="Select type"
-                />
-                <SelectDropdown<Option<LedgerStatementSection>>
-                  label="Statement section"
-                  items={sectionOptions}
-                  selected={selectedFormSection}
-                  onChange={(items: Option<LedgerStatementSection>[]) =>
-                    setForm((prev) => ({ ...prev, statement_section: items[0]?.value ?? "expense" }))
-                  }
-                  getItemKey={optionKey}
-                  getItemLabel={optionLabel}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel="Select section"
-                />
-              </div>
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">Structure</div>
+            </div>
 
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <SelectDropdown<Option<LedgerNormalBalance>>
-                  label="Normal balance"
-                  items={balanceOptions}
-                  selected={selectedFormBalance}
-                  onChange={(items: Option<LedgerNormalBalance>[]) =>
-                    setForm((prev) => ({ ...prev, normal_balance: items[0]?.value ?? "debit" }))
-                  }
-                  getItemKey={optionKey}
-                  getItemLabel={optionLabel}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel="Select balance"
-                />
-                <SelectDropdown<{ label: string; value: string }>
-                  label="Parent account"
-                  items={parentOptions}
-                  selected={selectedParent}
-                  onChange={(items: Array<{ label: string; value: string }>) =>
-                    setForm((prev) => ({ ...prev, parent_id: items[0]?.value ?? null }))
-                  }
-                  getItemKey={(item: { label: string; value: string }) => item.value}
-                  getItemLabel={(item: { label: string; value: string }) => item.label}
-                  singleSelect
-                  hideCheckboxes
-                  buttonLabel="Optional parent"
-                />
-              </div>
-            </section>
+            <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
+              <SelectDropdown<Option<LedgerAccountType>>
+                label="Account type"
+                items={accountTypeOptions}
+                selected={selectedFormAccountType}
+                onChange={(items: Option<LedgerAccountType>[]) =>
+                  setForm((prev) => ({ ...prev, account_type: items[0]?.value ?? "posting" }))
+                }
+                getItemKey={optionKey}
+                getItemLabel={optionLabel}
+                singleSelect
+                hideCheckboxes
+                buttonLabel="Select type"
+              />
 
-            <section className="rounded-3xl border border-gray-200 bg-white p-4">
-              <div className="mb-4 text-sm font-semibold text-gray-900">Posting and controls</div>
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800">
-                  <Checkbox
-                    checked={!!form.is_active}
-                    onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
-                    size="small"
-                  />
-                  <span className="font-medium">Active</span>
+              <SelectDropdown<Option<LedgerStatementSection>>
+                label="Statement section"
+                items={sectionOptions}
+                selected={selectedFormSection}
+                onChange={(items: Option<LedgerStatementSection>[]) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    statement_section: items[0]?.value ?? "expense",
+                  }))
+                }
+                getItemKey={optionKey}
+                getItemLabel={optionLabel}
+                singleSelect
+                hideCheckboxes
+                buttonLabel="Select section"
+              />
+
+              <SelectDropdown<Option<LedgerNormalBalance>>
+                label="Normal balance"
+                items={balanceOptions}
+                selected={selectedFormBalance}
+                onChange={(items: Option<LedgerNormalBalance>[]) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    normal_balance: items[0]?.value ?? "debit",
+                  }))
+                }
+                getItemKey={optionKey}
+                getItemLabel={optionLabel}
+                singleSelect
+                hideCheckboxes
+                buttonLabel="Select balance"
+              />
+
+              <SelectDropdown<{ label: string; value: string }>
+                label="Parent account"
+                items={parentOptions}
+                selected={selectedParent}
+                onChange={(items: Array<{ label: string; value: string }>) =>
+                  setForm((prev) => ({ ...prev, parent_id: items[0]?.value ?? null }))
+                }
+                getItemKey={(item: { label: string; value: string }) => item.value}
+                getItemLabel={(item: { label: string; value: string }) => item.label}
+                singleSelect
+                hideCheckboxes
+                buttonLabel="Optional parent"
+              />
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
+            </div>
+
+            <div className="space-y-3 px-4 py-4">
+              <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-800">
+                <Checkbox
+                  checked={!!form.is_active}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, is_active: event.target.checked }))
+                  }
+                  size="small"
+                />
+                <span className="font-medium text-gray-900">Active</span>
+              </label>
+
+              <label
+                className={[
+                  "flex items-center gap-3 rounded-md border px-3 py-3 text-[13px]",
+                  form.account_type !== "posting"
+                    ? "border-gray-100 bg-gray-50 text-gray-400"
+                    : "border-gray-200 bg-white text-gray-800",
+                ].join(" ")}
+              >
+                <Checkbox
+                  checked={!!form.is_bank_control}
+                  disabled={form.account_type !== "posting"}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, is_bank_control: event.target.checked }))
+                  }
+                  size="small"
+                />
+                <span className="font-medium">Bank control</span>
+              </label>
+
+              <label
+                className={[
+                  "flex items-center gap-3 rounded-md border px-3 py-3 text-[13px]",
+                  form.account_type !== "posting"
+                    ? "border-gray-100 bg-gray-50 text-gray-400"
+                    : "border-gray-200 bg-white text-gray-800",
+                ].join(" ")}
+              >
+                <Checkbox
+                  checked={!!form.allows_manual_posting}
+                  disabled={form.account_type !== "posting"}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      allows_manual_posting: event.target.checked,
+                    }))
+                  }
+                  size="small"
+                />
+                <span className="font-medium">Manual posting allowed</span>
+              </label>
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting and integrations</div>
+            </div>
+
+            <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
+              <Input
+                kind="text"
+                label="Report group"
+                value={form.report_group || ""}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, report_group: event.target.value }))
+                }
+              />
+              <Input
+                kind="text"
+                label="Report subgroup"
+                value={form.report_subgroup || ""}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, report_subgroup: event.target.value }))
+                }
+              />
+              <Input
+                kind="text"
+                label="External reference"
+                value={form.external_ref || ""}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, external_ref: event.target.value }))
+                }
+              />
+              <Input
+                kind="text"
+                label="Currency"
+                value={form.currency_code || ""}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, currency_code: event.target.value }))
+                }
+              />
+
+              <div className="sm:col-span-2">
+                <label className="mb-2 block text-[12px] font-semibold text-gray-700">
+                  Metadata JSON
                 </label>
-
-                <label
-                  className={[
-                    "flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm",
-                    form.account_type !== "posting"
-                      ? "border-gray-100 bg-gray-50 text-gray-400"
-                      : "border-gray-200 bg-white text-gray-800",
-                  ].join(" ")}
-                >
-                  <Checkbox
-                    checked={!!form.is_bank_control}
-                    disabled={form.account_type !== "posting"}
-                    onChange={(e) => setForm((prev) => ({ ...prev, is_bank_control: e.target.checked }))}
-                    size="small"
-                  />
-                  <span className="font-medium">Bank control</span>
-                </label>
-
-                <label
-                  className={[
-                    "flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm",
-                    form.account_type !== "posting"
-                      ? "border-gray-100 bg-gray-50 text-gray-400"
-                      : "border-gray-200 bg-white text-gray-800",
-                  ].join(" ")}
-                >
-                  <Checkbox
-                    checked={!!form.allows_manual_posting}
-                    disabled={form.account_type !== "posting"}
-                    onChange={(e) => setForm((prev) => ({ ...prev, allows_manual_posting: e.target.checked }))}
-                    size="small"
-                  />
-                  <span className="font-medium">Manual posting allowed</span>
-                </label>
-              </div>
-            </section>
-
-            <section className="rounded-3xl border border-gray-200 bg-white p-4">
-              <div className="mb-4 text-sm font-semibold text-gray-900">Reporting and integrations</div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  kind="text"
-                  label="Report group"
-                  value={form.report_group || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, report_group: e.target.value }))}
-                />
-                <Input
-                  kind="text"
-                  label="Report subgroup"
-                  value={form.report_subgroup || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, report_subgroup: e.target.value }))}
-                />
-                <Input
-                  kind="text"
-                  label="External reference"
-                  value={form.external_ref || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, external_ref: e.target.value }))}
-                />
-                <Input
-                  kind="text"
-                  label="Currency"
-                  value={form.currency_code || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, currency_code: e.target.value }))}
-                />
-              </div>
-
-              <div className="mt-4">
-                <label className="mb-2 block text-sm font-medium text-gray-700">Metadata JSON</label>
                 <textarea
                   value={metadataText}
-                  onChange={(e) => setMetadataText(e.target.value)}
-                  className="min-h-[180px] w-full rounded-2xl border border-gray-300 bg-white px-3 py-3 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+                  onChange={(event) => setMetadataText(event.target.value)}
+                  className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
                 />
               </div>
-            </section>
+            </div>
+          </section>
 
-            <div>
-              {modalError ? (
-                <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {modalError}
-                </div>
-              ) : null}
-
-              <div className="flex items-center justify-end gap-3">
-                <Button type="button" variant="outline" onClick={closeModal}>
-                  Cancel
-                </Button>
-                <Button disabled={saving} type="submit" className="border border-gray-900 bg-gray-900 text-white hover:bg-black">
-                  {saving ? "Saving..." : modalMode === "create" ? "Create account" : "Save changes"}
-                </Button>
+          <div>
+            {modalError ? (
+              <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+                {modalError}
               </div>
+            ) : null}
+
+            <div className="flex items-center justify-end gap-3">
+              <Button type="button" variant="outline" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button disabled={saving} type="submit">
+                {saving ? "Saving..." : modalMode === "create" ? "Create account" : "Save changes"}
+              </Button>
             </div>
           </div>
         </form>
@@ -1146,7 +1290,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
           showCloseButton
         />
       ) : null}
-    </main>
+    </>
   );
 };
 

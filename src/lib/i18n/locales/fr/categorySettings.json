@@ -1,0 +1,79 @@
+{
+  "common": {
+    "yes": "Oui",
+    "no": "Non",
+    "empty": "—"
+  },
+  "header": {
+    "eyebrow": "Paramètres de trésorerie",
+    "title": "Catégories",
+    "description": "Gérer les catégories opérationnelles qui classent les flux de trésorerie et servent de couche de liaison pour les règles de comptabilisation."
+  },
+  "stats": {
+    "total": "Total",
+    "totalHelp": "Catégories disponibles dans cette organisation.",
+    "active": "Actives",
+    "activeHelp": "Catégories activées pour l’usage opérationnel.",
+    "credit": "Indice crédit",
+    "creditHelp": "Catégories orientées vers les flux entrants.",
+    "debit": "Indice débit",
+    "debitHelp": "Catégories orientées vers les flux sortants."
+  },
+  "filters": {
+    "search": "Recherche",
+    "transactionHint": "Indice de transaction",
+    "includeInactive": "Inclure les inactives",
+    "any": "Tous",
+    "credit": "Crédit",
+    "debit": "Débit"
+  },
+  "table": {
+    "code": "Code",
+    "name": "Nom",
+    "parent": "Parent",
+    "txHint": "Indice",
+    "entries": "Écritures",
+    "sort": "Ordre",
+    "active": "Active",
+    "actions": "Actions",
+    "empty": "Aucune catégorie trouvée."
+  },
+  "modal": {
+    "createTitle": "Nouvelle catégorie",
+    "editTitle": "Modifier la catégorie",
+    "subtitle": "Définir la catégorie opérationnelle utilisée dans la classification de trésorerie et le mapping des règles comptables.",
+    "code": "Code",
+    "name": "Nom",
+    "description": "Description",
+    "parent": "Catégorie parente",
+    "noParent": "Aucun parent",
+    "txHint": "Indice de transaction",
+    "noHint": "Aucun indice",
+    "sortOrder": "Ordre",
+    "active": "Active",
+    "metadata": "Métadonnées (JSON)"
+  },
+  "actions": {
+    "new": "Nouvelle catégorie",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleting": "Suppression...",
+    "cancel": "Annuler",
+    "saving": "Enregistrement...",
+    "saveChanges": "Enregistrer les modifications",
+    "createCategory": "Créer la catégorie"
+  },
+  "feedback": {
+    "loadError": "Impossible de charger les catégories de trésorerie.",
+    "nameRequired": "Le nom est obligatoire.",
+    "invalidJson": "Les métadonnées doivent être un JSON valide.",
+    "created": "Catégorie créée.",
+    "updated": "Catégorie mise à jour.",
+    "deleted": "Catégorie supprimée.",
+    "saveError": "Impossible d’enregistrer la catégorie.",
+    "deleteError": "Impossible de supprimer la catégorie.",
+    "deleteConfirm": "Supprimer la catégorie {{name}} ?"
+  }
+}

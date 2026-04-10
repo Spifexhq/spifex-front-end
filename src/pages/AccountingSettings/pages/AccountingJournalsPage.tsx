@@ -76,6 +76,24 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function MetricCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <article className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
+    </article>
+  );
+}
+
 const EMPTY_FORM: ManualJournalForm = {
   book_id: "",
   source_type: "manual",
@@ -106,6 +124,19 @@ const AccountingJournalsPage: React.FC = () => {
     [books, form.book_id]
   );
 
+  const totals = React.useMemo(() => {
+    return form.lines.reduce(
+      (acc, line) => {
+        acc.debit += Math.max(0, toMinor(line.debit));
+        acc.credit += Math.max(0, toMinor(line.credit));
+        return acc;
+      },
+      { debit: 0, credit: 0 }
+    );
+  }, [form.lines]);
+
+  const balanced = totals.debit === totals.credit && totals.debit > 0;
+
   const load = React.useCallback(async () => {
     try {
       setLoading(true);
@@ -132,16 +163,18 @@ const AccountingJournalsPage: React.FC = () => {
 
       const [booksResponse, allAccounts] = await Promise.all([
         api.getAccountingBooks(),
-        fetchAllCursor<LedgerAccount>((p?: { cursor?: string }) =>
+        fetchAllCursor<LedgerAccount>((params?: { cursor?: string }) =>
           api.getLedgerAccounts({
-            cursor: p?.cursor,
+            cursor: params?.cursor,
             active: "true",
             account_type: "posting",
           })
         ),
       ]);
 
-      setBooks(extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse));
+      setBooks(
+        extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse)
+      );
       setLedgerAccounts(allAccounts);
     } catch {
       setSnackbar({ severity: "error", message: "Failed to load manual journal form lookups." });
@@ -158,8 +191,8 @@ const AccountingJournalsPage: React.FC = () => {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     const validLines = form.lines.filter((line) => line.account_id && (line.debit || line.credit));
     if (!form.book_id || !form.document_date || !form.posting_date || !validLines.length) {
@@ -215,73 +248,118 @@ const AccountingJournalsPage: React.FC = () => {
 
   return (
     <>
-      <section className="rounded-[28px] border border-gray-200 bg-white p-5 sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Journals</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Inspect accounting output, create manual journals, and reverse posted entries.
-            </p>
+      <section className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Journals</div>
           </div>
 
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[240px]">
-              <Input kind="text" label="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-[16px] font-semibold text-gray-900">Journal control</h2>
+                <p className="mt-1 text-[13px] leading-6 text-gray-600">
+                  Inspect accounting output, create controlled manual entries, and reverse
+                  posted journals that require correction.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="min-w-[240px]">
+                  <Input
+                    kind="text"
+                    label="Search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </div>
+                <Button type="button" variant="outline" onClick={() => void load()}>
+                  Apply
+                </Button>
+                <Button type="button" onClick={() => void openManualJournal()}>
+                  Manual journal
+                </Button>
+              </div>
             </div>
-            <Button type="button" variant="outline" onClick={() => void load()}>
-              Apply
-            </Button>
-            <Button type="button" onClick={() => void openManualJournal()}>
-              Manual journal
-            </Button>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <MetricCard
+                label="Entries"
+                value={items.length}
+                detail="Journals visible in the current search slice."
+              />
+              <MetricCard
+                label="Reversed"
+                value={items.filter((item) => item.status === "reversed").length}
+                detail="Entries already reversed."
+              />
+              <MetricCard
+                label="Lines"
+                value={items.reduce((sum, item) => sum + (Array.isArray(item.lines) ? item.lines.length : 0), 0)}
+                detail="Total journal lines across visible entries."
+              />
+            </div>
           </div>
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-gray-200">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
-                <th className="px-4 py-3">Entry</th>
-                <th className="px-4 py-3">Book</th>
-                <th className="px-4 py-3">Source</th>
-                <th className="px-4 py-3">Posting date</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Lines</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.entry_number || item.id}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.book_code}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.source_type}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.posting_date}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{item.status}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{Array.isArray(item.lines) ? item.lines.length : 0}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={reversingId === item.id}
-                      onClick={() => void reverseJournal(item.id)}
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">Journal list</div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200 text-left">
+                  {["Entry", "Book", "Source", "Posting date", "Status", "Lines", "Actions"].map((column) => (
+                    <th
+                      key={column}
+                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
                     >
-                      {reversingId === item.id ? "Reversing..." : "Reverse"}
-                    </Button>
-                  </td>
+                      {column}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-              {!items.length ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-500">
-                    No journals found.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
+                    <td className="px-4 py-3 text-[13px] font-medium text-gray-900">
+                      {item.entry_number || item.id}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.book_code || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.source_type || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.posting_date || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.status || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">
+                      {Array.isArray(item.lines) ? item.lines.length : 0}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={reversingId === item.id}
+                        onClick={() => void reverseJournal(item.id)}
+                      >
+                        {reversingId === item.id ? "Reversing..." : "Reverse"}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+
+                {!items.length ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
+                      No journals found.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {snackbar ? (
           <Snackbar
@@ -301,171 +379,220 @@ const AccountingJournalsPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Manual journal"
-        subtitle="Create a manual accounting entry with balanced debit and credit lines."
+        subtitle="Create a controlled accounting entry with balanced debit and credit lines."
       >
         {lookupsLoading ? (
           <PageSkeleton rows={5} />
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <SelectDropdown<AccountingBook>
-                label="Book"
-                items={books}
-                selected={selectedBook}
-                onChange={(selected: AccountingBook[]) =>
-                  setForm((p) => ({
-                    ...p,
-                    book_id: selected[0]?.id ?? "",
-                  }))
-                }
-                getItemKey={(book: AccountingBook) => book.id}
-                getItemLabel={(book: AccountingBook) => [book.code, book.name].filter(Boolean).join(" — ")}
-                buttonLabel="Select book"
-                singleSelect
-                hideCheckboxes
-              />
+          <form onSubmit={submit} className="space-y-5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Journal header</div>
+              </div>
 
-              <Input
-                kind="text"
-                label="Currency"
-                value={form.currency_code}
-                onChange={(e) => setForm((p) => ({ ...p, currency_code: e.target.value.toUpperCase() }))}
-              />
-            </div>
+              <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
+                <SelectDropdown<AccountingBook>
+                  label="Book"
+                  items={books}
+                  selected={selectedBook}
+                  onChange={(selected: AccountingBook[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      book_id: selected[0]?.id ?? "",
+                    }))
+                  }
+                  getItemKey={(book: AccountingBook) => book.id}
+                  getItemLabel={(book: AccountingBook) =>
+                    [book.code, book.name].filter(Boolean).join(" — ")
+                  }
+                  buttonLabel="Select book"
+                  singleSelect
+                  hideCheckboxes
+                />
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input
-                kind="date"
-                label="Document date"
-                value={form.document_date}
-                onValueChange={(v: string) => setForm((p) => ({ ...p, document_date: v }))}
-              />
-              <Input
-                kind="date"
-                label="Posting date"
-                value={form.posting_date}
-                onValueChange={(v: string) => setForm((p) => ({ ...p, posting_date: v }))}
-              />
-            </div>
+                <Input
+                  kind="text"
+                  label="Currency"
+                  value={form.currency_code}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      currency_code: event.target.value.toUpperCase(),
+                    }))
+                  }
+                />
 
-            <Input
-              kind="text"
-              label="Memo"
-              value={form.memo}
-              onChange={(e) => setForm((p) => ({ ...p, memo: e.target.value }))}
-            />
+                <Input
+                  kind="date"
+                  label="Document date"
+                  value={form.document_date}
+                  onValueChange={(value: string) =>
+                    setForm((prev) => ({ ...prev, document_date: value }))
+                  }
+                />
 
-            <div className="space-y-3">
-              {form.lines.map((line, index) => {
-                const selectedLineAccount = ledgerAccounts.filter((account) => account.id === line.account_id);
+                <Input
+                  kind="date"
+                  label="Posting date"
+                  value={form.posting_date}
+                  onValueChange={(value: string) =>
+                    setForm((prev) => ({ ...prev, posting_date: value }))
+                  }
+                />
 
-                return (
-                  <div key={index} className="rounded-2xl border border-gray-200 bg-white p-4">
-                    <div className="grid gap-4 md:grid-cols-[1.8fr_1fr_1fr]">
-                      <SelectDropdown<LedgerAccount>
-                        label="Account"
-                        items={ledgerAccounts}
-                        selected={selectedLineAccount}
-                        onChange={(selected: LedgerAccount[]) =>
-                          setForm((p) => ({
-                            ...p,
-                            lines: p.lines.map((row, rowIndex) =>
-                              rowIndex === index
-                                ? { ...row, account_id: selected[0]?.id ?? "" }
-                                : row
-                            ),
-                          }))
-                        }
-                        getItemKey={(account: LedgerAccount) => account.id}
-                        getItemLabel={(account: LedgerAccount) => [account.code, account.name].filter(Boolean).join(" — ")}
-                        buttonLabel="Select account"
-                        singleSelect
-                        hideCheckboxes
-                      />
+                <div className="md:col-span-2">
+                  <Input
+                    kind="text"
+                    label="Memo"
+                    value={form.memo}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, memo: event.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+            </section>
 
-                      <Input
-                        kind="amount"
-                        label="Debit"
-                        value={line.debit}
-                        onValueChange={(v: string) =>
-                          setForm((p) => ({
-                            ...p,
-                            lines: p.lines.map((row, rowIndex) =>
-                              rowIndex === index ? { ...row, debit: v } : row
-                            ),
-                          }))
-                        }
-                        zeroAsEmpty
-                      />
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Journal lines</div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        lines: [...prev.lines, { account_id: "", debit: "", credit: "", memo: "" }],
+                      }))
+                    }
+                  >
+                    Add line
+                  </Button>
+                </div>
+              </div>
 
-                      <Input
-                        kind="amount"
-                        label="Credit"
-                        value={line.credit}
-                        onValueChange={(v: string) =>
-                          setForm((p) => ({
-                            ...p,
-                            lines: p.lines.map((row, rowIndex) =>
-                              rowIndex === index ? { ...row, credit: v } : row
-                            ),
-                          }))
-                        }
-                        zeroAsEmpty
-                      />
-                    </div>
+              <div className="space-y-4 px-4 py-4">
+                {form.lines.map((line, index) => {
+                  const selectedLineAccount = ledgerAccounts.filter((account) => account.id === line.account_id);
 
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <Input
-                          kind="text"
-                          label="Line memo"
-                          value={line.memo}
-                          onChange={(e) =>
-                            setForm((p) => ({
-                              ...p,
-                              lines: p.lines.map((row, rowIndex) =>
-                                rowIndex === index ? { ...row, memo: e.target.value } : row
+                  return (
+                    <article key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="grid gap-4 md:grid-cols-[1.8fr_1fr_1fr]">
+                        <SelectDropdown<LedgerAccount>
+                          label="Account"
+                          items={ledgerAccounts}
+                          selected={selectedLineAccount}
+                          onChange={(selected: LedgerAccount[]) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              lines: prev.lines.map((row, rowIndex) =>
+                                rowIndex === index
+                                  ? { ...row, account_id: selected[0]?.id ?? "" }
+                                  : row
                               ),
                             }))
                           }
+                          getItemKey={(account: LedgerAccount) => account.id}
+                          getItemLabel={(account: LedgerAccount) =>
+                            [account.code, account.name].filter(Boolean).join(" — ")
+                          }
+                          buttonLabel="Select account"
+                          singleSelect
+                          hideCheckboxes
+                        />
+
+                        <Input
+                          kind="amount"
+                          label="Debit"
+                          value={line.debit}
+                          onValueChange={(value: string) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              lines: prev.lines.map((row, rowIndex) =>
+                                rowIndex === index ? { ...row, debit: value } : row
+                              ),
+                            }))
+                          }
+                          zeroAsEmpty
+                        />
+
+                        <Input
+                          kind="amount"
+                          label="Credit"
+                          value={line.credit}
+                          onValueChange={(value: string) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              lines: prev.lines.map((row, rowIndex) =>
+                                rowIndex === index ? { ...row, credit: value } : row
+                              ),
+                            }))
+                          }
+                          zeroAsEmpty
                         />
                       </div>
 
-                      {form.lines.length > 1 ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setForm((p) => ({
-                              ...p,
-                              lines: p.lines.filter((_, rowIndex) => rowIndex !== index),
-                            }))
-                          }
-                        >
-                          Remove
-                        </Button>
-                      ) : null}
-                    </div>
+                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div className="min-w-0 flex-1">
+                          <Input
+                            kind="text"
+                            label="Line memo"
+                            value={line.memo}
+                            onChange={(event) =>
+                              setForm((prev) => ({
+                                ...prev,
+                                lines: prev.lines.map((row, rowIndex) =>
+                                  rowIndex === index ? { ...row, memo: event.target.value } : row
+                                ),
+                              }))
+                            }
+                          />
+                        </div>
+
+                        {form.lines.length > 1 ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                lines: prev.lines.filter((_, rowIndex) => rowIndex !== index),
+                              }))
+                            }
+                          >
+                            Remove
+                          </Button>
+                        ) : null}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Debit total</div>
+                  <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.debit / 100).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Credit total</div>
+                  <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.credit / 100).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Balance</div>
+                  <div className="mt-1 text-[13px] font-medium text-gray-900">
+                    {balanced ? "Balanced" : "Unbalanced"}
                   </div>
-                );
-              })}
+                </div>
+              </div>
+            </section>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setForm((p) => ({
-                    ...p,
-                    lines: [...p.lines, { account_id: "", debit: "", credit: "", memo: "" }],
-                  }))
-                }
-              >
-                Add line
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2 pb-4 md:pb-6">
+            <div className="flex items-center justify-end gap-3 pt-1">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancel
               </Button>
