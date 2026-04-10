@@ -17,6 +17,7 @@ export type GetCashflowCategoriesParams = {
   search?: string;
   parent_id?: string;
   tx_type_hint?: "credit" | "debit";
+  active?: "true" | "false";
 };
 
 export type GetCashflowCategoriesResponse = CashflowCategory[];
