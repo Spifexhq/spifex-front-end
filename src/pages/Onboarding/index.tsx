@@ -6,7 +6,7 @@ import {
   Building2,
   CheckCircle2,
   CreditCard,
-  FolderTree,
+  ListTree,
   RefreshCcw,
   UserRound,
 } from "lucide-react";
@@ -797,7 +797,7 @@ const OnboardingPage: React.FC = () => {
                             defaultValue:
                               "At least one active operational category is required so entries can be classified before accounting consumes them.",
                           })}
-                          icon={<FolderTree className="h-4 w-4" />}
+                          icon={<ListTree className="h-4 w-4" />}
                         />
 
                         {!categoriesDone ? (
@@ -815,7 +815,7 @@ const OnboardingPage: React.FC = () => {
                                 onClick={() => navigate(CATEGORY_SETTINGS_PATH)}
                               >
                                 <span className="inline-flex items-center gap-2">
-                                  <FolderTree className="h-4 w-4" />
+                                  <ListTree className="h-4 w-4" />
                                   <span>
                                     {t("accounting.openCategorySettings", {
                                       defaultValue: "Open category settings",
@@ -856,7 +856,7 @@ const OnboardingPage: React.FC = () => {
                           done={categoriesDone}
                           title={t("accounting.categoriesTitle", { defaultValue: "Cashflow categories" })}
                           description={categoriesDone ? "Configured" : "Still required"}
-                          icon={<FolderTree className="h-4 w-4" />}
+                          icon={<ListTree className="h-4 w-4" />}
                         />
                       </div>
                     </div>
