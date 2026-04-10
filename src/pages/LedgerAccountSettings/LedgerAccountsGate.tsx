@@ -1,7 +1,7 @@
-// src\pages\LedgerAccountSettings\LedgerAccountsGate.tsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Building2, FileUser } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
@@ -20,7 +20,11 @@ type Snack =
   | null;
 
 type SetupMode = "csv" | "manual" | "standard" | null;
-type TemplateOption = { label: string; value: "personal" | "organizational" };
+type TemplateOption = {
+  label: string;
+  value: "personal" | "organizational";
+  icon: React.ReactNode;
+};
 
 type Props = {
   ledgerMode: LedgerMode;
@@ -33,6 +37,7 @@ type Props = {
 
 const templateKey = (item: TemplateOption) => item.value;
 const templateLabel = (item: TemplateOption) => item.label;
+const templateIcon = (item: TemplateOption) => item.icon;
 
 const SetupOptionCard = ({
   title,
@@ -105,10 +110,12 @@ const LedgerAccountsGate: React.FC<Props> = ({
       {
         label: t("setup.templatePersonal", "Personal starter template"),
         value: "personal",
+        icon: <FileUser className="h-4 w-4" />,
       },
       {
         label: t("setup.templateOrganizational", "Organizational starter template"),
         value: "organizational",
+        icon: <Building2 className="h-4 w-4" />,
       },
     ],
     [t]
@@ -288,6 +295,7 @@ const LedgerAccountsGate: React.FC<Props> = ({
                   }
                   getItemKey={templateKey}
                   getItemLabel={templateLabel}
+                  getItemIcon={templateIcon}
                   singleSelect
                   hideCheckboxes
                   buttonLabel={t("setup.templateLabel", "Template")}

@@ -1,4 +1,3 @@
-// src/components/ui/SelectDropdown.tsx
 import {
   useState,
   useRef,
@@ -15,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import { SelectDropdownProps } from "./SelectDropdown.types";
 import Checkbox from "@/shared/ui/Checkbox";
 
-/** Helper simples sem dependências externas */
 function cn(...classes: Array<string | undefined | false | null>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -42,6 +40,7 @@ function SelectDropdown<T>({
   onChange,
   getItemKey,
   getItemLabel,
+  getItemIcon,
   buttonLabel,
   disabled = false,
   singleSelect = false,
@@ -51,8 +50,6 @@ function SelectDropdown<T>({
   hideCheckboxes = false,
   hideFilter = false,
   size = "md",
-
-  // Virtualization
   virtualize = true,
   virtualThreshold = 300,
   virtualRowHeight,
@@ -69,6 +66,10 @@ function SelectDropdown<T>({
       filterInput: string;
       item: string;
       rowHeight: number;
+      iconBox: string;
+      iconSize: string;
+      triggerIconBox: string;
+      triggerIconSize: string;
     }
   > = {
     xs: {
@@ -79,6 +80,10 @@ function SelectDropdown<T>({
       filterInput: "h-7 pl-7 pr-2 text-[11px]",
       item: "px-2.5 py-2 text-[11px]",
       rowHeight: 32,
+      iconBox: "h-5 w-5",
+      iconSize: "h-3.5 w-3.5",
+      triggerIconBox: "h-4.5 w-4.5",
+      triggerIconSize: "h-3.5 w-3.5",
     },
     sm: {
       trigger: "h-8 px-3 text-xs",
@@ -88,6 +93,10 @@ function SelectDropdown<T>({
       filterInput: "h-7.5 pl-7 pr-2 text-[12px]",
       item: "px-3 py-2 text-xs",
       rowHeight: 34,
+      iconBox: "h-5 w-5",
+      iconSize: "h-3.5 w-3.5",
+      triggerIconBox: "h-5 w-5",
+      triggerIconSize: "h-3.5 w-3.5",
     },
     md: {
       trigger: "h-10 px-3 text-xs",
@@ -97,6 +106,10 @@ function SelectDropdown<T>({
       filterInput: "h-8 pl-7 pr-2 text-[12px]",
       item: "px-3 py-2.5 text-xs",
       rowHeight: 36,
+      iconBox: "h-6 w-6",
+      iconSize: "h-4 w-4",
+      triggerIconBox: "h-5.5 w-5.5",
+      triggerIconSize: "h-4 w-4",
     },
     lg: {
       trigger: "h-11 px-4 text-[13px]",
@@ -106,6 +119,10 @@ function SelectDropdown<T>({
       filterInput: "h-9 pl-8 pr-3 text-[13px]",
       item: "px-4 py-3 text-[13px]",
       rowHeight: 40,
+      iconBox: "h-6 w-6",
+      iconSize: "h-4 w-4",
+      triggerIconBox: "h-6 w-6",
+      triggerIconSize: "h-4 w-4",
     },
     xl: {
       trigger: "h-12 px-5 text-[15px]",
@@ -115,6 +132,10 @@ function SelectDropdown<T>({
       filterInput: "h-10 pl-9 pr-3 text-[14px]",
       item: "px-5 py-3.5 text-[14px]",
       rowHeight: 44,
+      iconBox: "h-7 w-7",
+      iconSize: "h-4.5 w-4.5",
+      triggerIconBox: "h-6.5 w-6.5",
+      triggerIconSize: "h-4.5 w-4.5",
     },
   };
 
@@ -220,11 +241,9 @@ function SelectDropdown<T>({
     return map;
   }, [flatItems, getItemKey]);
 
-  const lastSourceRef = useRef<"keyboard" | "mouse" | null>(null);
   const suppressMouseUntilTsRef = useRef(0);
 
   const setActiveFrom = (idx: number | null, source: "keyboard" | "mouse") => {
-    lastSourceRef.current = source;
     setActiveIndex(idx);
     if (source === "keyboard") suppressMouseUntilTsRef.current = performance.now() + 120;
   };
@@ -322,7 +341,7 @@ function SelectDropdown<T>({
     };
   }, [isOpen, onChange, clearOnClickOutside, updateFloatingPosition]);
 
-  window.useGlobalEsc(isOpen, () => {
+  window.useGlobalEsc?.(isOpen, () => {
     setIsOpen(false);
     setSearchTerm("");
     setActiveIndex(null);
@@ -364,8 +383,7 @@ function SelectDropdown<T>({
       setHasTopShadow(p.scrollTop > 0);
       setHasBottomShadow(p.scrollHeight - p.clientHeight - p.scrollTop > 1);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, flatItems, selected, getItemKey, flatKeyIndexMap, isMobileViewport, hideFilter, updateFloatingPosition]);
 
   useEffect(() => {
     if (!isOpen || activeIndex == null) return;
@@ -570,6 +588,7 @@ function SelectDropdown<T>({
   const renderItem = (item: T, flatIndex: number) => {
     const k = keyToStr(getItemKey(item));
     const itemLabel = getItemLabel(item);
+    const itemIcon = getItemIcon?.(item);
     const isChecked = selectedKeys.has(k);
     const isActive = activeIndex === flatIndex;
     const optionId = `${id}-opt-${flatIndex}`;
@@ -614,7 +633,22 @@ function SelectDropdown<T>({
             size="small"
           />
         )}
-        <span className="truncate">{itemLabel}</span>
+
+        {itemIcon ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center rounded-md text-gray-500",
+              SIZE[size].iconBox
+            )}
+          >
+            <span className={cn("inline-flex items-center justify-center", SIZE[size].iconSize)}>
+              {itemIcon}
+            </span>
+          </span>
+        ) : null}
+
+        <span className="min-w-0 truncate">{itemLabel}</span>
       </div>
     );
   };
@@ -623,8 +657,11 @@ function SelectDropdown<T>({
     selected.length === 0
       ? buttonLabel || (effectiveSingleSelect ? t("button.single") : t("button.multi"))
       : effectiveSingleSelect
-      ? getItemLabel(selected[0])
-      : `${t("count.selected", { count: selected.length })}`;
+        ? getItemLabel(selected[0])
+        : `${t("count.selected", { count: selected.length })}`;
+
+  const selectedIcon =
+    effectiveSingleSelect && selected.length === 1 ? getItemIcon?.(selected[0]) : null;
 
   const hasGroup = !!groupBy;
   const shouldVirtualize = virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
@@ -847,13 +884,29 @@ function SelectDropdown<T>({
               : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300"
           )}
         >
-          <span
-            className={cn(
-              "truncate text-left",
-              disabled ? "text-gray-400" : hasSelection ? "text-gray-800" : "text-gray-400"
-            )}
-          >
-            {selectedLabel}
+          <span className="flex min-w-0 items-center gap-2 overflow-hidden text-left">
+            {selectedIcon ? (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "inline-flex shrink-0 items-center justify-center rounded-md text-gray-600",
+                  SIZE[size].triggerIconBox
+                )}
+              >
+                <span className={cn("inline-flex items-center justify-center", SIZE[size].triggerIconSize)}>
+                  {selectedIcon}
+                </span>
+              </span>
+            ) : null}
+
+            <span
+              className={cn(
+                "truncate",
+                disabled ? "text-gray-400" : hasSelection ? "text-gray-800" : "text-gray-400"
+              )}
+            >
+              {selectedLabel}
+            </span>
           </span>
 
           <span className="ml-2 flex items-center gap-2">
