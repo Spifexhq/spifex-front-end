@@ -380,6 +380,7 @@ const AccountingJournalsPage: React.FC = () => {
         onClose={() => setModalOpen(false)}
         title="Manual journal"
         subtitle="Create a controlled accounting entry with balanced debit and credit lines."
+        contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
           <PageSkeleton rows={5} />

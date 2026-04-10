@@ -342,6 +342,7 @@ const AccountingBankMappingsPage: React.FC = () => {
         onClose={() => setModalOpen(false)}
         title="Bank mapping"
         subtitle="Choose the operational bank account, accounting book, and bank-control ledger account."
+        contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
           <PageSkeleton rows={4} />

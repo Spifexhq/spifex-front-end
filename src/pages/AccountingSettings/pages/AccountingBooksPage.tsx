@@ -281,6 +281,7 @@ const AccountingBooksPage: React.FC = () => {
         onClose={() => setModalOpen(false)}
         title={form.id ? "Edit accounting book" : "New accounting book"}
         subtitle="Create or update the accounting basis and posting currency."
+        contentClassName="pb-4 md:pb-6"
       >
         <form onSubmit={submit} className="space-y-5">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">

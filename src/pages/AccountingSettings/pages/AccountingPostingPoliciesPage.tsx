@@ -401,6 +401,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         onClose={() => setModalOpen(false)}
         title="Posting policy"
         subtitle="Define how one operational category maps into settlement, accrual, and clearing accounts."
+        contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
           <PageSkeleton rows={5} />
