@@ -1,3 +1,4 @@
+// src\models\settings\categories.ts
 export type CashflowCategory = {
   id: string;
   parent_id: string | null;

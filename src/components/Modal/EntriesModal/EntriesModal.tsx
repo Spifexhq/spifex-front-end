@@ -352,15 +352,20 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       (response as { data?: unknown })?.data ?? response
     );
 
-    const wantedType = type === "credit" ? 1 : -1;
+    const wantedType = type; // "credit" | "debit"
 
     return categories
       .filter((c) => c.is_active !== false)
-      .filter((c) => c.tx_type_hint == null || Number(c.tx_type_hint) === wantedType)
+      .filter((c) => c.tx_type_hint == null || c.tx_type_hint === wantedType)
       .sort((a, b) => {
+        const ao = Number(a.sort_order ?? 0);
+        const bo = Number(b.sort_order ?? 0);
+        if (ao !== bo) return ao - bo;
+
         const ac = a.code || "";
         const bc = b.code || "";
         if (ac && bc && ac !== bc) return ac.localeCompare(bc, "en", { numeric: true });
+
         return (a.name || "").localeCompare(b.name || "", "en");
       });
   }, [type]);
