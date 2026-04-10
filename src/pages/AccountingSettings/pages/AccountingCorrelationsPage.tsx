@@ -845,6 +845,14 @@ export default function AccountingCorrelationsPage() {
     originX: number;
     originY: number;
   }>(null);
+
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStateRef = useRef<null | {
+    startDistance: number;
+    startZoom: number;
+    centerBoardX: number;
+    centerBoardY: number;
+  }>(null);
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>(
     Object.fromEntries(BASE_NODES.map((node) => [node.id, { x: node.x, y: node.y }]))
   );
@@ -1022,6 +1030,14 @@ export default function AccountingCorrelationsPage() {
     [composedNodes, zoom]
   );
 
+  const distanceBetween = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    Math.hypot(b.x - a.x, b.y - a.y);
+
+  const midpointBetween = (a: { x: number; y: number }, b: { x: number; y: number }) => ({
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  });
+
   const handleWheel: React.WheelEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -1045,7 +1061,57 @@ export default function AccountingCorrelationsPage() {
 
   const startPan: React.PointerEventHandler<HTMLDivElement> = (event) => {
     const target = event.target as HTMLElement;
+
+    if (event.pointerType === "touch") {
+      activePointersRef.current.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      if (boardRef.current) {
+        try {
+          boardRef.current.setPointerCapture(event.pointerId);
+        } catch {
+          // no-op
+        }
+      }
+
+      if (activePointersRef.current.size === 2) {
+        const [first, second] = Array.from(activePointersRef.current.values());
+        const center = midpointBetween(first, second);
+        const rect = boardRef.current?.getBoundingClientRect();
+
+        if (rect) {
+          pinchStateRef.current = {
+            startDistance: distanceBetween(first, second),
+            startZoom: zoom,
+            centerBoardX: (center.x - rect.left - pan.x) / zoom,
+            centerBoardY: (center.y - rect.top - pan.y) / zoom,
+          };
+        }
+
+        setPanning(null);
+        setDraggingNode(null);
+        return;
+      }
+
+      if (activePointersRef.current.size === 1) {
+        if (target.closest("[data-node-card='true']")) return;
+
+        setPanning({
+          startX: event.clientX,
+          startY: event.clientY,
+          originX: pan.x,
+          originY: pan.y,
+        });
+        return;
+      }
+
+      return;
+    }
+
     if (target.closest("[data-node-card='true']")) return;
+
     event.preventDefault();
     setPanning({
       startX: event.clientX,
@@ -1056,6 +1122,43 @@ export default function AccountingCorrelationsPage() {
   };
 
   const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (event) => {
+    if (event.pointerType === "touch" && activePointersRef.current.has(event.pointerId)) {
+      activePointersRef.current.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      if (activePointersRef.current.size === 2 && pinchStateRef.current) {
+        const [first, second] = Array.from(activePointersRef.current.values());
+        const rect = boardRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const center = midpointBetween(first, second);
+        const distance = distanceBetween(first, second);
+
+        if (pinchStateRef.current.startDistance <= 0) return;
+
+        const scaleFactor = distance / pinchStateRef.current.startDistance;
+        const nextZoom = Math.min(1.8, Math.max(0.28, pinchStateRef.current.startZoom * scaleFactor));
+
+        setZoom(nextZoom);
+        setPan({
+          x: center.x - rect.left - pinchStateRef.current.centerBoardX * nextZoom,
+          y: center.y - rect.top - pinchStateRef.current.centerBoardY * nextZoom,
+        });
+
+        return;
+      }
+
+      if (activePointersRef.current.size === 1 && panning) {
+        setPan({
+          x: panning.originX + (event.clientX - panning.startX),
+          y: panning.originY + (event.clientY - panning.startY),
+        });
+        return;
+      }
+    }
+
     if (draggingNode) {
       const next = toBoardCoordinates(event.clientX, event.clientY);
       const clamped = clampNodePosition(next.x - draggingNode.offsetX, next.y - draggingNode.offsetY);
@@ -1071,10 +1174,44 @@ export default function AccountingCorrelationsPage() {
     }
   };
 
-  const endInteractions = useCallback(() => {
-    setDraggingNode(null);
-    setPanning(null);
-  }, []);
+  const endInteractions = useCallback(
+    (event?: React.PointerEvent<HTMLDivElement>) => {
+      if (event?.pointerType === "touch") {
+        activePointersRef.current.delete(event.pointerId);
+
+        if (boardRef.current) {
+          try {
+            boardRef.current.releasePointerCapture(event.pointerId);
+          } catch {
+            // no-op
+          }
+        }
+
+        if (activePointersRef.current.size < 2) {
+          pinchStateRef.current = null;
+        }
+
+        if (activePointersRef.current.size === 1) {
+          const remaining = Array.from(activePointersRef.current.values())[0];
+          setPanning({
+            startX: remaining.x,
+            startY: remaining.y,
+            originX: pan.x,
+            originY: pan.y,
+          });
+        } else {
+          setPanning(null);
+        }
+
+        setDraggingNode(null);
+        return;
+      }
+
+      setDraggingNode(null);
+      setPanning(null);
+    },
+    [pan.x, pan.y]
+  );
 
   const toggleDataset = useCallback((dataset: DatasetKey) => {
     setEnabledDatasets((prev) =>
@@ -1466,9 +1603,12 @@ export default function AccountingCorrelationsPage() {
                 onWheel={handleWheel}
                 onPointerDown={startPan}
                 onPointerMove={onPointerMove}
-                onPointerUp={endInteractions}
-                onPointerLeave={() => {
-                  endInteractions();
+                onPointerUp={(event) => endInteractions(event)}
+                onPointerCancel={(event) => endInteractions(event)}
+                onPointerLeave={(event) => {
+                  if (event.pointerType !== "touch") {
+                    endInteractions(event);
+                  }
                 }}
               >
                 <div className="absolute left-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[12px] text-gray-600">
@@ -1560,7 +1700,10 @@ export default function AccountingCorrelationsPage() {
                         data-node-card="true"
                         onClick={() => setSelectedId(node.id)}
                         onPointerDown={(event) => {
+                          if (event.pointerType === "touch" && activePointersRef.current.size > 1) return;
+
                           event.preventDefault();
+
                           const point = toBoardCoordinates(event.clientX, event.clientY);
                           setDraggingNode({
                             id: node.id,
