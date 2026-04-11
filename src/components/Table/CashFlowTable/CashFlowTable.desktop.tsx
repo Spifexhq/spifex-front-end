@@ -823,6 +823,10 @@ const CashFlowTableDesktop = forwardRef<CashFlowTableHandle, CashFlowTableProps>
                   {tableRows.slice(startIndex, endIndex + 1).map((row) => {
                     if (row.type === "entry" && row.entry) {
                       const isSelected = selectedIds.includes(getId(row.entry));
+                      const resolvedAccounting =
+                        accountingStateById?.[row.entry.id] ??
+                        row.entry.accounting ??
+                        null;
 
                       return (
                         <EntryRow
@@ -833,7 +837,7 @@ const CashFlowTableDesktop = forwardRef<CashFlowTableHandle, CashFlowTableProps>
                           onSelect={handleSelectRow}
                           onEdit={onEdit}
                           onOpenAccountingReason={onOpenAccountingReason}
-                          accounting={accountingStateById?.[row.entry.id] ?? null}
+                          accounting={resolvedAccounting}
                         />
                       );
                     }
