@@ -31,6 +31,8 @@ import { DATE_SIZE } from "./sizes";
 type EffectiveDateCode = "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
 type SegmentBag = { day: string; month: string; year: string };
 
+const CLOSE_MS = 150;
+
 const parseISOToSegments = (iso: string): SegmentBag => {
   if (!iso) return { day: "", month: "", year: "" };
   const parsed = parse(iso, "yyyy-MM-dd", new Date());
@@ -47,10 +49,9 @@ const getSegmentValue = (segments: SegmentBag, type: keyof SegmentBag): string =
 
 /**
  * DateField (Input: kind="date")
- * - Mirrors old DateInput behavior:
- *   - Calendar opens via calendar button click (preventDefault + stopPropagation)
- *   - Sync external value into slots only when NOT focused
- *   - Commit (emit) value on blur/outside click, and immediately on day pick
+ * - Animated open/close calendar popover
+ * - Sync external value into slots only when NOT focused
+ * - Commit (emit) value on blur/outside click, and immediately on day pick
  */
 const DateField = forwardRef<HTMLInputElement, DateInputProps>(
   (
@@ -75,12 +76,15 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
     const [isFocused, setIsFocused] = useState(false);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [isCalendarRendered, setIsCalendarRendered] = useState(false);
     const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
 
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const slot1Ref = useRef<HTMLInputElement | null>(null);
     const slot2Ref = useRef<HTMLInputElement | null>(null);
     const slot3Ref = useRef<HTMLInputElement | null>(null);
+    const closeTimerRef = useRef<number | null>(null);
+    const openRafRef = useRef<number | null>(null);
 
     useImperativeHandle(forwardedRef, () => slot1Ref.current as HTMLInputElement, []);
 
@@ -116,8 +120,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       }
     }, [effectiveCode]);
 
-    /* ---------------------------- Value → segments --------------------------- */
-
     const initialSegments = parseISOToSegments(value || "");
 
     const [slot1, setSlot1] = useState(
@@ -129,8 +131,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
     const [slot3, setSlot3] = useState(
       getSegmentValue(initialSegments, slotConfig.slot3.type)
     );
-
-    /* --------------------- Selected date / calendar month -------------------- */
 
     const selectedDate = useMemo(() => {
       const bag: SegmentBag = { day: "", month: "", year: "" };
@@ -160,8 +160,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       if (isValid(parsed)) setCalendarMonth(parsed);
     }, [value]);
 
-    /* -------------------- Sync external value → slots (only if NOT focused) ------------------ */
-
     useEffect(() => {
       if (isFocused) return;
       const seg = parseISOToSegments(value || "");
@@ -170,7 +168,12 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       setSlot3(getSegmentValue(seg, slotConfig.slot3.type));
     }, [value, isFocused, slotConfig]);
 
-    /* ----------------------------- Build ISO date ---------------------------- */
+    useEffect(() => {
+      return () => {
+        if (openRafRef.current != null) window.cancelAnimationFrame(openRafRef.current);
+        if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current);
+      };
+    }, []);
 
     const buildISO = useCallback(
       (s1: string, s2: string, s3: string): string | null => {
@@ -180,10 +183,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         bag[slotConfig.slot2.type] = s2;
         bag[slotConfig.slot3.type] = s3;
 
-        // If everything empty, emit empty string (same as old DateInput)
         if (!bag.day && !bag.month && !bag.year) return "";
-
-        // Incomplete: do not emit yet
         if (!bag.day || !bag.month || !bag.year) return null;
 
         const dateStr = `${bag.year}-${bag.month.padStart(2, "0")}-${bag.day.padStart(2, "0")}`;
@@ -201,7 +201,40 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       [buildISO, onValueChange]
     );
 
-    /* -------------------------- Slot input handling -------------------------- */
+    const openCalendar = useCallback(() => {
+      if (disabled) return;
+
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+
+      setIsCalendarRendered(true);
+
+      if (openRafRef.current != null) {
+        window.cancelAnimationFrame(openRafRef.current);
+      }
+
+      openRafRef.current = window.requestAnimationFrame(() => {
+        setIsCalendarOpen(true);
+      });
+    }, [disabled]);
+
+    const closeCalendar = useCallback(
+      (after?: () => void) => {
+        setIsCalendarOpen(false);
+
+        if (closeTimerRef.current != null) {
+          window.clearTimeout(closeTimerRef.current);
+        }
+
+        closeTimerRef.current = window.setTimeout(() => {
+          setIsCalendarRendered(false);
+          after?.();
+        }, CLOSE_MS);
+      },
+      []
+    );
 
     const handleSlotChange = (
       slotNum: 1 | 2 | 3,
@@ -215,8 +248,8 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         slotNum === 1
           ? slotConfig.slot1.type
           : slotNum === 2
-          ? slotConfig.slot2.type
-          : slotConfig.slot3.type;
+            ? slotConfig.slot2.type
+            : slotConfig.slot3.type;
 
       if (slotType === "month" && digits) {
         const monthNum = parseInt(digits, 10);
@@ -227,7 +260,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         if (dayNum > 31) digits = "31";
         else if (digits.length === 2 && dayNum < 1) digits = "01";
       }
-      // NOTE: year is NOT padded/forced. This fixes the "0000" behavior.
 
       if (slotNum === 1) setSlot1(digits);
       if (slotNum === 2) setSlot2(digits);
@@ -266,6 +298,9 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         }
       } else if (e.key === "Enter") {
         e.preventDefault();
+      } else if (e.key === "Escape" && isCalendarRendered) {
+        e.preventDefault();
+        closeCalendar();
       }
     };
 
@@ -286,13 +321,11 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
         if (!isStillInSlots && !isInsideWrapper) {
           setIsFocused(false);
-          setIsCalendarOpen(false);
+          closeCalendar();
           updateValue(slot1, slot2, slot3);
         }
       }, 0);
     };
-
-    /* --------------------- Calendar open/close like old component ---------------------- */
 
     const computePlacement = useCallback(() => {
       const el = wrapperRef.current;
@@ -301,7 +334,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       const r = el.getBoundingClientRect();
       const vh = window.innerHeight;
 
-      // conservative popover estimate: 320px
       const need = 320;
       const spaceBelow = vh - r.bottom - 8;
       const spaceAbove = r.top - 8;
@@ -314,38 +346,57 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       e.stopPropagation();
       if (disabled) return;
 
-      if (selectedDate) {
-        setCalendarMonth(selectedDate);
-      } else if (value) {
-        const parsed = parse(value, "yyyy-MM-dd", new Date());
-        if (isValid(parsed)) setCalendarMonth(parsed);
-        else setCalendarMonth(new Date());
-      } else {
-        setCalendarMonth(new Date());
+      if (!isCalendarRendered || !isCalendarOpen) {
+        if (selectedDate) {
+          setCalendarMonth(selectedDate);
+        } else if (value) {
+          const parsed = parse(value, "yyyy-MM-dd", new Date());
+          if (isValid(parsed)) setCalendarMonth(parsed);
+          else setCalendarMonth(new Date());
+        } else {
+          setCalendarMonth(new Date());
+        }
+
+        computePlacement();
+        openCalendar();
+        setIsFocused(true);
+        return;
       }
 
-      computePlacement();
-      setIsCalendarOpen((prev) => !prev);
-      setIsFocused(true);
+      closeCalendar();
     };
 
     useEffect(() => {
-      if (!isCalendarOpen) return;
+      if (!isCalendarRendered) return;
 
       const handleClickOutside = (event: MouseEvent) => {
         if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-          setIsCalendarOpen(false);
-          setIsFocused(false);
-          updateValue(slot1, slot2, slot3);
+          closeCalendar(() => {
+            setIsFocused(false);
+            updateValue(slot1, slot2, slot3);
+          });
         }
       };
 
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isCalendarOpen, slot1, slot2, slot3]);
+    }, [isCalendarRendered, closeCalendar, slot1, slot2, slot3, updateValue]);
 
-    /* ----------------------- Calendar day selection -------------------------- */
+    useEffect(() => {
+      if (!isCalendarRendered) return;
+
+      const handleViewportChange = () => {
+        computePlacement();
+      };
+
+      window.addEventListener("resize", handleViewportChange);
+      window.addEventListener("scroll", handleViewportChange, true);
+
+      return () => {
+        window.removeEventListener("resize", handleViewportChange);
+        window.removeEventListener("scroll", handleViewportChange, true);
+      };
+    }, [isCalendarRendered, computePlacement]);
 
     const handleDateSelect = (date: Date) => {
       const segs: SegmentBag = {
@@ -365,14 +416,12 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       const iso = format(date, "yyyy-MM-dd");
       onValueChange?.(iso);
 
-      setIsCalendarOpen(false);
-      setIsFocused(false);
+      closeCalendar(() => {
+        setIsFocused(false);
+      });
     };
 
-    /* -------------------------- Calendar rendering --------------------------- */
-
     const renderCalendar = () => {
-      // Monday as first day (matches old code)
       const start = startOfWeek(startOfMonth(calendarMonth), { weekStartsOn: 1 });
       const end = endOfWeek(endOfMonth(calendarMonth), { weekStartsOn: 1 });
 
@@ -411,25 +460,18 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       return (
         <div
           className={classNames(
-            // placement
-            "absolute left-0 origin-top",
-            placement === "bottom" ? "top-full" : "bottom-full mb-2",
-            // ensure above modals
-            "z-[9999]",
-            // box
-            "rounded-md border border-gray-200 bg-white shadow-lg",
-            // prevent hidden on small screens
+            "absolute left-0 z-[9999] origin-top rounded-md border border-gray-200 bg-white shadow-lg",
             "max-h-[50vh] overflow-auto",
+            placement === "bottom" ? "top-full mt-2" : "bottom-full mb-2",
             sz.popover,
-            // animation
             "transition-all duration-150 ease-out will-change-transform",
             isCalendarOpen
-              ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 -translate-y-1 pointer-events-none"
+              ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+              : "opacity-0 -translate-y-1 scale-[0.985] pointer-events-none"
           )}
           aria-hidden={!isCalendarOpen}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <button
               type="button"
               onMouseDown={(ev) => ev.preventDefault()}
@@ -461,7 +503,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          <div className="mb-1 grid grid-cols-7 gap-1">
             {weekdayLabels.map((w) => (
               <div
                 key={w}
@@ -476,8 +518,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         </div>
       );
     };
-
-    /* ------------------------------ Styling ---------------------------------- */
 
     const errorId = errorMessage ? `${id}-err` : undefined;
 
@@ -506,10 +546,8 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       sz.slot
     );
 
-    /* -------------------------------- Render --------------------------------- */
-
     return (
-      <div className="flex flex-col gap-1.5 min-w-0" style={style} ref={wrapperRef}>
+      <div className="flex min-w-0 flex-col gap-1.5" style={style} ref={wrapperRef}>
         {label ? (
           <label
             htmlFor={id}
@@ -519,7 +557,6 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
           </label>
         ) : null}
 
-        {/* hidden form field for native submit (optional) */}
         {name ? (
           <input
             type="hidden"
@@ -531,7 +568,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
         <div className="relative w-full min-w-0">
           <div className={containerClasses}>
-            <div className="flex items-center gap-0.5 min-w-0 flex-1 pr-10 overflow-hidden">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden pr-10">
               <input
                 id={id}
                 ref={slot1Ref}
@@ -594,17 +631,17 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             </div>
 
             <button
-            type="button"
-            className={classNames(
+              type="button"
+              className={classNames(
                 sz.calBtn,
                 "!absolute !right-0.5 !top-1/2 !left-auto !bottom-auto -translate-y-1/2 z-10 " +
-                    "flex-shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100"
-            )}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleCalendarClick}
-            aria-label="Open date picker"
-            tabIndex={-1}
-            disabled={disabled}
+                  "flex-shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100"
+              )}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleCalendarClick}
+              aria-label="Open date picker"
+              tabIndex={-1}
+              disabled={disabled}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -622,7 +659,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             </button>
           </div>
 
-          {isCalendarOpen ? renderCalendar() : null}
+          {isCalendarRendered ? renderCalendar() : null}
         </div>
 
         {errorMessage ? (
