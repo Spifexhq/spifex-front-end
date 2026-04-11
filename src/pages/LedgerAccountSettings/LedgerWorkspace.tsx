@@ -1,4 +1,3 @@
-// src\pages\LedgerAccountSettings\LedgerWorkspace.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -12,17 +11,13 @@ import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
-import { useCursorPager } from "@/hooks/useCursorPager";
-import { getCursorFromUrl } from "@/lib/list";
 
-import LedgerAccountModal from "./LedgerAccountModal";
-import LedgerSummaryCards from "./components/LedgerSummaryCards";
+import LedgerAccountModal from "./components/LedgerAccountModal";
 import LedgerTreePanel from "./components/LedgerTreePanel";
 
 import type { OrgLedgerProfileResponse } from "@/models/auth/organization";
 import type {
   AddLedgerAccountRequest,
-  GetLedgerAccountsResponse,
   LedgerAccount,
   LedgerAccountType,
   LedgerStatementSection,
@@ -34,10 +29,6 @@ type Snack =
       severity: "success" | "error" | "warning" | "info";
     }
   | null;
-
-type PaginationMeta = {
-  pagination?: { next?: string | null };
-};
 
 type Option<T extends string = string> = {
   label: string;
@@ -89,6 +80,8 @@ const sectionLabel = (value: LedgerStatementSection) => {
       return "Off balance";
     case "statistical":
       return "Statistical";
+    default:
+      return "—";
   }
 };
 
@@ -107,14 +100,18 @@ const SurfaceTab = ({
     type="button"
     onClick={onClick}
     className={[
-      "rounded-lg border bg-white p-4 text-left transition-colors",
+      "rounded-lg border bg-white px-3 py-2.5 text-left transition-colors",
       active
         ? "border-gray-900 text-gray-900"
         : "border-gray-200 text-gray-900 hover:bg-gray-50",
     ].join(" ")}
   >
-    <div className="text-[14px] font-semibold">{title}</div>
-    <div className="mt-1 text-[12px] text-gray-600">{description}</div>
+    <div className="flex items-center gap-2">
+      <div className="min-w-0">
+        <div className="text-[13px] font-semibold leading-5">{title}</div>
+        <div className="mt-0.5 text-[11px] leading-4 text-gray-600">{description}</div>
+      </div>
+    </div>
   </button>
 );
 
@@ -133,7 +130,7 @@ const SectionMetric = ({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-3 text-[13px]">
         <span className="text-gray-700">{label}</span>
-        <span className="font-medium text-gray-900">{value}</span>
+        <span className="font-medium text-gray-900 select-text">{value}</span>
       </div>
 
       <div className="h-2 rounded-full border border-gray-200 bg-white">
@@ -142,27 +139,6 @@ const SectionMetric = ({
     </div>
   );
 };
-
-const SimpleMetricCard = ({
-  title,
-  value,
-  subtitle,
-}: {
-  title: string;
-  value: string | number;
-  subtitle: string;
-}) => (
-  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-    <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{title}</div>
-    </div>
-
-    <div className="px-4 py-4">
-      <div className="text-[18px] font-semibold text-gray-900">{value}</div>
-      <p className="mt-1 text-[12px] text-gray-600">{subtitle}</p>
-    </div>
-  </div>
-);
 
 const DataTable = ({
   title,
@@ -177,7 +153,7 @@ const DataTable = ({
   rows: Array<Array<React.ReactNode>>;
   emptyLabel: string;
 }) => (
-  <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
     <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
       <h2 className="text-[14px] font-semibold text-gray-900">{title}</h2>
       <p className="mt-1 text-[12px] text-gray-600">{description}</p>
@@ -261,59 +237,63 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
   const [menuOpen, setMenuOpen] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
 
+  const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const fetchPage = useCallback(
-    async (cursor?: string) => {
-      if (!canView) {
-        return { items: [] as LedgerAccount[], nextCursor: undefined as string | undefined };
-      }
+  const loadAccounts = useCallback(async () => {
+    if (!canView) {
+      setAccounts([]);
+      return;
+    }
 
-      const response = (await api.getLedgerAccounts({
-        cursor,
+    try {
+      setLoading(true);
+
+      const response = await api.getLedgerAccounts({
         q: appliedSearch || undefined,
         active: appliedActive,
         ...(appliedSection ? { statement_section: appliedSection } : {}),
         ...(appliedAccountType ? { account_type: appliedAccountType } : {}),
         ...(appliedBankControl ? { is_bank_control: appliedBankControl } : {}),
         ...(appliedManualPosting ? { allows_manual_posting: appliedManualPosting } : {}),
-      })) as {
-        data: GetLedgerAccountsResponse;
-        meta?: PaginationMeta;
-      };
+      });
 
-      const data = response.data;
-      const nextUrl = response.meta?.pagination?.next ?? data?.next ?? null;
-      const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
+      const payload = response?.data;
+      const items = Array.isArray(payload?.results)
+        ? (payload.results as LedgerAccount[])
+        : Array.isArray(payload)
+          ? (payload as LedgerAccount[])
+          : [];
 
-      return {
-        items: (data?.results ?? []) as LedgerAccount[],
-        nextCursor,
-      };
-    },
-    [
-      canView,
-      appliedSearch,
-      appliedActive,
-      appliedSection,
-      appliedAccountType,
-      appliedBankControl,
-      appliedManualPosting,
-    ]
-  );
+      setAccounts(items);
+    } catch (error) {
+      setSnack({
+        message:
+          (error as Error)?.message ||
+          t("workspace.requestError", "Something went wrong. Please try again."),
+        severity: "error",
+      });
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    canView,
+    appliedSearch,
+    appliedActive,
+    appliedSection,
+    appliedAccountType,
+    appliedBankControl,
+    appliedManualPosting,
+    t,
+  ]);
 
-  const pager = useCursorPager<LedgerAccount>(fetchPage, {
-    autoLoadFirst: canView,
-    deps: [
-      canView,
-      appliedSearch,
-      appliedActive,
-      appliedSection,
-      appliedAccountType,
-      appliedBankControl,
-      appliedManualPosting,
-    ],
-  });
+  useEffect(() => {
+    void loadAccounts();
+  }, [loadAccounts, refreshKey]);
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -357,18 +337,18 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
   const parentOptions = useMemo<Option[]>(
     () =>
-      pager.items
+      accounts
         .filter((item) => item.id !== editing?.id && item.account_type === "header")
         .sort(sortAccounts)
         .map((item) => ({
           label: `${item.code || "—"} — ${item.name || item.id}`,
           value: item.id,
         })),
-    [editing?.id, pager.items]
+    [editing?.id, accounts]
   );
 
   const counters = useMemo(() => {
-    const items = pager.items;
+    const items = accounts;
     const postingCount = items.filter((item) => item.account_type === "posting").length;
     const headerCount = items.filter((item) => item.account_type === "header").length;
     const activeCount = items.filter((item) => item.is_active).length;
@@ -394,7 +374,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
         statistical: items.filter((item) => item.statement_section === "statistical").length,
       },
     };
-  }, [pager.items]);
+  }, [accounts]);
 
   const managementViews = useMemo(
     () => [
@@ -442,65 +422,35 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
     [t]
   );
 
-  const summaryCards = useMemo(
-    () => [
-      {
-        title: t("workspace.summaryActive", "Active accounts"),
-        value: counters.activeCount,
-        subtitle: t("workspace.summaryActiveSubtitle", "Accounts currently available for use."),
-      },
-      {
-        title: t("workspace.summaryPosting", "Posting accounts"),
-        value: counters.postingCount,
-        subtitle: t("workspace.summaryPostingSubtitle", "Accounts that can receive journal lines."),
-      },
-      {
-        title: t("workspace.summaryBank", "Bank control accounts"),
-        value: counters.bankControlCount,
-        subtitle: t(
-          "workspace.summaryBankSubtitle",
-          "Posting accounts mapped to operational bank balances."
-        ),
-      },
-      {
-        title: t("workspace.summaryManual", "Manual posting enabled"),
-        value: counters.manualCount,
-        subtitle: t(
-          "workspace.summaryManualSubtitle",
-          "Accounts that allow manual journal posting."
-        ),
-      },
-    ],
-    [counters.activeCount, counters.bankControlCount, counters.manualCount, counters.postingCount, t]
-  );
-
   const reportingGroups = useMemo(() => {
-    const grouped = pager.items.reduce<Record<string, number>>((acc, item) => {
+    const grouped = accounts.reduce<Record<string, number>>((acc, item) => {
       const key = item.report_group || "Unassigned";
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
-
     return Object.entries(grouped).sort((a, b) => b[1] - a[1]);
-  }, [pager.items]);
+  }, [accounts]);
 
   const overviewRows = useMemo(
     () =>
-      pager.items.slice(0, 8).sort(sortAccounts).map((item) => [
-        <span className="font-medium text-gray-900" key="code">
-          {item.code || "—"}
-        </span>,
-        item.name || "—",
-        item.account_type,
-        sectionLabel(item.statement_section),
-        [item.report_group, item.report_subgroup].filter(Boolean).join(" / ") || "—",
-      ]),
-    [pager.items]
+      [...accounts]
+        .sort(sortAccounts)
+        .slice(0, 8)
+        .map((item) => [
+          <span className="font-medium text-gray-900" key="code">
+            {item.code || "—"}
+          </span>,
+          item.name || "—",
+          item.account_type,
+          sectionLabel(item.statement_section),
+          [item.report_group, item.report_subgroup].filter(Boolean).join(" / ") || "—",
+        ]),
+    [accounts]
   );
 
   const postingRows = useMemo(
     () =>
-      pager.items
+      accounts
         .filter((item) => item.account_type === "posting")
         .sort(sortAccounts)
         .map((item) => [
@@ -516,12 +466,12 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
             : t("workspace.bankControlNo", "Not bank control"),
           item.is_active ? t("modal.active", "Active") : t("workspace.inactive", "Inactive"),
         ]),
-    [pager.items, t]
+    [accounts, t]
   );
 
   const bankRows = useMemo(
     () =>
-      pager.items
+      accounts
         .filter((item) => item.is_bank_control)
         .sort(sortAccounts)
         .map((item) => [
@@ -535,7 +485,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
             : t("workspace.manualBlocked", "No manual posting"),
           item.is_active ? t("modal.active", "Active") : t("workspace.inactive", "Inactive"),
         ]),
-    [pager.items, t]
+    [accounts, t]
   );
 
   const reportingRows = useMemo(
@@ -544,7 +494,9 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
         <span className="font-medium text-gray-900" key="group">
           {group}
         </span>,
-        count,
+        <span className="select-text" key="count">
+          {count}
+        </span>,
       ]),
     [reportingGroups]
   );
@@ -579,6 +531,10 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
     setModalOpen(true);
   };
 
+  const refreshAccounts = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   const submit = async (payload: AddLedgerAccountRequest) => {
     try {
       setSaving(true);
@@ -599,7 +555,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
       setModalOpen(false);
       setEditing(null);
-      await pager.refresh();
+      refreshAccounts();
     } catch (error) {
       setSnack({
         message:
@@ -624,7 +580,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
         message: t("workspace.deletedSuccess", "Account deleted."),
         severity: "success",
       });
-      await pager.refresh();
+      refreshAccounts();
     } catch (error) {
       setSnack({
         message:
@@ -664,13 +620,11 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
   if (!canView) return <PageSkeleton rows={8} />;
 
-  const showSyncBadge = pager.loading && pager.items.length > 0;
+  const showSyncBadge = loading && accounts.length > 0;
 
   return (
     <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
-      {pager.loading && pager.items.length === 0 ? (
-        <TopProgress active variant="top" topOffset={64} />
-      ) : null}
+      {loading && accounts.length === 0 ? <TopProgress active variant="top" topOffset={64} /> : null}
 
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="rounded-lg border border-gray-200 bg-white">
@@ -741,7 +695,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
           </div>
         </header>
 
-        <section className="grid gap-3 lg:grid-cols-5">
+        <section className="grid gap-2 lg:grid-cols-5">
           {managementViews.map((item) => (
             <SurfaceTab
               key={item.id}
@@ -753,7 +707,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
           ))}
         </section>
 
-        <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">
               {t("workspace.filtersTitle", "Filters")}
@@ -862,12 +816,10 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
           </div>
         </section>
 
-        <LedgerSummaryCards items={summaryCards} />
-
         {managementView === "overview" ? (
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
             <LedgerTreePanel
-              items={pager.items}
+              items={accounts}
               languageCode={ledgerProfile.language_code}
               editable={canManage}
               viewMode={treeViewMode}
@@ -880,7 +832,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
             />
 
             <aside className="space-y-4">
-              <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
                 <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
                   <h2 className="text-[14px] font-semibold text-gray-900">
                     {t("workspace.sectionDistributionTitle", "Section distribution")}
@@ -903,50 +855,14 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                   <SectionMetric label={sectionLabel("statistical")} value={counters.bySection.statistical} total={counters.total} />
                 </div>
               </section>
-
-              <section className="grid gap-4">
-                <SimpleMetricCard
-                  title={t("workspace.summaryTotal", "Total accounts")}
-                  value={counters.total}
-                  subtitle={t("workspace.summaryTotalSubtitle", "Accounts visible under the current filter set.")}
-                />
-                <SimpleMetricCard
-                  title={t("workspace.summaryHeaders", "Header accounts")}
-                  value={counters.headerCount}
-                  subtitle={t("workspace.summaryHeadersSubtitle", "Structural nodes used to organize the chart.")}
-                />
-                <SimpleMetricCard
-                  title={t("workspace.summaryDepth", "Max depth")}
-                  value={counters.maxDepth}
-                  subtitle={t("workspace.summaryDepthSubtitle", "Deepest hierarchy level in the current view.")}
-                />
-              </section>
             </aside>
           </section>
         ) : null}
 
         {managementView === "structure" ? (
           <section className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <SimpleMetricCard
-                title={t("workspace.structureRootAccounts", "Root accounts")}
-                value={counters.rootCount}
-                subtitle={t("workspace.structureRootAccountsSubtitle", "Top-level nodes without a parent account.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.structureMaxDepth", "Max depth")}
-                value={counters.maxDepth}
-                subtitle={t("workspace.structureMaxDepthSubtitle", "Deepest hierarchy level currently used.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.structureHeadersVsPosting", "Headers vs posting")}
-                value={`${counters.headerCount} / ${counters.postingCount}`}
-                subtitle={t("workspace.structureHeadersVsPostingSubtitle", "Distribution between structure and posting accounts.")}
-              />
-            </div>
-
             <LedgerTreePanel
-              items={pager.items}
+              items={accounts}
               languageCode={ledgerProfile.language_code}
               editable={canManage}
               viewMode={treeViewMode}
@@ -962,24 +878,6 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
         {managementView === "posting-controls" ? (
           <section className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <SimpleMetricCard
-                title={t("workspace.summaryPosting", "Posting accounts")}
-                value={counters.postingCount}
-                subtitle={t("workspace.summaryPostingSubtitle", "Accounts that can receive journal lines.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.manualEnabled", "Manual enabled")}
-                value={counters.manualCount}
-                subtitle={t("workspace.manualEnabledSubtitle", "Posting accounts available for direct manual operations.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.manualBlocked", "Manual blocked")}
-                value={Math.max(counters.postingCount - counters.manualCount, 0)}
-                subtitle={t("workspace.manualBlockedSubtitle", "Posting accounts restricted to controlled flows.")}
-              />
-            </div>
-
             <DataTable
               title={t("workspace.managementPostingControlsTitle", "Posting controls")}
               description={t(
@@ -1001,24 +899,6 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
         {managementView === "bank-control" ? (
           <section className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <SimpleMetricCard
-                title={t("workspace.summaryBank", "Bank control accounts")}
-                value={counters.bankControlCount}
-                subtitle={t("workspace.summaryBankSubtitle", "Posting accounts mapped to operational bank balances.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.manualEnabled", "Manual enabled")}
-                value={pager.items.filter((item) => item.is_bank_control && item.allows_manual_posting).length}
-                subtitle={t("workspace.bankManualEnabledSubtitle", "Bank control accounts that still allow manual posting.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.activeLabel", "Active")}
-                value={pager.items.filter((item) => item.is_bank_control && item.is_active).length}
-                subtitle={t("workspace.bankActiveSubtitle", "Bank control accounts currently active.")}
-              />
-            </div>
-
             <DataTable
               title={t("workspace.managementBankControlTitle", "Bank control")}
               description={t(
@@ -1040,24 +920,6 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
         {managementView === "reporting" ? (
           <section className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <SimpleMetricCard
-                title={t("workspace.reportGroups", "Report groups")}
-                value={reportingGroups.length}
-                subtitle={t("workspace.reportGroupsSubtitle", "Distinct report groups configured in the current slice.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.reportSubgroups", "Assigned subgroups")}
-                value={pager.items.filter((item) => !!item.report_subgroup).length}
-                subtitle={t("workspace.reportSubgroupsSubtitle", "Accounts that already have subgroup detail assigned.")}
-              />
-              <SimpleMetricCard
-                title={t("workspace.unassigned", "Unassigned")}
-                value={pager.items.filter((item) => !item.report_group).length}
-                subtitle={t("workspace.unassignedSubtitle", "Accounts still missing a top-level report group.")}
-              />
-            </div>
-
             <DataTable
               title={t("workspace.managementReportingTitle", "Reporting")}
               description={t(
@@ -1090,15 +952,6 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
             />
           </section>
         ) : null}
-
-        <div className="flex items-center justify-end gap-2">
-          <Button type="button" variant="outline" onClick={pager.prev} disabled={!pager.canPrev}>
-            {t("workspace.prev", "Prev")}
-          </Button>
-          <Button type="button" variant="outline" onClick={pager.next} disabled={!pager.canNext}>
-            {t("workspace.next", "Next")}
-          </Button>
-        </div>
       </div>
 
       <LedgerAccountModal

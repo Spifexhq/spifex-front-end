@@ -1,4 +1,3 @@
-// src\pages\LedgerAccountSettings\components\LedgerTreePanel.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -47,6 +46,8 @@ const sectionLabel = (value: LedgerAccount["statement_section"]) => {
       return "Off balance";
     case "statistical":
       return "Statistical";
+    default:
+      return "—";
   }
 };
 
@@ -55,6 +56,34 @@ const ToneBadge = ({ children }: { children: React.ReactNode }) => (
     {children}
   </span>
 );
+
+const CountCard = ({
+  label,
+  value,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  onClick?: () => void;
+}) => {
+  const interactive = !!onClick;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!interactive}
+      className={[
+        "rounded-lg border border-gray-200 bg-white px-4 py-3 text-left",
+        interactive ? "transition-colors hover:border-gray-300 hover:bg-gray-50" : "cursor-default",
+        "disabled:opacity-100",
+      ].join(" ")}
+    >
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 select-text text-[18px] font-semibold text-gray-900">{value}</div>
+    </button>
+  );
+};
 
 const LedgerTreePanel: React.FC<Props> = ({
   items,
@@ -119,6 +148,17 @@ const LedgerTreePanel: React.FC<Props> = ({
   useEffect(() => {
     setOpenIds(initialOpen);
   }, [initialOpen]);
+
+  const counters = useMemo(() => {
+    return {
+      total: items.length,
+      posting: items.filter((item) => item.account_type === "posting").length,
+      headers: items.filter((item) => item.account_type === "header").length,
+      bankControl: items.filter((item) => item.is_bank_control).length,
+      manualAllowed: items.filter((item) => item.allows_manual_posting).length,
+      active: items.filter((item) => item.is_active).length,
+    };
+  }, [items]);
 
   const toggle = (id: string) => {
     setOpenIds((prev) => {
@@ -218,11 +258,9 @@ const LedgerTreePanel: React.FC<Props> = ({
                   ) : null}
                 </div>
 
-                {(node.report_subgroup || node.path || node.external_ref) ? (
+                {node.report_subgroup || node.path || node.external_ref ? (
                   <p className="mt-1 text-[12px] text-gray-500">
-                    {[node.report_subgroup, node.path, node.external_ref]
-                      .filter(Boolean)
-                      .join(" • ")}
+                    {[node.report_subgroup, node.path, node.external_ref].filter(Boolean).join(" • ")}
                   </p>
                 ) : null}
               </div>
@@ -240,44 +278,55 @@ const LedgerTreePanel: React.FC<Props> = ({
   };
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-[14px] font-semibold text-gray-900">
-              {t("workspace.treeTitle", "Chart of accounts")}
-            </h2>
-            <p className="mt-1 text-[12px] text-gray-600">
-              {t("workspace.treeSubtitle", "A unified view of your accounting structure.")}
-            </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-[14px] font-semibold text-gray-900">
+                {t("workspace.treeTitle", "Chart of accounts")}
+              </h2>
+              <p className="mt-1 text-[12px] text-gray-600">
+                {t("workspace.treeSubtitle", "A unified view of your accounting structure.")}
+              </p>
+            </div>
+
+            <div className="inline-flex rounded-md border border-gray-300 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => onViewModeChange("tree")}
+                className={[
+                  "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
+                  viewMode === "tree"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-50",
+                ].join(" ")}
+              >
+                {t("workspace.viewTree", "Tree")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onViewModeChange("list")}
+                className={[
+                  "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
+                  viewMode === "list"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-50",
+                ].join(" ")}
+              >
+                {t("workspace.viewList", "List")}
+              </button>
+            </div>
           </div>
 
-          <div className="inline-flex rounded-md border border-gray-300 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => onViewModeChange("tree")}
-              className={[
-                "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
-                viewMode === "tree"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-700 hover:bg-gray-50",
-              ].join(" ")}
-            >
-              {t("workspace.viewTree", "Tree")}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onViewModeChange("list")}
-              className={[
-                "rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors",
-                viewMode === "list"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-700 hover:bg-gray-50",
-              ].join(" ")}
-            >
-              {t("workspace.viewList", "List")}
-            </button>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <CountCard label={t("workspace.summaryTotal", "Total")} value={counters.total} />
+            <CountCard label={t("workspace.summaryPosting", "Posting")} value={counters.posting} />
+            <CountCard label={t("workspace.summaryHeaders", "Headers")} value={counters.headers} />
+            <CountCard label={t("workspace.summaryBank", "Bank control")} value={counters.bankControl} />
+            <CountCard label={t("workspace.manualAllowed", "Manual allowed")} value={counters.manualAllowed} />
+            <CountCard label={t("workspace.activeLabel", "Active")} value={counters.active} />
           </div>
         </div>
       </div>

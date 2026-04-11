@@ -1,4 +1,4 @@
-// src\pages\LedgerAccountSettings\LedgerAccountModal.tsx
+// src\pages\LedgerAccountSettings\components\LedgerAccountModal.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
