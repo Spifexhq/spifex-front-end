@@ -1,4 +1,3 @@
-// src/pages/AccountingSettings/components/AccountingWorkspace.tsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import Button from "@/shared/ui/Button";
@@ -11,15 +10,12 @@ import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
-import { useCursorPager } from "@/hooks/useCursorPager";
-import { getCursorFromUrl } from "@/lib/list";
 
 import AccountingSideModal from "../components/AccountingSideModal";
 
 import type { OrgLedgerProfileResponse } from "@/models/auth/organization";
 import type {
   AddLedgerAccountRequest,
-  GetLedgerAccountsResponse,
   LedgerAccount,
   LedgerAccountType,
   LedgerNormalBalance,
@@ -38,14 +34,28 @@ type Option<T extends string = string> = {
   value: T;
 };
 
-type PaginationMeta = {
-  pagination?: { next?: string | null };
-};
-
-type WorkspaceMode = "chart" | "rules" | "reporting";
 type TreeMode = "compact" | "detailed";
-
 type TreeNode = LedgerAccount & { children: TreeNode[] };
+
+type ModalState =
+  | {
+      type: "closed";
+    }
+  | {
+      type: "create";
+      editing: Partial<LedgerAccount> | null;
+    }
+  | {
+      type: "edit";
+      editing: LedgerAccount;
+    }
+  | {
+      type: "accounts_list";
+      title: string;
+      subtitle: string;
+      items: LedgerAccount[];
+      emptyMessage: string;
+    };
 
 type Props = {
   ledgerProfile: OrgLedgerProfileResponse;
@@ -89,24 +99,6 @@ const sectionLabelMap: Record<LedgerStatementSection, string> = {
   statistical: "Statistical",
 };
 
-const workspaceModes: Array<{ id: WorkspaceMode; title: string; description: string }> = [
-  {
-    id: "chart",
-    title: "Chart designer",
-    description: "Tree-first workspace for hierarchy and account maintenance.",
-  },
-  {
-    id: "rules",
-    title: "Posting rules",
-    description: "Focus on controls, bank scope, and posting permissions.",
-  },
-  {
-    id: "reporting",
-    title: "Reporting map",
-    description: "Validate report groups, subgroups, and statement alignment.",
-  },
-];
-
 const DEFAULTS: AddLedgerAccountRequest = {
   code: "",
   name: "",
@@ -134,24 +126,6 @@ const sortAccounts = (a: LedgerAccount, b: LedgerAccount) => {
   return String(a.name || "").localeCompare(String(b.name || ""));
 };
 
-function MetricCard({
-  label,
-  value,
-  description,
-}: {
-  label: string;
-  value: string | number;
-  description: string;
-}) {
-  return (
-    <article className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
-      <p className="mt-1 text-[12px] leading-5 text-gray-600">{description}</p>
-    </article>
-  );
-}
-
 function StatusPill({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-1 text-[12px] text-gray-700">
@@ -160,31 +134,42 @@ function StatusPill({ children }: { children: React.ReactNode }) {
   );
 }
 
-function WorkspaceTab({
-  active,
-  title,
+function SummaryCard({
+  label,
+  value,
   description,
   onClick,
 }: {
-  active: boolean;
-  title: string;
+  label: string;
+  value: string | number;
   description: string;
-  onClick: () => void;
+  onClick?: () => void;
 }) {
+  const isInteractive = !!onClick;
+
   return (
-    <button
-      type="button"
+    <article
+      role={isInteractive ? "button" : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (!isInteractive) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick?.();
+        }
+      }}
       className={[
-        "rounded-lg border px-4 py-3 text-left transition-colors",
-        active
-          ? "border-gray-900 bg-white text-gray-900"
-          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50",
+        "rounded-lg border border-gray-200 bg-white p-4 transition-colors",
+        isInteractive
+          ? "cursor-pointer hover:border-gray-300 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+          : "",
       ].join(" ")}
     >
-      <div className="text-[13px] font-semibold">{title}</div>
-      <div className="mt-1 text-[12px] leading-5 text-gray-600">{description}</div>
-    </button>
+      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
+      <div className="mt-2 select-text text-[20px] font-semibold text-gray-900">{value}</div>
+      <p className="mt-1 text-[12px] leading-5 text-gray-600">{description}</p>
+    </article>
   );
 }
 
@@ -321,12 +306,56 @@ function TreeRow({
   );
 }
 
-const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
+function AccountListRow({
+  account,
+  onOpen,
+}: {
+  account: LedgerAccount;
+  onOpen: (account: LedgerAccount) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(account)}
+      className="flex w-full items-start justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left transition-colors hover:border-gray-300 hover:bg-gray-50"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[13px] font-semibold text-gray-900">{account.code || "—"}</span>
+          <span className="text-[13px] text-gray-900">{account.name}</span>
+        </div>
+
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-600">
+          <span>{sectionLabelMap[account.statement_section]}</span>
+          <span>•</span>
+          <span>{account.account_type}</span>
+          <span>•</span>
+          <span>{account.normal_balance}</span>
+          {account.report_group ? (
+            <>
+              <span>•</span>
+              <span>{account.report_group}</span>
+            </>
+          ) : null}
+          {account.report_subgroup ? (
+            <>
+              <span>•</span>
+              <span>{account.report_subgroup}</span>
+            </>
+          ) : null}
+        </div>
+      </div>
+
+      <span className="shrink-0 text-[12px] font-medium text-gray-700">Open</span>
+    </button>
+  );
+}
+
+const AccountingWorkspace: React.FC<Props> = () => {
   const { isOwner, permissions } = useAuthContext();
   const canView = isOwner || permissions.includes("view_ledger_account");
   const canManage = isOwner || permissions.includes("add_ledger_account");
 
-  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("chart");
   const [treeMode, setTreeMode] = useState<TreeMode>("compact");
 
   const [draftSearch, setDraftSearch] = useState("");
@@ -343,69 +372,81 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
   const [appliedManualPosting, setAppliedManualPosting] = useState<"" | "true" | "false">("");
   const [appliedActive, setAppliedActive] = useState<"true" | "false">("true");
 
+  const [accounts, setAccounts] = useState<LedgerAccount[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [editing, setEditing] = useState<Partial<LedgerAccount> | null>(null);
+  const [modalState, setModalState] = useState<ModalState>({ type: "closed" });
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState<SnackbarState>(null);
+
+  const editing =
+    modalState.type === "edit"
+      ? modalState.editing
+      : modalState.type === "create"
+        ? modalState.editing
+        : null;
+
+  const isFormModalOpen = modalState.type === "create" || modalState.type === "edit";
+  const isAccountsListModalOpen = modalState.type === "accounts_list";
 
   const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
   const [metadataText, setMetadataText] = useState("{}");
   const [modalError, setModalError] = useState<string | null>(null);
 
-  const fetchPage = useCallback(
-    async (cursor?: string) => {
-      if (!canView) {
-        return { items: [] as LedgerAccount[], nextCursor: undefined as string | undefined };
-      }
+  const loadAccounts = useCallback(async () => {
+    if (!canView) {
+      setAccounts([]);
+      return;
+    }
 
-      const response = (await api.getLedgerAccounts({
-        cursor,
+    try {
+      setLoading(true);
+
+      const response = await api.getLedgerAccounts({
         q: appliedSearch || undefined,
         active: appliedActive,
         ...(appliedSection ? { statement_section: appliedSection } : {}),
         ...(appliedAccountType ? { account_type: appliedAccountType } : {}),
         ...(appliedBankControl ? { is_bank_control: appliedBankControl } : {}),
         ...(appliedManualPosting ? { allows_manual_posting: appliedManualPosting } : {}),
-      })) as { data: GetLedgerAccountsResponse; meta?: PaginationMeta };
+      });
 
-      const data = response.data;
-      const nextUrl = response.meta?.pagination?.next ?? data?.next ?? null;
-      const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
+      const payload = response?.data;
+      const nextItems = Array.isArray(payload?.results)
+        ? (payload.results as LedgerAccount[])
+        : Array.isArray(payload)
+          ? (payload as LedgerAccount[])
+          : [];
 
-      return {
-        items: (data?.results ?? []) as LedgerAccount[],
-        nextCursor,
-      };
-    },
-    [
-      canView,
-      appliedSearch,
-      appliedActive,
-      appliedSection,
-      appliedAccountType,
-      appliedBankControl,
-      appliedManualPosting,
-    ]
-  );
+      setAccounts(nextItems);
+    } catch (error) {
+      setSnackbar({
+        message: (error as Error)?.message || "Unable to load ledger accounts.",
+        severity: "error",
+      });
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    canView,
+    appliedSearch,
+    appliedActive,
+    appliedSection,
+    appliedAccountType,
+    appliedBankControl,
+    appliedManualPosting,
+  ]);
 
-  const pager = useCursorPager<LedgerAccount>(fetchPage, {
-    autoLoadFirst: canView,
-    deps: [
-      canView,
-      appliedSearch,
-      appliedActive,
-      appliedSection,
-      appliedAccountType,
-      appliedBankControl,
-      appliedManualPosting,
-    ],
-  });
+  useEffect(() => {
+    void loadAccounts();
+  }, [loadAccounts, refreshKey]);
 
   const tree = useMemo<TreeNode[]>(() => {
-    const sorted = [...pager.items].sort(sortAccounts);
+    const sorted = [...accounts].sort(sortAccounts);
     const map = new Map<string, TreeNode>();
     const roots: TreeNode[] = [];
 
@@ -428,7 +469,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
 
     sortRecursive(roots);
     return roots;
-  }, [pager.items]);
+  }, [accounts]);
 
   useEffect(() => {
     const next = new Set<string>();
@@ -437,35 +478,35 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
   }, [tree]);
 
   useEffect(() => {
-    if (!pager.items.length) {
+    if (!accounts.length) {
       setSelectedId(null);
       return;
     }
 
-    if (!selectedId || !pager.items.some((item) => item.id === selectedId)) {
-      setSelectedId(pager.items[0].id);
+    if (!selectedId || !accounts.some((item) => item.id === selectedId)) {
+      setSelectedId(accounts[0].id);
     }
-  }, [pager.items, selectedId]);
+  }, [accounts, selectedId]);
 
   const parentOptions = useMemo(
     () =>
-      pager.items
+      accounts
         .filter((item) => item.id !== editing?.id && item.account_type === "header")
         .sort(sortAccounts)
         .map((item) => ({
           label: `${item.code || "—"} — ${item.name || item.id}`,
           value: item.id,
         })),
-    [editing?.id, pager.items]
+    [editing?.id, accounts]
   );
 
   const selectedAccount = useMemo(
-    () => pager.items.find((item) => item.id === selectedId) ?? null,
-    [pager.items, selectedId]
+    () => accounts.find((item) => item.id === selectedId) ?? null,
+    [accounts, selectedId]
   );
 
   const counters = useMemo(() => {
-    const items = pager.items;
+    const items = accounts;
     return {
       total: items.length,
       posting: items.filter((item) => item.account_type === "posting").length,
@@ -476,17 +517,16 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
       maxDepth: items.reduce((max, item) => Math.max(max, Number(item.depth || 0)), 0),
       reportingMapped: items.filter((item) => !!item.report_group || !!item.report_subgroup).length,
     };
-  }, [pager.items]);
+  }, [accounts]);
 
   const reportingGroups = useMemo(() => {
-    const grouped = pager.items.reduce<Record<string, number>>((acc, item) => {
+    const grouped = accounts.reduce<Record<string, number>>((acc, item) => {
       const key = item.report_group || "Unassigned";
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
-
     return Object.entries(grouped).sort((a, b) => b[1] - a[1]);
-  }, [pager.items]);
+  }, [accounts]);
 
   const selectedParent = useMemo(
     () => (form.parent_id ? parentOptions.filter((item) => item.value === form.parent_id) : []),
@@ -509,7 +549,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
   );
 
   useEffect(() => {
-    if (!modalOpen) return;
+    if (!isFormModalOpen) return;
 
     const next: AddLedgerAccountRequest = {
       ...DEFAULTS,
@@ -537,7 +577,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
     setForm(next);
     setMetadataText(JSON.stringify(next.metadata ?? {}, null, 2));
     setModalError(null);
-  }, [modalOpen, editing]);
+  }, [isFormModalOpen, editing]);
 
   const applyFilters = () => {
     setAppliedSearch(draftSearch.trim());
@@ -565,8 +605,9 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
   };
 
   const openCreateModal = () => {
-    setEditing(
-      selectedAccount
+    setModalState({
+      type: "create",
+      editing: selectedAccount
         ? {
             parent_id: selectedAccount.id,
             statement_section: selectedAccount.statement_section,
@@ -579,22 +620,41 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
             report_subgroup: selectedAccount.report_subgroup,
             currency_code: selectedAccount.currency_code,
           }
-        : null
-    );
-    setModalMode("create");
-    setModalOpen(true);
+        : null,
+    });
   };
 
   const openEditModal = (account: LedgerAccount) => {
-    setEditing(account);
-    setModalMode("edit");
-    setModalOpen(true);
+    setModalState({ type: "edit", editing: account });
+  };
+
+  const openAccountsListModal = ({
+    title,
+    subtitle,
+    items,
+    emptyMessage,
+  }: {
+    title: string;
+    subtitle: string;
+    items: LedgerAccount[];
+    emptyMessage: string;
+  }) => {
+    setModalState({
+      type: "accounts_list",
+      title,
+      subtitle,
+      items: [...items].sort(sortAccounts),
+      emptyMessage,
+    });
   };
 
   const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
+    setModalState({ type: "closed" });
     setModalError(null);
+  };
+
+  const refreshAccounts = () => {
+    setRefreshKey((prev) => prev + 1);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -636,15 +696,17 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
 
     try {
       setSaving(true);
-      if (modalMode === "edit" && editing?.id) {
-        await api.editLedgerAccount(editing.id, payload);
+
+      if (modalState.type === "edit" && modalState.editing?.id) {
+        await api.editLedgerAccount(modalState.editing.id, payload);
         setSnackbar({ message: "Account updated successfully.", severity: "success" });
       } else {
         await api.addLedgerAccount(payload);
         setSnackbar({ message: "Account created successfully.", severity: "success" });
       }
+
       closeModal();
-      await pager.refresh();
+      refreshAccounts();
     } catch (error) {
       setSnackbar({
         message: (error as Error)?.message || "Unable to save the account.",
@@ -662,7 +724,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
     try {
       await api.deleteLedgerAccount(account.id);
       setSnackbar({ message: "Account deleted successfully.", severity: "success" });
-      await pager.refresh();
+      refreshAccounts();
     } catch (error) {
       setSnackbar({
         message: (error as Error)?.message || "Unable to delete the account.",
@@ -684,14 +746,10 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
 
   return (
     <>
-      {pager.loading && pager.items.length === 0 ? <TopProgress active variant="top" topOffset={64} /> : null}
+      {loading && accounts.length === 0 ? <TopProgress active variant="top" topOffset={64} /> : null}
 
       <section className="space-y-4">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Ledger workspace</div>
-          </div>
-
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
@@ -699,14 +757,6 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
                   Maintain structure, posting controls, and reporting mapping in one compact workspace.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <StatusPill>
-                    {ledgerProfile.mode === "personal" ? "Personal profile" : "Organizational profile"}
-                  </StatusPill>
-                  <StatusPill>
-                    {ledgerProfile.use_compact_cashflow_view ? "Compact cashflow view" : "Full cashflow view"}
-                  </StatusPill>
-                </div>
               </div>
 
               {canManage ? (
@@ -726,31 +776,8 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                 </div>
               ) : null}
             </div>
-
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                label="Total accounts"
-                value={counters.total}
-                description="Accounts visible under the current filter set."
-              />
-              <MetricCard
-                label="Posting accounts"
-                value={counters.posting}
-                description="Accounts able to receive journal lines."
-              />
-              <MetricCard
-                label="Headers"
-                value={counters.headers}
-                description="Structural nodes used to organize the chart."
-              />
-              <MetricCard
-                label="Max depth"
-                value={counters.maxDepth}
-                description="Deepest hierarchy level in the current view."
-              />
-            </div>
           </div>
-        </div>
+        </section>
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
@@ -848,18 +875,6 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
           </div>
         </section>
 
-        <section className="grid gap-3 md:grid-cols-3">
-          {workspaceModes.map((item) => (
-            <WorkspaceTab
-              key={item.id}
-              active={workspaceMode === item.id}
-              title={item.title}
-              description={item.description}
-              onClick={() => setWorkspaceMode(item.id)}
-            />
-          ))}
-        </section>
-
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
@@ -871,7 +886,7 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
               </div>
 
               <div className="text-[12px] text-gray-600">
-                {pager.items.length} visible {pager.loading ? "• refreshing" : ""}
+                {accounts.length} visible {loading ? "• refreshing" : ""}
               </div>
             </div>
 
@@ -895,14 +910,6 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
                   No accounts found for the current filter set.
                 </div>
               )}
-
-              {pager.canNext ? (
-                <div className="flex justify-center pt-3">
-                  <Button variant="outline" type="button" disabled={pager.loading} onClick={pager.next}>
-                    {pager.loading ? "Loading..." : "Load more"}
-                  </Button>
-                </div>
-              ) : null}
             </div>
           </section>
 
@@ -975,307 +982,389 @@ const AccountingWorkspace: React.FC<Props> = ({ ledgerProfile }) => {
               </div>
             </section>
 
-            {workspaceMode === "rules" ? (
-              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
-                </div>
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
+              </div>
 
-                <div className="grid gap-3 px-4 py-4">
-                  <MetricCard
-                    label="Manual allowed"
-                    value={counters.manualAllowed}
-                    description="Accounts still open for direct manual posting."
-                  />
-                  <MetricCard
-                    label="Bank control"
-                    value={counters.bankControl}
-                    description="Accounts dedicated to settlement and bank control."
-                  />
-                  <MetricCard
-                    label="Active"
-                    value={counters.active}
-                    description="Accounts currently available in the chart."
-                  />
-                </div>
-              </section>
-            ) : null}
+              <div className="grid gap-3 px-4 py-4">
+                <SummaryCard
+                  label="Manual allowed"
+                  value={counters.manualAllowed}
+                  description="Accounts still open for direct manual posting."
+                  onClick={() =>
+                    openAccountsListModal({
+                      title: "Manual posting allowed",
+                      subtitle: "Accounts currently open for manual posting under the active filters.",
+                      items: accounts.filter((item) => item.allows_manual_posting),
+                      emptyMessage: "No accounts allow manual posting in the current view.",
+                    })
+                  }
+                />
+                <SummaryCard
+                  label="Bank control"
+                  value={counters.bankControl}
+                  description="Accounts dedicated to settlement and bank control."
+                  onClick={() =>
+                    openAccountsListModal({
+                      title: "Bank control accounts",
+                      subtitle: "Accounts marked for bank control under the active filters.",
+                      items: accounts.filter((item) => item.is_bank_control),
+                      emptyMessage: "No bank control accounts found in the current view.",
+                    })
+                  }
+                />
+                <SummaryCard
+                  label="Active"
+                  value={counters.active}
+                  description="Accounts currently available in the chart."
+                  onClick={() =>
+                    openAccountsListModal({
+                      title: "Active accounts",
+                      subtitle: "Accounts currently active under the active filters.",
+                      items: accounts.filter((item) => item.is_active),
+                      emptyMessage: "No active accounts found in the current view.",
+                    })
+                  }
+                />
+              </div>
+            </section>
 
-            {workspaceMode === "reporting" ? (
-              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting coverage</div>
-                </div>
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting coverage</div>
+              </div>
 
-                <div className="space-y-4 px-4 py-4">
-                  <MetricCard
-                    label="Mapped accounts"
-                    value={counters.reportingMapped}
-                    description="Accounts with report group or subgroup assigned."
-                  />
+              <div className="space-y-4 px-4 py-4">
+                <SummaryCard
+                  label="Mapped accounts"
+                  value={counters.reportingMapped}
+                  description="Accounts with report group or subgroup assigned."
+                  onClick={() =>
+                    openAccountsListModal({
+                      title: "Mapped reporting accounts",
+                      subtitle: "Accounts with report group or subgroup assigned under the active filters.",
+                      items: accounts.filter((item) => !!item.report_group || !!item.report_subgroup),
+                      emptyMessage: "No mapped reporting accounts found in the current view.",
+                    })
+                  }
+                />
 
-                  <div className="space-y-2">
-                    {reportingGroups.length ? (
-                      reportingGroups.slice(0, 6).map(([group, count]) => (
-                        <div
-                          key={group}
-                          className="flex items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2.5"
-                        >
-                          <span className="truncate text-[13px] text-gray-700">{group}</span>
-                          <span className="shrink-0 text-[13px] font-semibold text-gray-900">{count}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-[13px] text-gray-500">
-                        No reporting groups found.
-                      </div>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  {reportingGroups.length ? (
+                    reportingGroups.slice(0, 6).map(([group, count]) => (
+                      <button
+                        key={group}
+                        type="button"
+                        onClick={() =>
+                          openAccountsListModal({
+                            title: group === "Unassigned" ? "Unassigned reporting accounts" : `Report group: ${group}`,
+                            subtitle:
+                              group === "Unassigned"
+                                ? "Accounts without a report group in the current filtered view."
+                                : `Accounts assigned to report group "${group}" in the current filtered view.`,
+                            items:
+                              group === "Unassigned"
+                                ? accounts.filter((item) => !item.report_group)
+                                : accounts.filter((item) => item.report_group === group),
+                            emptyMessage: "No accounts found for this reporting group.",
+                          })
+                        }
+                        className="flex w-full items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2.5 text-left transition-colors hover:border-gray-300 hover:bg-gray-50"
+                      >
+                        <span className="truncate text-[13px] text-gray-700">{group}</span>
+                        <span className="shrink-0 select-text text-[13px] font-semibold text-gray-900">
+                          {count}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-[13px] text-gray-500">
+                      No reporting groups found.
+                    </div>
+                  )}
                 </div>
-              </section>
-            ) : null}
+              </div>
+            </section>
           </aside>
         </section>
       </section>
 
       <AccountingSideModal
-        isOpen={modalOpen}
+        isOpen={isFormModalOpen}
         onClose={closeModal}
-        title={modalMode === "create" ? "New account" : "Edit account"}
+        title={modalState.type === "create" ? "New account" : "Edit account"}
         subtitle="Maintain structure, posting rules, and reporting classification from a dedicated side modal."
         contentClassName="pb-4 md:pb-6"
       >
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">Identity</div>
-            </div>
+        {isFormModalOpen ? (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Identity</div>
+              </div>
 
-            <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
-              <Input
-                kind="text"
-                label="Code"
-                value={form.code}
-                onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
-              />
-              <Input
-                kind="text"
-                label="Name"
-                value={form.name}
-                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-              />
-              <div className="sm:col-span-2">
+              <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
                 <Input
                   kind="text"
-                  label="Description"
-                  value={form.description || ""}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, description: event.target.value }))
-                  }
+                  label="Code"
+                  value={form.code}
+                  onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
                 />
+                <Input
+                  kind="text"
+                  label="Name"
+                  value={form.name}
+                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                />
+                <div className="sm:col-span-2">
+                  <Input
+                    kind="text"
+                    label="Description"
+                    value={form.description || ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, description: event.target.value }))
+                    }
+                  />
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">Structure</div>
-            </div>
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Structure</div>
+              </div>
 
-            <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
-              <SelectDropdown<Option<LedgerAccountType>>
-                label="Account type"
-                items={accountTypeOptions}
-                selected={selectedFormAccountType}
-                onChange={(items: Option<LedgerAccountType>[]) =>
-                  setForm((prev) => ({ ...prev, account_type: items[0]?.value ?? "posting" }))
-                }
-                getItemKey={optionKey}
-                getItemLabel={optionLabel}
-                singleSelect
-                hideCheckboxes
-                buttonLabel="Select type"
-              />
-
-              <SelectDropdown<Option<LedgerStatementSection>>
-                label="Statement section"
-                items={sectionOptions}
-                selected={selectedFormSection}
-                onChange={(items: Option<LedgerStatementSection>[]) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    statement_section: items[0]?.value ?? "expense",
-                  }))
-                }
-                getItemKey={optionKey}
-                getItemLabel={optionLabel}
-                singleSelect
-                hideCheckboxes
-                buttonLabel="Select section"
-              />
-
-              <SelectDropdown<Option<LedgerNormalBalance>>
-                label="Normal balance"
-                items={balanceOptions}
-                selected={selectedFormBalance}
-                onChange={(items: Option<LedgerNormalBalance>[]) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    normal_balance: items[0]?.value ?? "debit",
-                  }))
-                }
-                getItemKey={optionKey}
-                getItemLabel={optionLabel}
-                singleSelect
-                hideCheckboxes
-                buttonLabel="Select balance"
-              />
-
-              <SelectDropdown<{ label: string; value: string }>
-                label="Parent account"
-                items={parentOptions}
-                selected={selectedParent}
-                onChange={(items: Array<{ label: string; value: string }>) =>
-                  setForm((prev) => ({ ...prev, parent_id: items[0]?.value ?? null }))
-                }
-                getItemKey={(item: { label: string; value: string }) => item.value}
-                getItemLabel={(item: { label: string; value: string }) => item.label}
-                singleSelect
-                hideCheckboxes
-                buttonLabel="Optional parent"
-              />
-            </div>
-          </section>
-
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
-            </div>
-
-            <div className="space-y-3 px-4 py-4">
-              <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-800">
-                <Checkbox
-                  checked={!!form.is_active}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, is_active: event.target.checked }))
+              <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
+                <SelectDropdown<Option<LedgerAccountType>>
+                  label="Account type"
+                  items={accountTypeOptions}
+                  selected={selectedFormAccountType}
+                  onChange={(items: Option<LedgerAccountType>[]) =>
+                    setForm((prev) => ({ ...prev, account_type: items[0]?.value ?? "posting" }))
                   }
-                  size="small"
+                  getItemKey={optionKey}
+                  getItemLabel={optionLabel}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel="Select type"
                 />
-                <span className="font-medium text-gray-900">Active</span>
-              </label>
 
-              <label
-                className={[
-                  "flex items-center gap-3 rounded-md border px-3 py-3 text-[13px]",
-                  form.account_type !== "posting"
-                    ? "border-gray-100 bg-gray-50 text-gray-400"
-                    : "border-gray-200 bg-white text-gray-800",
-                ].join(" ")}
-              >
-                <Checkbox
-                  checked={!!form.is_bank_control}
-                  disabled={form.account_type !== "posting"}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, is_bank_control: event.target.checked }))
-                  }
-                  size="small"
-                />
-                <span className="font-medium">Bank control</span>
-              </label>
-
-              <label
-                className={[
-                  "flex items-center gap-3 rounded-md border px-3 py-3 text-[13px]",
-                  form.account_type !== "posting"
-                    ? "border-gray-100 bg-gray-50 text-gray-400"
-                    : "border-gray-200 bg-white text-gray-800",
-                ].join(" ")}
-              >
-                <Checkbox
-                  checked={!!form.allows_manual_posting}
-                  disabled={form.account_type !== "posting"}
-                  onChange={(event) =>
+                <SelectDropdown<Option<LedgerStatementSection>>
+                  label="Statement section"
+                  items={sectionOptions}
+                  selected={selectedFormSection}
+                  onChange={(items: Option<LedgerStatementSection>[]) =>
                     setForm((prev) => ({
                       ...prev,
-                      allows_manual_posting: event.target.checked,
+                      statement_section: items[0]?.value ?? "expense",
                     }))
                   }
-                  size="small"
+                  getItemKey={optionKey}
+                  getItemLabel={optionLabel}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel="Select section"
                 />
-                <span className="font-medium">Manual posting allowed</span>
-              </label>
-            </div>
-          </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting and integrations</div>
-            </div>
+                <SelectDropdown<Option<LedgerNormalBalance>>
+                  label="Normal balance"
+                  items={balanceOptions}
+                  selected={selectedFormBalance}
+                  onChange={(items: Option<LedgerNormalBalance>[]) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      normal_balance: items[0]?.value ?? "debit",
+                    }))
+                  }
+                  getItemKey={optionKey}
+                  getItemLabel={optionLabel}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel="Select balance"
+                />
 
-            <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
-              <Input
-                kind="text"
-                label="Report group"
-                value={form.report_group || ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, report_group: event.target.value }))
-                }
-              />
-              <Input
-                kind="text"
-                label="Report subgroup"
-                value={form.report_subgroup || ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, report_subgroup: event.target.value }))
-                }
-              />
-              <Input
-                kind="text"
-                label="External reference"
-                value={form.external_ref || ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, external_ref: event.target.value }))
-                }
-              />
-              <Input
-                kind="text"
-                label="Currency"
-                value={form.currency_code || ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, currency_code: event.target.value }))
-                }
-              />
+                <SelectDropdown<{ label: string; value: string }>
+                  label="Parent account"
+                  items={parentOptions}
+                  selected={selectedParent}
+                  onChange={(items: Array<{ label: string; value: string }>) =>
+                    setForm((prev) => ({ ...prev, parent_id: items[0]?.value ?? null }))
+                  }
+                  getItemKey={(item: { label: string; value: string }) => item.value}
+                  getItemLabel={(item: { label: string; value: string }) => item.label}
+                  singleSelect
+                  hideCheckboxes
+                  buttonLabel="Optional parent"
+                />
+              </div>
+            </section>
 
-              <div className="sm:col-span-2">
-                <label className="mb-2 block text-[12px] font-semibold text-gray-700">
-                  Metadata JSON
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
+              </div>
+
+              <div className="space-y-3 px-4 py-4">
+                <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-800">
+                  <Checkbox
+                    checked={!!form.is_active}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, is_active: event.target.checked }))
+                    }
+                    size="small"
+                  />
+                  <span className="font-medium text-gray-900">Active</span>
                 </label>
-                <textarea
-                  value={metadataText}
-                  onChange={(event) => setMetadataText(event.target.value)}
-                  className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+
+                <label
+                  className={[
+                    "flex items-center gap-3 rounded-md border px-3 py-3 text-[13px]",
+                    form.account_type !== "posting"
+                      ? "border-gray-100 bg-gray-50 text-gray-400"
+                      : "border-gray-200 bg-white text-gray-800",
+                  ].join(" ")}
+                >
+                  <Checkbox
+                    checked={!!form.is_bank_control}
+                    disabled={form.account_type !== "posting"}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, is_bank_control: event.target.checked }))
+                    }
+                    size="small"
+                  />
+                  <span className="font-medium">Bank control</span>
+                </label>
+
+                <label
+                  className={[
+                    "flex items-center gap-3 rounded-md border px-3 py-3 text-[13px]",
+                    form.account_type !== "posting"
+                      ? "border-gray-100 bg-gray-50 text-gray-400"
+                      : "border-gray-200 bg-white text-gray-800",
+                  ].join(" ")}
+                >
+                  <Checkbox
+                    checked={!!form.allows_manual_posting}
+                    disabled={form.account_type !== "posting"}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        allows_manual_posting: event.target.checked,
+                      }))
+                    }
+                    size="small"
+                  />
+                  <span className="font-medium">Manual posting allowed</span>
+                </label>
+              </div>
+            </section>
+
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting and integrations</div>
+              </div>
+
+              <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
+                <Input
+                  kind="text"
+                  label="Report group"
+                  value={form.report_group || ""}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, report_group: event.target.value }))
+                  }
                 />
+                <Input
+                  kind="text"
+                  label="Report subgroup"
+                  value={form.report_subgroup || ""}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, report_subgroup: event.target.value }))
+                  }
+                />
+                <Input
+                  kind="text"
+                  label="External reference"
+                  value={form.external_ref || ""}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, external_ref: event.target.value }))
+                  }
+                />
+                <Input
+                  kind="text"
+                  label="Currency"
+                  value={form.currency_code || ""}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, currency_code: event.target.value }))
+                  }
+                />
+
+                <div className="sm:col-span-2">
+                  <label className="mb-2 block text-[12px] font-semibold text-gray-700">
+                    Metadata JSON
+                  </label>
+                  <textarea
+                    value={metadataText}
+                    onChange={(event) => setMetadataText(event.target.value)}
+                    className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-sm text-gray-900 outline-none focus:border-gray-500"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <div>
+              {modalError ? (
+                <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+                  {modalError}
+                </div>
+              ) : null}
+
+              <div className="flex items-center justify-end gap-3">
+                <Button type="button" variant="outline" onClick={closeModal}>
+                  Cancel
+                </Button>
+                <Button disabled={saving} type="submit">
+                  {saving ? "Saving..." : modalState.type === "create" ? "Create account" : "Save changes"}
+                </Button>
               </div>
             </div>
-          </section>
+          </form>
+        ) : null}
+      </AccountingSideModal>
 
-          <div>
-            {modalError ? (
-              <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
-                {modalError}
-              </div>
-            ) : null}
-
-            <div className="flex items-center justify-end gap-3">
-              <Button type="button" variant="outline" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button disabled={saving} type="submit">
-                {saving ? "Saving..." : modalMode === "create" ? "Create account" : "Save changes"}
-              </Button>
+      <AccountingSideModal
+        isOpen={isAccountsListModalOpen}
+        onClose={closeModal}
+        title={modalState.type === "accounts_list" ? modalState.title : "Accounts"}
+        subtitle={modalState.type === "accounts_list" ? modalState.subtitle : ""}
+        contentClassName="pb-4 md:pb-6"
+      >
+        {modalState.type === "accounts_list" ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] text-gray-600">
+              {modalState.items.length} account{modalState.items.length === 1 ? "" : "s"} found
             </div>
+
+            {modalState.items.length ? (
+              <div className="space-y-3">
+                {modalState.items.map((account) => (
+                  <AccountListRow
+                    key={account.id}
+                    account={account}
+                    onOpen={(item) => {
+                      setSelectedId(item.id);
+                      setModalState({ type: "edit", editing: item });
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-[13px] text-gray-500">
+                {modalState.emptyMessage}
+              </div>
+            )}
           </div>
-        </form>
+        ) : null}
       </AccountingSideModal>
 
       {snackbar ? (
