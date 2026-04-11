@@ -19,7 +19,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import signUpBackground from "@/assets/Images/background/signup-background.svg";
 import logoBlack from "@/assets/Icons/logo/logo-black.svg";
@@ -561,7 +561,7 @@ const SignUp = () => {
                           : "opacity-0 pointer-events-none absolute inset-0"
                       }`}
                     >
-                      <SelectDropdown<LanguageOption>
+                      <Select<LanguageOption>
                         label={t("languageLabel")}
                         items={LANGUAGE_OPTIONS}
                         selected={selectedLanguage}
@@ -585,7 +585,7 @@ const SignUp = () => {
                         hideFilter
                       />
 
-                      <SelectDropdown<CountryOption>
+                      <Select<CountryOption>
                         label={t("countryLabel")}
                         items={COUNTRIES}
                         selected={selectedCountry}
@@ -608,7 +608,7 @@ const SignUp = () => {
                         disabled={isLoading}
                       />
 
-                      <SelectDropdown<CurrencyOption>
+                      <Select<CurrencyOption>
                         label={t("currencyLabel")}
                         items={CURRENCIES}
                         selected={selectedCurrency}

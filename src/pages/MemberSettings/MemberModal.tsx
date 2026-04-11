@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Shimmer from "@/shared/ui/Loaders/Shimmer";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
@@ -450,7 +450,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
                 <PermissionMiddleware codeName={"view_group"}>
                   <div className="md:col-span-2">
-                    <SelectDropdown<GroupListItem>
+                    <Select<GroupListItem>
                       label={t("field.groups")}
                       items={allGroups}
                       selected={formData.groups}

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import type {
   AddLedgerAccountRequest,
@@ -390,7 +390,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                   }
                 />
 
-                <SelectDropdown<{ label: string; value: string }>
+                <Select<{ label: string; value: string }>
                   label={t("modal.parent", "Parent account")}
                   items={parentOptions}
                   selected={selectedParent}
@@ -410,7 +410,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
               <FieldGroup title={t("modal.classification", "Classification")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <SelectDropdown<Option<LedgerAccountType>>
+                  <Select<Option<LedgerAccountType>>
                     label={t("modal.accountType", "Account type")}
                     items={accountTypeOptions}
                     selected={accountTypeOptions.filter((item) => item.value === form.account_type)}
@@ -427,7 +427,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                     buttonLabel={t("modal.selectAccountType", "Select account type")}
                   />
 
-                  <SelectDropdown<Option<LedgerStatementSection>>
+                  <Select<Option<LedgerStatementSection>>
                     label={t("modal.statementSection", "Statement section")}
                     items={sectionOptions}
                     selected={sectionOptions.filter((item) => item.value === form.statement_section)}
@@ -445,7 +445,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                   />
                 </div>
 
-                <SelectDropdown<Option<LedgerNormalBalance>>
+                <Select<Option<LedgerNormalBalance>>
                   label={t("modal.normalBalance", "Normal balance")}
                   items={balanceOptions}
                   selected={balanceOptions.filter((item) => item.value === form.normal_balance)}

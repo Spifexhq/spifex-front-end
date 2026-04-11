@@ -125,10 +125,10 @@ import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
 import frSelectionActionsBar from "./locales/fr/selectionActionsBar.json";
 import deSelectionActionsBar from "./locales/de/selectionActionsBar.json";
 
-import ptSelectDropdown from "./locales/pt/selectDropdown.json";
-import enSelectDropdown from "./locales/en/selectDropdown.json";
-import frSelectDropdown from "./locales/fr/selectDropdown.json";
-import deSelectDropdown from "./locales/de/selectDropdown.json";
+import ptSelect from "./locales/pt/select.json";
+import enSelect from "./locales/en/select.json";
+import frSelect from "./locales/fr/select.json";
+import deSelect from "./locales/de/select.json";
 
 /* -------------------------------------------------------------------------- */
 /* Cashflow / Finance                                                           */
@@ -368,7 +368,7 @@ const NAMESPACES = [
   "reports",
 
   "selectionActionsBar",
-  "selectDropdown",
+  "select",
 
   "filterBar",
   "kpiCards",
@@ -442,7 +442,7 @@ const resources: Resource = {
     reports: ptReports,
 
     selectionActionsBar: ptSelectionActionsBar,
-    selectDropdown: ptSelectDropdown,
+    select: ptSelect,
 
     filterBar: ptFilterBar,
     kpiCards: ptKpiCards,
@@ -511,7 +511,7 @@ const resources: Resource = {
     reports: enReports,
 
     selectionActionsBar: enSelectionActionsBar,
-    selectDropdown: enSelectDropdown,
+    select: enSelect,
 
     filterBar: enFilterBar,
     kpiCards: enKpiCards,
@@ -580,7 +580,7 @@ const resources: Resource = {
     reports: frReports,
 
     selectionActionsBar: frSelectionActionsBar,
-    selectDropdown: frSelectDropdown,
+    select: frSelect,
 
     filterBar: frFilterBar,
     kpiCards: frKpiCards,
@@ -649,7 +649,7 @@ const resources: Resource = {
     reports: deReports,
 
     selectionActionsBar: deSelectionActionsBar,
-    selectDropdown: deSelectDropdown,
+    select: deSelect,
 
     filterBar: deFilterBar,
     kpiCards: deKpiCards,

@@ -11,7 +11,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 import { PermissionMiddleware } from "src/middlewares";
 
 import { api } from "@/api/requests";
@@ -295,7 +295,7 @@ const Statements: React.FC = () => {
                   placeholder={t("filters.placeholder")}
                 />
 
-                <SelectDropdown<SelectItem>
+                <Select<SelectItem>
                   label={t("filters.bank")}
                   items={bankOptions}
                   selected={

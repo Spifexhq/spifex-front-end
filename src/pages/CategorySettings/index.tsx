@@ -6,7 +6,7 @@ import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Snackbar from "@/shared/ui/Snackbar";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import AccountingSideModal from "@/pages/AccountingSettings/components/AccountingSideModal";
 import { api } from "@/api";
@@ -346,7 +346,7 @@ const CategorySettingsPage: React.FC = () => {
                   onChange={(e) => setDraftSearch(e.target.value)}
                 />
 
-                <SelectDropdown<Option<"credit" | "debit">>
+                <Select<Option<"credit" | "debit">>
                   label={t("filters.transactionHint")}
                   items={TX_TYPE_OPTIONS}
                   selected={selectedDraftTxFilter}
@@ -470,7 +470,7 @@ const CategorySettingsPage: React.FC = () => {
           />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <SelectDropdown<{ label: string; value: string }>
+            <Select<{ label: string; value: string }>
               label={t("modal.parent")}
               items={parentOptions}
               selected={selectedParent}
@@ -482,7 +482,7 @@ const CategorySettingsPage: React.FC = () => {
               hideCheckboxes
             />
 
-            <SelectDropdown<Option<"credit" | "debit">>
+            <Select<Option<"credit" | "debit">>
               label={t("modal.txHint")}
               items={TX_TYPE_OPTIONS}
               selected={selectedTxType}

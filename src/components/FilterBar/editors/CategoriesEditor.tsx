@@ -1,5 +1,5 @@
 import React from "react";
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 import Button from "@/shared/ui/Button";
 
 import type { FilterEditorProps } from "../FilterBar.types";
@@ -17,7 +17,7 @@ export const CategoriesEditor: React.FC<FilterEditorProps> = ({
   onApply,
 }) => (
   <>
-    <SelectDropdown<CashflowCategory>
+    <Select<CashflowCategory>
       label={t("filterBar:editors.categories.label")}
       items={categoriesForPicker}
       selected={selectedCategories}

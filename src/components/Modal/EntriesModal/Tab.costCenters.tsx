@@ -4,7 +4,7 @@ import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import type { FormData } from "../Modal.types";
 import type { Department } from "@/models/settings/departments";
@@ -115,7 +115,7 @@ const CostCentersTab: React.FC<Props> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <SelectDropdown<Department>
+        <Select<Department>
           label={t("entriesModal:costCenters.departments")}
           items={departments}
           selected={selectedDepartments}
@@ -176,7 +176,7 @@ const CostCentersTab: React.FC<Props> = ({
       </div>
 
       <div>
-        <SelectDropdown<Project>
+        <Select<Project>
           label={t("entriesModal:costCenters.projects")}
           items={projects}
           selected={selectedProject}

@@ -16,7 +16,7 @@ import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -549,7 +549,7 @@ const OnboardingPage: React.FC = () => {
                     </div>
 
                     <div className={missingBlockClass(personalMissing.timezone)}>
-                      <SelectDropdown<{ label: string; value: string }>
+                      <Select<{ label: string; value: string }>
                         label={t("fields.timezoneRequired")}
                         items={TIMEZONES}
                         selected={selectedPersonalTimezone}
@@ -579,7 +579,7 @@ const OnboardingPage: React.FC = () => {
                     </div>
 
                     <div className={missingBlockClass(personalMissing.country)}>
-                      <SelectDropdown<CountryOption>
+                      <Select<CountryOption>
                         label={t("fields.countryRequired")}
                         items={countries}
                         selected={selectedPersonalCountry}
@@ -654,7 +654,7 @@ const OnboardingPage: React.FC = () => {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className={missingBlockClass(orgMissing.timezone)}>
-                      <SelectDropdown<{ label: string; value: string }>
+                      <Select<{ label: string; value: string }>
                         label={t("fields.orgTimezoneRequired")}
                         items={TIMEZONES}
                         selected={selectedOrgTimezone}
@@ -684,7 +684,7 @@ const OnboardingPage: React.FC = () => {
                     </div>
 
                     <div className={missingBlockClass(orgMissing.country)}>
-                      <SelectDropdown<CountryOption>
+                      <Select<CountryOption>
                         label={t("fields.orgCountryRequired")}
                         items={countries}
                         selected={selectedOrgCountry}

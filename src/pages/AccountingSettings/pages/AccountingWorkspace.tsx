@@ -6,7 +6,7 @@ import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Snackbar from "@/shared/ui/Snackbar";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -793,7 +793,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 onChange={(event) => setDraftSearch(event.target.value)}
               />
 
-              <SelectDropdown<Option<LedgerStatementSection>>
+              <Select<Option<LedgerStatementSection>>
                 label="Section"
                 items={sectionOptions}
                 selected={sectionOptions.filter((item) => item.value === draftSection)}
@@ -807,7 +807,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 buttonLabel="All sections"
               />
 
-              <SelectDropdown<Option<LedgerAccountType>>
+              <Select<Option<LedgerAccountType>>
                 label="Account type"
                 items={accountTypeOptions}
                 selected={accountTypeOptions.filter((item) => item.value === draftAccountType)}
@@ -821,7 +821,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 buttonLabel="All types"
               />
 
-              <SelectDropdown<Option<"true" | "false">>
+              <Select<Option<"true" | "false">>
                 label="Bank control"
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftBankControl)}
@@ -835,7 +835,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 buttonLabel="Any"
               />
 
-              <SelectDropdown<Option<"true" | "false">>
+              <Select<Option<"true" | "false">>
                 label="Manual posting"
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftManualPosting)}
@@ -849,7 +849,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 buttonLabel="Any"
               />
 
-              <SelectDropdown<Option<"true" | "false">>
+              <Select<Option<"true" | "false">>
                 label="Active"
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftActive)}
@@ -1136,7 +1136,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
               </div>
 
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
-                <SelectDropdown<Option<LedgerAccountType>>
+                <Select<Option<LedgerAccountType>>
                   label="Account type"
                   items={accountTypeOptions}
                   selected={selectedFormAccountType}
@@ -1150,7 +1150,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   buttonLabel="Select type"
                 />
 
-                <SelectDropdown<Option<LedgerStatementSection>>
+                <Select<Option<LedgerStatementSection>>
                   label="Statement section"
                   items={sectionOptions}
                   selected={selectedFormSection}
@@ -1167,7 +1167,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   buttonLabel="Select section"
                 />
 
-                <SelectDropdown<Option<LedgerNormalBalance>>
+                <Select<Option<LedgerNormalBalance>>
                   label="Normal balance"
                   items={balanceOptions}
                   selected={selectedFormBalance}
@@ -1184,7 +1184,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   buttonLabel="Select balance"
                 />
 
-                <SelectDropdown<{ label: string; value: string }>
+                <Select<{ label: string; value: string }>
                   label="Parent account"
                   items={parentOptions}
                   selected={selectedParent}

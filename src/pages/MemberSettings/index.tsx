@@ -19,7 +19,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 import Popover from "src/shared/ui/Popover";
 
 import MemberModal from "./MemberModal";
@@ -768,7 +768,7 @@ const MemberSettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<RoleOption>
+              <Select<RoleOption>
                 label={t("filters.roleLabel")}
                 items={roleOptions}
                 selected={selectedDraftRoleOptions}
@@ -808,7 +808,7 @@ const MemberSettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<GroupOption>
+              <Select<GroupOption>
                 label={t("filters.groupLabel")}
                 items={groupOptions}
                 selected={selectedDraftGroupOptions}

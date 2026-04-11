@@ -33,7 +33,7 @@ import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 type BankOption = { label: string; value: string };
 type SelectItem = { label: string; value: string };
@@ -1127,7 +1127,7 @@ const StatementImportWizard: React.FC<Props> = ({
       <div className="border-b border-gray-200 bg-white px-4 py-4 md:px-5">
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,340px)_1fr]">
-            <SelectDropdown<SelectItem>
+            <Select<SelectItem>
               label="Bank account"
               items={bankOptions}
               selected={
@@ -1232,7 +1232,7 @@ const StatementImportWizard: React.FC<Props> = ({
               />
 
               <div className="mt-3">
-                <SelectDropdown<SelectItem>
+                <Select<SelectItem>
                   label="Status filter"
                   items={rowStatusOptions}
                   selected={
@@ -1559,7 +1559,7 @@ const StatementImportWizard: React.FC<Props> = ({
                     </div>
 
                     <div>
-                      <SelectDropdown<SelectItem>
+                      <Select<SelectItem>
                         label="Tx type"
                         items={txTypeOptions}
                         selected={
@@ -1625,7 +1625,7 @@ const StatementImportWizard: React.FC<Props> = ({
                     </div>
 
                     <div>
-                      <SelectDropdown<SelectItem>
+                      <Select<SelectItem>
                         label="Document type"
                         items={optionMap.document_types}
                         selected={
@@ -1683,7 +1683,7 @@ const StatementImportWizard: React.FC<Props> = ({
 
                   <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div>
-                      <SelectDropdown<EntityOption>
+                      <Select<EntityOption>
                         label="Entity"
                         items={filteredEntityOptions as EntityOption[]}
                         selected={
@@ -1719,7 +1719,7 @@ const StatementImportWizard: React.FC<Props> = ({
                       })}
                     </div>
 
-                    <SelectDropdown<SelectItem>
+                    <Select<SelectItem>
                       label="Entity type"
                       items={entityTypeOptions}
                       selected={
@@ -1745,7 +1745,7 @@ const StatementImportWizard: React.FC<Props> = ({
                     />
 
                     <div>
-                      <SelectDropdown<SelectItem>
+                      <Select<SelectItem>
                         label="Ledger account"
                         items={optionMap.ledger_accounts}
                         selected={
@@ -1788,7 +1788,7 @@ const StatementImportWizard: React.FC<Props> = ({
                     </div>
 
                     <div>
-                      <SelectDropdown<SelectItem>
+                      <Select<SelectItem>
                         label="Project"
                         items={optionMap.projects}
                         selected={
@@ -1821,7 +1821,7 @@ const StatementImportWizard: React.FC<Props> = ({
                       })}
                     </div>
 
-                    <SelectDropdown<SelectItem>
+                    <Select<SelectItem>
                       label="Installment interval"
                       items={intervalOptions}
                       selected={
@@ -1846,7 +1846,7 @@ const StatementImportWizard: React.FC<Props> = ({
                       customStyles={{ maxHeight: "240px" }}
                     />
 
-                    <SelectDropdown<SelectItem>
+                    <Select<SelectItem>
                       label="Weekend action"
                       items={weekendOptions}
                       selected={

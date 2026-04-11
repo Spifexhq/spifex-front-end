@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
@@ -181,7 +181,7 @@ export const SaveViewModal: React.FC<{
 
             {saveMode === "overwrite" && (
               <div className="mt-2 space-y-1">
-                <SelectDropdown<Visualization>
+                <Select<Visualization>
                   label={t("filterBar:saveModal.chooseView")}
                   items={scopedViews}
                   selected={overwriteView ? [overwriteView] : []}

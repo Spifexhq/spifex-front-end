@@ -4,7 +4,7 @@ import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 import Snackbar from "@/shared/ui/Snackbar";
 import { api } from "@/api";
 import AccountingSideModal from "../components/AccountingSideModal";
@@ -311,7 +311,7 @@ const AccountingBooksPage: React.FC = () => {
             </div>
 
             <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
-              <SelectDropdown<AccountingBookBasis>
+              <Select<AccountingBookBasis>
                 label="Basis"
                 items={BASIS_OPTIONS}
                 selected={selectedBasis}

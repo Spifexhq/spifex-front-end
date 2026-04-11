@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 import EntryAccountingStatusCell from "@/components/CashFlowAccounting/EntryAccountingStatusCell";
 
 import type { FormData } from "../Modal.types";
@@ -148,7 +148,7 @@ const DetailsTab: React.FC<Props> = ({
       />
 
       <div id={categoryWrapId} className="space-y-1.5">
-        <SelectDropdown<CashflowCategory>
+        <Select<CashflowCategory>
           label={t("entriesModal:details.cashflowCategory", { defaultValue: "Category" })}
           items={cashflowCategories}
           selected={selectedCategories}
@@ -185,7 +185,7 @@ const DetailsTab: React.FC<Props> = ({
         />
       </div>
 
-      <SelectDropdown<DocumentTypeItem>
+      <Select<DocumentTypeItem>
         label={t("entriesModal:details.docType")}
         items={documentTypes}
         selected={selectedDocumentTypes}

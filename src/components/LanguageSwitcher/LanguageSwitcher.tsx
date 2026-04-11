@@ -2,7 +2,7 @@
 import { useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { LANGS } from "@/lib/i18n";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 type AppLang = (typeof LANGS)[number];
 
@@ -98,7 +98,7 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="inline-block">
-      <SelectDropdown<AppLang>
+      <Select<AppLang>
         items={items}
         selected={[current]}
         onChange={handleLanguageChange}

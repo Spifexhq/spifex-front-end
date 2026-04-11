@@ -10,7 +10,7 @@ import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
 import Shimmer from "@/shared/ui/Loaders/Shimmer";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 
@@ -400,7 +400,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 />
 
                 <div className="md:col-span-2">
-                  <SelectDropdown<TypeOption>
+                  <Select<TypeOption>
                     label={t("field.type")}
                     items={typeOptions}
                     selected={typeOptions.filter((opt) => opt.value === formData.type)}

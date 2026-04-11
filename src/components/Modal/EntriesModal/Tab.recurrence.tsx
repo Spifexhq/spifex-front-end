@@ -4,7 +4,7 @@ import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import type { FormData, PeriodOption, RecurrenceOption } from "../Modal.types";
 
@@ -117,7 +117,7 @@ const RecurrenceTab: React.FC<Props> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <SelectDropdown<RecurrenceOption>
+      <Select<RecurrenceOption>
         label={t("entriesModal:recurrence.title")}
         items={recurrenceOptions}
         selected={selectedRecurrence}
@@ -144,7 +144,7 @@ const RecurrenceTab: React.FC<Props> = ({
             disabled={isRecurrenceLocked}
           />
 
-          <SelectDropdown<PeriodOption>
+          <Select<PeriodOption>
             label={t("entriesModal:recurrence.periods")}
             items={periodOptions}
             selected={selectedPeriod}
@@ -158,7 +158,7 @@ const RecurrenceTab: React.FC<Props> = ({
             disabled={isRecurrenceLocked}
           />
 
-          <SelectDropdown<WeekendOption>
+          <Select<WeekendOption>
             label={t("entriesModal:recurrence.weekend")}
             items={weekendOptions}
             selected={selectedWeekend}

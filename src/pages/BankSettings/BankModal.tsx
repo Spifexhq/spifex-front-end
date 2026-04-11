@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 
@@ -404,7 +404,7 @@ const BankModal: React.FC<BankModalProps> = ({
                   disabled={effectiveBusy}
                 />
 
-                <SelectDropdown<{ value: AccountType; label: string }>
+                <Select<{ value: AccountType; label: string }>
                   label={t("field.accountType")}
                   items={accountTypeOptions}
                   selected={accountTypeOptions.filter((o) => o.value === formData.account_type)}

@@ -14,7 +14,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 import Popover from "src/shared/ui/Popover";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 
 import BankModal from "./BankModal";
 
@@ -922,7 +922,7 @@ const BankSettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<AccountTypeOption>
+              <Select<AccountTypeOption>
                 label={t("filters.accountTypeLabel")}
                 items={accountTypeOptions}
                 selected={selectedDraftAccountTypeOptions}
@@ -1091,7 +1091,7 @@ const BankSettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<StatusOption>
+              <Select<StatusOption>
                 label={t("filters.statusLabel")}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}

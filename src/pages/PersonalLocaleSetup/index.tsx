@@ -8,7 +8,7 @@ import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Snackbar from "@/shared/ui/Snackbar";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { useAuth } from "@/api";
@@ -251,7 +251,7 @@ const PersonalLocaleSetup: React.FC = () => {
                 </div>
 
                 <div className="w-80">
-                  <SelectDropdown<TimezoneOption>
+                  <Select<TimezoneOption>
                     label={t("modalTzLabel")}
                     items={TIMEZONES}
                     selected={tzSelected}
@@ -311,7 +311,7 @@ const PersonalLocaleSetup: React.FC = () => {
                 </div>
 
                 <div className="w-80">
-                  <SelectDropdown<CountryOption>
+                  <Select<CountryOption>
                     label={t("fieldCountry")}
                     items={COUNTRIES}
                     selected={countrySelected}

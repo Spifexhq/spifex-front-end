@@ -95,7 +95,7 @@ export function useAnchoredPopover({
   }, []);
 
   const onEsc = useCallback(() => {
-    // Close transient overlays (SelectDropdown/Menu/Popover) before closing THIS popover
+    // Close transient overlays (Select/Menu/Popover) before closing THIS popover
     if (closeTransientOverlays()) return;
     onClose();
   }, [closeTransientOverlays, onClose]);

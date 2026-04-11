@@ -1,5 +1,5 @@
 import React from "react";
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 import Button from "@/shared/ui/Button";
 
 import type { FilterEditorProps } from "../FilterBar.types";
@@ -14,7 +14,7 @@ export const BanksEditor: React.FC<FilterEditorProps> = ({
   onApply,
 }) => (
   <>
-    <SelectDropdown<BankAccountTableRow>
+    <Select<BankAccountTableRow>
       label={t("filterBar:editors.banks.label")}
       items={bankOptions}
       selected={selectedBanks}

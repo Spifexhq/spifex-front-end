@@ -18,7 +18,7 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -329,7 +329,7 @@ const CurrencySettings: React.FC = () => {
                   tabIndex={-1}
                 />
 
-                <SelectDropdown<CurrencyOption>
+                <Select<CurrencyOption>
                   label={t("currencySettings:field.currency")}
                   items={allCurrencies}
                   selected={selectedCurrencyOption}

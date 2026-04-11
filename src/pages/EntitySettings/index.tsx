@@ -12,7 +12,7 @@ import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 import Popover from "src/shared/ui/Popover";
 
 import EntityModal from "./EntityModal";
@@ -799,7 +799,7 @@ const EntitySettings: React.FC = () => {
         </div>
       </Popover>
 
-      {/* TYPE POPOVER (SelectDropdown; allow overflow) */}
+      {/* TYPE POPOVER (Select; allow overflow) */}
       <Popover
         open={openFilter === "type"}
         anchorRef={typeAnchorRef}
@@ -811,7 +811,7 @@ const EntitySettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<EntityTypeOption>
+              <Select<EntityTypeOption>
                 label={t("filters.typeLabel")}
                 items={typeOptions}
                 selected={selectedDraftTypeOptions}
@@ -849,7 +849,7 @@ const EntitySettings: React.FC = () => {
         </div>
       </Popover>
 
-      {/* STATUS POPOVER (SelectDropdown; allow overflow) */}
+      {/* STATUS POPOVER (Select; allow overflow) */}
       <Popover
         open={openFilter === "status"}
         anchorRef={statusAnchorRef}
@@ -861,7 +861,7 @@ const EntitySettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<StatusOption>
+              <Select<StatusOption>
                 label={t("filters.statusLabel")}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}

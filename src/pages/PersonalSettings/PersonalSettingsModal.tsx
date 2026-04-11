@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { TIMEZONES } from "@/lib/location";
 import type { CountryOption } from "@/lib/location/countries";
@@ -189,7 +189,7 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
         aria-labelledby="personal-settings-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
         className={[
-          "relative bg-white shadow-2xl flex flex-col w-full",
+          "relative overflow-hidden bg-white shadow-2xl flex flex-col w-full",
           "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
           "md:static md:w-[640px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
           "md:rounded-lg md:border md:border-gray-200",
@@ -322,7 +322,7 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
               )}
 
               {showField("country") && (
-                <SelectDropdown<CountryOption>
+                <Select<CountryOption>
                   label={t("field.country")}
                   items={countries}
                   selected={selectedCountry}
@@ -367,7 +367,7 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
               )}
 
               {showField("gender") && (
-                <SelectDropdown<GenderOption>
+                <Select<GenderOption>
                   label={t("field.gender")}
                   items={genders}
                   selected={selectedGender}
@@ -414,7 +414,7 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
                     />
                   </div>
 
-                  <SelectDropdown<{ label: string; value: string }>
+                  <Select<{ label: string; value: string }>
                     label={t("modal.tzLabel")}
                     items={TIMEZONES}
                     selected={selectedTimezone}

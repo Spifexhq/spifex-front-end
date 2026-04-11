@@ -1,6 +1,6 @@
 import type React from "react";
 
-export interface SelectDropdownProps<T> {
+export interface SelectProps<T> {
   label?: string;
   items: T[];
   selected: T[];

@@ -4,7 +4,7 @@ import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import type { FormData } from "../Modal.types";
 import type { InventoryItem } from "@/models/settings/inventory";
@@ -75,7 +75,7 @@ const InventoryTab: React.FC<Props> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <SelectDropdown<InventoryItem>
+      <Select<InventoryItem>
         label={t("entriesModal:inventory.product")}
         items={inventoryItems}
         selected={selectedInventoryItem}

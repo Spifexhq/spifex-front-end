@@ -10,7 +10,7 @@ import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
 import Shimmer from "@/shared/ui/Loaders/Shimmer";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 
@@ -541,7 +541,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
             </div>
 
             <div>
-              <SelectDropdown<{ value: EntityTypeValue }>
+              <Select<{ value: EntityTypeValue }>
                 label={t("field.entity_type")}
                 items={ENTITY_TYPE_ITEMS}
                 selected={ENTITY_TYPE_ITEMS.filter((it) => it.value === formData.entity_type)}

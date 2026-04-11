@@ -11,14 +11,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { SelectDropdownProps } from "./SelectDropdown.types";
+import { SelectProps } from "./Select.types";
 import Checkbox from "@/shared/ui/Checkbox";
 
 function cn(...classes: Array<string | undefined | false | null>) {
   return classes.filter(Boolean).join(" ");
 }
 
-type SelectDropdownSize = "xs" | "sm" | "md" | "lg" | "xl";
+type SelectSize = "xs" | "sm" | "md" | "lg" | "xl";
 type DropdownPlacement = "bottom" | "top";
 
 type FloatingPanelPosition = {
@@ -33,7 +33,9 @@ type FloatingPanelPosition = {
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-function SelectDropdown<T>({
+const CLOSE_MS = 150;
+
+function Select<T>({
   label,
   items,
   selected,
@@ -53,11 +55,11 @@ function SelectDropdown<T>({
   virtualize = true,
   virtualThreshold = 300,
   virtualRowHeight,
-}: SelectDropdownProps<T> & { size?: SelectDropdownSize }) {
-  const { t } = useTranslation("selectDropdown");
+}: SelectProps<T> & { size?: SelectSize }) {
+  const { t } = useTranslation("select");
 
   const SIZE: Record<
-    SelectDropdownSize,
+    SelectSize,
     {
       trigger: string;
       chevron: string;
@@ -143,6 +145,7 @@ function SelectDropdown<T>({
   const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hasTopShadow, setHasTopShadow] = useState(false);
@@ -156,8 +159,11 @@ function SelectDropdown<T>({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const floatingRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const rowsScrollRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const itemElsRef = useRef<Array<HTMLDivElement | null>>([]);
+  const closeTimerRef = useRef<number | null>(null);
+  const openRafRef = useRef<number | null>(null);
 
   const id = useId();
   const panelId = `${id}-panel`;
@@ -165,6 +171,11 @@ function SelectDropdown<T>({
   useEffect(() => {
     if (typeof window === "undefined") return;
     setPortalReady(true);
+
+    return () => {
+      if (openRafRef.current != null) window.cancelAnimationFrame(openRafRef.current);
+      if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -269,7 +280,10 @@ function SelectDropdown<T>({
     const viewportHeight = window.innerHeight;
     const gap = 8;
 
-    const preferredMaxHeight = Math.min(resolvePreferredMaxHeight(), Math.round(viewportHeight * 0.5));
+    const preferredMaxHeight = Math.min(
+      resolvePreferredMaxHeight(),
+      Math.round(viewportHeight * 0.5)
+    );
     const spaceBelow = Math.max(0, viewportHeight - rect.bottom - gap);
     const spaceAbove = Math.max(0, rect.top - gap);
 
@@ -302,20 +316,108 @@ function SelectDropdown<T>({
     setPanelPosition(nextPosition);
   }, [resolvePreferredMaxHeight]);
 
-  const toggleDropdown = () => {
+  const focusTrigger = useCallback(() => {
+    requestAnimationFrame(() => {
+      buttonRef.current?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  const TABBABLE_SELECTOR =
+    'a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+  const isVisible = (el: HTMLElement) =>
+    !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+
+  const getTabbables = useCallback((root: HTMLElement | Document) => {
+    const container = (root as Document).body ?? (root as HTMLElement);
+    return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter(
+      (el) => !el.hasAttribute("disabled") && el.tabIndex !== -1 && isVisible(el)
+    );
+  }, []);
+
+  const focusRelativeToTrigger = useCallback(
+    (dir: -1 | 1) => {
+      const trigger = buttonRef.current;
+      if (!trigger) return;
+
+      const dialogScope =
+        (dropdownRef.current?.closest('[role="dialog"]') as HTMLElement | null) || document;
+
+      const tabbables = getTabbables(dialogScope);
+      const idx = tabbables.indexOf(trigger);
+      const target = tabbables[idx + dir];
+
+      setTimeout(() => {
+        target?.focus();
+      }, 0);
+    },
+    [getTabbables]
+  );
+
+  const openDropdown = useCallback(() => {
     if (disabled) return;
 
-    if (!isOpen) {
-      updateFloatingPosition();
-      setIsOpen(true);
-      return;
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
     }
 
-    setIsOpen(false);
+    updateFloatingPosition();
+    setIsRendered(true);
+
+    if (openRafRef.current != null) {
+      window.cancelAnimationFrame(openRafRef.current);
+    }
+
+    openRafRef.current = window.requestAnimationFrame(() => {
+      setIsOpen(true);
+    });
+  }, [disabled, updateFloatingPosition]);
+
+  const closeDropdown = useCallback(
+    (after?: () => void) => {
+      setIsOpen(false);
+
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+
+      closeTimerRef.current = window.setTimeout(() => {
+        setIsRendered(false);
+        setSearchTerm("");
+        setActiveIndex(null);
+        setHasTopShadow(false);
+        setHasBottomShadow(false);
+        setScrollTop(0);
+        after?.();
+      }, CLOSE_MS);
+    },
+    []
+  );
+
+  const closeAndKeepFocus = useCallback(() => {
+    closeDropdown(() => {
+      focusTrigger();
+    });
+  }, [closeDropdown, focusTrigger]);
+
+  const closeAndFocusNext = useCallback(() => {
+    closeDropdown(() => {
+      focusRelativeToTrigger(1);
+    });
+  }, [closeDropdown, focusRelativeToTrigger]);
+
+  const toggleDropdown = () => {
+    if (disabled) return;
+    if (!isRendered || !isOpen) {
+      openDropdown();
+      return;
+    }
+    closeAndKeepFocus();
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isRendered) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -323,11 +425,9 @@ function SelectDropdown<T>({
       if (dropdownRef.current?.contains(target)) return;
       if (floatingRef.current?.contains(target)) return;
 
-      setIsOpen(false);
-      setSearchTerm("");
-      setActiveIndex(null);
-
-      if (clearOnClickOutside) onChange([]);
+      closeDropdown(() => {
+        if (clearOnClickOutside) onChange([]);
+      });
     };
 
     document.addEventListener("mousedown", handleClickOutside, true);
@@ -339,21 +439,19 @@ function SelectDropdown<T>({
       window.removeEventListener("resize", updateFloatingPosition);
       window.removeEventListener("scroll", updateFloatingPosition, true);
     };
-  }, [isOpen, onChange, clearOnClickOutside, updateFloatingPosition]);
+  }, [isRendered, onChange, clearOnClickOutside, updateFloatingPosition, closeDropdown]);
 
-  window.useGlobalEsc?.(isOpen, () => {
-    setIsOpen(false);
-    setSearchTerm("");
-    setActiveIndex(null);
+  window.useGlobalEsc?.(isRendered, () => {
+    closeAndKeepFocus();
   });
 
   useIsomorphicLayoutEffect(() => {
-    if (!isOpen) return;
+    if (!isRendered) return;
     updateFloatingPosition();
-  }, [isOpen, updateFloatingPosition]);
+  }, [isRendered, updateFloatingPosition]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isRendered) return;
 
     let idx: number | null = null;
     if (flatItems.length > 0) {
@@ -378,44 +476,53 @@ function SelectDropdown<T>({
         panelRef.current?.focus?.({ preventScroll: true });
       }
 
-      const p = panelRef.current;
-      if (!p) return;
-      setHasTopShadow(p.scrollTop > 0);
-      setHasBottomShadow(p.scrollHeight - p.clientHeight - p.scrollTop > 1);
+      const rowsPanel = rowsScrollRef.current;
+      if (!rowsPanel) return;
+      setHasTopShadow(rowsPanel.scrollTop > 0);
+      setHasBottomShadow(rowsPanel.scrollHeight - rowsPanel.clientHeight - rowsPanel.scrollTop > 1);
     });
-  }, [isOpen, flatItems, selected, getItemKey, flatKeyIndexMap, isMobileViewport, hideFilter, updateFloatingPosition]);
+  }, [
+    isRendered,
+    flatItems,
+    selected,
+    getItemKey,
+    flatKeyIndexMap,
+    isMobileViewport,
+    hideFilter,
+    updateFloatingPosition,
+  ]);
 
   useEffect(() => {
-    if (!isOpen || activeIndex == null) return;
-    const panel = panelRef.current;
-    if (!panel) return;
+    if (!isRendered || activeIndex == null) return;
+    const rowsPanel = rowsScrollRef.current;
+    if (!rowsPanel) return;
 
     const rowH = effectiveRowHeight;
     const hasGroup = !!groupBy;
     const shouldVirtualize = virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
 
     if (shouldVirtualize) {
-      const panelH = panel.clientHeight || 320;
+      const panelH = rowsPanel.clientHeight || 320;
       const itemTop = activeIndex * rowH;
       const itemBottom = itemTop + rowH;
-      const viewTop = panel.scrollTop;
+      const viewTop = rowsPanel.scrollTop;
       const viewBottom = viewTop + panelH;
 
-      if (itemTop < viewTop) panel.scrollTop = itemTop;
-      else if (itemBottom > viewBottom) panel.scrollTop = itemBottom - panelH;
+      if (itemTop < viewTop) rowsPanel.scrollTop = itemTop;
+      else if (itemBottom > viewBottom) rowsPanel.scrollTop = itemBottom - panelH;
       return;
     }
 
     const el = itemElsRef.current[activeIndex];
     if (!el) return;
 
-    const panelRect = panel.getBoundingClientRect();
+    const panelRect = rowsPanel.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
 
     if (elRect.top < panelRect.top || elRect.bottom > panelRect.bottom) {
       el.scrollIntoView({ block: "nearest" });
     }
-  }, [activeIndex, isOpen, flatItems.length, effectiveRowHeight, virtualize, virtualThreshold, groupBy]);
+  }, [activeIndex, isRendered, flatItems.length, effectiveRowHeight, virtualize, virtualThreshold, groupBy]);
 
   useEffect(() => {
     if (activeIndex == null) return;
@@ -423,12 +530,12 @@ function SelectDropdown<T>({
     else if (activeIndex > flatItems.length - 1) setActiveIndex(flatItems.length - 1);
   }, [flatItems, activeIndex]);
 
-  const handleCheckboxChange = (item: T) => {
+  const handleCheckboxChange = (item: T, options?: { moveFocusNext?: boolean }) => {
     const k = keyToStr(getItemKey(item));
     const isCurrentlySelected = selectedKeys.has(k);
 
-    const panel = panelRef.current;
-    const prevScrollTop = panel?.scrollTop ?? 0;
+    const rowsPanel = rowsScrollRef.current;
+    const prevScrollTop = rowsPanel?.scrollTop ?? 0;
 
     let updated: T[];
     if (effectiveSingleSelect) {
@@ -442,12 +549,13 @@ function SelectDropdown<T>({
     onChange(updated);
 
     if (hideCheckboxes || effectiveSingleSelect) {
-      setIsOpen(false);
+      if (options?.moveFocusNext) closeAndFocusNext();
+      else closeAndKeepFocus();
     } else {
       requestAnimationFrame(() => {
-        if (panel) {
-          panel.scrollTop = prevScrollTop;
-          panel.focus?.({ preventScroll: true });
+        if (rowsPanel) {
+          rowsPanel.scrollTop = prevScrollTop;
+          rowsPanel.focus?.({ preventScroll: true });
           updateFloatingPosition();
         }
       });
@@ -480,60 +588,41 @@ function SelectDropdown<T>({
     onChange(updated);
   };
 
-  const TABBABLE_SELECTOR =
-    'a[href],area[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
-  const isVisible = (el: HTMLElement) =>
-    !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
-
-  const getTabbables = (root: HTMLElement | Document) => {
-    const container = (root as Document).body ?? (root as HTMLElement);
-    return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter(
-      (el) => !el.hasAttribute("disabled") && el.tabIndex !== -1 && isVisible(el)
-    );
-  };
-
-  const focusRelativeToTrigger = (dir: -1 | 1) => {
-    const trigger = buttonRef.current;
-    if (!trigger) return;
-
-    const dialogScope =
-      (dropdownRef.current?.closest('[role="dialog"]') as HTMLElement | null) || document;
-
-    const tabbables = getTabbables(dialogScope);
-    const idx = tabbables.indexOf(trigger);
-    const target = tabbables[idx + dir];
-
-    setTimeout(() => {
-      target?.focus();
-    }, 0);
-  };
-
   const handleButtonKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
 
     if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      updateFloatingPosition();
-      setIsOpen(true);
+      openDropdown();
+    }
+
+    if (e.key === "Escape" && isRendered) {
+      e.preventDefault();
+      closeAndKeepFocus();
     }
   };
 
   const handleButtonFocus = () => {
     if (!disabled && lastFocusByTabRef.current) {
-      updateFloatingPosition();
-      setIsOpen(true);
+      openDropdown();
     }
   };
 
   const handlePanelKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (!isOpen) return;
+    if (!isRendered) return;
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeAndKeepFocus();
+      return;
+    }
 
     if (e.key === "Tab") {
       e.preventDefault();
-      setIsOpen(false);
-      if (e.shiftKey) focusRelativeToTrigger(-1);
-      else focusRelativeToTrigger(1);
+      closeDropdown(() => {
+        if (e.shiftKey) focusRelativeToTrigger(-1);
+        else focusRelativeToTrigger(1);
+      });
       return;
     }
 
@@ -544,7 +633,10 @@ function SelectDropdown<T>({
     if (flatItems.length === 0) return;
 
     const lastIdx = flatItems.length - 1;
-    const page = Math.max(1, Math.floor((panelRef.current?.clientHeight || 240) / effectiveRowHeight));
+    const page = Math.max(
+      1,
+      Math.floor((rowsScrollRef.current?.clientHeight || 240) / effectiveRowHeight)
+    );
 
     if (e.key === "Home") {
       setActiveFrom(0, "keyboard");
@@ -581,7 +673,7 @@ function SelectDropdown<T>({
     }
 
     if (e.key === "Enter" && activeIndex != null) {
-      handleCheckboxChange(flatItems[activeIndex]);
+      handleCheckboxChange(flatItems[activeIndex], { moveFocusNext: effectiveSingleSelect });
     }
   };
 
@@ -610,7 +702,7 @@ function SelectDropdown<T>({
         key={k}
         id={optionId}
         ref={(el) => (itemElsRef.current[flatIndex] = el)}
-        onClick={() => handleCheckboxChange(item)}
+        onClick={() => handleCheckboxChange(item, { moveFocusNext: false })}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         className={cn(
@@ -629,7 +721,7 @@ function SelectDropdown<T>({
           <Checkbox
             checked={isChecked}
             onClick={(e) => e.stopPropagation()}
-            onChange={() => handleCheckboxChange(item)}
+            onChange={() => handleCheckboxChange(item, { moveFocusNext: false })}
             size="small"
           />
         )}
@@ -666,7 +758,7 @@ function SelectDropdown<T>({
   const hasGroup = !!groupBy;
   const shouldVirtualize = virtualize !== false && !hasGroup && flatItems.length > virtualThreshold;
 
-  const onPanelScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const onRowsScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (shouldVirtualize) setScrollTop(e.currentTarget.scrollTop);
 
     const p = e.currentTarget;
@@ -690,15 +782,20 @@ function SelectDropdown<T>({
   };
 
   const hasSelection = selected.length > 0;
+  const showActions = !effectiveSingleSelect && !hideCheckboxes;
+  const showFilter = !hideFilter;
 
   const floatingPanel =
-    isOpen && portalReady && panelPosition
+    isRendered && portalReady && panelPosition
       ? createPortal(
           <div
             ref={floatingRef}
             className={cn(
-              "fixed rounded-md border border-gray-200 bg-white shadow-lg",
-              "transition-opacity duration-150 ease-out opacity-100"
+              "fixed overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg",
+              "origin-top transition-all duration-150 ease-out",
+              isOpen
+                ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+                : "opacity-0 -translate-y-1 scale-[0.985] pointer-events-none"
             )}
             style={{
               zIndex: 10050,
@@ -707,6 +804,7 @@ function SelectDropdown<T>({
               top: panelPosition.top,
               bottom: panelPosition.bottom,
             }}
+            data-select-open={isOpen ? "true" : "false"}
           >
             <div
               id={panelId}
@@ -720,130 +818,160 @@ function SelectDropdown<T>({
               ref={panelRef}
               tabIndex={0}
               onKeyDown={handlePanelKeyDown}
-              onScroll={onPanelScroll}
-              className="overflow-y-auto outline-none"
+              className="flex outline-none"
               style={panelStyle}
             >
-              {!effectiveSingleSelect && !hideCheckboxes && (
-                <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
-                  <div className="flex gap-1 p-2">
-                    <button
-                      type="button"
-                      onClick={selectAll}
-                      className={cn(
-                        "rounded border border-gray-200 font-medium hover:bg-gray-50",
-                        SIZE[size].actionBtn
-                      )}
-                      tabIndex={-1}
-                      aria-label={t("actions.selectAll")}
-                    >
-                      {t("actions.selectAll")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={deselectAll}
-                      className={cn(
-                        "rounded border border-gray-200 font-medium hover:bg-gray-50",
-                        SIZE[size].actionBtn
-                      )}
-                      tabIndex={-1}
-                      aria-label={t("actions.clearAll")}
-                    >
-                      {t("actions.clearAll")}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {!hideFilter && (
-                <div className="sticky top-[var(--sticky-offset,0px)] z-10 border-b border-gray-200 bg-white px-2 py-2">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder={t("filter.placeholder")}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      ref={searchInputRef}
-                      className={cn(
-                        "w-full rounded border border-gray-200 outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-200",
-                        SIZE[size].filterInput
-                      )}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") e.preventDefault();
-                      }}
-                      aria-label={t("filter.aria")}
-                    />
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      className={cn(
-                        "absolute left-2 top-1/2 -translate-y-1/2 text-gray-400",
-                        size === "xl" ? "h-5 w-5" : "h-4 w-4"
-                      )}
-                      fill="none"
-                    >
-                      <path
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              )}
-
-              <div className="py-1">
-                {flatItems.length === 0 ? (
-                  <div className="px-3 py-8 text-center text-[12px] text-gray-500">
-                    {searchTerm ? t("empty.search") : t("empty.default")}
-                  </div>
-                ) : shouldVirtualize ? (
-                  (() => {
-                    const panelH = panelRef.current?.clientHeight || 320;
-                    const rowH = effectiveRowHeight;
-                    const overscan = 8;
-
-                    const total = flatItems.length;
-                    const totalHeight = total * rowH;
-
-                    const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
-                    const visibleCount = Math.ceil(panelH / rowH) + overscan * 2;
-                    const end = Math.min(total, start + visibleCount);
-
-                    const slice = flatItems.slice(start, end);
-
-                    return (
-                      <div style={{ height: totalHeight, position: "relative" }}>
-                        <div style={{ position: "absolute", top: start * rowH, left: 0, right: 0 }}>
-                          {slice.map((item, idx) => renderItem(item, start + idx))}
-                        </div>
-                      </div>
-                    );
-                  })()
-                ) : groupBy ? (
-                  Object.entries(groupedItems).map(([groupName, groupItems]) => (
-                    <div key={groupName}>
-                      <div
+              <div className="flex min-h-0 w-full flex-col">
+                {showActions && (
+                  <div
+                    className={cn(
+                      "z-10 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75",
+                      !showFilter ? "rounded-t-md" : ""
+                    )}
+                  >
+                    <div className="flex gap-1 rounded-t-md p-2">
+                      <button
+                        type="button"
+                        onClick={selectAll}
                         className={cn(
-                          "font-semibold text-gray-600",
-                          size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]",
-                          !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : ""
+                          "rounded border border-gray-200 font-medium hover:bg-gray-50",
+                          SIZE[size].actionBtn
                         )}
-                        onClick={() => handleGroupToggle(groupItems)}
+                        tabIndex={-1}
+                        aria-label={t("actions.selectAll")}
                       >
-                        {groupName}
-                      </div>
-                      {groupItems.map((item) => {
-                        const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
-                        return idx >= 0 ? renderItem(item, idx) : null;
-                      })}
+                        {t("actions.selectAll")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={deselectAll}
+                        className={cn(
+                          "rounded border border-gray-200 font-medium hover:bg-gray-50",
+                          SIZE[size].actionBtn
+                        )}
+                        tabIndex={-1}
+                        aria-label={t("actions.clearAll")}
+                      >
+                        {t("actions.clearAll")}
+                      </button>
                     </div>
-                  ))
-                ) : (
-                  flatItems.map((item, idx) => renderItem(item, idx))
+                  </div>
                 )}
+
+                {showFilter && (
+                  <div
+                    className={cn(
+                      "z-10 border-b border-gray-200 bg-white px-2 py-2",
+                      !showActions ? "rounded-t-md" : ""
+                    )}
+                  >
+                    <div className="relative rounded-t-md">
+                      <input
+                        type="text"
+                        placeholder={t("filter.placeholder")}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        ref={searchInputRef}
+                        className={cn(
+                          "w-full rounded border border-gray-200 outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-200",
+                          SIZE[size].filterInput
+                        )}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.preventDefault();
+                          if (e.key === "Escape") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            closeAndKeepFocus();
+                          }
+                        }}
+                        aria-label={t("filter.aria")}
+                      />
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className={cn(
+                          "absolute left-2 top-1/2 -translate-y-1/2 text-gray-400",
+                          size === "xl" ? "h-5 w-5" : "h-4 w-4"
+                        )}
+                        fill="none"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  ref={rowsScrollRef}
+                  onScroll={onRowsScroll}
+                  className="min-h-0 flex-1 overflow-y-auto"
+                  tabIndex={-1}
+                >
+                  <div className="py-1">
+                    {flatItems.length === 0 ? (
+                      <div className="px-3 py-8 text-center text-[12px] text-gray-500">
+                        {searchTerm ? t("empty.search") : t("empty.default")}
+                      </div>
+                    ) : shouldVirtualize ? (
+                      (() => {
+                        const panelH = rowsScrollRef.current?.clientHeight || 320;
+                        const rowH = effectiveRowHeight;
+                        const overscan = 8;
+
+                        const total = flatItems.length;
+                        const totalHeight = total * rowH;
+
+                        const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
+                        const visibleCount = Math.ceil(panelH / rowH) + overscan * 2;
+                        const end = Math.min(total, start + visibleCount);
+
+                        const slice = flatItems.slice(start, end);
+
+                        return (
+                          <div style={{ height: totalHeight, position: "relative" }}>
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: start * rowH,
+                                left: 0,
+                                right: 0,
+                              }}
+                            >
+                              {slice.map((item, idx) => renderItem(item, start + idx))}
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : groupBy ? (
+                      Object.entries(groupedItems).map(([groupName, groupItems]) => (
+                        <div key={groupName}>
+                          <div
+                            className={cn(
+                              "font-semibold text-gray-600",
+                              size === "xl" ? "px-5 py-3 text-[13px]" : "px-3 py-2 text-[11px]",
+                              !effectiveSingleSelect ? "cursor-pointer hover:bg-gray-50" : ""
+                            )}
+                            onClick={() => handleGroupToggle(groupItems)}
+                          >
+                            {groupName}
+                          </div>
+                          {groupItems.map((item) => {
+                            const idx = flatKeyIndexMap.get(keyToStr(getItemKey(item))) ?? -1;
+                            return idx >= 0 ? renderItem(item, idx) : null;
+                          })}
+                        </div>
+                      ))
+                    ) : (
+                      flatItems.map((item, idx) => renderItem(item, idx))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>,
@@ -862,7 +990,7 @@ function SelectDropdown<T>({
       <div
         ref={dropdownRef}
         className="relative w-full select-none"
-        data-select-open={isOpen ? "true" : undefined}
+        data-select-open={isRendered ? "true" : undefined}
       >
         <button
           ref={buttonRef}
@@ -873,7 +1001,7 @@ function SelectDropdown<T>({
           type="button"
           disabled={disabled}
           aria-haspopup="listbox"
-          aria-expanded={isOpen}
+          aria-expanded={isRendered}
           aria-controls={panelId}
           aria-label={t("aria.trigger")}
           className={cn(
@@ -893,7 +1021,12 @@ function SelectDropdown<T>({
                   SIZE[size].triggerIconBox
                 )}
               >
-                <span className={cn("inline-flex items-center justify-center", SIZE[size].triggerIconSize)}>
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center",
+                    SIZE[size].triggerIconSize
+                  )}
+                >
                   {selectedIcon}
                 </span>
               </span>
@@ -949,4 +1082,5 @@ function SelectDropdown<T>({
   );
 }
 
-export default SelectDropdown;
+export default Select;
+export { Select };

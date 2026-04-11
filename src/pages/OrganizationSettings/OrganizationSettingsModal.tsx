@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { TIMEZONES } from "@/lib/location";
 import type { CountryOption } from "@/lib/location/countries";
@@ -260,7 +260,7 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
               )}
 
               {showField("country") && (
-                <SelectDropdown<CountryOption>
+                <Select<CountryOption>
                   label={t("field.country")}
                   items={countries}
                   selected={selectedCountry}
@@ -303,7 +303,7 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
                     />
                   </div>
 
-                  <SelectDropdown<{ label: string; value: string }>
+                  <Select<{ label: string; value: string }>
                     label={t("modal.tzLabel")}
                     items={TIMEZONES}
                     selected={selectedTimezone}

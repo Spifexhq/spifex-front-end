@@ -7,7 +7,7 @@ import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Snackbar from "@/shared/ui/Snackbar";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -734,7 +734,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                 onChange={(event) => setDraftSearch(event.target.value)}
               />
 
-              <SelectDropdown<Option<LedgerStatementSection>>
+              <Select<Option<LedgerStatementSection>>
                 label={t("workspace.sectionLabel", "Statement section")}
                 items={sectionOptions}
                 selected={draftSection ? sectionOptions.filter((item) => item.value === draftSection) : []}
@@ -746,7 +746,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                 buttonLabel={t("modal.selectSection", "Select section")}
               />
 
-              <SelectDropdown<Option<LedgerAccountType>>
+              <Select<Option<LedgerAccountType>>
                 label={t("workspace.accountTypeLabel", "Account type")}
                 items={accountTypeOptions}
                 selected={
@@ -762,7 +762,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                 buttonLabel={t("modal.selectAccountType", "Select account type")}
               />
 
-              <SelectDropdown<Option<"true" | "false">>
+              <Select<Option<"true" | "false">>
                 label={t("workspace.bankControlLabel", "Bank control")}
                 items={yesNoOptions}
                 selected={
@@ -776,7 +776,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                 buttonLabel={t("workspace.bankControlLabel", "Bank control")}
               />
 
-              <SelectDropdown<Option<"true" | "false">>
+              <Select<Option<"true" | "false">>
                 label={t("workspace.manualPostingLabel", "Manual posting")}
                 items={yesNoOptions}
                 selected={
@@ -792,7 +792,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                 buttonLabel={t("workspace.manualPostingLabel", "Manual posting")}
               />
 
-              <SelectDropdown<Option<"true" | "false">>
+              <Select<Option<"true" | "false">>
                 label={t("workspace.activeLabel", "Active")}
                 items={yesNoOptions}
                 selected={yesNoOptions.filter((item) => item.value === draftActive)}

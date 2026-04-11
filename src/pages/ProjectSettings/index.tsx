@@ -12,7 +12,7 @@ import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
-import SelectDropdown from "@/shared/ui/SelectDropdown/SelectDropdown";
+import Select from "src/shared/ui/Select/Select";
 import Popover from "src/shared/ui/Popover";
 
 import ProjectModal from "./ProjectModal";
@@ -909,7 +909,7 @@ const ProjectSettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<TypeOption>
+              <Select<TypeOption>
                 label={t("filters.typeLabel", { defaultValue: "Type" })}
                 items={typeOptions}
                 selected={selectedDraftTypeOptions}
@@ -958,7 +958,7 @@ const ProjectSettings: React.FC = () => {
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
-              <SelectDropdown<StatusOption>
+              <Select<StatusOption>
                 label={t("filters.statusLabel", { defaultValue: "Status" })}
                 items={statusOptions}
                 selected={selectedDraftStatusOptions}

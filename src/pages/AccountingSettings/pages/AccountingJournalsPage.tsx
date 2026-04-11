@@ -3,7 +3,7 @@ import React from "react";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 import Snackbar from "@/shared/ui/Snackbar";
 import AccountingSideModal from "../components/AccountingSideModal";
 import { api } from "@/api";
@@ -392,7 +392,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
-                <SelectDropdown<AccountingBook>
+                <Select<AccountingBook>
                   label="Book"
                   items={books}
                   selected={selectedBook}
@@ -481,7 +481,7 @@ const AccountingJournalsPage: React.FC = () => {
                   return (
                     <article key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <div className="grid gap-4 md:grid-cols-[1.8fr_1fr_1fr]">
-                        <SelectDropdown<LedgerAccount>
+                        <Select<LedgerAccount>
                           label="Account"
                           items={ledgerAccounts}
                           selected={selectedLineAccount}

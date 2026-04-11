@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { api } from "@/api/requests";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 import { formatCurrency } from "@/lib";
 
 import type { BankAccount } from "@/models/settings/banking";
@@ -365,7 +365,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 onChange={(e) => setField("description", e.target.value)}
               />
 
-              <SelectDropdown<BankAccount>
+              <Select<BankAccount>
                 label={t("fields.bankOut")}
                 items={bankOutOptions}
                 selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
@@ -391,7 +391,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
                 </Button>
               </div>
 
-              <SelectDropdown<BankAccount>
+              <Select<BankAccount>
                 label={t("fields.bankIn")}
                 items={bankInOptions}
                 selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}

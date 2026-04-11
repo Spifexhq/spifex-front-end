@@ -2,7 +2,7 @@ import React from "react";
 
 import Button from "@/shared/ui/Button";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 import Snackbar from "@/shared/ui/Snackbar";
 import AccountingSideModal from "../components/AccountingSideModal";
 import { api } from "@/api";
@@ -413,7 +413,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
 
               <div className="grid gap-4 px-4 py-4">
-                <SelectDropdown<CashflowCategory>
+                <Select<CashflowCategory>
                   label="Cashflow category"
                   items={sortedCategories}
                   selected={selectedCategory}
@@ -430,7 +430,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                   hideCheckboxes
                 />
 
-                <SelectDropdown<AccountingBook>
+                <Select<AccountingBook>
                   label="Book"
                   items={books}
                   selected={selectedBook}
@@ -459,7 +459,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                   const selectedAccount = ledgerAccounts.filter((account) => account.id === form[field]);
 
                   return (
-                    <SelectDropdown<LedgerAccount>
+                    <Select<LedgerAccount>
                       key={field}
                       label={label}
                       items={ledgerAccounts}

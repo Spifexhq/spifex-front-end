@@ -5,7 +5,7 @@ import { Building2, FileUser } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import { Select } from "src/shared/ui/Select";
 
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -283,7 +283,7 @@ const LedgerAccountsGate: React.FC<Props> = ({
           {setupMode === "standard" ? (
             <div className={modePanelClass}>
               <div className="max-w-[420px]">
-                <SelectDropdown<TemplateOption>
+                <Select<TemplateOption>
                   label={t("setup.templateLabel", "Template")}
                   items={templateOptions}
                   selected={templateOptions.filter((item) => item.value === standardPlan)}
