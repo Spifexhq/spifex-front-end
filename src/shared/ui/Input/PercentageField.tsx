@@ -1,9 +1,8 @@
-// src/shared/ui/Input/PercentageField.tsx
 import React, { forwardRef, useCallback, useId, useMemo } from "react";
 import classNames from "classnames";
 
 import type { PercentageInputProps, InputVariant, InputSize } from "./Input.types";
-import { INPUT_SIZE } from "./sizes";
+import { INPUT_MESSAGE_TONE, INPUT_SIZE } from "./sizes";
 
 import { formatMajorNumber, toCanonicalMajorString } from "@/lib/currency/formatCurrency";
 
@@ -66,6 +65,7 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
       size = "md",
 
       label,
+      labelChip,
       errorMessage,
       style,
 
@@ -88,7 +88,6 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
 
     const centsDigits = useMemo(() => majorToCentsDigits(value), [value]);
 
-    // Visual formatting (no % inside input value)
     const displayValue = useMemo(() => {
       if (!value) return "";
       if (zeroAsEmpty && isZeroLikeMajor(value)) return "";
@@ -102,14 +101,9 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
 
     const sz = INPUT_SIZE[size as InputSize];
 
-    /**
-     * % is always present visually, so we treat it as “one trailing thing”.
-     * If loading/clear show up, use the larger padding.
-     */
     const rightPadClass = useMemo(() => {
-      // base space for "%"
-      if (canClear || isLoading) return sz.rightPadTwo; // "%" + (spinner or clear)
-      return sz.rightPadOne; // only "%"
+      if (canClear || isLoading) return sz.rightPadTwo;
+      return sz.rightPadOne;
     }, [canClear, isLoading, sz]);
 
     const inputClasses = classNames(
@@ -122,7 +116,7 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
 
     const emitMajor = useCallback(
       (major: string) => {
-        const canonical = toCanonicalMajorString(major); // accepts "." or "," when pasted/typed
+        const canonical = toCanonicalMajorString(major);
         if (zeroAsEmpty && (!canonical || canonical === "0.00" || canonical === "-0.00")) {
           onValueChange("");
           return;
@@ -173,7 +167,6 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
           return;
         }
 
-        // Ignore decimal separators on keydown (paste/change still supports both "," and ".")
         if (e.key === "." || e.key === ",") {
           e.preventDefault();
           return;
@@ -196,7 +189,6 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        // For IME/mobile keyboards: canonicalize whatever comes in (supports "," or ".")
         const raw = String(e.target.value ?? "").trim();
         if (!raw) {
           onValueChange("");
@@ -212,12 +204,26 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
     return (
       <div className="flex flex-col gap-1.5 w-full min-w-0" style={style}>
         {label ? (
-          <label
-            htmlFor={inputId}
-            className={classNames("font-semibold text-gray-700 select-none", sz.label)}
-          >
-            {label}
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <label
+              htmlFor={inputId}
+              className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
+            >
+              {label}
+            </label>
+
+            {labelChip ? (
+              <span
+                className={classNames(
+                  "inline-flex shrink-0 items-center rounded-full border font-medium whitespace-nowrap",
+                  sz.chip,
+                  INPUT_MESSAGE_TONE[labelChip.tone ?? "neutral"]
+                )}
+              >
+                {labelChip.label}
+              </span>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="relative w-full min-w-0">
@@ -286,7 +292,6 @@ const PercentageField = forwardRef<HTMLInputElement, PercentageInputProps>(
               </button>
             )}
 
-            {/* Fixed, visual-only percent sign (not selectable) */}
             <span className={classNames("text-gray-500 select-none", sz.trailingText ?? "text-sm")}>
               %
             </span>

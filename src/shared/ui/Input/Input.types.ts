@@ -1,3 +1,4 @@
+// src/shared/ui/Input/Input.types.ts
 import type React from "react";
 
 export type InputKind = "text" | "amount" | "percentage" | "date";
@@ -6,30 +7,35 @@ export type InputSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export type AmountDisplay = "currency" | "amount";
 
-/** Shared props across all kinds */
+export type InputMessageTone =
+  | "neutral"
+  | "info"
+  | "success"
+  | "warning"
+  | "danger";
+
+export type InputLabelChip = {
+  label: React.ReactNode;
+  tone?: InputMessageTone;
+};
+
 export type InputCommonProps = {
   kind?: InputKind;
-
-  label?: string;
-  errorMessage?: string;
-
+  label?: React.ReactNode;
+  labelChip?: InputLabelChip;
+  errorMessage?: React.ReactNode;
   variant?: InputVariant;
   size?: InputSize;
-
   isLoading?: boolean;
-
-  /** Wrapper style */
   style?: React.CSSProperties;
 };
 
-/** TEXT input props (native input) */
 export type TextInputProps = InputCommonProps &
   Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> & {
     kind?: "text";
     showTogglePassword?: boolean;
   };
 
-/** AMOUNT base props */
 type AmountInputBaseProps = InputCommonProps &
   Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -47,28 +53,22 @@ type AmountInputBaseProps = InputCommonProps &
     zeroAsEmpty?: boolean;
     currency?: string;
     allowNegative?: boolean;
-  } & (
-    | { value: string; onValueChange: (next: string) => void }
-    | { value: number; onValueChange: (next: number) => void }
-  );
+  };
 
-/** AMOUNT input props (string-mode: major string like "1234.56") */
 export type AmountInputStringProps = AmountInputBaseProps & {
-  valueType?: "string"; // default
-  value: string;
+  valueType?: "string";
+  value: string | "";
   onValueChange: (nextMajor: string) => void;
 };
 
-/** AMOUNT input props (number-mode: decimal number like 1234.56) */
 export type AmountInputNumberProps = AmountInputBaseProps & {
   valueType: "number";
-  value: number;
-  onValueChange: (next: number) => void;
+  value: number | "";
+  onValueChange: (next: number | "") => void;
 };
 
 export type AmountInputProps = AmountInputStringProps | AmountInputNumberProps;
 
-/** PERCENTAGE input props (major string like "12.34" representing 12.34%) */
 export type PercentageInputProps = InputCommonProps &
   Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -82,17 +82,12 @@ export type PercentageInputProps = InputCommonProps &
     | "size"
   > & {
     kind: "percentage";
-
-    /** Canonical major string with 2 decimals, e.g. "12.34" (no "%") */
     value: string;
     onValueChange: (nextMajor: string) => void;
-
-    /** Same semantics as AmountField */
     zeroAsEmpty?: boolean;
     allowNegative?: boolean;
   };
 
-/** DATE input props (ISO string "yyyy-MM-dd") */
 export type DateInputProps = InputCommonProps &
   Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "onChange" | "size"> & {
     kind: "date";
@@ -100,4 +95,8 @@ export type DateInputProps = InputCommonProps &
     onValueChange?: (valueIso: string) => void;
   };
 
-export type InputProps = TextInputProps | AmountInputProps | PercentageInputProps | DateInputProps;
+export type InputProps =
+  | TextInputProps
+  | AmountInputProps
+  | PercentageInputProps
+  | DateInputProps;

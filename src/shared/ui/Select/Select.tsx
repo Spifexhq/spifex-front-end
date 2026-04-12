@@ -1,3 +1,4 @@
+// src/shared/ui/Select/Select.tsx
 import {
   useState,
   useRef,
@@ -11,14 +12,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { SelectProps } from "./Select.types";
+import type { SelectProps } from "./Select.types";
+import { SELECT_SIZE } from "./sizes";
 import Checkbox from "@/shared/ui/Checkbox";
 
 function cn(...classes: Array<string | undefined | false | null>) {
   return classes.filter(Boolean).join(" ");
 }
 
-type SelectSize = "xs" | "sm" | "md" | "lg" | "xl";
 type DropdownPlacement = "bottom" | "top";
 
 type FloatingPanelPosition = {
@@ -55,93 +56,11 @@ function Select<T>({
   virtualize = true,
   virtualThreshold = 300,
   virtualRowHeight,
-}: SelectProps<T> & { size?: SelectSize }) {
+}: SelectProps<T>) {
   const { t } = useTranslation("select");
 
-  const SIZE: Record<
-    SelectSize,
-    {
-      trigger: string;
-      chevron: string;
-      badge: string;
-      actionBtn: string;
-      filterInput: string;
-      item: string;
-      rowHeight: number;
-      iconBox: string;
-      iconSize: string;
-      triggerIconBox: string;
-      triggerIconSize: string;
-    }
-  > = {
-    xs: {
-      trigger: "h-7 px-2.5 text-[11px]",
-      chevron: "w-3.5 h-3.5",
-      badge: "min-w-[1.25rem] h-4 px-1 text-[10px]",
-      actionBtn: "h-6 px-2 text-[10px]",
-      filterInput: "h-7 pl-7 pr-2 text-[11px]",
-      item: "px-2.5 py-2 text-[11px]",
-      rowHeight: 32,
-      iconBox: "h-5 w-5",
-      iconSize: "h-3.5 w-3.5",
-      triggerIconBox: "h-4.5 w-4.5",
-      triggerIconSize: "h-3.5 w-3.5",
-    },
-    sm: {
-      trigger: "h-8 px-3 text-xs",
-      chevron: "w-4 h-4",
-      badge: "min-w-[1.5rem] h-5 px-1.5 text-[10px]",
-      actionBtn: "h-6.5 px-2 text-[11px]",
-      filterInput: "h-7.5 pl-7 pr-2 text-[12px]",
-      item: "px-3 py-2 text-xs",
-      rowHeight: 34,
-      iconBox: "h-5 w-5",
-      iconSize: "h-3.5 w-3.5",
-      triggerIconBox: "h-5 w-5",
-      triggerIconSize: "h-3.5 w-3.5",
-    },
-    md: {
-      trigger: "h-10 px-3 text-xs",
-      chevron: "w-4 h-4",
-      badge: "min-w-[1.5rem] h-5 px-1.5 text-[10px]",
-      actionBtn: "h-7 px-2 text-[11px]",
-      filterInput: "h-8 pl-7 pr-2 text-[12px]",
-      item: "px-3 py-2.5 text-xs",
-      rowHeight: 36,
-      iconBox: "h-6 w-6",
-      iconSize: "h-4 w-4",
-      triggerIconBox: "h-5.5 w-5.5",
-      triggerIconSize: "h-4 w-4",
-    },
-    lg: {
-      trigger: "h-11 px-4 text-[13px]",
-      chevron: "w-4 h-4",
-      badge: "min-w-[1.75rem] h-6 px-2 text-[11px]",
-      actionBtn: "h-8 px-3 text-[12px]",
-      filterInput: "h-9 pl-8 pr-3 text-[13px]",
-      item: "px-4 py-3 text-[13px]",
-      rowHeight: 40,
-      iconBox: "h-6 w-6",
-      iconSize: "h-4 w-4",
-      triggerIconBox: "h-6 w-6",
-      triggerIconSize: "h-4 w-4",
-    },
-    xl: {
-      trigger: "h-12 px-5 text-[15px]",
-      chevron: "w-5 h-5",
-      badge: "min-w-[2rem] h-7 px-2.5 text-[12px]",
-      actionBtn: "h-9 px-3.5 text-[13px]",
-      filterInput: "h-10 pl-9 pr-3 text-[14px]",
-      item: "px-5 py-3.5 text-[14px]",
-      rowHeight: 44,
-      iconBox: "h-7 w-7",
-      iconSize: "h-4.5 w-4.5",
-      triggerIconBox: "h-6.5 w-6.5",
-      triggerIconSize: "h-4.5 w-4.5",
-    },
-  };
-
-  const effectiveRowHeight = virtualRowHeight ?? SIZE[size].rowHeight;
+  const sz = SELECT_SIZE[size];
+  const effectiveRowHeight = virtualRowHeight ?? sz.rowHeight;
   const effectiveSingleSelect = singleSelect || hideCheckboxes;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -374,26 +293,23 @@ function Select<T>({
     });
   }, [disabled, updateFloatingPosition]);
 
-  const closeDropdown = useCallback(
-    (after?: () => void) => {
-      setIsOpen(false);
+  const closeDropdown = useCallback((after?: () => void) => {
+    setIsOpen(false);
 
-      if (closeTimerRef.current != null) {
-        window.clearTimeout(closeTimerRef.current);
-      }
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current);
+    }
 
-      closeTimerRef.current = window.setTimeout(() => {
-        setIsRendered(false);
-        setSearchTerm("");
-        setActiveIndex(null);
-        setHasTopShadow(false);
-        setHasBottomShadow(false);
-        setScrollTop(0);
-        after?.();
-      }, CLOSE_MS);
-    },
-    []
-  );
+    closeTimerRef.current = window.setTimeout(() => {
+      setIsRendered(false);
+      setSearchTerm("");
+      setActiveIndex(null);
+      setHasTopShadow(false);
+      setHasBottomShadow(false);
+      setScrollTop(0);
+      after?.();
+    }, CLOSE_MS);
+  }, []);
 
   const closeAndKeepFocus = useCallback(() => {
     closeDropdown(() => {
@@ -707,7 +623,7 @@ function Select<T>({
         onMouseMove={handleMouseMove}
         className={cn(
           "flex cursor-pointer select-none items-center gap-2 transition-colors focus:outline-none",
-          SIZE[size].item,
+          sz.item,
           isActive ? "bg-gray-100" : "hover:bg-gray-50",
           hideCheckboxes && isChecked ? "bg-gray-100 font-medium" : ""
         )}
@@ -731,10 +647,10 @@ function Select<T>({
             aria-hidden="true"
             className={cn(
               "inline-flex shrink-0 items-center justify-center rounded-md text-gray-500",
-              SIZE[size].iconBox
+              sz.iconBox
             )}
           >
-            <span className={cn("inline-flex items-center justify-center", SIZE[size].iconSize)}>
+            <span className={cn("inline-flex items-center justify-center", sz.iconSize)}>
               {itemIcon}
             </span>
           </span>
@@ -835,7 +751,7 @@ function Select<T>({
                         onClick={selectAll}
                         className={cn(
                           "rounded border border-gray-200 font-medium hover:bg-gray-50",
-                          SIZE[size].actionBtn
+                          sz.actionBtn
                         )}
                         tabIndex={-1}
                         aria-label={t("actions.selectAll")}
@@ -847,7 +763,7 @@ function Select<T>({
                         onClick={deselectAll}
                         className={cn(
                           "rounded border border-gray-200 font-medium hover:bg-gray-50",
-                          SIZE[size].actionBtn
+                          sz.actionBtn
                         )}
                         tabIndex={-1}
                         aria-label={t("actions.clearAll")}
@@ -873,8 +789,8 @@ function Select<T>({
                         onChange={(e) => setSearchTerm(e.target.value)}
                         ref={searchInputRef}
                         className={cn(
-                          "w-full rounded border border-gray-200 outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-200",
-                          SIZE[size].filterInput
+                          "w-full border border-gray-200 outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-200",
+                          sz.filterInput
                         )}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") e.preventDefault();
@@ -915,7 +831,7 @@ function Select<T>({
                 >
                   <div className="py-1">
                     {flatItems.length === 0 ? (
-                      <div className="px-3 py-8 text-center text-[12px] text-gray-500">
+                      <div className={cn("text-center text-gray-500", sz.empty)}>
                         {searchTerm ? t("empty.search") : t("empty.default")}
                       </div>
                     ) : shouldVirtualize ? (
@@ -982,7 +898,7 @@ function Select<T>({
   return (
     <div className="flex w-full flex-col gap-1.5">
       {label && (
-        <label className="select-none text-[10.5px] font-semibold text-gray-700" htmlFor={id}>
+        <label className={cn("select-none font-semibold text-gray-700", sz.label)} htmlFor={id}>
           {label}
         </label>
       )}
@@ -1005,8 +921,8 @@ function Select<T>({
           aria-controls={panelId}
           aria-label={t("aria.trigger")}
           className={cn(
-            "group flex w-full items-center justify-between rounded-md border outline-none transition-colors",
-            SIZE[size].trigger,
+            "group flex w-full items-center justify-between border outline-none transition-colors",
+            sz.trigger,
             disabled
               ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
               : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-300"
@@ -1018,15 +934,10 @@ function Select<T>({
                 aria-hidden="true"
                 className={cn(
                   "inline-flex shrink-0 items-center justify-center rounded-md text-gray-600",
-                  SIZE[size].triggerIconBox
+                  sz.triggerIconBox
                 )}
               >
-                <span
-                  className={cn(
-                    "inline-flex items-center justify-center",
-                    SIZE[size].triggerIconSize
-                  )}
-                >
+                <span className={cn("inline-flex items-center justify-center", sz.triggerIconSize)}>
                   {selectedIcon}
                 </span>
               </span>
@@ -1047,7 +958,7 @@ function Select<T>({
               <span
                 className={cn(
                   "inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-700",
-                  SIZE[size].badge
+                  sz.badge
                 )}
                 aria-hidden="true"
               >
@@ -1058,7 +969,7 @@ function Select<T>({
             <svg
               className={cn(
                 "transition-transform duration-200 ease-out",
-                SIZE[size].chevron,
+                sz.chevron,
                 isOpen ? "rotate-180" : "rotate-0"
               )}
               aria-hidden="true"

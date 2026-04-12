@@ -26,7 +26,7 @@ import {
 import { getEffectiveDateFormat } from "@/lib/date";
 
 import type { DateInputProps, InputVariant, InputSize } from "./Input.types";
-import { DATE_SIZE } from "./sizes";
+import { DATE_SIZE, INPUT_MESSAGE_TONE } from "./sizes";
 
 type EffectiveDateCode = "DMY_SLASH" | "MDY_SLASH" | "YMD_ISO";
 type SegmentBag = { day: string; month: string; year: string };
@@ -47,18 +47,13 @@ const parseISOToSegments = (iso: string): SegmentBag => {
 const getSegmentValue = (segments: SegmentBag, type: keyof SegmentBag): string =>
   segments[type] || "";
 
-/**
- * DateField (Input: kind="date")
- * - Animated open/close calendar popover
- * - Sync external value into slots only when NOT focused
- * - Commit (emit) value on blur/outside click, and immediately on day pick
- */
 const DateField = forwardRef<HTMLInputElement, DateInputProps>(
   (
     {
       value,
       onValueChange,
       label,
+      labelChip,
       errorMessage,
       variant = "default",
       size = "md",
@@ -93,6 +88,12 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
     const sz = DATE_SIZE[size as InputSize];
 
+    const focusPrimarySlot = useCallback(() => {
+      requestAnimationFrame(() => {
+        slot1Ref.current?.focus({ preventScroll: true });
+      });
+    }, []);
+
     const slotConfig = useMemo(() => {
       switch (effectiveCode) {
         case "DMY_SLASH":
@@ -122,15 +123,9 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
     const initialSegments = parseISOToSegments(value || "");
 
-    const [slot1, setSlot1] = useState(
-      getSegmentValue(initialSegments, slotConfig.slot1.type)
-    );
-    const [slot2, setSlot2] = useState(
-      getSegmentValue(initialSegments, slotConfig.slot2.type)
-    );
-    const [slot3, setSlot3] = useState(
-      getSegmentValue(initialSegments, slotConfig.slot3.type)
-    );
+    const [slot1, setSlot1] = useState(getSegmentValue(initialSegments, slotConfig.slot1.type));
+    const [slot2, setSlot2] = useState(getSegmentValue(initialSegments, slotConfig.slot2.type));
+    const [slot3, setSlot3] = useState(getSegmentValue(initialSegments, slotConfig.slot3.type));
 
     const selectedDate = useMemo(() => {
       const bag: SegmentBag = { day: "", month: "", year: "" };
@@ -220,21 +215,36 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       });
     }, [disabled]);
 
-    const closeCalendar = useCallback(
-      (after?: () => void) => {
-        setIsCalendarOpen(false);
+    const closeCalendar = useCallback((after?: () => void) => {
+      setIsCalendarOpen(false);
 
-        if (closeTimerRef.current != null) {
-          window.clearTimeout(closeTimerRef.current);
-        }
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current);
+      }
 
-        closeTimerRef.current = window.setTimeout(() => {
-          setIsCalendarRendered(false);
-          after?.();
-        }, CLOSE_MS);
-      },
-      []
-    );
+      closeTimerRef.current = window.setTimeout(() => {
+        setIsCalendarRendered(false);
+        after?.();
+      }, CLOSE_MS);
+    }, []);
+
+    const closeAndKeepFocus = useCallback(() => {
+      closeCalendar(() => {
+        setIsFocused(false);
+        focusPrimarySlot();
+      });
+    }, [closeCalendar, focusPrimarySlot]);
+
+    const closeAndCommit = useCallback(() => {
+      closeCalendar(() => {
+        setIsFocused(false);
+        updateValue(slot1, slot2, slot3);
+      });
+    }, [closeCalendar, slot1, slot2, slot3, updateValue]);
+
+    window.useGlobalEsc?.(isCalendarRendered, () => {
+      closeAndKeepFocus();
+    });
 
     const handleSlotChange = (
       slotNum: 1 | 2 | 3,
@@ -300,7 +310,8 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         e.preventDefault();
       } else if (e.key === "Escape" && isCalendarRendered) {
         e.preventDefault();
-        closeCalendar();
+        e.stopPropagation();
+        closeAndKeepFocus();
       }
     };
 
@@ -321,8 +332,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
         if (!isStillInSlots && !isInsideWrapper) {
           setIsFocused(false);
-          closeCalendar();
-          updateValue(slot1, slot2, slot3);
+          closeAndCommit();
         }
       }, 0);
     };
@@ -363,24 +373,21 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         return;
       }
 
-      closeCalendar();
+      closeAndKeepFocus();
     };
 
     useEffect(() => {
       if (!isCalendarRendered) return;
 
       const handleClickOutside = (event: MouseEvent) => {
-        if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-          closeCalendar(() => {
-            setIsFocused(false);
-            updateValue(slot1, slot2, slot3);
-          });
-        }
+        const target = event.target as Node;
+        if (wrapperRef.current?.contains(target)) return;
+        closeAndCommit();
       };
 
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isCalendarRendered, closeCalendar, slot1, slot2, slot3, updateValue]);
+      document.addEventListener("mousedown", handleClickOutside, true);
+      return () => document.removeEventListener("mousedown", handleClickOutside, true);
+    }, [isCalendarRendered, closeAndCommit]);
 
     useEffect(() => {
       if (!isCalendarRendered) return;
@@ -418,6 +425,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
       closeCalendar(() => {
         setIsFocused(false);
+        focusPrimarySlot();
       });
     };
 
@@ -549,12 +557,26 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
     return (
       <div className="flex min-w-0 flex-col gap-1.5" style={style} ref={wrapperRef}>
         {label ? (
-          <label
-            htmlFor={id}
-            className={classNames("font-semibold text-gray-700 select-none", sz.label)}
-          >
-            {label}
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <label
+              htmlFor={id}
+              className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
+            >
+              {label}
+            </label>
+
+            {labelChip ? (
+              <span
+                className={classNames(
+                  "inline-flex shrink-0 items-center rounded-full border font-medium whitespace-nowrap",
+                  sz.chip,
+                  INPUT_MESSAGE_TONE[labelChip.tone ?? "neutral"]
+                )}
+              >
+                {labelChip.label}
+              </span>
+            ) : null}
+          </div>
         ) : null}
 
         {name ? (

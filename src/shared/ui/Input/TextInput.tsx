@@ -8,7 +8,7 @@ import {
 import classNames from "classnames";
 
 import type { InputVariant, InputSize, TextInputProps } from "./Input.types";
-import { INPUT_SIZE } from "./sizes";
+import { INPUT_MESSAGE_TONE, INPUT_SIZE } from "./sizes";
 
 import visible from "@/assets/Icons/password/visible.svg";
 import notVisible from "@/assets/Icons/password/not-visible.svg";
@@ -31,6 +31,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
     variant = "default",
     size = "md",
     label,
+    labelChip,
     errorMessage,
     style,
     className,
@@ -49,7 +50,10 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
   const inputType = isPassword ? (isPasswordVisible ? "text" : "password") : type;
 
   const { autoComplete: rawAutoComplete, ...restProps } =
-    rest as Omit<TextInputProps, "variant" | "size" | "label" | "errorMessage" | "showTogglePassword">;
+    rest as Omit<
+      TextInputProps,
+      "variant" | "size" | "label" | "labelChip" | "errorMessage" | "showTogglePassword"
+    >;
 
   const derivedAutoComplete =
     type === "password" || type === "email" ? "off" : (rawAutoComplete as string | undefined);
@@ -58,8 +62,8 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
     typeof (restProps as { value?: unknown }).value === "string"
       ? ((restProps as { value?: string }).value ?? "")
       : typeof (restProps as { defaultValue?: unknown }).defaultValue === "string"
-      ? ((restProps as { defaultValue?: string }).defaultValue ?? "")
-      : "";
+        ? ((restProps as { defaultValue?: string }).defaultValue ?? "")
+        : "";
 
   const canClear =
     !isPassword &&
@@ -93,7 +97,6 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
   const togglePasswordVisibility = () => setIsPasswordVisible((v) => !v);
 
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
-    // Preserve user handlers
     (restProps as { onKeyDown?: (e: ReactKeyboardEvent<HTMLInputElement>) => void }).onKeyDown?.(e);
   };
 
@@ -115,12 +118,26 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
   return (
     <div className="flex flex-col gap-1.5 w-full min-w-0" style={style}>
       {label ? (
-        <label
-          htmlFor={id}
-          className={classNames("font-semibold text-gray-700 select-none", sz.label)}
-        >
-          {label}
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label
+            htmlFor={id}
+            className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
+          >
+            {label}
+          </label>
+
+          {labelChip ? (
+            <span
+              className={classNames(
+                "inline-flex shrink-0 items-center rounded-full border font-medium whitespace-nowrap",
+                sz.chip,
+                INPUT_MESSAGE_TONE[labelChip.tone ?? "neutral"]
+              )}
+            >
+              {labelChip.label}
+            </span>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="relative w-full min-w-0">

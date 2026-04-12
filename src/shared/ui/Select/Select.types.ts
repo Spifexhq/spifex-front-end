@@ -1,7 +1,10 @@
+// src/shared/ui/Select/Select.types.ts
 import type React from "react";
 
+export type SelectSize = "xs" | "sm" | "md" | "lg" | "xl";
+
 export interface SelectProps<T> {
-  label?: string;
+  label?: React.ReactNode;
   items: T[];
   selected: T[];
   onChange: (selected: T[]) => void;
@@ -19,5 +22,5 @@ export interface SelectProps<T> {
   virtualize?: boolean;
   virtualThreshold?: number;
   virtualRowHeight?: number;
-  size?: string;
+  size?: SelectSize;
 }

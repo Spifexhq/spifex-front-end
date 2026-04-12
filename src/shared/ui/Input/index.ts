@@ -6,3 +6,4 @@ export type {
   InputSize,
   AmountDisplay,
 } from "./Input.types";
+export * from "./sizes";

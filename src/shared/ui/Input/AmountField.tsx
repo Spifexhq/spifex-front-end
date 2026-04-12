@@ -2,7 +2,7 @@ import React, { forwardRef, useCallback, useId, useMemo } from "react";
 import classNames from "classnames";
 
 import type { AmountInputProps, InputVariant, InputSize } from "./Input.types";
-import { INPUT_SIZE } from "./sizes";
+import { INPUT_MESSAGE_TONE, INPUT_SIZE } from "./sizes";
 
 import { formatCurrency, formatMajorNumber, toCanonicalMajorString } from "@/lib/currency/formatCurrency";
 
@@ -65,6 +65,7 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
     size = "md",
 
     label,
+    labelChip,
     errorMessage,
     style,
 
@@ -92,7 +93,6 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
   const disabled = rest.disabled ?? false;
   const placeholder = rest.placeholder;
 
-  // Always work internally with a "major string" like "1234.56"
   const majorValue = useMemo(() => {
     if (rawValue === "" || rawValue == null) return "";
     if (typeof rawValue === "number" && Number.isFinite(rawValue)) return rawValue.toFixed(2);
@@ -240,9 +240,26 @@ const AmountField = forwardRef<HTMLInputElement, AmountInputProps>((props, ref) 
   return (
     <div className="flex flex-col gap-1.5 w-full min-w-0" style={style}>
       {label ? (
-        <label htmlFor={inputId} className={classNames("font-semibold text-gray-700 select-none", sz.label)}>
-          {label}
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label
+            htmlFor={inputId}
+            className={classNames("font-semibold text-gray-700 select-none min-w-0", sz.label)}
+          >
+            {label}
+          </label>
+
+          {labelChip ? (
+            <span
+              className={classNames(
+                "inline-flex shrink-0 items-center rounded-full border font-medium whitespace-nowrap",
+                sz.chip,
+                INPUT_MESSAGE_TONE[labelChip.tone ?? "neutral"]
+              )}
+            >
+              {labelChip.label}
+            </span>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="relative w-full min-w-0">

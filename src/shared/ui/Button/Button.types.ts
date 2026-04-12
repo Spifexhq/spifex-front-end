@@ -1,3 +1,4 @@
+// src/components/ui/Button.types.ts
 import * as React from "react";
 
 export type ButtonVariant =
@@ -18,7 +19,7 @@ export type ButtonVariant =
   | "warning"
   | "info"
   | "dashed"
-  | "gradient"
+  | "gradient";
 
 export type ButtonSize =
   | "xs"
@@ -26,13 +27,11 @@ export type ButtonSize =
   | "md"
   | "lg"
   | "xl"
-  // ícone-only (quadrados)
   | "iconSm"
   | "iconMd"
   | "iconLg";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;

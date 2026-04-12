@@ -1,28 +1,56 @@
 // src/shared/ui/Input/sizes.ts
-import type { InputSize } from "./Input.types";
+import type { InputMessageTone, InputSize } from "./Input.types";
 
-export const INPUT_SIZE: Record<
-  InputSize,
-  {
-    inputBox: string;
-    label: string;
-    error: string;
+type SharedInputSizeShape = {
+  inputBox: string;
+  label: string;
+  error: string;
 
-    icon: string;
-    pwIcon: { w: number; h: number };
-    trailingRight: string;
-    trailingGap: string;
-    trailingBtnPad: string;
+  icon: string;
+  pwIcon: { w: number; h: number };
+  trailingRight: string;
+  trailingGap: string;
+  trailingBtnPad: string;
+  trailingText: string;
 
-    trailingText: string;
+  rightPadNone: string;
+  rightPadOne: string;
+  rightPadTwo: string;
 
-    rightPadNone: string;
-    rightPadOne: string;
-    rightPadTwo: string;
-  }
-> = {
+  chip: string;
+};
+
+type DateSizeShape = {
+  label: string;
+  error: string;
+
+  container: string;
+  slot: string;
+  sep: string;
+
+  calBtn: string;
+  calIcon: string;
+
+  popover: string;
+  navBtn: string;
+  title: string;
+  weekday: string;
+  dayCell: string;
+
+  chip: string;
+};
+
+export const INPUT_MESSAGE_TONE: Record<InputMessageTone, string> = {
+  neutral: "border-gray-200 bg-gray-50 text-gray-600",
+  info: "border-blue-200 bg-blue-50 text-blue-700",
+  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  warning: "border-amber-200 bg-amber-50 text-amber-700",
+  danger: "border-red-200 bg-red-50 text-red-700",
+};
+
+export const INPUT_SIZE: Record<InputSize, SharedInputSizeShape> = {
   xs: {
-    inputBox: "h-7 text-[11px] px-2.5 py-1.5 rounded-md",
+    inputBox: "h-7 text-[11px] px-2.5 rounded-md",
     label: "text-[10px]",
     error: "text-[10px]",
     icon: "h-3.5 w-3.5",
@@ -34,9 +62,10 @@ export const INPUT_SIZE: Record<
     rightPadNone: "pr-2.5",
     rightPadOne: "pr-8",
     rightPadTwo: "pr-12",
+    chip: "h-5 px-1.5 text-[10px]",
   },
   sm: {
-    inputBox: "h-8 text-xs px-3 py-2 rounded-md",
+    inputBox: "h-8 text-xs px-3 rounded-md",
     label: "text-[10.5px]",
     error: "text-[11px]",
     icon: "h-4 w-4",
@@ -48,9 +77,10 @@ export const INPUT_SIZE: Record<
     rightPadNone: "pr-3",
     rightPadOne: "pr-10",
     rightPadTwo: "pr-16",
+    chip: "h-5.5 px-2 text-[10px]",
   },
   md: {
-    inputBox: "h-10 text-xs px-3 py-2.5 rounded-lg",
+    inputBox: "h-8 text-xs px-4 rounded-md",
     label: "text-[10.5px]",
     error: "text-[11px]",
     icon: "h-4 w-4",
@@ -62,9 +92,10 @@ export const INPUT_SIZE: Record<
     rightPadNone: "pr-3.5",
     rightPadOne: "pr-10",
     rightPadTwo: "pr-16",
+    chip: "h-5.5 px-2 text-[10px]",
   },
   lg: {
-    inputBox: "h-11 text-[13px] px-4 py-3 rounded-lg",
+    inputBox: "h-10 text-[13px] px-4 rounded-lg",
     label: "text-[11px]",
     error: "text-[12px]",
     icon: "h-4 w-4",
@@ -76,9 +107,10 @@ export const INPUT_SIZE: Record<
     rightPadNone: "pr-4",
     rightPadOne: "pr-11",
     rightPadTwo: "pr-[4.25rem]",
+    chip: "h-6 px-2 text-[11px]",
   },
   xl: {
-    inputBox: "h-12 text-[15px] px-5 py-3.5 rounded-xl",
+    inputBox: "h-11 text-[15px] px-5 rounded-xl",
     label: "text-[12px]",
     error: "text-[12.5px]",
     icon: "h-5 w-5",
@@ -90,29 +122,11 @@ export const INPUT_SIZE: Record<
     rightPadNone: "pr-5",
     rightPadOne: "pr-12",
     rightPadTwo: "pr-[4.75rem]",
+    chip: "h-6 px-2.5 text-[11px]",
   },
 };
 
-export const DATE_SIZE: Record<
-  InputSize,
-  {
-    label: string;
-    error: string;
-
-    container: string;
-    slot: string;
-    sep: string;
-
-    calBtn: string;
-    calIcon: string;
-
-    popover: string;
-    navBtn: string;
-    title: string;
-    weekday: string;
-    dayCell: string;
-  }
-> = {
+export const DATE_SIZE: Record<InputSize, DateSizeShape> = {
   xs: {
     label: "text-[10px]",
     error: "text-[10px]",
@@ -126,6 +140,7 @@ export const DATE_SIZE: Record<
     title: "text-[11px]",
     weekday: "h-4 text-[9px]",
     dayCell: "h-6 w-6 text-[11px]",
+    chip: "h-5 px-1.5 text-[10px]",
   },
   sm: {
     label: "text-[10.5px]",
@@ -140,11 +155,12 @@ export const DATE_SIZE: Record<
     title: "text-xs",
     weekday: "h-5 text-[10px]",
     dayCell: "h-7 w-7 text-xs",
+    chip: "h-5.5 px-2 text-[10px]",
   },
   md: {
     label: "text-[10.5px]",
     error: "text-[11px]",
-    container: "h-10 px-2.5 py-1.5 gap-1 text-xs rounded-lg",
+    container: "h-8 px-2.5 py-1 gap-1 text-xs rounded-md",
     slot: "text-xs placeholder:text-xs",
     sep: "text-xs",
     calBtn: "h-6 w-6",
@@ -154,11 +170,12 @@ export const DATE_SIZE: Record<
     title: "text-xs",
     weekday: "h-5 text-[10px]",
     dayCell: "h-7 w-7 text-xs",
+    chip: "h-5.5 px-2 text-[10px]",
   },
   lg: {
     label: "text-[11px]",
     error: "text-[12px]",
-    container: "h-11 px-3 py-2 gap-1.5 text-[13px] rounded-lg",
+    container: "h-10 px-3 py-2 gap-1.5 text-[13px] rounded-lg",
     slot: "text-[13px] placeholder:text-[13px]",
     sep: "text-[13px]",
     calBtn: "h-7 w-7",
@@ -168,11 +185,12 @@ export const DATE_SIZE: Record<
     title: "text-[13px]",
     weekday: "h-6 text-[11px]",
     dayCell: "h-8 w-8 text-[13px]",
+    chip: "h-6 px-2 text-[11px]",
   },
   xl: {
     label: "text-[12px]",
     error: "text-[12.5px]",
-    container: "h-12 px-4 py-2.5 gap-2 text-[15px] rounded-xl",
+    container: "h-11 px-4 py-2.5 gap-2 text-[15px] rounded-xl",
     slot: "text-[15px] placeholder:text-[15px]",
     sep: "text-[15px]",
     calBtn: "h-8 w-8",
@@ -182,5 +200,6 @@ export const DATE_SIZE: Record<
     title: "text-[15px]",
     weekday: "h-7 text-[12px]",
     dayCell: "h-9 w-9 text-[15px]",
+    chip: "h-6 px-2.5 text-[11px]",
   },
 };
