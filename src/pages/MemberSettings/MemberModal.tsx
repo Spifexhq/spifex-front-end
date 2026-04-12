@@ -337,7 +337,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
         aria-modal="true"
         aria-labelledby="member-modal-title"
         className={[
-          "relative bg-white shadow-2xl flex flex-col w-full",
+          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
           "h-[100dvh] max-h-[100dvh]",
           "rounded-none border-0",
           "fixed inset-x-0 bottom-0",

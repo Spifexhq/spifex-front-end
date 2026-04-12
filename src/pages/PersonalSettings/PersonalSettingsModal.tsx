@@ -179,9 +179,6 @@ const PersonalSettingsModal: React.FC<PersonalSettingsModalProps> = ({
   return (
     <div
       className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isSubmitting) onClose();
-      }}
     >
       <div
         role="dialog"
