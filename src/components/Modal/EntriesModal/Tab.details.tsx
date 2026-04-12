@@ -3,10 +3,8 @@ import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
 import { Select } from "src/shared/ui/Select";
-import EntryAccountingStatusCell from "@/components/CashFlowAccounting/EntryAccountingStatusCell";
 
 import type { FormData } from "../Modal.types";
-import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 import type { CashflowCategory } from "@/models/settings/categories";
 import type { DocumentType } from "src/models/entries/documentTypes";
 
@@ -27,8 +25,6 @@ type Props = {
   documentTypes: DocumentTypeItem[];
 
   isFinancialLocked: boolean;
-  accounting?: AccountingReadiness | null;
-  onOpenAccountingReason?: () => void;
 };
 
 const DetailsTab: React.FC<Props> = ({
@@ -41,8 +37,6 @@ const DetailsTab: React.FC<Props> = ({
   categoryWrapId,
   documentTypes,
   isFinancialLocked,
-  accounting,
-  onOpenAccountingReason,
 }) => {
   const selectedCategories = useMemo(() => {
     const id = String((formData.details as Record<string, unknown>).cashflowCategory || "");
@@ -163,15 +157,6 @@ const DetailsTab: React.FC<Props> = ({
           virtualThreshold={300}
           disabled={isFinancialLocked}
         />
-
-        {accounting ? (
-          <div className="flex items-center justify-between gap-2 px-0.5">
-            <span className="text-[10px] text-gray-500">
-              {t("entriesModal:details.accountingStatus", { defaultValue: "Accounting" })}
-            </span>
-            <EntryAccountingStatusCell accounting={accounting} onOpen={onOpenAccountingReason} />
-          </div>
-        ) : null}
       </div>
 
       <div className="md:col-span-3">

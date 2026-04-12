@@ -21,7 +21,6 @@ import type {
 
 import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
 import type { CashflowCategory } from "@/models/settings/categories";
-import type { AccountingReadiness } from "@/models/entries/accountingReadiness";
 import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
 import type { InventoryItem } from "@/models/settings/inventory";
@@ -55,7 +54,6 @@ type EntryDiffable = {
   weekend_action?: number | null;
   last_settled_on?: string | null;
   departments?: Array<{ department_id: string; percent: string | number }>;
-  accounting?: AccountingReadiness | null;
 };
 
 /* ------------------------------ Stable constants ------------------------------ */
@@ -242,7 +240,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   );
 
   const [cashflowCategories, setCashflowCategories] = useState<CashflowCategory[]>([]);
-  const [accounting, setAccounting] = useState<AccountingReadiness | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -311,7 +308,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     setActiveTab("details");
     setWarning(null);
     setShowCloseConfirm(false);
-    setAccounting(null);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -352,7 +348,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       (response as { data?: unknown })?.data ?? response
     );
 
-    const wantedType = type; // "credit" | "debit"
+    const wantedType = type;
 
     return categories
       .filter((c) => c.is_active !== false)
@@ -375,16 +371,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const fetchAllInventoryItems = useCallback(() => fetchAllCursor<InventoryItem>(api.getInventoryOptions), []);
   const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions), []);
   const fetchAllDocumentTypes = useCallback(() => fetchAllCursor<DocumentType>(api.getDocumentTypes), []);
-
-  const refreshAccountingReadiness = useCallback(async (entryId: string) => {
-    try {
-      const res = await api.getEntryAccountingReadiness(entryId);
-      const envelope = (res as { data?: { accounting?: AccountingReadiness } }).data;
-      setAccounting(envelope?.accounting ?? null);
-    } catch {
-      setAccounting(null);
-    }
-  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -480,19 +466,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         weekend: weekendNum === 1 ? 1 : weekendNum === -1 ? -1 : "",
       },
     });
-
-    setAccounting(ie.accounting ?? null);
   }, [isOpen, initialEntry]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (initialEntry?.id) {
-      void refreshAccountingReadiness(initialEntry.id);
-    } else {
-      setAccounting(null);
-    }
-  }, [isOpen, initialEntry?.id, refreshAccountingReadiness]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -901,10 +875,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             categoryWrapId={IDS.categoryWrap}
             documentTypes={DOCUMENT_TYPES}
             isFinancialLocked={isFinancialLocked}
-            accounting={accounting}
-            onOpenAccountingReason={
-              initialEntry?.id ? () => void refreshAccountingReadiness(initialEntry.id) : undefined
-            }
           />
         );
 

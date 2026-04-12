@@ -20,7 +20,6 @@ const EntryAccountingStatusCell: React.FC<Props> = ({ accounting, onOpen }) => {
           onClick={onOpen}
           className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[10px] font-medium text-gray-700 hover:bg-gray-50"
         >
-          Why
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       ) : null}
