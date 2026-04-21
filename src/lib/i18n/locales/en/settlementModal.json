@@ -1,8 +1,13 @@
 {
-  "aria": { "dialog": "Entries settlement" },
+  "aria": {
+    "dialog": "Entries settlement"
+  },
   "header": {
     "kind": "Settlement",
-    "title": { "one": "1 entry selected", "many": "{{n}} entries selected" }
+    "title": {
+      "one": "1 entry selected",
+      "many": "{{n}} entries selected"
+    }
   },
   "actions": {
     "close": "Close",
@@ -44,6 +49,18 @@
     "shortcuts": "Shortcuts: Esc (close), Ctrl/⌘+Enter (save)"
   },
   "errors": {
-    "bulk": "Error settling entries."
+    "bulk": "Error settling entries.",
+    "missingPrimaryBook": "No active primary accounting book is configured for this organization.",
+    "multiplePrimaryBooks": "More than one active primary accounting book is configured. Keep only one primary book active.",
+    "missingBankMapping": "This bank account is not mapped to a ledger account in the active primary accounting book. Configure it in Accounting > Bank mappings before settling.",
+    "multipleBankMappings": "This bank account has more than one active ledger mapping for the primary accounting book. Keep only one active mapping.",
+    "invalidBankLedgerAccount": "The mapped bank ledger account is invalid.",
+    "missingCategory": "This entry has no cashflow category. Assign a category before settling.",
+    "missingPostingPolicy": "This entry category has no active settlement posting policy for the primary accounting book. Configure settlement debit and credit accounts before settling.",
+    "multiplePostingPolicies": "This entry category has more than one active settlement posting policy for the primary accounting book. Keep only one active policy.",
+    "invalidDebitAccount": "The settlement debit account configured for this category is invalid.",
+    "invalidCreditAccount": "The settlement credit account configured for this category is invalid.",
+    "invalidTxType": "This entry has an invalid transaction type.",
+    "sameTransferBank": "The source and destination bank accounts must be different for a transfer."
   }
 }

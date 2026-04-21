@@ -1,8 +1,13 @@
 {
-  "aria": { "dialog": "Règlement des écritures" },
+  "aria": {
+    "dialog": "Règlement des écritures"
+  },
   "header": {
     "kind": "Règlement",
-    "title": { "one": "1 écriture sélectionnée", "many": "{{n}} écritures sélectionnées" }
+    "title": {
+      "one": "1 écriture sélectionnée",
+      "many": "{{n}} écritures sélectionnées"
+    }
   },
   "actions": {
     "close": "Fermer",
@@ -44,6 +49,18 @@
     "shortcuts": "Raccourcis : Échap (fermer), Ctrl/⌘+Entrée (enregistrer)"
   },
   "errors": {
-    "bulk": "Erreur lors du règlement des écritures."
+    "bulk": "Erreur lors du règlement des écritures.",
+    "missingPrimaryBook": "Aucun livre comptable principal actif n’est configuré pour cette organisation.",
+    "multiplePrimaryBooks": "Plusieurs livres comptables principaux actifs sont configurés. Conservez un seul livre principal actif.",
+    "missingBankMapping": "Ce compte bancaire n’est pas mappé à un compte comptable dans le livre comptable principal actif. Configurez-le dans Comptabilité > Mappages bancaires avant de régler.",
+    "multipleBankMappings": "Ce compte bancaire possède plusieurs mappages comptables actifs pour le livre principal. Conservez un seul mappage actif.",
+    "invalidBankLedgerAccount": "Le compte comptable bancaire mappé est invalide.",
+    "missingCategory": "Cette écriture n’a pas de catégorie de trésorerie. Attribuez une catégorie avant de régler.",
+    "missingPostingPolicy": "La catégorie de cette écriture n’a pas de politique de comptabilisation de règlement active pour le livre comptable principal. Configurez les comptes de débit et de crédit avant de régler.",
+    "multiplePostingPolicies": "La catégorie de cette écriture possède plusieurs politiques de règlement actives pour le livre comptable principal. Conservez une seule politique active.",
+    "invalidDebitAccount": "Le compte de débit de règlement configuré pour cette catégorie est invalide.",
+    "invalidCreditAccount": "Le compte de crédit de règlement configuré pour cette catégorie est invalide.",
+    "invalidTxType": "Cette écriture possède un type de transaction invalide.",
+    "sameTransferBank": "Les comptes bancaires source et destination doivent être différents pour un transfert."
   }
 }

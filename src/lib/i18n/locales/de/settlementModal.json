@@ -1,8 +1,13 @@
 {
-  "aria": { "dialog": "Abrechnung von Buchungen" },
+  "aria": {
+    "dialog": "Abrechnung von Buchungen"
+  },
   "header": {
     "kind": "Abrechnung",
-    "title": { "one": "1 Buchung ausgewählt", "many": "{{n}} Buchungen ausgewählt" }
+    "title": {
+      "one": "1 Buchung ausgewählt",
+      "many": "{{n}} Buchungen ausgewählt"
+    }
   },
   "actions": {
     "close": "Schließen",
@@ -44,6 +49,18 @@
     "shortcuts": "Shortcuts: Esc (schließen), Ctrl/⌘+Enter (speichern)"
   },
   "errors": {
-    "bulk": "Fehler beim Abrechnen der Buchungen."
+    "bulk": "Fehler beim Abrechnen der Buchungen.",
+    "missingPrimaryBook": "Für diese Organisation ist kein aktives primäres Buchhaltungsbuch konfiguriert.",
+    "multiplePrimaryBooks": "Es sind mehrere aktive primäre Buchhaltungsbücher konfiguriert. Lassen Sie nur ein primäres Buch aktiv.",
+    "missingBankMapping": "Dieses Bankkonto ist im aktiven primären Buchhaltungsbuch keinem Sachkonto zugeordnet. Konfigurieren Sie es unter Buchhaltung > Bankzuordnungen, bevor Sie abrechnen.",
+    "multipleBankMappings": "Dieses Bankkonto hat mehr als eine aktive Sachkonto-Zuordnung für das primäre Buchhaltungsbuch. Lassen Sie nur eine aktive Zuordnung bestehen.",
+    "invalidBankLedgerAccount": "Das zugeordnete Bank-Sachkonto ist ungültig.",
+    "missingCategory": "Diese Buchung hat keine Cashflow-Kategorie. Weisen Sie vor der Abrechnung eine Kategorie zu.",
+    "missingPostingPolicy": "Für die Kategorie dieser Buchung gibt es keine aktive Abrechnungs-Buchungsregel im primären Buchhaltungsbuch. Konfigurieren Sie vor der Abrechnung die Soll- und Haben-Konten.",
+    "multiplePostingPolicies": "Für die Kategorie dieser Buchung gibt es mehrere aktive Abrechnungs-Buchungsregeln im primären Buchhaltungsbuch. Lassen Sie nur eine aktive Regel bestehen.",
+    "invalidDebitAccount": "Das für diese Kategorie konfigurierte Sollkonto für die Abrechnung ist ungültig.",
+    "invalidCreditAccount": "Das für diese Kategorie konfigurierte Habenkonto für die Abrechnung ist ungültig.",
+    "invalidTxType": "Diese Buchung hat einen ungültigen Transaktionstyp.",
+    "sameTransferBank": "Quell- und Zielbankkonto müssen bei einer Überweisung unterschiedlich sein."
   }
 }

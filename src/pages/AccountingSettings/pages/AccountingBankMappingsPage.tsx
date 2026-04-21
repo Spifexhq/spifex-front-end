@@ -6,7 +6,6 @@ import { Select } from "src/shared/ui/Select";
 import Snackbar from "@/shared/ui/Snackbar";
 import AccountingSideModal from "../components/AccountingSideModal";
 import { api } from "@/api";
-import { fetchAllCursor } from "@/lib/list";
 
 import type { BankAccountLedgerMap, AccountingBook } from "@/models/settings/accounting";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
@@ -144,28 +143,36 @@ const AccountingBankMappingsPage: React.FC = () => {
     try {
       setLookupsLoading(true);
 
-      const [booksResponse, allBanks, allAccounts] = await Promise.all([
+      const [booksResponse, banksResponse, ledgerAccountsResponse] = await Promise.all([
         api.getAccountingBooks(),
-        fetchAllCursor<BankAccount>((params?: { cursor?: string }) =>
-          api.getBanks({ cursor: params?.cursor, active: "true" })
-        ),
-        fetchAllCursor<LedgerAccount>((params?: { cursor?: string }) =>
-          api.getLedgerAccounts({
-            cursor: params?.cursor,
-            active: "true",
-            account_type: "posting",
-            is_bank_control: "true",
-          })
-        ),
+        api.getBanks({ active: "true" }),
+        api.getLedgerAccounts({
+          active: "true",
+          account_type: "posting",
+          is_bank_control: "true",
+        }),
       ]);
 
-      setBooks(
-        extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse)
+      const nextBooks = extractCollection<AccountingBook>(
+        (booksResponse as { data?: unknown })?.data ?? booksResponse
       );
-      setBanks(allBanks);
-      setLedgerAccounts(allAccounts);
+
+      const nextBanks = extractCollection<BankAccount>(
+        (banksResponse as { data?: unknown })?.data ?? banksResponse
+      );
+
+      const nextLedgerAccounts = extractCollection<LedgerAccount>(
+        (ledgerAccountsResponse as { data?: unknown })?.data ?? ledgerAccountsResponse
+      );
+
+      setBooks(nextBooks);
+      setBanks(nextBanks);
+      setLedgerAccounts(nextLedgerAccounts);
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to load mapping form lookups." });
+      setSnackbar({
+        severity: "error",
+        message: "Failed to load mapping form lookups.",
+      });
     } finally {
       setLookupsLoading(false);
     }

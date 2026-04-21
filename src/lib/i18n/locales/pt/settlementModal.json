@@ -1,8 +1,13 @@
 {
-  "aria": { "dialog": "Liquidação de lançamentos" },
+  "aria": {
+    "dialog": "Liquidação de lançamentos"
+  },
   "header": {
     "kind": "Liquidação",
-    "title": { "one": "1 lançamento selecionado", "many": "{{n}} lançamentos selecionados" }
+    "title": {
+      "one": "1 lançamento selecionado",
+      "many": "{{n}} lançamentos selecionados"
+    }
   },
   "actions": {
     "close": "Fechar",
@@ -44,6 +49,18 @@
     "shortcuts": "Atalhos: Esc (fechar), Ctrl/⌘+Enter (salvar)"
   },
   "errors": {
-    "bulk": "Erro ao liquidar lançamentos."
+    "bulk": "Erro ao liquidar lançamentos.",
+    "missingPrimaryBook": "Nenhum livro contábil primário ativo está configurado para esta organização.",
+    "multiplePrimaryBooks": "Mais de um livro contábil primário ativo está configurado. Mantenha apenas um livro primário ativo.",
+    "missingBankMapping": "Esta conta bancária não está mapeada para uma conta contábil no livro contábil primário ativo. Configure em Contabilidade > Mapeamentos bancários antes de liquidar.",
+    "multipleBankMappings": "Esta conta bancária possui mais de um mapeamento contábil ativo para o livro primário. Mantenha apenas um mapeamento ativo.",
+    "invalidBankLedgerAccount": "A conta contábil bancária mapeada é inválida.",
+    "missingCategory": "Este lançamento não possui categoria de fluxo de caixa. Atribua uma categoria antes de liquidar.",
+    "missingPostingPolicy": "A categoria deste lançamento não possui uma política de lançamento de liquidação ativa para o livro contábil primário. Configure as contas de débito e crédito antes de liquidar.",
+    "multiplePostingPolicies": "A categoria deste lançamento possui mais de uma política de liquidação ativa para o livro contábil primário. Mantenha apenas uma política ativa.",
+    "invalidDebitAccount": "A conta de débito de liquidação configurada para esta categoria é inválida.",
+    "invalidCreditAccount": "A conta de crédito de liquidação configurada para esta categoria é inválida.",
+    "invalidTxType": "Este lançamento possui um tipo de transação inválido.",
+    "sameTransferBank": "As contas bancárias de origem e destino devem ser diferentes em uma transferência."
   }
 }

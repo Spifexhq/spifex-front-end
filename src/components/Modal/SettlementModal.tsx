@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
+import Snackbar from "@/shared/ui/Snackbar";
 
 import { api } from "@/api/requests";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
@@ -42,6 +43,10 @@ type LocalEntryState = {
 
 const FORM_ID = "settlementForm";
 
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
+
 /* ------------------------------ helpers ------------------------------ */
 
 function todayISO(): string {
@@ -67,6 +72,51 @@ function signedEffect(tx: TxType, amountRaw: unknown): number {
   return tx === "debit" ? -n : n;
 }
 
+function firstText(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim();
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const text = firstText(item);
+      if (text) return text;
+    }
+    return null;
+  }
+
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    return (
+      firstText(obj.message) ||
+      firstText(obj.detail) ||
+      firstText(obj.non_field_errors) ||
+      firstText(obj.bank) ||
+      firstText(obj.bank_id) ||
+      firstText(obj.book) ||
+      firstText(obj.category) ||
+      firstText(obj.policy) ||
+      firstText(obj.items) ||
+      firstText(obj.error) ||
+      null
+    );
+  }
+
+  return null;
+}
+
+function getSettlementErrorMessage(errorLike: unknown, fallback: string): string {
+  if (axios.isAxiosError(errorLike)) {
+    return firstText(errorLike.response?.data) || fallback;
+  }
+
+  if (errorLike && typeof errorLike === "object") {
+    const obj = errorLike as Record<string, unknown>;
+    return firstText(obj.error) || firstText(obj) || fallback;
+  }
+
+  return fallback;
+}
+
 /* ------------------------------ component ------------------------------ */
 
 const SettlementModal: React.FC<SettlementModalProps> = ({
@@ -82,6 +132,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
   const [entriesState, setEntriesState] = useState<LocalEntryState[]>([]);
   const [bulkDate, setBulkDate] = useState<string>("");
+  const [snack, setSnack] = useState<Snack>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
   const submitDisabledRef = useRef(true);
@@ -238,20 +289,20 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
 
         if (!("data" in res)) {
           const apiError = res as ApiError;
-          const message = apiError?.error?.message || t("errors.bulk");
-          window.alert(message);
+          setSnack({
+            message: getSettlementErrorMessage(apiError, t("errors.bulk")),
+            severity: "error",
+          });
           return;
         }
 
         onSave();
         onClose();
       } catch (err) {
-        const message =
-          axios.isAxiosError(err) && err.response?.data?.error?.message
-            ? err.response.data.error.message
-            : t("errors.bulk");
-
-        window.alert(message);
+        setSnack({
+          message: getSettlementErrorMessage(err, t("errors.bulk")),
+          severity: "error",
+        });
       }
     },
     [entriesState, onClose, onSave, selectedBankId, t]
@@ -265,21 +316,19 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
   const headerTitle = selectedCount === 1 ? t("header.title.one") : t("header.title.many", { n: selectedCount });
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[9999] md:grid md:place-items-center">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("aria.dialog")}
-        className={[
-          /* ---- mobile: full-screen bottom sheet ---- */
-          "fixed inset-x-0 bottom-0 h-[100dvh] max-h-[100dvh] rounded-none border-0",
-          /* ---- desktop: centred modal (unchanged) ---- */
-          "md:static md:rounded-lg md:border md:border-gray-200",
-          "md:w-[1500px] md:max-w-[96vw] md:h-[640px] md:max-h-[92vh]",
-          /* ---- shared ---- */
-          "bg-white shadow-xl overflow-hidden flex flex-col",
-        ].join(" ")}
-      >
+    <>
+      <div className="fixed inset-0 bg-black/30 z-[9999] md:grid md:place-items-center">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("aria.dialog")}
+          className={[
+            "fixed inset-x-0 bottom-0 h-[100dvh] max-h-[100dvh] rounded-none border-0",
+            "md:static md:rounded-lg md:border md:border-gray-200",
+            "md:w-[1500px] md:max-w-[96vw] md:h-[640px] md:max-h-[92vh]",
+            "bg-white shadow-xl overflow-hidden flex flex-col",
+          ].join(" ")}
+        >
         {/* Drag handle — mobile only */}
         <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
@@ -662,7 +711,19 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
         </footer>
       </div>
     </div>
-  );
+
+    <Snackbar
+      open={!!snack}
+      onClose={() => setSnack(null)}
+      autoHideDuration={6000}
+      message={snack?.message}
+      severity={snack?.severity}
+      anchor={{ vertical: "bottom", horizontal: "center" }}
+      pauseOnHover
+      showCloseButton
+    />
+  </>
+);
 };
 
 export default SettlementModal;
