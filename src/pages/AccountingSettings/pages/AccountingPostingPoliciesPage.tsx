@@ -6,7 +6,6 @@ import { Select } from "src/shared/ui/Select";
 import Snackbar from "@/shared/ui/Snackbar";
 import AccountingSideModal from "../components/AccountingSideModal";
 import { api } from "@/api";
-import { fetchAllCursor } from "@/lib/list";
 
 import type { CategoryPostingPolicy, AccountingBook } from "@/models/settings/accounting";
 import type { LedgerAccount } from "@/models/settings/ledgerAccounts";
@@ -172,27 +171,30 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     try {
       setLookupsLoading(true);
 
-      const [booksResponse, allAccounts, categoriesResponse] = await Promise.all([
+      const [booksResponse, ledgerAccountsResponse, categoriesResponse] = await Promise.all([
         api.getAccountingBooks(),
-        fetchAllCursor<LedgerAccount>((params?: { cursor?: string }) =>
-          api.getLedgerAccounts({
-            cursor: params?.cursor,
-            active: "true",
-            account_type: "posting",
-          })
-        ),
-        api.getCashflowCategories?.(),
+        api.getLedgerAccounts({
+          active: "true",
+          account_type: "posting",
+        }),
+        api.getCashflowCategories(),
       ]);
 
-      setBooks(
-        extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse)
+      const nextBooks = extractCollection<AccountingBook>(
+        (booksResponse as { data?: unknown })?.data ?? booksResponse
       );
-      setLedgerAccounts(allAccounts);
-      setCategories(
-        extractCollection<CashflowCategory>(
-          (categoriesResponse as { data?: unknown })?.data ?? categoriesResponse
-        )
+
+      const nextLedgerAccounts = extractCollection<LedgerAccount>(
+        (ledgerAccountsResponse as { data?: unknown })?.data ?? ledgerAccountsResponse
       );
+
+      const nextCategories = extractCollection<CashflowCategory>(
+        (categoriesResponse as { data?: unknown })?.data ?? categoriesResponse
+      );
+
+      setBooks(nextBooks);
+      setLedgerAccounts(nextLedgerAccounts);
+      setCategories(nextCategories);
     } catch {
       setSnackbar({ severity: "error", message: "Failed to load posting policy form lookups." });
     } finally {
