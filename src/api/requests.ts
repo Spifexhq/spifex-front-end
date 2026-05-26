@@ -500,7 +500,7 @@ export const api = {
     request<LedgerAccount>(`ledger/accounts/${ledgerAccountId}/`, 'PATCH', payload),
 
   deleteAllLedgerAccounts: () =>
-    request<DeleteAllLedgerAccountsResponse>('ledger/accounts/delete/all/', 'DELETE', {
+    request<DeleteAllLedgerAccountsResponse>('ledger/accounts/delete-all/', 'POST', {
       confirm_delete_all: true,
     } satisfies DeleteAllLedgerAccountsRequest),
 
