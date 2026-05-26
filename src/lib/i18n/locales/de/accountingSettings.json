@@ -40,7 +40,27 @@
     "notAvailable": "—",
     "total": "Gesamt",
     "refreshing": "wird aktualisiert",
-    "loading": "Wird geladen..."
+    "loading": "Wird geladen...",
+    "sections": {
+      "asset": "Aktiva",
+      "liability": "Passiva",
+      "equity": "Eigenkapital",
+      "income": "Erträge",
+      "expense": "Aufwendungen",
+      "offBalance": "Außerbilanziell",
+      "statistical": "Statistisch"
+    },
+    "balances": {
+      "debit": "Soll",
+      "credit": "Haben"
+    },
+    "accountTypes": {
+      "header": "Überschrift",
+      "posting": "Buchung"
+    },
+    "system": "System",
+    "apply": "Anwenden",
+    "clear": "Zurücksetzen"
   },
   "nav": {
     "ariaLabel": "Navigation der Buchhaltungseinstellungen",
@@ -112,7 +132,8 @@
       "bankControl": "Banksteuerung",
       "manualPosting": "Manuelle Buchung",
       "active": "Aktiv",
-      "activeOnly": "Nur aktive"
+      "activeOnly": "Nur aktive",
+      "title": "Filter"
     },
     "emptySelectionTitle": "Kein Konto ausgewählt",
     "emptySelectionDescription": "Wähle ein Konto im Baum aus, um es zu prüfen.",
@@ -168,7 +189,9 @@
         "title": "Nicht zugewiesene Berichtskonten",
         "subtitle": "Konten ohne Berichtsgruppe in der aktuellen gefilterten Ansicht.",
         "empty": "Keine Konten für diese Berichtsgruppe gefunden.",
-        "groupTitle": "{{group}}"
+        "groupTitle": "{{group}}",
+        "reportGroup": "Reporting-Gruppe: {{group}}",
+        "assignedSubtitle": "Konten, die der Reporting-Gruppe \"{{group}}\" in der aktuell gefilterten Ansicht zugeordnet sind."
       }
     },
     "form": {
@@ -184,10 +207,45 @@
       "isBankControl": "Banksteuerung",
       "allowsManualPosting": "Erlaubt manuelle Buchung",
       "createAccount": "Konto erstellen",
-      "saveChanges": "Änderungen speichern"
+      "saveChanges": "Änderungen speichern",
+      "sections": {
+        "identity": "Identität",
+        "structure": "Struktur",
+        "reportingIntegrations": "Reporting und Integrationen"
+      },
+      "metadataJson": "Metadaten-JSON"
     },
     "accountsList": {
-      "title": "Konten"
+      "title": "Konten",
+      "count": "{{count}} Konto/Konten gefunden"
+    },
+    "tree": {
+      "collapseGroup": "Gruppe einklappen",
+      "expandGroup": "Gruppe ausklappen",
+      "title": "Baum",
+      "description": "Hierarchieansicht mit direkter Auswahl und Schnellbearbeitung.",
+      "visibleCount": "{{count}} sichtbar",
+      "refreshing": "• wird aktualisiert",
+      "empty": "Keine Konten für den aktuellen Filtersatz gefunden."
+    },
+    "labels": {
+      "bankControlLower": "Banksteuerung",
+      "regularAccount": "reguläres Konto",
+      "manualAllowedLower": "manuelle Buchung erlaubt",
+      "manualBlockedLower": "manuelle Buchung gesperrt"
+    },
+    "confirmDelete": "{{name}} löschen?",
+    "title": "Kontenplan",
+    "description": "Pflege Struktur, Buchungskontrollen und Reporting-Zuordnung in einem kompakten Arbeitsbereich.",
+    "newAccount": "Neues Konto",
+    "inspector": {
+      "title": "Inspektor",
+      "empty": "Wähle ein Konto im Baum aus, um seine Buchhaltungseigenschaften zu prüfen."
+    },
+    "postingControlsTitle": "Buchungskontrollen",
+    "reportingCoverage": "Reporting-Abdeckung",
+    "reporting": {
+      "emptyGroups": "Keine Reporting-Gruppen gefunden."
     }
   },
   "booksPage": {
@@ -305,8 +363,15 @@
       "cashflowCategory": "Cashflow-Kategorie",
       "selectCategory": "Kategorie auswählen",
       "selectBook": "Buch auswählen",
-      "savePolicy": "Regel speichern"
-    }
+      "savePolicy": "Regel speichern",
+      "scopeSection": "Geltungsbereich",
+      "accountMapping": "Kontenzuordnung"
+    },
+    "actions": {
+      "newPolicy": "Neue Richtlinie"
+    },
+    "listTitle": "Richtlinienliste",
+    "empty": "Keine Buchungsrichtlinien gefunden."
   },
   "journalsPage": {
     "loadError": "Journale konnten nicht geladen werden.",
@@ -341,7 +406,8 @@
     },
     "actions": {
       "reverse": "Stornieren",
-      "reversing": "Storniere..."
+      "reversing": "Storniere...",
+      "manualJournal": "Manuelle Buchung"
     },
     "modal": {
       "title": "Manuelles Journal",
@@ -360,8 +426,15 @@
       "lineMemo": "Zeilenmemo",
       "balanced": "Ausgeglichen",
       "unbalanced": "Nicht ausgeglichen",
-      "createJournal": "Journal erstellen"
-    }
+      "createJournal": "Journal erstellen",
+      "headerSection": "Buchungskopf",
+      "linesSection": "Buchungszeilen",
+      "debitTotal": "Soll gesamt",
+      "creditTotal": "Haben gesamt",
+      "balance": "Saldo"
+    },
+    "listTitle": "Buchungsliste",
+    "empty": "Keine Buchungen gefunden."
   },
   "reconciliationPage": {
     "sectionLabel": "Abstimmung",
@@ -394,11 +467,11 @@
     }
   },
   "correlationsPage": {
-    "loadError": "Buchhaltungs-Korrelationsdaten konnten nicht geladen werden.",
+    "loadError": "Die Daten des Korrelations-Explorers konnten nicht geladen werden.",
     "exportSuccess": "Diagramm exportiert.",
     "selectionRequired": "Wähle eine Zeile aus, um sie dem Diagramm hinzuzufügen.",
-    "title": "Buchhaltungs-Korrelationskarte",
-    "description": "Untersuche, wie Buchhaltungseinstellungsseiten, APIs, Entitäten und operative Datensätze miteinander verbunden sind.",
+    "title": "Korrelations-Explorer",
+    "description": "Wähle konkrete Zeilen aus und visualisiere ihre direkten ID-Korrelationen zu Büchern, Kategorien, Bankkonten, Hauptbuchkonten und Journalen.",
     "controls": {
       "search": "Suche",
       "filter": "Filter",
@@ -412,7 +485,9 @@
       "export": "Exportieren",
       "maximize": "Maximieren",
       "minimize": "Minimieren",
-      "move": "Verschieben"
+      "move": "Verschieben",
+      "architecture": "Nur Architektur",
+      "selected": "Nur ausgewählte Daten"
     },
     "datasets": {
       "books": {
@@ -477,7 +552,31 @@
       "categoryBridge": "Kategoriebrücke",
       "reviewExceptions": "Prüfung / Ausnahmen",
       "policyReadiness": "Regelbereitschaft",
-      "bankReadiness": "Bankbereitschaft"
+      "bankReadiness": "Bankbereitschaft",
+      "list + CRUD": "Liste + CRUD",
+      "bank-control lookup": "Banksteuerungs-Suche",
+      "bank lookup": "Banksuche",
+      "book lookup": "Buchsuche",
+      "account lookup": "Kontosuche",
+      "category scope": "Kategorieumfang",
+      "line account lookup": "Kontosuche der Zeile",
+      "list/create/reverse": "auflisten/erstellen/stornieren",
+      "tree + inspector": "Baum + Inspektor",
+      "bank-control account": "Banksteuerungskonto",
+      "settlement/accrual/clearing": "Abgleich/Abgrenzung/Clearing",
+      "journal lines": "Journalzeilen",
+      "mapping scope": "Zuordnungsumfang",
+      "policy scope": "Richtlinienumfang",
+      "journal header": "Journalkopf",
+      "operational bank": "operative Bank",
+      "category bridge": "Kategoriebrücke",
+      "review / exceptions": "Prüfung / Ausnahmen",
+      "policy readiness": "Richtlinienbereitschaft",
+      "bank readiness": "Bankbereitschaft",
+      "selected row": "ausgewählte Zeile",
+      "correlated by id": "nach ID korreliert",
+      "selected mapping": "ausgewählte Zuordnung",
+      "selected policy": "ausgewählte Richtlinie"
     },
     "nodes": {
       "workspace": {
@@ -563,13 +662,68 @@
     },
     "rows": {
       "bankMapping": "Bankzuordnung {{number}}",
-      "postingPolicy": "Buchungsregel {{number}}",
+      "postingPolicy": "Buchungsrichtlinie {{number}}",
       "bank": "Bank",
       "book": "Buch",
       "ledgerAccount": "Hauptbuchkonto",
       "category": "Kategorie",
       "noHint": "kein Hinweis",
-      "lines": "{{count}} Zeilen"
+      "lines": "{{count}} Zeilen",
+      "mapNumber": "Zuordnung {{number}}",
+      "policyNumber": "Richtlinie {{number}}"
+    },
+    "heading": "Explorer für Buchhaltungsdaten-Korrelationen",
+    "board": {
+      "title": "Korrelationsboard",
+      "subtitle": "Breites Board mit ziehbaren und auswählbaren Karten",
+      "zoomStatus": "Zoom {{zoom}} % • {{count}} ausgewählte Zeilen"
+    },
+    "aria": {
+      "filterData": "Daten filtern",
+      "centerSelected": "Auswahl zentrieren",
+      "downloadPng": "PNG herunterladen",
+      "collapseChart": "Diagramm einklappen",
+      "expandChart": "Diagramm erweitern",
+      "zoomOut": "Verkleinern",
+      "zoomIn": "Vergrößern",
+      "resetView": "Ansicht zurücksetzen"
+    },
+    "empty": {
+      "noDataSelectedTitle": "Noch keine Daten ausgewählt",
+      "noDataSelectedMessage": "Öffne das Filterpanel, aktiviere Datensätze und wähle Zeilen aus, um direkte Korrelationen nach ID zu visualisieren."
+    },
+    "inspector": {
+      "title": "Inspektor",
+      "node": "Knoten",
+      "noNodeSelected": "Kein Knoten ausgewählt",
+      "selectNode": "Wähle einen Knoten aus, um seine Verbindungen zu prüfen.",
+      "incoming": "Eingehende Verbindungen",
+      "noIncoming": "Keine eingehenden Verbindungen im aktuellen Filter.",
+      "outgoing": "Ausgehende Verbindungen",
+      "noOutgoing": "Keine ausgehenden Verbindungen im aktuellen Filter."
+    },
+    "filters": {
+      "title": "Korrelationsfilter",
+      "subtitle": "{{datasets}} Datensätze aktiviert • {{rows}} Zeilen ausgewählt",
+      "datasets": "Datensätze",
+      "rows": "Zeilen",
+      "rowSelector": "Zeilenauswahl",
+      "searchPlaceholder": "Aktivierte Datensätze durchsuchen",
+      "enableDatasets": "Aktiviere oben einen oder mehrere Datensätze, um Zeilen auszuwählen.",
+      "noRows": "Keine Zeilen entsprechen der aktuellen Suche."
+    },
+    "dynamic": {
+      "selectedBookRow": "Ausgewählte Buchzeile",
+      "correlatedBookById": "Nach ID korreliertes Buch",
+      "selectedAccountRow": "Ausgewählte Kontozeile",
+      "correlatedAccountById": "Nach ID korreliertes Konto",
+      "selectedBankRow": "Ausgewählte Bankzeile",
+      "correlatedBankById": "Nach ID korrelierte Bank",
+      "selectedCategoryRow": "Ausgewählte Kategoriezeile",
+      "correlatedCategoryById": "Nach ID korrelierte Kategorie",
+      "bankMappingArchitectureLabel": "Bankzuordnung",
+      "postingPolicyArchitectureLabel": "Buchungsrichtlinie",
+      "journalArchitectureLabel": "Journal"
     }
   }
 }

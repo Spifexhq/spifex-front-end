@@ -80,13 +80,6 @@ const EMPTY_FORM: PolicyFormState = {
   clearing_account_id: "",
 };
 
-const ACCOUNT_FIELDS: Array<{ field: PolicyAccountField; label: string }> = [
-  { field: "settlement_debit_account_id", label: "Settlement debit" },
-  { field: "settlement_credit_account_id", label: "Settlement credit" },
-  { field: "accrual_debit_account_id", label: "Accrual debit" },
-  { field: "accrual_credit_account_id", label: "Accrual credit" },
-  { field: "clearing_account_id", label: "Clearing" },
-];
 
 const displayValue = (label?: string | null, fallback?: string | null): string =>
   (label && label.trim()) || (fallback && fallback.trim()) || "—";
@@ -120,6 +113,17 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
       String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
     [i18n]
+  );
+
+  const accountFields = React.useMemo<Array<{ field: PolicyAccountField; label: string }>>(
+    () => [
+      { field: "settlement_debit_account_id", label: t("postingPoliciesPage.accountFields.settlementDebit", "Settlement debit") },
+      { field: "settlement_credit_account_id", label: t("postingPoliciesPage.accountFields.settlementCredit", "Settlement credit") },
+      { field: "accrual_debit_account_id", label: t("postingPoliciesPage.accountFields.accrualDebit", "Accrual debit") },
+      { field: "accrual_credit_account_id", label: t("postingPoliciesPage.accountFields.accrualCredit", "Accrual credit") },
+      { field: "clearing_account_id", label: t("postingPoliciesPage.accountFields.clearing", "Clearing") },
+    ],
+    [t]
   );
 
   const [loading, setLoading] = React.useState(true);
@@ -173,7 +177,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadLookups = React.useCallback(async () => {
     try {
@@ -208,7 +212,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     } finally {
       setLookupsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     void load();
@@ -286,15 +290,14 @@ const AccountingPostingPoliciesPage: React.FC = () => {
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">Category-to-accounting bridge</h2>
+                <h2 className="text-[16px] font-semibold text-gray-900">{t("postingPoliciesPage.title", "Category-to-accounting bridge")}</h2>
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  Define how each operational cashflow category translates into settlement,
-                  accrual, and clearing accounts inside each accounting book.
+                  {t("postingPoliciesPage.description", "Define how each operational cashflow category translates into settlement, accrual, and clearing accounts inside each accounting book.")}
                 </p>
               </div>
 
               <Button type="button" onClick={() => void openCreate()}>
-                New policy
+                {t("postingPoliciesPage.actions.newPolicy", "New policy")}
               </Button>
             </div>
 
@@ -374,7 +377,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.status}</td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
-                        Edit
+                        {t("common.edit", "Edit")}
                       </Button>
                     </td>
                   </tr>
@@ -419,7 +422,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
           <form onSubmit={submit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Scope</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("postingPoliciesPage.modal.scopeSection", "Scope")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4">
@@ -465,7 +468,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
-                {ACCOUNT_FIELDS.map(({ field, label }) => {
+                {accountFields.map(({ field, label }) => {
                   const selectedAccount = ledgerAccounts.filter((account) => account.id === form[field]);
 
                   return (

@@ -40,7 +40,27 @@
     "notAvailable": "—",
     "total": "Total",
     "refreshing": "a atualizar",
-    "loading": "A carregar..."
+    "loading": "A carregar...",
+    "sections": {
+      "asset": "Ativo",
+      "liability": "Passivo",
+      "equity": "Capital próprio",
+      "income": "Rendimento",
+      "expense": "Despesa",
+      "offBalance": "Extrapatrimonial",
+      "statistical": "Estatístico"
+    },
+    "balances": {
+      "debit": "Débito",
+      "credit": "Crédito"
+    },
+    "accountTypes": {
+      "header": "Cabeçalho",
+      "posting": "Lançamento"
+    },
+    "system": "Sistema",
+    "apply": "Aplicar",
+    "clear": "Limpar"
   },
   "nav": {
     "ariaLabel": "Navegação das definições de contabilidade",
@@ -112,7 +132,8 @@
       "bankControl": "Controlo bancário",
       "manualPosting": "Lançamento manual",
       "active": "Ativa",
-      "activeOnly": "Apenas ativas"
+      "activeOnly": "Apenas ativas",
+      "title": "Filtros"
     },
     "emptySelectionTitle": "Nenhuma conta selecionada",
     "emptySelectionDescription": "Selecione uma conta na árvore para inspecioná-la.",
@@ -168,7 +189,9 @@
         "title": "Contas de reporting não atribuídas",
         "subtitle": "Contas sem grupo de relatório na vista filtrada atual.",
         "empty": "Nenhuma conta encontrada para este grupo de reporting.",
-        "groupTitle": "{{group}}"
+        "groupTitle": "{{group}}",
+        "reportGroup": "Grupo de reporting: {{group}}",
+        "assignedSubtitle": "Contas atribuídas ao grupo de reporting \"{{group}}\" na vista filtrada atual."
       }
     },
     "form": {
@@ -184,10 +207,45 @@
       "isBankControl": "Controlo bancário",
       "allowsManualPosting": "Permite lançamento manual",
       "createAccount": "Criar conta",
-      "saveChanges": "Guardar alterações"
+      "saveChanges": "Guardar alterações",
+      "sections": {
+        "identity": "Identidade",
+        "structure": "Estrutura",
+        "reportingIntegrations": "Reporting e integrações"
+      },
+      "metadataJson": "Metadata JSON"
     },
     "accountsList": {
-      "title": "Contas"
+      "title": "Contas",
+      "count": "{{count}} conta(s) encontrada(s)"
+    },
+    "tree": {
+      "collapseGroup": "Recolher grupo",
+      "expandGroup": "Expandir grupo",
+      "title": "Árvore",
+      "description": "Vista hierárquica com seleção direta e edição rápida.",
+      "visibleCount": "{{count}} visível(eis)",
+      "refreshing": "• a atualizar",
+      "empty": "Nenhuma conta encontrada para o conjunto de filtros atual."
+    },
+    "labels": {
+      "bankControlLower": "controlo bancário",
+      "regularAccount": "conta regular",
+      "manualAllowedLower": "lançamento manual permitido",
+      "manualBlockedLower": "lançamento manual bloqueado"
+    },
+    "confirmDelete": "Apagar {{name}}?",
+    "title": "Plano de contas",
+    "description": "Mantenha a estrutura, os controlos de lançamento e o mapeamento de reporting num espaço compacto.",
+    "newAccount": "Nova conta",
+    "inspector": {
+      "title": "Inspetor",
+      "empty": "Selecione uma conta na árvore para inspecionar as propriedades contabilísticas."
+    },
+    "postingControlsTitle": "Controlos de lançamento",
+    "reportingCoverage": "Cobertura de reporting",
+    "reporting": {
+      "emptyGroups": "Nenhum grupo de reporting encontrado."
     }
   },
   "booksPage": {
@@ -305,8 +363,15 @@
       "cashflowCategory": "Categoria de fluxo de caixa",
       "selectCategory": "Selecionar categoria",
       "selectBook": "Selecionar livro",
-      "savePolicy": "Guardar política"
-    }
+      "savePolicy": "Guardar política",
+      "scopeSection": "Âmbito",
+      "accountMapping": "Mapeamento de contas"
+    },
+    "actions": {
+      "newPolicy": "Nova política"
+    },
+    "listTitle": "Lista de políticas",
+    "empty": "Nenhuma política de lançamento encontrada."
   },
   "journalsPage": {
     "loadError": "Falha ao carregar os diários.",
@@ -341,7 +406,8 @@
     },
     "actions": {
       "reverse": "Reverter",
-      "reversing": "A reverter..."
+      "reversing": "A reverter...",
+      "manualJournal": "Lançamento manual"
     },
     "modal": {
       "title": "Diário manual",
@@ -360,8 +426,15 @@
       "lineMemo": "Memo da linha",
       "balanced": "Equilibrado",
       "unbalanced": "Desequilibrado",
-      "createJournal": "Criar diário"
-    }
+      "createJournal": "Criar diário",
+      "headerSection": "Cabeçalho do lançamento",
+      "linesSection": "Linhas do lançamento",
+      "debitTotal": "Total a débito",
+      "creditTotal": "Total a crédito",
+      "balance": "Saldo"
+    },
+    "listTitle": "Lista de lançamentos",
+    "empty": "Nenhum lançamento encontrado."
   },
   "reconciliationPage": {
     "sectionLabel": "Reconciliação",
@@ -394,15 +467,15 @@
     }
   },
   "correlationsPage": {
-    "loadError": "Falha ao carregar os dados de correlação contabilística.",
+    "loadError": "Não foi possível carregar os dados do explorador de correlações.",
     "exportSuccess": "Diagrama exportado.",
     "selectionRequired": "Selecione uma linha para adicioná-la ao diagrama.",
-    "title": "Mapa de correlação contabilística",
-    "description": "Explore como as páginas de definições contabilísticas, APIs, entidades e datasets operacionais se conectam.",
+    "title": "Explorador de correlações",
+    "description": "Selecione linhas concretas e visualize as correlações diretas por ID com livros, categorias, contas bancárias, contas contabilísticas e lançamentos.",
     "controls": {
       "search": "Pesquisar",
       "filter": "Filtro",
-      "all": "Todos",
+      "all": "Tudo",
       "architectureOnly": "Apenas arquitetura",
       "selectedDataOnly": "Apenas dados selecionados",
       "zoomIn": "Aproximar",
@@ -412,7 +485,9 @@
       "export": "Exportar",
       "maximize": "Maximizar",
       "minimize": "Minimizar",
-      "move": "Mover"
+      "move": "Mover",
+      "architecture": "Apenas arquitetura",
+      "selected": "Apenas dados selecionados"
     },
     "datasets": {
       "books": {
@@ -477,7 +552,31 @@
       "categoryBridge": "ponte de categoria",
       "reviewExceptions": "revisão / exceções",
       "policyReadiness": "prontidão de política",
-      "bankReadiness": "prontidão bancária"
+      "bankReadiness": "prontidão bancária",
+      "list + CRUD": "listar + CRUD",
+      "bank-control lookup": "consulta de controlo bancário",
+      "bank lookup": "consulta bancária",
+      "book lookup": "consulta de livro",
+      "account lookup": "consulta de conta",
+      "category scope": "âmbito da categoria",
+      "line account lookup": "consulta da conta da linha",
+      "list/create/reverse": "listar/criar/reverter",
+      "tree + inspector": "árvore + inspetor",
+      "bank-control account": "conta de controlo bancário",
+      "settlement/accrual/clearing": "liquidação/acréscimo/compensação",
+      "journal lines": "linhas de lançamento",
+      "mapping scope": "âmbito do mapeamento",
+      "policy scope": "âmbito da política",
+      "journal header": "cabeçalho do lançamento",
+      "operational bank": "banco operacional",
+      "category bridge": "ponte de categoria",
+      "review / exceptions": "revisão / exceções",
+      "policy readiness": "prontidão da política",
+      "bank readiness": "prontidão bancária",
+      "selected row": "linha selecionada",
+      "correlated by id": "correlacionado por ID",
+      "selected mapping": "mapeamento selecionado",
+      "selected policy": "política selecionada"
     },
     "nodes": {
       "workspace": {
@@ -569,7 +668,62 @@
       "ledgerAccount": "Conta contabilística",
       "category": "Categoria",
       "noHint": "sem sugestão",
-      "lines": "{{count}} linhas"
+      "lines": "{{count}} linhas",
+      "mapNumber": "Mapa {{number}}",
+      "policyNumber": "Política {{number}}"
+    },
+    "heading": "Explorador de correlação dos dados contabilísticos",
+    "board": {
+      "title": "Quadro de correlações",
+      "subtitle": "Quadro amplo com cartões arrastáveis e selecionáveis",
+      "zoomStatus": "Zoom {{zoom}}% • {{count}} linhas selecionadas"
+    },
+    "aria": {
+      "filterData": "Filtrar dados",
+      "centerSelected": "Centralizar selecionado",
+      "downloadPng": "Transferir PNG",
+      "collapseChart": "Recolher gráfico",
+      "expandChart": "Expandir gráfico",
+      "zoomOut": "Reduzir zoom",
+      "zoomIn": "Aumentar zoom",
+      "resetView": "Repor vista"
+    },
+    "empty": {
+      "noDataSelectedTitle": "Ainda não há dados selecionados",
+      "noDataSelectedMessage": "Abra o painel de filtros, ative conjuntos de dados e selecione linhas para visualizar correlações diretas por ID."
+    },
+    "inspector": {
+      "title": "Inspetor",
+      "node": "Nó",
+      "noNodeSelected": "Nenhum nó selecionado",
+      "selectNode": "Selecione um nó para inspecionar as suas ligações.",
+      "incoming": "Ligações de entrada",
+      "noIncoming": "Sem ligações de entrada no filtro atual.",
+      "outgoing": "Ligações de saída",
+      "noOutgoing": "Sem ligações de saída no filtro atual."
+    },
+    "filters": {
+      "title": "Filtros de correlação",
+      "subtitle": "{{datasets}} conjuntos de dados ativos • {{rows}} linhas selecionadas",
+      "datasets": "Conjuntos de dados",
+      "rows": "linhas",
+      "rowSelector": "Seletor de linhas",
+      "searchPlaceholder": "Pesquisar nos conjuntos ativos",
+      "enableDatasets": "Ative um ou mais conjuntos de dados acima para selecionar linhas.",
+      "noRows": "Nenhuma linha corresponde à pesquisa atual."
+    },
+    "dynamic": {
+      "selectedBookRow": "Linha de livro selecionada",
+      "correlatedBookById": "Livro correlacionado por ID",
+      "selectedAccountRow": "Linha de conta selecionada",
+      "correlatedAccountById": "Conta correlacionada por ID",
+      "selectedBankRow": "Linha de banco selecionada",
+      "correlatedBankById": "Banco correlacionado por ID",
+      "selectedCategoryRow": "Linha de categoria selecionada",
+      "correlatedCategoryById": "Categoria correlacionada por ID",
+      "bankMappingArchitectureLabel": "Mapeamento bancário",
+      "postingPolicyArchitectureLabel": "Política de lançamento",
+      "journalArchitectureLabel": "Lançamento"
     }
   }
 }

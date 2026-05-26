@@ -40,7 +40,27 @@
     "notAvailable": "—",
     "total": "Total",
     "refreshing": "refreshing",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "sections": {
+      "asset": "Asset",
+      "liability": "Liability",
+      "equity": "Equity",
+      "income": "Income",
+      "expense": "Expense",
+      "offBalance": "Off balance",
+      "statistical": "Statistical"
+    },
+    "balances": {
+      "debit": "Debit",
+      "credit": "Credit"
+    },
+    "accountTypes": {
+      "header": "Header",
+      "posting": "Posting"
+    },
+    "system": "System",
+    "apply": "Apply",
+    "clear": "Clear"
   },
   "nav": {
     "ariaLabel": "Accounting settings navigation",
@@ -112,7 +132,8 @@
       "bankControl": "Bank control",
       "manualPosting": "Manual posting",
       "active": "Active",
-      "activeOnly": "Active only"
+      "activeOnly": "Active only",
+      "title": "Filters"
     },
     "emptySelectionTitle": "No account selected",
     "emptySelectionDescription": "Select an account in the tree to inspect it.",
@@ -168,7 +189,9 @@
         "title": "Unassigned reporting accounts",
         "subtitle": "Accounts without a report group in the current filtered view.",
         "empty": "No accounts found for this reporting group.",
-        "groupTitle": "{{group}}"
+        "groupTitle": "{{group}}",
+        "reportGroup": "Report group: {{group}}",
+        "assignedSubtitle": "Accounts assigned to report group \"{{group}}\" in the current filtered view."
       }
     },
     "form": {
@@ -184,10 +207,45 @@
       "isBankControl": "Bank control",
       "allowsManualPosting": "Allows manual posting",
       "createAccount": "Create account",
-      "saveChanges": "Save changes"
+      "saveChanges": "Save changes",
+      "sections": {
+        "identity": "Identity",
+        "structure": "Structure",
+        "reportingIntegrations": "Reporting and integrations"
+      },
+      "metadataJson": "Metadata JSON"
     },
     "accountsList": {
-      "title": "Accounts"
+      "title": "Accounts",
+      "count": "{{count}} account(s) found"
+    },
+    "tree": {
+      "collapseGroup": "Collapse group",
+      "expandGroup": "Expand group",
+      "title": "Tree",
+      "description": "Hierarchy view with direct selection and quick editing.",
+      "visibleCount": "{{count}} visible",
+      "refreshing": "• refreshing",
+      "empty": "No accounts found for the current filter set."
+    },
+    "labels": {
+      "bankControlLower": "bank control",
+      "regularAccount": "regular account",
+      "manualAllowedLower": "manual allowed",
+      "manualBlockedLower": "manual blocked"
+    },
+    "confirmDelete": "Delete {{name}}?",
+    "title": "Chart of accounts",
+    "description": "Maintain structure, posting controls, and reporting mapping in one compact workspace.",
+    "newAccount": "New account",
+    "inspector": {
+      "title": "Inspector",
+      "empty": "Select an account in the tree to inspect its accounting properties."
+    },
+    "postingControlsTitle": "Posting controls",
+    "reportingCoverage": "Reporting coverage",
+    "reporting": {
+      "emptyGroups": "No reporting groups found."
     }
   },
   "booksPage": {
@@ -305,8 +363,15 @@
       "cashflowCategory": "Cashflow category",
       "selectCategory": "Select category",
       "selectBook": "Select book",
-      "savePolicy": "Save policy"
-    }
+      "savePolicy": "Save policy",
+      "scopeSection": "Scope",
+      "accountMapping": "Account mapping"
+    },
+    "actions": {
+      "newPolicy": "New policy"
+    },
+    "listTitle": "Policy list",
+    "empty": "No posting policies found."
   },
   "journalsPage": {
     "loadError": "Failed to load journals.",
@@ -341,7 +406,8 @@
     },
     "actions": {
       "reverse": "Reverse",
-      "reversing": "Reversing..."
+      "reversing": "Reversing...",
+      "manualJournal": "Manual journal"
     },
     "modal": {
       "title": "Manual journal",
@@ -360,8 +426,15 @@
       "lineMemo": "Line memo",
       "balanced": "Balanced",
       "unbalanced": "Unbalanced",
-      "createJournal": "Create journal"
-    }
+      "createJournal": "Create journal",
+      "headerSection": "Journal header",
+      "linesSection": "Journal lines",
+      "debitTotal": "Debit total",
+      "creditTotal": "Credit total",
+      "balance": "Balance"
+    },
+    "listTitle": "Journal list",
+    "empty": "No journals found."
   },
   "reconciliationPage": {
     "sectionLabel": "Reconciliation",
@@ -394,11 +467,11 @@
     }
   },
   "correlationsPage": {
-    "loadError": "Failed to load accounting correlation data.",
+    "loadError": "Failed to load correlation explorer data.",
     "exportSuccess": "Diagram exported.",
     "selectionRequired": "Select a row to add it to the diagram.",
-    "title": "Accounting correlation map",
-    "description": "Explore how accounting settings pages, APIs, entities, and operational datasets connect to each other.",
+    "title": "Correlation explorer",
+    "description": "Select concrete rows and visualize their direct ID correlations to books, categories, bank accounts, ledger accounts, and journals.",
     "controls": {
       "search": "Search",
       "filter": "Filter",
@@ -412,7 +485,9 @@
       "export": "Export",
       "maximize": "Maximize",
       "minimize": "Minimize",
-      "move": "Move"
+      "move": "Move",
+      "architecture": "Architecture only",
+      "selected": "Selected data only"
     },
     "datasets": {
       "books": {
@@ -477,7 +552,31 @@
       "categoryBridge": "category bridge",
       "reviewExceptions": "review / exceptions",
       "policyReadiness": "policy readiness",
-      "bankReadiness": "bank readiness"
+      "bankReadiness": "bank readiness",
+      "list + CRUD": "list + CRUD",
+      "bank-control lookup": "bank-control lookup",
+      "bank lookup": "bank lookup",
+      "book lookup": "book lookup",
+      "account lookup": "account lookup",
+      "category scope": "category scope",
+      "line account lookup": "line account lookup",
+      "list/create/reverse": "list/create/reverse",
+      "tree + inspector": "tree + inspector",
+      "bank-control account": "bank-control account",
+      "settlement/accrual/clearing": "settlement/accrual/clearing",
+      "journal lines": "journal lines",
+      "mapping scope": "mapping scope",
+      "policy scope": "policy scope",
+      "journal header": "journal header",
+      "operational bank": "operational bank",
+      "category bridge": "category bridge",
+      "review / exceptions": "review / exceptions",
+      "policy readiness": "policy readiness",
+      "bank readiness": "bank readiness",
+      "selected row": "selected row",
+      "correlated by id": "correlated by id",
+      "selected mapping": "selected mapping",
+      "selected policy": "selected policy"
     },
     "nodes": {
       "workspace": {
@@ -569,7 +668,62 @@
       "ledgerAccount": "Ledger account",
       "category": "Category",
       "noHint": "no hint",
-      "lines": "{{count}} lines"
+      "lines": "{{count}} lines",
+      "mapNumber": "Map {{number}}",
+      "policyNumber": "Policy {{number}}"
+    },
+    "heading": "Accounting data correlation explorer",
+    "board": {
+      "title": "Correlation board",
+      "subtitle": "Wide board with draggable, selectable cards",
+      "zoomStatus": "Zoom {{zoom}}% • {{count}} selected rows"
+    },
+    "aria": {
+      "filterData": "Filter data",
+      "centerSelected": "Center selected",
+      "downloadPng": "Download PNG",
+      "collapseChart": "Collapse chart",
+      "expandChart": "Expand chart",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "resetView": "Reset view"
+    },
+    "empty": {
+      "noDataSelectedTitle": "No data selected yet",
+      "noDataSelectedMessage": "Open the filter panel, enable datasets, and select rows to visualize direct correlations by ID."
+    },
+    "inspector": {
+      "title": "Inspector",
+      "node": "Node",
+      "noNodeSelected": "No node selected",
+      "selectNode": "Select a node to inspect its connections.",
+      "incoming": "Incoming connections",
+      "noIncoming": "No incoming connections in the current filter.",
+      "outgoing": "Outgoing connections",
+      "noOutgoing": "No outgoing connections in the current filter."
+    },
+    "filters": {
+      "title": "Correlation filters",
+      "subtitle": "{{datasets}} datasets enabled • {{rows}} rows selected",
+      "datasets": "Datasets",
+      "rows": "rows",
+      "rowSelector": "Row selector",
+      "searchPlaceholder": "Search enabled datasets",
+      "enableDatasets": "Enable one or more datasets above to select rows.",
+      "noRows": "No rows match the current search."
+    },
+    "dynamic": {
+      "selectedBookRow": "Selected book row",
+      "correlatedBookById": "Correlated book by id",
+      "selectedAccountRow": "Selected account row",
+      "correlatedAccountById": "Correlated account by id",
+      "selectedBankRow": "Selected bank row",
+      "correlatedBankById": "Correlated bank by id",
+      "selectedCategoryRow": "Selected category row",
+      "correlatedCategoryById": "Correlated category by id",
+      "bankMappingArchitectureLabel": "Bank mapping",
+      "postingPolicyArchitectureLabel": "Posting policy",
+      "journalArchitectureLabel": "Journal"
     }
   }
 }

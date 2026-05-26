@@ -104,6 +104,8 @@ type SnackbarState = {
   message: string;
 } | null;
 
+type TFunc = (key: string, defaultValue: string, options?: Record<string, unknown>) => string;
+
 const DATASET_CONFIGS: DatasetConfig[] = [
   { key: "books", label: "Books", description: "Accounting books and execution scopes." },
   { key: "accounts", label: "Chart of accounts", description: "Ledger hierarchy and posting accounts." },
@@ -122,13 +124,6 @@ const groupStyles: Record<NodeGroup, string> = {
   data: "border-blue-200 bg-blue-50 text-gray-900",
 };
 
-const groupLabels: Record<NodeGroup, string> = {
-  page: "Page",
-  api: "API",
-  entity: "Entity",
-  status: "Readiness",
-  data: "Data row",
-};
 
 const edgeStyles: Record<EdgeKind, string> = {
   depends: "stroke-gray-400",
@@ -438,7 +433,7 @@ function escapeXml(value: string) {
     .replace(/'/g, "&apos;");
 }
 
-function buildRowOptions(data: ExplorerData): RowOption[] {
+function buildRowOptions(data: ExplorerData, t: TFunc): RowOption[] {
   const booksById = new Map(data.books.map((item) => [item.id, item]));
   const accountsById = new Map(data.accounts.map((item) => [item.id, item]));
   const banksById = new Map(data.banks.map((item) => [item.id, item]));
@@ -470,24 +465,24 @@ function buildRowOptions(data: ExplorerData): RowOption[] {
       id: item.id,
       dataset: "categories" as const,
       label: formatCategory(item),
-      sublabel: `${item.tx_type_hint || "no hint"}`,
+      sublabel: `${item.tx_type_hint || t("correlationsPage.rows.noHint", "no hint")}`,
       keywords: `${item.code} ${item.name} ${item.tx_type_hint || ""}`.toLowerCase(),
     })),
     ...data.bankMappings.map((item, index) => {
       const bankLabel = banksById.get(item.bank_account_id)
         ? formatBank(banksById.get(item.bank_account_id) as BankAccount)
-        : "Bank";
+        : t("correlationsPage.rows.bank", "Bank");
       const bookLabel = booksById.get(item.book_id)
         ? formatBook(booksById.get(item.book_id) as AccountingBook)
-        : "Book";
+        : t("correlationsPage.rows.book", "Book");
       const accountLabel = accountsById.get(item.ledger_account_id)
         ? formatAccount(accountsById.get(item.ledger_account_id) as LedgerAccount)
-        : "Ledger account";
+        : t("correlationsPage.rows.ledgerAccount", "Ledger account");
 
       return {
         id: item.id,
         dataset: "bankMappings" as const,
-        label: `Bank mapping ${index + 1}`,
+        label: t("correlationsPage.rows.bankMapping", "Bank mapping {{number}}", { number: index + 1 }),
         sublabel: `${bankLabel} • ${bookLabel} • ${accountLabel}`,
         keywords: `${bankLabel} ${bookLabel} ${accountLabel}`.toLowerCase(),
       };
@@ -495,15 +490,15 @@ function buildRowOptions(data: ExplorerData): RowOption[] {
     ...data.policies.map((item, index) => {
       const categoryLabel = categoriesById.get(item.cashflow_category_id)
         ? formatCategory(categoriesById.get(item.cashflow_category_id) as CashflowCategory)
-        : "Category";
+        : t("correlationsPage.rows.category", "Category");
       const bookLabel = booksById.get(item.book_id)
         ? formatBook(booksById.get(item.book_id) as AccountingBook)
-        : "Book";
+        : t("correlationsPage.rows.book", "Book");
 
       return {
         id: item.id,
         dataset: "policies" as const,
-        label: `Posting policy ${index + 1}`,
+        label: t("correlationsPage.rows.postingPolicy", "Posting policy {{number}}", { number: index + 1 }),
         sublabel: `${categoryLabel} • ${bookLabel}`,
         keywords: `${categoryLabel} ${bookLabel} ${item.status}`.toLowerCase(),
       };
@@ -512,7 +507,7 @@ function buildRowOptions(data: ExplorerData): RowOption[] {
       id: item.id,
       dataset: "journals" as const,
       label: item.entry_number || item.id,
-      sublabel: `${item.book_code} • ${item.status} • ${item.lines.length} lines`,
+      sublabel: `${item.book_code} • ${item.status} • ${t("correlationsPage.rows.lines", "{{count}} lines", { count: item.lines.length })}`,
       keywords: `${item.entry_number} ${item.book_code} ${item.status} ${item.memo || ""} ${item.lines
         .map((line) => `${line.account_code} ${line.account_name}`)
         .join(" ")}`.toLowerCase(),
@@ -520,7 +515,7 @@ function buildRowOptions(data: ExplorerData): RowOption[] {
   ];
 }
 
-function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Set<string>>) {
+function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Set<string>>, t: TFunc) {
   const booksById = new Map(data.books.map((item) => [item.id, item]));
   const accountsById = new Map(data.accounts.map((item) => [item.id, item]));
   const banksById = new Map(data.banks.map((item) => [item.id, item]));
@@ -605,7 +600,7 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         `data-book-${item.id}`,
         item.code || item.id,
         formatBook(item),
-        selectedBooksSet.has(item.id) ? "Selected book row" : "Correlated book by id",
+        selectedBooksSet.has(item.id) ? t("correlationsPage.dynamic.selectedBookRow", "Selected book row") : t("correlationsPage.dynamic.correlatedBookById", "Correlated book by id"),
         2720,
         80 + index * 120,
         "Book"
@@ -625,7 +620,7 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         `data-account-${item.id}`,
         item.code || item.id,
         formatAccount(item),
-        selectedAccountsSet.has(item.id) ? "Selected account row" : "Correlated account by id",
+        selectedAccountsSet.has(item.id) ? t("correlationsPage.dynamic.selectedAccountRow", "Selected account row") : t("correlationsPage.dynamic.correlatedAccountById", "Correlated account by id"),
         2720,
         520 + index * 120,
         "Ledger account"
@@ -645,7 +640,7 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         `data-bank-${item.id}`,
         item.institution || item.id,
         formatBank(item),
-        selectedBanksSet.has(item.id) ? "Selected bank row" : "Correlated bank by id",
+        selectedBanksSet.has(item.id) ? t("correlationsPage.dynamic.selectedBankRow", "Selected bank row") : t("correlationsPage.dynamic.correlatedBankById", "Correlated bank by id"),
         2720,
         1120 + index * 120,
         "Bank"
@@ -665,7 +660,7 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         `data-category-${item.id}`,
         item.code || item.id,
         formatCategory(item),
-        selectedCategoriesSet.has(item.id) ? "Selected category row" : "Correlated category by id",
+        selectedCategoriesSet.has(item.id) ? t("correlationsPage.dynamic.selectedCategoryRow", "Selected category row") : t("correlationsPage.dynamic.correlatedCategoryById", "Correlated category by id"),
         3360,
         80 + index * 120,
         "Cashflow category"
@@ -683,22 +678,22 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
     .forEach((item, index) => {
       const bankLabel = banksById.get(item.bank_account_id)
         ? formatBank(banksById.get(item.bank_account_id) as BankAccount)
-        : "Bank";
+        : t("correlationsPage.rows.bank", "Bank");
       const bookLabel = booksById.get(item.book_id)
         ? formatBook(booksById.get(item.book_id) as AccountingBook)
-        : "Book";
+        : t("correlationsPage.rows.book", "Book");
       const accountLabel = accountsById.get(item.ledger_account_id)
         ? formatAccount(accountsById.get(item.ledger_account_id) as LedgerAccount)
-        : "Ledger account";
+        : t("correlationsPage.rows.ledgerAccount", "Ledger account");
 
       pushNode(
         `data-bankmap-${item.id}`,
-        `Map ${index + 1}`,
+        t("correlationsPage.rows.mapNumber", "Map {{number}}", { number: index + 1 }),
         `Bank mapping ${index + 1}`,
         `${bankLabel} • ${bookLabel} • ${accountLabel}`,
         3360,
         500 + index * 130,
-        "Bank mapping"
+        t("correlationsPage.dynamic.bankMappingArchitectureLabel", "Bank mapping")
       );
 
       dataEdges.push({ from: `data-bankmap-${item.id}`, to: "bankMappingsPage", kind: "relates", note: "selected mapping" });
@@ -722,19 +717,19 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
     .forEach((item, index) => {
       const categoryLabel = categoriesById.get(item.cashflow_category_id)
         ? formatCategory(categoriesById.get(item.cashflow_category_id) as CashflowCategory)
-        : "Category";
+        : t("correlationsPage.rows.category", "Category");
       const bookLabel = booksById.get(item.book_id)
         ? formatBook(booksById.get(item.book_id) as AccountingBook)
-        : "Book";
+        : t("correlationsPage.rows.book", "Book");
 
       pushNode(
         `data-policy-${item.id}`,
-        `Policy ${index + 1}`,
+        t("correlationsPage.rows.policyNumber", "Policy {{number}}", { number: index + 1 }),
         `Posting policy ${index + 1}`,
         `${categoryLabel} • ${bookLabel}`,
         3360,
         940 + index * 140,
-        "Posting policy"
+        t("correlationsPage.dynamic.postingPolicyArchitectureLabel", "Posting policy")
       );
 
       dataEdges.push({ from: `data-policy-${item.id}`, to: "postingPoliciesPage", kind: "relates", note: "selected policy" });
@@ -779,7 +774,7 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         `${item.book_code} • ${item.status} • ${item.lines.length} lines`,
         4040,
         500 + index * 150,
-        "Journal"
+        t("correlationsPage.dynamic.journalArchitectureLabel", "Journal")
       );
 
       dataEdges.push({ from: `data-journal-${item.id}`, to: "journalsPage", kind: "relates", note: "selected journal" });
@@ -818,6 +813,72 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
 }
 
 export default function AccountingCorrelationsPage() {
+  const { i18n } = useTranslation("accountingSettings");
+  const t = useCallback<TFunc>(
+    (key, defaultValue, options = {}) =>
+      String(
+        i18n.t(key, {
+          ns: "accountingSettings",
+          defaultValue,
+          ...options,
+        })
+      ),
+    [i18n]
+  );
+
+  const translatedGroupLabels = useMemo<Record<NodeGroup, string>>(
+    () => ({
+      page: t("correlationsPage.groups.page", "Page"),
+      api: t("correlationsPage.groups.api", "API"),
+      entity: t("correlationsPage.groups.entity", "Entity"),
+      status: t("correlationsPage.groups.status", "Readiness"),
+      data: t("correlationsPage.groups.data", "Data row"),
+    }),
+    [t]
+  );
+
+  const datasetConfigs = useMemo<DatasetConfig[]>(
+    () =>
+      DATASET_CONFIGS.map((item) => ({
+        ...item,
+        label: t(`correlationsPage.datasets.${item.key}.label`, item.label),
+        description: t(`correlationsPage.datasets.${item.key}.description`, item.description),
+      })),
+    [t]
+  );
+
+  const filterModeOptions = useMemo(
+    () =>
+      filterOptions.map((item) => ({
+        ...item,
+        label: t(`correlationsPage.controls.${item.id}`, item.label),
+      })),
+    [t]
+  );
+
+  const baseNodes = useMemo<DiagramNode[]>(
+    () =>
+      BASE_NODES.map((node) => ({
+        ...node,
+        label: t(`correlationsPage.nodes.${node.id}.label`, node.label),
+        short: t(`correlationsPage.nodes.${node.id}.short`, node.short),
+        description: t(`correlationsPage.nodes.${node.id}.description`, node.description),
+        architectureLabel: node.architectureLabel
+          ? t(`correlationsPage.groups.${node.group}`, node.architectureLabel)
+          : undefined,
+      })),
+    [t]
+  );
+
+  const baseEdges = useMemo<DiagramEdge[]>(
+    () =>
+      BASE_EDGES.map((edge) => ({
+        ...edge,
+        note: edge.note ? t(`correlationsPage.edges.${edge.note}`, edge.note) : undefined,
+      })),
+    [t]
+  );
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ExplorerData>(EMPTY_DATA);
   const [snackbar, setSnackbar] = useState<SnackbarState>(null);
@@ -921,22 +982,22 @@ export default function AccountingCorrelationsPage() {
         ),
       });
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to load correlation explorer data." });
+      setSnackbar({ severity: "error", message: t("correlationsPage.loadError", "Failed to load correlation explorer data.") });
       setData(EMPTY_DATA);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
-  const rowOptions = useMemo(() => buildRowOptions(data), [data]);
-  const dataGraph = useMemo(() => deriveDataGraph(data, selectedRows), [data, selectedRows]);
+  const rowOptions = useMemo(() => buildRowOptions(data, t), [data, t]);
+  const dataGraph = useMemo(() => deriveDataGraph(data, selectedRows, t), [data, selectedRows, t]);
 
   const composedNodes = useMemo(() => {
-    const base = BASE_NODES.map((node) => ({
+    const base = baseNodes.map((node) => ({
       ...node,
       ...(nodePositions[node.id] || { x: node.x, y: node.y }),
     }));
@@ -945,9 +1006,9 @@ export default function AccountingCorrelationsPage() {
       ...(nodePositions[node.id] || { x: node.x, y: node.y }),
     }));
     return [...base, ...dynamic];
-  }, [dataGraph.nodes, nodePositions]);
+  }, [baseNodes, dataGraph.nodes, nodePositions]);
 
-  const allEdges = useMemo(() => [...BASE_EDGES, ...dataGraph.edges], [dataGraph.edges]);
+  const allEdges = useMemo(() => [...baseEdges, ...dataGraph.edges], [baseEdges, dataGraph.edges]);
 
   const selected = useMemo(
     () => composedNodes.find((node) => node.id === selectedId) ?? composedNodes[0],
@@ -1356,7 +1417,7 @@ export default function AccountingCorrelationsPage() {
               fill="#4b5563"
               letter-spacing="0.8"
             >
-              ${escapeXml(node.architectureLabel || groupLabels[node.group])}
+              ${escapeXml(node.architectureLabel || translatedGroupLabels[node.group])}
             </text>
             <text
               x="${node.x + 12}"
@@ -1429,6 +1490,7 @@ export default function AccountingCorrelationsPage() {
     DRAG_MARGIN,
     NODE_HEIGHT,
     NODE_WIDTH,
+    translatedGroupLabels,
   ]);
 
   useEffect(() => {
@@ -1477,20 +1539,22 @@ export default function AccountingCorrelationsPage() {
       <div className="mx-auto max-w-[2400px] space-y-6">
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Correlation explorer</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.title", "Correlation explorer")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-4xl">
-              <h1 className="text-[16px] font-semibold text-gray-900">Accounting data correlation explorer</h1>
+              <h1 className="text-[16px] font-semibold text-gray-900">{t("correlationsPage.heading", "Accounting data correlation explorer")}</h1>
               <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                Select concrete rows and visualize their direct ID correlations to books, categories,
-                bank accounts, ledger accounts, and journals.
+                {t(
+                  "correlationsPage.description",
+                  "Select concrete rows and visualize their direct ID correlations to books, categories, bank accounts, ledger accounts, and journals."
+                )}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {filterOptions.map((option) => {
+              {filterModeOptions.map((option) => {
                 const active = filterMode === option.id;
                 return (
                   <button
@@ -1516,9 +1580,9 @@ export default function AccountingCorrelationsPage() {
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Correlation board</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.board.title", "Correlation board")}</div>
                 <div className="mt-1 text-[13px] font-medium text-gray-900">
-                  Wide board with draggable, selectable cards
+                  {t("correlationsPage.board.subtitle", "Wide board with draggable, selectable cards")}
                 </div>
               </div>
 
@@ -1528,7 +1592,7 @@ export default function AccountingCorrelationsPage() {
                     type="button"
                     onClick={() => setFiltersOpen(true)}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                    aria-label="Filter data"
+                    aria-label={t("correlationsPage.aria.filterData", "Filter data")}
                   >
                     <Filter className="h-4 w-4" />
                   </button>
@@ -1538,7 +1602,7 @@ export default function AccountingCorrelationsPage() {
                   type="button"
                   onClick={() => centerNode(selectedId)}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label="Center selected"
+                  aria-label={t("correlationsPage.aria.centerSelected", "Center selected")}
                 >
                   <LocateFixed className="h-4 w-4" />
                 </button>
@@ -1547,7 +1611,7 @@ export default function AccountingCorrelationsPage() {
                   type="button"
                   onClick={downloadBoardAsPng}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label="Download PNG"
+                  aria-label={t("correlationsPage.aria.downloadPng", "Download PNG")}
                 >
                   <Download className="h-4 w-4" />
                 </button>
@@ -1556,7 +1620,7 @@ export default function AccountingCorrelationsPage() {
                   type="button"
                   onClick={() => setIsExpanded((prev) => !prev)}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label={isExpanded ? "Collapse chart" : "Expand chart"}
+                  aria-label={isExpanded ? t("correlationsPage.aria.collapseChart", "Collapse chart") : t("correlationsPage.aria.expandChart", "Expand chart")}
                 >
                   {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                 </button>
@@ -1565,7 +1629,7 @@ export default function AccountingCorrelationsPage() {
                   type="button"
                   onClick={() => setZoom((prev) => Math.max(0.28, +(prev * 0.9).toFixed(2)))}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label="Zoom out"
+                  aria-label={t("correlationsPage.aria.zoomOut", "Zoom out")}
                 >
                   <ZoomOut className="h-4 w-4" />
                 </button>
@@ -1574,7 +1638,7 @@ export default function AccountingCorrelationsPage() {
                   type="button"
                   onClick={() => setZoom((prev) => Math.min(1.8, +(prev * 1.1).toFixed(2)))}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label="Zoom in"
+                  aria-label={t("correlationsPage.aria.zoomIn", "Zoom in")}
                 >
                   <ZoomIn className="h-4 w-4" />
                 </button>
@@ -1587,7 +1651,7 @@ export default function AccountingCorrelationsPage() {
                     setNodePositions(Object.fromEntries(BASE_NODES.map((node) => [node.id, { x: node.x, y: node.y }])));
                   }}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                  aria-label="Reset view"
+                  aria-label={t("correlationsPage.aria.resetView", "Reset view")}
                 >
                   <RotateCcw className="h-4 w-4" />
                 </button>
@@ -1614,7 +1678,7 @@ export default function AccountingCorrelationsPage() {
               >
                 <div className="absolute left-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[12px] text-gray-600">
                   <Move className="h-3.5 w-3.5" />
-                  Zoom {Math.round(zoom * 100)}% • {selectedCount} selected rows
+                  {t("correlationsPage.board.zoomStatus", "Zoom {{zoom}}% • {{count}} selected rows", { zoom: Math.round(zoom * 100), count: selectedCount })}
                 </div>
 
                 {filterMode === "selected" && !selectedCount ? (
@@ -1623,9 +1687,9 @@ export default function AccountingCorrelationsPage() {
                       <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
                         <Filter className="h-5 w-5" />
                       </div>
-                      <h3 className="mt-3 text-[14px] font-semibold text-gray-900">No data selected yet</h3>
+                      <h3 className="mt-3 text-[14px] font-semibold text-gray-900">{t("correlationsPage.empty.noDataSelectedTitle", "No data selected yet")}</h3>
                       <p className="mt-1 max-w-[360px] text-[13px] leading-6 text-gray-600">
-                        Open the filter panel, enable datasets, and select rows to visualize direct correlations by ID.
+                        {t("correlationsPage.empty.noDataSelectedMessage", "Open the filter panel, enable datasets, and select rows to visualize direct correlations by ID.")}
                       </p>
                     </div>
                   </div>
@@ -1725,7 +1789,7 @@ export default function AccountingCorrelationsPage() {
                             {iconForNode(node.group)}
                           </span>
                           <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] uppercase tracking-wide text-gray-600">
-                            {node.architectureLabel || groupLabels[node.group]}
+                            {node.architectureLabel || translatedGroupLabels[node.group]}
                           </span>
                         </div>
                         <div className="mt-3 text-[13px] font-semibold text-gray-900">{node.short}</div>
@@ -1741,7 +1805,7 @@ export default function AccountingCorrelationsPage() {
           <aside className={isExpanded ? "space-y-4 xl:col-span-full" : "space-y-4"}>
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Inspector</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.title", "Inspector")}</div>
               </div>
 
               <div className="space-y-4 px-4 py-4">
@@ -1749,19 +1813,19 @@ export default function AccountingCorrelationsPage() {
                   <div className="flex items-center gap-2 text-gray-700">
                     {selected ? legendIcon(selected.label) : <Network className="h-4 w-4" />}
                     <span className="text-[12px] font-medium uppercase tracking-wide">
-                      {selected?.architectureLabel || (selected ? groupLabels[selected.group] : "Node")}
+                      {selected?.architectureLabel || (selected ? translatedGroupLabels[selected.group] : "Node")}
                     </span>
                   </div>
                   <h2 className="mt-2 text-[16px] font-semibold text-gray-900">
-                    {selected?.label || "No node selected"}
+                    {selected?.label || t("correlationsPage.inspector.noNodeSelected", "No node selected")}
                   </h2>
                   <p className="mt-2 text-[13px] leading-6 text-gray-600">
-                    {selected?.description || "Select a node to inspect its connections."}
+                    {selected?.description || t("correlationsPage.inspector.selectNode", "Select a node to inspect its connections.")}
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Incoming connections</div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.incoming", "Incoming connections")}</div>
                   <div className="mt-3 space-y-2">
                     {incoming.length ? (
                       incoming.map((edge, index) => {
@@ -1772,7 +1836,7 @@ export default function AccountingCorrelationsPage() {
                           <div key={`${edge.from}-${index}`} className="rounded-md border border-gray-200 bg-white px-3 py-2.5">
                             <div className="flex items-center justify-between gap-3">
                               <span className="text-[13px] font-medium text-gray-900">{source.short}</span>
-                              <span className="text-[12px] text-gray-600">{edge.kind}</span>
+                              <span className="text-[12px] text-gray-600">{t(`correlationsPage.edges.${edge.kind}`, edge.kind)}</span>
                             </div>
                             {edge.note ? <div className="mt-1 text-[12px] text-gray-600">{edge.note}</div> : null}
                           </div>
@@ -1780,14 +1844,14 @@ export default function AccountingCorrelationsPage() {
                       })
                     ) : (
                       <div className="rounded-md border border-dashed border-gray-300 bg-white px-3 py-4 text-[12px] text-gray-500">
-                        No incoming connections in the current filter.
+                        {t("correlationsPage.inspector.noIncoming", "No incoming connections in the current filter.")}
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Outgoing connections</div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.outgoing", "Outgoing connections")}</div>
                   <div className="mt-3 space-y-2">
                     {outgoing.length ? (
                       outgoing.map((edge, index) => {
@@ -1798,7 +1862,7 @@ export default function AccountingCorrelationsPage() {
                           <div key={`${edge.to}-${index}`} className="rounded-md border border-gray-200 bg-white px-3 py-2.5">
                             <div className="flex items-center justify-between gap-3">
                               <span className="text-[13px] font-medium text-gray-900">{target.short}</span>
-                              <span className="text-[12px] text-gray-600">{edge.kind}</span>
+                              <span className="text-[12px] text-gray-600">{t(`correlationsPage.edges.${edge.kind}`, edge.kind)}</span>
                             </div>
                             {edge.note ? <div className="mt-1 text-[12px] text-gray-600">{edge.note}</div> : null}
                           </div>
@@ -1806,7 +1870,7 @@ export default function AccountingCorrelationsPage() {
                       })
                     ) : (
                       <div className="rounded-md border border-dashed border-gray-300 bg-white px-3 py-4 text-[12px] text-gray-500">
-                        No outgoing connections in the current filter.
+                        {t("correlationsPage.inspector.noOutgoing", "No outgoing connections in the current filter.")}
                       </div>
                     )}
                   </div>
@@ -1819,18 +1883,18 @@ export default function AccountingCorrelationsPage() {
         <AccountingSideModal
           isOpen={filtersOpen}
           onClose={() => setFiltersOpen(false)}
-          title="Correlation filters"
-          subtitle={`${enabledDatasets.length} datasets enabled • ${selectedCount} rows selected`}
+          title={t("correlationsPage.filters.title", "Correlation filters")}
+          subtitle={t("correlationsPage.filters.subtitle", "{{datasets}} datasets enabled • {{rows}} rows selected", { datasets: enabledDatasets.length, rows: selectedCount })}
           contentClassName="pb-4 md:pb-6"
         >
           <div className="space-y-4">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Datasets</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.filters.datasets", "Datasets")}</div>
               </div>
 
               <div className="space-y-3 px-4 py-4">
-                {DATASET_CONFIGS.map((dataset) => {
+                {datasetConfigs.map((dataset) => {
                   const active = enabledDatasets.includes(dataset.key);
                   const totalForDataset = rowOptions.filter((row) => row.dataset === dataset.key).length;
 
@@ -1851,7 +1915,7 @@ export default function AccountingCorrelationsPage() {
                         </div>
                         <div className="text-right">
                           <div className="text-[12px] font-medium text-gray-900">{totalForDataset}</div>
-                          <div className="text-[10px] uppercase tracking-wide text-gray-500">rows</div>
+                          <div className="text-[10px] uppercase tracking-wide text-gray-500">{t("correlationsPage.filters.rows", "rows")}</div>
                         </div>
                       </div>
                     </button>
@@ -1862,7 +1926,7 @@ export default function AccountingCorrelationsPage() {
 
             <section className="min-h-[520px] overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Row selector</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.filters.rowSelector", "Row selector")}</div>
               </div>
 
               <div className="space-y-4 px-4 py-4">
@@ -1871,7 +1935,7 @@ export default function AccountingCorrelationsPage() {
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search enabled datasets"
+                    placeholder={t("correlationsPage.filters.searchPlaceholder", "Search enabled datasets")}
                     className="h-10 w-full rounded-md border border-gray-300 bg-white pl-9 pr-3 text-[13px] text-gray-900 outline-none focus:border-gray-500"
                   />
                 </div>
@@ -1908,7 +1972,7 @@ export default function AccountingCorrelationsPage() {
                       })
                     ) : (
                       <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-10 text-center text-[13px] text-gray-500">
-                        No rows match the current search.
+                        {t("correlationsPage.filters.noRows", "No rows match the current search.")}
                       </div>
                     )}
                   </div>

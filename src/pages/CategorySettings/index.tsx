@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
@@ -70,6 +70,10 @@ function extractCollection<T>(input: unknown): T[] {
 
 const CategorySettingsPage: React.FC = () => {
   const { t } = useTranslation("categorySettings");
+
+  useEffect(() => {
+    document.title = t("header.title");
+  }, [t]);
 
   const TX_TYPE_OPTIONS = React.useMemo<Array<Option<"credit" | "debit">>>(
     () => [

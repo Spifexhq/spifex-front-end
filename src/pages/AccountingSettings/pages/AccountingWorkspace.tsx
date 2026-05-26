@@ -62,43 +62,21 @@ type Props = {
   ledgerProfile: OrgLedgerProfileResponse;
 };
 
+type WorkspaceLabels = {
+  system: string;
+  inactive: string;
+  collapseGroup: string;
+  expandGroup: string;
+  bankControl: string;
+  regularAccount: string;
+  manualAllowed: string;
+  manualBlocked: string;
+  edit: string;
+};
+
 const optionKey = <T extends string>(item: Option<T>) => item.value;
 const optionLabel = <T extends string>(item: Option<T>) => item.label;
 
-const sectionOptions: Option<LedgerStatementSection>[] = [
-  { value: "asset", label: "Asset" },
-  { value: "liability", label: "Liability" },
-  { value: "equity", label: "Equity" },
-  { value: "income", label: "Income" },
-  { value: "expense", label: "Expense" },
-  { value: "off_balance", label: "Off balance" },
-  { value: "statistical", label: "Statistical" },
-];
-
-const balanceOptions: Option<LedgerNormalBalance>[] = [
-  { value: "debit", label: "Debit" },
-  { value: "credit", label: "Credit" },
-];
-
-const accountTypeOptions: Option<LedgerAccountType>[] = [
-  { value: "header", label: "Header" },
-  { value: "posting", label: "Posting" },
-];
-
-const binaryOptions: Option<"true" | "false">[] = [
-  { value: "true", label: "Yes" },
-  { value: "false", label: "No" },
-];
-
-const sectionLabelMap: Record<LedgerStatementSection, string> = {
-  asset: "Asset",
-  liability: "Liability",
-  equity: "Equity",
-  income: "Income",
-  expense: "Expense",
-  off_balance: "Off balance",
-  statistical: "Statistical",
-};
 
 const DEFAULTS: AddLedgerAccountRequest = {
   code: "",
@@ -183,6 +161,8 @@ function TreeRow({
   onQuickEdit,
   selectedId,
   treeMode,
+  labels,
+  sectionLabels,
 }: {
   node: TreeNode;
   depth: number;
@@ -192,6 +172,8 @@ function TreeRow({
   onQuickEdit: (node: LedgerAccount) => void;
   selectedId?: string | null;
   treeMode: TreeMode;
+  labels: WorkspaceLabels;
+  sectionLabels: Record<LedgerStatementSection, string>;
 }) {
   const hasChildren = node.children.length > 0;
   const isOpen = openIds.has(node.id);
@@ -234,7 +216,7 @@ function TreeRow({
                   event.stopPropagation();
                   onToggle(node.id);
                 }}
-                aria-label={isOpen ? "Collapse group" : "Expand group"}
+                aria-label={isOpen ? labels.collapseGroup : labels.expandGroup}
               >
                 {isOpen ? "−" : "+"}
               </button>
@@ -249,12 +231,12 @@ function TreeRow({
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[13px] font-semibold text-gray-900">{node.code || "—"}</span>
               <span className="text-[13px] text-gray-900">{node.name}</span>
-              {node.is_system ? <StatusPill>System</StatusPill> : null}
-              {!node.is_active ? <StatusPill>Inactive</StatusPill> : null}
+              {node.is_system ? <StatusPill>{labels.system}</StatusPill> : null}
+              {!node.is_active ? <StatusPill>{labels.inactive}</StatusPill> : null}
             </div>
 
             <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-600">
-              <span>{sectionLabelMap[node.statement_section]}</span>
+              <span>{sectionLabels[node.statement_section]}</span>
               <span>•</span>
               <span>{node.account_type}</span>
               <span>•</span>
@@ -262,9 +244,9 @@ function TreeRow({
               {treeMode === "detailed" ? (
                 <>
                   <span>•</span>
-                  <span>{node.is_bank_control ? "bank control" : "regular account"}</span>
+                  <span>{node.is_bank_control ? labels.bankControl : labels.regularAccount}</span>
                   <span>•</span>
-                  <span>{node.allows_manual_posting ? "manual allowed" : "manual blocked"}</span>
+                  <span>{node.allows_manual_posting ? labels.manualAllowed : labels.manualBlocked}</span>
                 </>
               ) : null}
             </div>
@@ -281,7 +263,7 @@ function TreeRow({
               onQuickEdit(node);
             }}
           >
-            Edit
+            {labels.edit}
           </Button>
         </div>
       </div>
@@ -299,6 +281,8 @@ function TreeRow({
               onQuickEdit={onQuickEdit}
               selectedId={selectedId}
               treeMode={treeMode}
+              labels={labels}
+              sectionLabels={sectionLabels}
             />
           ))}
         </div>
@@ -310,9 +294,13 @@ function TreeRow({
 function AccountListRow({
   account,
   onOpen,
+  openLabel,
+  sectionLabels,
 }: {
   account: LedgerAccount;
   onOpen: (account: LedgerAccount) => void;
+  openLabel: string;
+  sectionLabels: Record<LedgerStatementSection, string>;
 }) {
   return (
     <button
@@ -327,7 +315,7 @@ function AccountListRow({
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-gray-600">
-          <span>{sectionLabelMap[account.statement_section]}</span>
+          <span>{sectionLabels[account.statement_section]}</span>
           <span>•</span>
           <span>{account.account_type}</span>
           <span>•</span>
@@ -347,7 +335,7 @@ function AccountListRow({
         </div>
       </div>
 
-      <span className="shrink-0 text-[12px] font-medium text-gray-700">Open</span>
+      <span className="shrink-0 text-[12px] font-medium text-gray-700">{openLabel}</span>
     </button>
   );
 }
@@ -358,6 +346,71 @@ const AccountingWorkspace: React.FC<Props> = () => {
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
       String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
     [i18n]
+  );
+
+  const sectionLabels = useMemo<Record<LedgerStatementSection, string>>(
+    () => ({
+      asset: t("common.sections.asset", "Asset"),
+      liability: t("common.sections.liability", "Liability"),
+      equity: t("common.sections.equity", "Equity"),
+      income: t("common.sections.income", "Income"),
+      expense: t("common.sections.expense", "Expense"),
+      off_balance: t("common.sections.offBalance", "Off balance"),
+      statistical: t("common.sections.statistical", "Statistical"),
+    }),
+    [t]
+  );
+
+  const sectionOptions = useMemo<Option<LedgerStatementSection>[]>(
+    () => [
+      { value: "asset", label: sectionLabels.asset },
+      { value: "liability", label: sectionLabels.liability },
+      { value: "equity", label: sectionLabels.equity },
+      { value: "income", label: sectionLabels.income },
+      { value: "expense", label: sectionLabels.expense },
+      { value: "off_balance", label: sectionLabels.off_balance },
+      { value: "statistical", label: sectionLabels.statistical },
+    ],
+    [sectionLabels]
+  );
+
+  const balanceOptions = useMemo<Option<LedgerNormalBalance>[]>(
+    () => [
+      { value: "debit", label: t("common.balances.debit", "Debit") },
+      { value: "credit", label: t("common.balances.credit", "Credit") },
+    ],
+    [t]
+  );
+
+  const accountTypeOptions = useMemo<Option<LedgerAccountType>[]>(
+    () => [
+      { value: "header", label: t("common.accountTypes.header", "Header") },
+      { value: "posting", label: t("common.accountTypes.posting", "Posting") },
+    ],
+    [t]
+  );
+
+  const binaryOptions = useMemo<Option<"true" | "false">[]>(
+    () => [
+      { value: "true", label: t("common.yes", "Yes") },
+      { value: "false", label: t("common.no", "No") },
+    ],
+    [t]
+  );
+
+  const labels = useMemo<WorkspaceLabels>(
+    () => ({
+      system: t("common.system", "System"),
+      inactive: t("common.inactive", "Inactive"),
+      collapseGroup: t("workspace.tree.collapseGroup", "Collapse group"),
+      expandGroup: t("workspace.tree.expandGroup", "Expand group"),
+      bankControl: t("workspace.labels.bankControlLower", "bank control"),
+      regularAccount: t("workspace.labels.regularAccount", "regular account"),
+      manualAllowed: t("workspace.labels.manualAllowedLower", "manual allowed"),
+      manualBlocked: t("workspace.labels.manualBlockedLower", "manual blocked"),
+      edit: t("common.edit", "Edit"),
+    }),
+    [t]
   );
 
   const { isOwner, permissions } = useAuthContext();
@@ -447,6 +500,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
     appliedAccountType,
     appliedBankControl,
     appliedManualPosting,
+    t,
   ]);
 
   useEffect(() => {
@@ -534,7 +588,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
       return acc;
     }, {});
     return Object.entries(grouped).sort((a, b) => b[1] - a[1]);
-  }, [accounts]);
+  }, [accounts, t]);
 
   const selectedParent = useMemo(
     () => (form.parent_id ? parentOptions.filter((item) => item.value === form.parent_id) : []),
@@ -543,17 +597,17 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
   const selectedFormAccountType = useMemo(
     () => accountTypeOptions.filter((item) => item.value === form.account_type),
-    [form.account_type]
+    [accountTypeOptions, form.account_type]
   );
 
   const selectedFormSection = useMemo(
     () => sectionOptions.filter((item) => item.value === form.statement_section),
-    [form.statement_section]
+    [sectionOptions, form.statement_section]
   );
 
   const selectedFormBalance = useMemo(
     () => balanceOptions.filter((item) => item.value === form.normal_balance),
-    [form.normal_balance]
+    [balanceOptions, form.normal_balance]
   );
 
   useEffect(() => {
@@ -726,7 +780,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
   };
 
   const handleDelete = async (account: LedgerAccount) => {
-    const confirmed = window.confirm(`Delete ${account.code || account.name}?`);
+    const confirmed = window.confirm(t("workspace.confirmDelete", "Delete {{name}}?", { name: account.code || account.name }));
     if (!confirmed) return;
 
     try {
@@ -761,9 +815,9 @@ const AccountingWorkspace: React.FC<Props> = () => {
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">Chart of accounts</h2>
+                <h2 className="text-[16px] font-semibold text-gray-900">{t("workspace.title", "Chart of accounts")}</h2>
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  Maintain structure, posting controls, and reporting mapping in one compact workspace.
+                  {t("workspace.description", "Maintain structure, posting controls, and reporting mapping in one compact workspace.")}
                 </p>
               </div>
 
@@ -779,7 +833,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                     {treeMode === "compact" ? t("workspace.detailedTree", "Detailed tree") : t("workspace.compactTree", "Compact tree")}
                   </Button>
                   <Button type="button" onClick={openCreateModal}>
-                    New account
+                    {t("workspace.newAccount", "New account")}
                   </Button>
                 </div>
               ) : null}
@@ -789,7 +843,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Filters</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.filters.title", "Filters")}</div>
           </div>
 
           <div className="space-y-4 px-4 py-4">
@@ -874,10 +928,10 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
             <div className="flex flex-wrap items-center gap-3">
               <Button type="button" onClick={applyFilters}>
-                Apply
+                {t("common.apply", "Apply")}
               </Button>
               <Button variant="outline" type="button" onClick={clearFilters}>
-                Clear
+                {t("common.clear", "Clear")}
               </Button>
             </div>
           </div>
@@ -887,14 +941,14 @@ const AccountingWorkspace: React.FC<Props> = () => {
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h3 className="text-[14px] font-semibold text-gray-900">Tree</h3>
+                <h3 className="text-[14px] font-semibold text-gray-900">{t("workspace.tree.title", "Tree")}</h3>
                 <p className="mt-1 text-[12px] text-gray-600">
-                  Hierarchy view with direct selection and quick editing.
+                  {t("workspace.tree.description", "Hierarchy view with direct selection and quick editing.")}
                 </p>
               </div>
 
               <div className="text-[12px] text-gray-600">
-                {accounts.length} visible {loading ? "• refreshing" : ""}
+                {t("workspace.tree.visibleCount", "{{count}} visible", { count: accounts.length })} {loading ? t("workspace.tree.refreshing", "• refreshing") : ""}
               </div>
             </div>
 
@@ -911,11 +965,13 @@ const AccountingWorkspace: React.FC<Props> = () => {
                     onQuickEdit={openEditModal}
                     selectedId={selectedId}
                     treeMode={treeMode}
+                    labels={labels}
+                    sectionLabels={sectionLabels}
                   />
                 ))
               ) : (
                 <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-10 text-center text-[13px] text-gray-500">
-                  No accounts found for the current filter set.
+                  {t("workspace.tree.empty", "No accounts found for the current filter set.")}
                 </div>
               )}
             </div>
@@ -924,7 +980,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
           <aside className="space-y-4">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Inspector</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.inspector.title", "Inspector")}</div>
               </div>
 
               <div className="space-y-4 px-4 py-4">
@@ -941,11 +997,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   {selectedAccount && canManage ? (
                     <div className="flex items-center gap-2">
                       <Button variant="outline" type="button" size="sm" onClick={() => openEditModal(selectedAccount)}>
-                        Edit
+                        {t("common.edit", "Edit")}
                       </Button>
                       {!selectedAccount.is_system ? (
                         <Button variant="outline" type="button" size="sm" onClick={() => handleDelete(selectedAccount)}>
-                          Delete
+                          {t("common.delete", "Delete")}
                         </Button>
                       ) : null}
                     </div>
@@ -956,12 +1012,12 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   <>
                     <div className="flex flex-wrap gap-2">
                       <StatusPill>{selectedAccount.code || "—"}</StatusPill>
-                      <StatusPill>{sectionLabelMap[selectedAccount.statement_section]}</StatusPill>
+                      <StatusPill>{sectionLabels[selectedAccount.statement_section]}</StatusPill>
                       <StatusPill>{selectedAccount.account_type}</StatusPill>
                       <StatusPill>{selectedAccount.normal_balance}</StatusPill>
-                      {selectedAccount.is_bank_control ? <StatusPill>Bank control</StatusPill> : null}
-                      {selectedAccount.allows_manual_posting ? <StatusPill>Manual posting</StatusPill> : null}
-                      {!selectedAccount.is_active ? <StatusPill>Inactive</StatusPill> : null}
+                      {selectedAccount.is_bank_control ? <StatusPill>{t("workspace.summary.bankControl.label", "Bank control")}</StatusPill> : null}
+                      {selectedAccount.allows_manual_posting ? <StatusPill>{t("workspace.filters.manualPosting", "Manual posting")}</StatusPill> : null}
+                      {!selectedAccount.is_active ? <StatusPill>{t("common.inactive", "Inactive")}</StatusPill> : null}
                     </div>
 
                     <dl className="divide-y divide-gray-100 rounded-lg border border-gray-200">
@@ -984,7 +1040,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   </>
                 ) : (
                   <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-[13px] text-gray-500">
-                    Select an account in the tree to inspect its accounting properties.
+                    {t("workspace.inspector.empty", "Select an account in the tree to inspect its accounting properties.")}
                   </div>
                 )}
               </div>
@@ -992,7 +1048,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.postingControlsTitle", "Posting controls")}</div>
               </div>
 
               <div className="grid gap-3 px-4 py-4">
@@ -1095,7 +1151,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                     ))
                   ) : (
                     <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-[13px] text-gray-500">
-                      No reporting groups found.
+                      {t("workspace.reporting.emptyGroups", "No reporting groups found.")}
                     </div>
                   )}
                 </div>
@@ -1116,7 +1172,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Identity</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.form.sections.identity", "Identity")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
@@ -1147,7 +1203,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Structure</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.form.sections.structure", "Structure")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
@@ -1217,7 +1273,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting controls</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.postingControlsTitle", "Posting controls")}</div>
               </div>
 
               <div className="space-y-3 px-4 py-4">
@@ -1229,7 +1285,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                     }
                     size="small"
                   />
-                  <span className="font-medium text-gray-900">Active</span>
+                  <span className="font-medium text-gray-900">{t("workspace.filters.active", "Active")}</span>
                 </label>
 
                 <label
@@ -1248,7 +1304,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                     }
                     size="small"
                   />
-                  <span className="font-medium">Bank control</span>
+                  <span className="font-medium">{t("workspace.summary.bankControl.label", "Bank control")}</span>
                 </label>
 
                 <label
@@ -1270,14 +1326,14 @@ const AccountingWorkspace: React.FC<Props> = () => {
                     }
                     size="small"
                   />
-                  <span className="font-medium">Manual posting allowed</span>
+                  <span className="font-medium">{t("workspace.summary.manualAllowed.modalTitle", "Manual posting allowed")}</span>
                 </label>
               </div>
             </section>
 
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting and integrations</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.form.sections.reportingIntegrations", "Reporting and integrations")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
@@ -1316,7 +1372,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
                 <div className="sm:col-span-2">
                   <label className="mb-2 block text-[12px] font-semibold text-gray-700">
-                    Metadata JSON
+                    {t("workspace.form.metadataJson", "Metadata JSON")}
                   </label>
                   <textarea
                     value={metadataText}
@@ -1336,7 +1392,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
               <div className="flex items-center justify-end gap-3">
                 <Button type="button" variant="outline" onClick={closeModal}>
-                  Cancel
+                  {t("common.cancel", "Cancel")}
                 </Button>
                 <Button disabled={saving} type="submit">
                   {saving ? t("common.saving", "Saving...") : modalState.type === "create" ? t("workspace.form.createAccount", "Create account") : t("workspace.form.saveChanges", "Save changes")}
@@ -1357,7 +1413,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
         {modalState.type === "accounts_list" ? (
           <div className="space-y-4">
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[12px] text-gray-600">
-              {modalState.items.length} account{modalState.items.length === 1 ? "" : "s"} found
+              {t("workspace.accountsList.count", "{{count}} account(s) found", { count: modalState.items.length })}
             </div>
 
             {modalState.items.length ? (
@@ -1366,6 +1422,8 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   <AccountListRow
                     key={account.id}
                     account={account}
+                    openLabel={t("common.open", "Open")}
+                    sectionLabels={sectionLabels}
                     onOpen={(item) => {
                       setSelectedId(item.id);
                       setModalState({ type: "edit", editing: item });

@@ -159,7 +159,7 @@ const AccountingJournalsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, t]);
 
   React.useEffect(() => {
     void load();
@@ -189,7 +189,7 @@ const AccountingJournalsPage: React.FC = () => {
     } finally {
       setLookupsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const openManualJournal = async () => {
     setForm(EMPTY_FORM);
@@ -265,10 +265,9 @@ const AccountingJournalsPage: React.FC = () => {
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">Journal control</h2>
+                <h2 className="text-[16px] font-semibold text-gray-900">{t("journalsPage.title", "Journal control")}</h2>
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  Inspect accounting output, create controlled manual entries, and reverse
-                  posted journals that require correction.
+                  {t("journalsPage.description", "Inspect accounting output, create controlled manual entries, and reverse posted journals that require correction.")}
                 </p>
               </div>
 
@@ -282,10 +281,10 @@ const AccountingJournalsPage: React.FC = () => {
                   />
                 </div>
                 <Button type="button" variant="outline" onClick={() => void load()}>
-                  Apply
+                  {t("common.apply", "Apply")}
                 </Button>
                 <Button type="button" onClick={() => void openManualJournal()}>
-                  Manual journal
+                  {t("journalsPage.actions.manualJournal", "Manual journal")}
                 </Button>
               </div>
             </div>
@@ -312,7 +311,7 @@ const AccountingJournalsPage: React.FC = () => {
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Journal list</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.listTitle", "Journal list")}</div>
           </div>
 
           <div className="overflow-x-auto">
@@ -360,7 +359,7 @@ const AccountingJournalsPage: React.FC = () => {
                 {!items.length ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      No journals found.
+                      {t("journalsPage.empty", "No journals found.")}
                     </td>
                   </tr>
                 ) : null}
@@ -396,7 +395,7 @@ const AccountingJournalsPage: React.FC = () => {
           <form onSubmit={submit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Journal header</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
@@ -465,7 +464,7 @@ const AccountingJournalsPage: React.FC = () => {
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Journal lines</div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
                   <Button
                     type="button"
                     variant="outline"
@@ -477,7 +476,7 @@ const AccountingJournalsPage: React.FC = () => {
                       }))
                     }
                   >
-                    Add line
+                    {t("journalsPage.modal.addLine", "Add line")}
                   </Button>
                 </div>
               </div>
@@ -585,15 +584,15 @@ const AccountingJournalsPage: React.FC = () => {
             <section className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="grid gap-3 md:grid-cols-3">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Debit total</div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.debit / 100).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Credit total</div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.creditTotal", "Credit total")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.credit / 100).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">Balance</div>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.balance", "Balance")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">
                     {balanced ? t("journalsPage.modal.balanced", "Balanced") : t("journalsPage.modal.unbalanced", "Unbalanced")}
                   </div>

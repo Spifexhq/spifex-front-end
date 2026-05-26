@@ -50,6 +50,11 @@ const formatBytes = (n: number) => {
 
 const Statements: React.FC = () => {
   const { t } = useTranslation("statements");
+
+  useEffect(() => {
+    document.title = t("header.title");
+  }, [t]);
+  
   const { handleInitUser, isSuperUser, isSubscribed, permissions, isOwner } =
     useAuthContext();
 
