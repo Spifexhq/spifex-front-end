@@ -59,7 +59,26 @@
     "updatedSuccess": "Compte mis à jour.",
     "deletedSuccess": "Compte supprimé.",
     "requestError": "Une erreur est survenue. Veuillez réessayer.",
-    "backToLedger": "Retour à l’espace du plan"
+    "backToLedger": "Retour à l’espace du plan",
+    "summaryTotal": "Total des comptes",
+    "summaryHeaders": "Comptes d’en-tête",
+    "managementOverviewTitle": "Vue d’ensemble",
+    "managementOverviewDescription": "Santé globale des comptes et couverture du plan.",
+    "managementStructureTitle": "Structure",
+    "managementStructureDescription": "Hiérarchie, profondeur et organisation parent-enfant.",
+    "managementPostingControlsTitle": "Contrôles de saisie",
+    "managementPostingControlsDescription": "Périmètre de saisie, règle de saisie manuelle et discipline opérationnelle.",
+    "managementBankControlTitle": "Contrôle bancaire",
+    "managementBankControlDescription": "Comptes dédiés au contrôle des soldes bancaires et à la logique de rapprochement.",
+    "managementReportingTitle": "Reporting",
+    "managementReportingDescription": "Groupes, sous-groupes et couverture de reporting.",
+    "syncing": "Synchronisation...",
+    "filtersTitle": "Filtres",
+    "filtersSubtitle": "Affinez la liste des comptes par structure, statut et règles de saisie.",
+    "sectionDistributionTitle": "Répartition par section",
+    "sectionDistributionDescription": "Répartition des comptes entre actifs, passifs, capitaux propres, produits, charges et autres sections.",
+    "reportingSampleTitle": "Groupes de reporting",
+    "reportingSampleDescription": "Comptes regroupés par classification de reporting."
   },
   "setup": {
     "pageLabel": "Paramètres",
@@ -132,7 +151,9 @@
     "requiredCode": "Le code est obligatoire.",
     "selectSection": "Sélectionner la section",
     "selectBalance": "Sélectionner le solde",
-    "selectAccountType": "Sélectionner le type"
+    "selectAccountType": "Sélectionner le type",
+    "createSubtitle": "Créer un compte du grand livre avec structure, classification et contrôles de saisie.",
+    "editSubtitle": "Mettre à jour la structure, la classification et les contrôles de saisie du compte du grand livre."
   },
   "accounting": {
     "title": "Espace comptable",

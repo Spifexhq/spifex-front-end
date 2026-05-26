@@ -59,7 +59,26 @@
     "updatedSuccess": "Conta atualizada.",
     "deletedSuccess": "Conta apagada.",
     "requestError": "Ocorreu um erro. Tente novamente.",
-    "backToLedger": "Voltar ao espaço do plano"
+    "backToLedger": "Voltar ao espaço do plano",
+    "summaryTotal": "Total de contas",
+    "summaryHeaders": "Contas de cabeçalho",
+    "managementOverviewTitle": "Visão geral",
+    "managementOverviewDescription": "Saúde geral das contas e cobertura do plano.",
+    "managementStructureTitle": "Estrutura",
+    "managementStructureDescription": "Hierarquia, profundidade e organização entre contas principais e subordinadas.",
+    "managementPostingControlsTitle": "Controlos de lançamento",
+    "managementPostingControlsDescription": "Âmbito de lançamento, política de lançamento manual e disciplina operacional.",
+    "managementBankControlTitle": "Controlo bancário",
+    "managementBankControlDescription": "Contas dedicadas ao controlo de saldos bancários e à lógica de reconciliação.",
+    "managementReportingTitle": "Reporting",
+    "managementReportingDescription": "Grupos, subgrupos e cobertura de reporting.",
+    "syncing": "A sincronizar...",
+    "filtersTitle": "Filtros",
+    "filtersSubtitle": "Refine a lista de contas por estrutura, estado e regras de lançamento.",
+    "sectionDistributionTitle": "Distribuição por secção",
+    "sectionDistributionDescription": "Distribuição das contas entre ativos, passivos, capital próprio, rendimentos, gastos e outras secções.",
+    "reportingSampleTitle": "Grupos de reporting",
+    "reportingSampleDescription": "Contas agrupadas por classificação de reporting."
   },
   "setup": {
     "pageLabel": "Definições",
@@ -132,7 +151,9 @@
     "requiredCode": "O código é obrigatório.",
     "selectSection": "Selecionar secção",
     "selectBalance": "Selecionar saldo",
-    "selectAccountType": "Selecionar tipo de conta"
+    "selectAccountType": "Selecionar tipo de conta",
+    "createSubtitle": "Criar uma conta do plano com estrutura, classificação e controlos de lançamento.",
+    "editSubtitle": "Atualizar a estrutura, classificação e controlos de lançamento da conta do plano."
   },
   "accounting": {
     "title": "Espaço de contabilidade",

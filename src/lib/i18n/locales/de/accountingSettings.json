@@ -1,22 +1,575 @@
 {
-  "pageTitle": "Buchhaltungsbereich",
-  "title": "Buchhaltungsbereich",
-  "subtitle": "Verwalten Sie die buchhalterische Struktur des Hauptbuchs getrennt von der operativen Cashflow-Kategorisierung.",
-  "buttons": {
-    "backToLedger": "Zurück zum Hauptbuchbereich",
-    "addAccount": "Add account",
-    "search": "Search",
-    "clear": "Clear"
+  "common": {
+    "settings": "Einstellungen",
+    "accountingSettings": "Buchhaltungseinstellungen",
+    "pageLabel": "Buchhaltungseinstellungen",
+    "close": "Schließen",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "open": "Öffnen",
+    "actions": "Aktionen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "yes": "Ja",
+    "no": "Nein",
+    "any": "Beliebig",
+    "search": "Suche",
+    "currency": "Währung",
+    "code": "Code",
+    "name": "Name",
+    "description": "Beschreibung",
+    "status": "Status",
+    "book": "Buch",
+    "books": "Bücher",
+    "account": "Konto",
+    "category": "Kategorie",
+    "ledgerAccount": "Hauptbuchkonto",
+    "cashflowCategory": "Cashflow-Kategorie",
+    "bankAccount": "Bankkonto",
+    "selectBook": "Buch auswählen",
+    "selectAccount": "Konto auswählen",
+    "selectCategory": "Kategorie auswählen",
+    "selectBank": "Bank auswählen",
+    "selectType": "Typ auswählen",
+    "selectSection": "Bereich auswählen",
+    "selectBalance": "Saldo auswählen",
+    "unassigned": "Nicht zugewiesen",
+    "notAvailable": "—",
+    "total": "Gesamt",
+    "refreshing": "wird aktualisiert",
+    "loading": "Wird geladen..."
   },
-  "sections": {
-    "structure": {
-      "title": "Buchhaltungsstruktur",
-      "description": "Verfeinern Sie Hierarchie, Berichtsgruppen, Sichtbarkeit und Abschlusszuordnung."
+  "nav": {
+    "ariaLabel": "Navigation der Buchhaltungseinstellungen",
+    "chart": "Kontenplan",
+    "books": "Bücher",
+    "bankMappings": "Bankzuordnungen",
+    "postingPolicies": "Buchungsregeln",
+    "journals": "Journale",
+    "correlation": "Korrelation",
+    "reconciliation": "Abstimmung"
+  },
+  "shell": {
+    "title": "Buchhaltungseinstellungen",
+    "description": "Konfiguriere Hauptbuchstruktur, Buchungsregeln, Banksteuerung, Journale und Buchhaltungsbereitschaft, ohne diese Steuerungen mit dem operativen Cashflow-Workflow zu vermischen."
+  },
+  "modal": {
+    "sectionLabel": "Buchhaltungseinstellungen",
+    "close": "Schließen"
+  },
+  "options": {
+    "statementSections": {
+      "asset": "Aktivum",
+      "liability": "Verbindlichkeit",
+      "equity": "Eigenkapital",
+      "income": "Ertrag",
+      "expense": "Aufwand",
+      "off_balance": "Außerbilanziell",
+      "statistical": "Statistisch"
     },
-    "views": {
-      "title": "Ansichten",
-      "cashflow": "Cashflow view",
-      "accounting": "Accounting view"
+    "normalBalance": {
+      "debit": "Soll",
+      "credit": "Haben"
+    },
+    "accountType": {
+      "header": "Überschrift",
+      "posting": "Buchung"
+    },
+    "bookBasis": {
+      "management": "Management",
+      "cash": "Kasse",
+      "accrual": "Periodenabgrenzung",
+      "tax": "Steuer"
+    },
+    "sourceType": {
+      "manual": "Manuell",
+      "cash_entry": "Cashflow-Buchung",
+      "cash_settlement": "Cashflow-Ausgleich",
+      "cash_transfer": "Cashflow-Übertrag",
+      "system": "System"
+    }
+  },
+  "workspace": {
+    "loadError": "Hauptbuchkonten konnten nicht geladen werden.",
+    "requiredCode": "Code ist erforderlich.",
+    "requiredName": "Name ist erforderlich.",
+    "invalidJson": "Metadaten müssen gültiges JSON sein.",
+    "updatedSuccess": "Konto erfolgreich aktualisiert.",
+    "createdSuccess": "Konto erfolgreich erstellt.",
+    "saveError": "Konto konnte nicht gespeichert werden.",
+    "deletedSuccess": "Konto erfolgreich gelöscht.",
+    "deleteError": "Konto konnte nicht gelöscht werden.",
+    "detailedTree": "Detaillierter Baum",
+    "compactTree": "Kompakter Baum",
+    "filters": {
+      "section": "Bereich",
+      "allSections": "Alle Bereiche",
+      "accountType": "Kontotyp",
+      "allTypes": "Alle Typen",
+      "bankControl": "Banksteuerung",
+      "manualPosting": "Manuelle Buchung",
+      "active": "Aktiv",
+      "activeOnly": "Nur aktive"
+    },
+    "emptySelectionTitle": "Kein Konto ausgewählt",
+    "emptySelectionDescription": "Wähle ein Konto im Baum aus, um es zu prüfen.",
+    "fields": {
+      "path": "Pfad",
+      "group": "Gruppe",
+      "subgroup": "Untergruppe",
+      "externalRef": "Externe Referenz",
+      "manualAllowed": "Manuell erlaubt",
+      "reportGroup": "Berichtsgruppe",
+      "reportSubgroup": "Berichtsuntergruppe",
+      "externalReference": "Externe Referenz",
+      "metadata": "Metadaten"
+    },
+    "badges": {
+      "system": "System",
+      "bankControl": "Banksteuerung",
+      "regularAccount": "reguläres Konto",
+      "manualAllowed": "manuell erlaubt",
+      "manualBlocked": "manuell gesperrt"
+    },
+    "summary": {
+      "manualAllowed": {
+        "label": "Manuell erlaubt",
+        "description": "Konten, die noch für direkte manuelle Buchungen offen sind.",
+        "modalTitle": "Manuelle Buchung erlaubt",
+        "modalSubtitle": "Konten, die unter den aktiven Filtern für manuelle Buchungen offen sind.",
+        "empty": "In der aktuellen Ansicht erlauben keine Konten manuelle Buchungen."
+      },
+      "bankControl": {
+        "label": "Banksteuerung",
+        "description": "Konten für Ausgleich und Banksteuerung.",
+        "modalTitle": "Banksteuerungskonten",
+        "modalSubtitle": "Konten, die unter den aktiven Filtern als Banksteuerung markiert sind.",
+        "empty": "Keine Banksteuerungskonten in der aktuellen Ansicht gefunden."
+      },
+      "active": {
+        "label": "Aktiv",
+        "description": "Konten, die derzeit im Kontenplan verfügbar sind.",
+        "modalTitle": "Aktive Konten",
+        "modalSubtitle": "Konten, die unter den aktiven Filtern aktiv sind.",
+        "empty": "Keine aktiven Konten in der aktuellen Ansicht gefunden."
+      },
+      "mapped": {
+        "label": "Zugeordnete Konten",
+        "description": "Konten mit zugewiesener Berichtsgruppe oder Untergruppe.",
+        "modalTitle": "Zugeordnete Berichtskonten",
+        "modalSubtitle": "Konten mit zugewiesener Berichtsgruppe oder Untergruppe unter den aktiven Filtern.",
+        "empty": "Keine zugeordneten Berichtskonten in der aktuellen Ansicht gefunden."
+      },
+      "unassignedReporting": {
+        "label": "Nicht zugewiesen",
+        "title": "Nicht zugewiesene Berichtskonten",
+        "subtitle": "Konten ohne Berichtsgruppe in der aktuellen gefilterten Ansicht.",
+        "empty": "Keine Konten für diese Berichtsgruppe gefunden.",
+        "groupTitle": "{{group}}"
+      }
+    },
+    "form": {
+      "newAccount": "Neues Konto",
+      "editAccount": "Konto bearbeiten",
+      "subtitle": "Pflege Struktur, Buchungsregeln und Berichtsklassifizierung in einem dedizierten Seitenmodal.",
+      "accountType": "Kontotyp",
+      "statementSection": "Abschlussbereich",
+      "normalBalance": "Normalsaldo",
+      "parentAccount": "Übergeordnetes Konto",
+      "optionalParent": "Optionales übergeordnetes Konto",
+      "isActive": "Aktiv",
+      "isBankControl": "Banksteuerung",
+      "allowsManualPosting": "Erlaubt manuelle Buchung",
+      "createAccount": "Konto erstellen",
+      "saveChanges": "Änderungen speichern"
+    },
+    "accountsList": {
+      "title": "Konten"
+    }
+  },
+  "booksPage": {
+    "loadError": "Buchhaltungsbücher konnten nicht geladen werden.",
+    "requiredError": "Code, Name und Währung sind erforderlich.",
+    "updatedSuccess": "Buchhaltungsbuch aktualisiert.",
+    "createdSuccess": "Buchhaltungsbuch erstellt.",
+    "saveError": "Buchhaltungsbuch konnte nicht gespeichert werden.",
+    "sectionLabel": "Buchhaltungsbücher",
+    "title": "Buchhaltungsbücher",
+    "description": "Erstelle und pflege Buchhaltungsbücher, die als Buchungsbereiche für Journale, Bankzuordnungen und Kategorieregeln dienen.",
+    "newButton": "Neues Buch",
+    "metrics": {
+      "books": "Bücher",
+      "booksDetail": "Gesamtzahl der aktuell konfigurierten Bücher.",
+      "primary": "Primär",
+      "primaryDetail": "Bücher, die als primäre Buchhaltungsbasis markiert sind.",
+      "active": "Aktiv",
+      "activeDetail": "Bücher, die für operative Buchungsabläufe verfügbar sind."
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "basis": "Basis",
+      "currency": "Währung",
+      "primary": "Primär",
+      "active": "Aktiv",
+      "actions": "Aktionen"
+    },
+    "modal": {
+      "editTitle": "Buchhaltungsbuch bearbeiten",
+      "newTitle": "Neues Buchhaltungsbuch",
+      "subtitle": "Erstelle oder aktualisiere die Buchhaltungsbasis und Buchungswährung.",
+      "basis": "Basis",
+      "selectBasis": "Basis auswählen",
+      "isPrimary": "Primär",
+      "isActive": "Aktiv",
+      "saveChanges": "Änderungen speichern",
+      "createBook": "Buch erstellen"
+    }
+  },
+  "bankMappingsPage": {
+    "loadError": "Bankzuordnungen konnten nicht geladen werden.",
+    "lookupError": "Auswahldaten für das Zuordnungsformular konnten nicht geladen werden.",
+    "requiredError": "Bank, Buch und Hauptbuchkonto sind erforderlich.",
+    "savedSuccess": "Bankzuordnung gespeichert.",
+    "saveError": "Bankzuordnung konnte nicht gespeichert werden.",
+    "sectionLabel": "Bankzuordnungen",
+    "title": "Bankzuordnungen",
+    "description": "Verknüpfe operative Bankkonten mit Buchhaltungsbüchern und Banksteuerungskonten für zuverlässige Buchung und Abstimmung.",
+    "newButton": "Neue Zuordnung",
+    "metrics": {
+      "activeMappings": "Aktive Zuordnungen",
+      "activeMappingsDetail": "Zuordnungen, die für Buchungsvorgänge verfügbar sind.",
+      "booksCovered": "Abgedeckte Bücher",
+      "booksCoveredDetail": "Buchhaltungsbücher, die bereits mit Banken verknüpft sind.",
+      "uniqueBanks": "Eindeutige Banken",
+      "uniqueBanksDetail": "Operative Bankkonten mit Zuordnungsabdeckung."
+    },
+    "columns": {
+      "bankAccount": "Bankkonto",
+      "book": "Buch",
+      "ledgerAccount": "Hauptbuchkonto",
+      "active": "Aktiv",
+      "actions": "Aktionen"
+    },
+    "modal": {
+      "title": "Bankzuordnung",
+      "subtitle": "Wähle das operative Bankkonto, das Buchhaltungsbuch und das Banksteuerungskonto aus.",
+      "selectBank": "Bank auswählen",
+      "selectBook": "Buch auswählen",
+      "selectLedgerAccount": "Hauptbuchkonto auswählen",
+      "saveMapping": "Zuordnung speichern"
+    }
+  },
+  "postingPoliciesPage": {
+    "loadError": "Buchungsregeln konnten nicht geladen werden.",
+    "lookupError": "Auswahldaten für das Buchungsregel-Formular konnten nicht geladen werden.",
+    "requiredError": "Kategorie und Buch sind erforderlich.",
+    "savedSuccess": "Buchungsregel gespeichert.",
+    "saveError": "Buchungsregel konnte nicht gespeichert werden.",
+    "sectionLabel": "Buchungsregeln",
+    "title": "Buchungsregeln",
+    "description": "Definiere, wie operative Cashflow-Kategorien in Hauptbuchkonten für Ausgleichs-, Abgrenzungs- und Clearing-Workflows übersetzt werden.",
+    "newButton": "Neue Regel",
+    "metrics": {
+      "policies": "Regeln",
+      "policiesDetail": "Gesamtzahl konfigurierter Kategorieregeln.",
+      "settlementReady": "Ausgleich bereit",
+      "settlementReadyDetail": "Regeln mit vollständiger Ausgleichs-Paarzuordnung.",
+      "accrualReady": "Abgrenzung bereit",
+      "accrualReadyDetail": "Regeln mit vollständiger Abgrenzungs-Paarzuordnung.",
+      "withClearing": "Mit Clearing",
+      "withClearingDetail": "Regeln, die bereits mit einem Clearing-Konto verknüpft sind."
+    },
+    "columns": {
+      "category": "Kategorie",
+      "book": "Buch",
+      "settlement": "Ausgleich",
+      "accrual": "Periodenabgrenzung",
+      "clearing": "Clearing",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "accountFields": {
+      "settlementDebit": "Ausgleich Soll",
+      "settlementCredit": "Ausgleich Haben",
+      "accrualDebit": "Abgrenzung Soll",
+      "accrualCredit": "Abgrenzung Haben",
+      "clearing": "Clearing"
+    },
+    "modal": {
+      "title": "Buchungsregel",
+      "subtitle": "Definiere, wie eine operative Kategorie auf Ausgleichs-, Abgrenzungs- und Clearing-Konten abgebildet wird.",
+      "cashflowCategory": "Cashflow-Kategorie",
+      "selectCategory": "Kategorie auswählen",
+      "selectBook": "Buch auswählen",
+      "savePolicy": "Regel speichern"
+    }
+  },
+  "journalsPage": {
+    "loadError": "Journale konnten nicht geladen werden.",
+    "lookupError": "Auswahldaten für das manuelle Journalformular konnten nicht geladen werden.",
+    "requiredError": "Buch, Daten und mindestens eine Journalzeile sind erforderlich.",
+    "createdSuccess": "Manuelles Journal erstellt.",
+    "createError": "Manuelles Journal konnte nicht erstellt werden.",
+    "reverseReason": "Stornierung von der Journalseite angefordert",
+    "reversedSuccess": "Journal storniert.",
+    "reverseError": "Journal konnte nicht storniert werden.",
+    "sectionLabel": "Journale",
+    "title": "Journale",
+    "description": "Prüfe Buchhaltungseinträge, erstelle kontrollierte manuelle Journale und storniere gebuchte Einträge bei Bedarf.",
+    "searchPlaceholder": "Suche",
+    "newButton": "Manuelles Journal",
+    "metrics": {
+      "entries": "Einträge",
+      "entriesDetail": "Journale, die im aktuellen Suchausschnitt sichtbar sind.",
+      "reversed": "Storniert",
+      "reversedDetail": "Bereits stornierte Einträge.",
+      "lines": "Zeilen",
+      "linesDetail": "Gesamtzahl der Journalzeilen in sichtbaren Einträgen."
+    },
+    "columns": {
+      "entry": "Eintrag",
+      "book": "Buch",
+      "source": "Quelle",
+      "postingDate": "Buchungsdatum",
+      "status": "Status",
+      "lines": "Zeilen",
+      "actions": "Aktionen"
+    },
+    "actions": {
+      "reverse": "Stornieren",
+      "reversing": "Storniere..."
+    },
+    "modal": {
+      "title": "Manuelles Journal",
+      "subtitle": "Erstelle einen kontrollierten Buchhaltungseintrag mit ausgeglichenen Soll- und Haben-Zeilen.",
+      "selectBook": "Buch auswählen",
+      "currency": "Währung",
+      "documentDate": "Belegdatum",
+      "postingDate": "Buchungsdatum",
+      "memo": "Memo",
+      "addLine": "Zeile hinzufügen",
+      "removeLine": "Entfernen",
+      "account": "Konto",
+      "selectAccount": "Konto auswählen",
+      "debit": "Soll",
+      "credit": "Haben",
+      "lineMemo": "Zeilenmemo",
+      "balanced": "Ausgeglichen",
+      "unbalanced": "Nicht ausgeglichen",
+      "createJournal": "Journal erstellen"
+    }
+  },
+  "reconciliationPage": {
+    "sectionLabel": "Abstimmung",
+    "title": "Board für Buchhaltungsbereitschaft",
+    "description": "Dieser Bereich soll als Brücke zwischen operativer Cashflow-Ebene und Buchhaltungsebene dienen und zeigen, was Buchungen blockiert, was bereit ist und was geprüft werden muss.",
+    "queue": "Warteschlange",
+    "backendProposal": "Backend-Vorschlag",
+    "backendProposalText": "Vorgeschlagener Endpoint: GET cashflow/accounting-readiness/, der gruppierte Warteschlangen nach Bereitschaftsstatus zurückgibt, damit diese Seite von statischer Anleitung zu einem echten operativen Board werden kann.",
+    "cards": {
+      "missingCategoryPolicy": {
+        "title": "Fehlende Kategorieregel",
+        "description": "Operative Einträge sind kategorisiert, aber die Kategorie wird noch nicht in Buchhaltungskonten übersetzt.",
+        "cta": "Buchungsregeln öffnen"
+      },
+      "missingBankMapping": {
+        "title": "Fehlende Bankzuordnung",
+        "description": "Bankbewegungen können nicht gebucht werden, weil das operative Bankkonto nicht mit einem Banksteuerungskonto verknüpft ist.",
+        "cta": "Bankzuordnungen öffnen"
+      },
+      "readyToPost": {
+        "title": "Bereit zur Buchung",
+        "description": "Einträge haben bereits Kategorie, Regel, Bankzuordnung und Buchhaltungskontext für die Buchungsprüfung aufgelöst.",
+        "cta": "Journale prüfen"
+      },
+      "postedWithException": {
+        "title": "Mit Ausnahme gebucht",
+        "description": "Einträge wurden erfolgreich gebucht, benötigen aber noch manuelle Prüfung, Stornierung oder vertiefte Abstimmung.",
+        "cta": "Journale öffnen"
+      }
+    }
+  },
+  "correlationsPage": {
+    "loadError": "Buchhaltungs-Korrelationsdaten konnten nicht geladen werden.",
+    "exportSuccess": "Diagramm exportiert.",
+    "selectionRequired": "Wähle eine Zeile aus, um sie dem Diagramm hinzuzufügen.",
+    "title": "Buchhaltungs-Korrelationskarte",
+    "description": "Untersuche, wie Buchhaltungseinstellungsseiten, APIs, Entitäten und operative Datensätze miteinander verbunden sind.",
+    "controls": {
+      "search": "Suche",
+      "filter": "Filter",
+      "all": "Alle",
+      "architectureOnly": "Nur Architektur",
+      "selectedDataOnly": "Nur ausgewählte Daten",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern",
+      "fit": "Anpassen",
+      "reset": "Zurücksetzen",
+      "export": "Exportieren",
+      "maximize": "Maximieren",
+      "minimize": "Minimieren",
+      "move": "Verschieben"
+    },
+    "datasets": {
+      "books": {
+        "label": "Bücher",
+        "description": "Buchhaltungsbücher und Ausführungsbereiche."
+      },
+      "accounts": {
+        "label": "Kontenplan",
+        "description": "Hauptbuchhierarchie und Buchungskonten."
+      },
+      "banks": {
+        "label": "Banken",
+        "description": "Operative Bankkonten."
+      },
+      "categories": {
+        "label": "Kategorien",
+        "description": "Operative Cashflow-Kategorien."
+      },
+      "bankMappings": {
+        "label": "Bankzuordnungen",
+        "description": "Brücke zwischen Bank, Buch und Hauptbuchkonto."
+      },
+      "policies": {
+        "label": "Buchungsregeln",
+        "description": "Regelbrücke zwischen Kategorie, Buch und Hauptbuchkonto."
+      },
+      "journals": {
+        "label": "Journale",
+        "description": "Buchhaltungsausführung mit Zeilen und Status."
+      }
+    },
+    "groups": {
+      "page": "Seite",
+      "api": "API",
+      "entity": "Entität",
+      "status": "Bereitschaft",
+      "data": "Datenzeile"
+    },
+    "edges": {
+      "depends": "Hängt ab",
+      "feeds": "Speist",
+      "controls": "Steuert",
+      "relates": "Bezieht sich auf",
+      "listCrud": "Liste + CRUD",
+      "lookup": "Suche",
+      "bankControlLookup": "Banksteuerungs-Suche",
+      "bankLookup": "Banksuche",
+      "bookLookup": "Buchsuche",
+      "accountLookup": "Kontosuche",
+      "categoryScope": "Kategoriebereich",
+      "lineAccountLookup": "Zeilenkonto-Suche",
+      "results": "Ergebnisse",
+      "treeInspector": "Baum + Inspektor",
+      "bankControlAccount": "Banksteuerungskonto",
+      "settlementAccrualClearing": "Ausgleich/Abgrenzung/Clearing",
+      "journalLines": "Journalzeilen",
+      "registry": "Register",
+      "mappingScope": "Zuordnungsbereich",
+      "policyScope": "Regelbereich",
+      "journalHeader": "Journal-Kopf",
+      "operationalBank": "operative Bank",
+      "categoryBridge": "Kategoriebrücke",
+      "reviewExceptions": "Prüfung / Ausnahmen",
+      "policyReadiness": "Regelbereitschaft",
+      "bankReadiness": "Bankbereitschaft"
+    },
+    "nodes": {
+      "workspace": {
+        "label": "AccountingWorkspace",
+        "short": "Kontenplan",
+        "description": "Hierarchie-Arbeitsbereich für Hauptbuchkonten."
+      },
+      "booksPage": {
+        "label": "AccountingBooksPage",
+        "short": "Bücher",
+        "description": "Register der Buchhaltungsbücher."
+      },
+      "bankMappingsPage": {
+        "label": "AccountingBankMappingsPage",
+        "short": "Bankzuordnungen",
+        "description": "Brücke zwischen Bankkonten, Büchern und Banksteuerungskonten."
+      },
+      "postingPoliciesPage": {
+        "label": "AccountingPostingPoliciesPage",
+        "short": "Buchungsregeln",
+        "description": "Brücke zwischen Cashflow-Kategorien, Büchern und Hauptbuchkonten."
+      },
+      "journalsPage": {
+        "label": "AccountingJournalsPage",
+        "short": "Journale",
+        "description": "Seite zum Erstellen, Prüfen und Stornieren von Journalen."
+      },
+      "reconciliation": {
+        "label": "AccountingReconciliationPage",
+        "short": "Abstimmung",
+        "description": "Bereitschaftsboard, gespeist durch vorgelagerte Vollständigkeit."
+      },
+      "ledgerApi": {
+        "label": "Hauptbuchkonten-API",
+        "short": "Hauptbuch-API",
+        "description": "Quelle für Hauptbuchliste und CRUD."
+      },
+      "booksApi": {
+        "label": "Buchhaltungsbücher-API",
+        "short": "Bücher-API",
+        "description": "Quelle für Bücherliste und CRUD."
+      },
+      "banksApi": {
+        "label": "Bankkonten-API",
+        "short": "Banken-API",
+        "description": "Quelle für operative Bankkonto-Suche."
+      },
+      "categoriesApi": {
+        "label": "Cashflow-Kategorien-API",
+        "short": "Kategorien-API",
+        "description": "Quelle für operative Kategoriesuche."
+      },
+      "journalsApi": {
+        "label": "Journale-API",
+        "short": "Journale-API",
+        "description": "Quelle für Journalliste / Erstellung / Stornierung."
+      },
+      "ledgerEntity": {
+        "label": "LedgerAccount",
+        "short": "Hauptbuchkonto",
+        "description": "Hauptstruktur des Kontenplans."
+      },
+      "bookEntity": {
+        "label": "AccountingBook",
+        "short": "Buchhaltungsbuch",
+        "description": "Buchhalterischer Ausführungsbereich."
+      },
+      "bankEntity": {
+        "label": "BankAccount",
+        "short": "Bankkonto",
+        "description": "Operatives Bankkonto."
+      },
+      "categoryEntity": {
+        "label": "CashflowCategory",
+        "short": "Cashflow-Kategorie",
+        "description": "Operative Kategorie für Regelzuordnung."
+      },
+      "journalEntity": {
+        "label": "JournalEntry",
+        "short": "Journaleintrag",
+        "description": "Ausgabe der Buchhaltungsausführung."
+      }
+    },
+    "rows": {
+      "bankMapping": "Bankzuordnung {{number}}",
+      "postingPolicy": "Buchungsregel {{number}}",
+      "bank": "Bank",
+      "book": "Buch",
+      "ledgerAccount": "Hauptbuchkonto",
+      "category": "Kategorie",
+      "noHint": "kein Hinweis",
+      "lines": "{{count}} Zeilen"
     }
   }
 }

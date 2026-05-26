@@ -1,6 +1,7 @@
 // src/pages/AccountingSettings/components/AccountingSideModal.tsx
 import React from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const AccountingSideModal: React.FC<Props> = ({
   children,
   contentClassName = "",
 }) => {
+  const { t } = useTranslation("accountingSettings");
+
   const [mounted, setMounted] = React.useState(isOpen);
   const [visible, setVisible] = React.useState(isOpen);
 
@@ -84,7 +87,7 @@ const AccountingSideModal: React.FC<Props> = ({
           <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4">
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
-                Accounting settings
+                {t("modal.sectionLabel", { defaultValue: "Accounting settings" })}
               </div>
               <h3
                 id="accounting-side-modal-title"
@@ -99,7 +102,7 @@ const AccountingSideModal: React.FC<Props> = ({
               type="button"
               onClick={onClose}
               className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center shrink-0"
-              aria-label="Close"
+              aria-label={t("modal.close", { defaultValue: "Close" })}
             >
               <X size={18} />
             </button>

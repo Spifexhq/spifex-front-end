@@ -17,6 +17,8 @@
   "details": {
     "dueDate": "Vencimento",
     "amount": "Valor",
+    "cashflowCategory": "Categoria",
+    "cashflowCategoryBtn": "Selecione a categoria",
     "amountPlaceholder": "0,00",
     "ledgerAccount": "Conta contábil",
     "ledgerAccountBtn": "Selecione a conta",

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -65,6 +66,13 @@ const EMPTY_FORM: MappingFormState = {
 };
 
 const AccountingBankMappingsPage: React.FC = () => {
+  const { i18n } = useTranslation("accountingSettings");
+  const t = React.useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n]
+  );
+
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [items, setItems] = React.useState<BankAccountLedgerMap[]>([]);
@@ -133,7 +141,7 @@ const AccountingBankMappingsPage: React.FC = () => {
       setItems(nextItems);
     } catch {
       setItems([]);
-      setSnackbar({ severity: "error", message: "Failed to load bank mappings." });
+      setSnackbar({ severity: "error", message: t("bankMappingsPage.loadError", "Failed to load bank mappings.") });
     } finally {
       setLoading(false);
     }
@@ -171,7 +179,7 @@ const AccountingBankMappingsPage: React.FC = () => {
     } catch {
       setSnackbar({
         severity: "error",
-        message: "Failed to load mapping form lookups.",
+        message: t("bankMappingsPage.lookupError", "Failed to load mapping form lookups."),
       });
     } finally {
       setLookupsLoading(false);
@@ -207,7 +215,7 @@ const AccountingBankMappingsPage: React.FC = () => {
     event.preventDefault();
 
     if (!form.bank_account_id || !form.book_id || !form.ledger_account_id) {
-      setSnackbar({ severity: "error", message: "Bank, book, and ledger account are required." });
+      setSnackbar({ severity: "error", message: t("bankMappingsPage.requiredError", "Bank, book, and ledger account are required.") });
       return;
     }
 
@@ -219,12 +227,12 @@ const AccountingBankMappingsPage: React.FC = () => {
         ledger_account_id: form.ledger_account_id,
       });
 
-      setSnackbar({ severity: "success", message: "Bank mapping saved." });
+      setSnackbar({ severity: "success", message: t("bankMappingsPage.savedSuccess", "Bank mapping saved.") });
       setModalOpen(false);
       setForm(EMPTY_FORM);
       await load();
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to save bank mapping." });
+      setSnackbar({ severity: "error", message: t("bankMappingsPage.saveError", "Failed to save bank mapping.") });
     } finally {
       setSaving(false);
     }
@@ -237,16 +245,15 @@ const AccountingBankMappingsPage: React.FC = () => {
       <section className="space-y-4">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Bank mappings</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.sectionLabel", "Bank mappings")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">Bank control mapping</h2>
+                <h2 className="text-[16px] font-semibold text-gray-900"> {t("bankMappingsPage.title", "Bank control mapping")}</h2>
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  Link each operational bank account to the accounting book and bank-control ledger
-                  account used during posting, settlement, and transfer flows.
+                  {t("bankMappingsPage.description", "Link each operational bank account to the accounting book and bank-control ledger account used during posting, settlement, and transfer flows.")}
                 </p>
               </div>
 
@@ -257,19 +264,19 @@ const AccountingBankMappingsPage: React.FC = () => {
 
             <div className="grid gap-3 md:grid-cols-3">
               <MetricCard
-                label="Active mappings"
+                label={t("bankMappingsPage.metrics.activeMappings", "Active mappings")}
                 value={items.filter((item) => item.is_active).length}
-                detail="Mappings available for posting operations."
+                detail={t("bankMappingsPage.metrics.activeMappingsDetail", "Mappings available for posting operations.")}
               />
               <MetricCard
-                label="Books covered"
+                label={t("bankMappingsPage.metrics.booksCovered", "Books covered")}
                 value={new Set(items.map((item) => item.book_id)).size}
-                detail="Accounting books already linked to banks."
+                detail={t("bankMappingsPage.metrics.booksCoveredDetail", "Accounting books already linked to banks.")}
               />
               <MetricCard
-                label="Unique banks"
+                label={t("bankMappingsPage.metrics.uniqueBanks", "Unique banks")}
                 value={new Set(items.map((item) => item.bank_account_id)).size}
-                detail="Operational bank accounts with mapping coverage."
+                detail={t("bankMappingsPage.metrics.uniqueBanksDetail", "Operational bank accounts with mapping coverage.")}
               />
             </div>
           </div>
@@ -277,14 +284,14 @@ const AccountingBankMappingsPage: React.FC = () => {
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Mapping list</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.listTitle", "Mapping list")}</div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
-                  {["Bank account", "Book", "Ledger account", "Active", "Actions"].map((column) => (
+                  {[t("bankMappingsPage.columns.bankAccount", "Bank account"), t("bankMappingsPage.columns.book", "Book"), t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), t("bankMappingsPage.columns.active", "Active"), t("bankMappingsPage.columns.actions", "Actions")].map((column) => (
                     <th
                       key={column}
                       className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
@@ -308,7 +315,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                       {accountMap.get(item.ledger_account_id) || item.ledger_account_id}
                     </td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {item.is_active ? "Yes" : "No"}
+                      {item.is_active ? t("common.yes", "Yes") : t("common.no", "No")}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
@@ -321,7 +328,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                 {!items.length ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      No bank mappings found.
+                      {t("bankMappingsPage.empty", "No bank mappings found.")}
                     </td>
                   </tr>
                 ) : null}
@@ -347,8 +354,8 @@ const AccountingBankMappingsPage: React.FC = () => {
       <AccountingSideModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Bank mapping"
-        subtitle="Choose the operational bank account, accounting book, and bank-control ledger account."
+        title={t("bankMappingsPage.modal.title", "Bank mapping")}
+        subtitle={t("bankMappingsPage.modal.subtitle", "Choose the operational bank account, accounting book, and bank-control ledger account.")}
         contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
@@ -357,12 +364,12 @@ const AccountingBankMappingsPage: React.FC = () => {
           <form onSubmit={submit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Mapping definition</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.modal.definition", "Mapping definition")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4">
                 <Select<BankAccount>
-                  label="Bank account"
+                  label={t("common.bankAccount", "Bank account")}
                   items={banks}
                   selected={selectedBank}
                   onChange={(selected: BankAccount[]) =>
@@ -375,13 +382,13 @@ const AccountingBankMappingsPage: React.FC = () => {
                   getItemLabel={(bank: BankAccount) =>
                     [bank.institution, bank.branch, bank.account_number].filter(Boolean).join(" — ") || bank.id
                   }
-                  buttonLabel="Select bank"
+                  buttonLabel={t("bankMappingsPage.modal.selectBank", "Select bank")}
                   singleSelect
                   hideCheckboxes
                 />
 
                 <Select<AccountingBook>
-                  label="Book"
+                  label={t("common.book", "Book")}
                   items={books}
                   selected={selectedBook}
                   onChange={(selected: AccountingBook[]) =>
@@ -394,13 +401,13 @@ const AccountingBankMappingsPage: React.FC = () => {
                   getItemLabel={(book: AccountingBook) =>
                     [book.code, book.name].filter(Boolean).join(" — ")
                   }
-                  buttonLabel="Select book"
+                  buttonLabel={t("bankMappingsPage.modal.selectBook", "Select book")}
                   singleSelect
                   hideCheckboxes
                 />
 
                 <Select<LedgerAccount>
-                  label="Ledger account"
+                  label={t("common.ledgerAccount", "Ledger account")}
                   items={ledgerAccounts}
                   selected={selectedLedgerAccount}
                   onChange={(selected: LedgerAccount[]) =>
@@ -413,7 +420,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                   getItemLabel={(account: LedgerAccount) =>
                     [account.code, account.name].filter(Boolean).join(" — ")
                   }
-                  buttonLabel="Select ledger account"
+                  buttonLabel={t("bankMappingsPage.modal.selectLedgerAccount", "Select ledger account")}
                   singleSelect
                   hideCheckboxes
                 />
@@ -425,7 +432,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save mapping"}
+                {saving ? t("common.saving", "Saving...") : t("bankMappingsPage.modal.saveMapping", "Save mapping")}
               </Button>
             </div>
           </form>

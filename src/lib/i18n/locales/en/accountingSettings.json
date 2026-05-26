@@ -1,22 +1,575 @@
 {
-  "pageTitle": "Accounting workspace",
-  "title": "Accounting workspace",
-  "subtitle": "Manage the accounting structure of the ledger separately from the day-to-day cashflow categorization view.",
-  "buttons": {
-    "backToLedger": "Back to ledger workspace",
-    "addAccount": "Konto hinzufügen",
-    "search": "Suchen",
-    "clear": "Zurücksetzen"
+  "common": {
+    "settings": "Settings",
+    "accountingSettings": "Accounting settings",
+    "pageLabel": "Accounting settings",
+    "close": "Close",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "open": "Open",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No",
+    "any": "Any",
+    "search": "Search",
+    "currency": "Currency",
+    "code": "Code",
+    "name": "Name",
+    "description": "Description",
+    "status": "Status",
+    "book": "Book",
+    "books": "Books",
+    "account": "Account",
+    "category": "Category",
+    "ledgerAccount": "Ledger account",
+    "cashflowCategory": "Cashflow category",
+    "bankAccount": "Bank account",
+    "selectBook": "Select book",
+    "selectAccount": "Select account",
+    "selectCategory": "Select category",
+    "selectBank": "Select bank",
+    "selectType": "Select type",
+    "selectSection": "Select section",
+    "selectBalance": "Select balance",
+    "unassigned": "Unassigned",
+    "notAvailable": "—",
+    "total": "Total",
+    "refreshing": "refreshing",
+    "loading": "Loading..."
   },
-  "sections": {
-    "structure": {
-      "title": "Accounting structure",
-      "description": "Refine hierarchy, reporting groups, visibility, and statement alignment."
+  "nav": {
+    "ariaLabel": "Accounting settings navigation",
+    "chart": "Chart",
+    "books": "Books",
+    "bankMappings": "Bank mappings",
+    "postingPolicies": "Posting policies",
+    "journals": "Journals",
+    "correlation": "Correlation",
+    "reconciliation": "Reconciliation"
+  },
+  "shell": {
+    "title": "Accounting settings",
+    "description": "Configure ledger structure, posting rules, bank control, journals, and accounting readiness without mixing those controls into the operational cashflow workflow."
+  },
+  "modal": {
+    "sectionLabel": "Accounting settings",
+    "close": "Close"
+  },
+  "options": {
+    "statementSections": {
+      "asset": "Asset",
+      "liability": "Liability",
+      "equity": "Equity",
+      "income": "Income",
+      "expense": "Expense",
+      "off_balance": "Off balance",
+      "statistical": "Statistical"
     },
-    "views": {
-      "title": "Views",
-      "cashflow": "Cashflow-Sicht",
-      "accounting": "Buchhaltungssicht"
+    "normalBalance": {
+      "debit": "Debit",
+      "credit": "Credit"
+    },
+    "accountType": {
+      "header": "Header",
+      "posting": "Posting"
+    },
+    "bookBasis": {
+      "management": "Management",
+      "cash": "Cash",
+      "accrual": "Accrual",
+      "tax": "Tax"
+    },
+    "sourceType": {
+      "manual": "Manual",
+      "cash_entry": "Cash entry",
+      "cash_settlement": "Cash settlement",
+      "cash_transfer": "Cash transfer",
+      "system": "System"
+    }
+  },
+  "workspace": {
+    "loadError": "Unable to load ledger accounts.",
+    "requiredCode": "Code is required.",
+    "requiredName": "Name is required.",
+    "invalidJson": "Metadata must be valid JSON.",
+    "updatedSuccess": "Account updated successfully.",
+    "createdSuccess": "Account created successfully.",
+    "saveError": "Unable to save the account.",
+    "deletedSuccess": "Account deleted successfully.",
+    "deleteError": "Unable to delete the account.",
+    "detailedTree": "Detailed tree",
+    "compactTree": "Compact tree",
+    "filters": {
+      "section": "Section",
+      "allSections": "All sections",
+      "accountType": "Account type",
+      "allTypes": "All types",
+      "bankControl": "Bank control",
+      "manualPosting": "Manual posting",
+      "active": "Active",
+      "activeOnly": "Active only"
+    },
+    "emptySelectionTitle": "No account selected",
+    "emptySelectionDescription": "Select an account in the tree to inspect it.",
+    "fields": {
+      "path": "Path",
+      "group": "Group",
+      "subgroup": "Subgroup",
+      "externalRef": "External ref",
+      "manualAllowed": "Manual allowed",
+      "reportGroup": "Report group",
+      "reportSubgroup": "Report subgroup",
+      "externalReference": "External reference",
+      "metadata": "Metadata"
+    },
+    "badges": {
+      "system": "System",
+      "bankControl": "bank control",
+      "regularAccount": "regular account",
+      "manualAllowed": "manual allowed",
+      "manualBlocked": "manual blocked"
+    },
+    "summary": {
+      "manualAllowed": {
+        "label": "Manual allowed",
+        "description": "Accounts still open for direct manual posting.",
+        "modalTitle": "Manual posting allowed",
+        "modalSubtitle": "Accounts currently open for manual posting under the active filters.",
+        "empty": "No accounts allow manual posting in the current view."
+      },
+      "bankControl": {
+        "label": "Bank control",
+        "description": "Accounts dedicated to settlement and bank control.",
+        "modalTitle": "Bank control accounts",
+        "modalSubtitle": "Accounts marked for bank control under the active filters.",
+        "empty": "No bank control accounts found in the current view."
+      },
+      "active": {
+        "label": "Active",
+        "description": "Accounts currently available in the chart.",
+        "modalTitle": "Active accounts",
+        "modalSubtitle": "Accounts currently active under the active filters.",
+        "empty": "No active accounts found in the current view."
+      },
+      "mapped": {
+        "label": "Mapped accounts",
+        "description": "Accounts with report group or subgroup assigned.",
+        "modalTitle": "Mapped reporting accounts",
+        "modalSubtitle": "Accounts with report group or subgroup assigned under the active filters.",
+        "empty": "No mapped reporting accounts found in the current view."
+      },
+      "unassignedReporting": {
+        "label": "Unassigned",
+        "title": "Unassigned reporting accounts",
+        "subtitle": "Accounts without a report group in the current filtered view.",
+        "empty": "No accounts found for this reporting group.",
+        "groupTitle": "{{group}}"
+      }
+    },
+    "form": {
+      "newAccount": "New account",
+      "editAccount": "Edit account",
+      "subtitle": "Maintain structure, posting rules, and reporting classification from a dedicated side modal.",
+      "accountType": "Account type",
+      "statementSection": "Statement section",
+      "normalBalance": "Normal balance",
+      "parentAccount": "Parent account",
+      "optionalParent": "Optional parent",
+      "isActive": "Active",
+      "isBankControl": "Bank control",
+      "allowsManualPosting": "Allows manual posting",
+      "createAccount": "Create account",
+      "saveChanges": "Save changes"
+    },
+    "accountsList": {
+      "title": "Accounts"
+    }
+  },
+  "booksPage": {
+    "loadError": "Failed to load accounting books.",
+    "requiredError": "Code, name, and currency are required.",
+    "updatedSuccess": "Accounting book updated.",
+    "createdSuccess": "Accounting book created.",
+    "saveError": "Failed to save accounting book.",
+    "sectionLabel": "Accounting books",
+    "title": "Accounting books",
+    "description": "Create and maintain accounting books used as posting scopes for journals, bank mappings, and category policies.",
+    "newButton": "New book",
+    "metrics": {
+      "books": "Books",
+      "booksDetail": "Total books currently configured.",
+      "primary": "Primary",
+      "primaryDetail": "Books marked as the primary accounting base.",
+      "active": "Active",
+      "activeDetail": "Books available for operational posting flows."
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "basis": "Basis",
+      "currency": "Currency",
+      "primary": "Primary",
+      "active": "Active",
+      "actions": "Actions"
+    },
+    "modal": {
+      "editTitle": "Edit accounting book",
+      "newTitle": "New accounting book",
+      "subtitle": "Create or update the accounting basis and posting currency.",
+      "basis": "Basis",
+      "selectBasis": "Select basis",
+      "isPrimary": "Primary",
+      "isActive": "Active",
+      "saveChanges": "Save changes",
+      "createBook": "Create book"
+    }
+  },
+  "bankMappingsPage": {
+    "loadError": "Failed to load bank mappings.",
+    "lookupError": "Failed to load mapping form lookups.",
+    "requiredError": "Bank, book, and ledger account are required.",
+    "savedSuccess": "Bank mapping saved.",
+    "saveError": "Failed to save bank mapping.",
+    "sectionLabel": "Bank mappings",
+    "title": "Bank mappings",
+    "description": "Link operational bank accounts to accounting books and bank-control ledger accounts for reliable posting and reconciliation.",
+    "newButton": "New mapping",
+    "metrics": {
+      "activeMappings": "Active mappings",
+      "activeMappingsDetail": "Mappings available for posting operations.",
+      "booksCovered": "Books covered",
+      "booksCoveredDetail": "Accounting books already linked to banks.",
+      "uniqueBanks": "Unique banks",
+      "uniqueBanksDetail": "Operational bank accounts with mapping coverage."
+    },
+    "columns": {
+      "bankAccount": "Bank account",
+      "book": "Book",
+      "ledgerAccount": "Ledger account",
+      "active": "Active",
+      "actions": "Actions"
+    },
+    "modal": {
+      "title": "Bank mapping",
+      "subtitle": "Choose the operational bank account, accounting book, and bank-control ledger account.",
+      "selectBank": "Select bank",
+      "selectBook": "Select book",
+      "selectLedgerAccount": "Select ledger account",
+      "saveMapping": "Save mapping"
+    }
+  },
+  "postingPoliciesPage": {
+    "loadError": "Failed to load posting policies.",
+    "lookupError": "Failed to load posting policy form lookups.",
+    "requiredError": "Category and book are required.",
+    "savedSuccess": "Posting policy saved.",
+    "saveError": "Failed to save posting policy.",
+    "sectionLabel": "Posting policies",
+    "title": "Posting policies",
+    "description": "Define how operational cashflow categories translate into ledger accounts for settlement, accrual, and clearing workflows.",
+    "newButton": "New policy",
+    "metrics": {
+      "policies": "Policies",
+      "policiesDetail": "Total configured category policies.",
+      "settlementReady": "Settlement-ready",
+      "settlementReadyDetail": "Policies with full settlement pair mapping.",
+      "accrualReady": "Accrual-ready",
+      "accrualReadyDetail": "Policies with full accrual pair mapping.",
+      "withClearing": "With clearing",
+      "withClearingDetail": "Policies already linked to a clearing account."
+    },
+    "columns": {
+      "category": "Category",
+      "book": "Book",
+      "settlement": "Settlement",
+      "accrual": "Accrual",
+      "clearing": "Clearing",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "accountFields": {
+      "settlementDebit": "Settlement debit",
+      "settlementCredit": "Settlement credit",
+      "accrualDebit": "Accrual debit",
+      "accrualCredit": "Accrual credit",
+      "clearing": "Clearing"
+    },
+    "modal": {
+      "title": "Posting policy",
+      "subtitle": "Define how one operational category maps into settlement, accrual, and clearing accounts.",
+      "cashflowCategory": "Cashflow category",
+      "selectCategory": "Select category",
+      "selectBook": "Select book",
+      "savePolicy": "Save policy"
+    }
+  },
+  "journalsPage": {
+    "loadError": "Failed to load journals.",
+    "lookupError": "Failed to load manual journal form lookups.",
+    "requiredError": "Book, dates, and at least one journal line are required.",
+    "createdSuccess": "Manual journal created.",
+    "createError": "Failed to create manual journal.",
+    "reverseReason": "Reversal requested from journals page",
+    "reversedSuccess": "Journal reversed.",
+    "reverseError": "Failed to reverse journal.",
+    "sectionLabel": "Journals",
+    "title": "Journals",
+    "description": "Review accounting entries, create controlled manual journals, and reverse posted entries when needed.",
+    "searchPlaceholder": "Search",
+    "newButton": "Manual journal",
+    "metrics": {
+      "entries": "Entries",
+      "entriesDetail": "Journals visible in the current search slice.",
+      "reversed": "Reversed",
+      "reversedDetail": "Entries already reversed.",
+      "lines": "Lines",
+      "linesDetail": "Total journal lines across visible entries."
+    },
+    "columns": {
+      "entry": "Entry",
+      "book": "Book",
+      "source": "Source",
+      "postingDate": "Posting date",
+      "status": "Status",
+      "lines": "Lines",
+      "actions": "Actions"
+    },
+    "actions": {
+      "reverse": "Reverse",
+      "reversing": "Reversing..."
+    },
+    "modal": {
+      "title": "Manual journal",
+      "subtitle": "Create a controlled accounting entry with balanced debit and credit lines.",
+      "selectBook": "Select book",
+      "currency": "Currency",
+      "documentDate": "Document date",
+      "postingDate": "Posting date",
+      "memo": "Memo",
+      "addLine": "Add line",
+      "removeLine": "Remove",
+      "account": "Account",
+      "selectAccount": "Select account",
+      "debit": "Debit",
+      "credit": "Credit",
+      "lineMemo": "Line memo",
+      "balanced": "Balanced",
+      "unbalanced": "Unbalanced",
+      "createJournal": "Create journal"
+    }
+  },
+  "reconciliationPage": {
+    "sectionLabel": "Reconciliation",
+    "title": "Accounting readiness board",
+    "description": "This area should act as the bridge between the operational cashflow layer and the accounting layer, surfacing what blocks posting, what is ready, and what needs review.",
+    "queue": "Queue",
+    "backendProposal": "Backend proposal",
+    "backendProposalText": "Suggested endpoint: GET cashflow/accounting-readiness/, returning grouped queues by readiness state so this page can evolve from static guidance into a true operational board.",
+    "cards": {
+      "missingCategoryPolicy": {
+        "title": "Missing category policy",
+        "description": "Operational entries are categorized, but the category still does not translate into accounting accounts.",
+        "cta": "Open posting policies"
+      },
+      "missingBankMapping": {
+        "title": "Missing bank mapping",
+        "description": "Bank movements cannot post because the operational bank account is not linked to a bank-control ledger account.",
+        "cta": "Open bank mappings"
+      },
+      "readyToPost": {
+        "title": "Ready to post",
+        "description": "Entries already have category, policy, bank mapping, and accounting context resolved for posting review.",
+        "cta": "Review journals"
+      },
+      "postedWithException": {
+        "title": "Posted with exception",
+        "description": "Entries posted successfully but still need manual review, reversal, or deeper reconciliation follow-up.",
+        "cta": "Open journals"
+      }
+    }
+  },
+  "correlationsPage": {
+    "loadError": "Failed to load accounting correlation data.",
+    "exportSuccess": "Diagram exported.",
+    "selectionRequired": "Select a row to add it to the diagram.",
+    "title": "Accounting correlation map",
+    "description": "Explore how accounting settings pages, APIs, entities, and operational datasets connect to each other.",
+    "controls": {
+      "search": "Search",
+      "filter": "Filter",
+      "all": "All",
+      "architectureOnly": "Architecture only",
+      "selectedDataOnly": "Selected data only",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fit": "Fit",
+      "reset": "Reset",
+      "export": "Export",
+      "maximize": "Maximize",
+      "minimize": "Minimize",
+      "move": "Move"
+    },
+    "datasets": {
+      "books": {
+        "label": "Books",
+        "description": "Accounting books and execution scopes."
+      },
+      "accounts": {
+        "label": "Chart of accounts",
+        "description": "Ledger hierarchy and posting accounts."
+      },
+      "banks": {
+        "label": "Banks",
+        "description": "Operational bank accounts."
+      },
+      "categories": {
+        "label": "Categories",
+        "description": "Operational cashflow categories."
+      },
+      "bankMappings": {
+        "label": "Bank mappings",
+        "description": "Bank + book + ledger account bridge."
+      },
+      "policies": {
+        "label": "Posting policies",
+        "description": "Category + book + ledger-account policy bridge."
+      },
+      "journals": {
+        "label": "Journals",
+        "description": "Accounting execution with lines and statuses."
+      }
+    },
+    "groups": {
+      "page": "Page",
+      "api": "API",
+      "entity": "Entity",
+      "status": "Readiness",
+      "data": "Data row"
+    },
+    "edges": {
+      "depends": "Depends",
+      "feeds": "Feeds",
+      "controls": "Controls",
+      "relates": "Relates",
+      "listCrud": "list + CRUD",
+      "lookup": "lookup",
+      "bankControlLookup": "bank-control lookup",
+      "bankLookup": "bank lookup",
+      "bookLookup": "book lookup",
+      "accountLookup": "account lookup",
+      "categoryScope": "category scope",
+      "lineAccountLookup": "line account lookup",
+      "results": "results",
+      "treeInspector": "tree + inspector",
+      "bankControlAccount": "bank-control account",
+      "settlementAccrualClearing": "settlement/accrual/clearing",
+      "journalLines": "journal lines",
+      "registry": "registry",
+      "mappingScope": "mapping scope",
+      "policyScope": "policy scope",
+      "journalHeader": "journal header",
+      "operationalBank": "operational bank",
+      "categoryBridge": "category bridge",
+      "reviewExceptions": "review / exceptions",
+      "policyReadiness": "policy readiness",
+      "bankReadiness": "bank readiness"
+    },
+    "nodes": {
+      "workspace": {
+        "label": "AccountingWorkspace",
+        "short": "Chart of Accounts",
+        "description": "Hierarchy workspace for ledger accounts."
+      },
+      "booksPage": {
+        "label": "AccountingBooksPage",
+        "short": "Books",
+        "description": "Accounting books registry."
+      },
+      "bankMappingsPage": {
+        "label": "AccountingBankMappingsPage",
+        "short": "Bank Mappings",
+        "description": "Bridge between bank accounts, books, and bank-control ledger accounts."
+      },
+      "postingPoliciesPage": {
+        "label": "AccountingPostingPoliciesPage",
+        "short": "Posting Policies",
+        "description": "Bridge between cashflow categories, books, and ledger accounts."
+      },
+      "journalsPage": {
+        "label": "AccountingJournalsPage",
+        "short": "Journals",
+        "description": "Journal creation, review, and reversal page."
+      },
+      "reconciliation": {
+        "label": "AccountingReconciliationPage",
+        "short": "Reconciliation",
+        "description": "Readiness board fed by upstream completeness."
+      },
+      "ledgerApi": {
+        "label": "Ledger Accounts API",
+        "short": "Ledger API",
+        "description": "Ledger listing and CRUD source."
+      },
+      "booksApi": {
+        "label": "Accounting Books API",
+        "short": "Books API",
+        "description": "Books listing and CRUD source."
+      },
+      "banksApi": {
+        "label": "Bank Accounts API",
+        "short": "Banks API",
+        "description": "Operational bank account lookup source."
+      },
+      "categoriesApi": {
+        "label": "Cashflow Categories API",
+        "short": "Categories API",
+        "description": "Operational category lookup source."
+      },
+      "journalsApi": {
+        "label": "Journals API",
+        "short": "Journals API",
+        "description": "Journal listing / create / reverse source."
+      },
+      "ledgerEntity": {
+        "label": "LedgerAccount",
+        "short": "Ledger Account",
+        "description": "Main chart-of-accounts structure."
+      },
+      "bookEntity": {
+        "label": "AccountingBook",
+        "short": "Accounting Book",
+        "description": "Accounting execution scope."
+      },
+      "bankEntity": {
+        "label": "BankAccount",
+        "short": "Bank Account",
+        "description": "Operational bank account."
+      },
+      "categoryEntity": {
+        "label": "CashflowCategory",
+        "short": "Cashflow Category",
+        "description": "Operational category used in policy mapping."
+      },
+      "journalEntity": {
+        "label": "JournalEntry",
+        "short": "Journal Entry",
+        "description": "Accounting execution output."
+      }
+    },
+    "rows": {
+      "bankMapping": "Bank mapping {{number}}",
+      "postingPolicy": "Posting policy {{number}}",
+      "bank": "Bank",
+      "book": "Book",
+      "ledgerAccount": "Ledger account",
+      "category": "Category",
+      "noHint": "no hint",
+      "lines": "{{count}} lines"
     }
   }
 }

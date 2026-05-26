@@ -276,6 +276,10 @@ import enProjectSettings from "./locales/en/projectSettings.json";
 import frProjectSettings from "./locales/fr/projectSettings.json";
 import deProjectSettings from "./locales/de/projectSettings.json";
 
+import ptAccountingSettings from "./locales/pt/accountingSettings.json";
+import enAccountingSettings from "./locales/en/accountingSettings.json";
+import frAccountingSettings from "./locales/fr/accountingSettings.json";
+import deAccountingSettings from "./locales/de/accountingSettings.json";
 
 import ptLedgerAccounts from "./locales/pt/ledgerAccounts.json";
 import enLedgerAccounts from "./locales/en/ledgerAccounts.json";
@@ -399,6 +403,7 @@ const NAMESPACES = [
   "bankSettings",
   "departmentSettings",
   "projectSettings",
+  "accountingSettings",
   "ledgerAccounts",
   "categorySettings",
   "inventorySettings",
@@ -473,6 +478,7 @@ const resources: Resource = {
     bankSettings: ptBankSettings,
     departmentSettings: ptDepartmentSettings,
     projectSettings: ptProjectSettings,
+    accountingSettings: ptAccountingSettings,
     ledgerAccounts: ptLedgerAccounts,
     categorySettings: ptCategorySettings,
     inventorySettings: ptInventorySettings,
@@ -542,6 +548,7 @@ const resources: Resource = {
     bankSettings: enBankSettings,
     departmentSettings: enDepartmentSettings,
     projectSettings: enProjectSettings,
+    accountingSettings: enAccountingSettings,
     ledgerAccounts: enLedgerAccounts,
     categorySettings: enCategorySettings,
     inventorySettings: enInventorySettings,
@@ -611,6 +618,7 @@ const resources: Resource = {
     bankSettings: frBankSettings,
     departmentSettings: frDepartmentSettings,
     projectSettings: frProjectSettings,
+    accountingSettings: frAccountingSettings,
     ledgerAccounts: frLedgerAccounts,
     categorySettings: frCategorySettings,
     inventorySettings: frInventorySettings,
@@ -680,6 +688,7 @@ const resources: Resource = {
     bankSettings: deBankSettings,
     departmentSettings: deDepartmentSettings,
     projectSettings: deProjectSettings,
+    accountingSettings: deAccountingSettings,
     ledgerAccounts: deLedgerAccounts,
     categorySettings: deCategorySettings,
     inventorySettings: deInventorySettings,

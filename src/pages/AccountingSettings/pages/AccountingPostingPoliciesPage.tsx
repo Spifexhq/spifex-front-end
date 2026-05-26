@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -114,6 +115,13 @@ const bookLabel = (book: AccountingBook): string =>
   [book.code, book.name].filter(Boolean).join(" — ");
 
 const AccountingPostingPoliciesPage: React.FC = () => {
+  const { i18n } = useTranslation("accountingSettings");
+  const t = React.useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n]
+  );
+
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [items, setItems] = React.useState<CategoryPostingPolicy[]>([]);
@@ -161,7 +169,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       setItems(nextItems);
     } catch {
       setItems([]);
-      setSnackbar({ severity: "error", message: "Failed to load posting policies." });
+      setSnackbar({ severity: "error", message: t("postingPoliciesPage.loadError", "Failed to load posting policies.") });
     } finally {
       setLoading(false);
     }
@@ -196,7 +204,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       setLedgerAccounts(nextLedgerAccounts);
       setCategories(nextCategories);
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to load posting policy form lookups." });
+      setSnackbar({ severity: "error", message: t("postingPoliciesPage.lookupError", "Failed to load posting policy form lookups.") });
     } finally {
       setLookupsLoading(false);
     }
@@ -235,7 +243,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     event.preventDefault();
 
     if (!form.cashflow_category_id.trim() || !form.book_id) {
-      setSnackbar({ severity: "error", message: "Category and book are required." });
+      setSnackbar({ severity: "error", message: t("postingPoliciesPage.requiredError", "Category and book are required.") });
       return;
     }
 
@@ -254,12 +262,12 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         metadata: {},
       } satisfies Parameters<typeof api.upsertCategoryPostingPolicy>[0]);
 
-      setSnackbar({ severity: "success", message: "Posting policy saved." });
+      setSnackbar({ severity: "success", message: t("postingPoliciesPage.savedSuccess", "Posting policy saved.") });
       setModalOpen(false);
       setForm(EMPTY_FORM);
       await load();
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to save posting policy." });
+      setSnackbar({ severity: "error", message: t("postingPoliciesPage.saveError", "Failed to save posting policy.") });
     } finally {
       setSaving(false);
     }
@@ -272,7 +280,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       <section className="space-y-4">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Posting policies</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.sectionLabel", "Posting policies")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
@@ -292,24 +300,24 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <MetricCard
-                label="Policies"
+                label={t("postingPoliciesPage.metrics.policies", "Policies")}
                 value={items.length}
-                detail="Total configured category policies."
+                detail={t("postingPoliciesPage.metrics.policiesDetail", "Total configured category policies.")}
               />
               <MetricCard
-                label="Settlement-ready"
+                label={t("postingPoliciesPage.metrics.settlementReady", "Settlement-ready")}
                 value={items.filter((item) => item.settlement_debit_account_id && item.settlement_credit_account_id).length}
-                detail="Policies with full settlement pair mapping."
+                detail={t("postingPoliciesPage.metrics.settlementReadyDetail", "Policies with full settlement pair mapping.")}
               />
               <MetricCard
-                label="Accrual-ready"
+                label={t("postingPoliciesPage.metrics.accrualReady", "Accrual-ready")}
                 value={items.filter((item) => item.accrual_debit_account_id && item.accrual_credit_account_id).length}
-                detail="Policies with full accrual pair mapping."
+                detail={t("postingPoliciesPage.metrics.accrualReadyDetail", "Policies with full accrual pair mapping.")}
               />
               <MetricCard
-                label="With clearing"
+                label={t("postingPoliciesPage.metrics.withClearing", "With clearing")}
                 value={items.filter((item) => item.clearing_account_id).length}
-                detail="Policies already linked to a clearing account."
+                detail={t("postingPoliciesPage.metrics.withClearingDetail", "Policies already linked to a clearing account.")}
               />
             </div>
           </div>
@@ -317,14 +325,14 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Policy list</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.listTitle", "Policy list")}</div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
-                  {["Category", "Book", "Settlement", "Accrual", "Clearing", "Status", "Actions"].map((column) => (
+                  {[t("postingPoliciesPage.columns.category", "Category"), t("postingPoliciesPage.columns.book", "Book"), t("postingPoliciesPage.columns.settlement", "Settlement"), t("postingPoliciesPage.columns.accrual", "Accrual"), t("postingPoliciesPage.columns.clearing", "Clearing"), t("postingPoliciesPage.columns.status", "Status"), t("postingPoliciesPage.columns.actions", "Actions")].map((column) => (
                     <th
                       key={column}
                       className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
@@ -375,7 +383,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                 {!items.length ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      No posting policies found.
+                      {t("postingPoliciesPage.empty", "No posting policies found.")}
                     </td>
                   </tr>
                 ) : null}
@@ -401,8 +409,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       <AccountingSideModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Posting policy"
-        subtitle="Define how one operational category maps into settlement, accrual, and clearing accounts."
+        title={t("postingPoliciesPage.modal.title", "Posting policy")}
+        subtitle={t("postingPoliciesPage.modal.subtitle", "Define how one operational category maps into settlement, accrual, and clearing accounts.")}
         contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
@@ -416,7 +424,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
               <div className="grid gap-4 px-4 py-4">
                 <Select<CashflowCategory>
-                  label="Cashflow category"
+                  label={t("postingPoliciesPage.modal.cashflowCategory", "Cashflow category")}
                   items={sortedCategories}
                   selected={selectedCategory}
                   onChange={(selected: CashflowCategory[]) =>
@@ -427,13 +435,13 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                   }
                   getItemKey={(category: CashflowCategory) => category.id}
                   getItemLabel={categoryLabel}
-                  buttonLabel="Select category"
+                  buttonLabel={t("postingPoliciesPage.modal.selectCategory", "Select category")}
                   singleSelect
                   hideCheckboxes
                 />
 
                 <Select<AccountingBook>
-                  label="Book"
+                  label={t("common.book", "Book")}
                   items={books}
                   selected={selectedBook}
                   onChange={(selected: AccountingBook[]) =>
@@ -444,7 +452,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                   }
                   getItemKey={(book: AccountingBook) => book.id}
                   getItemLabel={bookLabel}
-                  buttonLabel="Select book"
+                  buttonLabel={t("postingPoliciesPage.modal.selectBook", "Select book")}
                   singleSelect
                   hideCheckboxes
                 />
@@ -453,7 +461,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Account mapping</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.modal.accountMapping", "Account mapping")}</div>
               </div>
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
@@ -488,7 +496,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save policy"}
+                {saving ? t("common.saving", "Saving...") : t("postingPoliciesPage.modal.savePolicy", "Save policy")}
               </Button>
             </div>
           </form>

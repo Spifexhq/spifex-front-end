@@ -17,6 +17,8 @@
   "details": {
     "dueDate": "Fälligkeitsdatum",
     "amount": "Betrag",
+    "cashflowCategory": "Kategorie",
+    "cashflowCategoryBtn": "Kategorie auswählen",
     "amountPlaceholder": "0,00",
     "ledgerAccount": "Hauptbuchkonto",
     "ledgerAccountBtn": "Konto auswählen",

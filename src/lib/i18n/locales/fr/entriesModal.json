@@ -17,6 +17,8 @@
   "details": {
     "dueDate": "Date d'échéance",
     "amount": "Montant",
+    "cashflowCategory": "Catégorie",
+    "cashflowCategoryBtn": "Sélectionner une catégorie",
     "amountPlaceholder": "0,00",
     "ledgerAccount": "Compte du grand livre",
     "ledgerAccountBtn": "Sélectionner un compte",

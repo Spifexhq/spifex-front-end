@@ -1,22 +1,575 @@
 {
-  "pageTitle": "Área de contabilidade",
-  "title": "Área de contabilidade",
-  "subtitle": "Gerir a estrutura contabilística do razão separadamente da vista operacional de categorização de cashflow.",
-  "buttons": {
-    "backToLedger": "Voltar ao espaço do razão",
-    "addAccount": "Adicionar conta",
+  "common": {
+    "settings": "Definições",
+    "accountingSettings": "Definições de contabilidade",
+    "pageLabel": "Definições de contabilidade",
+    "close": "Fechar",
+    "save": "Guardar",
+    "saving": "A guardar...",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Apagar",
+    "open": "Abrir",
+    "actions": "Ações",
+    "active": "Ativa",
+    "inactive": "Inativa",
+    "yes": "Sim",
+    "no": "Não",
+    "any": "Qualquer",
     "search": "Pesquisar",
-    "clear": "Limpar"
+    "currency": "Moeda",
+    "code": "Código",
+    "name": "Nome",
+    "description": "Descrição",
+    "status": "Estado",
+    "book": "Livro",
+    "books": "Livros",
+    "account": "Conta",
+    "category": "Categoria",
+    "ledgerAccount": "Conta contabilística",
+    "cashflowCategory": "Categoria de fluxo de caixa",
+    "bankAccount": "Conta bancária",
+    "selectBook": "Selecionar livro",
+    "selectAccount": "Selecionar conta",
+    "selectCategory": "Selecionar categoria",
+    "selectBank": "Selecionar banco",
+    "selectType": "Selecionar tipo",
+    "selectSection": "Selecionar secção",
+    "selectBalance": "Selecionar saldo",
+    "unassigned": "Não atribuído",
+    "notAvailable": "—",
+    "total": "Total",
+    "refreshing": "a atualizar",
+    "loading": "A carregar..."
   },
-  "sections": {
-    "structure": {
-      "title": "Estrutura contabilística",
-      "description": "Refine a hierarquia, os grupos de reporte, a visibilidade e o alinhamento com demonstrações."
+  "nav": {
+    "ariaLabel": "Navegação das definições de contabilidade",
+    "chart": "Plano",
+    "books": "Livros",
+    "bankMappings": "Mapeamentos bancários",
+    "postingPolicies": "Políticas de lançamento",
+    "journals": "Diários",
+    "correlation": "Correlação",
+    "reconciliation": "Reconciliação"
+  },
+  "shell": {
+    "title": "Definições de contabilidade",
+    "description": "Configure a estrutura contabilística, regras de lançamento, controlo bancário, diários e prontidão contabilística sem misturar esses controlos no fluxo operacional de caixa."
+  },
+  "modal": {
+    "sectionLabel": "Definições de contabilidade",
+    "close": "Fechar"
+  },
+  "options": {
+    "statementSections": {
+      "asset": "Ativo",
+      "liability": "Passivo",
+      "equity": "Capital próprio",
+      "income": "Rendimento",
+      "expense": "Despesa",
+      "off_balance": "Extrapatrimonial",
+      "statistical": "Estatístico"
     },
-    "views": {
-      "title": "Vistas",
-      "cashflow": "Vista de cashflow",
-      "accounting": "Vista contabilística"
+    "normalBalance": {
+      "debit": "Débito",
+      "credit": "Crédito"
+    },
+    "accountType": {
+      "header": "Cabeçalho",
+      "posting": "Lançamento"
+    },
+    "bookBasis": {
+      "management": "Gestão",
+      "cash": "Caixa",
+      "accrual": "Acréscimo",
+      "tax": "Fiscal"
+    },
+    "sourceType": {
+      "manual": "Manual",
+      "cash_entry": "Lançamento de caixa",
+      "cash_settlement": "Liquidação de caixa",
+      "cash_transfer": "Transferência de caixa",
+      "system": "Sistema"
+    }
+  },
+  "workspace": {
+    "loadError": "Não foi possível carregar as contas contabilísticas.",
+    "requiredCode": "O código é obrigatório.",
+    "requiredName": "O nome é obrigatório.",
+    "invalidJson": "Os metadados devem ser JSON válido.",
+    "updatedSuccess": "Conta atualizada com sucesso.",
+    "createdSuccess": "Conta criada com sucesso.",
+    "saveError": "Não foi possível guardar a conta.",
+    "deletedSuccess": "Conta apagada com sucesso.",
+    "deleteError": "Não foi possível apagar a conta.",
+    "detailedTree": "Árvore detalhada",
+    "compactTree": "Árvore compacta",
+    "filters": {
+      "section": "Secção",
+      "allSections": "Todas as secções",
+      "accountType": "Tipo de conta",
+      "allTypes": "Todos os tipos",
+      "bankControl": "Controlo bancário",
+      "manualPosting": "Lançamento manual",
+      "active": "Ativa",
+      "activeOnly": "Apenas ativas"
+    },
+    "emptySelectionTitle": "Nenhuma conta selecionada",
+    "emptySelectionDescription": "Selecione uma conta na árvore para inspecioná-la.",
+    "fields": {
+      "path": "Caminho",
+      "group": "Grupo",
+      "subgroup": "Subgrupo",
+      "externalRef": "Referência externa",
+      "manualAllowed": "Manual permitido",
+      "reportGroup": "Grupo de relatório",
+      "reportSubgroup": "Subgrupo de relatório",
+      "externalReference": "Referência externa",
+      "metadata": "Metadados"
+    },
+    "badges": {
+      "system": "Sistema",
+      "bankControl": "controlo bancário",
+      "regularAccount": "conta regular",
+      "manualAllowed": "manual permitido",
+      "manualBlocked": "manual bloqueado"
+    },
+    "summary": {
+      "manualAllowed": {
+        "label": "Manual permitido",
+        "description": "Contas ainda abertas para lançamentos manuais diretos.",
+        "modalTitle": "Lançamento manual permitido",
+        "modalSubtitle": "Contas atualmente abertas para lançamento manual nos filtros ativos.",
+        "empty": "Nenhuma conta permite lançamento manual na vista atual."
+      },
+      "bankControl": {
+        "label": "Controlo bancário",
+        "description": "Contas dedicadas à liquidação e ao controlo bancário.",
+        "modalTitle": "Contas de controlo bancário",
+        "modalSubtitle": "Contas marcadas para controlo bancário nos filtros ativos.",
+        "empty": "Nenhuma conta de controlo bancário encontrada na vista atual."
+      },
+      "active": {
+        "label": "Ativas",
+        "description": "Contas atualmente disponíveis no plano.",
+        "modalTitle": "Contas ativas",
+        "modalSubtitle": "Contas atualmente ativas nos filtros ativos.",
+        "empty": "Nenhuma conta ativa encontrada na vista atual."
+      },
+      "mapped": {
+        "label": "Contas mapeadas",
+        "description": "Contas com grupo ou subgrupo de relatório atribuído.",
+        "modalTitle": "Contas mapeadas para reporting",
+        "modalSubtitle": "Contas com grupo ou subgrupo de relatório atribuído nos filtros ativos.",
+        "empty": "Nenhuma conta mapeada para reporting encontrada na vista atual."
+      },
+      "unassignedReporting": {
+        "label": "Não atribuído",
+        "title": "Contas de reporting não atribuídas",
+        "subtitle": "Contas sem grupo de relatório na vista filtrada atual.",
+        "empty": "Nenhuma conta encontrada para este grupo de reporting.",
+        "groupTitle": "{{group}}"
+      }
+    },
+    "form": {
+      "newAccount": "Nova conta",
+      "editAccount": "Editar conta",
+      "subtitle": "Mantenha a estrutura, regras de lançamento e classificação de reporting num modal lateral dedicado.",
+      "accountType": "Tipo de conta",
+      "statementSection": "Secção da demonstração",
+      "normalBalance": "Saldo normal",
+      "parentAccount": "Conta-mãe",
+      "optionalParent": "Conta-mãe opcional",
+      "isActive": "Ativa",
+      "isBankControl": "Controlo bancário",
+      "allowsManualPosting": "Permite lançamento manual",
+      "createAccount": "Criar conta",
+      "saveChanges": "Guardar alterações"
+    },
+    "accountsList": {
+      "title": "Contas"
+    }
+  },
+  "booksPage": {
+    "loadError": "Falha ao carregar os livros contabilísticos.",
+    "requiredError": "Código, nome e moeda são obrigatórios.",
+    "updatedSuccess": "Livro contabilístico atualizado.",
+    "createdSuccess": "Livro contabilístico criado.",
+    "saveError": "Falha ao guardar o livro contabilístico.",
+    "sectionLabel": "Livros contabilísticos",
+    "title": "Livros contabilísticos",
+    "description": "Crie e mantenha livros contabilísticos usados como escopos de lançamento para diários, mapeamentos bancários e políticas de categoria.",
+    "newButton": "Novo livro",
+    "metrics": {
+      "books": "Livros",
+      "booksDetail": "Total de livros atualmente configurados.",
+      "primary": "Principal",
+      "primaryDetail": "Livros marcados como base contabilística principal.",
+      "active": "Ativos",
+      "activeDetail": "Livros disponíveis para fluxos operacionais de lançamento."
+    },
+    "columns": {
+      "code": "Código",
+      "name": "Nome",
+      "basis": "Base",
+      "currency": "Moeda",
+      "primary": "Principal",
+      "active": "Ativo",
+      "actions": "Ações"
+    },
+    "modal": {
+      "editTitle": "Editar livro contabilístico",
+      "newTitle": "Novo livro contabilístico",
+      "subtitle": "Crie ou atualize a base contabilística e a moeda de lançamento.",
+      "basis": "Base",
+      "selectBasis": "Selecionar base",
+      "isPrimary": "Principal",
+      "isActive": "Ativo",
+      "saveChanges": "Guardar alterações",
+      "createBook": "Criar livro"
+    }
+  },
+  "bankMappingsPage": {
+    "loadError": "Falha ao carregar os mapeamentos bancários.",
+    "lookupError": "Falha ao carregar as opções do formulário de mapeamento.",
+    "requiredError": "Banco, livro e conta contabilística são obrigatórios.",
+    "savedSuccess": "Mapeamento bancário guardado.",
+    "saveError": "Falha ao guardar o mapeamento bancário.",
+    "sectionLabel": "Mapeamentos bancários",
+    "title": "Mapeamentos bancários",
+    "description": "Associe contas bancárias operacionais a livros contabilísticos e contas de controlo bancário para lançamentos e reconciliação confiáveis.",
+    "newButton": "Novo mapeamento",
+    "metrics": {
+      "activeMappings": "Mapeamentos ativos",
+      "activeMappingsDetail": "Mapeamentos disponíveis para operações de lançamento.",
+      "booksCovered": "Livros cobertos",
+      "booksCoveredDetail": "Livros contabilísticos já associados a bancos.",
+      "uniqueBanks": "Bancos únicos",
+      "uniqueBanksDetail": "Contas bancárias operacionais com cobertura de mapeamento."
+    },
+    "columns": {
+      "bankAccount": "Conta bancária",
+      "book": "Livro",
+      "ledgerAccount": "Conta contabilística",
+      "active": "Ativo",
+      "actions": "Ações"
+    },
+    "modal": {
+      "title": "Mapeamento bancário",
+      "subtitle": "Escolha a conta bancária operacional, o livro contabilístico e a conta contabilística de controlo bancário.",
+      "selectBank": "Selecionar banco",
+      "selectBook": "Selecionar livro",
+      "selectLedgerAccount": "Selecionar conta contabilística",
+      "saveMapping": "Guardar mapeamento"
+    }
+  },
+  "postingPoliciesPage": {
+    "loadError": "Falha ao carregar as políticas de lançamento.",
+    "lookupError": "Falha ao carregar as opções do formulário de política de lançamento.",
+    "requiredError": "Categoria e livro são obrigatórios.",
+    "savedSuccess": "Política de lançamento guardada.",
+    "saveError": "Falha ao guardar a política de lançamento.",
+    "sectionLabel": "Políticas de lançamento",
+    "title": "Políticas de lançamento",
+    "description": "Defina como categorias operacionais de fluxo de caixa são traduzidas em contas contabilísticas para liquidação, acréscimo e clearing.",
+    "newButton": "Nova política",
+    "metrics": {
+      "policies": "Políticas",
+      "policiesDetail": "Total de políticas de categoria configuradas.",
+      "settlementReady": "Prontas para liquidação",
+      "settlementReadyDetail": "Políticas com par completo de contas de liquidação.",
+      "accrualReady": "Prontas para acréscimo",
+      "accrualReadyDetail": "Políticas com par completo de contas de acréscimo.",
+      "withClearing": "Com clearing",
+      "withClearingDetail": "Políticas já ligadas a uma conta de clearing."
+    },
+    "columns": {
+      "category": "Categoria",
+      "book": "Livro",
+      "settlement": "Liquidação",
+      "accrual": "Acréscimo",
+      "clearing": "Clearing",
+      "status": "Estado",
+      "actions": "Ações"
+    },
+    "accountFields": {
+      "settlementDebit": "Débito de liquidação",
+      "settlementCredit": "Crédito de liquidação",
+      "accrualDebit": "Débito de acréscimo",
+      "accrualCredit": "Crédito de acréscimo",
+      "clearing": "Clearing"
+    },
+    "modal": {
+      "title": "Política de lançamento",
+      "subtitle": "Defina como uma categoria operacional é mapeada para contas de liquidação, acréscimo e clearing.",
+      "cashflowCategory": "Categoria de fluxo de caixa",
+      "selectCategory": "Selecionar categoria",
+      "selectBook": "Selecionar livro",
+      "savePolicy": "Guardar política"
+    }
+  },
+  "journalsPage": {
+    "loadError": "Falha ao carregar os diários.",
+    "lookupError": "Falha ao carregar as opções do formulário de diário manual.",
+    "requiredError": "Livro, datas e pelo menos uma linha de diário são obrigatórios.",
+    "createdSuccess": "Diário manual criado.",
+    "createError": "Falha ao criar diário manual.",
+    "reverseReason": "Reversão solicitada a partir da página de diários",
+    "reversedSuccess": "Diário revertido.",
+    "reverseError": "Falha ao reverter o diário.",
+    "sectionLabel": "Diários",
+    "title": "Diários",
+    "description": "Revise lançamentos contabilísticos, crie diários manuais controlados e reverta lançamentos publicados quando necessário.",
+    "searchPlaceholder": "Pesquisar",
+    "newButton": "Diário manual",
+    "metrics": {
+      "entries": "Entradas",
+      "entriesDetail": "Diários visíveis no recorte de pesquisa atual.",
+      "reversed": "Revertidos",
+      "reversedDetail": "Entradas já revertidas.",
+      "lines": "Linhas",
+      "linesDetail": "Total de linhas de diário nas entradas visíveis."
+    },
+    "columns": {
+      "entry": "Entrada",
+      "book": "Livro",
+      "source": "Origem",
+      "postingDate": "Data de lançamento",
+      "status": "Estado",
+      "lines": "Linhas",
+      "actions": "Ações"
+    },
+    "actions": {
+      "reverse": "Reverter",
+      "reversing": "A reverter..."
+    },
+    "modal": {
+      "title": "Diário manual",
+      "subtitle": "Crie uma entrada contabilística controlada com linhas de débito e crédito equilibradas.",
+      "selectBook": "Selecionar livro",
+      "currency": "Moeda",
+      "documentDate": "Data do documento",
+      "postingDate": "Data de lançamento",
+      "memo": "Memo",
+      "addLine": "Adicionar linha",
+      "removeLine": "Remover",
+      "account": "Conta",
+      "selectAccount": "Selecionar conta",
+      "debit": "Débito",
+      "credit": "Crédito",
+      "lineMemo": "Memo da linha",
+      "balanced": "Equilibrado",
+      "unbalanced": "Desequilibrado",
+      "createJournal": "Criar diário"
+    }
+  },
+  "reconciliationPage": {
+    "sectionLabel": "Reconciliação",
+    "title": "Painel de prontidão contabilística",
+    "description": "Esta área deve atuar como ponte entre a camada operacional de fluxo de caixa e a camada contabilística, mostrando o que bloqueia lançamentos, o que está pronto e o que precisa de revisão.",
+    "queue": "Fila",
+    "backendProposal": "Proposta de backend",
+    "backendProposalText": "Endpoint sugerido: GET cashflow/accounting-readiness/, retornando filas agrupadas por estado de prontidão para que esta página evolua de orientação estática para um painel operacional real.",
+    "cards": {
+      "missingCategoryPolicy": {
+        "title": "Política de categoria ausente",
+        "description": "As entradas operacionais estão categorizadas, mas a categoria ainda não é traduzida em contas contabilísticas.",
+        "cta": "Abrir políticas de lançamento"
+      },
+      "missingBankMapping": {
+        "title": "Mapeamento bancário ausente",
+        "description": "Movimentos bancários não podem ser lançados porque a conta bancária operacional não está ligada a uma conta contabilística de controlo bancário.",
+        "cta": "Abrir mapeamentos bancários"
+      },
+      "readyToPost": {
+        "title": "Pronto para lançar",
+        "description": "As entradas já têm categoria, política, mapeamento bancário e contexto contabilístico resolvidos para revisão de lançamento.",
+        "cta": "Rever diários"
+      },
+      "postedWithException": {
+        "title": "Lançado com exceção",
+        "description": "Entradas lançadas com sucesso, mas que ainda precisam de revisão manual, reversão ou acompanhamento de reconciliação mais profundo.",
+        "cta": "Abrir diários"
+      }
+    }
+  },
+  "correlationsPage": {
+    "loadError": "Falha ao carregar os dados de correlação contabilística.",
+    "exportSuccess": "Diagrama exportado.",
+    "selectionRequired": "Selecione uma linha para adicioná-la ao diagrama.",
+    "title": "Mapa de correlação contabilística",
+    "description": "Explore como as páginas de definições contabilísticas, APIs, entidades e datasets operacionais se conectam.",
+    "controls": {
+      "search": "Pesquisar",
+      "filter": "Filtro",
+      "all": "Todos",
+      "architectureOnly": "Apenas arquitetura",
+      "selectedDataOnly": "Apenas dados selecionados",
+      "zoomIn": "Aproximar",
+      "zoomOut": "Afastar",
+      "fit": "Ajustar",
+      "reset": "Repor",
+      "export": "Exportar",
+      "maximize": "Maximizar",
+      "minimize": "Minimizar",
+      "move": "Mover"
+    },
+    "datasets": {
+      "books": {
+        "label": "Livros",
+        "description": "Livros contabilísticos e escopos de execução."
+      },
+      "accounts": {
+        "label": "Plano de contas",
+        "description": "Hierarquia contabilística e contas de lançamento."
+      },
+      "banks": {
+        "label": "Bancos",
+        "description": "Contas bancárias operacionais."
+      },
+      "categories": {
+        "label": "Categorias",
+        "description": "Categorias operacionais de fluxo de caixa."
+      },
+      "bankMappings": {
+        "label": "Mapeamentos bancários",
+        "description": "Ponte entre banco, livro e conta contabilística."
+      },
+      "policies": {
+        "label": "Políticas de lançamento",
+        "description": "Ponte entre categoria, livro e contas contabilísticas."
+      },
+      "journals": {
+        "label": "Diários",
+        "description": "Execução contabilística com linhas e estados."
+      }
+    },
+    "groups": {
+      "page": "Página",
+      "api": "API",
+      "entity": "Entidade",
+      "status": "Prontidão",
+      "data": "Linha de dados"
+    },
+    "edges": {
+      "depends": "Depende",
+      "feeds": "Alimenta",
+      "controls": "Controla",
+      "relates": "Relaciona",
+      "listCrud": "listar + CRUD",
+      "lookup": "consulta",
+      "bankControlLookup": "consulta de controlo bancário",
+      "bankLookup": "consulta bancária",
+      "bookLookup": "consulta de livro",
+      "accountLookup": "consulta de conta",
+      "categoryScope": "escopo de categoria",
+      "lineAccountLookup": "consulta de conta da linha",
+      "results": "resultados",
+      "treeInspector": "árvore + inspetor",
+      "bankControlAccount": "conta de controlo bancário",
+      "settlementAccrualClearing": "liquidação/acréscimo/clearing",
+      "journalLines": "linhas de diário",
+      "registry": "registo",
+      "mappingScope": "escopo de mapeamento",
+      "policyScope": "escopo de política",
+      "journalHeader": "cabeçalho do diário",
+      "operationalBank": "banco operacional",
+      "categoryBridge": "ponte de categoria",
+      "reviewExceptions": "revisão / exceções",
+      "policyReadiness": "prontidão de política",
+      "bankReadiness": "prontidão bancária"
+    },
+    "nodes": {
+      "workspace": {
+        "label": "AccountingWorkspace",
+        "short": "Plano de contas",
+        "description": "Área de hierarquia para contas contabilísticas."
+      },
+      "booksPage": {
+        "label": "AccountingBooksPage",
+        "short": "Livros",
+        "description": "Registo de livros contabilísticos."
+      },
+      "bankMappingsPage": {
+        "label": "AccountingBankMappingsPage",
+        "short": "Mapeamentos bancários",
+        "description": "Ponte entre contas bancárias, livros e contas contabilísticas de controlo bancário."
+      },
+      "postingPoliciesPage": {
+        "label": "AccountingPostingPoliciesPage",
+        "short": "Políticas de lançamento",
+        "description": "Ponte entre categorias de fluxo de caixa, livros e contas contabilísticas."
+      },
+      "journalsPage": {
+        "label": "AccountingJournalsPage",
+        "short": "Diários",
+        "description": "Página de criação, revisão e reversão de diários."
+      },
+      "reconciliation": {
+        "label": "AccountingReconciliationPage",
+        "short": "Reconciliação",
+        "description": "Painel de prontidão alimentado pela completude a montante."
+      },
+      "ledgerApi": {
+        "label": "Ledger Accounts API",
+        "short": "API do plano",
+        "description": "Origem de listagem e CRUD do plano de contas."
+      },
+      "booksApi": {
+        "label": "Accounting Books API",
+        "short": "API de livros",
+        "description": "Origem de listagem e CRUD de livros."
+      },
+      "banksApi": {
+        "label": "Bank Accounts API",
+        "short": "API de bancos",
+        "description": "Origem de consulta de contas bancárias operacionais."
+      },
+      "categoriesApi": {
+        "label": "Cashflow Categories API",
+        "short": "API de categorias",
+        "description": "Origem de consulta de categorias operacionais."
+      },
+      "journalsApi": {
+        "label": "Journals API",
+        "short": "API de diários",
+        "description": "Origem de listagem / criação / reversão de diários."
+      },
+      "ledgerEntity": {
+        "label": "LedgerAccount",
+        "short": "Conta contabilística",
+        "description": "Estrutura principal do plano de contas."
+      },
+      "bookEntity": {
+        "label": "AccountingBook",
+        "short": "Livro contabilístico",
+        "description": "Escopo de execução contabilística."
+      },
+      "bankEntity": {
+        "label": "BankAccount",
+        "short": "Conta bancária",
+        "description": "Conta bancária operacional."
+      },
+      "categoryEntity": {
+        "label": "CashflowCategory",
+        "short": "Categoria de fluxo de caixa",
+        "description": "Categoria operacional usada no mapeamento de políticas."
+      },
+      "journalEntity": {
+        "label": "JournalEntry",
+        "short": "Entrada de diário",
+        "description": "Saída da execução contabilística."
+      }
+    },
+    "rows": {
+      "bankMapping": "Mapeamento bancário {{number}}",
+      "postingPolicy": "Política de lançamento {{number}}",
+      "bank": "Banco",
+      "book": "Livro",
+      "ledgerAccount": "Conta contabilística",
+      "category": "Categoria",
+      "noHint": "sem sugestão",
+      "lines": "{{count}} linhas"
     }
   }
 }

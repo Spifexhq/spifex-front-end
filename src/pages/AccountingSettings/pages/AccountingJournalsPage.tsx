@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -105,6 +106,13 @@ const EMPTY_FORM: ManualJournalForm = {
 };
 
 const AccountingJournalsPage: React.FC = () => {
+  const { i18n } = useTranslation("accountingSettings");
+  const t = React.useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n]
+  );
+
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [reversingId, setReversingId] = React.useState<string | null>(null);
@@ -147,7 +155,7 @@ const AccountingJournalsPage: React.FC = () => {
       setItems(nextItems);
     } catch {
       setItems([]);
-      setSnackbar({ severity: "error", message: "Failed to load journals." });
+      setSnackbar({ severity: "error", message: t("journalsPage.loadError", "Failed to load journals.") });
     } finally {
       setLoading(false);
     }
@@ -177,7 +185,7 @@ const AccountingJournalsPage: React.FC = () => {
       );
       setLedgerAccounts(allAccounts);
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to load manual journal form lookups." });
+      setSnackbar({ severity: "error", message: t("journalsPage.lookupError", "Failed to load manual journal form lookups.") });
     } finally {
       setLookupsLoading(false);
     }
@@ -196,7 +204,7 @@ const AccountingJournalsPage: React.FC = () => {
 
     const validLines = form.lines.filter((line) => line.account_id && (line.debit || line.credit));
     if (!form.book_id || !form.document_date || !form.posting_date || !validLines.length) {
-      setSnackbar({ severity: "error", message: "Book, dates, and at least one journal line are required." });
+      setSnackbar({ severity: "error", message: t("journalsPage.requiredError", "Book, dates, and at least one journal line are required.") });
       return;
     }
 
@@ -220,12 +228,12 @@ const AccountingJournalsPage: React.FC = () => {
       };
 
       await api.createJournalEntry(payload);
-      setSnackbar({ severity: "success", message: "Manual journal created." });
+      setSnackbar({ severity: "success", message: t("journalsPage.createdSuccess", "Manual journal created.") });
       setModalOpen(false);
       setForm(EMPTY_FORM);
       await load();
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to create manual journal." });
+      setSnackbar({ severity: "error", message: t("journalsPage.createError", "Failed to create manual journal.") });
     } finally {
       setSaving(false);
     }
@@ -234,11 +242,11 @@ const AccountingJournalsPage: React.FC = () => {
   const reverseJournal = async (journalId: string) => {
     try {
       setReversingId(journalId);
-      await api.reverseJournalEntry(journalId, { memo: "Reversal requested from journals page" });
-      setSnackbar({ severity: "success", message: "Journal reversed." });
+      await api.reverseJournalEntry(journalId, { memo: t("journalsPage.reverseReason", "Reversal requested from journals page") });
+      setSnackbar({ severity: "success", message: t("journalsPage.reversedSuccess", "Journal reversed.") });
       await load();
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to reverse journal." });
+      setSnackbar({ severity: "error", message: t("journalsPage.reverseError", "Failed to reverse journal.") });
     } finally {
       setReversingId(null);
     }
@@ -251,7 +259,7 @@ const AccountingJournalsPage: React.FC = () => {
       <section className="space-y-4">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Journals</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("journalsPage.sectionLabel", "Journals")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
@@ -268,7 +276,7 @@ const AccountingJournalsPage: React.FC = () => {
                 <div className="min-w-[240px]">
                   <Input
                     kind="text"
-                    label="Search"
+                    label={t("common.search", "Search")}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                   />
@@ -284,19 +292,19 @@ const AccountingJournalsPage: React.FC = () => {
 
             <div className="grid gap-3 md:grid-cols-3">
               <MetricCard
-                label="Entries"
+                label={t("journalsPage.metrics.entries", "Entries")}
                 value={items.length}
-                detail="Journals visible in the current search slice."
+                detail={t("journalsPage.metrics.entriesDetail", "Journals visible in the current search slice.")}
               />
               <MetricCard
-                label="Reversed"
+                label={t("journalsPage.metrics.reversed", "Reversed")}
                 value={items.filter((item) => item.status === "reversed").length}
-                detail="Entries already reversed."
+                detail={t("journalsPage.metrics.reversedDetail", "Entries already reversed.")}
               />
               <MetricCard
-                label="Lines"
+                label={t("journalsPage.metrics.lines", "Lines")}
                 value={items.reduce((sum, item) => sum + (Array.isArray(item.lines) ? item.lines.length : 0), 0)}
-                detail="Total journal lines across visible entries."
+                detail={t("journalsPage.metrics.linesDetail", "Total journal lines across visible entries.")}
               />
             </div>
           </div>
@@ -311,7 +319,7 @@ const AccountingJournalsPage: React.FC = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
-                  {["Entry", "Book", "Source", "Posting date", "Status", "Lines", "Actions"].map((column) => (
+                  {[t("journalsPage.columns.entry", "Entry"), t("journalsPage.columns.book", "Book"), t("journalsPage.columns.source", "Source"), t("journalsPage.columns.postingDate", "Posting date"), t("journalsPage.columns.status", "Status"), t("journalsPage.columns.lines", "Lines"), t("journalsPage.columns.actions", "Actions")].map((column) => (
                     <th
                       key={column}
                       className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
@@ -343,7 +351,7 @@ const AccountingJournalsPage: React.FC = () => {
                         disabled={reversingId === item.id}
                         onClick={() => void reverseJournal(item.id)}
                       >
-                        {reversingId === item.id ? "Reversing..." : "Reverse"}
+                        {reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}
                       </Button>
                     </td>
                   </tr>
@@ -378,8 +386,8 @@ const AccountingJournalsPage: React.FC = () => {
       <AccountingSideModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Manual journal"
-        subtitle="Create a controlled accounting entry with balanced debit and credit lines."
+        title={t("journalsPage.modal.title", "Manual journal")}
+        subtitle={t("journalsPage.modal.subtitle", "Create a controlled accounting entry with balanced debit and credit lines.")}
         contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
@@ -393,7 +401,7 @@ const AccountingJournalsPage: React.FC = () => {
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
                 <Select<AccountingBook>
-                  label="Book"
+                  label={t("common.book", "Book")}
                   items={books}
                   selected={selectedBook}
                   onChange={(selected: AccountingBook[]) =>
@@ -406,14 +414,14 @@ const AccountingJournalsPage: React.FC = () => {
                   getItemLabel={(book: AccountingBook) =>
                     [book.code, book.name].filter(Boolean).join(" — ")
                   }
-                  buttonLabel="Select book"
+                  buttonLabel={t("journalsPage.modal.selectBook", "Select book")}
                   singleSelect
                   hideCheckboxes
                 />
 
                 <Input
                   kind="text"
-                  label="Currency"
+                  label={t("common.currency", "Currency")}
                   value={form.currency_code}
                   onChange={(event) =>
                     setForm((prev) => ({
@@ -425,7 +433,7 @@ const AccountingJournalsPage: React.FC = () => {
 
                 <Input
                   kind="date"
-                  label="Document date"
+                  label={t("journalsPage.modal.documentDate", "Document date")}
                   value={form.document_date}
                   onValueChange={(value: string) =>
                     setForm((prev) => ({ ...prev, document_date: value }))
@@ -434,7 +442,7 @@ const AccountingJournalsPage: React.FC = () => {
 
                 <Input
                   kind="date"
-                  label="Posting date"
+                  label={t("journalsPage.modal.postingDate", "Posting date")}
                   value={form.posting_date}
                   onValueChange={(value: string) =>
                     setForm((prev) => ({ ...prev, posting_date: value }))
@@ -444,7 +452,7 @@ const AccountingJournalsPage: React.FC = () => {
                 <div className="md:col-span-2">
                   <Input
                     kind="text"
-                    label="Memo"
+                    label={t("journalsPage.modal.memo", "Memo")}
                     value={form.memo}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, memo: event.target.value }))
@@ -482,7 +490,7 @@ const AccountingJournalsPage: React.FC = () => {
                     <article key={index} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <div className="grid gap-4 md:grid-cols-[1.8fr_1fr_1fr]">
                         <Select<LedgerAccount>
-                          label="Account"
+                          label={t("journalsPage.modal.account", "Account")}
                           items={ledgerAccounts}
                           selected={selectedLineAccount}
                           onChange={(selected: LedgerAccount[]) =>
@@ -499,14 +507,14 @@ const AccountingJournalsPage: React.FC = () => {
                           getItemLabel={(account: LedgerAccount) =>
                             [account.code, account.name].filter(Boolean).join(" — ")
                           }
-                          buttonLabel="Select account"
+                          buttonLabel={t("journalsPage.modal.selectAccount", "Select account")}
                           singleSelect
                           hideCheckboxes
                         />
 
                         <Input
                           kind="amount"
-                          label="Debit"
+                          label={t("journalsPage.modal.debit", "Debit")}
                           value={line.debit}
                           onValueChange={(value: string) =>
                             setForm((prev) => ({
@@ -521,7 +529,7 @@ const AccountingJournalsPage: React.FC = () => {
 
                         <Input
                           kind="amount"
-                          label="Credit"
+                          label={t("journalsPage.modal.credit", "Credit")}
                           value={line.credit}
                           onValueChange={(value: string) =>
                             setForm((prev) => ({
@@ -539,7 +547,7 @@ const AccountingJournalsPage: React.FC = () => {
                         <div className="min-w-0 flex-1">
                           <Input
                             kind="text"
-                            label="Line memo"
+                            label={t("journalsPage.modal.lineMemo", "Line memo")}
                             value={line.memo}
                             onChange={(event) =>
                               setForm((prev) => ({
@@ -587,7 +595,7 @@ const AccountingJournalsPage: React.FC = () => {
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">Balance</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">
-                    {balanced ? "Balanced" : "Unbalanced"}
+                    {balanced ? t("journalsPage.modal.balanced", "Balanced") : t("journalsPage.modal.unbalanced", "Unbalanced")}
                   </div>
                 </div>
               </div>
@@ -598,7 +606,7 @@ const AccountingJournalsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Create journal"}
+                {saving ? t("common.saving", "Saving...") : t("journalsPage.modal.createJournal", "Create journal")}
               </Button>
             </div>
           </form>

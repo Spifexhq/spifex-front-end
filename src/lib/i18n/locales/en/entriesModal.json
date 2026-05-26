@@ -17,6 +17,8 @@
   "details": {
     "dueDate": "Due date",
     "amount": "Amount",
+    "cashflowCategory": "Category",
+    "cashflowCategoryBtn": "Choose category",
     "amountPlaceholder": "0.00",
     "ledgerAccount": "G/L account",
     "ledgerAccountBtn": "Select account",

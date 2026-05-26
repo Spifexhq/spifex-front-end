@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
@@ -25,6 +26,8 @@ const DEFAULT_PROFILE: OrgLedgerProfileResponse = {
 };
 
 const AccountingSettings: React.FC = () => {
+  const { t } = useTranslation("accountingSettings");
+
   const [loading, setLoading] = React.useState(true);
   const [profile, setProfile] = React.useState<OrgLedgerProfileResponse>(DEFAULT_PROFILE);
 
@@ -64,7 +67,7 @@ const AccountingSettings: React.FC = () => {
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">
-              Settings
+              {t("common.settings", { defaultValue: "Settings" })}
             </div>
           </div>
 
@@ -72,12 +75,16 @@ const AccountingSettings: React.FC = () => {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
                 <h1 className="text-[16px] font-semibold text-gray-900">
-                  Accounting settings
+                  {t("shell.title", { defaultValue: "Accounting settings" })}
                 </h1>
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  Configure ledger structure, posting rules, bank control, journals,
-                  and accounting readiness without mixing those controls into the
-                  operational cashflow workflow.
+                  {t(
+                    "shell.description",
+                    {
+                      defaultValue:
+                        "Configure ledger structure, posting rules, bank control, journals, and accounting readiness without mixing those controls into the operational cashflow workflow.",
+                    }
+                  )}
                 </p>
               </div>
             </div>

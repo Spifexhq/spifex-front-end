@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
@@ -352,6 +353,13 @@ function AccountListRow({
 }
 
 const AccountingWorkspace: React.FC<Props> = () => {
+  const { i18n } = useTranslation("accountingSettings");
+  const t = React.useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n]
+  );
+
   const { isOwner, permissions } = useAuthContext();
   const canView = isOwner || permissions.includes("view_ledger_account");
   const canManage = isOwner || permissions.includes("add_ledger_account");
@@ -424,7 +432,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
       setAccounts(nextItems);
     } catch (error) {
       setSnackbar({
-        message: (error as Error)?.message || "Unable to load ledger accounts.",
+        message: (error as Error)?.message || t("workspace.loadError", "Unable to load ledger accounts."),
         severity: "error",
       });
       setAccounts([]);
@@ -521,7 +529,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
   const reportingGroups = useMemo(() => {
     const grouped = accounts.reduce<Record<string, number>>((acc, item) => {
-      const key = item.report_group || "Unassigned";
+      const key = item.report_group || t("common.unassigned", "Unassigned");
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
@@ -662,12 +670,12 @@ const AccountingWorkspace: React.FC<Props> = () => {
     setModalError(null);
 
     if (!form.code.trim()) {
-      setModalError("Code is required.");
+      setModalError(t("workspace.requiredCode", "Code is required."));
       return;
     }
 
     if (!form.name.trim()) {
-      setModalError("Name is required.");
+      setModalError(t("workspace.requiredName", "Name is required."));
       return;
     }
 
@@ -675,7 +683,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
     try {
       parsedMetadata = metadataText.trim() ? JSON.parse(metadataText) : {};
     } catch {
-      setModalError("Metadata must be valid JSON.");
+      setModalError(t("workspace.invalidJson", "Metadata must be valid JSON."));
       return;
     }
 
@@ -699,17 +707,17 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
       if (modalState.type === "edit" && modalState.editing?.id) {
         await api.editLedgerAccount(modalState.editing.id, payload);
-        setSnackbar({ message: "Account updated successfully.", severity: "success" });
+        setSnackbar({ message: t("workspace.updatedSuccess", "Account updated successfully."), severity: "success" });
       } else {
         await api.addLedgerAccount(payload);
-        setSnackbar({ message: "Account created successfully.", severity: "success" });
+        setSnackbar({ message: t("workspace.createdSuccess", "Account created successfully."), severity: "success" });
       }
 
       closeModal();
       refreshAccounts();
     } catch (error) {
       setSnackbar({
-        message: (error as Error)?.message || "Unable to save the account.",
+        message: (error as Error)?.message || t("workspace.saveError", "Unable to save the account."),
         severity: "error",
       });
     } finally {
@@ -723,11 +731,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
     try {
       await api.deleteLedgerAccount(account.id);
-      setSnackbar({ message: "Account deleted successfully.", severity: "success" });
+      setSnackbar({ message: t("workspace.deletedSuccess", "Account deleted successfully."), severity: "success" });
       refreshAccounts();
     } catch (error) {
       setSnackbar({
-        message: (error as Error)?.message || "Unable to delete the account.",
+        message: (error as Error)?.message || t("workspace.deleteError", "Unable to delete the account."),
         severity: "error",
       });
     }
@@ -768,7 +776,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                       setTreeMode((prev) => (prev === "compact" ? "detailed" : "compact"))
                     }
                   >
-                    {treeMode === "compact" ? "Detailed tree" : "Compact tree"}
+                    {treeMode === "compact" ? t("workspace.detailedTree", "Detailed tree") : t("workspace.compactTree", "Compact tree")}
                   </Button>
                   <Button type="button" onClick={openCreateModal}>
                     New account
@@ -788,13 +796,13 @@ const AccountingWorkspace: React.FC<Props> = () => {
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
               <Input
                 kind="text"
-                label="Search"
+                label={t("common.search", "Search")}
                 value={draftSearch}
                 onChange={(event) => setDraftSearch(event.target.value)}
               />
 
               <Select<Option<LedgerStatementSection>>
-                label="Section"
+                label={t("workspace.filters.section", "Section")}
                 items={sectionOptions}
                 selected={sectionOptions.filter((item) => item.value === draftSection)}
                 onChange={(items: Option<LedgerStatementSection>[]) =>
@@ -804,11 +812,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 getItemLabel={optionLabel}
                 singleSelect
                 hideCheckboxes
-                buttonLabel="All sections"
+                buttonLabel={t("workspace.filters.allSections", "All sections")}
               />
 
               <Select<Option<LedgerAccountType>>
-                label="Account type"
+                label={t("workspace.form.accountType", "Account type")}
                 items={accountTypeOptions}
                 selected={accountTypeOptions.filter((item) => item.value === draftAccountType)}
                 onChange={(items: Option<LedgerAccountType>[]) =>
@@ -818,11 +826,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 getItemLabel={optionLabel}
                 singleSelect
                 hideCheckboxes
-                buttonLabel="All types"
+                buttonLabel={t("workspace.filters.allTypes", "All types")}
               />
 
               <Select<Option<"true" | "false">>
-                label="Bank control"
+                label={t("workspace.summary.bankControl.label", "Bank control")}
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftBankControl)}
                 onChange={(items: Option<"true" | "false">[]) =>
@@ -832,11 +840,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 getItemLabel={optionLabel}
                 singleSelect
                 hideCheckboxes
-                buttonLabel="Any"
+                buttonLabel={t("common.any", "Any")}
               />
 
               <Select<Option<"true" | "false">>
-                label="Manual posting"
+                label={t("workspace.filters.manualPosting", "Manual posting")}
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftManualPosting)}
                 onChange={(items: Option<"true" | "false">[]) =>
@@ -846,11 +854,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 getItemLabel={optionLabel}
                 singleSelect
                 hideCheckboxes
-                buttonLabel="Any"
+                buttonLabel={t("common.any", "Any")}
               />
 
               <Select<Option<"true" | "false">>
-                label="Active"
+                label={t("workspace.filters.active", "Active")}
                 items={binaryOptions}
                 selected={binaryOptions.filter((item) => item.value === draftActive)}
                 onChange={(items: Option<"true" | "false">[]) =>
@@ -860,7 +868,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 getItemLabel={optionLabel}
                 singleSelect
                 hideCheckboxes
-                buttonLabel="Active only"
+                buttonLabel={t("workspace.filters.activeOnly", "Active only")}
               />
             </div>
 
@@ -923,10 +931,10 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-[14px] font-semibold text-gray-900">
-                      {selectedAccount?.name || "No account selected"}
+                      {selectedAccount?.name || t("workspace.emptySelectionTitle", "No account selected")}
                     </h3>
                     <p className="mt-1 text-[12px] text-gray-600">
-                      {selectedAccount?.code || "Select an account in the tree to inspect it."}
+                      {selectedAccount?.code || t("workspace.emptySelectionDescription", "Select an account in the tree to inspect it.")}
                     </p>
                   </div>
 
@@ -958,12 +966,12 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
                     <dl className="divide-y divide-gray-100 rounded-lg border border-gray-200">
                       {[
-                        ["Description", selectedAccount.description || "—"],
-                        ["Path", selectedAccount.path || "—"],
-                        ["Group", selectedAccount.report_group || "—"],
-                        ["Subgroup", selectedAccount.report_subgroup || "—"],
-                        ["External ref", selectedAccount.external_ref || "—"],
-                        ["Currency", selectedAccount.currency_code || "—"],
+                        [t("common.description", "Description"), selectedAccount.description || "—"],
+                        [t("workspace.fields.path", "Path"), selectedAccount.path || "—"],
+                        [t("workspace.fields.group", "Group"), selectedAccount.report_group || "—"],
+                        [t("workspace.fields.subgroup", "Subgroup"), selectedAccount.report_subgroup || "—"],
+                        [t("workspace.fields.externalRef", "External ref"), selectedAccount.external_ref || "—"],
+                        [t("common.currency", "Currency"), selectedAccount.currency_code || "—"],
                       ].map(([label, value]) => (
                         <div key={label} className="flex items-start justify-between gap-3 px-4 py-3">
                           <dt className="text-[10px] uppercase tracking-wide text-gray-600">{label}</dt>
@@ -989,41 +997,41 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
               <div className="grid gap-3 px-4 py-4">
                 <SummaryCard
-                  label="Manual allowed"
+                  label={t("workspace.summary.manualAllowed.label", "Manual allowed")}
                   value={counters.manualAllowed}
-                  description="Accounts still open for direct manual posting."
+                  description={t("workspace.summary.manualAllowed.description", "Accounts still open for direct manual posting.")}
                   onClick={() =>
                     openAccountsListModal({
-                      title: "Manual posting allowed",
-                      subtitle: "Accounts currently open for manual posting under the active filters.",
+                      title: t("workspace.summary.manualAllowed.modalTitle", "Manual posting allowed"),
+                      subtitle: t("workspace.summary.manualAllowed.modalSubtitle", "Accounts currently open for manual posting under the active filters."),
                       items: accounts.filter((item) => item.allows_manual_posting),
-                      emptyMessage: "No accounts allow manual posting in the current view.",
+                      emptyMessage: t("workspace.summary.manualAllowed.empty", "No accounts allow manual posting in the current view."),
                     })
                   }
                 />
                 <SummaryCard
-                  label="Bank control"
+                  label={t("workspace.summary.bankControl.label", "Bank control")}
                   value={counters.bankControl}
-                  description="Accounts dedicated to settlement and bank control."
+                  description={t("workspace.summary.bankControl.description", "Accounts dedicated to settlement and bank control.")}
                   onClick={() =>
                     openAccountsListModal({
-                      title: "Bank control accounts",
-                      subtitle: "Accounts marked for bank control under the active filters.",
+                      title: t("workspace.summary.bankControl.modalTitle", "Bank control accounts"),
+                      subtitle: t("workspace.summary.bankControl.modalSubtitle", "Accounts marked for bank control under the active filters."),
                       items: accounts.filter((item) => item.is_bank_control),
-                      emptyMessage: "No bank control accounts found in the current view.",
+                      emptyMessage: t("workspace.summary.bankControl.empty", "No bank control accounts found in the current view."),
                     })
                   }
                 />
                 <SummaryCard
-                  label="Active"
+                  label={t("workspace.filters.active", "Active")}
                   value={counters.active}
-                  description="Accounts currently available in the chart."
+                  description={t("workspace.summary.active.description", "Accounts currently available in the chart.")}
                   onClick={() =>
                     openAccountsListModal({
-                      title: "Active accounts",
-                      subtitle: "Accounts currently active under the active filters.",
+                      title: t("workspace.summary.active.modalTitle", "Active accounts"),
+                      subtitle: t("workspace.summary.active.modalSubtitle", "Accounts currently active under the active filters."),
                       items: accounts.filter((item) => item.is_active),
-                      emptyMessage: "No active accounts found in the current view.",
+                      emptyMessage: t("workspace.summary.active.empty", "No active accounts found in the current view."),
                     })
                   }
                 />
@@ -1032,20 +1040,20 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">Reporting coverage</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("workspace.reportingCoverage", "Reporting coverage")}</div>
               </div>
 
               <div className="space-y-4 px-4 py-4">
                 <SummaryCard
-                  label="Mapped accounts"
+                  label={t("workspace.summary.mapped.label", "Mapped accounts")}
                   value={counters.reportingMapped}
-                  description="Accounts with report group or subgroup assigned."
+                  description={t("workspace.summary.mapped.description", "Accounts with report group or subgroup assigned.")}
                   onClick={() =>
                     openAccountsListModal({
-                      title: "Mapped reporting accounts",
-                      subtitle: "Accounts with report group or subgroup assigned under the active filters.",
+                      title: t("workspace.summary.mapped.modalTitle", "Mapped reporting accounts"),
+                      subtitle: t("workspace.summary.mapped.modalSubtitle", "Accounts with report group or subgroup assigned under the active filters."),
                       items: accounts.filter((item) => !!item.report_group || !!item.report_subgroup),
-                      emptyMessage: "No mapped reporting accounts found in the current view.",
+                      emptyMessage: t("workspace.summary.mapped.empty", "No mapped reporting accounts found in the current view."),
                     })
                   }
                 />
@@ -1058,16 +1066,23 @@ const AccountingWorkspace: React.FC<Props> = () => {
                         type="button"
                         onClick={() =>
                           openAccountsListModal({
-                            title: group === "Unassigned" ? "Unassigned reporting accounts" : `Report group: ${group}`,
+                            title:
+                              group === t("common.unassigned", "Unassigned")
+                                ? t("workspace.summary.unassignedReporting.title", "Unassigned reporting accounts")
+                                : t("workspace.summary.unassignedReporting.reportGroup", "Report group: {{group}}", { group }),
                             subtitle:
-                              group === "Unassigned"
-                                ? "Accounts without a report group in the current filtered view."
-                                : `Accounts assigned to report group "${group}" in the current filtered view.`,
+                              group === t("common.unassigned", "Unassigned")
+                                ? t("workspace.summary.unassignedReporting.subtitle", "Accounts without a report group in the current filtered view.")
+                                : t(
+                                    "workspace.summary.unassignedReporting.assignedSubtitle",
+                                    "Accounts assigned to report group \"{{group}}\" in the current filtered view.",
+                                    { group }
+                                  ),
                             items:
-                              group === "Unassigned"
+                              group === t("common.unassigned", "Unassigned")
                                 ? accounts.filter((item) => !item.report_group)
                                 : accounts.filter((item) => item.report_group === group),
-                            emptyMessage: "No accounts found for this reporting group.",
+                            emptyMessage: t("workspace.summary.unassignedReporting.empty", "No accounts found for this reporting group."),
                           })
                         }
                         className="flex w-full items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2.5 text-left transition-colors hover:border-gray-300 hover:bg-gray-50"
@@ -1093,8 +1108,8 @@ const AccountingWorkspace: React.FC<Props> = () => {
       <AccountingSideModal
         isOpen={isFormModalOpen}
         onClose={closeModal}
-        title={modalState.type === "create" ? "New account" : "Edit account"}
-        subtitle="Maintain structure, posting rules, and reporting classification from a dedicated side modal."
+        title={modalState.type === "create" ? t("workspace.form.newAccount", "New account") : t("workspace.form.editAccount", "Edit account")}
+        subtitle={t("workspace.form.subtitle", "Maintain structure, posting rules, and reporting classification from a dedicated side modal.")}
         contentClassName="pb-4 md:pb-6"
       >
         {isFormModalOpen ? (
@@ -1107,20 +1122,20 @@ const AccountingWorkspace: React.FC<Props> = () => {
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
                 <Input
                   kind="text"
-                  label="Code"
+                  label={t("common.code", "Code")}
                   value={form.code}
                   onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
                 />
                 <Input
                   kind="text"
-                  label="Name"
+                  label={t("common.name", "Name")}
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                 />
                 <div className="sm:col-span-2">
                   <Input
                     kind="text"
-                    label="Description"
+                    label={t("common.description", "Description")}
                     value={form.description || ""}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, description: event.target.value }))
@@ -1137,7 +1152,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
 
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
                 <Select<Option<LedgerAccountType>>
-                  label="Account type"
+                  label={t("workspace.form.accountType", "Account type")}
                   items={accountTypeOptions}
                   selected={selectedFormAccountType}
                   onChange={(items: Option<LedgerAccountType>[]) =>
@@ -1147,11 +1162,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   getItemLabel={optionLabel}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Select type"
+                  buttonLabel={t("common.selectType", "Select type")}
                 />
 
                 <Select<Option<LedgerStatementSection>>
-                  label="Statement section"
+                  label={t("workspace.form.statementSection", "Statement section")}
                   items={sectionOptions}
                   selected={selectedFormSection}
                   onChange={(items: Option<LedgerStatementSection>[]) =>
@@ -1164,11 +1179,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   getItemLabel={optionLabel}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Select section"
+                  buttonLabel={t("common.selectSection", "Select section")}
                 />
 
                 <Select<Option<LedgerNormalBalance>>
-                  label="Normal balance"
+                  label={t("workspace.form.normalBalance", "Normal balance")}
                   items={balanceOptions}
                   selected={selectedFormBalance}
                   onChange={(items: Option<LedgerNormalBalance>[]) =>
@@ -1181,11 +1196,11 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   getItemLabel={optionLabel}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Select balance"
+                  buttonLabel={t("common.selectBalance", "Select balance")}
                 />
 
                 <Select<{ label: string; value: string }>
-                  label="Parent account"
+                  label={t("workspace.form.parentAccount", "Parent account")}
                   items={parentOptions}
                   selected={selectedParent}
                   onChange={(items: Array<{ label: string; value: string }>) =>
@@ -1195,7 +1210,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   getItemLabel={(item: { label: string; value: string }) => item.label}
                   singleSelect
                   hideCheckboxes
-                  buttonLabel="Optional parent"
+                  buttonLabel={t("workspace.form.optionalParent", "Optional parent")}
                 />
               </div>
             </section>
@@ -1268,7 +1283,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
               <div className="grid gap-4 px-4 py-4 sm:grid-cols-2">
                 <Input
                   kind="text"
-                  label="Report group"
+                  label={t("workspace.fields.reportGroup", "Report group")}
                   value={form.report_group || ""}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, report_group: event.target.value }))
@@ -1276,7 +1291,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 />
                 <Input
                   kind="text"
-                  label="Report subgroup"
+                  label={t("workspace.fields.reportSubgroup", "Report subgroup")}
                   value={form.report_subgroup || ""}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, report_subgroup: event.target.value }))
@@ -1284,7 +1299,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 />
                 <Input
                   kind="text"
-                  label="External reference"
+                  label={t("workspace.fields.externalReference", "External reference")}
                   value={form.external_ref || ""}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, external_ref: event.target.value }))
@@ -1292,7 +1307,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                 />
                 <Input
                   kind="text"
-                  label="Currency"
+                  label={t("common.currency", "Currency")}
                   value={form.currency_code || ""}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, currency_code: event.target.value }))
@@ -1324,7 +1339,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
                   Cancel
                 </Button>
                 <Button disabled={saving} type="submit">
-                  {saving ? "Saving..." : modalState.type === "create" ? "Create account" : "Save changes"}
+                  {saving ? t("common.saving", "Saving...") : modalState.type === "create" ? t("workspace.form.createAccount", "Create account") : t("workspace.form.saveChanges", "Save changes")}
                 </Button>
               </div>
             </div>
@@ -1335,7 +1350,7 @@ const AccountingWorkspace: React.FC<Props> = () => {
       <AccountingSideModal
         isOpen={isAccountsListModalOpen}
         onClose={closeModal}
-        title={modalState.type === "accounts_list" ? modalState.title : "Accounts"}
+        title={modalState.type === "accounts_list" ? modalState.title : t("workspace.accountsList.title", "Accounts")}
         subtitle={modalState.type === "accounts_list" ? modalState.subtitle : ""}
         contentClassName="pb-4 md:pb-6"
       >

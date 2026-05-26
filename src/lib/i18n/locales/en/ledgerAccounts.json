@@ -59,7 +59,26 @@
     "updatedSuccess": "Account updated.",
     "deletedSuccess": "Account deleted.",
     "requestError": "Something went wrong. Please try again.",
-    "backToLedger": "Back to ledger workspace"
+    "backToLedger": "Back to ledger workspace",
+    "summaryTotal": "Total accounts",
+    "summaryHeaders": "Header accounts",
+    "managementOverviewTitle": "Overview",
+    "managementOverviewDescription": "High-level account health and chart coverage.",
+    "managementStructureTitle": "Structure",
+    "managementStructureDescription": "Hierarchy, depth, and parent-child organization.",
+    "managementPostingControlsTitle": "Posting controls",
+    "managementPostingControlsDescription": "Posting scope, manual posting policy, and operating discipline.",
+    "managementBankControlTitle": "Bank control",
+    "managementBankControlDescription": "Accounts dedicated to bank balance control and settlement logic.",
+    "managementReportingTitle": "Reporting",
+    "managementReportingDescription": "Report groups, subgroups, and reporting coverage.",
+    "syncing": "Syncing...",
+    "filtersTitle": "Filters",
+    "filtersSubtitle": "Refine the account list by structure, status, and posting rules.",
+    "sectionDistributionTitle": "Statement section distribution",
+    "sectionDistributionDescription": "Distribution of accounts across assets, liabilities, equity, income, expenses, and other sections.",
+    "reportingSampleTitle": "Reporting groups",
+    "reportingSampleDescription": "Accounts grouped by reporting classification."
   },
   "setup": {
     "pageLabel": "Settings",
@@ -132,7 +151,9 @@
     "requiredCode": "Code is required.",
     "selectSection": "Select section",
     "selectBalance": "Select balance",
-    "selectAccountType": "Select account type"
+    "selectAccountType": "Select account type",
+    "createSubtitle": "Create a ledger account with structure, classification, and posting controls.",
+    "editSubtitle": "Update the ledger account structure, classification, and posting controls."
   },
   "accounting": {
     "title": "Accounting workspace",

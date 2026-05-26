@@ -59,7 +59,26 @@
     "updatedSuccess": "Konto aktualisiert.",
     "deletedSuccess": "Konto gelöscht.",
     "requestError": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
-    "backToLedger": "Zurück zum Kontenplan"
+    "backToLedger": "Zurück zum Kontenplan",
+    "summaryTotal": "Konten insgesamt",
+    "summaryHeaders": "Überschriftkonten",
+    "managementOverviewTitle": "Übersicht",
+    "managementOverviewDescription": "Übergeordnete Kontengesundheit und Abdeckung des Kontenplans.",
+    "managementStructureTitle": "Struktur",
+    "managementStructureDescription": "Hierarchie, Tiefe und Organisation der Eltern-Kind-Beziehungen.",
+    "managementPostingControlsTitle": "Buchungssteuerung",
+    "managementPostingControlsDescription": "Buchungsumfang, Richtlinie für manuelle Buchungen und operative Disziplin.",
+    "managementBankControlTitle": "Banksteuerung",
+    "managementBankControlDescription": "Konten für Banksaldosteuerung und Logik der Abstimmung.",
+    "managementReportingTitle": "Reporting",
+    "managementReportingDescription": "Berichtsgruppen, Untergruppen und Reporting-Abdeckung.",
+    "syncing": "Wird synchronisiert...",
+    "filtersTitle": "Filter",
+    "filtersSubtitle": "Verfeinere die Kontenliste nach Struktur, Status und Buchungsregeln.",
+    "sectionDistributionTitle": "Verteilung nach Abschlussbereich",
+    "sectionDistributionDescription": "Verteilung der Konten über Vermögenswerte, Verbindlichkeiten, Eigenkapital, Erträge, Aufwendungen und weitere Bereiche.",
+    "reportingSampleTitle": "Reporting-Gruppen",
+    "reportingSampleDescription": "Konten gruppiert nach Reporting-Klassifizierung."
   },
   "setup": {
     "pageLabel": "Einstellungen",
@@ -132,7 +151,9 @@
     "requiredCode": "Code ist erforderlich.",
     "selectSection": "Bereich auswählen",
     "selectBalance": "Saldo auswählen",
-    "selectAccountType": "Kontotyp auswählen"
+    "selectAccountType": "Kontotyp auswählen",
+    "createSubtitle": "Erstelle ein Hauptbuchkonto mit Struktur, Klassifizierung und Buchungssteuerung.",
+    "editSubtitle": "Aktualisiere Struktur, Klassifizierung und Buchungssteuerung des Hauptbuchkontos."
   },
   "accounting": {
     "title": "Buchhaltungs-Arbeitsbereich",

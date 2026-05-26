@@ -1,22 +1,575 @@
 {
-  "pageTitle": "Espace comptable",
-  "title": "Espace comptable",
-  "subtitle": "Gérez la structure comptable du grand livre séparément de la vue opérationnelle de catégorisation de trésorerie.",
-  "buttons": {
-    "backToLedger": "Retour à l’espace du grand livre",
-    "addAccount": "Ajouter un compte",
-    "search": "Rechercher",
-    "clear": "Effacer"
+  "common": {
+    "settings": "Paramètres",
+    "accountingSettings": "Paramètres comptables",
+    "pageLabel": "Paramètres comptables",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "open": "Ouvrir",
+    "actions": "Actions",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "yes": "Oui",
+    "no": "Non",
+    "any": "Tous",
+    "search": "Recherche",
+    "currency": "Devise",
+    "code": "Code",
+    "name": "Nom",
+    "description": "Description",
+    "status": "Statut",
+    "book": "Livre",
+    "books": "Livres",
+    "account": "Compte",
+    "category": "Catégorie",
+    "ledgerAccount": "Compte du grand livre",
+    "cashflowCategory": "Catégorie de trésorerie",
+    "bankAccount": "Compte bancaire",
+    "selectBook": "Sélectionner un livre",
+    "selectAccount": "Sélectionner un compte",
+    "selectCategory": "Sélectionner une catégorie",
+    "selectBank": "Sélectionner une banque",
+    "selectType": "Sélectionner un type",
+    "selectSection": "Sélectionner une section",
+    "selectBalance": "Sélectionner un solde",
+    "unassigned": "Non attribué",
+    "notAvailable": "—",
+    "total": "Total",
+    "refreshing": "actualisation",
+    "loading": "Chargement..."
   },
-  "sections": {
-    "structure": {
-      "title": "Structure comptable",
-      "description": "Affinez la hiérarchie, les groupes de reporting, la visibilité et le rattachement aux états financiers."
+  "nav": {
+    "ariaLabel": "Navigation des paramètres comptables",
+    "chart": "Plan",
+    "books": "Livres",
+    "bankMappings": "Mappages bancaires",
+    "postingPolicies": "Politiques d’écriture",
+    "journals": "Journaux",
+    "correlation": "Corrélation",
+    "reconciliation": "Rapprochement"
+  },
+  "shell": {
+    "title": "Paramètres comptables",
+    "description": "Configurez la structure du grand livre, les règles d’écriture, le contrôle bancaire, les journaux et la préparation comptable sans mélanger ces contrôles au flux opérationnel de trésorerie."
+  },
+  "modal": {
+    "sectionLabel": "Paramètres comptables",
+    "close": "Fermer"
+  },
+  "options": {
+    "statementSections": {
+      "asset": "Actif",
+      "liability": "Passif",
+      "equity": "Capitaux propres",
+      "income": "Produits",
+      "expense": "Charges",
+      "off_balance": "Hors bilan",
+      "statistical": "Statistique"
     },
-    "views": {
-      "title": "Vues",
-      "cashflow": "Vue de trésorerie",
-      "accounting": "Vue comptable"
+    "normalBalance": {
+      "debit": "Débit",
+      "credit": "Crédit"
+    },
+    "accountType": {
+      "header": "En-tête",
+      "posting": "Écriture"
+    },
+    "bookBasis": {
+      "management": "Gestion",
+      "cash": "Trésorerie",
+      "accrual": "Comptabilité d’engagement",
+      "tax": "Fiscal"
+    },
+    "sourceType": {
+      "manual": "Manuel",
+      "cash_entry": "Écriture de trésorerie",
+      "cash_settlement": "Règlement de trésorerie",
+      "cash_transfer": "Virement de trésorerie",
+      "system": "Système"
+    }
+  },
+  "workspace": {
+    "loadError": "Impossible de charger les comptes du grand livre.",
+    "requiredCode": "Le code est obligatoire.",
+    "requiredName": "Le nom est obligatoire.",
+    "invalidJson": "Les métadonnées doivent être un JSON valide.",
+    "updatedSuccess": "Compte mis à jour avec succès.",
+    "createdSuccess": "Compte créé avec succès.",
+    "saveError": "Impossible d’enregistrer le compte.",
+    "deletedSuccess": "Compte supprimé avec succès.",
+    "deleteError": "Impossible de supprimer le compte.",
+    "detailedTree": "Arborescence détaillée",
+    "compactTree": "Arborescence compacte",
+    "filters": {
+      "section": "Section",
+      "allSections": "Toutes les sections",
+      "accountType": "Type de compte",
+      "allTypes": "Tous les types",
+      "bankControl": "Contrôle bancaire",
+      "manualPosting": "Écriture manuelle",
+      "active": "Actif",
+      "activeOnly": "Actifs uniquement"
+    },
+    "emptySelectionTitle": "Aucun compte sélectionné",
+    "emptySelectionDescription": "Sélectionnez un compte dans l’arborescence pour l’inspecter.",
+    "fields": {
+      "path": "Chemin",
+      "group": "Groupe",
+      "subgroup": "Sous-groupe",
+      "externalRef": "Référence externe",
+      "manualAllowed": "Manuel autorisé",
+      "reportGroup": "Groupe de reporting",
+      "reportSubgroup": "Sous-groupe de reporting",
+      "externalReference": "Référence externe",
+      "metadata": "Métadonnées"
+    },
+    "badges": {
+      "system": "Système",
+      "bankControl": "contrôle bancaire",
+      "regularAccount": "compte standard",
+      "manualAllowed": "manuel autorisé",
+      "manualBlocked": "manuel bloqué"
+    },
+    "summary": {
+      "manualAllowed": {
+        "label": "Manuel autorisé",
+        "description": "Comptes encore ouverts à la saisie manuelle directe.",
+        "modalTitle": "Écriture manuelle autorisée",
+        "modalSubtitle": "Comptes actuellement ouverts à la saisie manuelle avec les filtres actifs.",
+        "empty": "Aucun compte n’autorise la saisie manuelle dans la vue actuelle."
+      },
+      "bankControl": {
+        "label": "Contrôle bancaire",
+        "description": "Comptes dédiés au règlement et au contrôle bancaire.",
+        "modalTitle": "Comptes de contrôle bancaire",
+        "modalSubtitle": "Comptes marqués pour le contrôle bancaire avec les filtres actifs.",
+        "empty": "Aucun compte de contrôle bancaire trouvé dans la vue actuelle."
+      },
+      "active": {
+        "label": "Actif",
+        "description": "Comptes actuellement disponibles dans le plan.",
+        "modalTitle": "Comptes actifs",
+        "modalSubtitle": "Comptes actuellement actifs avec les filtres actifs.",
+        "empty": "Aucun compte actif trouvé dans la vue actuelle."
+      },
+      "mapped": {
+        "label": "Comptes mappés",
+        "description": "Comptes avec un groupe ou sous-groupe de reporting attribué.",
+        "modalTitle": "Comptes de reporting mappés",
+        "modalSubtitle": "Comptes avec un groupe ou sous-groupe de reporting attribué avec les filtres actifs.",
+        "empty": "Aucun compte de reporting mappé trouvé dans la vue actuelle."
+      },
+      "unassignedReporting": {
+        "label": "Non attribué",
+        "title": "Comptes de reporting non attribués",
+        "subtitle": "Comptes sans groupe de reporting dans la vue filtrée actuelle.",
+        "empty": "Aucun compte trouvé pour ce groupe de reporting.",
+        "groupTitle": "{{group}}"
+      }
+    },
+    "form": {
+      "newAccount": "Nouveau compte",
+      "editAccount": "Modifier le compte",
+      "subtitle": "Maintenez la structure, les règles d’écriture et la classification de reporting depuis un panneau latéral dédié.",
+      "accountType": "Type de compte",
+      "statementSection": "Section d’état financier",
+      "normalBalance": "Solde normal",
+      "parentAccount": "Compte parent",
+      "optionalParent": "Parent facultatif",
+      "isActive": "Actif",
+      "isBankControl": "Contrôle bancaire",
+      "allowsManualPosting": "Autorise la saisie manuelle",
+      "createAccount": "Créer le compte",
+      "saveChanges": "Enregistrer les modifications"
+    },
+    "accountsList": {
+      "title": "Comptes"
+    }
+  },
+  "booksPage": {
+    "loadError": "Échec du chargement des livres comptables.",
+    "requiredError": "Le code, le nom et la devise sont obligatoires.",
+    "updatedSuccess": "Livre comptable mis à jour.",
+    "createdSuccess": "Livre comptable créé.",
+    "saveError": "Échec de l’enregistrement du livre comptable.",
+    "sectionLabel": "Livres comptables",
+    "title": "Livres comptables",
+    "description": "Créez et maintenez les livres comptables utilisés comme périmètres d’écriture pour les journaux, les mappages bancaires et les politiques de catégorie.",
+    "newButton": "Nouveau livre",
+    "metrics": {
+      "books": "Livres",
+      "booksDetail": "Nombre total de livres actuellement configurés.",
+      "primary": "Principal",
+      "primaryDetail": "Livres marqués comme base comptable principale.",
+      "active": "Actif",
+      "activeDetail": "Livres disponibles pour les flux opérationnels d’écriture."
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Nom",
+      "basis": "Base",
+      "currency": "Devise",
+      "primary": "Principal",
+      "active": "Actif",
+      "actions": "Actions"
+    },
+    "modal": {
+      "editTitle": "Modifier le livre comptable",
+      "newTitle": "Nouveau livre comptable",
+      "subtitle": "Créez ou mettez à jour la base comptable et la devise d’écriture.",
+      "basis": "Base",
+      "selectBasis": "Sélectionner une base",
+      "isPrimary": "Principal",
+      "isActive": "Actif",
+      "saveChanges": "Enregistrer les modifications",
+      "createBook": "Créer le livre"
+    }
+  },
+  "bankMappingsPage": {
+    "loadError": "Échec du chargement des mappages bancaires.",
+    "lookupError": "Échec du chargement des listes du formulaire de mappage.",
+    "requiredError": "La banque, le livre et le compte du grand livre sont obligatoires.",
+    "savedSuccess": "Mappage bancaire enregistré.",
+    "saveError": "Échec de l’enregistrement du mappage bancaire.",
+    "sectionLabel": "Mappages bancaires",
+    "title": "Mappages bancaires",
+    "description": "Associez les comptes bancaires opérationnels aux livres comptables et aux comptes de contrôle bancaire pour fiabiliser les écritures et le rapprochement.",
+    "newButton": "Nouveau mappage",
+    "metrics": {
+      "activeMappings": "Mappages actifs",
+      "activeMappingsDetail": "Mappages disponibles pour les opérations d’écriture.",
+      "booksCovered": "Livres couverts",
+      "booksCoveredDetail": "Livres comptables déjà liés à des banques.",
+      "uniqueBanks": "Banques uniques",
+      "uniqueBanksDetail": "Comptes bancaires opérationnels couverts par un mappage."
+    },
+    "columns": {
+      "bankAccount": "Compte bancaire",
+      "book": "Livre",
+      "ledgerAccount": "Compte du grand livre",
+      "active": "Actif",
+      "actions": "Actions"
+    },
+    "modal": {
+      "title": "Mappage bancaire",
+      "subtitle": "Choisissez le compte bancaire opérationnel, le livre comptable et le compte de contrôle bancaire.",
+      "selectBank": "Sélectionner une banque",
+      "selectBook": "Sélectionner un livre",
+      "selectLedgerAccount": "Sélectionner le compte du grand livre",
+      "saveMapping": "Enregistrer le mappage"
+    }
+  },
+  "postingPoliciesPage": {
+    "loadError": "Échec du chargement des politiques d’écriture.",
+    "lookupError": "Échec du chargement des listes du formulaire de politique d’écriture.",
+    "requiredError": "La catégorie et le livre sont obligatoires.",
+    "savedSuccess": "Politique d’écriture enregistrée.",
+    "saveError": "Échec de l’enregistrement de la politique d’écriture.",
+    "sectionLabel": "Politiques d’écriture",
+    "title": "Politiques d’écriture",
+    "description": "Définissez comment les catégories opérationnelles de trésorerie se traduisent en comptes du grand livre pour les flux de règlement, d’engagement et de compensation.",
+    "newButton": "Nouvelle politique",
+    "metrics": {
+      "policies": "Politiques",
+      "policiesDetail": "Nombre total de politiques de catégorie configurées.",
+      "settlementReady": "Prêt pour règlement",
+      "settlementReadyDetail": "Politiques avec paire de règlement complète.",
+      "accrualReady": "Prêt pour engagement",
+      "accrualReadyDetail": "Politiques avec paire d’engagement complète.",
+      "withClearing": "Avec compensation",
+      "withClearingDetail": "Politiques déjà liées à un compte de compensation."
+    },
+    "columns": {
+      "category": "Catégorie",
+      "book": "Livre",
+      "settlement": "Règlement",
+      "accrual": "Comptabilité d’engagement",
+      "clearing": "Compensation",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "accountFields": {
+      "settlementDebit": "Débit de règlement",
+      "settlementCredit": "Crédit de règlement",
+      "accrualDebit": "Débit d’engagement",
+      "accrualCredit": "Crédit d’engagement",
+      "clearing": "Compensation"
+    },
+    "modal": {
+      "title": "Politique d’écriture",
+      "subtitle": "Définissez comment une catégorie opérationnelle est mappée aux comptes de règlement, d’engagement et de compensation.",
+      "cashflowCategory": "Catégorie de trésorerie",
+      "selectCategory": "Sélectionner une catégorie",
+      "selectBook": "Sélectionner un livre",
+      "savePolicy": "Enregistrer la politique"
+    }
+  },
+  "journalsPage": {
+    "loadError": "Échec du chargement des journaux.",
+    "lookupError": "Échec du chargement des listes du formulaire de journal manuel.",
+    "requiredError": "Le livre, les dates et au moins une ligne de journal sont obligatoires.",
+    "createdSuccess": "Journal manuel créé.",
+    "createError": "Échec de la création du journal manuel.",
+    "reverseReason": "Contrepassation demandée depuis la page des journaux",
+    "reversedSuccess": "Journal contrepassé.",
+    "reverseError": "Échec de la contrepassation du journal.",
+    "sectionLabel": "Journaux",
+    "title": "Journaux",
+    "description": "Examinez les écritures comptables, créez des journaux manuels contrôlés et contrepasser les écritures publiées si nécessaire.",
+    "searchPlaceholder": "Recherche",
+    "newButton": "Journal manuel",
+    "metrics": {
+      "entries": "Écritures",
+      "entriesDetail": "Journaux visibles dans le périmètre de recherche actuel.",
+      "reversed": "Contrepassés",
+      "reversedDetail": "Écritures déjà contrepassées.",
+      "lines": "Lignes",
+      "linesDetail": "Nombre total de lignes de journal dans les écritures visibles."
+    },
+    "columns": {
+      "entry": "Écriture",
+      "book": "Livre",
+      "source": "Source",
+      "postingDate": "Date de comptabilisation",
+      "status": "Statut",
+      "lines": "Lignes",
+      "actions": "Actions"
+    },
+    "actions": {
+      "reverse": "Contrepasser",
+      "reversing": "Contrepassation..."
+    },
+    "modal": {
+      "title": "Journal manuel",
+      "subtitle": "Créez une écriture comptable contrôlée avec des lignes de débit et de crédit équilibrées.",
+      "selectBook": "Sélectionner un livre",
+      "currency": "Devise",
+      "documentDate": "Date du document",
+      "postingDate": "Date de comptabilisation",
+      "memo": "Mémo",
+      "addLine": "Ajouter une ligne",
+      "removeLine": "Supprimer",
+      "account": "Compte",
+      "selectAccount": "Sélectionner un compte",
+      "debit": "Débit",
+      "credit": "Crédit",
+      "lineMemo": "Mémo de ligne",
+      "balanced": "Équilibré",
+      "unbalanced": "Déséquilibré",
+      "createJournal": "Créer le journal"
+    }
+  },
+  "reconciliationPage": {
+    "sectionLabel": "Rapprochement",
+    "title": "Tableau de préparation comptable",
+    "description": "Cette zone doit servir de pont entre la couche de trésorerie opérationnelle et la couche comptable, en affichant ce qui bloque la comptabilisation, ce qui est prêt et ce qui nécessite une revue.",
+    "queue": "File",
+    "backendProposal": "Proposition backend",
+    "backendProposalText": "Endpoint suggéré : GET cashflow/accounting-readiness/, retournant des files groupées par état de préparation afin que cette page évolue d’un guide statique vers un vrai tableau opérationnel.",
+    "cards": {
+      "missingCategoryPolicy": {
+        "title": "Politique de catégorie manquante",
+        "description": "Les écritures opérationnelles sont catégorisées, mais la catégorie ne se traduit pas encore en comptes comptables.",
+        "cta": "Ouvrir les politiques d’écriture"
+      },
+      "missingBankMapping": {
+        "title": "Mappage bancaire manquant",
+        "description": "Les mouvements bancaires ne peuvent pas être comptabilisés car le compte bancaire opérationnel n’est pas lié à un compte de contrôle bancaire.",
+        "cta": "Ouvrir les mappages bancaires"
+      },
+      "readyToPost": {
+        "title": "Prêt à comptabiliser",
+        "description": "Les écritures ont déjà une catégorie, une politique, un mappage bancaire et un contexte comptable résolus pour la revue de comptabilisation.",
+        "cta": "Réviser les journaux"
+      },
+      "postedWithException": {
+        "title": "Comptabilisé avec exception",
+        "description": "Écritures comptabilisées avec succès mais nécessitant encore une revue manuelle, une contrepassation ou un suivi de rapprochement plus approfondi.",
+        "cta": "Ouvrir les journaux"
+      }
+    }
+  },
+  "correlationsPage": {
+    "loadError": "Échec du chargement des données de corrélation comptable.",
+    "exportSuccess": "Diagramme exporté.",
+    "selectionRequired": "Sélectionnez une ligne pour l’ajouter au diagramme.",
+    "title": "Carte de corrélation comptable",
+    "description": "Explorez comment les pages de paramètres comptables, les API, les entités et les jeux de données opérationnels se connectent.",
+    "controls": {
+      "search": "Recherche",
+      "filter": "Filtre",
+      "all": "Tout",
+      "architectureOnly": "Architecture uniquement",
+      "selectedDataOnly": "Données sélectionnées uniquement",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "fit": "Ajuster",
+      "reset": "Réinitialiser",
+      "export": "Exporter",
+      "maximize": "Maximiser",
+      "minimize": "Réduire",
+      "move": "Déplacer"
+    },
+    "datasets": {
+      "books": {
+        "label": "Livres",
+        "description": "Livres comptables et périmètres d’exécution."
+      },
+      "accounts": {
+        "label": "Plan comptable",
+        "description": "Hiérarchie du grand livre et comptes d’écriture."
+      },
+      "banks": {
+        "label": "Banques",
+        "description": "Comptes bancaires opérationnels."
+      },
+      "categories": {
+        "label": "Catégories",
+        "description": "Catégories opérationnelles de trésorerie."
+      },
+      "bankMappings": {
+        "label": "Mappages bancaires",
+        "description": "Pont entre banque, livre et compte du grand livre."
+      },
+      "policies": {
+        "label": "Politiques d’écriture",
+        "description": "Pont de politique entre catégorie, livre et compte du grand livre."
+      },
+      "journals": {
+        "label": "Journaux",
+        "description": "Exécution comptable avec lignes et statuts."
+      }
+    },
+    "groups": {
+      "page": "Page",
+      "api": "API",
+      "entity": "Entité",
+      "status": "Préparation",
+      "data": "Ligne de données"
+    },
+    "edges": {
+      "depends": "Dépend",
+      "feeds": "Alimente",
+      "controls": "Contrôle",
+      "relates": "Relie",
+      "listCrud": "liste + CRUD",
+      "lookup": "recherche",
+      "bankControlLookup": "recherche contrôle bancaire",
+      "bankLookup": "recherche banque",
+      "bookLookup": "recherche livre",
+      "accountLookup": "recherche compte",
+      "categoryScope": "périmètre catégorie",
+      "lineAccountLookup": "recherche compte de ligne",
+      "results": "résultats",
+      "treeInspector": "arborescence + inspecteur",
+      "bankControlAccount": "compte de contrôle bancaire",
+      "settlementAccrualClearing": "règlement/engagement/compensation",
+      "journalLines": "lignes de journal",
+      "registry": "registre",
+      "mappingScope": "périmètre de mappage",
+      "policyScope": "périmètre de politique",
+      "journalHeader": "en-tête de journal",
+      "operationalBank": "banque opérationnelle",
+      "categoryBridge": "pont de catégorie",
+      "reviewExceptions": "revue / exceptions",
+      "policyReadiness": "préparation politique",
+      "bankReadiness": "préparation bancaire"
+    },
+    "nodes": {
+      "workspace": {
+        "label": "AccountingWorkspace",
+        "short": "Plan comptable",
+        "description": "Espace hiérarchique pour les comptes du grand livre."
+      },
+      "booksPage": {
+        "label": "AccountingBooksPage",
+        "short": "Livres",
+        "description": "Registre des livres comptables."
+      },
+      "bankMappingsPage": {
+        "label": "AccountingBankMappingsPage",
+        "short": "Mappages bancaires",
+        "description": "Pont entre comptes bancaires, livres et comptes de contrôle bancaire."
+      },
+      "postingPoliciesPage": {
+        "label": "AccountingPostingPoliciesPage",
+        "short": "Politiques d’écriture",
+        "description": "Pont entre catégories de trésorerie, livres et comptes du grand livre."
+      },
+      "journalsPage": {
+        "label": "AccountingJournalsPage",
+        "short": "Journaux",
+        "description": "Page de création, revue et contrepassation des journaux."
+      },
+      "reconciliation": {
+        "label": "AccountingReconciliationPage",
+        "short": "Rapprochement",
+        "description": "Tableau de préparation alimenté par la complétude en amont."
+      },
+      "ledgerApi": {
+        "label": "API des comptes du grand livre",
+        "short": "API du grand livre",
+        "description": "Source de liste et CRUD du grand livre."
+      },
+      "booksApi": {
+        "label": "API des livres comptables",
+        "short": "API livres",
+        "description": "Source de liste et CRUD des livres."
+      },
+      "banksApi": {
+        "label": "API des comptes bancaires",
+        "short": "API banques",
+        "description": "Source de recherche de comptes bancaires opérationnels."
+      },
+      "categoriesApi": {
+        "label": "API des catégories de trésorerie",
+        "short": "API catégories",
+        "description": "Source de recherche de catégories opérationnelles."
+      },
+      "journalsApi": {
+        "label": "API journaux",
+        "short": "API journaux",
+        "description": "Source de liste / création / contrepassation des journaux."
+      },
+      "ledgerEntity": {
+        "label": "LedgerAccount",
+        "short": "Compte du grand livre",
+        "description": "Structure principale du plan comptable."
+      },
+      "bookEntity": {
+        "label": "AccountingBook",
+        "short": "Livre comptable",
+        "description": "Périmètre d’exécution comptable."
+      },
+      "bankEntity": {
+        "label": "BankAccount",
+        "short": "Compte bancaire",
+        "description": "Compte bancaire opérationnel."
+      },
+      "categoryEntity": {
+        "label": "CashflowCategory",
+        "short": "Catégorie de trésorerie",
+        "description": "Catégorie opérationnelle utilisée dans le mappage de politiques."
+      },
+      "journalEntity": {
+        "label": "JournalEntry",
+        "short": "Écriture de journal",
+        "description": "Sortie d’exécution comptable."
+      }
+    },
+    "rows": {
+      "bankMapping": "Mappage bancaire {{number}}",
+      "postingPolicy": "Politique d’écriture {{number}}",
+      "bank": "Banque",
+      "book": "Livre",
+      "ledgerAccount": "Compte du grand livre",
+      "category": "Catégorie",
+      "noHint": "aucune indication",
+      "lines": "{{count}} lignes"
     }
   }
 }

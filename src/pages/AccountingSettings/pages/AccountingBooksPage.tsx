@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
@@ -79,6 +80,13 @@ const EMPTY_FORM: BookFormState = {
 };
 
 const AccountingBooksPage: React.FC = () => {
+  const { i18n } = useTranslation("accountingSettings");
+  const t = React.useCallback(
+    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n]
+  );
+
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [items, setItems] = React.useState<AccountingBook[]>([]);
@@ -101,7 +109,7 @@ const AccountingBooksPage: React.FC = () => {
       setItems(nextItems);
     } catch {
       setItems([]);
-      setSnackbar({ severity: "error", message: "Failed to load accounting books." });
+      setSnackbar({ severity: "error", message: t("booksPage.loadError", "Failed to load accounting books.") });
     } finally {
       setLoading(false);
     }
@@ -133,7 +141,7 @@ const AccountingBooksPage: React.FC = () => {
     event.preventDefault();
 
     if (!form.code.trim() || !form.name.trim() || !form.currency_code.trim()) {
-      setSnackbar({ severity: "error", message: "Code, name, and currency are required." });
+      setSnackbar({ severity: "error", message: t("booksPage.requiredError", "Code, name, and currency are required.") });
       return;
     }
 
@@ -152,17 +160,17 @@ const AccountingBooksPage: React.FC = () => {
 
       if (form.id) {
         await api.editAccountingBook(form.id, payload);
-        setSnackbar({ severity: "success", message: "Accounting book updated." });
+        setSnackbar({ severity: "success", message: t("booksPage.updatedSuccess", "Accounting book updated.") });
       } else {
         await api.addAccountingBook(payload);
-        setSnackbar({ severity: "success", message: "Accounting book created." });
+        setSnackbar({ severity: "success", message: t("booksPage.createdSuccess", "Accounting book created.") });
       }
 
       setModalOpen(false);
       setForm(EMPTY_FORM);
       await load();
     } catch {
-      setSnackbar({ severity: "error", message: "Failed to save accounting book." });
+      setSnackbar({ severity: "error", message: t("booksPage.saveError", "Failed to save accounting book.") });
     } finally {
       setSaving(false);
     }
@@ -175,16 +183,15 @@ const AccountingBooksPage: React.FC = () => {
       <section className="space-y-4">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Accounting books</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.sectionLabel", "Accounting books")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">Book registry</h2>
+                <h2 className="text-[16px] font-semibold text-gray-900"> {t("booksPage.title", "Accounting books")}</h2>
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
-                  Maintain the accounting books used for posting basis, primary selection,
-                  and transaction currency.
+                  {t("booksPage.description", "Create and maintain accounting books used as posting scopes for journals, bank mappings, and category policies.")}
                 </p>
               </div>
 
@@ -195,19 +202,19 @@ const AccountingBooksPage: React.FC = () => {
 
             <div className="grid gap-3 md:grid-cols-3">
               <MetricCard
-                label="Books"
+                label={t("booksPage.metrics.books", "Books")}
                 value={items.length}
-                detail="Total books currently configured."
+                detail={t("booksPage.metrics.booksDetail", "Total books currently configured.")}
               />
               <MetricCard
-                label="Primary"
+                label={t("booksPage.metrics.primary", "Primary")}
                 value={items.filter((item) => item.is_primary).length}
-                detail="Books marked as the primary accounting base."
+                detail={t("booksPage.metrics.primaryDetail", "Books marked as the primary accounting base.")}
               />
               <MetricCard
-                label="Active"
+                label={t("booksPage.metrics.active", "Active")}
                 value={items.filter((item) => item.is_active).length}
-                detail="Books available for operational posting flows."
+                detail={t("booksPage.metrics.activeDetail", "Books available for operational posting flows.")}
               />
             </div>
           </div>
@@ -215,14 +222,14 @@ const AccountingBooksPage: React.FC = () => {
 
         <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">Book list</div>
+            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.listTitle", "Book list")}</div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
-                  {["Code", "Name", "Basis", "Currency", "Primary", "Active", "Actions"].map((column) => (
+                  {[t("booksPage.columns.code", "Code"), t("booksPage.columns.name", "Name"), t("booksPage.columns.basis", "Basis"), t("booksPage.columns.currency", "Currency"), t("booksPage.columns.primary", "Primary"), t("booksPage.columns.active", "Active"), t("booksPage.columns.actions", "Actions")].map((column) => (
                     <th
                       key={column}
                       className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
@@ -240,8 +247,8 @@ const AccountingBooksPage: React.FC = () => {
                     <td className="px-4 py-3 text-[13px] text-gray-900">{item.name || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.basis || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.currency_code || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_primary ? "Yes" : "No"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_active ? "Yes" : "No"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_primary ? t("common.yes", "Yes") : t("common.no", "No")}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_active ? t("common.yes", "Yes") : t("common.no", "No")}</td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
                         Edit
@@ -253,7 +260,7 @@ const AccountingBooksPage: React.FC = () => {
                 {!items.length ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      No accounting books found.
+                      {t("booksPage.empty", "No accounting books found.")}
                     </td>
                   </tr>
                 ) : null}
@@ -279,26 +286,26 @@ const AccountingBooksPage: React.FC = () => {
       <AccountingSideModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={form.id ? "Edit accounting book" : "New accounting book"}
-        subtitle="Create or update the accounting basis and posting currency."
+        title={form.id ? t("booksPage.modal.editTitle", "Edit accounting book") : t("booksPage.modal.newTitle", "New accounting book")}
+        subtitle={t("booksPage.modal.subtitle", "Create or update the accounting basis and posting currency.")}
         contentClassName="pb-4 md:pb-6"
       >
         <form onSubmit={submit} className="space-y-5">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">Identity</div>
+              <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>
             </div>
 
             <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
               <Input
                 kind="text"
-                label="Code"
+                label={t("common.code", "Code")}
                 value={form.code}
                 onChange={(event) => setForm((prev) => ({ ...prev, code: event.target.value }))}
               />
               <Input
                 kind="text"
-                label="Name"
+                label={t("common.name", "Name")}
                 value={form.name}
                 onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
               />
@@ -307,12 +314,12 @@ const AccountingBooksPage: React.FC = () => {
 
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">Configuration</div>
+              <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.configuration", "Configuration")}</div>
             </div>
 
             <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
               <Select<AccountingBookBasis>
-                label="Basis"
+                label={t("booksPage.modal.basis", "Basis")}
                 items={BASIS_OPTIONS}
                 selected={selectedBasis}
                 onChange={(selected: AccountingBookBasis[]) =>
@@ -325,14 +332,14 @@ const AccountingBooksPage: React.FC = () => {
                 getItemLabel={(item: AccountingBookBasis) =>
                   item.charAt(0).toUpperCase() + item.slice(1)
                 }
-                buttonLabel="Select basis"
+                buttonLabel={t("booksPage.modal.selectBasis", "Select basis")}
                 singleSelect
                 hideCheckboxes
               />
 
               <Input
                 kind="text"
-                label="Currency"
+                label={t("common.currency", "Currency")}
                 value={form.currency_code}
                 onChange={(event) =>
                   setForm((prev) => ({
@@ -352,7 +359,7 @@ const AccountingBooksPage: React.FC = () => {
                   }
                   size="small"
                 />
-                <span className="font-medium text-gray-900">Primary book</span>
+                <span className="font-medium text-gray-900"> {t("booksPage.modal.primaryBook", "Primary book")}</span>
               </label>
 
               <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-700">
@@ -363,7 +370,7 @@ const AccountingBooksPage: React.FC = () => {
                   }
                   size="small"
                 />
-                <span className="font-medium text-gray-900">Active</span>
+                <span className="font-medium text-gray-900"> {t("common.active", "Active")}</span>
               </label>
             </div>
           </section>
@@ -373,7 +380,7 @@ const AccountingBooksPage: React.FC = () => {
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : form.id ? "Save changes" : "Create book"}
+              {saving ? t("common.saving", "Saving...") : form.id ? t("booksPage.modal.saveChanges", "Save changes") : t("booksPage.modal.createBook", "Create book")}
             </Button>
           </div>
         </form>
