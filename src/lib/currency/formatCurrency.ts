@@ -15,7 +15,7 @@ function normalizeSpaces(s: string) {
 /** cookie language > i18n language > en-US */
 export function getAppLanguage(): string {
   const cookieLang =
-    typeof document !== "undefined" ? LanguageCookie.get(false) : null;
+    typeof document !== "undefined" ? LanguageCookie.get() : null;
 
   const lng = cookieLang || i18n.resolvedLanguage || i18n.language || "en-US";
   return lng === "en" ? "en-US" : lng;
