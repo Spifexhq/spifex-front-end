@@ -1,21 +1,11 @@
 // src/lib/tokens.ts
 
-const ACCESS_STORAGE_KEY = "c0";                 // sessionStorage (tab-scoped)
-const ORG_EXTERNAL_ID_STORAGE_KEY = "tenant";    // localStorage (cross-tab)
-const USER_ID_STORAGE_KEY = "uid";               // localStorage (cross-tab)
+export const ORG_EXTERNAL_ID_STORAGE_KEY = "spx_tenant";
+export const USER_ID_STORAGE_KEY = "spx_uid";
 
 let _access = "";
 let _orgExternalId = "";
 let _userId = "";
-
-function getSessionStorage(): Storage | null {
-  try {
-    if (typeof window === "undefined") return null;
-    return window.sessionStorage;
-  } catch {
-    return null;
-  }
-}
 
 function getLocalStorage(): Storage | null {
   try {
@@ -28,76 +18,64 @@ function getLocalStorage(): Storage | null {
 
 function loadFrom(storage: Storage | null, key: string): string {
   if (!storage) return "";
-  const v = storage.getItem(key);
-  return typeof v === "string" ? v : "";
+  const value = storage.getItem(key);
+  return typeof value === "string" ? value : "";
 }
 
-// Initialize
-_access = loadFrom(getSessionStorage(), ACCESS_STORAGE_KEY);
+// Access token is memory-only.
+// Do not read it from localStorage/sessionStorage.
 _orgExternalId = loadFrom(getLocalStorage(), ORG_EXTERNAL_ID_STORAGE_KEY);
 _userId = loadFrom(getLocalStorage(), USER_ID_STORAGE_KEY);
 
 export const getAccess = (): string => _access;
-export const getRefresh = (): string => "";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const setTokens = (access: string, _refresh?: string) => {
+// Keep the signature stable, but do not persist the access token.
+export const setTokens = (access: string): void => {
   _access = access || "";
-
-  const ss = getSessionStorage();
-  if (!ss) return;
-
-  if (_access) ss.setItem(ACCESS_STORAGE_KEY, _access);
-  else ss.removeItem(ACCESS_STORAGE_KEY);
 };
 
-export const clearTokens = () => {
+export const clearTokens = (): void => {
   _access = "";
-
-  const ss = getSessionStorage();
-  if (!ss) return;
-
-  ss.removeItem(ACCESS_STORAGE_KEY);
 };
 
 // -----------------------------------------------------------------------------
-// Org external id (cross-tab persistence)
+// Org external id
 // -----------------------------------------------------------------------------
 
 export const getOrgExternalIdStored = (): string => _orgExternalId;
 
-export const setOrgExternalIdStored = (externalId: string) => {
-  const v = (externalId || "").trim();
-  _orgExternalId = v;
+export const setOrgExternalIdStored = (externalId: string): void => {
+  const value = (externalId || "").trim();
+  _orgExternalId = value;
 
-  const ls = getLocalStorage();
-  if (!ls) return;
+  const storage = getLocalStorage();
+  if (!storage) return;
 
-  if (v) ls.setItem(ORG_EXTERNAL_ID_STORAGE_KEY, v);
-  else ls.removeItem(ORG_EXTERNAL_ID_STORAGE_KEY);
+  if (value) storage.setItem(ORG_EXTERNAL_ID_STORAGE_KEY, value);
+  else storage.removeItem(ORG_EXTERNAL_ID_STORAGE_KEY);
 };
 
-export const clearOrgExternalIdStored = () => {
+export const clearOrgExternalIdStored = (): void => {
   setOrgExternalIdStored("");
 };
 
 // -----------------------------------------------------------------------------
-// User id (external_id) (cross-tab persistence)
+// User id
 // -----------------------------------------------------------------------------
 
 export const getUserIdStored = (): string => _userId;
 
-export const setUserIdStored = (userId: string) => {
-  const v = (userId || "").trim();
-  _userId = v;
+export const setUserIdStored = (userId: string): void => {
+  const value = (userId || "").trim();
+  _userId = value;
 
-  const ls = getLocalStorage();
-  if (!ls) return;
+  const storage = getLocalStorage();
+  if (!storage) return;
 
-  if (v) ls.setItem(USER_ID_STORAGE_KEY, v);
-  else ls.removeItem(USER_ID_STORAGE_KEY);
+  if (value) storage.setItem(USER_ID_STORAGE_KEY, value);
+  else storage.removeItem(USER_ID_STORAGE_KEY);
 };
 
-export const clearUserIdStored = () => {
+export const clearUserIdStored = (): void => {
   setUserIdStored("");
 };

@@ -1,3 +1,4 @@
+// src/lib/ws/useSpifexWebSocket.ts
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AUTH_SYNC_EVENT } from "@/lib/http";
 import { buildWsUrl } from "@/lib/ws/url";

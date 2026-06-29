@@ -1,7 +1,4 @@
 // src/lib/location/countries.ts
-// Build a localized list of countries with value = ISO-3166 alpha-2 (US, PT, BR, ...)
-// and label = full country name in the current UI language.
-
 export interface CountryOption {
   value: string; // "PT"
   label: string; // "Portugal"

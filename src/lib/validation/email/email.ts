@@ -1,3 +1,4 @@
+// src\lib\validation\email\email.ts
 type EmailValidationResult = {
   isValid: boolean;
   normalized: string;

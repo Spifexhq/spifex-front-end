@@ -1,3 +1,4 @@
+// src/lib/ws/types.ts
 export type LiveSyncSchemaVersion = 1;
 
 export type LiveSyncEventType =
