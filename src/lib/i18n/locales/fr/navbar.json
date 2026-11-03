@@ -14,5 +14,26 @@
     "settled": "Réglé",
     "reports": "Rapports",
     "cta": "Terminer la configuration"
+  },
+  "header": "En-tête de page",
+  "notifications": {
+    "title": "Notifications",
+    "list": "Notifications récentes",
+    "empty": "Aucune notification pour le moment",
+    "description": "Les nouvelles notifications apparaîtront ici.",
+    "manage": "Gérer les notifications"
+  },
+  "pages": {
+    "home": "Tableau de bord",
+    "cashflow": "Trésorerie",
+    "settled": "Écritures réglées",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "currency": "Devise",
+    "formats": "Formats et préférences régionales",
+    "limits": "Limites et utilisation",
+    "onboarding": "Configuration de l'espace de travail",
+    "locale": "Préférences régionales",
+    "status": "État de l'espace de travail"
   }
 }

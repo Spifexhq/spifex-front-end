@@ -14,5 +14,26 @@
     "settled": "Settled",
     "reports": "Reports",
     "cta": "Complete setup"
+  },
+  "header": "Page header",
+  "notifications": {
+    "title": "Notifications",
+    "list": "Recent notifications",
+    "empty": "No notifications yet",
+    "description": "New notifications will appear here.",
+    "manage": "Manage notifications"
+  },
+  "pages": {
+    "home": "Dashboard",
+    "cashflow": "Cash flow",
+    "settled": "Settled entries",
+    "reports": "Reports",
+    "settings": "Settings",
+    "currency": "Currency",
+    "formats": "Formats and regional preferences",
+    "limits": "Limits and usage",
+    "onboarding": "Workspace setup",
+    "locale": "Regional preferences",
+    "status": "Workspace status"
   }
 }

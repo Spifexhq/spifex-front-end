@@ -15,5 +15,8 @@
     "notifications": "Benachrichtigungen",
     "help": "Hilfe",
     "signout": "Abmelden"
-  }
+  },
+  "account": "Ihr Konto",
+  "accountButton": "Kontomenü für {{name}}",
+  "signoutError": "Abmelden fehlgeschlagen. Bitte erneut versuchen."
 }

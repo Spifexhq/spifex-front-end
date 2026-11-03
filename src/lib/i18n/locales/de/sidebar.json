@@ -15,7 +15,8 @@
     "title": "Arbeitsbereich",
     "settings": "Einstellungen",
     "sections": {
-      "actions": "Schnellaktionen"
+      "actions": "Schnellaktionen",
+      "workspaces": "Arbeitsbereiche"
     }
   }
 }

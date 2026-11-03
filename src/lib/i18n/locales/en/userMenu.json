@@ -15,5 +15,8 @@
     "notifications": "Notifications",
     "help": "Help",
     "signout": "Sign out"
-  }
+  },
+  "account": "Your account",
+  "accountButton": "Account menu for {{name}}",
+  "signoutError": "Could not sign out. Please try again."
 }

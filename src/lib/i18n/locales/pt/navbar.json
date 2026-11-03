@@ -14,5 +14,26 @@
     "settled": "Realizado",
     "reports": "Relatórios",
     "cta": "Concluir configuração"
+  },
+  "header": "Cabeçalho da página",
+  "notifications": {
+    "title": "Notificações",
+    "list": "Notificações recentes",
+    "empty": "Nenhuma notificação por enquanto",
+    "description": "Novas notificações aparecerão aqui.",
+    "manage": "Gerenciar notificações"
+  },
+  "pages": {
+    "home": "Visão geral",
+    "cashflow": "Fluxo de caixa",
+    "settled": "Lançamentos realizados",
+    "reports": "Relatórios",
+    "settings": "Configurações",
+    "currency": "Moeda",
+    "formats": "Formatos e preferências regionais",
+    "limits": "Limites e utilização",
+    "onboarding": "Configuração do espaço de trabalho",
+    "locale": "Preferências regionais",
+    "status": "Estado do espaço de trabalho"
   }
 }

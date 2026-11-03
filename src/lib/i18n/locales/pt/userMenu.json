@@ -15,5 +15,8 @@
     "notifications": "Notificações",
     "help": "Ajuda",
     "signout": "Terminar sessão"
-  }
+  },
+  "account": "Sua conta",
+  "accountButton": "Menu da conta de {{name}}",
+  "signoutError": "Não foi possível sair. Tente novamente."
 }

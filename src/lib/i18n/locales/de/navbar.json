@@ -14,5 +14,26 @@
     "settled": "Abgerechnet",
     "reports": "Berichte",
     "cta": "Einrichtung abschließen"
+  },
+  "header": "Seitenkopf",
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "list": "Letzte Benachrichtigungen",
+    "empty": "Noch keine Benachrichtigungen",
+    "description": "Neue Benachrichtigungen werden hier angezeigt.",
+    "manage": "Benachrichtigungen verwalten"
+  },
+  "pages": {
+    "home": "Übersicht",
+    "cashflow": "Cashflow",
+    "settled": "Abgewickelte Einträge",
+    "reports": "Berichte",
+    "settings": "Einstellungen",
+    "currency": "Währung",
+    "formats": "Formate und regionale Einstellungen",
+    "limits": "Limits und Nutzung",
+    "onboarding": "Arbeitsbereich einrichten",
+    "locale": "Regionale Einstellungen",
+    "status": "Arbeitsbereichsstatus"
   }
 }

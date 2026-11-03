@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+import { useAppShell } from "@/contexts/AppShellContext";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PermissionMiddleware } from "@/middlewares";
 
@@ -36,14 +38,17 @@ export interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
-  isOpen,
-  toggleSidebar,
+  isOpen: providedOpen,
+  toggleSidebar: providedToggle,
   mode,
   onEntriesSaved,
   onTransferenceSaved,
   entryModalState,
   onEntryModalClose,
 }) => {
+  const shell = useAppShell();
+  const isOpen = shell ? !shell.collapsed : providedOpen;
+  const toggleSidebar = shell?.toggleCollapsed ?? providedToggle;
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const toggleMobile = useCallback(() => setMobileOpen(open => !open), []);
@@ -58,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [banks, setBanks] = useState<BankAccount[]>([]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
     const update = (event?: MediaQueryListEvent) => {
       setIsMobile(event ? event.matches : mediaQuery.matches);
     };
@@ -150,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {isMobile ? <SidebarMobile {...actionProps} isOpen={mobileOpen} toggleSidebar={toggleMobile} /> : <SidebarDesktop {...actionProps} />}
+      {shell ? shell.sidebarSlot && createPortal(isMobile ? <SidebarMobile {...actionProps} isOpen={shell.mobileOpen} toggleSidebar={shell.toggleMobile} /> : <SidebarDesktop {...actionProps} />, shell.sidebarSlot) : isMobile ? <SidebarMobile {...actionProps} isOpen={mobileOpen} toggleSidebar={toggleMobile} /> : <SidebarDesktop {...actionProps} />}
 
       {entryType && (
         <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>

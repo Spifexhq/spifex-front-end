@@ -204,7 +204,7 @@ const CashFlow = () => {
   const selectedAccounting = reasonEntryId ? readinessByEntryId[reasonEntryId] : null;
 
   return (
-    <div className="flex">
+    <div className="flex min-h-0">
       <TopProgress active={banksLoading} variant="top" topOffset={64} />
 
       <div className="shrink-0">

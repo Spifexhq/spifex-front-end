@@ -87,7 +87,7 @@ const Settled = () => {
   );
 
   return (
-    <div className="flex">
+    <div className="flex min-h-0">
       <TopProgress active={isReturning} variant="top" topOffset={64} />
 
       <div className="shrink-0">

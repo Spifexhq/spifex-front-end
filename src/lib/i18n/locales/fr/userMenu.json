@@ -15,5 +15,8 @@
     "notifications": "Notifications",
     "help": "Aide",
     "signout": "Se déconnecter"
-  }
+  },
+  "account": "Votre compte",
+  "accountButton": "Menu du compte de {{name}}",
+  "signoutError": "Impossible de se déconnecter. Réessayez."
 }

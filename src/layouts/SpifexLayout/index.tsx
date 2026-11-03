@@ -4,13 +4,12 @@ import { Outlet } from "react-router-dom";
 import { useAuthContext } from "@/hooks/useAuth";
 import { AuthMiddleware, LocaleProfileMiddleware } from "@/middlewares";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import { Navbar } from "@/shared/layout/Navbar";
+import ApplicationShell from "./ApplicationShell";
 import { CookieBanner } from "@/components/Cookies/CookieBanner";
 import { api } from "@/api/requests";
 import type { OnboardingStatus } from "@/models/auth/onboarding";
 import { AUTH_SYNC_EVENT } from "@/lib/http";
 
-const NAVBAR_HEIGHT = 64;
 
 export const SpifexLayout: FC = () => {
   const { handleInitUser } = useAuthContext();
@@ -85,22 +84,9 @@ export const SpifexLayout: FC = () => {
   return (
     <AuthMiddleware>
       <LocaleProfileMiddleware>
-        <div className="h-[100dvh] overflow-hidden bg-white text-gray-900">
-          <Navbar
-            onboarding={onboarding}
-            showOnboardingWarning={showOnboardingWarning}
-          />
-
-          <main
-            className="overflow-y-auto"
-            style={{
-              height: `calc(100dvh - ${NAVBAR_HEIGHT}px)`,
-              marginTop: `${NAVBAR_HEIGHT}px`,
-            }}
-          >
-            <Outlet />
-          </main>
-        </div>
+        <ApplicationShell onboarding={onboarding} showOnboardingWarning={showOnboardingWarning}>
+          <Outlet />
+        </ApplicationShell>
 
         <CookieBanner />
       </LocaleProfileMiddleware>

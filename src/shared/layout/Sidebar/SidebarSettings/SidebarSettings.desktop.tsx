@@ -1,3 +1,4 @@
+import SidebarUserConfiguration from "../SidebarUserConfiguration";
 import "../sidebar-motion.css";
 import { useEffect, useMemo, useRef } from "react";
 import { NavLink } from "react-router-dom";
@@ -7,8 +8,8 @@ import { useAuthContext } from "@/hooks/useAuth";
 import type { SidebarSettingsProps } from "./SidebarSettings";
 const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network };
 type SidebarSection = { title: string; id: string; items: { id: string; icon: keyof typeof Icons; label: string; permission: string }[] };
-export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 64, mobileOpen = false, onMobileClose, collapsed = false, onToggleCollapsed }: SidebarSettingsProps) {
-  const { user, permissions, isOwner } = useAuthContext();
+export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mobileOpen = false, onMobileClose, collapsed = false, onToggleCollapsed }: SidebarSettingsProps) {
+  const { permissions, isOwner } = useAuthContext();
   const { t } = useTranslation("settingsSidebar");
   const navRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -88,8 +89,8 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 64, m
       style={{ top: topOffsetPx, height: `calc(100dvh - ${topOffsetPx}px)` }}>
       <div className="sidebar-header h-20 shrink-0 items-center">
         <div className="sidebar-header-copy sidebar-label">
-          <p className="text-[15px] font-semibold tracking-tight text-gray-900">{t("title", "Settings")}</p>
-          <p className="mt-0.5 truncate text-xs text-gray-500">{user?.name}</p>
+          <p className="text-[15px] font-semibold tracking-tight text-gray-900"><NavLink to="/home" tabIndex={collapsed && !mobileOpen ? -1 : undefined}>Spifex</NavLink></p>
+          <p className="mt-0.5 truncate text-xs text-gray-500">{t("title", "Settings")}</p>
         </div>
         <button type="button" onClick={onToggleCollapsed} aria-expanded={!collapsed} aria-controls="settings-navigation" title={t(collapsed ? "actions.expand" : "actions.collapse")} aria-label={t(collapsed ? "actions.expand" : "actions.collapse")} className="sidebar-toggle hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200/60 focus-visible:outline-2 focus-visible:outline-gray-500 md:inline-flex">
           {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
@@ -113,6 +114,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 64, m
       <div className="shrink-0 border-t border-gray-200 p-3">
         <NavLink to="/" title={t("actions.back", "Back to workspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" /><span className="sidebar-label">{t("actions.back", "Back to workspace")}</span></NavLink>
       </div>
+      <SidebarUserConfiguration collapsed={collapsed && !mobileOpen} />
     </nav>
   </>;
 }

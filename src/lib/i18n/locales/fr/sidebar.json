@@ -15,7 +15,8 @@
     "title": "Espace de travail",
     "settings": "Paramètres",
     "sections": {
-      "actions": "Actions rapides"
+      "actions": "Actions rapides",
+      "workspaces": "Espaces de travail"
     }
   }
 }
