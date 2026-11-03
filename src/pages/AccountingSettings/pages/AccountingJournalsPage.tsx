@@ -1,5 +1,5 @@
 import { useTranslation as useCommonTranslation } from "react-i18next";
-import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
+import { SettingsModalContent, SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
@@ -394,12 +394,11 @@ const AccountingJournalsPage: React.FC = () => {
         onClose={() => setModalOpen(false)}
         title={t("journalsPage.modal.title", "Manual journal")}
         subtitle={t("journalsPage.modal.subtitle", "Create a controlled accounting entry with balanced debit and credit lines.")}
-        contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
-          <PageSkeleton rows={5} />
+          <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
         ) : (
-          <SettingsModalForm recordLabel={commonT("modalHints.journal")} recordName={form.memo} onSubmit={submit} className="space-y-5">
+          <SettingsModalForm recordLabel={commonT("modalHints.journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
@@ -597,8 +596,8 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
-              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+            <div className="flex items-center justify-end gap-2">
+              <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
@@ -609,7 +608,7 @@ const AccountingJournalsPage: React.FC = () => {
         )}
       </AccountingSideModal>
       <AccountingSideModal isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}>
-        {selectedJournal && <div className="space-y-6 pb-6">
+        {selectedJournal && <SettingsModalContent recordLabel={commonT("modalHints.journal")} recordName={selectedJournal.entry_number || selectedJournal.id}><div className="space-y-6">
           <dl className="grid grid-cols-2 gap-4 rounded-lg border border-gray-200 p-4 text-[13px]">
             {[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label, value]) => <div key={label}><dt className="text-xs text-gray-500">{label}</dt><dd className="mt-1 font-medium text-gray-900">{value}</dd></div>)}
           </dl>
@@ -621,8 +620,8 @@ const AccountingJournalsPage: React.FC = () => {
             </SettingsTable>
           </div>
           <p className="break-all text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)} · {selectedJournal.source_external_id || "—"}</p>
-          <div className="flex justify-end"><Button variant="outline" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button></div>
-        </div>}
+          <div className="flex justify-end"><Button type="button" variant="outline" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button></div>
+        </div></SettingsModalContent>}
       </AccountingSideModal>
     </>
   );

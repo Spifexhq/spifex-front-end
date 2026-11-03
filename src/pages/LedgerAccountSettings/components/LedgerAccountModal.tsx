@@ -124,7 +124,16 @@ const LedgerAccountModal: React.FC<Props> = ({
     [i18n, language]
   );
 
-  window.useGlobalEsc(isOpen, onClose);
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || busy) return;
+      event.preventDefault();
+      onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, busy, onClose]);
   const sectionLabel = React.useCallback((value: LedgerStatementSection) => String(i18n.t(`common.sections.${value === "off_balance" ? "offBalance" : value}`, { ns: "accountingSettings", lng: language })), [i18n, language]);
   const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
   const [metadataText, setMetadataText] = useState("{}");
@@ -255,7 +264,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
 
   return (
-    <SettingsModalFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" onBackdropClose={onClose} className="accounting-dialog">
+    <SettingsModalFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" className="accounting-dialog">
         <SettingsModalHeader titleId="ledger-account-modal-title" title={<>{mode === "create"
                   ? t("modal.createTitle", "Create ledger account")
                   : t("modal.editTitle", "Edit ledger account")}</>} subtitle={<>{mode === "create"
@@ -269,7 +278,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                     )}</>} onClose={onClose} disabled={busy} />
 
         <div className="settings-modal-content">
-          <SettingsModalForm recordLabel={commonT("modalHints.ledgerAccount")} recordName={form.name} onSubmit={submit} className="flex flex-col gap-4 pb-4 md:pb-6">
+          <SettingsModalForm recordLabel={commonT("modalHints.ledgerAccount")} recordName={form.name} onSubmit={submit} className="flex flex-col gap-4">
             <div className="grid gap-5">
               <FieldGroup title={t("modal.general", "General")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -485,7 +494,7 @@ const LedgerAccountModal: React.FC<Props> = ({
               </div>
             ) : null}
 
-            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
+            <div className="flex items-center justify-end gap-3">
               <Button type="button" variant="outline" onClick={onClose}>
                 {t("modal.cancel", "Cancel")}
               </Button>

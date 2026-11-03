@@ -361,12 +361,11 @@ const AccountingBankMappingsPage: React.FC = () => {
         onClose={() => setModalOpen(false)}
         title={t("bankMappingsPage.modal.title", "Bank mapping")}
         subtitle={t("bankMappingsPage.modal.subtitle", "Choose the operational bank account, accounting book, and bank-control ledger account.")}
-        contentClassName="pb-4 md:pb-6"
       >
         {lookupsLoading ? (
-          <PageSkeleton rows={4} />
+          <div className="settings-modal-scroll"><PageSkeleton rows={4} /></div>
         ) : (
-          <SettingsModalForm recordLabel={commonT("modalHints.bankMapping")} recordName={banks.find(bank => bank.id === form.bank_account_id)?.institution} onSubmit={submit} className="space-y-5">
+          <SettingsModalForm recordLabel={commonT("modalHints.bankMapping")} recordName={banks.find(bank => bank.id === form.bank_account_id)?.institution} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.modal.definition", "Mapping definition")}</div>
@@ -432,8 +431,8 @@ const AccountingBankMappingsPage: React.FC = () => {
               </div>
             </section>
 
-            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
-              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+            <div className="flex items-center justify-end gap-2">
+              <Button type="button" variant="cancel" onClick={() => setModalOpen(false)}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
