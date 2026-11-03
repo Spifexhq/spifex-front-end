@@ -1,3 +1,4 @@
+import SettingsPopover from "./SettingsPopover";
 /* -------------------------------------------------------------------------- */
 /* File: src/shared/ui/Popover.tsx                                             */
 /* -------------------------------------------------------------------------- */
@@ -14,7 +15,7 @@ function toCssSize(v?: number | string): string | undefined {
   return typeof v === "number" ? `${v}px` : v;
 }
 
-export const Popover: React.FC<{
+export type PopoverProps = {
   open: boolean;
   onClose(): void;
   children: React.ReactNode;
@@ -28,7 +29,10 @@ export const Popover: React.FC<{
 
   isMobile?: boolean;
   title?: string;
-}> = ({ open, onClose, children, className, anchorRef, width, height, isMobile, title }) => {
+  appearance?: "default" | "settings";
+};
+
+const LegacyPopover: React.FC<PopoverProps> = ({ open, onClose, children, className, anchorRef, width, height, isMobile, title }) => {
   const popRef = useRef<HTMLDivElement>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -259,5 +263,6 @@ export const Popover: React.FC<{
   );
 };
 
+export const Popover: React.FC<PopoverProps> = (props) => props.appearance === "settings" ? <SettingsPopover {...props} /> : <LegacyPopover {...props} />;
 Popover.displayName = "Popover";
 export default Popover;

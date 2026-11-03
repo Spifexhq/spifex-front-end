@@ -30,5 +30,15 @@
     "openDatePicker": "Abrir calendário",
     "previousMonth": "Mês anterior",
     "nextMonth": "Próximo mês"
+  },
+  "settings": {
+    "filters": "Filtros",
+    "activeFilters": "Filtros aplicados"
+  },
+  "pagination": {
+    "previous": "Página anterior",
+    "next": "Próxima página",
+    "noPrevious": "Sem página anterior",
+    "noNext": "Sem próxima página"
   }
 }

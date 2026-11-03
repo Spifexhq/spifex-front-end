@@ -18,7 +18,7 @@ import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
 import { api } from "@/api/requests";
-import { useAuthContext } from "@/hooks/useAuth";
+
 import type { NotificationCategory, NotificationPreference } from "@/models/auth/notifications";
 
 /* ----------------------------- Snackbar type ----------------------------- */
@@ -113,11 +113,7 @@ const CategoryRow: React.FC<{
   );
 };
 
-function getInitials(name?: string) {
-  if (!name) return "SC";
-  const p = name.split(" ").filter(Boolean);
-  return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
-}
+
 
 /* --------------------------------- Page ---------------------------------- */
 const NotificationSettings: React.FC = () => {
@@ -133,7 +129,7 @@ const NotificationSettings: React.FC = () => {
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user: authUser } = useAuthContext();
+
 
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -225,32 +221,16 @@ const NotificationSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
+      <main className="settings-page">
+        <div className="settings-content ">
           {/* Header card */}
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                  {getInitials(authUser?.name)}
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.notifications")}
-                  </h1>
-                </div>
-              </div>
-            </div>
-          </header>
+          
 
           {/* Main card */}
           <section className="mt-6 grid grid-cols-12 gap-6">
             <div className="col-span-12 lg:col-span-8">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between settings-panel-heading">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
                     {t("section.email")}
                   </span>
@@ -287,8 +267,8 @@ const NotificationSettings: React.FC = () => {
 
             {/* Informational side card */}
             <div className="col-span-12 lg:col-span-4">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 settings-panel-heading">
                   <span className="text-[11px] uppercase tracking-wide text-gray-700">
                     {t("sidebar.title")}
                   </span>

@@ -56,7 +56,7 @@ export default function AccountingWorkspace() {
   }, [modal]);
   if (!canView) return <p className="py-8 text-sm text-gray-500">{t("chartPage.noAccess", "You do not have permission to view the chart of accounts.")}</p>;
   return <section className="min-w-0 space-y-4">
-    <header className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">{t("workspace.title", "Chart of accounts")}</h2><p className="mt-1 text-xs leading-5 text-gray-500">{t("chartPage.description", "Review the accounts used by your accounting books and posting rules.")}</p></div>{canAdd && <Button onClick={() => setModal({ account: null })}>{t("workspace.newAccount", "New account")}</Button>}</header>
+    <header className="flex flex-wrap items-center justify-between gap-3"><div><p className="mt-1 text-xs leading-5 text-gray-500">{t("chartPage.description", "Review the accounts used by your accounting books and posting rules.")}</p></div>{canAdd && <Button onClick={() => setModal({ account: null })}>{t("workspace.newAccount", "New account")}</Button>}</header>
     <form className="flex flex-wrap items-end gap-3" onSubmit={event => { event.preventDefault(); setAppliedSearch(search); }}>
       <div className="min-w-[160px] flex-1"><Input kind="text" label={t("common.search", "Search")} value={search} onChange={event => setSearch(event.target.value)} /></div>
       <div className="w-44"><Select label={t("chartPage.status", "Account status")} items={statusOptions} selected={statusOptions.filter(option => option.value === status)} onChange={selected => setStatus(selected[0]?.value ?? "true")} getItemKey={option => option.value} getItemLabel={option => option.label} singleSelect hideCheckboxes /></div>

@@ -1,3 +1,4 @@
+import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -278,7 +279,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
           <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">{t("postingPoliciesPage.title", "Category-to-accounting bridge")}</h2>
+                
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
                   {t("postingPoliciesPage.description", "Define how each operational cashflow category translates into settlement, accrual, and clearing accounts inside each accounting book.")}
                 </p>
@@ -289,7 +290,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
               <MetricCard
                 label={t("postingPoliciesPage.metrics.policies", "Policies")}
                 value={items.length}
@@ -305,13 +306,13 @@ const AccountingPostingPoliciesPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
             <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.listTitle", "Policy list")}</div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto settings-table-scroll">
+            <SettingsTable className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
                   {[t("postingPoliciesPage.columns.category", "Category"), t("postingPoliciesPage.columns.book", "Book"), t("redesign.paymentAccount", "Payments · debit"), t("redesign.receiptAccount", "Receipts · credit"), t("postingPoliciesPage.columns.actions", "Actions")].map((column) => (
@@ -352,7 +353,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                   </tr>
                 ) : null}
               </tbody>
-            </table>
+            </SettingsTable>
           </div>
         </section>
 
@@ -381,8 +382,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
           <PageSkeleton rows={5} />
         ) : (
           <form onSubmit={submit} className="space-y-5">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("postingPoliciesPage.modal.scopeSection", "Scope")}</div>
               </div>
 
@@ -423,8 +424,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.modal.accountMapping", "Account mapping")}</div>
               </div>
 
@@ -455,7 +456,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
               <p className="border-t border-gray-100 px-4 py-3 text-xs leading-5 text-gray-500">{t("redesign.policyHelp", "The bank connection supplies the bank side. These accounts supply the other side of each payment or receipt. Both are currently required.")}</p>
             </section>
-            <details className="rounded-lg border border-gray-200 bg-white">
+            <details className="rounded-lg border border-gray-200 bg-white settings-panel">
               <summary className="flex items-center px-4 py-4 text-sm font-medium">{t("redesign.advancedAccounts", "Advanced account mapping")}</summary>
               <p className="px-4 text-xs leading-5 text-gray-500">{t("redesign.advancedAccountsHelp", "Accrual and clearing settings are stored separately and are not used by automatic settlement posting.")}</p>
               <div className="grid gap-4 p-4 md:grid-cols-2">

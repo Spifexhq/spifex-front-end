@@ -1,3 +1,5 @@
+import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
+import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/MemberSettings.tsx                                          */
 /* -------------------------------------------------------------------------- */
@@ -37,7 +39,7 @@ type Snack =
   | null;
 
 
-const getInitials = () => "FN";
+
 
 /* ------------------------- Filter types / helpers ------------------------ */
 
@@ -65,90 +67,9 @@ function selectedSingle<T>(keys: T[]): T | undefined {
 
 /* ------------------------------- Chip UI ---------------------------------- */
 
-const Chip = ({
-  label,
-  value,
-  active,
-  onClick,
-  onClear,
-  disabled,
-}: {
-  label: string;
-  value?: string;
-  active: boolean;
-  onClick: () => void;
-  onClear?: () => void;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] transition",
-        disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50",
-        active ? "border-gray-300 bg-white" : "border-gray-200 bg-white",
-      ].join(" ")}
-    >
-      {!active ? (
-        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
-          +
-        </span>
-      ) : (
-        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
-          ✓
-        </span>
-      )}
 
-      <span className="text-gray-800 font-medium">{label}</span>
 
-      {active && value ? <span className="text-gray-700 font-normal">{value}</span> : null}
 
-      {active && onClear ? (
-        <span
-          role="button"
-          aria-label="Clear"
-          className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClear();
-          }}
-        >
-          ×
-        </span>
-      ) : null}
-    </button>
-  );
-};
-
-const ClearFiltersChip = ({
-  label,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition",
-        "border-red-200 text-red-600 bg-white",
-        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50",
-      ].join(" ")}
-    >
-      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-red-200 text-red-600 text-[12px] leading-none">
-        ×
-      </span>
-      <span>{label}</span>
-    </button>
-  );
-};
 
 /* ----------------------------- UI: Row ----------------------------------- */
 const Row = ({
@@ -164,12 +85,12 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+  <div className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">{member.name}</p>
       <p className="text-[12px] text-gray-600 truncate">{member.email}</p>
     </div>
-    <div className="flex gap-2 shrink-0">
+    <div className="flex gap-2 shrink-0 settings-row-actions">
       <PermissionMiddleware codeName={"change_member"}>
         <Button variant="outline" onClick={() => onEdit(member)} disabled={busy}>
           {t("btn.edit")}
@@ -554,40 +475,30 @@ const MemberSettings: React.FC = () => {
     <>
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials()}
-              </div>
+      <main className="settings-page">
+        <div className="settings-content ">
+          <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
+              
               <div className="flex items-center gap-3">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("header.settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("header.members")}
-                  </h1>
-                </div>
+                
                 {headerBadge}
               </div>
-            </div>
-          </header>
+            </div></div>
 
           <PermissionMiddleware codeName={"view_member"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between gap-3">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 settings-panel-heading">
+                  <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <SettingsFilters active={hasAppliedFilters}>
                       <div ref={nameAnchorRef}>
                         <Chip
                           label={t("filters.nameLabel")}
                           value={nameChipValue ? `• ${nameChipValue}` : undefined}
                           active={!!appliedName.trim()}
                           onClick={() => togglePopover("name")}
+                          expanded={openFilter === "name"}
                           onClear={appliedName.trim() ? () => clearOne("name") : undefined}
                           disabled={globalBusy}
                         />
@@ -599,6 +510,7 @@ const MemberSettings: React.FC = () => {
                           value={emailChipValue ? `• ${emailChipValue}` : undefined}
                           active={!!appliedEmail.trim()}
                           onClick={() => togglePopover("email")}
+                          expanded={openFilter === "email"}
                           onClear={appliedEmail.trim() ? () => clearOne("email") : undefined}
                           disabled={globalBusy}
                         />
@@ -610,6 +522,7 @@ const MemberSettings: React.FC = () => {
                           value={roleChipValue ? `• ${roleChipValue}` : undefined}
                           active={appliedRoles.length > 0}
                           onClick={() => togglePopover("role")}
+                          expanded={openFilter === "role"}
                           onClear={appliedRoles.length ? () => clearOne("role") : undefined}
                           disabled={globalBusy}
                         />
@@ -622,6 +535,7 @@ const MemberSettings: React.FC = () => {
                             value={groupChipValue ? `• ${groupChipValue}` : undefined}
                             active={appliedGroups.length > 0}
                             onClick={() => togglePopover("group")}
+                          expanded={openFilter === "group"}
                             onClear={appliedGroups.length ? () => clearOne("group") : undefined}
                             disabled={globalBusy}
                           />
@@ -631,7 +545,7 @@ const MemberSettings: React.FC = () => {
                       {hasAppliedFilters && (
                         <ClearFiltersChip label={t("filters.clearAll")} onClick={clearAll} disabled={globalBusy} />
                       )}
-                    </div>
+                    </SettingsFilters>
 
                     {/* RIGHT: add button */}
                     <div className="shrink-0">
@@ -684,9 +598,9 @@ const MemberSettings: React.FC = () => {
       </main>
 
       {/* NAME POPOVER */}
-      <Popover open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)}>
+      <Popover appearance="settings" open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byNameTitle")}>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byNameTitle")}</div>
+          
 
           <div className="mt-3">
             <Input
@@ -723,9 +637,9 @@ const MemberSettings: React.FC = () => {
       </Popover>
 
       {/* EMAIL POPOVER */}
-      <Popover open={openFilter === "email"} anchorRef={emailAnchorRef} onClose={() => setOpenFilter(null)}>
+      <Popover appearance="settings" open={openFilter === "email"} anchorRef={emailAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byEmailTitle")}>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byEmailTitle")}</div>
+          
 
           <div className="mt-3">
             <Input
@@ -762,9 +676,9 @@ const MemberSettings: React.FC = () => {
       </Popover>
 
       {/* ROLE POPOVER */}
-      <Popover open={openFilter === "role"} anchorRef={roleAnchorRef} onClose={() => setOpenFilter(null)} width={420}>
+      <Popover appearance="settings" open={openFilter === "role"} anchorRef={roleAnchorRef} onClose={() => setOpenFilter(null)} width={420} title={t("filters.byRoleTitle")}>
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byRoleTitle")}</div>
+          
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -802,9 +716,9 @@ const MemberSettings: React.FC = () => {
       </Popover>
 
       {/* GROUP POPOVER */}
-      <Popover open={openFilter === "group"} anchorRef={groupAnchorRef} onClose={() => setOpenFilter(null)} width={420}>
+      <Popover appearance="settings" open={openFilter === "group"} anchorRef={groupAnchorRef} onClose={() => setOpenFilter(null)} width={420} title={t("filters.byGroupTitle")}>
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byGroupTitle")}</div>
+          
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Button from "@/shared/ui/Button";
 
 type Props = {
@@ -15,9 +16,11 @@ const PaginationArrows: React.FC<Props> = ({
   disabledPrev,
   disabledNext,
   className,
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+  return (
   <div
-    className={`flex items-center justify-center px-3 py-2 border-t border-gray-200 bg-white ${className || ""}`}
+    className={`flex items-center justify-end px-3 py-2 border-t border-gray-200 bg-white ${className || ""}`}
   >
     <div className="flex items-center gap-2">
       <Button
@@ -26,8 +29,8 @@ const PaginationArrows: React.FC<Props> = ({
         className="!h-8"
         disabled={!!disabledPrev}
         onClick={onPrev}
-        aria-label="Previous page"
-        title={disabledPrev ? "No previous page" : "Previous page"}
+        aria-label={t("pagination.previous")}
+        title={t(disabledPrev ? "pagination.noPrevious" : "pagination.previous")}
       >
         ←
       </Button>
@@ -37,13 +40,14 @@ const PaginationArrows: React.FC<Props> = ({
         className="!h-8"
         disabled={!!disabledNext}
         onClick={onNext}
-        aria-label="Next page"
-        title={disabledNext ? "No next page" : "Next page"}
+        aria-label={t("pagination.next")}
+        title={t(disabledNext ? "pagination.noNext" : "pagination.next")}
       >
         →
       </Button>
     </div>
   </div>
-);
+  );
+};
 
 export default PaginationArrows;

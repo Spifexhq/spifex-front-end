@@ -29,7 +29,7 @@ export default function Navbar({ showOnboardingWarning = false }: NavbarProps) {
     <div className="flex min-w-0 items-center gap-3">
       <button type="button" className="rounded-md p-2 text-gray-500 hover:bg-gray-50 md:hidden" onClick={shell?.toggleMobile} aria-label={t("navbar:actions.open")} aria-expanded={shell?.mobileOpen ?? false}><Menu size={18} /></button>
       <PanelsTopLeft size={16} className="hidden shrink-0 text-gray-400 sm:block" aria-hidden="true" />
-      <p className="truncate text-[13px] font-medium text-gray-700">{t(getPageTitleKey(pathname))}</p>
+      <h1 id="app-page-title" className="truncate text-[13px] font-medium text-gray-700">{t(getPageTitleKey(pathname))}</h1>
     </div>
     <div className="flex shrink-0 items-center gap-2">
       {showOnboardingWarning && <Link to="/onboarding" title={t("navbar:links.cta")} className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-900 hover:bg-amber-100"><AlertTriangle size={15} /><span className="hidden sm:inline">{t("navbar:links.cta")}</span></Link>}

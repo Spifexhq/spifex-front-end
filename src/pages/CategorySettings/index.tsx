@@ -1,3 +1,4 @@
+import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -290,14 +291,13 @@ const CategorySettingsPage: React.FC = () => {
 
   return (
     <>
-      <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="px-4 py-4 sm:px-5">
+      <main className="settings-page">
+        <div className="settings-content space-y-6">
+          <section className="settings-intro">
+            <div className="w-full">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.eyebrow")}</div>
-                  <h1 className="mt-1 text-[16px] font-semibold text-gray-900">{t("header.title")}</h1>
+                  
                   <p className="mt-2 max-w-3xl text-[13px] text-gray-600">{t("header.description")}</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -309,30 +309,30 @@ const CategorySettingsPage: React.FC = () => {
             </div>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600">{t("stats.total")}</div>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.total")}</div>
               <div className="px-4 py-4">
                 <div className="text-[24px] font-semibold text-gray-900">{stats.total}</div>
                 <p className="mt-1 text-[12px] text-gray-600">{t("stats.totalHelp")}</p>
               </div>
             </article>
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600">{t("stats.active")}</div>
+            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.active")}</div>
               <div className="px-4 py-4">
                 <div className="text-[24px] font-semibold text-gray-900">{stats.active}</div>
                 <p className="mt-1 text-[12px] text-gray-600">{t("stats.activeHelp")}</p>
               </div>
             </article>
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600">{t("stats.credit")}</div>
+            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.credit")}</div>
               <div className="px-4 py-4">
                 <div className="text-[24px] font-semibold text-gray-900">{stats.credit}</div>
                 <p className="mt-1 text-[12px] text-gray-600">{t("stats.creditHelp")}</p>
               </div>
             </article>
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600">{t("stats.debit")}</div>
+            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.debit")}</div>
               <div className="px-4 py-4">
                 <div className="text-[24px] font-semibold text-gray-900">{stats.debit}</div>
                 <p className="mt-1 text-[12px] text-gray-600">{t("stats.debitHelp")}</p>
@@ -340,8 +340,8 @@ const CategorySettingsPage: React.FC = () => {
             </article>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 settings-panel-heading">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_220px_auto_auto] lg:items-end">
                 <Input
                   kind="text"
@@ -382,8 +382,8 @@ const CategorySettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
+            <div className="overflow-x-auto settings-table-scroll">
+              <SettingsTable className="min-w-full">
                 <thead>
                   <tr className="border-b border-gray-200 text-left text-[10px] uppercase tracking-wide text-gray-600">
                     <th className="px-4 py-3">{t("table.code")}</th>
@@ -437,7 +437,7 @@ const CategorySettingsPage: React.FC = () => {
                     </tr>
                   ) : null}
                 </tbody>
-              </table>
+              </SettingsTable>
             </div>
           </section>
         </div>

@@ -1,3 +1,4 @@
+import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -252,7 +253,7 @@ const AccountingBankMappingsPage: React.FC = () => {
           <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900"> {t("bankMappingsPage.title", "Bank control mapping")}</h2>
+                
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
                   {t("bankMappingsPage.description", "Link each operational bank account to the accounting book and bank-control ledger account used during posting, settlement, and transfer flows.")}
                 </p>
@@ -263,7 +264,7 @@ const AccountingBankMappingsPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
               <MetricCard
                 label={t("bankMappingsPage.metrics.activeMappings", "Active mappings")}
                 value={items.filter((item) => item.is_active).length}
@@ -283,13 +284,13 @@ const AccountingBankMappingsPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
             <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.listTitle", "Mapping list")}</div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto settings-table-scroll">
+            <SettingsTable className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
                   {[t("bankMappingsPage.columns.bankAccount", "Bank account"), t("bankMappingsPage.columns.book", "Book"), t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), t("bankMappingsPage.columns.active", "Active"), t("bankMappingsPage.columns.actions", "Actions")].map((column) => (
@@ -334,7 +335,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                   </tr>
                 ) : null}
               </tbody>
-            </table>
+            </SettingsTable>
           </div>
         </section>
 
@@ -363,8 +364,8 @@ const AccountingBankMappingsPage: React.FC = () => {
           <PageSkeleton rows={4} />
         ) : (
           <form onSubmit={submit} className="space-y-5">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.modal.definition", "Mapping definition")}</div>
               </div>
 

@@ -23,11 +23,7 @@ const PLAN_CODES = ["starter", "pro"] as const satisfies readonly PlanCode[];
 const isPlanCode = (v: unknown): v is PlanCode =>
   typeof v === "string" && (PLAN_CODES as readonly string[]).includes(v);
 
-const getInitials = (name?: string) => {
-  if (!name) return "GP";
-  const p = name.split(" ").filter(Boolean);
-  return ((p[0]?.[0] || "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
-};
+
 
 const toIso = (v: unknown): string | undefined => {
   if (typeof v !== "string") return undefined;
@@ -85,7 +81,7 @@ const Badge: React.FC<{
 };
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
-  <div className="flex items-center justify-between px-4 py-2.5">
+  <div className="flex items-center justify-between px-4 py-2.5 settings-row">
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">{left}</p>
     </div>
@@ -152,7 +148,7 @@ const SubscriptionManagement: React.FC = () => {
   const { t, i18n } = useTranslation(["subscription"]);
   const isLogged = useRequireLogin();
 
-  const { handleInitUser, user, isOwner, isSuperUser } = useAuthContext();
+  const { handleInitUser, isOwner, isSuperUser } = useAuthContext();
   const navigate = useNavigate();
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -480,27 +476,12 @@ const SubscriptionManagement: React.FC = () => {
       <>
         <TopProgress active={isProcessing} variant="top" topOffset={64} />
 
-        <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-          <div className="max-w-5xl mx-auto">
-            <header className="bg-white border border-gray-200 rounded-lg">
-              <div className="px-5 py-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                  {getInitials(user?.name)}
-                </div>
-
-                <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("subscription:header.settings", "Settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                    {t("subscription:header.title", "Plan & Billing")}
-                  </h1>
-                </div>
-              </div>
-            </header>
+        <main className="settings-page">
+          <div className="settings-content ">
+            
 
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="rounded-lg border border-gray-200 bg-white p-4 settings-panel">
                 <p className="text-[13px] text-gray-700 mb-4">
                   {t(
                     "subscription:errors.ownerOnly",
@@ -543,33 +524,22 @@ const SubscriptionManagement: React.FC = () => {
     <>
       <TopProgress active={isProcessing} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials(user?.name)}
-              </div>
+      <main className="settings-page">
+        <div className="settings-content ">
+          <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
+              
 
               <div className="flex items-center gap-3 min-w-0">
-                <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("subscription:header.settings", "Settings")}
-                  </div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug truncate">
-                    {t("subscription:header.title", "Plan & Billing")}
-                  </h1>
-                </div>
+                
 
                 {statusBadge}
                 {headerBadge}
               </div>
-            </div>
-          </header>
+            </div></div>
 
           <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 settings-panel-heading">
                 <span className="text-[11px] uppercase tracking-wide text-gray-700">
                   {hasSubscription
                     ? t("subscription:section.withPlan", "Your current plan")

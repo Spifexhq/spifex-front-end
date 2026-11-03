@@ -309,29 +309,22 @@ const GroupSettings: React.FC = () => {
     <>
       <TopProgress active={isBackgroundSync || isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-4 sm:px-5 py-4 flex items-start sm:items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
-                GR
-              </div>
+      <main className="settings-page">
+        <div className="settings-content ">
+          <div className="settings-intro"><div className="px-4 sm:px-5 py-4 flex items-start sm:items-center gap-3">
+              
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
-                <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                  <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
-                </div>
+                
                 {headerBadge}
               </div>
-            </div>
-          </header>
+            </div></div>
 
           <PermissionMiddleware codeName={"view_group"} behavior="lock">
             <section className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
               <aside className="lg:col-span-3">
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden settings-panel">
+                  <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 settings-panel-heading">
                     <div className="text-[11px] uppercase tracking-wide text-gray-700">{t("left.groups")}</div>
 
                     <PermissionMiddleware codeName={"add_group"}>
@@ -377,11 +370,11 @@ const GroupSettings: React.FC = () => {
 
               <section className="lg:col-span-9">
                 {!selectedGroupDetail ? (
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500 settings-panel">
                     {t("right.selectPrompt")}
                   </div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden settings-panel">
                     <div className="p-4 border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex flex-col min-w-0 sm:max-w-[70%]">
                         <label className="text-[11px] uppercase tracking-wide text-gray-700">

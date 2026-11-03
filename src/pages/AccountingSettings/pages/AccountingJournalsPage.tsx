@@ -1,3 +1,4 @@
+import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
 import React from "react";
@@ -268,7 +269,7 @@ const AccountingJournalsPage: React.FC = () => {
           <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900">{t("journalsPage.title", "Journal control")}</h2>
+                
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
                   {t("journalsPage.description", "Inspect accounting output, create controlled manual entries, and reverse posted journals that require correction.")}
                 </p>
@@ -292,7 +293,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
               <MetricCard
                 label={t("journalsPage.metrics.entries", "Entries")}
                 value={items.length}
@@ -312,13 +313,13 @@ const AccountingJournalsPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.listTitle", "Journal list")}</div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto settings-table-scroll">
+            <SettingsTable className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
                   {[t("journalsPage.columns.entry", "Entry"), t("journalsPage.columns.book", "Book"), t("journalsPage.columns.source", "Source"), t("journalsPage.columns.postingDate", "Posting date"), t("journalsPage.columns.status", "Status"), t("journalsPage.columns.lines", "Lines"), t("journalsPage.columns.actions", "Actions")].map((column) => (
@@ -367,7 +368,7 @@ const AccountingJournalsPage: React.FC = () => {
                   </tr>
                 ) : null}
               </tbody>
-            </table>
+            </SettingsTable>
           </div>
         </section>
 
@@ -396,8 +397,8 @@ const AccountingJournalsPage: React.FC = () => {
           <PageSkeleton rows={5} />
         ) : (
           <form onSubmit={submit} className="space-y-5">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
               </div>
 
@@ -454,8 +455,8 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
                   <Button
@@ -574,7 +575,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-4">
+            <section className="rounded-lg border border-gray-200 bg-white p-4 settings-panel">
               <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
@@ -610,11 +611,11 @@ const AccountingJournalsPage: React.FC = () => {
             {[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label, value]) => <div key={label}><dt className="text-xs text-gray-500">{label}</dt><dd className="mt-1 font-medium text-gray-900">{value}</dd></div>)}
           </dl>
           {selectedJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{selectedJournal.memo}</p>}
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full text-[13px]"><thead><tr className="border-b border-gray-200 bg-gray-50 text-left"><th className="p-3 font-medium">{t("redesign.ledgerAccount", "Ledger account")}</th><th className="p-3 text-right font-medium">{t("common.balances.debit", "Debit")}</th><th className="p-3 text-right font-medium">{t("common.balances.credit", "Credit")}</th></tr></thead>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 settings-table-scroll">
+            <SettingsTable className="w-full text-[13px]"><thead><tr className="border-b border-gray-200 bg-gray-50 text-left settings-panel-heading"><th className="p-3 font-medium">{t("redesign.ledgerAccount", "Ledger account")}</th><th className="p-3 text-right font-medium">{t("common.balances.debit", "Debit")}</th><th className="p-3 text-right font-medium">{t("common.balances.credit", "Credit")}</th></tr></thead>
               <tbody>{selectedJournal.lines.map(line => <tr key={line.line_no} className="border-b border-gray-100 last:border-0"><td className="p-3"><p className="font-medium">{line.account_name}</p><p className="mt-1 text-xs text-gray-500">{line.account_code}</p>{line.memo && <p className="mt-1 text-xs text-gray-500">{line.memo}</p>}</td><td className="p-3 text-right tabular-nums">{(line.debit_minor / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(line.credit_minor / 100).toFixed(2)}</td></tr>)}</tbody>
               <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold"><tr><td className="p-3">{t("redesign.total", "Total")}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.debit_minor, 0) / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.credit_minor, 0) / 100).toFixed(2)}</td></tr></tfoot>
-            </table>
+            </SettingsTable>
           </div>
           <p className="break-all text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)} · {selectedJournal.source_external_id || "—"}</p>
           <div className="flex justify-end"><Button variant="outline" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button></div>

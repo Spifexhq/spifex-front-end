@@ -34,6 +34,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        data-ui="button"
+        data-variant={variant}
         type={type}
         className={classes}
         disabled={disabled || isLoading}

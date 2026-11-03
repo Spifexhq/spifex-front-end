@@ -1,3 +1,5 @@
+import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
+import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* --------------------------------------------------------------------------
  * File: src/pages/DepartmentSettings/index.tsx
  * -------------------------------------------------------------------------- */
@@ -32,9 +34,7 @@ type Snack =
   | null;
 
 /* --------------------------------- Helpers -------------------------------- */
-function getInitials() {
-  return "DP";
-}
+
 
 function sortOverlayByCodeThenName(a: Department, b: Department) {
   const ca = (a.code || "").toString();
@@ -75,90 +75,9 @@ function toActiveParamFromStatusKeys(keys: StatusKey[]): GetDepartmentsParams["a
 
 /* ------------------------------- Chip UI ---------------------------------- */
 
-const Chip = ({
-  label,
-  value,
-  active,
-  onClick,
-  onClear,
-  disabled,
-}: {
-  label: string;
-  value?: string;
-  active: boolean;
-  onClick: () => void;
-  onClear?: () => void;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] transition",
-        disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50",
-        active ? "border-gray-300 bg-white" : "border-gray-200 bg-white",
-      ].join(" ")}
-    >
-      {!active ? (
-        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
-          +
-        </span>
-      ) : (
-        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
-          ✓
-        </span>
-      )}
 
-      <span className="text-gray-800 font-medium">{label}</span>
 
-      {active && value ? <span className="text-gray-700 font-normal">{value}</span> : null}
 
-      {active && onClear ? (
-        <span
-          role="button"
-          aria-label="Clear"
-          className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClear();
-          }}
-        >
-          ×
-        </span>
-      ) : null}
-    </button>
-  );
-};
-
-const ClearFiltersChip = ({
-  label,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition",
-        "border-red-200 text-red-600 bg-white",
-        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50",
-      ].join(" ")}
-    >
-      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-red-200 text-red-600 text-[12px] leading-none">
-        ×
-      </span>
-      <span>{label}</span>
-    </button>
-  );
-};
 
 /* ------------------------------ Row component ------------------------------ */
 
@@ -175,7 +94,7 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+  <div className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
         {dept.code ? `${t("tags.code")}: ${dept.code}` : "—"}
@@ -184,7 +103,7 @@ const Row = ({
       <p className="text-[13px] font-medium text-gray-900 truncate">{dept.name || t("tags.noName")}</p>
     </div>
 
-    <div className="flex gap-2 shrink-0">
+    <div className="flex gap-2 shrink-0 settings-row-actions">
       <PermissionMiddleware codeName={"change_department"}>
         <Button variant="outline" onClick={() => onEdit(dept)} disabled={busy}>
           {t("buttons.edit")}
@@ -541,33 +460,24 @@ const DepartmentSettings: React.FC = () => {
     <>
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials()}
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("card.settings")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("card.departments")}</h1>
-              </div>
-            </div>
-          </header>
+      <main className="settings-page">
+        <div className="settings-content ">
+          
 
           <PermissionMiddleware codeName={"view_department"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between gap-3">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 settings-panel-heading">
+                  <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <SettingsFilters active={hasAppliedFilters}>
                       <div ref={codeAnchorRef}>
                         <Chip
                           label={t("filters.codeLabel", { defaultValue: "Code" })}
                           value={codeChipValue ? `• ${codeChipValue}` : undefined}
                           active={!!appliedCode.trim()}
                           onClick={() => togglePopover("code")}
+                          expanded={openFilter === "code"}
                           onClear={appliedCode.trim() ? () => clearOne("code") : undefined}
                           disabled={globalBusy}
                         />
@@ -579,6 +489,7 @@ const DepartmentSettings: React.FC = () => {
                           value={nameChipValue ? `• ${nameChipValue}` : undefined}
                           active={!!appliedName.trim()}
                           onClick={() => togglePopover("name")}
+                          expanded={openFilter === "name"}
                           onClear={appliedName.trim() ? () => clearOne("name") : undefined}
                           disabled={globalBusy}
                         />
@@ -590,6 +501,7 @@ const DepartmentSettings: React.FC = () => {
                           value={statusChipValue ? `• ${statusChipValue}` : undefined}
                           active={appliedStatuses.length > 0}
                           onClick={() => togglePopover("status")}
+                          expanded={openFilter === "status"}
                           onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
                           disabled={globalBusy}
                         />
@@ -602,7 +514,7 @@ const DepartmentSettings: React.FC = () => {
                           disabled={globalBusy}
                         />
                       )}
-                    </div>
+                    </SettingsFilters>
 
                     {/* RIGHT: add button */}
                     <div className="shrink-0">
@@ -681,15 +593,13 @@ const DepartmentSettings: React.FC = () => {
       </main>
 
       {/* CODE POPOVER (PORTAL) */}
-      <Popover
+      <Popover appearance="settings"
         open={openFilter === "code"}
         anchorRef={codeAnchorRef}
         onClose={() => setOpenFilter(null)}
-      >
+       title={t("filters.byCodeTitle", { defaultValue: "Filter by code" })}>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byCodeTitle", { defaultValue: "Filter by code" })}
-          </div>
+          
 
           <div className="mt-3">
             <Input
@@ -727,15 +637,13 @@ const DepartmentSettings: React.FC = () => {
       </Popover>
 
       {/* NAME POPOVER (PORTAL) */}
-      <Popover
+      <Popover appearance="settings"
         open={openFilter === "name"}
         anchorRef={nameAnchorRef}
         onClose={() => setOpenFilter(null)}
-      >
+       title={t("filters.byNameTitle", { defaultValue: "Filter by name" })}>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byNameTitle", { defaultValue: "Filter by name" })}
-          </div>
+          
 
           <div className="mt-3">
             <Input
@@ -773,16 +681,14 @@ const DepartmentSettings: React.FC = () => {
       </Popover>
 
       {/* STATUS POPOVER (PORTAL) */}
-      <Popover
+      <Popover appearance="settings"
         open={openFilter === "status"}
         anchorRef={statusAnchorRef}
         onClose={() => setOpenFilter(null)}
         width={420}
-      >
+       title={t("filters.byStatusTitle", { defaultValue: "Filter by status" })}>
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">
-            {t("filters.byStatusTitle", { defaultValue: "Filter by status" })}
-          </div>
+          
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">

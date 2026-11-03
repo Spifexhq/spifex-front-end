@@ -1,6 +1,5 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 
 import "./accounting.css";
@@ -15,17 +14,10 @@ import AccountingReconciliationPage from "./pages/AccountingReconciliationPage";
 import AccountingCorrelationsPage from "./pages/AccountingCorrelationsPage";
 
 const AccountingSettings: React.FC = () => {
-  const { t } = useTranslation("accountingSettings");
-  const isChart = useLocation().pathname.endsWith("/chart");
 
   return (
-    <main className="accounting-workspace min-h-full px-4 py-5 text-gray-900 sm:px-8 lg:px-10">
-      <div className="mx-auto max-w-[1440px] space-y-4">
-        <header>
-          <p className="mb-2 text-xs font-medium text-gray-400">{t("common.settings", { defaultValue: "Settings" })}</p>
-          <h1 className="font-semibold">{t("redesign.title", "Accounting")}</h1>
-          {!isChart && <p className="mt-2 text-[13px] leading-6 text-gray-500">{t("redesign.subtitle", "Connect your cashflow to a clear, consistent accounting record.")}</p>}
-        </header>
+    <main className="accounting-workspace settings-page">
+      <div className="settings-content space-y-4">
         <AccountingNav />
         <div className="accounting-page min-w-0">
         <Routes>

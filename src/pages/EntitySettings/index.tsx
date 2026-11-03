@@ -1,3 +1,5 @@
+import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
+import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/EntitySettings/index.tsx                                   */
 /* -------------------------------------------------------------------------- */
@@ -40,9 +42,7 @@ type EntityTypeOption = { key: EntityTypeValue; label: string };
 
 /* --------------------------------- Helpers -------------------------------- */
 
-function getInitials() {
-  return "EN";
-}
+
 
 function uniq<T>(arr: T[]) {
   return Array.from(new Set(arr));
@@ -85,90 +85,9 @@ function asEntityTypeValue(v: string): EntityTypeValue {
 
 /* ------------------------------- Chip UI ---------------------------------- */
 
-const Chip = ({
-  label,
-  value,
-  active,
-  onClick,
-  onClear,
-  disabled,
-}: {
-  label: string;
-  value?: string;
-  active: boolean;
-  onClick: () => void;
-  onClear?: () => void;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] transition",
-        disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50",
-        active ? "border-gray-300 bg-white" : "border-gray-200 bg-white",
-      ].join(" ")}
-    >
-      {!active ? (
-        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
-          +
-        </span>
-      ) : (
-        <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-700 text-[12px] leading-none">
-          ✓
-        </span>
-      )}
 
-      <span className="text-gray-800 font-medium">{label}</span>
 
-      {active && value ? <span className="text-gray-700 font-normal">{value}</span> : null}
 
-      {active && onClear ? (
-        <span
-          role="button"
-          aria-label="Clear"
-          className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClear();
-          }}
-        >
-          ×
-        </span>
-      ) : null}
-    </button>
-  );
-};
-
-const ClearFiltersChip = ({
-  label,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition",
-        "border-red-200 text-red-600 bg-white",
-        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50",
-      ].join(" ")}
-    >
-      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-red-200 text-red-600 text-[12px] leading-none">
-        ×
-      </span>
-      <span>{label}</span>
-    </button>
-  );
-};
 
 /* ------------------------------ Row component ------------------------------ */
 
@@ -184,7 +103,7 @@ const Row: React.FC<{
   const typeLabel = t(`types.${type}`);
 
   return (
-    <div className={`flex items-center justify-between px-4 py-2.5 ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+    <div className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
       <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-wide text-gray-600">
           {typeLabel}
@@ -193,7 +112,7 @@ const Row: React.FC<{
         <p className="text-[13px] font-medium text-gray-900 truncate">{entity.full_name || t("row.untitled")}</p>
       </div>
 
-      <div className="flex gap-2 shrink-0">
+      <div className="flex gap-2 shrink-0 settings-row-actions">
         <PermissionMiddleware codeName={"change_entity"}>
           <Button variant="outline" onClick={() => onEdit(entity)} disabled={busy}>
             {t("btn.edit")}
@@ -575,33 +494,24 @@ const EntitySettings: React.FC = () => {
     <>
       <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700">
-                {getInitials()}
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.entities")}</h1>
-              </div>
-            </div>
-          </header>
+      <main className="settings-page">
+        <div className="settings-content ">
+          
 
           <PermissionMiddleware codeName={"view_entity"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between gap-3">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 settings-panel-heading">
+                  <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <SettingsFilters active={hasAppliedFilters}>
                       <div ref={nameAnchorRef}>
                         <Chip
                           label={t("filters.nameLabel", { defaultValue: "Name" })}
                           value={nameChipValue || undefined}
                           active={!!appliedName.trim()}
                           onClick={() => togglePopover("name")}
+                          expanded={openFilter === "name"}
                           onClear={appliedName.trim() ? () => clearOne("name") : undefined}
                           disabled={globalBusy}
                         />
@@ -613,6 +523,7 @@ const EntitySettings: React.FC = () => {
                           value={aliasChipValue || undefined}
                           active={!!appliedAlias.trim()}
                           onClick={() => togglePopover("alias")}
+                          expanded={openFilter === "alias"}
                           onClear={appliedAlias.trim() ? () => clearOne("alias") : undefined}
                           disabled={globalBusy}
                         />
@@ -624,6 +535,7 @@ const EntitySettings: React.FC = () => {
                           value={typeChipValue || undefined}
                           active={appliedTypes.length > 0}
                           onClick={() => togglePopover("type")}
+                          expanded={openFilter === "type"}
                           onClear={appliedTypes.length ? () => clearOne("type") : undefined}
                           disabled={globalBusy}
                         />
@@ -635,6 +547,7 @@ const EntitySettings: React.FC = () => {
                           value={statusChipValue || undefined}
                           active={appliedStatuses.length > 0}
                           onClick={() => togglePopover("status")}
+                          expanded={openFilter === "status"}
                           onClear={appliedStatuses.length ? () => clearOne("status") : undefined}
                           disabled={globalBusy}
                         />
@@ -647,7 +560,7 @@ const EntitySettings: React.FC = () => {
                           disabled={globalBusy}
                         />
                       )}
-                    </div>
+                    </SettingsFilters>
 
                     {/* RIGHT: add button */}
                     <div className="shrink-0">
@@ -720,9 +633,9 @@ const EntitySettings: React.FC = () => {
       </main>
 
       {/* NAME POPOVER */}
-      <Popover open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)}>
+      <Popover appearance="settings" open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byNameTitle")}>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byNameTitle")}</div>
+          
 
           <div className="mt-3">
             <Input
@@ -760,9 +673,9 @@ const EntitySettings: React.FC = () => {
       </Popover>
 
       {/* ALIAS POPOVER */}
-      <Popover open={openFilter === "alias"} anchorRef={aliasAnchorRef} onClose={() => setOpenFilter(null)}>
+      <Popover appearance="settings" open={openFilter === "alias"} anchorRef={aliasAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byAliasTitle")}>
         <div className="p-4">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byAliasTitle")}</div>
+          
 
           <div className="mt-3">
             <Input
@@ -800,14 +713,14 @@ const EntitySettings: React.FC = () => {
       </Popover>
 
       {/* TYPE POPOVER (Select; allow overflow) */}
-      <Popover
+      <Popover appearance="settings"
         open={openFilter === "type"}
         anchorRef={typeAnchorRef}
         onClose={() => setOpenFilter(null)}
         width={420}
-      >
+       title={t("filters.byTypeTitle")}>
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byTypeTitle")}</div>
+          
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -850,14 +763,14 @@ const EntitySettings: React.FC = () => {
       </Popover>
 
       {/* STATUS POPOVER (Select; allow overflow) */}
-      <Popover
+      <Popover appearance="settings"
         open={openFilter === "status"}
         anchorRef={statusAnchorRef}
         onClose={() => setOpenFilter(null)}
         width={420}
-      >
+       title={t("filters.byStatusTitle")}>
         <div className="p-4 overflow-visible">
-          <div className="text-[14px] font-semibold text-gray-900">{t("filters.byStatusTitle")}</div>
+          
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">

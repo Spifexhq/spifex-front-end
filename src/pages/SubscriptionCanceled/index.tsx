@@ -35,16 +35,14 @@ const SubscriptionCanceled: React.FC = () => {
     <>
       <TopProgress active={false} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-3xl mx-auto">
-          <section className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
+      <main className="settings-page">
+        <div className="settings-content ">
+          <section className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+            <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 settings-panel-heading">
               <div className="text-[10px] uppercase tracking-wide text-gray-600">
                 {t("subscription:header.settings", "Settings")}
               </div>
-              <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                {t("subscription:header.title", "Plan & Billing")}
-              </h1>
+              
             </div>
 
             <div className="px-5 py-4">

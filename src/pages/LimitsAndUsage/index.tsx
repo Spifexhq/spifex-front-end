@@ -205,13 +205,12 @@ const LimitsAndUsage: React.FC = () => {
     );
 
   return (
-    <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-      <div className="max-w-6xl mx-auto">
+    <main className="settings-page">
+      <div className="settings-content">
         {/* Header */}
-        <header className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kicker")}</div>
-            <h1 className="text-[16px] font-semibold text-gray-900">{t("header.title")}</h1>
+        <div className="settings-intro"><div>
+            
+            
             <p className="text-[12px] text-gray-600">
               {t("header.subtitle")}{" "}
               <span className="font-medium">{data?.plan?.name ?? t("header.planUnknown")}</span>
@@ -226,21 +225,13 @@ const LimitsAndUsage: React.FC = () => {
               <ToneBadge tone="lime">{t("legend.unmetered")}</ToneBadge>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Input
-              kind="text"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="h-9 w-64 text-[13px] rounded-md border border-gray-300 px-3 outline-none focus:ring-2 focus:ring-amber-500/40"
-            />
-          </div>
-        </header>
+<div className="flex items-center gap-2">
+            <Input kind="text" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchPlaceholder")} className="h-9 w-64 text-[13px] rounded-md border border-gray-300 px-3 outline-none focus:ring-2 focus:ring-amber-500/40"/>
+          </div></div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="grid grid-cols-12 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-[11px] font-medium text-gray-700 uppercase tracking-wide">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <div className="settings-usage-heading grid grid-cols-12 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-[11px] font-medium text-gray-700 uppercase tracking-wide settings-panel-heading">
             <button className="text-left col-span-4 hover:underline" onClick={() => toggleSort("permission")}>
               {t("th.permission")}
             </button>
@@ -292,7 +283,7 @@ const LimitsAndUsage: React.FC = () => {
                   : "";
 
               return (
-                <div key={`${permission.code}-${limits.period}`} className="grid grid-cols-12 items-center px-4 py-3">
+                <div key={`${permission.code}-${limits.period}`} className="settings-usage-row grid grid-cols-12 items-center px-4 py-3">
                   {/* Permission */}
                   <div className="col-span-4">
                     <div className="flex items-start gap-3">
@@ -330,19 +321,19 @@ const LimitsAndUsage: React.FC = () => {
                   </div>
 
                   {/* Period */}
-                  <div className="col-span-2 text-[13px] text-gray-800">
+                  <div className="col-span-2 text-[13px] text-gray-800"><span className="settings-cell-label">{t("th.period")}</span>
                     {periodLabel}
                     {resetsLabel && <div className="text-[11px] text-gray-500">{resetsLabel}</div>}
                   </div>
 
                   {/* Limit */}
-                  <div className="col-span-2 text-[13px] text-gray-800">
+                  <div className="col-span-2 text-[13px] text-gray-800"><span className="settings-cell-label">{t("th.limit")}</span>
                     {limits.unmetered ? t("unmetered") : limits.limit ?? 0}
                     {limits.enforce === false && <div className="text-[11px] text-gray-500">{t("notEnforced")}</div>}
                   </div>
 
                   {/* Used */}
-                  <div className="col-span-2">
+                  <div className="col-span-2"><span className="settings-cell-label">{t("th.used")}</span>
                     <div className="text-[13px] text-gray-800">
                       {usage.used}
                       {!limits.unmetered && limits.limit != null ? ` / ${limits.limit}` : ""}
@@ -357,7 +348,7 @@ const LimitsAndUsage: React.FC = () => {
                   </div>
 
                   {/* % + progress */}
-                  <div className="col-span-2">
+                  <div className="col-span-2"><span className="settings-cell-label">{t("th.percent")}</span>
                     <div className="mb-1 text-[13px] text-gray-800 tabular-nums">{percentage}%</div>
                     <Progress pct={percentage} tone={st.tone} />
                   </div>

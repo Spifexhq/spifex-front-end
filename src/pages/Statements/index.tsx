@@ -237,43 +237,29 @@ const Statements: React.FC = () => {
     <>
       <TopProgress active={busy} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <header className="rounded-lg border border-gray-200 bg-white">
-            <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("header.settings")}
-                </div>
-                <h1 className="text-[16px] font-semibold leading-snug text-gray-900">
-                  {t("header.title")}
-                </h1>
-              </div>
+      <main className="settings-page">
+        <div className="settings-content space-y-6">
+          <div className="settings-intro"><div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              
 
               <div className="flex items-center gap-2">
                 <PermissionMiddleware codeName={"add_statement"}>
-                  <Button
-                    variant="primary"
-                    disabled={isAccessLocked}
-                    onClick={() => {
-                      if (isAccessLocked) {
-                        setSnack({
-                          message: t("paywall.body"),
-                          severity: "warning",
-                        });
-                        return;
-                      }
-
-                      setSelectedStatementId(null);
-                      setImportOpen(true);
-                    }}
-                  >
+                  <Button variant="primary" disabled={isAccessLocked} onClick={() => {
+        if (isAccessLocked) {
+            setSnack({
+                message: t("paywall.body"),
+                severity: "warning",
+            });
+            return;
+        }
+        setSelectedStatementId(null);
+        setImportOpen(true);
+    }}>
                     {t("btn.upload")}
                   </Button>
                 </PermissionMiddleware>
               </div>
-            </div>
-          </header>
+            </div></div>
 
           {isAccessLocked ? (
             <section className="rounded-lg border border-amber-200 bg-amber-50">
@@ -291,7 +277,7 @@ const Statements: React.FC = () => {
               </div>
             </section>
           ) : (
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="grid grid-cols-1 gap-3 border-b border-gray-200 px-4 py-4 sm:px-5 lg:grid-cols-[1.1fr_320px]">
                 <Input
                   label={t("filters.searchLabel")}

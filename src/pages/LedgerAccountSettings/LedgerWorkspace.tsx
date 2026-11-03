@@ -111,13 +111,13 @@ const DataTable = ({
   rows: Array<Array<React.ReactNode>>;
   emptyLabel: string;
 }) => (
-  <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-    <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+  <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+    <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 settings-panel-heading">
       <h2 className="text-[14px] font-semibold text-gray-900">{title}</h2>
       <p className="mt-1 text-[12px] text-gray-600">{description}</p>
     </div>
 
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto settings-table-scroll">
       <table className="min-w-full">
         <thead className="bg-gray-50 text-left text-[10px] uppercase tracking-wide text-gray-600">
           <tr>
@@ -153,7 +153,7 @@ const DataTable = ({
   </section>
 );
 
-const LedgerWorkspace: React.FC<Props> = ({ title, description }) => {
+const LedgerWorkspace: React.FC<Props> = ({ description }) => {
   const navigate = useNavigate();
   const { i18n } = useTranslation("ledgerAccounts");
   const language = i18n.resolvedLanguage || i18n.language || "en";
@@ -541,38 +541,25 @@ const LedgerWorkspace: React.FC<Props> = ({ title, description }) => {
   const showSyncBadge = loading && accounts.length > 0;
 
   return (
-    <main className="accounting-workspace min-h-full min-w-0 px-4 py-7 text-gray-900 sm:px-8 lg:px-10">
+    <main className="accounting-workspace settings-page">
       {loading && accounts.length === 0 ? <TopProgress active variant="top" topOffset={64} /> : null}
 
-      <div className="mx-auto max-w-[1440px] space-y-3">
-        <header className="ledger-page-header border-b border-gray-200 pb-3">
-          <div className="flex flex-col gap-4 py-1 lg:flex-row lg:items-start lg:justify-between">
+      <div className="settings-content space-y-3">
+        <div className="settings-intro"><div className="flex flex-col gap-4 py-1 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 items-start gap-3">
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                      {t("workspace.pageLabel", "Settings")}
-                    </div>
-                    <h1 className="text-[16px] font-semibold leading-snug text-gray-900">
-                      {title || t("workspace.titleOverview", "Chart of accounts workspace")}
-                    </h1>
-                  </div>
+                  
 
-                  {showSyncBadge ? (
-                    <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px]">
+                  {showSyncBadge ? (<span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px]">
                       {t("workspace.syncing", "Syncing")}
-                    </span>
-                  ) : null}
+                    </span>) : null}
                 </div>
 
                 <p className="mt-2 max-w-3xl text-[13px] leading-6 text-gray-600">
                   {description ||
-                    t(
-                      "workspace.descriptionOverview",
-                      "Manage the chart of accounts used by your organization, keeping the structure clean, auditable, and ready for reporting."
-                    )}
+        t("workspace.descriptionOverview", "Manage the chart of accounts used by your organization, keeping the structure clean, auditable, and ready for reporting.")}
                 </p>
               </div>
             </div>
@@ -583,34 +570,20 @@ const LedgerWorkspace: React.FC<Props> = ({ title, description }) => {
               </Button>
 
               <div className="relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => setMenuOpen((prev) => !prev)}
-                  disabled={!canManage}
-                >
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setMenuOpen((prev) => !prev)} disabled={!canManage}>
                   {t("workspace.moreActions", "More actions")}
                 </Button>
 
-                {menuOpen ? (
-                  <div className="absolute right-0 z-20 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-                    <button
-                      type="button"
-                      onClick={() => void requestDeleteAll()}
-                      disabled={deletingAll}
-                      className="w-full rounded-md px-3 py-2 text-left text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50"
-                    >
+                {menuOpen ? (<div className="absolute right-0 z-20 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                    <button type="button" onClick={() => void requestDeleteAll()} disabled={deletingAll} className="w-full rounded-md px-3 py-2 text-left text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50">
                       {t("workspace.deleteAll", "Delete all accounts")}
                     </button>
-                  </div>
-                ) : null}
+                  </div>) : null}
               </div>
             </div>
-          </div>
-        </header>
+          </div></div>
 
-        <section className="ledger-view-tabs flex gap-1 overflow-x-auto border-b border-gray-200">
+        <section className="ledger-view-tabs flex gap-1 overflow-x-auto border-b border-gray-200 settings-table-scroll">
           {managementViews.map((item) => (
             <SurfaceTab
               key={item.id}
@@ -638,7 +611,7 @@ const LedgerWorkspace: React.FC<Props> = ({ title, description }) => {
           <Button type="submit">{t("workspace.searchLabel", "Search")}</Button>
           <Button type="button" variant="outline" onClick={() => setFiltersOpen(open => !open)} aria-expanded={filtersOpen} aria-controls="ledger-filters"><SlidersHorizontal size={14} /><span>{t("workspace.filtersTitle", "Filters")}</span>{[appliedSection, appliedAccountType, appliedBankControl, appliedManualPosting, appliedActive === "false" ? "inactive" : ""].filter(Boolean).length || ""}</Button>
         </form>
-        {filtersOpen && <section id="ledger-filters" className="rounded-lg border border-gray-200 bg-white">
+        {filtersOpen && <section id="ledger-filters" className="rounded-lg border border-gray-200 bg-white settings-panel">
           <div className="space-y-4 px-4 py-4">
             <p className="text-[12px] text-gray-600">
               {t(

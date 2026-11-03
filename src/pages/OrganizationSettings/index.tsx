@@ -33,11 +33,7 @@ function pickField<T, K extends keyof T>(obj: T, key: K): Pick<T, K> {
   return { [key]: obj[key] } as Pick<T, K>;
 }
 
-function getInitials(name?: string) {
-  if (!name) return "OR";
-  const parts = name.split(" ").filter(Boolean);
-  return ((parts[0]?.[0] || "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
-}
+
 
 const normalizeCountry = (value: unknown) => (value ?? "").toString().toUpperCase().trim();
 
@@ -64,7 +60,7 @@ const Row = ({
   value: React.ReactNode;
   action?: React.ReactNode;
 }) => (
-  <div className="flex items-start sm:items-center justify-between gap-3 px-4 py-3">
+  <div className="settings-row">
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
       <p className="text-[13px] font-medium text-gray-900 break-words sm:truncate">{value || "—"}</p>
@@ -80,8 +76,8 @@ const SectionCard = ({
   title: string;
   children: React.ReactNode;
 }) => (
-  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
+    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 settings-panel-heading">
       <span className="text-[11px] uppercase tracking-wide text-gray-700">{title}</span>
     </div>
     {children}
@@ -239,9 +235,9 @@ const OrganizationSettings: React.FC = () => {
 
   if (!isOwner) {
     return (
-      <main className="min-h-[calc(100vh-64px)] px-4 sm:px-6 py-6 sm:py-8 text-gray-900">
-        <div className="max-w-3xl mx-auto">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <main className="settings-page">
+        <div className="settings-content ">
+          <div className="rounded-lg border border-gray-200 bg-white p-4 settings-panel">
             <p className="text-[13px] text-gray-700">{t("errors.ownerOnly")}</p>
           </div>
         </div>
@@ -260,19 +256,9 @@ const OrganizationSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <header className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-4 sm:px-5 py-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
-                {getInitials(org?.name)}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.organization")}</h1>
-              </div>
-            </div>
-          </header>
+      <main className="settings-page">
+        <div className="settings-content ">
+          
 
           <section className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-7 space-y-6">

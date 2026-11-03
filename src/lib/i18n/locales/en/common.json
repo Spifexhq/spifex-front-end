@@ -30,5 +30,15 @@
     "openDatePicker": "Open date picker",
     "previousMonth": "Previous month",
     "nextMonth": "Next month"
+  },
+  "settings": {
+    "filters": "Filters",
+    "activeFilters": "Filters applied"
+  },
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "noPrevious": "No previous page",
+    "noNext": "No next page"
   }
 }

@@ -1,3 +1,4 @@
+import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
 import React from "react";
@@ -190,7 +191,7 @@ const AccountingBooksPage: React.FC = () => {
           <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
-                <h2 className="text-[16px] font-semibold text-gray-900"> {t("booksPage.title", "Accounting books")}</h2>
+                
                 <p className="mt-1 text-[13px] leading-6 text-gray-600">
                   {t("booksPage.description", "Create and maintain accounting books used as posting scopes for journals, bank mappings, and category policies.")}
                 </p>
@@ -201,7 +202,7 @@ const AccountingBooksPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
               <MetricCard
                 label={t("booksPage.metrics.books", "Books")}
                 value={items.length}
@@ -221,13 +222,13 @@ const AccountingBooksPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
             <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.listTitle", "Book list")}</div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="overflow-x-auto settings-table-scroll">
+            <SettingsTable className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
                   {[t("booksPage.columns.code", "Code"), t("booksPage.columns.name", "Name"), t("booksPage.columns.basis", "Basis"), t("booksPage.columns.currency", "Currency"), t("booksPage.columns.primary", "Primary"), t("booksPage.columns.active", "Active"), t("booksPage.columns.actions", "Actions")].map((column) => (
@@ -266,7 +267,7 @@ const AccountingBooksPage: React.FC = () => {
                   </tr>
                 ) : null}
               </tbody>
-            </table>
+            </SettingsTable>
           </div>
         </section>
 
@@ -292,8 +293,8 @@ const AccountingBooksPage: React.FC = () => {
         contentClassName="pb-4 md:pb-6"
       >
         <form onSubmit={submit} className="space-y-5">
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>
             </div>
 
@@ -313,8 +314,8 @@ const AccountingBooksPage: React.FC = () => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.configuration", "Configuration")}</div>
             </div>
 

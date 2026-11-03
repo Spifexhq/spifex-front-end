@@ -1537,16 +1537,16 @@ export default function AccountingCorrelationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 sm:py-8">
+    <main className="min-w-0">
       <div className="mx-auto max-w-[2400px] space-y-6">
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.title", "Correlation explorer")}</div>
           </div>
 
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-4xl">
-              <h1 className="text-[16px] font-semibold text-gray-900">{t("correlationsPage.heading", "Accounting data correlation explorer")}</h1>
+              
               <p className="mt-1 text-[13px] leading-6 text-gray-600">
                 {t(
                   "correlationsPage.description",
@@ -1564,7 +1564,7 @@ export default function AccountingCorrelationsPage() {
                     type="button"
                     onClick={() => setFilterMode(option.id)}
                     className={[
-                      "rounded-full border px-3 py-1.5 text-[13px] transition-colors",
+                      "rounded-md border px-3 py-1.5 text-xs transition-colors",
                       active
                         ? "border-gray-900 bg-white text-gray-900"
                         : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50",
@@ -1579,8 +1579,8 @@ export default function AccountingCorrelationsPage() {
         </section>
 
         <section className={isExpanded ? "grid gap-6" : "grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]"}>
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+            <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.board.title", "Correlation board")}</div>
                 <div className="mt-1 text-[13px] font-medium text-gray-900">
@@ -1805,8 +1805,8 @@ export default function AccountingCorrelationsPage() {
           </section>
 
           <aside className={isExpanded ? "space-y-4 xl:col-span-full" : "accounting-inspector space-y-4"}>
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.title", "Inspector")}</div>
               </div>
 
@@ -1890,8 +1890,8 @@ export default function AccountingCorrelationsPage() {
           contentClassName="pb-4 md:pb-6"
         >
           <div className="space-y-4">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.filters.datasets", "Datasets")}</div>
               </div>
 
@@ -1926,8 +1926,8 @@ export default function AccountingCorrelationsPage() {
               </div>
             </section>
 
-            <section className="min-h-[520px] overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+            <section className="min-h-[520px] overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.filters.rowSelector", "Row selector")}</div>
               </div>
 
@@ -1954,7 +1954,7 @@ export default function AccountingCorrelationsPage() {
                         return (
                           <label
                             key={`${row.dataset}-${row.id}`}
-                            className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 hover:bg-gray-50"
+                            className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 hover:bg-gray-50 settings-panel"
                           >
                             <input
                               type="checkbox"

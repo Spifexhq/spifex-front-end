@@ -150,7 +150,7 @@ const GroupPermissionsTable: React.FC<GroupPermissionsTableProps> = ({
   return (
     <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
       <div className="border-t border-gray-200">
-        <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-center gap-3">
+        <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-center gap-3 settings-panel-heading">
           <nav className="flex gap-2" aria-label={t("aria.tabs", { defaultValue: "Permission tabs" })}>
             {TABS.map((tab) => {
               const isActive = tab.id === activeTab;

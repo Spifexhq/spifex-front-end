@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Building2, FileUser, ListTree } from "lucide-react";
+import { Building2, FileUser } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
@@ -198,46 +198,27 @@ const LedgerAccountsGate: React.FC<Props> = ({
   const content = (
     <>
       {!embedded ? (
-        <header className="rounded-lg border border-gray-200 bg-white">
-          <div className="flex items-start gap-3 px-5 py-4">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-gray-200 bg-gray-50 text-[11px] font-semibold text-gray-700">
-              <ListTree size={18} aria-hidden="true" />
-            </div>
+        <div className="settings-intro"><div className="flex items-start gap-3 px-5 py-4">
+            
 
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                {t("setup.pageLabel", "Settings")}
-              </div>
-              <h1 className="text-[16px] font-semibold leading-snug text-gray-900">
-                {ledgerMode === "personal"
-                  ? t("setup.titlePersonal", "Set up your personal ledger")
-                  : t("setup.titleOrganizational", "Set up your organizational ledger")}
-              </h1>
+              
+              
 
               <p className="mt-2 max-w-3xl text-[13px] leading-6 text-gray-600">
                 {compact
-                  ? t(
-                      "setup.descriptionCompact",
-                      "Compact cashflow view is enabled. Start with a smaller chart and expand later if needed."
-                    )
-                  : ledgerMode === "personal"
-                    ? t(
-                        "setup.descriptionPersonal",
-                        "Start with a clean personal structure and adapt it only where you need more detail."
-                      )
-                    : t(
-                        "setup.descriptionOrganizational",
-                        "Start with a practical business-ready chart of accounts and then refine it for your organization."
-                      )}
+        ? t("setup.descriptionCompact", "Compact cashflow view is enabled. Start with a smaller chart and expand later if needed.")
+        : ledgerMode === "personal"
+            ? t("setup.descriptionPersonal", "Start with a clean personal structure and adapt it only where you need more detail.")
+            : t("setup.descriptionOrganizational", "Start with a practical business-ready chart of accounts and then refine it for your organization.")}
               </p>
             </div>
-          </div>
-        </header>
+          </div></div>
       ) : null}
 
       <section className={embeddedShellClass}>
         {!embedded ? (
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">
               {t("setup.setupMethod", "Setup method")}
             </div>
@@ -404,7 +385,7 @@ const LedgerAccountsGate: React.FC<Props> = ({
   if (embedded) return <>{content}</>;
 
   return (
-    <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
+    <main className="settings-page">
       <div className="mx-auto max-w-6xl space-y-6">{content}</div>
     </main>
   );
