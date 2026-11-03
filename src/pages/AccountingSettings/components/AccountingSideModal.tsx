@@ -11,6 +11,8 @@ type Props = {
   recordLabel?: ReactNode;
   recordName?: string;
   contentClassName?: string;
+  /** Optional preview actions. Rendered in the Department-style pinned footer. */
+  footer?: ReactNode;
 };
 
 /**
@@ -28,6 +30,7 @@ export default function AccountingSideModal({
   recordLabel,
   recordName,
   contentClassName = "",
+  footer,
 }: Props) {
   const generatedId = useId();
   const titleId = `accounting-side-modal-${generatedId.replace(/:/g, "")}`;
@@ -63,7 +66,26 @@ export default function AccountingSideModal({
       />
       {isForm ? children : (
         <div className="settings-modal-form flex min-h-0 flex-1 flex-col overflow-hidden">
-          {isPreviewContent ? children : (
+          {footer ? (
+            <>
+              <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+                <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>{children}</div>
+              </div>
+              <footer
+                className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
+                style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+              >
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <p className="hidden text-[12px] text-gray-600 md:block">
+                    {recordLabel ?? title}: <b>{recordName?.trim() || subtitle || "—"}</b>
+                  </p>
+                  <div className="flex flex-wrap justify-end gap-2 md:ml-auto">
+                    {footer}
+                  </div>
+                </div>
+              </footer>
+            </>
+          ) : isPreviewContent ? children : (
             <SettingsModalContent recordLabel={recordLabel ?? title} recordName={recordName ?? subtitle}>
               <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>
                 {children}

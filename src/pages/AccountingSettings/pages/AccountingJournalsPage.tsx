@@ -1,5 +1,5 @@
 import { useTranslation as useCommonTranslation } from "react-i18next";
-import { SettingsModalContent, SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
+import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
@@ -607,8 +607,10 @@ const AccountingJournalsPage: React.FC = () => {
           </SettingsModalForm>
         )}
       </AccountingSideModal>
-      <AccountingSideModal isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}>
-        {selectedJournal && <SettingsModalContent recordLabel={commonT("modalHints.journal")} recordName={selectedJournal.entry_number || selectedJournal.id}><div className="space-y-6">
+      <AccountingSideModal isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}
+        recordLabel={commonT("modalHints.journal")} recordName={selectedJournal?.entry_number || selectedJournal?.id}
+        footer={<Button type="button" variant="cancel" className="w-full md:w-auto" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button>}>
+        {selectedJournal && <div className="space-y-6">
           <dl className="grid grid-cols-2 gap-4 rounded-lg border border-gray-200 p-4 text-[13px]">
             {[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label, value]) => <div key={label}><dt className="text-xs text-gray-500">{label}</dt><dd className="mt-1 font-medium text-gray-900">{value}</dd></div>)}
           </dl>
@@ -620,8 +622,7 @@ const AccountingJournalsPage: React.FC = () => {
             </SettingsTable>
           </div>
           <p className="break-all text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)} · {selectedJournal.source_external_id || "—"}</p>
-          <div className="flex justify-end"><Button type="button" variant="outline" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button></div>
-        </div></SettingsModalContent>}
+        </div>}
       </AccountingSideModal>
     </>
   );

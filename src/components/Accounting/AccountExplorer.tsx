@@ -78,11 +78,14 @@ export default function AccountExplorer({ items, onEdit, onDelete, editable = tr
       {!rows.length && <div className="px-5 py-12 text-center"><p className="text-sm font-medium text-gray-900">{t("workspace.emptyTitle")}</p><p className="mt-2 text-xs text-gray-500">{t("workspace.emptySubtitle")}</p></div>}
     </div>
     <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-2 text-[11px] text-gray-400">{t("explorer.visibleCount", "{{visible}} of {{total}} accounts shown", { visible: rows.length, total: filtered.length })}<span className="ml-3 hidden sm:inline">{t("explorer.inspectHint", "Select an account name to see its details.")}</span></div>
-    <AccountingSideModal recordLabel={t("modal.name")} recordName={selected?.name} isOpen={!!selected} title={selected?.name || ""} subtitle={selected?.code} onClose={() => setSelectedId(null)}>
+    <AccountingSideModal recordLabel={t("modal.name")} recordName={selected?.name} isOpen={!!selected} title={selected?.name || ""} subtitle={selected?.code} onClose={() => setSelectedId(null)}
+      footer={selected && editable ? <>
+        {onDelete && !selected.is_system ? <Button type="button" variant="cancel" className="w-full md:w-auto" onClick={() => { setSelectedId(null); onDelete(selected); }}>{t("workspace.delete")}</Button> : <span />}
+        {onEdit && <Button type="button" variant="outline" className="w-full md:w-auto" onClick={() => { setSelectedId(null); onEdit(selected); }}>{t("workspace.edit")}</Button>}
+      </> : undefined}>
       {selected && <div className="space-y-6"><dl className="divide-y divide-gray-100 text-[13px]">{[
         [t("modal.accountType"), t(`modal.${selected.account_type}`)], [t("modal.statementSection"), sectionLabel(selected.statement_section)], [t("modal.normalBalance"), t(`modal.${selected.normal_balance}`)], [t("modal.parent"), items.find(item => item.id === selected.parent_id)?.name || "—"], [t("modal.currencyCode"), selected.currency_code || "—"], [t("modal.bankControl"), accounting(selected.is_bank_control ? "common.yes" : "common.no")], [t("modal.manualPosting"), accounting(selected.allows_manual_posting ? "common.yes" : "common.no")], [t("modal.reportGroup"), selected.report_group || "—"], [t("modal.reportSubgroup"), selected.report_subgroup || "—"], [t("modal.externalRef"), selected.external_ref || "—"],
       ].map(([label, value]) => <div key={label} className="flex justify-between gap-6 py-3"><dt className="text-gray-500">{label}</dt><dd className="max-w-[60%] break-words text-right font-medium text-gray-900">{value}</dd></div>)}</dl>{selected.description && <p className="text-[13px] leading-6 text-gray-500">{selected.description}</p>}
-        {editable && <div className="flex items-center justify-end gap-2 border-t border-gray-200 pt-4"><div>{onDelete && !selected.is_system && <button type="button" className="mr-auto px-3 py-2 text-xs text-red-600 hover:underline" onClick={() => { setSelectedId(null); onDelete(selected); }}>{t("workspace.delete")}</button>}</div>{onEdit && <Button variant="outline" onClick={() => { setSelectedId(null); onEdit(selected); }}>{t("workspace.edit")}</Button>}</div>}
       </div>}
     </AccountingSideModal>
   </section>;

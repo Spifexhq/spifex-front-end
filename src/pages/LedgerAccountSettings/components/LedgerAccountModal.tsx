@@ -1,5 +1,5 @@
 import { SettingsModalFrame, SettingsModalHeader } from "@/shared/ui/Settings/SettingsModalFrame";
-import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
+import { SettingsModalFooter } from "@/shared/ui/Settings/SettingsModalContent";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
 
@@ -277,8 +277,13 @@ const LedgerAccountModal: React.FC<Props> = ({
                       "Update the ledger account structure, classification, and posting controls."
                     )}</>} onClose={onClose} disabled={busy} />
 
-        <div className="settings-modal-content">
-          <SettingsModalForm recordLabel={commonT("modalHints.ledgerAccount")} recordName={form.name} onSubmit={submit} className="flex flex-col gap-4">
+        <form className="settings-modal-form" onSubmit={submit} onKeyDown={event => {
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+            event.preventDefault();
+            event.currentTarget.requestSubmit();
+          }
+        }}>
+          <div className="settings-modal-scroll flex flex-col gap-4">
             <div className="grid gap-5">
               <FieldGroup title={t("modal.general", "General")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -494,18 +499,24 @@ const LedgerAccountModal: React.FC<Props> = ({
               </div>
             ) : null}
 
-            <div className="flex items-center justify-end gap-3">
-              <Button type="button" variant="outline" onClick={onClose}>
-                {t("modal.cancel", "Cancel")}
-              </Button>
-              <Button type="submit" disabled={busy}>
-                {mode === "create"
-                  ? t("modal.saveCreate", "Create account")
-                  : t("modal.saveEdit", "Save changes")}
-              </Button>
+          </div>
+          <SettingsModalFooter
+            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="hidden text-[12px] text-gray-600 md:block">
+                {commonT("modalHints.ledgerAccount")}: <b>{form.name.trim() || "—"}</b>
+              </p>
+              <div className="grid grid-cols-2 gap-2 md:ml-auto md:flex md:gap-2">
+                <Button type="button" variant="cancel" onClick={onClose} disabled={busy} className="w-full md:w-auto">{t("modal.cancel", "Cancel")}</Button>
+                <Button type="submit" disabled={busy} className="w-full md:w-auto">
+                  {mode === "create" ? t("modal.saveCreate", "Create account") : t("modal.saveEdit", "Save changes")}
+                </Button>
+              </div>
             </div>
-          </SettingsModalForm>
-        </div>
+          </SettingsModalFooter>
+        </form>
       </SettingsModalFrame>
   );
 };
