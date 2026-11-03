@@ -1,6 +1,5 @@
 import { accountingErrorMessage } from "../accountingError";
 import { useAccountingSetup, useAccountingDraft } from "../setup/useAccountingSetup";
-import { useTranslation as useCommonTranslation } from "react-i18next";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
@@ -88,7 +87,6 @@ const EMPTY_FORM: BookFormState = {
 
 const AccountingBooksPage: React.FC = () => {
   const { refresh: refreshSetup, canManage, status: setupStatus } = useAccountingSetup();
-  const { t: commonT } = useCommonTranslation("common");
   const { i18n } = useTranslation("accountingSettings");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
@@ -300,7 +298,7 @@ const AccountingBooksPage: React.FC = () => {
         title={form.id ? t("booksPage.modal.editTitle", "Edit accounting book") : t("booksPage.modal.newTitle", "New accounting book")}
         subtitle={t("booksPage.modal.subtitle", "Create or update the accounting basis and posting currency.")}
       >
-        <SidePanelForm recordLabel={commonT("modalHints.book")} recordName={form.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
+        <SidePanelForm recordLabel={t("footer.book", "Book")} recordName={form.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>

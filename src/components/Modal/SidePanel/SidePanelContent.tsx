@@ -30,17 +30,7 @@ export function SidePanelContent({ children, recordLabel, recordName }: { childr
   return <><div className="settings-modal-scroll">{wrapper ? cloneElement(wrapper, { children: split.body }) : split.body}</div>{split.actions && <footer className="settings-modal-footer"><div className="settings-modal-footer-layout"><SidePanelHint recordLabel={recordLabel} recordName={recordName} /><div className="settings-modal-action-buttons">{split.actions}</div></div></footer>}</>;
 }
 
-/** Shared action labels and secondary-button treatment for preview/edit forms. */
+/** Layout only: each feature owns its action labels and button variants. */
 export function SidePanelFooter({ children, ...props }: HTMLAttributes<HTMLElement>) {
-  const { t } = useTranslation("common");
-  function standardize(nodes: ReactNode): ReactNode {
-    return Children.map(nodes, node => {
-      if (!isValidElement(node)) return node;
-      const element = node as ReactElement<{ type?: string; variant?: string; children?: ReactNode }>;
-      if (element.props.type === "submit") return cloneElement(element, { children: t("btn.save") });
-      if (element.props.type === "button" && ["cancel", "outline"].includes(element.props.variant ?? "")) return cloneElement(element, { variant: "cancel", children: t("btn.cancel") });
-      return element.props.children ? cloneElement(element, { children: standardize(element.props.children) }) : element;
-    });
-  }
-  return <footer {...props}>{standardize(children)}</footer>;
+  return <footer {...props}>{children}</footer>;
 }

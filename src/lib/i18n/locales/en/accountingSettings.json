@@ -971,5 +971,11 @@
     "continueStep": "Continue",
     "editPeriod": "Edit period",
     "scopeLocked": "The bank or category and book identify this configuration. Create a new configuration to use a different scope."
+  },
+  "footer": {
+    "book": "Book",
+    "bankMapping": "Bank connection",
+    "postingPolicy": "Posting rule",
+    "journal": "Journal"
   }
 }

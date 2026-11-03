@@ -971,5 +971,11 @@
     "continueStep": "Continuar",
     "editPeriod": "Editar período",
     "scopeLocked": "O banco ou a categoria e o livro identificam esta configuração. Crie uma nova configuração para usar outro escopo."
+  },
+  "footer": {
+    "book": "Livro",
+    "bankMapping": "Conexão bancária",
+    "postingPolicy": "Regra de lançamento",
+    "journal": "Diário"
   }
 }

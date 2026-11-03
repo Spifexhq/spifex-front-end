@@ -158,7 +158,16 @@
     "createSubtitle": "Créer un compte du grand livre avec structure, classification et contrôles de saisie.",
     "editSubtitle": "Mettre à jour la structure, la classification et les contrôles de saisie du compte du grand livre.",
     "debit": "Débit",
-    "credit": "Crédit"
+    "credit": "Crédit",
+    "sections": {
+      "asset": "Actif",
+      "liability": "Passif",
+      "equity": "Capitaux propres",
+      "income": "Produits",
+      "expense": "Charges",
+      "off_balance": "Hors bilan",
+      "statistical": "Statistique"
+    }
   },
   "accounting": {
     "title": "Espace comptable",
@@ -178,5 +187,14 @@
     "inspectHint": "Sélectionnez un nom de compte pour voir ses détails.",
     "postingCount_one": "{{count}} compte de comptabilisation",
     "postingCount_other": "{{count}} comptes de comptabilisation"
+  },
+  "footer": {
+    "account": "Compte comptable:",
+    "enterName": "Saisissez un nom de compte pour continuer.",
+    "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
+  },
+  "btn": {
+    "save": "Enregistrer",
+    "cancel": "Annuler"
   }
 }

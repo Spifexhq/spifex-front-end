@@ -158,7 +158,16 @@
     "createSubtitle": "Create a ledger account with structure, classification, and posting controls.",
     "editSubtitle": "Update the ledger account structure, classification, and posting controls.",
     "debit": "Debit",
-    "credit": "Credit"
+    "credit": "Credit",
+    "sections": {
+      "asset": "Asset",
+      "liability": "Liability",
+      "equity": "Equity",
+      "income": "Income",
+      "expense": "Expense",
+      "off_balance": "Off balance",
+      "statistical": "Statistical"
+    }
   },
   "accounting": {
     "title": "Accounting workspace",
@@ -178,5 +187,14 @@
     "inspectHint": "Select an account name to see its details.",
     "postingCount_one": "{{count}} posting account",
     "postingCount_other": "{{count}} posting accounts"
+  },
+  "footer": {
+    "account": "Ledger account:",
+    "enterName": "Enter an account name to continue.",
+    "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
+  },
+  "btn": {
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

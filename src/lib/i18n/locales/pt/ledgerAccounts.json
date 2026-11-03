@@ -158,7 +158,16 @@
     "createSubtitle": "Criar uma conta do plano com estrutura, classificação e controlos de lançamento.",
     "editSubtitle": "Atualizar a estrutura, classificação e controlos de lançamento da conta do plano.",
     "debit": "Débito",
-    "credit": "Crédito"
+    "credit": "Crédito",
+    "sections": {
+      "asset": "Ativo",
+      "liability": "Passivo",
+      "equity": "Capital próprio",
+      "income": "Rendimento",
+      "expense": "Despesa",
+      "off_balance": "Extrapatrimonial",
+      "statistical": "Estatístico"
+    }
   },
   "accounting": {
     "title": "Espaço de contabilidade",
@@ -178,5 +187,14 @@
     "inspectHint": "Selecione o nome de uma conta para ver os detalhes.",
     "postingCount_one": "{{count}} conta de lançamento",
     "postingCount_other": "{{count}} contas de lançamento"
+  },
+  "footer": {
+    "account": "Conta contábil:",
+    "enterName": "Introduza o nome da conta para continuar.",
+    "shortcuts": "Atalhos: Esc fecha • Ctrl/⌘+S salva"
+  },
+  "btn": {
+    "save": "Salvar",
+    "cancel": "Cancelar"
   }
 }

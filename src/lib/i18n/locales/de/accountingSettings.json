@@ -971,5 +971,11 @@
     "continueStep": "Weiter",
     "editPeriod": "Periode bearbeiten",
     "scopeLocked": "Bank oder Kategorie und Buch bestimmen diese Konfiguration. Legen Sie für einen anderen Geltungsbereich eine neue Konfiguration an."
+  },
+  "footer": {
+    "book": "Buch",
+    "bankMapping": "Bankverbindung",
+    "postingPolicy": "Buchungsregel",
+    "journal": "Journal"
   }
 }

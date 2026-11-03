@@ -971,5 +971,11 @@
     "continueStep": "Continuer",
     "editPeriod": "Modifier la période",
     "scopeLocked": "La banque ou la catégorie et le livre identifient cette configuration. Créez une nouvelle configuration pour changer de périmètre."
+  },
+  "footer": {
+    "book": "Livre",
+    "bankMapping": "Connexion bancaire",
+    "postingPolicy": "Règle de comptabilisation",
+    "journal": "Journal"
   }
 }

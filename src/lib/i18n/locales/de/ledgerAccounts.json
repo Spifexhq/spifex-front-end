@@ -158,7 +158,16 @@
     "createSubtitle": "Erstelle ein Hauptbuchkonto mit Struktur, Klassifizierung und Buchungssteuerung.",
     "editSubtitle": "Aktualisiere Struktur, Klassifizierung und Buchungssteuerung des Hauptbuchkontos.",
     "debit": "Soll",
-    "credit": "Haben"
+    "credit": "Haben",
+    "sections": {
+      "asset": "Aktiva",
+      "liability": "Passiva",
+      "equity": "Eigenkapital",
+      "income": "Erträge",
+      "expense": "Aufwendungen",
+      "off_balance": "Außerbilanziell",
+      "statistical": "Statistisch"
+    }
   },
   "accounting": {
     "title": "Buchhaltungs-Arbeitsbereich",
@@ -178,5 +187,14 @@
     "inspectHint": "Wählen Sie einen Kontonamen, um die Details anzuzeigen.",
     "postingCount_one": "{{count}} Buchungskonto",
     "postingCount_other": "{{count}} Buchungskonten"
+  },
+  "footer": {
+    "account": "Sachkonto:",
+    "enterName": "Geben Sie einen Kontonamen ein, um fortzufahren.",
+    "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
+  },
+  "btn": {
+    "save": "Speichern",
+    "cancel": "Abbrechen"
   }
 }

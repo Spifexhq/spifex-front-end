@@ -1,7 +1,6 @@
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import { accountingErrorMessage } from "../accountingError";
 import Checkbox from "@/shared/ui/Checkbox";
-import { useTranslation as useCommonTranslation } from "react-i18next";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import AccountingTerm from "../components/AccountingTerm";
@@ -106,7 +105,6 @@ const bookLabel = (book: AccountingBook): string =>
 const AccountingPostingPoliciesPage: React.FC = () => {
   const { canManage } = useAccountingSetup();
   const [editingScope, setEditingScope] = React.useState(false);
-  const { t: commonT } = useCommonTranslation("common");
   const { i18n } = useTranslation("accountingSettings");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
@@ -394,7 +392,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         {lookupsLoading ? (
           <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
         ) : (
-          <SidePanelForm recordLabel={commonT("modalHints.postingPolicy")} recordName={categories.find(category => category.id === form.cashflow_category_id)?.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
+          <SidePanelForm recordLabel={t("footer.postingPolicy", "Posting policy")} recordName={categories.find(category => category.id === form.cashflow_category_id)?.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             {editingScope && <p className="text-xs leading-6 text-gray-500">{t("setupFlow.scopeLocked", "The bank or category and book identify this configuration. Create a new configuration to use a different scope.")}</p>}
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">

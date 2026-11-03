@@ -110,8 +110,7 @@ const LedgerAccountModal: React.FC<Props> = ({
   onClose,
   onSubmit,
 }) => {
-  const { i18n } = useTranslation("ledgerAccounts");
-  const { t: commonT } = useTranslation("common");
+  const { i18n, t: translate } = useTranslation("ledgerAccounts");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string) =>
@@ -135,7 +134,7 @@ const LedgerAccountModal: React.FC<Props> = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isOpen, busy, onClose]);
-  const sectionLabel = React.useCallback((value: LedgerStatementSection) => String(i18n.t(`common.sections.${value === "off_balance" ? "offBalance" : value}`, { ns: "accountingSettings", lng: language })), [i18n, language]);
+  const sectionLabel = React.useCallback((value: LedgerStatementSection) => String(i18n.t(`modal.sections.${value}`, { ns: "ledgerAccounts", lng: language })), [i18n, language]);
   const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
   const [metadataText, setMetadataText] = useState("{}");
   const [error, setError] = useState<string | null>(null);
@@ -252,7 +251,7 @@ const LedgerAccountModal: React.FC<Props> = ({
   };
 
   return (
-    <SidePanelFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" className="accounting-dialog">
+    <SidePanelFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" className="accounting-dialog" onBackdropClose={() => { if (!busy) onClose(); }}>
         <SidePanelHeader titleId="ledger-account-modal-title" title={<>{mode === "create"
                   ? t("modal.createTitle", "Create ledger account")
                   : t("modal.editTitle", "Edit ledger account")}</>} subtitle={<>{mode === "create"
@@ -494,12 +493,13 @@ const LedgerAccountModal: React.FC<Props> = ({
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="hidden text-[12px] text-gray-600 md:block">
-                {commonT("modalHints.ledgerAccount")}: <b>{form.name.trim() || "—"}</b>
+                {form.name.trim() ? <>{translate("footer.account")} <b>{form.name.trim()}</b></> : <>{translate("footer.enterName")}</>}
+                <span className="ml-3 text-gray-400">{translate("footer.shortcuts")}</span>
               </p>
               <div className="grid grid-cols-2 gap-2 md:ml-auto md:flex md:gap-2">
-                <Button type="button" variant="cancel" onClick={onClose} disabled={busy} className="w-full md:w-auto">{t("modal.cancel", "Cancel")}</Button>
+                <Button type="button" variant="cancel" onClick={onClose} disabled={busy} className="w-full md:w-auto">{translate("btn.cancel")}</Button>
                 <Button type="submit" disabled={busy} className="w-full md:w-auto">
-                  {mode === "create" ? t("modal.saveCreate", "Create account") : t("modal.saveEdit", "Save changes")}
+                  {translate("btn.save")}
                 </Button>
               </div>
             </div>

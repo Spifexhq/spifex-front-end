@@ -1,5 +1,4 @@
 import { useAccountingSetup } from "../setup/useAccountingSetup";
-import { useTranslation as useCommonTranslation } from "react-i18next";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import AccountingTerm from "@/pages/Settings/AccountingSettings/components/AccountingTerm";
@@ -112,7 +111,6 @@ const EMPTY_FORM: ManualJournalForm = {
 
 const AccountingJournalsPage: React.FC = () => {
   const { status: setupStatus, canManage } = useAccountingSetup();
-  const { t: commonT } = useCommonTranslation("common");
   const { i18n } = useTranslation("accountingSettings");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
@@ -403,7 +401,7 @@ const AccountingJournalsPage: React.FC = () => {
         {lookupsLoading ? (
           <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
         ) : (
-          <SidePanelForm recordLabel={commonT("modalHints.journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
+          <SidePanelForm recordLabel={t("footer.journal", "Journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
@@ -614,7 +612,7 @@ const AccountingJournalsPage: React.FC = () => {
         )}
       </SidePanel>
       <SidePanel className="accounting-dialog" isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}
-        recordLabel={commonT("modalHints.journal")} recordName={selectedJournal?.entry_number || selectedJournal?.id}
+        recordLabel={t("footer.journal", "Journal")} recordName={selectedJournal?.entry_number || selectedJournal?.id}
         footer={<Button type="button" variant="cancel" className="w-full md:w-auto" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button>}>
         {selectedJournal && <div className="space-y-6">
           <dl className="grid grid-cols-2 gap-4 rounded-lg border border-gray-200 p-4 text-[13px]">
