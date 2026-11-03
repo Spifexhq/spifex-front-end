@@ -1,7 +1,7 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { SettingsModalFooter } from "@/shared/ui/Settings/SettingsModalContent";
+import { SettingsModalFrame, SettingsModalHeader } from "@/shared/ui/Settings/SettingsModalFrame";
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
 
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
@@ -77,20 +77,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
 
   const isBusy = isSubmitting || isTwoFactorSubmitting;
 
-  useEffect(() => {
-    if (!isOpen) return;
 
-    const previousOverflow = document.body.style.overflow;
-    const previousTouchAction = document.body.style.touchAction;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.touchAction = previousTouchAction;
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -130,43 +117,9 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
 
 
   return (
-    <AnimatePresence>{isOpen && !!modalMode && (<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.18,ease:"easeOut"}}
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-    >
-      <motion.div initial={{opacity:0,y:12,scale:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:12,scale:.985}} transition={{duration:.18,ease:"easeOut"}}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="security-and-privacy-modal-title"
-        onMouseDown={(event) => event.stopPropagation()}
-        className="settings-drawer settings-modal"
-      >
-        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
-        </div>
+    <SettingsModalFrame isOpen={isOpen && !!modalMode} labelledBy="security-and-privacy-modal-title">
 
-        <header className="border-b border-gray-200 bg-white shrink-0">
-          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-              <h3
-                id="security-and-privacy-modal-title"
-                className="text-[16px] font-semibold text-gray-900 leading-snug truncate"
-              >
-                {title}
-              </h3>
-            </div>
-
-            <button
-              type="button"
-              className="settings-modal-close"
-              onClick={onClose}
-              aria-label={t("modal.close")}
-              disabled={isBusy}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </header>
+        <SettingsModalHeader titleId="security-and-privacy-modal-title" title={<>{title}</>} onClose={onClose} disabled={isBusy}></SettingsModalHeader>
 
         <form
           className="settings-modal-form"
@@ -308,7 +261,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
             </div>
           </div>
 
-          <footer
+          <SettingsModalFooter
             className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
@@ -331,10 +284,9 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
                   : t("btn.confirm")}
               </Button>
             </div>
-          </footer>
+          </SettingsModalFooter>
         </form>
-      </motion.div>
-    </motion.div>)}</AnimatePresence>
+      </SettingsModalFrame>
   );
 };
 

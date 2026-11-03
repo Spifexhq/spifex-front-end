@@ -1,7 +1,8 @@
 {
   "aria": {
     "mainNav": "Main navigation",
-    "drawerNav": "Side menu"
+    "drawerNav": "Side menu",
+    "breadcrumb": "Breadcrumb"
   },
   "actions": {
     "open": "Open menu",
@@ -35,5 +36,34 @@
     "onboarding": "Workspace setup",
     "locale": "Regional preferences",
     "status": "Workspace status"
-  }
+  },
+  "settingsDescriptions": {
+    "personal": "Manage your profile, contact details, and personal preferences.",
+    "organization-settings": "Keep your organization’s details and regional settings up to date.",
+    "subscription-management": "Review your plan, billing, and subscription details.",
+    "security": "Manage sign-in, passwords, and account security.",
+    "banks": "Manage the bank accounts used to track your cash flow.",
+    "departments": "Organize departments to group your business activities.",
+    "entities": "Manage customers, suppliers, and other business contacts.",
+    "inventory": "Manage your items, quantities, and inventory details.",
+    "projects": "Organize projects to track related financial activity.",
+    "members": "Manage the people who have access to your workspace.",
+    "groups": "Define groups and permissions for your team.",
+    "categories": "Organize transactions into consistent categories.",
+    "ledger-accounts": "Maintain the account structure used for financial reporting.",
+    "bank-statements": "Import and review statements from your bank accounts.",
+    "notifications": "Choose which updates and reminders you receive.",
+    "manage-currency": "Set the currency used by your organization.",
+    "manage-formats": "Choose how dates, numbers, and amounts are displayed.",
+    "limits": "Review your usage and the limits included in your plan.",
+    "accounting-overview": "Configure how cash flow connects to your accounting records.",
+    "accounting-chart": "Browse and maintain the accounts used for accounting.",
+    "accounting-books": "Manage accounting books, their basis, and currencies.",
+    "accounting-bank-mappings": "Connect bank accounts to the appropriate ledger accounts.",
+    "accounting-posting-policies": "Define how categories translate into accounting entries.",
+    "accounting-journals": "Review journal entries and their posting status.",
+    "accounting-reconciliation": "Find and resolve issues in your accounting setup.",
+    "accounting-correlation": "Explore connections between accounting records."
+  },
+  "settingsDescription": "Manage your workspace settings."
 }

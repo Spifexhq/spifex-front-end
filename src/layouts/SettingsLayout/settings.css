@@ -212,3 +212,22 @@
 .settings-modal-tab[aria-selected="true"] { color: #26344a; background: white; border-color: #e1e6ee; box-shadow: 0 1px 2px #26334d0a; }
 .settings-modal-tab:focus-visible { background: #e8edf5; }
 @media(max-width:767px) { .settings-modal-tab { min-height: 38px; padding-inline: 10px; } }
+.settings-page-heading { padding: 24px 28px 0; }
+.settings-page-heading + .settings-page, .settings-surface > .settings-page { padding-top: 20px; }
+@media(max-width:767px) { .settings-page-heading { padding: 20px 16px 0; } .settings-surface > .settings-page { padding-top: 16px; } }
+.settings-modal-standard-header .settings-modal-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
+.settings-modal-kicker { margin: 0 0 3px; font-size: 10px; line-height: 15px; font-weight: 500; text-transform: uppercase; letter-spacing: .025em; color: #687385; }
+.settings-modal-title { margin: 0; font-size: 15px; line-height: 22px; font-weight: 600; letter-spacing: normal; color: #202936; }
+.settings-modal-subtitle { margin: 5px 0 0; font-size: 12px; line-height: 18px; color: #687385; }
+.settings-modal-scroll { font-size: 13px; color: #202936; }
+.settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 34px; height: 34px; padding: 6px 14px; font-size: 12px; line-height: 20px; font-weight: 500; }
+.settings-modal :is(.settings-modal-footer,form > footer) [data-variant="outline"], .settings-modal :is(.settings-modal-footer,form > footer) [data-variant="cancel"] { border: 1px solid #d6d6d6; background: #f5f5f5; color: #202020; }
+.settings-modal :is(.settings-modal-footer,form > footer) :is([data-variant="outline"],[data-variant="cancel"]):hover { background: #f1f1f1; }
+@media(max-width:767px) { .settings-modal :is(.settings-modal-footer,form > footer) [data-ui="button"] { min-height: 40px; height: 40px; } }
+.settings-modal-footer .settings-modal-footer-layout { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; }
+.settings-modal-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; font-size: 12px; line-height: 18px; color: #687385; }
+.settings-modal-hint b { color: #465164; font-weight: 600; overflow-wrap: anywhere; }
+.settings-modal-hint > span:last-child { color: #99a1ad; }
+.settings-modal-action-buttons { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
+.settings-modal-action-buttons > div { display: flex; align-items: center; gap: 8px; padding: 0; border: 0; position: static; }
+@media(max-width:767px) { .settings-modal-hint { display: none; } .settings-modal-footer-layout { justify-content: flex-end !important; } }

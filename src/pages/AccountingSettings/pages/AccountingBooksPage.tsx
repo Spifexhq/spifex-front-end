@@ -1,3 +1,4 @@
+import { useTranslation as useCommonTranslation } from "react-i18next";
 import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
@@ -83,6 +84,7 @@ const EMPTY_FORM: BookFormState = {
 };
 
 const AccountingBooksPage: React.FC = () => {
+  const { t: commonT } = useCommonTranslation("common");
   const { i18n } = useTranslation("accountingSettings");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
@@ -293,7 +295,7 @@ const AccountingBooksPage: React.FC = () => {
         subtitle={t("booksPage.modal.subtitle", "Create or update the accounting basis and posting currency.")}
         contentClassName="pb-4 md:pb-6"
       >
-        <SettingsModalForm onSubmit={submit} className="space-y-5">
+        <SettingsModalForm recordLabel={commonT("modalHints.book")} recordName={form.name} onSubmit={submit} className="space-y-5">
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>

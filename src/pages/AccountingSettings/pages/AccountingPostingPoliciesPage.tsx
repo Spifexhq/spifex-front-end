@@ -1,3 +1,4 @@
+import { useTranslation as useCommonTranslation } from "react-i18next";
 import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import AccountingTerm from "../components/AccountingTerm";
@@ -98,6 +99,7 @@ const bookLabel = (book: AccountingBook): string =>
   [book.code, book.name].filter(Boolean).join(" — ");
 
 const AccountingPostingPoliciesPage: React.FC = () => {
+  const { t: commonT } = useCommonTranslation("common");
   const { i18n } = useTranslation("accountingSettings");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
@@ -382,7 +384,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         {lookupsLoading ? (
           <PageSkeleton rows={5} />
         ) : (
-          <SettingsModalForm onSubmit={submit} className="space-y-5">
+          <SettingsModalForm recordLabel={commonT("modalHints.postingPolicy")} recordName={categories.find(category => category.id === form.category_id)?.name} onSubmit={submit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("postingPoliciesPage.modal.scopeSection", "Scope")}</div>

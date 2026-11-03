@@ -1,7 +1,8 @@
 {
   "aria": {
     "mainNav": "Navegação principal",
-    "drawerNav": "Menu lateral"
+    "drawerNav": "Menu lateral",
+    "breadcrumb": "Caminho de navegação"
   },
   "actions": {
     "open": "Abrir menu",
@@ -35,5 +36,34 @@
     "onboarding": "Configuração do espaço de trabalho",
     "locale": "Preferências regionais",
     "status": "Estado do espaço de trabalho"
-  }
+  },
+  "settingsDescriptions": {
+    "personal": "Gerencie seu perfil, dados de contato e preferências pessoais.",
+    "organization-settings": "Mantenha os dados e as configurações regionais da organização atualizados.",
+    "subscription-management": "Consulte seu plano, faturamento e detalhes da assinatura.",
+    "security": "Gerencie o acesso, a senha e a segurança da sua conta.",
+    "banks": "Gerencie as contas bancárias usadas no fluxo de caixa.",
+    "departments": "Organize departamentos para agrupar as atividades do negócio.",
+    "entities": "Gerencie clientes, fornecedores e outros contatos comerciais.",
+    "inventory": "Gerencie itens, quantidades e informações do estoque.",
+    "projects": "Organize projetos para acompanhar atividades financeiras relacionadas.",
+    "members": "Gerencie as pessoas com acesso ao espaço de trabalho.",
+    "groups": "Defina grupos e permissões para sua equipe.",
+    "categories": "Organize as transações em categorias consistentes.",
+    "ledger-accounts": "Mantenha a estrutura de contas usada nos relatórios financeiros.",
+    "bank-statements": "Importe e revise extratos das suas contas bancárias.",
+    "notifications": "Escolha quais atualizações e lembretes deseja receber.",
+    "manage-currency": "Defina a moeda usada pela sua organização.",
+    "manage-formats": "Escolha como datas, números e valores são apresentados.",
+    "limits": "Consulte o uso e os limites incluídos no seu plano.",
+    "accounting-overview": "Configure a conexão entre o fluxo de caixa e os registros contábeis.",
+    "accounting-chart": "Consulte e organize as contas usadas na contabilidade.",
+    "accounting-books": "Gerencie livros contábeis, suas bases e moedas.",
+    "accounting-bank-mappings": "Conecte contas bancárias às contas contábeis correspondentes.",
+    "accounting-posting-policies": "Defina como as categorias geram lançamentos contábeis.",
+    "accounting-journals": "Revise os lançamentos do diário e seu status.",
+    "accounting-reconciliation": "Identifique e resolva problemas na configuração contábil.",
+    "accounting-correlation": "Explore as conexões entre os registros contábeis."
+  },
+  "settingsDescription": "Gerencie as configurações do espaço de trabalho."
 }

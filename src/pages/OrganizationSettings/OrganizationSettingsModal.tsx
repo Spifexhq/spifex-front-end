@@ -1,7 +1,7 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { SettingsModalFooter } from "@/shared/ui/Settings/SettingsModalContent";
+import { SettingsModalFrame, SettingsModalHeader } from "@/shared/ui/Settings/SettingsModalFrame";
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -78,20 +78,7 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
   const { t } = useTranslation("organizationSettings");
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
 
-    const previousOverflow = document.body.style.overflow;
-    const previousTouchAction = document.body.style.touchAction;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.touchAction = previousTouchAction;
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -142,43 +129,9 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
 
 
   return (
-    <AnimatePresence>{isOpen && (<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.18,ease:"easeOut"}}
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
-    >
-      <motion.div initial={{opacity:0,y:12,scale:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:12,scale:.985}} transition={{duration:.18,ease:"easeOut"}}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="organization-settings-modal-title"
-        onMouseDown={(event) => event.stopPropagation()}
-        className="settings-drawer settings-modal"
-      >
-        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
-        </div>
+    <SettingsModalFrame isOpen={isOpen} labelledBy="organization-settings-modal-title">
 
-        <header className="border-b border-gray-200 bg-white shrink-0">
-          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.settings")}</div>
-              <h3
-                id="organization-settings-modal-title"
-                className="text-[16px] font-semibold text-gray-900 leading-snug truncate"
-              >
-                {title}
-              </h3>
-            </div>
-
-            <button
-              type="button"
-              className="settings-modal-close"
-              onClick={onClose}
-              aria-label={t("modal.close")}
-              disabled={isSubmitting}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </header>
+        <SettingsModalHeader titleId="organization-settings-modal-title" title={<>{title}</>} onClose={onClose} disabled={isSubmitting}></SettingsModalHeader>
 
         <form
           className="settings-modal-form"
@@ -320,7 +273,7 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
             </div>
           </div>
 
-          <footer
+          <SettingsModalFooter
             className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
@@ -338,10 +291,9 @@ const OrganizationSettingsModal: React.FC<OrganizationSettingsModalProps> = ({
                 {t("btn.save")}
               </Button>
             </div>
-          </footer>
+          </SettingsModalFooter>
         </form>
-      </motion.div>
-    </motion.div>)}</AnimatePresence>
+      </SettingsModalFrame>
   );
 };
 

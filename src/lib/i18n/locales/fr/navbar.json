@@ -1,7 +1,8 @@
 {
   "aria": {
     "mainNav": "Navigation principale",
-    "drawerNav": "Menu latéral"
+    "drawerNav": "Menu latéral",
+    "breadcrumb": "Fil d’Ariane"
   },
   "actions": {
     "open": "Ouvrir le menu",
@@ -35,5 +36,34 @@
     "onboarding": "Configuration de l'espace de travail",
     "locale": "Préférences régionales",
     "status": "État de l'espace de travail"
-  }
+  },
+  "settingsDescriptions": {
+    "personal": "Gérez votre profil, vos coordonnées et vos préférences personnelles.",
+    "organization-settings": "Actualisez les coordonnées et les paramètres régionaux de votre organisation.",
+    "subscription-management": "Consultez votre offre, votre facturation et votre abonnement.",
+    "security": "Gérez la connexion, le mot de passe et la sécurité du compte.",
+    "banks": "Gérez les comptes bancaires utilisés pour suivre votre trésorerie.",
+    "departments": "Organisez les services pour regrouper les activités de votre entreprise.",
+    "entities": "Gérez les clients, fournisseurs et autres contacts professionnels.",
+    "inventory": "Gérez les articles, les quantités et les informations de stock.",
+    "projects": "Organisez les projets pour suivre les activités financières associées.",
+    "members": "Gérez les personnes ayant accès à votre espace de travail.",
+    "groups": "Définissez les groupes et les autorisations de votre équipe.",
+    "categories": "Organisez les transactions en catégories cohérentes.",
+    "ledger-accounts": "Gérez la structure des comptes utilisée dans les rapports financiers.",
+    "bank-statements": "Importez et consultez les relevés de vos comptes bancaires.",
+    "notifications": "Choisissez les mises à jour et les rappels que vous recevez.",
+    "manage-currency": "Définissez la devise de votre organisation.",
+    "manage-formats": "Choisissez le format des dates, nombres et montants.",
+    "limits": "Consultez votre utilisation et les limites de votre offre.",
+    "accounting-overview": "Configurez les liens entre la trésorerie et les écritures comptables.",
+    "accounting-chart": "Consultez et organisez les comptes utilisés en comptabilité.",
+    "accounting-books": "Gérez les livres comptables, leurs bases et leurs devises.",
+    "accounting-bank-mappings": "Reliez les comptes bancaires aux comptes comptables appropriés.",
+    "accounting-posting-policies": "Définissez comment les catégories génèrent des écritures comptables.",
+    "accounting-journals": "Consultez les écritures du journal et leur statut.",
+    "accounting-reconciliation": "Identifiez et résolvez les problèmes de configuration comptable.",
+    "accounting-correlation": "Explorez les liens entre les données comptables."
+  },
+  "settingsDescription": "Gérez les paramètres de votre espace de travail."
 }

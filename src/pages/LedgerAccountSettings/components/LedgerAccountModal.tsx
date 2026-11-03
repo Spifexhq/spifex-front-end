@@ -1,10 +1,11 @@
+import { SettingsModalFrame, SettingsModalHeader } from "@/shared/ui/Settings/SettingsModalFrame";
 import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
-import { useDialogFocus } from "@/shared/ui/useDialogFocus";
+
 // src\pages\LedgerAccountSettings\components\LedgerAccountModal.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
@@ -109,6 +110,7 @@ const LedgerAccountModal: React.FC<Props> = ({
   onSubmit,
 }) => {
   const { i18n } = useTranslation("ledgerAccounts");
+  const { t: commonT } = useTranslation("common");
   const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string) =>
@@ -122,13 +124,14 @@ const LedgerAccountModal: React.FC<Props> = ({
     [i18n, language]
   );
 
+  window.useGlobalEsc(isOpen, onClose);
   const sectionLabel = React.useCallback((value: LedgerStatementSection) => String(i18n.t(`common.sections.${value === "off_balance" ? "offBalance" : value}`, { ns: "accountingSettings", lng: language })), [i18n, language]);
   const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
   const [metadataText, setMetadataText] = useState("{}");
   const [error, setError] = useState<string | null>(null);
-  const dialogRef = React.useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(isOpen);
-  const [visible, setVisible] = useState(isOpen);
+
+
+
 
   const sectionOptions = useMemo<Option<LedgerStatementSection>[]>(
     () => [
@@ -159,46 +162,11 @@ const LedgerAccountModal: React.FC<Props> = ({
     [t]
   );
 
-  useEffect(() => {
-    if (isOpen) {
-      setMounted(true);
-      setVisible(false);
 
-      const id = window.setTimeout(() => setVisible(true), 16);
-      return () => window.clearTimeout(id);
-    }
 
-    setVisible(false);
 
-    const id = window.setTimeout(() => setMounted(false), 300);
-    return () => window.clearTimeout(id);
-  }, [isOpen]);
 
-  useEffect(() => {
-    if (!mounted) return;
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [mounted, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -282,43 +250,15 @@ const LedgerAccountModal: React.FC<Props> = ({
     }
   };
 
-  useDialogFocus(isOpen && mounted, dialogRef);
 
-  if (!mounted) return null;
+
+
 
   return (
-    <div className="accounting-dialog fixed inset-0 z-[9999]">
-      <div className="absolute inset-0 bg-gray-950/20" onClick={onClose} aria-hidden="true" />
-
-      <div
-        ref={dialogRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="ledger-account-modal-title"
-        className={[
-          "settings-drawer settings-modal",
-          "transition-transform duration-300 ease-out",
-          visible ? "translate-x-0" : "translate-x-full",
-        ].join(" ")}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="shrink-0 border-b border-gray-200 bg-white/95">
-          <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4">
-            <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
-                {t("workspace.pageLabel", "Settings")}
-              </div>
-              <h3
-                id="ledger-account-modal-title"
-                className="mt-1 truncate text-[18px] font-semibold text-gray-900"
-              >
-                {mode === "create"
+    <SettingsModalFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" onBackdropClose={onClose} className="accounting-dialog">
+        <SettingsModalHeader titleId="ledger-account-modal-title" title={<>{mode === "create"
                   ? t("modal.createTitle", "Create ledger account")
-                  : t("modal.editTitle", "Edit ledger account")}
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                {mode === "create"
+                  : t("modal.editTitle", "Edit ledger account")}</>} subtitle={<>{mode === "create"
                   ? t(
                       "modal.createSubtitle",
                       "Create a ledger account with structure, classification, and posting controls."
@@ -326,23 +266,10 @@ const LedgerAccountModal: React.FC<Props> = ({
                   : t(
                       "modal.editSubtitle",
                       "Update the ledger account structure, classification, and posting controls."
-                    )}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="settings-modal-close"
-              aria-label={t("modal.cancel", "Cancel")}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </header>
+                    )}</>} onClose={onClose} disabled={busy} />
 
         <div className="settings-modal-content">
-          <SettingsModalForm onSubmit={submit} className="flex flex-col gap-4 pb-4 md:pb-6">
+          <SettingsModalForm recordLabel={commonT("modalHints.ledgerAccount")} recordName={form.name} onSubmit={submit} className="flex flex-col gap-4 pb-4 md:pb-6">
             <div className="grid gap-5">
               <FieldGroup title={t("modal.general", "General")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -570,8 +497,7 @@ const LedgerAccountModal: React.FC<Props> = ({
             </div>
           </SettingsModalForm>
         </div>
-      </div>
-    </div>
+      </SettingsModalFrame>
   );
 };
 

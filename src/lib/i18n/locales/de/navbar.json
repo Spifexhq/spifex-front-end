@@ -1,7 +1,8 @@
 {
   "aria": {
     "mainNav": "Hauptnavigation",
-    "drawerNav": "Seitenmenü"
+    "drawerNav": "Seitenmenü",
+    "breadcrumb": "Navigationspfad"
   },
   "actions": {
     "open": "Menü öffnen",
@@ -35,5 +36,34 @@
     "onboarding": "Arbeitsbereich einrichten",
     "locale": "Regionale Einstellungen",
     "status": "Arbeitsbereichsstatus"
-  }
+  },
+  "settingsDescriptions": {
+    "personal": "Verwalten Sie Ihr Profil, Ihre Kontaktdaten und persönlichen Einstellungen.",
+    "organization-settings": "Halten Sie die Daten und regionalen Einstellungen Ihrer Organisation aktuell.",
+    "subscription-management": "Prüfen Sie Ihren Tarif, Ihre Abrechnung und Ihr Abonnement.",
+    "security": "Verwalten Sie Anmeldung, Passwort und Kontosicherheit.",
+    "banks": "Verwalten Sie die Bankkonten für Ihre Zahlungsübersicht.",
+    "departments": "Organisieren Sie Abteilungen zur Gruppierung Ihrer Geschäftsaktivitäten.",
+    "entities": "Verwalten Sie Kunden, Lieferanten und weitere Geschäftskontakte.",
+    "inventory": "Verwalten Sie Artikel, Mengen und Bestandsinformationen.",
+    "projects": "Organisieren Sie Projekte für zusammengehörige Finanzaktivitäten.",
+    "members": "Verwalten Sie die Personen mit Zugriff auf Ihren Arbeitsbereich.",
+    "groups": "Legen Sie Gruppen und Berechtigungen für Ihr Team fest.",
+    "categories": "Ordnen Sie Transaktionen in einheitliche Kategorien ein.",
+    "ledger-accounts": "Pflegen Sie die Kontenstruktur für Ihre Finanzberichte.",
+    "bank-statements": "Importieren und prüfen Sie die Auszüge Ihrer Bankkonten.",
+    "notifications": "Wählen Sie die gewünschten Neuigkeiten und Erinnerungen aus.",
+    "manage-currency": "Legen Sie die Währung Ihrer Organisation fest.",
+    "manage-formats": "Wählen Sie die Darstellung von Datum, Zahlen und Beträgen.",
+    "limits": "Prüfen Sie Ihre Nutzung und die Grenzen Ihres Tarifs.",
+    "accounting-overview": "Verbinden Sie Ihre Zahlungsübersicht mit der Buchhaltung.",
+    "accounting-chart": "Prüfen und verwalten Sie die Konten Ihrer Buchhaltung.",
+    "accounting-books": "Verwalten Sie Bücher, Buchungsgrundlagen und Währungen.",
+    "accounting-bank-mappings": "Verbinden Sie Bankkonten mit den passenden Sachkonten.",
+    "accounting-posting-policies": "Legen Sie die Buchungsregeln für Kategorien fest.",
+    "accounting-journals": "Prüfen Sie Journalbuchungen und ihren Status.",
+    "accounting-reconciliation": "Finden und beheben Sie Probleme in Ihrer Buchhaltungskonfiguration.",
+    "accounting-correlation": "Erkunden Sie die Verbindungen zwischen Buchhaltungsdaten."
+  },
+  "settingsDescription": "Verwalten Sie die Einstellungen Ihres Arbeitsbereichs."
 }
