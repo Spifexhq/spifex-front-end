@@ -2,14 +2,20 @@
   "sidebar": {
     "aria": {
       "nav": "Barre latérale des actions de trésorerie",
-      "toggleOpen": "Ouvrir la barre latérale",
-      "toggleClose": "Fermer la barre latérale"
+      "toggleOpen": "Développer le menu",
+      "toggleClose": "Réduire le menu",
+      "close": "Fermer la navigation"
     },
     "items": {
       "credit": "Encaissements",
       "debit": "Paiements",
-      "transfer": "Virements"
+      "transfer": "Virements",
+      "importStatement": "Importer un relevé"
+    },
+    "title": "Espace de travail",
+    "settings": "Paramètres",
+    "sections": {
+      "actions": "Actions rapides"
     }
   }
 }
-

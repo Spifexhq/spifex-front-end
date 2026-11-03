@@ -60,7 +60,7 @@ export interface GetLedgerAccountsRequest {
   cursor?: string;
 }
 
-export type GetLedgerAccountsResponse = Paginated<LedgerAccount>;
+export type GetLedgerAccountsResponse = LedgerAccount[] | Paginated<LedgerAccount>;
 
 export interface AddLedgerAccountRequest {
   code: string;

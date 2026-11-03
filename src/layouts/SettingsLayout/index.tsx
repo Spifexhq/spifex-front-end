@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Menu } from "lucide-react";
 import { SidebarSettings } from "@/shared/layout/Sidebar";
 
@@ -47,11 +48,22 @@ export const SettingsLayout: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { t } = useTranslation("settingsSidebar");
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem("spifex.settings.collapsed") === "true"; } catch { return false; }
+  });
+  const toggleCollapsed = () => setCollapsed(previous => {
+    const next = !previous;
+    try { localStorage.setItem("spifex.settings.collapsed", String(next)); } catch { /* Storage may be unavailable. */ }
+    return next;
+  });
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
   const topOffsetPx = 64;
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const activeItem = useMemo(() => {
-    const [, root, slug] = location.pathname.split("/");
+    const [, root, slug, setupSlug] = location.pathname.split("/");
+    if (root === "settings" && slug === "register" && setupSlug === "ledger-accounts") return "ledger-accounts";
     return root === "settings" ? slug || "personal" : "personal";
   }, [location.pathname]);
 
@@ -90,7 +102,9 @@ export const SettingsLayout: FC = () => {
         activeItem={activeItem}
         topOffsetPx={topOffsetPx}
         mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
+        onMobileClose={closeMobile}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
         onSelect={handleSelect}
       />
 
@@ -98,7 +112,8 @@ export const SettingsLayout: FC = () => {
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          aria-label="Open settings navigation"
+          aria-label={t("actions.open", "Open settings navigation")}
+          aria-controls="settings-navigation"
           aria-expanded={mobileOpen}
           className={[
             "fixed z-30 md:hidden",
@@ -115,7 +130,7 @@ export const SettingsLayout: FC = () => {
         </button>
       )}
 
-      <div className="md:ml-64 pb-16 md:pb-0">
+      <div className={`settings-sidebar-content min-w-0 pb-16 md:pb-0 ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>
         <Outlet />
       </div>
     </>

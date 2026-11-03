@@ -6,7 +6,8 @@
     "organization": "Organização",
     "banking": "Bancos",
     "management": "Gestão",
-    "accounting": "Contabilidade e Estrutura"
+    "accounting": "Contabilidade e Estrutura",
+    "profile": "Sua conta"
   },
   "items": {
     "personal": "Definições pessoais",
@@ -26,5 +27,13 @@
     "ledger-accounts": "Contas contábeis",
     "departments": "Departamentos",
     "accounting": "Contabilidade"
+  },
+  "title": "Configurações",
+  "actions": {
+    "expand": "Expandir menu",
+    "collapse": "Recolher menu",
+    "close": "Fechar navegação",
+    "open": "Abrir navegação de configurações",
+    "back": "Voltar ao espaço de trabalho"
   }
 }

@@ -22,5 +22,13 @@
   "btn.save": "Salvar",
   "btn.cancel": "Cancelar",
   "toast.loadError": "Erro ao buscar dados pessoais.",
-  "toast.updateError": "Erro ao atualizar os dados pessoais."
+  "toast.updateError": "Erro ao atualizar os dados pessoais.",
+  "input": {
+    "clear": "Limpar",
+    "hidePassword": "Ocultar senha",
+    "showPassword": "Mostrar senha",
+    "openDatePicker": "Abrir calendário",
+    "previousMonth": "Mês anterior",
+    "nextMonth": "Próximo mês"
+  }
 }

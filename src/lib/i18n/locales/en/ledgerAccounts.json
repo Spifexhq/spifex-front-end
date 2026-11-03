@@ -3,7 +3,7 @@
     "pageLabel": "Settings",
     "personalLedger": "Personal ledger",
     "organizationalLedger": "Organizational ledger",
-    "titleOverview": "Chart of accounts workspace",
+    "titleOverview": "Chart of accounts",
     "titleAccounting": "Accounting workspace",
     "descriptionOverview": "Manage the chart of accounts used by your organization, keeping the structure clean, auditable, and ready for reporting.",
     "descriptionAccounting": "Shape the accounting structure, refine parent-child relationships, and maintain a reliable chart of accounts for books, journals, and reporting.",
@@ -78,7 +78,10 @@
     "sectionDistributionTitle": "Statement section distribution",
     "sectionDistributionDescription": "Distribution of accounts across assets, liabilities, equity, income, expenses, and other sections.",
     "reportingSampleTitle": "Reporting groups",
-    "reportingSampleDescription": "Accounts grouped by reporting classification."
+    "reportingSampleDescription": "Accounts grouped by reporting classification.",
+    "unassigned": "Unassigned",
+    "yes": "Yes",
+    "no": "No"
   },
   "setup": {
     "pageLabel": "Settings",
@@ -153,10 +156,27 @@
     "selectBalance": "Select balance",
     "selectAccountType": "Select account type",
     "createSubtitle": "Create a ledger account with structure, classification, and posting controls.",
-    "editSubtitle": "Update the ledger account structure, classification, and posting controls."
+    "editSubtitle": "Update the ledger account structure, classification, and posting controls.",
+    "debit": "Debit",
+    "credit": "Credit"
   },
   "accounting": {
     "title": "Accounting workspace",
     "description": "A dedicated accounting surface for maintaining the chart of accounts and preparing the structure for journals, books, and reporting."
+  },
+  "explorer": {
+    "accounts": "Accounts",
+    "postingCount": "{{count}} posting accounts",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "expandGroup": "Expand {{name}}",
+    "collapseGroup": "Collapse {{name}}",
+    "allAccounts": "All accounts",
+    "status": "Status",
+    "editAccount": "Edit {{name}}",
+    "visibleCount": "{{visible}} of {{total}} accounts shown",
+    "inspectHint": "Select an account name to see its details.",
+    "postingCount_one": "{{count}} posting account",
+    "postingCount_other": "{{count}} posting accounts"
   }
 }

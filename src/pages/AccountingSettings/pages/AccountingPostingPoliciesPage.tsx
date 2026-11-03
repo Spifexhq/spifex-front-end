@@ -1,3 +1,4 @@
+import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -62,9 +63,9 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-4">
+    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
       <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
       <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
     </article>
   );
@@ -84,19 +85,6 @@ const EMPTY_FORM: PolicyFormState = {
 const displayValue = (label?: string | null, fallback?: string | null): string =>
   (label && label.trim()) || (fallback && fallback.trim()) || "—";
 
-const pairValue = (
-  leftLabel?: string | null,
-  leftFallback?: string | null,
-  rightLabel?: string | null,
-  rightFallback?: string | null
-): string => {
-  const left = (leftLabel && leftLabel.trim()) || (leftFallback && leftFallback.trim()) || "";
-  const right = (rightLabel && rightLabel.trim()) || (rightFallback && rightFallback.trim()) || "";
-  if (left && right) return `${left} / ${right}`;
-  if (left) return left;
-  if (right) return right;
-  return "—";
-};
 
 const categoryLabel = (category: CashflowCategory): string =>
   [category.code, category.name].filter(Boolean).join(" — ") || category.name || "—";
@@ -109,16 +97,18 @@ const bookLabel = (book: AccountingBook): string =>
 
 const AccountingPostingPoliciesPage: React.FC = () => {
   const { i18n } = useTranslation("accountingSettings");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
-      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
-    [i18n]
+      String(i18n.t(key, {
+          lng: language, ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n, language]
   );
 
   const accountFields = React.useMemo<Array<{ field: PolicyAccountField; label: string }>>(
     () => [
-      { field: "settlement_debit_account_id", label: t("postingPoliciesPage.accountFields.settlementDebit", "Settlement debit") },
-      { field: "settlement_credit_account_id", label: t("postingPoliciesPage.accountFields.settlementCredit", "Settlement credit") },
+      { field: "settlement_debit_account_id", label: t("redesign.paymentAccount", "Payments · debit") },
+      { field: "settlement_credit_account_id", label: t("redesign.receiptAccount", "Receipts · credit") },
       { field: "accrual_debit_account_id", label: t("postingPoliciesPage.accountFields.accrualDebit", "Accrual debit") },
       { field: "accrual_credit_account_id", label: t("postingPoliciesPage.accountFields.accrualCredit", "Accrual credit") },
       { field: "clearing_account_id", label: t("postingPoliciesPage.accountFields.clearing", "Clearing") },
@@ -282,12 +272,10 @@ const AccountingPostingPoliciesPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.sectionLabel", "Posting policies")}</div>
-          </div>
+        <div className="accounting-page-header">
 
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+
+          <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <h2 className="text-[16px] font-semibold text-gray-900">{t("postingPoliciesPage.title", "Category-to-accounting bridge")}</h2>
@@ -301,7 +289,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
               <MetricCard
                 label={t("postingPoliciesPage.metrics.policies", "Policies")}
                 value={items.length}
@@ -312,16 +300,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                 value={items.filter((item) => item.settlement_debit_account_id && item.settlement_credit_account_id).length}
                 detail={t("postingPoliciesPage.metrics.settlementReadyDetail", "Policies with full settlement pair mapping.")}
               />
-              <MetricCard
-                label={t("postingPoliciesPage.metrics.accrualReady", "Accrual-ready")}
-                value={items.filter((item) => item.accrual_debit_account_id && item.accrual_credit_account_id).length}
-                detail={t("postingPoliciesPage.metrics.accrualReadyDetail", "Policies with full accrual pair mapping.")}
-              />
-              <MetricCard
-                label={t("postingPoliciesPage.metrics.withClearing", "With clearing")}
-                value={items.filter((item) => item.clearing_account_id).length}
-                detail={t("postingPoliciesPage.metrics.withClearingDetail", "Policies already linked to a clearing account.")}
-              />
+              <MetricCard label={t("redesign.incompleteRules", "Need attention")} value={items.filter(item => !item.settlement_debit_account_id || !item.settlement_credit_account_id).length} detail={t("redesign.incompleteRulesDescription", "Rules missing a payment or receipt account.")} />
             </div>
           </div>
         </div>
@@ -335,7 +314,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
-                  {[t("postingPoliciesPage.columns.category", "Category"), t("postingPoliciesPage.columns.book", "Book"), t("postingPoliciesPage.columns.settlement", "Settlement"), t("postingPoliciesPage.columns.accrual", "Accrual"), t("postingPoliciesPage.columns.clearing", "Clearing"), t("postingPoliciesPage.columns.status", "Status"), t("postingPoliciesPage.columns.actions", "Actions")].map((column) => (
+                  {[t("postingPoliciesPage.columns.category", "Category"), t("postingPoliciesPage.columns.book", "Book"), t("redesign.paymentAccount", "Payments · debit"), t("redesign.receiptAccount", "Receipts · credit"), t("postingPoliciesPage.columns.actions", "Actions")].map((column) => (
                     <th
                       key={column}
                       className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
@@ -355,26 +334,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                     <td className="px-4 py-3 text-[13px] text-gray-700">
                       {displayValue(item.book_label, item.book_id)}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {pairValue(
-                        item.settlement_debit_account_label,
-                        item.settlement_debit_account_id,
-                        item.settlement_credit_account_label,
-                        item.settlement_credit_account_id
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {pairValue(
-                        item.accrual_debit_account_label,
-                        item.accrual_debit_account_id,
-                        item.accrual_credit_account_label,
-                        item.accrual_credit_account_id
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {displayValue(item.clearing_account_label, item.clearing_account_id)}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.status}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{displayValue(item.settlement_debit_account_label, item.settlement_debit_account_id)}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{displayValue(item.settlement_credit_account_label, item.settlement_credit_account_id)}</td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
                         {t("common.edit", "Edit")}
@@ -385,7 +346,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
                 {!items.length ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
+                    <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-gray-500">
                       {t("postingPoliciesPage.empty", "No posting policies found.")}
                     </td>
                   </tr>
@@ -468,13 +429,13 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
 
               <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
-                {accountFields.map(({ field, label }) => {
+                {accountFields.slice(0, 2).map(({ field, label }) => {
                   const selectedAccount = ledgerAccounts.filter((account) => account.id === form[field]);
 
                   return (
                     <Select<LedgerAccount>
                       key={field}
-                      label={label}
+                      label={<AccountingTerm term={field.startsWith("accrual") ? "accrual" : field === "clearing_account_id" ? "clearing" : field === "settlement_debit_account_id" ? "debit" : "credit"}>{label}</AccountingTerm>}
                       items={ledgerAccounts}
                       selected={selectedAccount}
                       onChange={(selected: LedgerAccount[]) =>
@@ -485,18 +446,48 @@ const AccountingPostingPoliciesPage: React.FC = () => {
                       }
                       getItemKey={(account: LedgerAccount) => account.id}
                       getItemLabel={accountLabel}
-                      buttonLabel={`Select ${label.toLowerCase()} account`}
+                      buttonLabel={t("postingPoliciesPage.modal.selectAccount", "Select account")}
                       singleSelect
                       hideCheckboxes
                     />
                   );
                 })}
               </div>
+              <p className="border-t border-gray-100 px-4 py-3 text-xs leading-5 text-gray-500">{t("redesign.policyHelp", "The bank connection supplies the bank side. These accounts supply the other side of each payment or receipt. Both are currently required.")}</p>
             </section>
+            <details className="rounded-lg border border-gray-200 bg-white">
+              <summary className="flex items-center px-4 py-4 text-sm font-medium">{t("redesign.advancedAccounts", "Advanced account mapping")}</summary>
+              <p className="px-4 text-xs leading-5 text-gray-500">{t("redesign.advancedAccountsHelp", "Accrual and clearing settings are stored separately and are not used by automatic settlement posting.")}</p>
+              <div className="grid gap-4 p-4 md:grid-cols-2">
+                {accountFields.slice(2).map(({ field, label }) => {
+                  const selectedAccount = ledgerAccounts.filter((account) => account.id === form[field]);
 
-            <div className="flex items-center justify-end gap-3 pt-1">
+                  return (
+                    <Select<LedgerAccount>
+                      key={field}
+                      label={<AccountingTerm term={field.startsWith("accrual") ? "accrual" : field === "clearing_account_id" ? "clearing" : field === "settlement_debit_account_id" ? "debit" : "credit"}>{label}</AccountingTerm>}
+                      items={ledgerAccounts}
+                      selected={selectedAccount}
+                      onChange={(selected: LedgerAccount[]) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          [field]: selected[0]?.id ?? "",
+                        }))
+                      }
+                      getItemKey={(account: LedgerAccount) => account.id}
+                      getItemLabel={accountLabel}
+                      buttonLabel={t("postingPoliciesPage.modal.selectAccount", "Select account")}
+                      singleSelect
+                      hideCheckboxes
+                    />
+                  );
+                })}
+              </div>
+            </details>
+
+            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? t("common.saving", "Saving...") : t("postingPoliciesPage.modal.savePolicy", "Save policy")}

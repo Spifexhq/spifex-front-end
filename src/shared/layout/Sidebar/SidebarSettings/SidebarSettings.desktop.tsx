@@ -1,106 +1,17 @@
-/* -------------------------------------------------------------------------- */
-/* File: src/components/layout/Sidebar/SidebarSettings.desktop.tsx  (DESKTOP)  */
-/* -------------------------------------------------------------------------- */
-
-import {
-  type FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react";
-import { useNavigate } from "react-router-dom";
+import "../sidebar-motion.css";
+import { useEffect, useMemo, useRef } from "react";
+import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-import {
-  User,
-  SlidersHorizontal,
-  Bell,
-  Shield,
-  Building2,
-  Users,
-  Layers3,
-  Landmark,
-  CreditCard,
-  BookOpen,
-  BookOpenText,
-  UsersRound,
-  Network,
-  Boxes,
-  FolderKanban,
-  IdCard,
-  ListTree,
-} from "lucide-react";
-
+import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
-import { PermissionMiddleware } from "@/middlewares";
-
-/* -------------------------------- Types ----------------------------------- */
-export interface SidebarSettingsProps {
-  userName?: string;
-  activeItem?: string;
-  onSelect?: (id: string) => void;
-  topOffsetPx?: number;
-
-  // Ignored on desktop (kept for prop-compat)
-  mobileOpen?: boolean;
-  onMobileClose?: () => void;
-}
-
-/* ------------------------------ Lucide Icons ------------------------------ */
-const iconClass = "h-4 w-4 flex-shrink-0";
-
-const Icons = {
-  user: <User className={iconClass} aria-hidden="true" />,
-
-  // "Personal" / profile settings
-  personal: <SlidersHorizontal className={iconClass} aria-hidden="true" />,
-
-  // Notifications / security
-  bell: <Bell className={iconClass} aria-hidden="true" />,
-  shield: <Shield className={iconClass} aria-hidden="true" />,
-
-  // Organization
-  building: <Building2 className={iconClass} aria-hidden="true" />,
-  members: <Users className={iconClass} aria-hidden="true" />,
-  groups: <UsersRound className={iconClass} aria-hidden="true" />,
-  layers: <Layers3 className={iconClass} aria-hidden="true" />,
-
-  // Banking
-  bank: <Landmark className={iconClass} aria-hidden="true" />,
-  category: <ListTree className={iconClass} aria-hidden="true" />,
-  card: <CreditCard className={iconClass} aria-hidden="true" />,
-
-  // Accounting / structure
-  ledger: <BookOpen className={iconClass} aria-hidden="true" />,
-  accounting: <BookOpenText className={iconClass} aria-hidden="true" />,
-  
-  // Management
-  entities: <IdCard className={iconClass} aria-hidden="true" />,
-  inventory: <Boxes className={iconClass} aria-hidden="true" />,
-  projects: <FolderKanban className={iconClass} aria-hidden="true" />,
-  departments: <Network className={iconClass} aria-hidden="true" />,
-} as const;
-
-type IconKey = keyof typeof Icons;
-type SidebarItem = { id: string; icon: IconKey; label: string; permission: string };
-type SidebarSection = { title: string; id: string; items: SidebarItem[] };
-
-/* ------------------------------ Component --------------------------------- */
-const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
-  userName = "User",
-  activeItem,
-  onSelect,
-  topOffsetPx = 64,
-}) => {
-  const navigate = useNavigate();
-  const { user, permissions } = useAuthContext();
+import type { SidebarSettingsProps } from "./SidebarSettings";
+const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network };
+type SidebarSection = { title: string; id: string; items: { id: string; icon: keyof typeof Icons; label: string; permission: string }[] };
+export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 64, mobileOpen = false, onMobileClose, collapsed = false, onToggleCollapsed }: SidebarSettingsProps) {
+  const { user, permissions, isOwner } = useAuthContext();
   const { t } = useTranslation("settingsSidebar");
-
-  const displayName = user?.name || userName;
-
+  const navRef = useRef<HTMLElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const sections: SidebarSection[] = useMemo(
     () => [
       {
@@ -153,148 +64,55 @@ const SidebarSettingsDesktop: FC<SidebarSettingsProps> = ({
     [t]
   );
 
-  const flatItems = useMemo(
-    () => sections.flatMap((s) => s.items.map((it) => ({ ...it, sectionId: s.id }))),
-    [sections]
-  );
 
-  const idxById = useMemo(() => {
-    const map = new Map<string, number>();
-    flatItems.forEach((it, idx) => map.set(it.id, idx));
-    return map;
-  }, [flatItems]);
-
-  const handleClick = useCallback(
-    (id: string) => {
-      if (onSelect) onSelect(id);
-      else navigate(`/settings/${id}`);
-    },
-    [navigate, onSelect]
-  );
-
-  const listRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
+  const visibleSections = sections.map(section => ({ ...section, items: section.items.filter(item => isOwner || permissions.includes(item.permission)) })).filter(section => section.items.length);
   useEffect(() => {
-    btnRefs.current = Array.from({ length: flatItems.length }, (_, i) => btnRefs.current[i] ?? null);
-  }, [flatItems.length]);
-
-  const activeIdx = Math.max(0, idxById.get(activeItem ?? "") ?? 0);
-  const [focusIdx, setFocusIdx] = useState<number>(activeIdx);
-
-  useEffect(() => {
-    setFocusIdx(activeIdx);
-    const btn = btnRefs.current[activeIdx];
-    requestAnimationFrame(() => btn?.scrollIntoView({ block: "nearest" }));
-  }, [activeIdx]);
-
-  const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (!["ArrowDown", "ArrowUp", "Home", "End", "Enter", " "].includes(e.key)) return;
-    e.preventDefault();
-
-    const last = flatItems.length - 1;
-
-    if (e.key === "ArrowDown") setFocusIdx((n) => Math.min(n + 1, last));
-    if (e.key === "ArrowUp") setFocusIdx((n) => Math.max(n - 1, 0));
-    if (e.key === "Home") setFocusIdx(0);
-    if (e.key === "End") setFocusIdx(last);
-
-    if (e.key === "Enter" || e.key === " ") {
-      const item = flatItems[focusIdx];
-      if (item) handleClick(item.id);
-    }
-  };
-
-  useEffect(() => {
-    const el = btnRefs.current[focusIdx];
-    el?.focus({ preventScroll: true });
-    requestAnimationFrame(() => el?.scrollIntoView({ block: "nearest" }));
-  }, [focusIdx]);
-
-  return (
-    <nav
-      aria-label={t("aria.nav")}
-      className={[
-        "hidden md:flex fixed left-0 z-40 border-r border-gray-200 bg-white",
-        "w-64",
-        "flex flex-col",
-      ].join(" ")}
-      style={{ top: topOffsetPx, height: `calc(100vh - ${topOffsetPx}px)` }}
-    >
-      {/* Desktop header */}
-      <div className="px-4 pt-3 pb-2 border-b border-gray-100 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">{Icons.user}</span>
-          <span className="text-sm font-semibold text-gray-800">{displayName}</span>
+    if (!mobileOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onMobileClose?.();
+      if (event.key !== "Tab") return;
+      const elements = Array.from(navRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []).filter(el => el.getClientRects().length);
+      const first = elements[0], last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("keydown", onKey); previous?.focus(); };
+  }, [mobileOpen, onMobileClose]);
+  return <>
+    {mobileOpen && <div className="fixed inset-0 z-40 bg-gray-950/25 backdrop-blur-[2px] md:hidden" onClick={onMobileClose} aria-hidden="true" />}
+    <nav ref={navRef} id="settings-navigation" data-collapsed={collapsed && !mobileOpen} aria-label={t("aria.nav")} role={mobileOpen ? "dialog" : undefined} aria-modal={mobileOpen || undefined}
+      className={`sidebar-motion fixed left-0 z-50 flex flex-col border-r border-gray-200 bg-gray-50 ${collapsed ? "md:w-[72px]" : "md:w-[248px]"} w-[280px] max-w-[85vw] ${mobileOpen ? "translate-x-0" : "invisible -translate-x-full md:visible md:translate-x-0"}`}
+      style={{ top: topOffsetPx, height: `calc(100dvh - ${topOffsetPx}px)` }}>
+      <div className="sidebar-header h-20 shrink-0 items-center">
+        <div className="sidebar-header-copy sidebar-label">
+          <p className="text-[15px] font-semibold tracking-tight text-gray-900">{t("title", "Settings")}</p>
+          <p className="mt-0.5 truncate text-xs text-gray-500">{user?.name}</p>
         </div>
+        <button type="button" onClick={onToggleCollapsed} aria-expanded={!collapsed} aria-controls="settings-navigation" title={t(collapsed ? "actions.expand" : "actions.collapse")} aria-label={t(collapsed ? "actions.expand" : "actions.collapse")} className="sidebar-toggle hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200/60 focus-visible:outline-2 focus-visible:outline-gray-500 md:inline-flex">
+          {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+        </button>
+        <button ref={closeRef} type="button" onClick={onMobileClose} aria-label={t("actions.close", "Close navigation")} className="sidebar-toggle rounded-md p-2 hover:bg-gray-100 md:hidden"><X size={18} /></button>
       </div>
-
-      {/* Scroll region */}
-      <div
-        ref={listRef}
-        className={["min-h-0 flex-1 overflow-y-auto outline-none overscroll-contain", "pt-2 pb-12"].join(" ")}
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        role="menu"
-        aria-orientation="vertical"
-        style={{ scrollPaddingTop: 12, scrollPaddingBottom: 48 }}
-      >
-        <div className="mt-1 space-y-4">
-          {sections.map(({ title, id: sectionId, items }) => {
-            const visibleItems = items.filter(item => permissions.includes(item.permission));
-
-            return (
-              visibleItems.length > 0 && (
-                <section key={sectionId} aria-label={title || "Profile"}>
-                  {title && (
-                    <p className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                      {title}
-                    </p>
-                  )}
-
-                  <ul className="space-y-0.5 px-2">
-                    {visibleItems.map(({ id, icon, label, permission }) => (
-                      <li key={id}>
-                        <PermissionMiddleware codeName={permission}>
-                          <button
-                            ref={(el) => {
-                              btnRefs.current[idxById.get(id) ?? 0] = el;
-                            }}
-                            type="button"
-                            role="menuitem"
-                            aria-current={activeItem === id ? "page" : undefined}
-                            onClick={() => handleClick(id)}
-                            tabIndex={focusIdx === idxById.get(id) ? 0 : -1}
-                            className={[
-                              "group w-full flex items-center gap-3 h-9 rounded-md px-3",
-                              activeItem === id ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50",
-                            ].join(" ")}
-                            title={label}
-                          >
-                            <span className="flex items-center justify-center rounded" aria-hidden="true">
-                              {Icons[icon]}
-                            </span>
-                            <span className="text-sm truncate">{label}</span>
-                            <span
-                              aria-hidden="true"
-                              className={[
-                                "ml-auto h-4 w-0.5 rounded-full",
-                                activeItem === id ? "bg-gray-400/70" : "bg-transparent",
-                              ].join(" ")}
-                            />
-                          </button>
-                        </PermissionMiddleware>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )
-            );
-          })}
-        </div>
+      <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+        {visibleSections.map(section => <section key={section.id} className="mb-5" aria-label={section.title || t("sections.profile", "Your account")}>
+          <div className="sidebar-section-title text-[11px] font-medium text-gray-400">
+            <span className="sidebar-label">{section.title || t("sections.profile", "Your account")}</span>
+          </div>
+          <ul className="space-y-1">{section.items.map(item => {
+            const Icon = Icons[item.icon];
+            return <li key={item.id}><NavLink to={`/settings/${item.id}`} onClick={onMobileClose} title={collapsed ? item.label : undefined} aria-label={item.label} aria-current={activeItem === item.id ? "page" : undefined}
+              className={`sidebar-row group rounded-md text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-gray-400 ${activeItem === item.id ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}>
+              <Icon size={16} className="sidebar-icon" aria-hidden="true" /><span className="sidebar-label">{item.label}</span>
+            </NavLink></li>;
+          })}</ul>
+        </section>)}
+      </div>
+      <div className="shrink-0 border-t border-gray-200 p-3">
+        <NavLink to="/" title={t("actions.back", "Back to workspace")} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><ArrowLeft size={16} className="sidebar-icon" /><span className="sidebar-label">{t("actions.back", "Back to workspace")}</span></NavLink>
       </div>
     </nav>
-  );
-};
-
-export default SidebarSettingsDesktop;
+  </>;
+}

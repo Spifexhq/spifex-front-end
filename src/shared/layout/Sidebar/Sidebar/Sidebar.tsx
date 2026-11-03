@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PermissionMiddleware } from "@/middlewares";
 
 import SidebarDesktop from "./Sidebar.desktop";
@@ -45,6 +45,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onEntryModalClose,
 }) => {
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const toggleMobile = useCallback(() => setMobileOpen(open => !open), []);
+  useEffect(() => { if (!isMobile) setMobileOpen(false); }, [isMobile]);
 
   const [localEntryOpen, setLocalEntryOpen] = useState(false);
   const [localEntryType, setLocalEntryType] = useState<ModalType | null>(null);
@@ -147,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {isMobile ? <SidebarMobile {...actionProps} /> : <SidebarDesktop {...actionProps} />}
+      {isMobile ? <SidebarMobile {...actionProps} isOpen={mobileOpen} toggleSidebar={toggleMobile} /> : <SidebarDesktop {...actionProps} />}
 
       {entryType && (
         <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>

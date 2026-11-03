@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Building2, FileUser } from "lucide-react";
+import { Building2, FileUser, ListTree } from "lucide-react";
 
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
@@ -71,23 +71,23 @@ const SetupOptionCard = ({
 const LedgerAccountsGate: React.FC<Props> = ({
   ledgerMode,
   compact,
-  languageCode,
   embedded = false,
   onSuccess,
   successRedirectTo = "/settings/ledger-accounts",
 }) => {
   const navigate = useNavigate();
   const { i18n } = useTranslation("ledgerAccounts");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string) =>
       String(
         i18n.t(key, {
+          lng: language,
           ns: "ledgerAccounts",
-          lng: languageCode || i18n.resolvedLanguage || i18n.language,
           defaultValue,
         })
       ),
-    [i18n, languageCode]
+    [i18n, language]
   );
 
   const { isOwner, permissions } = useAuthContext();
@@ -201,7 +201,7 @@ const LedgerAccountsGate: React.FC<Props> = ({
         <header className="rounded-lg border border-gray-200 bg-white">
           <div className="flex items-start gap-3 px-5 py-4">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-gray-200 bg-gray-50 text-[11px] font-semibold text-gray-700">
-              LA
+              <ListTree size={18} aria-hidden="true" />
             </div>
 
             <div className="min-w-0">

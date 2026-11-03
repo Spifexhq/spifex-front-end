@@ -66,11 +66,12 @@
     "ariaLabel": "Navigation der Buchhaltungseinstellungen",
     "chart": "Kontenplan",
     "books": "Bücher",
-    "bankMappings": "Bankzuordnungen",
-    "postingPolicies": "Buchungsregeln",
+    "bankMappings": "Bankverknüpfungen",
+    "postingPolicies": "Kategorieregeln",
     "journals": "Journale",
-    "correlation": "Korrelation",
-    "reconciliation": "Abstimmung"
+    "correlation": "Verknüpfungen",
+    "reconciliation": "Prüfleitfaden",
+    "overview": "Übersicht"
   },
   "shell": {
     "title": "Buchhaltungseinstellungen",
@@ -284,8 +285,13 @@
       "isPrimary": "Primär",
       "isActive": "Aktiv",
       "saveChanges": "Änderungen speichern",
-      "createBook": "Buch erstellen"
-    }
+      "createBook": "Buch erstellen",
+      "identity": "Bezeichnung",
+      "configuration": "Konfiguration",
+      "primaryBook": "Hauptbuch"
+    },
+    "listTitle": "Buchungsbücher",
+    "empty": "Keine Buchungsbücher gefunden."
   },
   "bankMappingsPage": {
     "loadError": "Bankzuordnungen konnten nicht geladen werden.",
@@ -294,8 +300,8 @@
     "savedSuccess": "Bankzuordnung gespeichert.",
     "saveError": "Bankzuordnung konnte nicht gespeichert werden.",
     "sectionLabel": "Bankzuordnungen",
-    "title": "Bankzuordnungen",
-    "description": "Verknüpfe operative Bankkonten mit Buchhaltungsbüchern und Banksteuerungskonten für zuverlässige Buchung und Abstimmung.",
+    "title": "Bankverknüpfungen",
+    "description": "Verknüpfen Sie jede Bank mit dem Buchungskonto für Zahlungen und Umbuchungen.",
     "newButton": "Neue Zuordnung",
     "metrics": {
       "activeMappings": "Aktive Zuordnungen",
@@ -318,8 +324,11 @@
       "selectBank": "Bank auswählen",
       "selectBook": "Buch auswählen",
       "selectLedgerAccount": "Hauptbuchkonto auswählen",
-      "saveMapping": "Zuordnung speichern"
-    }
+      "saveMapping": "Zuordnung speichern",
+      "definition": "Verknüpfungsdetails"
+    },
+    "listTitle": "Bankverknüpfungen",
+    "empty": "Keine Bankverknüpfungen gefunden."
   },
   "postingPoliciesPage": {
     "loadError": "Buchungsregeln konnten nicht geladen werden.",
@@ -328,8 +337,8 @@
     "savedSuccess": "Buchungsregel gespeichert.",
     "saveError": "Buchungsregel konnte nicht gespeichert werden.",
     "sectionLabel": "Buchungsregeln",
-    "title": "Buchungsregeln",
-    "description": "Definiere, wie operative Cashflow-Kategorien in Hauptbuchkonten für Ausgleichs-, Abgrenzungs- und Clearing-Workflows übersetzt werden.",
+    "title": "Kategorieregeln",
+    "description": "Wählen Sie die Konten für Ein- und Auszahlungen jeder Kategorie.",
     "newButton": "Neue Regel",
     "metrics": {
       "policies": "Regeln",
@@ -365,7 +374,8 @@
       "selectBook": "Buch auswählen",
       "savePolicy": "Regel speichern",
       "scopeSection": "Geltungsbereich",
-      "accountMapping": "Kontenzuordnung"
+      "accountMapping": "Kontenzuordnung",
+      "selectAccount": "Konto auswählen"
     },
     "actions": {
       "newPolicy": "Neue Richtlinie"
@@ -384,7 +394,7 @@
     "reverseError": "Journal konnte nicht storniert werden.",
     "sectionLabel": "Journale",
     "title": "Journale",
-    "description": "Prüfe Buchhaltungseinträge, erstelle kontrollierte manuelle Journale und storniere gebuchte Einträge bei Bedarf.",
+    "description": "Prüfen Sie Buchungen aus Einzahlungen, Auszahlungen und Umbuchungen.",
     "searchPlaceholder": "Suche",
     "newButton": "Manuelles Journal",
     "metrics": {
@@ -580,82 +590,82 @@
     },
     "nodes": {
       "workspace": {
-        "label": "AccountingWorkspace",
+        "label": "Kontenplan",
         "short": "Kontenplan",
         "description": "Hierarchie-Arbeitsbereich für Hauptbuchkonten."
       },
       "booksPage": {
-        "label": "AccountingBooksPage",
+        "label": "Bücher",
         "short": "Bücher",
         "description": "Register der Buchhaltungsbücher."
       },
       "bankMappingsPage": {
-        "label": "AccountingBankMappingsPage",
+        "label": "Bankverknüpfungen",
         "short": "Bankzuordnungen",
         "description": "Brücke zwischen Bankkonten, Büchern und Banksteuerungskonten."
       },
       "postingPoliciesPage": {
-        "label": "AccountingPostingPoliciesPage",
+        "label": "Kategorieregeln",
         "short": "Buchungsregeln",
         "description": "Brücke zwischen Cashflow-Kategorien, Büchern und Hauptbuchkonten."
       },
       "journalsPage": {
-        "label": "AccountingJournalsPage",
+        "label": "Journale",
         "short": "Journale",
         "description": "Seite zum Erstellen, Prüfen und Stornieren von Journalen."
       },
       "reconciliation": {
-        "label": "AccountingReconciliationPage",
+        "label": "Prüfleitfaden",
         "short": "Abstimmung",
         "description": "Bereitschaftsboard, gespeist durch vorgelagerte Vollständigkeit."
       },
       "ledgerApi": {
-        "label": "Hauptbuchkonten-API",
+        "label": "Kontendienst",
         "short": "Hauptbuch-API",
         "description": "Quelle für Hauptbuchliste und CRUD."
       },
       "booksApi": {
-        "label": "Buchhaltungsbücher-API",
+        "label": "Buchungsdienst",
         "short": "Bücher-API",
         "description": "Quelle für Bücherliste und CRUD."
       },
       "banksApi": {
-        "label": "Bankkonten-API",
+        "label": "Bankdienst",
         "short": "Banken-API",
         "description": "Quelle für operative Bankkonto-Suche."
       },
       "categoriesApi": {
-        "label": "Cashflow-Kategorien-API",
+        "label": "Kategoriendienst",
         "short": "Kategorien-API",
         "description": "Quelle für operative Kategoriesuche."
       },
       "journalsApi": {
-        "label": "Journale-API",
+        "label": "Journaldienst",
         "short": "Journale-API",
         "description": "Quelle für Journalliste / Erstellung / Stornierung."
       },
       "ledgerEntity": {
-        "label": "LedgerAccount",
+        "label": "Sachkonto",
         "short": "Hauptbuchkonto",
         "description": "Hauptstruktur des Kontenplans."
       },
       "bookEntity": {
-        "label": "AccountingBook",
+        "label": "Buchungsbuch",
         "short": "Buchhaltungsbuch",
         "description": "Buchhalterischer Ausführungsbereich."
       },
       "bankEntity": {
-        "label": "BankAccount",
+        "label": "Bankkonto",
         "short": "Bankkonto",
         "description": "Operatives Bankkonto."
       },
       "categoryEntity": {
-        "label": "CashflowCategory",
+        "label": "Cashflow-Kategorie",
         "short": "Cashflow-Kategorie",
         "description": "Operative Kategorie für Regelzuordnung."
       },
       "journalEntity": {
-        "label": "JournalEntry",
+        "label": "Journalbuchung",
         "short": "Journaleintrag",
         "description": "Ausgabe der Buchhaltungsausführung."
       }
@@ -724,6 +734,135 @@
       "bankMappingArchitectureLabel": "Bankzuordnung",
       "postingPolicyArchitectureLabel": "Buchungsrichtlinie",
       "journalArchitectureLabel": "Journal"
+    },
+    "enableDatasets": "Aktivieren Sie mindestens einen Datensatz, um Zeilen auszuwählen.",
+    "node": "Datensatz",
+    "notes": {
+      "selected": "Ausgewählte Zeile",
+      "correlated": "Verknüpfter Datensatz",
+      "mapping": "Ausgewählte Verknüpfung",
+      "policy": "Ausgewählte Regel",
+      "journal": "Ausgewählte Buchung",
+      "lineAccount": "Konto der Zeile {{number}}",
+      "lineBank": "Bank der Zeile {{number}}"
     }
+  },
+  "redesign": {
+    "title": "Buchhaltung",
+    "subtitle": "Verbinden Sie Ihren Cashflow mit klaren, konsistenten Buchungen.",
+    "steps": {
+      "chart": "Konten strukturieren",
+      "chartDescription": "Gruppieren Sie die Konten für Ihre Geschäftsvorgänge.",
+      "books": "Hauptbuch auswählen",
+      "booksDescription": "Legen Sie Buch und Währung für automatische Buchungen fest.",
+      "banks": "Bankkonten verknüpfen",
+      "banksDescription": "Legen Sie fest, wo Bankbewegungen in der Buchhaltung erscheinen.",
+      "rules": "Kategorieregeln festlegen",
+      "rulesDescription": "Bestimmen Sie die Konten für Ein- und Auszahlungen."
+    },
+    "reviewChart": "Kontenplan prüfen",
+    "needsPrimary": "Ein aktives Hauptbuch auswählen",
+    "mappingCount": "{{count}} aktive Verknüpfungen im Hauptbuch",
+    "policyCount": "{{count}} Regeln mit beiden Zahlungskonten",
+    "overviewTitle": "Ihre Buchhaltung, verknüpft",
+    "overviewDescription": "Legen Sie fest, wie Zahlungen Buchungen erzeugen, und prüfen Sie die Journale.",
+    "viewJournals": "Journale anzeigen",
+    "setupTitle": "Buchhaltung einrichten",
+    "setupHint": "Konfigurationsübersicht: jede Bank und Kategorie prüfen",
+    "loadError": "Die Übersicht konnte nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "howTitle": "Was passiert bei einer Zahlung?",
+    "flow": {
+      "category": "Cashflow-Kategorie",
+      "rule": "Kategorieregel + Bankverknüpfung",
+      "journal": "Ausgeglichene Buchung"
+    },
+    "howDescription": "Jede tatsächliche Ein- oder Auszahlung erzeugt einen eigenen Datensatz im aktiven Hauptbuch. Ein geplanter Cashflow-Eintrag allein erzeugt keine Buchung.",
+    "reviewTitle": "Prüfen und verstehen",
+    "reviewGuide": "Einrichtungsfragen klären",
+    "reviewGuideDescription": "Finden Sie fehlende Regeln und Bankverknüpfungen.",
+    "explore": "Verknüpfungen erkunden",
+    "exploreDescription": "Prüfen Sie die Beziehungen Ihrer Buchhaltungsdaten.",
+    "paymentAccount": "Auszahlungen: Soll",
+    "receiptAccount": "Einzahlungen: Haben",
+    "incompleteRules": "Zu prüfen",
+    "incompleteRulesDescription": "Regeln ohne Ein- oder Auszahlungskonto.",
+    "policyHelp": "Die Bankverknüpfung bestimmt die Bankseite. Diese Konten bestimmen die Gegenseite jeder Zahlung. Derzeit sind beide erforderlich.",
+    "advancedAccounts": "Erweiterte Kontenzuordnung",
+    "advancedAccountsHelp": "Abgrenzungs- und Verrechnungseinstellungen werden separat gespeichert und nicht für automatische Zahlungsbuchungen verwendet.",
+    "guide": {
+      "rule": "Einer Kategorie fehlt die Buchungsregel",
+      "ruleDescription": "Wählen Sie im Hauptbuch die Ein- und Auszahlungskonten dieser Kategorie.",
+      "ruleAction": "Kategorieregeln prüfen",
+      "bank": "Eine Bank ist nicht verknüpft",
+      "bankDescription": "Verknüpfen Sie die Zahlungsbank mit einem aktiven Bankkontrollkonto im Hauptbuch.",
+      "bankAction": "Bankverknüpfungen prüfen",
+      "journal": "Eine Buchung muss geprüft werden",
+      "journalDescription": "Prüfen Sie die Buchung und ihre Quelle. Ein Storno ändert nur die Buchhaltung; die Zahlung wird nicht aufgehoben.",
+      "journalAction": "Journale prüfen",
+      "title": "Leitfaden zur Buchhaltungsprüfung",
+      "description": "Beginnen Sie mit dem Problem im Cashflow-Eintrag. Diese Verknüpfungen führen zu den passenden Einstellungen.",
+      "notice": "Dieser Leitfaden zeigt keine Live-Ausnahmelisten und gleicht keine Kontoauszüge mit Journalen ab."
+    },
+    "searchAccounts": "Konten suchen",
+    "journalDetails": "Buchungsdetails",
+    "ledgerAccount": "Sachkonto",
+    "total": "Summe",
+    "source": "Quelle"
+  },
+  "currency": {
+    "choose": "Währung auswählen",
+    "inherit": "Keine Kontowährung festgelegt"
+  },
+  "terms": {
+    "learn": "Über {{term}}",
+    "basis": "Die Berichtsgrundlage des Buchs. Automatische Buchungen folgen derzeit unabhängig von dieser Auswahl den tatsächlichen Zahlungen.",
+    "primary": "Dieses Buch erhält automatische Zahlungs- und Umbuchungen. Genau ein aktives Buch sollte als Hauptbuch markiert sein.",
+    "header": "Eine Gruppe zur Strukturierung anderer Konten. Sie nimmt selbst keine Buchungszeilen auf.",
+    "posting": "Buchungskonten erhalten Soll- und Habenzeilen. Gruppenkonten dienen nur zur Strukturierung anderer Konten.",
+    "section": "Die Zuordnung des Kontos im Finanzbericht: Vermögen, Verbindlichkeiten, Eigenkapital, Erträge oder Aufwendungen.",
+    "normalBalance": "Die Seite, auf der das Konto üblicherweise einen Saldo hat. Sie bedeutet nicht Geldeingang oder Geldausgang.",
+    "bankControl": "Das Sachkonto für einen Banksaldo. Eine Bankverknüpfung verbindet die operative Bank mit diesem Konto.",
+    "manualPosting": "Gibt an, ob das Konto für direkt erfasste Buchungen statt für automatisch aus Zahlungen erzeugte Buchungen vorgesehen ist.",
+    "debit": "Eine Seite einer Buchung. Eine Sollbuchung erhöht das Bankkonto; bei Auszahlungen bildet das Sollkonto der Kategorie die Gegenseite.",
+    "credit": "Die andere Seite einer Buchung. Eine Habenbuchung vermindert das Bankkonto; bei Einzahlungen erfasst das Habenkonto der Kategorie die Gegenseite.",
+    "policy": "Eine Regel, die eine Cashflow-Kategorie mit Konten in einem bestimmten Buch verknüpft.",
+    "clearing": "Ein Zwischenkonto während der Abwicklung eines Vorgangs. Diese Einstellung wird im aktuellen automatischen Zahlungsablauf nicht verwendet.",
+    "accrual": "Erträge und Aufwendungen werden bei Entstehung erfasst, auch vor der Zahlung. Diese Konten werden bei den derzeitigen automatischen Zahlungsbuchungen nicht verwendet.",
+    "postingDate": "Das Datum, an dem die Buchung die Buchhaltung beeinflusst. Bei automatischen Zahlungsbuchungen ist dies das Wertstellungsdatum."
+  },
+  "enums": {
+    "basis": {
+      "management": "Management",
+      "cash": "Zahlungsbasiert",
+      "accrual": "Periodenabgrenzung",
+      "tax": "Steuern"
+    },
+    "status": {
+      "draft": "Entwurf",
+      "posted": "Gebucht",
+      "reversed": "Storniert",
+      "void": "Ungültig",
+      "error": "Fehler"
+    },
+    "source": {
+      "cash_entry": "Cashflow-Eintrag",
+      "cash_settlement": "Ein- oder Auszahlung",
+      "cash_transfer": "Bankumbuchung",
+      "manual": "Manuell",
+      "system": "System"
+    },
+    "direction": {
+      "credit": "Eingang",
+      "debit": "Ausgang"
+    }
+  },
+  "chartPage": {
+    "active": "Aktive Konten",
+    "inactive": "Inaktive Konten",
+    "all": "Alle Konten",
+    "status": "Kontostatus",
+    "noAccess": "Sie haben keine Berechtigung, den Kontenplan anzuzeigen.",
+    "description": "Prüfen Sie die Konten Ihrer Buchungsbücher und Buchungsregeln."
   }
 }

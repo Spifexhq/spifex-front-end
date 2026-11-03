@@ -15,7 +15,8 @@
 
     "preview": "vite preview --mode prod --host 127.0.0.1 --port 5173 --strictPort",
     "prod": "npm run build && npm run preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:accounting-i18n": "node scripts/check-accounting-translations.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.1",

@@ -1,3 +1,5 @@
+import CurrencySelect from "@/shared/ui/CurrencySelect";
+import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -87,9 +89,9 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-4">
+    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
       <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
       <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
     </article>
   );
@@ -107,10 +109,12 @@ const EMPTY_FORM: ManualJournalForm = {
 
 const AccountingJournalsPage: React.FC = () => {
   const { i18n } = useTranslation("accountingSettings");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
-      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
-    [i18n]
+      String(i18n.t(key, {
+          lng: language, ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n, language]
   );
 
   const [loading, setLoading] = React.useState(true);
@@ -120,6 +124,7 @@ const AccountingJournalsPage: React.FC = () => {
   const [search, setSearch] = React.useState("");
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
+  const [selectedJournal, setSelectedJournal] = React.useState<JournalEntry | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [form, setForm] = React.useState<ManualJournalForm>(EMPTY_FORM);
 
@@ -257,12 +262,10 @@ const AccountingJournalsPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("journalsPage.sectionLabel", "Journals")}</div>
-          </div>
+        <div className="accounting-page-header">
 
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+
+          <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <h2 className="text-[16px] font-semibold text-gray-900">{t("journalsPage.title", "Journal control")}</h2>
@@ -289,7 +292,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
               <MetricCard
                 label={t("journalsPage.metrics.entries", "Entries")}
                 value={items.length}
@@ -333,12 +336,12 @@ const AccountingJournalsPage: React.FC = () => {
                 {items.map((item) => (
                   <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
                     <td className="px-4 py-3 text-[13px] font-medium text-gray-900">
-                      {item.entry_number || item.id}
+                      <button type="button" onClick={() => setSelectedJournal(item)} className="break-all text-left underline decoration-gray-200 underline-offset-4 hover:decoration-gray-600 focus-visible:outline-2 focus-visible:outline-gray-400">{item.entry_number || item.id}</button>
                     </td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.book_code || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.source_type || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{t(`enums.source.${item.source_type}`, item.source_type) || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.posting_date || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.status || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700"><span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs">{t(`enums.status.${item.status}`, item.status) || "—"}</span></td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">
                       {Array.isArray(item.lines) ? item.lines.length : 0}
                     </td>
@@ -347,7 +350,7 @@ const AccountingJournalsPage: React.FC = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        disabled={reversingId === item.id}
+                        disabled={reversingId === item.id || item.status !== "posted"}
                         onClick={() => void reverseJournal(item.id)}
                       >
                         {reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}
@@ -418,17 +421,7 @@ const AccountingJournalsPage: React.FC = () => {
                   hideCheckboxes
                 />
 
-                <Input
-                  kind="text"
-                  label={t("common.currency", "Currency")}
-                  value={form.currency_code}
-                  onChange={(event) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      currency_code: event.target.value.toUpperCase(),
-                    }))
-                  }
-                />
+                <CurrencySelect value={form.currency_code || ""} onChange={currency_code => setForm(prev => ({ ...prev, currency_code }))} />
 
                 <Input
                   kind="date"
@@ -441,7 +434,7 @@ const AccountingJournalsPage: React.FC = () => {
 
                 <Input
                   kind="date"
-                  label={t("journalsPage.modal.postingDate", "Posting date")}
+                  label={<AccountingTerm term="postingDate">{t("journalsPage.modal.postingDate", "Posting date")}</AccountingTerm>}
                   value={form.posting_date}
                   onValueChange={(value: string) =>
                     setForm((prev) => ({ ...prev, posting_date: value }))
@@ -513,7 +506,7 @@ const AccountingJournalsPage: React.FC = () => {
 
                         <Input
                           kind="amount"
-                          label={t("journalsPage.modal.debit", "Debit")}
+                          label={<AccountingTerm term="debit">{t("journalsPage.modal.debit", "Debit")}</AccountingTerm>}
                           value={line.debit}
                           onValueChange={(value: string) =>
                             setForm((prev) => ({
@@ -528,7 +521,7 @@ const AccountingJournalsPage: React.FC = () => {
 
                         <Input
                           kind="amount"
-                          label={t("journalsPage.modal.credit", "Credit")}
+                          label={<AccountingTerm term="credit">{t("journalsPage.modal.credit", "Credit")}</AccountingTerm>}
                           value={line.credit}
                           onValueChange={(value: string) =>
                             setForm((prev) => ({
@@ -571,7 +564,7 @@ const AccountingJournalsPage: React.FC = () => {
                               }))
                             }
                           >
-                            Remove
+                            {t("journalsPage.modal.removeLine", "Remove")}
                           </Button>
                         ) : null}
                       </div>
@@ -582,7 +575,7 @@ const AccountingJournalsPage: React.FC = () => {
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
                   <div className="mt-1 text-[13px] font-medium text-gray-900">{(totals.debit / 100).toFixed(2)}</div>
@@ -600,9 +593,9 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <div className="flex items-center justify-end gap-3 pt-1">
+            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? t("common.saving", "Saving...") : t("journalsPage.modal.createJournal", "Create journal")}
@@ -610,6 +603,22 @@ const AccountingJournalsPage: React.FC = () => {
             </div>
           </form>
         )}
+      </AccountingSideModal>
+      <AccountingSideModal isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}>
+        {selectedJournal && <div className="space-y-6 pb-6">
+          <dl className="grid grid-cols-2 gap-4 rounded-lg border border-gray-200 p-4 text-[13px]">
+            {[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label, value]) => <div key={label}><dt className="text-xs text-gray-500">{label}</dt><dd className="mt-1 font-medium text-gray-900">{value}</dd></div>)}
+          </dl>
+          {selectedJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{selectedJournal.memo}</p>}
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-[13px]"><thead><tr className="border-b border-gray-200 bg-gray-50 text-left"><th className="p-3 font-medium">{t("redesign.ledgerAccount", "Ledger account")}</th><th className="p-3 text-right font-medium">{t("common.balances.debit", "Debit")}</th><th className="p-3 text-right font-medium">{t("common.balances.credit", "Credit")}</th></tr></thead>
+              <tbody>{selectedJournal.lines.map(line => <tr key={line.line_no} className="border-b border-gray-100 last:border-0"><td className="p-3"><p className="font-medium">{line.account_name}</p><p className="mt-1 text-xs text-gray-500">{line.account_code}</p>{line.memo && <p className="mt-1 text-xs text-gray-500">{line.memo}</p>}</td><td className="p-3 text-right tabular-nums">{(line.debit_minor / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(line.credit_minor / 100).toFixed(2)}</td></tr>)}</tbody>
+              <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold"><tr><td className="p-3">{t("redesign.total", "Total")}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.debit_minor, 0) / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.credit_minor, 0) / 100).toFixed(2)}</td></tr></tfoot>
+            </table>
+          </div>
+          <p className="break-all text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)} · {selectedJournal.source_external_id || "—"}</p>
+          <div className="flex justify-end"><Button variant="outline" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button></div>
+        </div>}
       </AccountingSideModal>
     </>
   );

@@ -1,0 +1,82 @@
+/* A fixed internal grid prevents label reflow and icon drift as the rail resizes. */
+.sidebar-motion {
+  --sidebar-duration: 220ms;
+  --sidebar-easing: cubic-bezier(.22, 1, .36, 1);
+  overflow-x: clip;
+  transition-property: width, transform;
+  transition-duration: var(--sidebar-duration);
+  transition-timing-function: var(--sidebar-easing);
+}
+.sidebar-header {
+  display: grid;
+  grid-template-columns: 48px 176px;
+  width: 224px;
+  margin-inline: 12px;
+}
+.sidebar-header-copy { grid-area: 1 / 2; padding-right: 12px; }
+.sidebar-toggle { grid-area: 1 / 1; justify-self: center; }
+.sidebar-scroll { overflow-x: hidden; }
+.sidebar-row {
+  display: grid;
+  grid-template-columns: 48px 176px;
+  align-items: center;
+  width: 224px;
+  min-height: 36px;
+  margin-left: 0;
+  padding-inline: 0;
+  gap: 0;
+  overflow: clip;
+  transition:
+    width var(--sidebar-duration) var(--sidebar-easing),
+    margin-left var(--sidebar-duration) var(--sidebar-easing),
+    grid-template-columns var(--sidebar-duration) var(--sidebar-easing),
+    color 120ms ease,
+    background-color 120ms ease;
+}
+.sidebar-motion[data-collapsed="true"] .sidebar-row {
+  width: 36px;
+  margin-left: 6px;
+  grid-template-columns: 36px 176px;
+}
+.sidebar-icon { justify-self: center; flex-shrink: 0; }
+.sidebar-label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 1;
+  transition: opacity 120ms ease 70ms;
+}
+.sidebar-motion[data-collapsed="true"] .sidebar-label {
+  opacity: 0;
+  transition-duration: 70ms;
+  transition-delay: 0ms;
+  pointer-events: none;
+}
+.sidebar-section-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 224px;
+  height: 20px;
+  margin-bottom: 8px;
+  padding-inline: 12px;
+}
+.sidebar-section-title::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  width: 24px;
+  height: 1px;
+  background: #e5e7eb;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.sidebar-motion[data-collapsed="true"] .sidebar-section-title::after { opacity: 1; }
+.settings-sidebar-content {
+  transition: margin-left 220ms cubic-bezier(.22, 1, .36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-motion, .sidebar-row, .sidebar-label, .sidebar-section-title::after, .settings-sidebar-content { transition: none; }
+}

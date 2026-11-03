@@ -6,7 +6,8 @@
     "organization": "Organisation",
     "banking": "Banking",
     "management": "Verwaltung",
-    "accounting": "Buchhaltung & Struktur"
+    "accounting": "Buchhaltung & Struktur",
+    "profile": "Ihr Konto"
   },
   "items": {
     "personal": "Persönliche Einstellungen",
@@ -26,5 +27,13 @@
     "ledger-accounts": "Hauptbuchkonten",
     "departments": "Abteilungen",
     "accounting": "Buchhaltung"
+  },
+  "title": "Einstellungen",
+  "actions": {
+    "expand": "Seitenleiste ausklappen",
+    "collapse": "Seitenleiste einklappen",
+    "close": "Navigation schließen",
+    "open": "Einstellungsnavigation öffnen",
+    "back": "Zurück zum Arbeitsbereich"
   }
 }

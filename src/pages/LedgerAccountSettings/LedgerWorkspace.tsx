@@ -1,7 +1,10 @@
+import { SlidersHorizontal } from "lucide-react";
+import { fetchAllCursor } from "@/lib/list";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+import "../AccountingSettings/accounting.css";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -37,7 +40,6 @@ type Option<T extends string = string> = {
 
 type ManagementView =
   | "overview"
-  | "structure"
   | "posting-controls"
   | "bank-control"
   | "reporting";
@@ -64,27 +66,6 @@ const sortAccounts = (a: LedgerAccount, b: LedgerAccount) => {
   });
 };
 
-const sectionLabel = (value: LedgerStatementSection) => {
-  switch (value) {
-    case "asset":
-      return "Asset";
-    case "liability":
-      return "Liability";
-    case "equity":
-      return "Equity";
-    case "income":
-      return "Income";
-    case "expense":
-      return "Expense";
-    case "off_balance":
-      return "Off balance";
-    case "statistical":
-      return "Statistical";
-    default:
-      return "—";
-  }
-};
-
 const SurfaceTab = ({
   active,
   title,
@@ -99,46 +80,23 @@ const SurfaceTab = ({
   <button
     type="button"
     onClick={onClick}
+    aria-pressed={active}
+    title={description}
     className={[
-      "rounded-lg border bg-white px-3 py-2.5 text-left transition-colors",
+      "-mb-px shrink-0 border-b-2 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-gray-400",
       active
         ? "border-gray-900 text-gray-900"
-        : "border-gray-200 text-gray-900 hover:bg-gray-50",
+        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900",
     ].join(" ")}
   >
     <div className="flex items-center gap-2">
       <div className="min-w-0">
         <div className="text-[13px] font-semibold leading-5">{title}</div>
-        <div className="mt-0.5 text-[11px] leading-4 text-gray-600">{description}</div>
+
       </div>
     </div>
   </button>
 );
-
-const SectionMetric = ({
-  label,
-  value,
-  total,
-}: {
-  label: string;
-  value: number;
-  total: number;
-}) => {
-  const width = total > 0 ? Math.max(4, Math.round((value / total) * 100)) : 0;
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-[13px]">
-        <span className="text-gray-700">{label}</span>
-        <span className="font-medium text-gray-900 select-text">{value}</span>
-      </div>
-
-      <div className="h-2 rounded-full border border-gray-200 bg-white">
-        <div className="h-full rounded-full bg-gray-900" style={{ width: `${width}%` }} />
-      </div>
-    </div>
-  );
-};
 
 const DataTable = ({
   title,
@@ -195,25 +153,28 @@ const DataTable = ({
   </section>
 );
 
-const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description }) => {
+const LedgerWorkspace: React.FC<Props> = ({ title, description }) => {
   const navigate = useNavigate();
   const { i18n } = useTranslation("ledgerAccounts");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string) =>
       String(
         i18n.t(key, {
+          lng: language,
           ns: "ledgerAccounts",
-          lng: ledgerProfile.language_code || i18n.resolvedLanguage || i18n.language,
           defaultValue,
         })
       ),
-    [i18n, ledgerProfile.language_code]
+    [i18n, language]
   );
 
+  const sectionLabel = useCallback((value: LedgerStatementSection) => String(i18n.t(`common.sections.${value === "off_balance" ? "offBalance" : value}`, { ns: "accountingSettings", lng: language })), [i18n, language]);
   const { isOwner, permissions } = useAuthContext();
   const canView = isOwner || permissions.includes("view_ledger_account");
   const canManage = isOwner || permissions.includes("add_ledger_account");
 
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [draftSearch, setDraftSearch] = useState("");
   const [draftSection, setDraftSection] = useState<"" | LedgerStatementSection>("");
   const [draftAccountType, setDraftAccountType] = useState<"" | LedgerAccountType>("");
@@ -252,21 +213,15 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
     try {
       setLoading(true);
 
-      const response = await api.getLedgerAccounts({
+      const items = await fetchAllCursor<LedgerAccount>(params => api.getLedgerAccounts({
+        cursor: params.cursor,
         q: appliedSearch || undefined,
         active: appliedActive,
         ...(appliedSection ? { statement_section: appliedSection } : {}),
         ...(appliedAccountType ? { account_type: appliedAccountType } : {}),
         ...(appliedBankControl ? { is_bank_control: appliedBankControl } : {}),
         ...(appliedManualPosting ? { allows_manual_posting: appliedManualPosting } : {}),
-      });
-
-      const payload = response?.data;
-      const items = Array.isArray(payload?.results)
-        ? (payload.results as LedgerAccount[])
-        : Array.isArray(payload)
-          ? (payload as LedgerAccount[])
-          : [];
+      }));
 
       setAccounts(items);
     } catch (error) {
@@ -316,7 +271,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
       { label: sectionLabel("off_balance"), value: "off_balance" },
       { label: sectionLabel("statistical"), value: "statistical" },
     ],
-    []
+    [sectionLabel]
   );
 
   const accountTypeOptions = useMemo<Option<LedgerAccountType>[]>(
@@ -329,10 +284,10 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
   const yesNoOptions = useMemo<Option<"true" | "false">[]>(
     () => [
-      { label: "Yes", value: "true" },
-      { label: "No", value: "false" },
+      { label: t("workspace.yes", "Yes"), value: "true" },
+      { label: t("workspace.no", "No"), value: "false" },
     ],
-    []
+    [t]
   );
 
   const parentOptions = useMemo<Option[]>(
@@ -347,51 +302,14 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
     [editing?.id, accounts]
   );
 
-  const counters = useMemo(() => {
-    const items = accounts;
-    const postingCount = items.filter((item) => item.account_type === "posting").length;
-    const headerCount = items.filter((item) => item.account_type === "header").length;
-    const activeCount = items.filter((item) => item.is_active).length;
-    const bankControlCount = items.filter((item) => item.is_bank_control).length;
-    const manualCount = items.filter((item) => item.allows_manual_posting).length;
-
-    return {
-      total: items.length,
-      postingCount,
-      headerCount,
-      activeCount,
-      bankControlCount,
-      manualCount,
-      maxDepth: items.reduce((max, item) => Math.max(max, Number(item.depth || 0)), 0),
-      rootCount: items.filter((item) => !item.parent_id).length,
-      bySection: {
-        asset: items.filter((item) => item.statement_section === "asset").length,
-        liability: items.filter((item) => item.statement_section === "liability").length,
-        equity: items.filter((item) => item.statement_section === "equity").length,
-        income: items.filter((item) => item.statement_section === "income").length,
-        expense: items.filter((item) => item.statement_section === "expense").length,
-        off_balance: items.filter((item) => item.statement_section === "off_balance").length,
-        statistical: items.filter((item) => item.statement_section === "statistical").length,
-      },
-    };
-  }, [accounts]);
-
   const managementViews = useMemo(
     () => [
       {
         id: "overview" as const,
-        title: t("workspace.managementOverviewTitle", "Overview"),
+        title: t("explorer.accounts", "Accounts"),
         description: t(
           "workspace.managementOverviewDescription",
           "High-level account health and chart coverage."
-        ),
-      },
-      {
-        id: "structure" as const,
-        title: t("workspace.managementStructureTitle", "Structure"),
-        description: t(
-          "workspace.managementStructureDescription",
-          "Hierarchy, depth, and parent-child organization."
         ),
       },
       {
@@ -424,12 +342,12 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
 
   const reportingGroups = useMemo(() => {
     const grouped = accounts.reduce<Record<string, number>>((acc, item) => {
-      const key = item.report_group || "Unassigned";
+      const key = item.report_group || t("workspace.unassigned", "Unassigned");
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
     return Object.entries(grouped).sort((a, b) => b[1] - a[1]);
-  }, [accounts]);
+  }, [accounts, t]);
 
   const overviewRows = useMemo(
     () =>
@@ -441,11 +359,11 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
             {item.code || "—"}
           </span>,
           item.name || "—",
-          item.account_type,
+          t(`modal.${item.account_type}`, item.account_type),
           sectionLabel(item.statement_section),
           [item.report_group, item.report_subgroup].filter(Boolean).join(" / ") || "—",
         ]),
-    [accounts]
+    [accounts, t, sectionLabel]
   );
 
   const postingRows = useMemo(
@@ -479,7 +397,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
             {item.code || "—"}
           </span>,
           item.name || "—",
-          item.account_type,
+          t(`modal.${item.account_type}`, item.account_type),
           item.allows_manual_posting
             ? t("workspace.manualAllowed", "Manual posting")
             : t("workspace.manualBlocked", "No manual posting"),
@@ -623,16 +541,13 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
   const showSyncBadge = loading && accounts.length > 0;
 
   return (
-    <main className="min-h-full bg-transparent px-4 py-6 text-gray-900 sm:px-6 sm:py-8">
+    <main className="accounting-workspace min-h-full min-w-0 px-4 py-7 text-gray-900 sm:px-8 lg:px-10">
       {loading && accounts.length === 0 ? <TopProgress active variant="top" topOffset={64} /> : null}
 
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-lg border border-gray-200 bg-white">
-          <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="mx-auto max-w-[1440px] space-y-3">
+        <header className="ledger-page-header border-b border-gray-200 pb-3">
+          <div className="flex flex-col gap-4 py-1 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-gray-200 bg-gray-50 text-[11px] font-semibold text-gray-700">
-                LA
-              </div>
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
@@ -662,7 +577,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
               </div>
             </div>
 
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row" ref={menuRef}>
+            <div className="flex w-full gap-2 sm:w-auto" ref={menuRef}>
               <Button type="button" onClick={openCreate} disabled={!canManage}>
                 {t("workspace.addAccount", "Add account")}
               </Button>
@@ -695,7 +610,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
           </div>
         </header>
 
-        <section className="grid gap-2 lg:grid-cols-5">
+        <section className="ledger-view-tabs flex gap-1 overflow-x-auto border-b border-gray-200">
           {managementViews.map((item) => (
             <SurfaceTab
               key={item.id}
@@ -707,22 +622,8 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
           ))}
         </section>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">
-              {t("workspace.filtersTitle", "Filters")}
-            </div>
-          </div>
-
-          <div className="space-y-4 px-4 py-4">
-            <p className="text-[12px] text-gray-600">
-              {t(
-                "workspace.filtersSubtitle",
-                "Refine the chart before reviewing structure, posting controls, or reporting coverage."
-              )}
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <form onSubmit={event => { event.preventDefault(); applyFilters(); }} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-2">
+          <div className="min-w-0">
               <Input
                 kind="text"
                 label={t("workspace.searchLabel", "Search")}
@@ -733,6 +634,21 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
                 value={draftSearch}
                 onChange={(event) => setDraftSearch(event.target.value)}
               />
+          </div>
+          <Button type="submit">{t("workspace.searchLabel", "Search")}</Button>
+          <Button type="button" variant="outline" onClick={() => setFiltersOpen(open => !open)} aria-expanded={filtersOpen} aria-controls="ledger-filters"><SlidersHorizontal size={14} /><span>{t("workspace.filtersTitle", "Filters")}</span>{[appliedSection, appliedAccountType, appliedBankControl, appliedManualPosting, appliedActive === "false" ? "inactive" : ""].filter(Boolean).length || ""}</Button>
+        </form>
+        {filtersOpen && <section id="ledger-filters" className="rounded-lg border border-gray-200 bg-white">
+          <div className="space-y-4 px-4 py-4">
+            <p className="text-[12px] text-gray-600">
+              {t(
+                "workspace.filtersSubtitle",
+                "Refine the chart before reviewing structure, posting controls, or reporting coverage."
+              )}
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+
 
               <Select<Option<LedgerStatementSection>>
                 label={t("workspace.sectionLabel", "Statement section")}
@@ -814,13 +730,13 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
               </Button>
             </div>
           </div>
-        </section>
+        </section>}
 
         {managementView === "overview" ? (
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="min-w-0">
             <LedgerTreePanel
               items={accounts}
-              languageCode={ledgerProfile.language_code}
+              languageCode={i18n.resolvedLanguage || i18n.language}
               editable={canManage}
               viewMode={treeViewMode}
               onViewModeChange={setTreeViewMode}
@@ -831,48 +747,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
               onDelete={(account) => void requestDelete(account)}
             />
 
-            <aside className="space-y-4">
-              <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                  <h2 className="text-[14px] font-semibold text-gray-900">
-                    {t("workspace.sectionDistributionTitle", "Section distribution")}
-                  </h2>
-                  <p className="mt-1 text-[12px] text-gray-600">
-                    {t(
-                      "workspace.sectionDistributionDescription",
-                      "Current allocation of visible accounts by statement section."
-                    )}
-                  </p>
-                </div>
 
-                <div className="space-y-4 p-4">
-                  <SectionMetric label={sectionLabel("asset")} value={counters.bySection.asset} total={counters.total} />
-                  <SectionMetric label={sectionLabel("liability")} value={counters.bySection.liability} total={counters.total} />
-                  <SectionMetric label={sectionLabel("equity")} value={counters.bySection.equity} total={counters.total} />
-                  <SectionMetric label={sectionLabel("income")} value={counters.bySection.income} total={counters.total} />
-                  <SectionMetric label={sectionLabel("expense")} value={counters.bySection.expense} total={counters.total} />
-                  <SectionMetric label={sectionLabel("off_balance")} value={counters.bySection.off_balance} total={counters.total} />
-                  <SectionMetric label={sectionLabel("statistical")} value={counters.bySection.statistical} total={counters.total} />
-                </div>
-              </section>
-            </aside>
-          </section>
-        ) : null}
-
-        {managementView === "structure" ? (
-          <section className="space-y-4">
-            <LedgerTreePanel
-              items={accounts}
-              languageCode={ledgerProfile.language_code}
-              editable={canManage}
-              viewMode={treeViewMode}
-              onViewModeChange={setTreeViewMode}
-              onEdit={(account) => {
-                setEditing(account);
-                setModalOpen(true);
-              }}
-              onDelete={(account) => void requestDelete(account)}
-            />
           </section>
         ) : null}
 
@@ -959,7 +834,7 @@ const LedgerWorkspace: React.FC<Props> = ({ ledgerProfile, title, description })
         mode={editing ? "edit" : "create"}
         initial={editing}
         parentOptions={parentOptions}
-        languageCode={ledgerProfile.language_code}
+        languageCode={i18n.resolvedLanguage || i18n.language}
         busy={saving}
         onClose={() => {
           setModalOpen(false);

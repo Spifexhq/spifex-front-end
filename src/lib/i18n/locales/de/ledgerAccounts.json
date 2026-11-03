@@ -3,7 +3,7 @@
     "pageLabel": "Einstellungen",
     "personalLedger": "Persönlicher Kontenplan",
     "organizationalLedger": "Organisatorischer Kontenplan",
-    "titleOverview": "Kontenplan-Arbeitsbereich",
+    "titleOverview": "Kontenplan",
     "titleAccounting": "Buchhaltungs-Arbeitsbereich",
     "descriptionOverview": "Verwalte den Kontenplan der Organisation mit einer sauberen, prüfbaren und reportingfähigen Struktur.",
     "descriptionAccounting": "Pflege die Buchhaltungsstruktur, verfeinere Hierarchien und halte den Kontenplan für Journale, Bücher und Reporting zuverlässig.",
@@ -70,7 +70,7 @@
     "managementPostingControlsDescription": "Buchungsumfang, Richtlinie für manuelle Buchungen und operative Disziplin.",
     "managementBankControlTitle": "Banksteuerung",
     "managementBankControlDescription": "Konten für Banksaldosteuerung und Logik der Abstimmung.",
-    "managementReportingTitle": "Reporting",
+    "managementReportingTitle": "Berichte",
     "managementReportingDescription": "Berichtsgruppen, Untergruppen und Reporting-Abdeckung.",
     "syncing": "Wird synchronisiert...",
     "filtersTitle": "Filter",
@@ -78,7 +78,10 @@
     "sectionDistributionTitle": "Verteilung nach Abschlussbereich",
     "sectionDistributionDescription": "Verteilung der Konten über Vermögenswerte, Verbindlichkeiten, Eigenkapital, Erträge, Aufwendungen und weitere Bereiche.",
     "reportingSampleTitle": "Reporting-Gruppen",
-    "reportingSampleDescription": "Konten gruppiert nach Reporting-Klassifizierung."
+    "reportingSampleDescription": "Konten gruppiert nach Reporting-Klassifizierung.",
+    "unassigned": "Nicht zugeordnet",
+    "yes": "Ja",
+    "no": "Nein"
   },
   "setup": {
     "pageLabel": "Einstellungen",
@@ -153,10 +156,27 @@
     "selectBalance": "Saldo auswählen",
     "selectAccountType": "Kontotyp auswählen",
     "createSubtitle": "Erstelle ein Hauptbuchkonto mit Struktur, Klassifizierung und Buchungssteuerung.",
-    "editSubtitle": "Aktualisiere Struktur, Klassifizierung und Buchungssteuerung des Hauptbuchkontos."
+    "editSubtitle": "Aktualisiere Struktur, Klassifizierung und Buchungssteuerung des Hauptbuchkontos.",
+    "debit": "Soll",
+    "credit": "Haben"
   },
   "accounting": {
     "title": "Buchhaltungs-Arbeitsbereich",
     "description": "Ein Bereich für die Pflege des Kontenplans und die Vorbereitung der Struktur für Journale, Bücher und Reporting."
+  },
+  "explorer": {
+    "accounts": "Konten",
+    "postingCount": "{{count}} Buchungskonten",
+    "expandAll": "Alle ausklappen",
+    "collapseAll": "Alle einklappen",
+    "expandGroup": "{{name}} ausklappen",
+    "collapseGroup": "{{name}} einklappen",
+    "allAccounts": "Alle Konten",
+    "status": "Status",
+    "editAccount": "{{name}} bearbeiten",
+    "visibleCount": "{{visible}} von {{total}} Konten angezeigt",
+    "inspectHint": "Wählen Sie einen Kontonamen, um die Details anzuzeigen.",
+    "postingCount_one": "{{count}} Buchungskonto",
+    "postingCount_other": "{{count}} Buchungskonten"
   }
 }

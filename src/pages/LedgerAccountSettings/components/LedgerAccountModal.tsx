@@ -1,10 +1,12 @@
+import CurrencySelect from "@/shared/ui/CurrencySelect";
+import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
+import { useDialogFocus } from "@/shared/ui/useDialogFocus";
 // src\pages\LedgerAccountSettings\components\LedgerAccountModal.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
-import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import { Select } from "src/shared/ui/Select";
 
@@ -53,25 +55,6 @@ const DEFAULTS: AddLedgerAccountRequest = {
 const optionKey = <T extends string>(item: Option<T>) => item.value;
 const optionLabel = <T extends string>(item: Option<T>) => item.label;
 
-const sectionLabel = (value: LedgerStatementSection) => {
-  switch (value) {
-    case "asset":
-      return "Asset";
-    case "liability":
-      return "Liability";
-    case "equity":
-      return "Equity";
-    case "income":
-      return "Income";
-    case "expense":
-      return "Expense";
-    case "off_balance":
-      return "Off balance";
-    case "statistical":
-      return "Statistical";
-  }
-};
-
 const FieldGroup = ({
   title,
   children,
@@ -93,7 +76,7 @@ const ToggleRow = ({
   onChange,
   disabled = false,
 }: {
-  label: string;
+  label: React.ReactNode;
   checked: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
@@ -107,10 +90,9 @@ const ToggleRow = ({
     ].join(" ")}
   >
     <span className="text-[13px] font-medium">{label}</span>
-    <Checkbox
+    <input type="checkbox" className="h-4 w-4 shrink-0 accent-gray-900"
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
-      size="small"
       disabled={disabled}
     />
   </label>
@@ -121,27 +103,29 @@ const LedgerAccountModal: React.FC<Props> = ({
   mode,
   initial,
   parentOptions,
-  languageCode,
   busy = false,
   onClose,
   onSubmit,
 }) => {
   const { i18n } = useTranslation("ledgerAccounts");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string) =>
       String(
         i18n.t(key, {
+          lng: language,
           ns: "ledgerAccounts",
-          lng: languageCode || i18n.resolvedLanguage || i18n.language,
           defaultValue,
         })
       ),
-    [i18n, languageCode]
+    [i18n, language]
   );
 
+  const sectionLabel = React.useCallback((value: LedgerStatementSection) => String(i18n.t(`common.sections.${value === "off_balance" ? "offBalance" : value}`, { ns: "accountingSettings", lng: language })), [i18n, language]);
   const [form, setForm] = useState<AddLedgerAccountRequest>(DEFAULTS);
   const [metadataText, setMetadataText] = useState("{}");
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(isOpen);
   const [visible, setVisible] = useState(isOpen);
 
@@ -155,15 +139,15 @@ const LedgerAccountModal: React.FC<Props> = ({
       { value: "off_balance", label: sectionLabel("off_balance") },
       { value: "statistical", label: sectionLabel("statistical") },
     ],
-    []
+    [sectionLabel]
   );
 
   const balanceOptions = useMemo<Option<LedgerNormalBalance>[]>(
     () => [
-      { value: "debit", label: "Debit" },
-      { value: "credit", label: "Credit" },
+      { value: "debit", label: t("modal.debit", "Debit") },
+      { value: "credit", label: t("modal.credit", "Credit") },
     ],
-    []
+    [t]
   );
 
   const accountTypeOptions = useMemo<Option<LedgerAccountType>[]>(
@@ -276,6 +260,7 @@ const LedgerAccountModal: React.FC<Props> = ({
       return;
     }
 
+    try {
     await onSubmit({
       ...form,
       code: form.code.trim(),
@@ -291,20 +276,27 @@ const LedgerAccountModal: React.FC<Props> = ({
       allows_manual_posting:
         form.account_type === "posting" ? !!form.allows_manual_posting : false,
     });
+    } catch {
+      setError(t("workspace.requestError", "Something went wrong. Please try again."));
+    }
   };
+
+  useDialogFocus(isOpen && mounted, dialogRef);
 
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999]">
-      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+    <div className="accounting-dialog fixed inset-0 z-[9999]">
+      <div className="absolute inset-0 bg-gray-950/20 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
 
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="ledger-account-modal-title"
         className={[
-          "absolute inset-y-0 right-0 flex h-full w-full max-w-[880px] flex-col border-l border-gray-200 bg-white",
+          "absolute inset-y-0 right-0 flex h-full w-full max-w-[720px] flex-col border-l border-gray-200 bg-white",
           "transition-transform duration-300 ease-out",
           visible ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
@@ -350,7 +342,7 @@ const LedgerAccountModal: React.FC<Props> = ({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 md:px-6 md:pt-6">
           <form onSubmit={submit} className="flex flex-col gap-4 pb-4 md:pb-6">
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid gap-5">
               <FieldGroup title={t("modal.general", "General")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
@@ -411,7 +403,7 @@ const LedgerAccountModal: React.FC<Props> = ({
               <FieldGroup title={t("modal.classification", "Classification")}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Select<Option<LedgerAccountType>>
-                    label={t("modal.accountType", "Account type")}
+                    label={<AccountingTerm term="posting">{t("modal.accountType", "Account type")}</AccountingTerm>}
                     items={accountTypeOptions}
                     selected={accountTypeOptions.filter((item) => item.value === form.account_type)}
                     onChange={(items) =>
@@ -428,7 +420,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                   />
 
                   <Select<Option<LedgerStatementSection>>
-                    label={t("modal.statementSection", "Statement section")}
+                    label={<AccountingTerm term="section">{t("modal.statementSection", "Statement section")}</AccountingTerm>}
                     items={sectionOptions}
                     selected={sectionOptions.filter((item) => item.value === form.statement_section)}
                     onChange={(items) =>
@@ -446,7 +438,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 </div>
 
                 <Select<Option<LedgerNormalBalance>>
-                  label={t("modal.normalBalance", "Normal balance")}
+                  label={<AccountingTerm term="normalBalance">{t("modal.normalBalance", "Normal balance")}</AccountingTerm>}
                   items={balanceOptions}
                   selected={balanceOptions.filter((item) => item.value === form.normal_balance)}
                   onChange={(items) =>
@@ -476,7 +468,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
 
                 <ToggleRow
-                  label={t("modal.bankControl", "Bank control account")}
+                  label={<AccountingTerm term="bankControl">{t("modal.bankControl", "Bank control account")}</AccountingTerm>}
                   checked={!!form.is_bank_control}
                   disabled={form.account_type !== "posting"}
                   onChange={(value) =>
@@ -488,7 +480,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
 
                 <ToggleRow
-                  label={t("modal.manualPosting", "Allow manual posting")}
+                  label={<AccountingTerm term="manualPosting">{t("modal.manualPosting", "Allow manual posting")}</AccountingTerm>}
                   checked={!!form.allows_manual_posting}
                   disabled={form.account_type !== "posting"}
                   onChange={(value) =>
@@ -500,7 +492,9 @@ const LedgerAccountModal: React.FC<Props> = ({
                 />
               </FieldGroup>
 
-              <FieldGroup title={t("modal.advanced", "Advanced")}>
+              <details className="rounded-lg border border-gray-200 bg-white">
+                <summary className="flex items-center justify-between px-4 py-4 text-sm font-medium">{t("modal.advanced", "Advanced")}</summary>
+                <div className="space-y-4 p-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Input
                     kind="text"
@@ -540,17 +534,7 @@ const LedgerAccountModal: React.FC<Props> = ({
                     }
                   />
 
-                  <Input
-                    kind="text"
-                    label={t("modal.currencyCode", "Currency code")}
-                    value={form.currency_code || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        currency_code: e.target.value,
-                      }))
-                    }
-                  />
+                  <CurrencySelect value={form.currency_code || ""} onChange={currency_code => setForm(prev => ({ ...prev, currency_code }))} optional />
                 </div>
 
                 <label className="block">
@@ -563,7 +547,8 @@ const LedgerAccountModal: React.FC<Props> = ({
                     className="min-h-[180px] w-full rounded-md border border-gray-300 bg-white px-3 py-3 font-mono text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-400"
                   />
                 </label>
-              </FieldGroup>
+                </div>
+              </details>
             </div>
 
             {error ? (
@@ -572,7 +557,7 @@ const LedgerAccountModal: React.FC<Props> = ({
               </div>
             ) : null}
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
               <Button type="button" variant="outline" onClick={onClose}>
                 {t("modal.cancel", "Cancel")}
               </Button>

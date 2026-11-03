@@ -3,7 +3,7 @@
     "pageLabel": "Paramètres",
     "personalLedger": "Plan personnel",
     "organizationalLedger": "Plan organisationnel",
-    "titleOverview": "Espace du plan comptable",
+    "titleOverview": "Plan comptable",
     "titleAccounting": "Espace comptable",
     "descriptionOverview": "Gérer le plan comptable de l’organisation en gardant une structure propre, auditable et prête pour le reporting.",
     "descriptionAccounting": "Ajuster la structure comptable, affiner la hiérarchie et maintenir un plan comptable fiable pour les journaux, livres et rapports.",
@@ -70,7 +70,7 @@
     "managementPostingControlsDescription": "Périmètre de saisie, règle de saisie manuelle et discipline opérationnelle.",
     "managementBankControlTitle": "Contrôle bancaire",
     "managementBankControlDescription": "Comptes dédiés au contrôle des soldes bancaires et à la logique de rapprochement.",
-    "managementReportingTitle": "Reporting",
+    "managementReportingTitle": "Rapports",
     "managementReportingDescription": "Groupes, sous-groupes et couverture de reporting.",
     "syncing": "Synchronisation...",
     "filtersTitle": "Filtres",
@@ -78,7 +78,10 @@
     "sectionDistributionTitle": "Répartition par section",
     "sectionDistributionDescription": "Répartition des comptes entre actifs, passifs, capitaux propres, produits, charges et autres sections.",
     "reportingSampleTitle": "Groupes de reporting",
-    "reportingSampleDescription": "Comptes regroupés par classification de reporting."
+    "reportingSampleDescription": "Comptes regroupés par classification de reporting.",
+    "unassigned": "Non attribué",
+    "yes": "Oui",
+    "no": "Non"
   },
   "setup": {
     "pageLabel": "Paramètres",
@@ -153,10 +156,27 @@
     "selectBalance": "Sélectionner le solde",
     "selectAccountType": "Sélectionner le type",
     "createSubtitle": "Créer un compte du grand livre avec structure, classification et contrôles de saisie.",
-    "editSubtitle": "Mettre à jour la structure, la classification et les contrôles de saisie du compte du grand livre."
+    "editSubtitle": "Mettre à jour la structure, la classification et les contrôles de saisie du compte du grand livre.",
+    "debit": "Débit",
+    "credit": "Crédit"
   },
   "accounting": {
     "title": "Espace comptable",
     "description": "Un espace dédié à la maintenance du plan comptable et à la préparation de la structure pour les journaux, livres et rapports."
+  },
+  "explorer": {
+    "accounts": "Comptes",
+    "postingCount": "{{count}} comptes de comptabilisation",
+    "expandAll": "Tout développer",
+    "collapseAll": "Tout réduire",
+    "expandGroup": "Développer {{name}}",
+    "collapseGroup": "Réduire {{name}}",
+    "allAccounts": "Tous les comptes",
+    "status": "Statut",
+    "editAccount": "Modifier {{name}}",
+    "visibleCount": "{{visible}} comptes affichés sur {{total}}",
+    "inspectHint": "Sélectionnez un nom de compte pour voir ses détails.",
+    "postingCount_one": "{{count}} compte de comptabilisation",
+    "postingCount_other": "{{count}} comptes de comptabilisation"
   }
 }

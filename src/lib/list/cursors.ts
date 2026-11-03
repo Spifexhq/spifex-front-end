@@ -14,7 +14,7 @@ export const getCursorFromUrl = (url?: string | null): string | undefined => {
 };
 
 type CursorParams = { page_size?: number; cursor?: string };
-type CursorResp<T> = { data: { results?: T[]; next?: string | null | undefined } };
+type CursorResp<T> = { data: T[] | { results?: T[]; items?: T[]; next?: string | null | undefined } };
 
 export async function fetchAllCursor<T>(
   fn: (params: CursorParams) => Promise<CursorResp<T>>,
@@ -22,15 +22,21 @@ export async function fetchAllCursor<T>(
 ): Promise<T[]> {
   const acc: T[] = [];
   let cursor: string | undefined = undefined;
+  const seenCursors = new Set<string>();
 
   do {
     const params: CursorParams = { cursor };
     if (opts?.pageSize != null) params.page_size = opts.pageSize;
 
     const { data } = await fn(params);
-    if (data?.results?.length) acc.push(...data.results);
+    if (Array.isArray(data)) return [...acc, ...data];
+    const rows = data?.results ?? data?.items;
+    if (!Array.isArray(rows)) throw new Error("Unexpected list response: expected an array, results, or items.");
+    acc.push(...rows);
 
-    cursor = getCursorFromUrl(data?.next ?? undefined) || undefined;
+    cursor = getCursorFromUrl(data.next) || undefined;
+    if (cursor && seenCursors.has(cursor)) throw new Error("Repeated pagination cursor.");
+    if (cursor) seenCursors.add(cursor);
   } while (cursor);
 
   return acc;

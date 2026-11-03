@@ -2,13 +2,20 @@
   "sidebar": {
     "aria": {
       "nav": "Seitenleiste für Kassen-Schnellaktionen",
-      "toggleOpen": "Seitenleiste öffnen",
-      "toggleClose": "Seitenleiste schließen"
+      "toggleOpen": "Seitenleiste ausklappen",
+      "toggleClose": "Seitenleiste einklappen",
+      "close": "Navigation schließen"
     },
     "items": {
       "credit": "Eingänge",
       "debit": "Ausgänge",
-      "transfer": "Überweisungen"
+      "transfer": "Überweisungen",
+      "importStatement": "Kontoauszug importieren"
+    },
+    "title": "Arbeitsbereich",
+    "settings": "Einstellungen",
+    "sections": {
+      "actions": "Schnellaktionen"
     }
   }
 }

@@ -22,5 +22,13 @@
   "btn.save": "Save",
   "btn.cancel": "Cancel",
   "toast.loadError": "Failed to fetch personal data.",
-  "toast.updateError": "Failed to update personal data."
+  "toast.updateError": "Failed to update personal data.",
+  "input": {
+    "clear": "Clear",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+    "openDatePicker": "Open date picker",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month"
+  }
 }

@@ -64,13 +64,14 @@
   },
   "nav": {
     "ariaLabel": "Navigation des paramètres comptables",
-    "chart": "Plan",
+    "chart": "Plan comptable",
     "books": "Livres",
-    "bankMappings": "Mappages bancaires",
-    "postingPolicies": "Politiques d’écriture",
+    "bankMappings": "Liaisons bancaires",
+    "postingPolicies": "Règles par catégorie",
     "journals": "Journaux",
-    "correlation": "Corrélation",
-    "reconciliation": "Rapprochement"
+    "correlation": "Liaisons",
+    "reconciliation": "Guide de vérification",
+    "overview": "Vue générale"
   },
   "shell": {
     "title": "Paramètres comptables",
@@ -284,8 +285,13 @@
       "isPrimary": "Principal",
       "isActive": "Actif",
       "saveChanges": "Enregistrer les modifications",
-      "createBook": "Créer le livre"
-    }
+      "createBook": "Créer le livre",
+      "identity": "Identification",
+      "configuration": "Configuration",
+      "primaryBook": "Livre principal"
+    },
+    "listTitle": "Livres comptables",
+    "empty": "Aucun livre comptable trouvé."
   },
   "bankMappingsPage": {
     "loadError": "Échec du chargement des mappages bancaires.",
@@ -294,8 +300,8 @@
     "savedSuccess": "Mappage bancaire enregistré.",
     "saveError": "Échec de l’enregistrement du mappage bancaire.",
     "sectionLabel": "Mappages bancaires",
-    "title": "Mappages bancaires",
-    "description": "Associez les comptes bancaires opérationnels aux livres comptables et aux comptes de contrôle bancaire pour fiabiliser les écritures et le rapprochement.",
+    "title": "Liaisons bancaires",
+    "description": "Reliez chaque banque au compte comptable de ses encaissements, paiements et virements.",
     "newButton": "Nouveau mappage",
     "metrics": {
       "activeMappings": "Mappages actifs",
@@ -318,8 +324,11 @@
       "selectBank": "Sélectionner une banque",
       "selectBook": "Sélectionner un livre",
       "selectLedgerAccount": "Sélectionner le compte du grand livre",
-      "saveMapping": "Enregistrer le mappage"
-    }
+      "saveMapping": "Enregistrer le mappage",
+      "definition": "Détails de la liaison"
+    },
+    "listTitle": "Liaisons bancaires",
+    "empty": "Aucune liaison bancaire trouvée."
   },
   "postingPoliciesPage": {
     "loadError": "Échec du chargement des politiques d’écriture.",
@@ -328,8 +337,8 @@
     "savedSuccess": "Politique d’écriture enregistrée.",
     "saveError": "Échec de l’enregistrement de la politique d’écriture.",
     "sectionLabel": "Politiques d’écriture",
-    "title": "Politiques d’écriture",
-    "description": "Définissez comment les catégories opérationnelles de trésorerie se traduisent en comptes du grand livre pour les flux de règlement, d’engagement et de compensation.",
+    "title": "Règles par catégorie",
+    "description": "Choisissez les comptes des paiements et encaissements de chaque catégorie.",
     "newButton": "Nouvelle politique",
     "metrics": {
       "policies": "Politiques",
@@ -365,7 +374,8 @@
       "selectBook": "Sélectionner un livre",
       "savePolicy": "Enregistrer la politique",
       "scopeSection": "Périmètre",
-      "accountMapping": "Mappage des comptes"
+      "accountMapping": "Mappage des comptes",
+      "selectAccount": "Choisir un compte"
     },
     "actions": {
       "newPolicy": "Nouvelle politique"
@@ -384,7 +394,7 @@
     "reverseError": "Échec de la contrepassation du journal.",
     "sectionLabel": "Journaux",
     "title": "Journaux",
-    "description": "Examinez les écritures comptables, créez des journaux manuels contrôlés et contrepasser les écritures publiées si nécessaire.",
+    "description": "Vérifiez les écritures des paiements, encaissements et virements.",
     "searchPlaceholder": "Recherche",
     "newButton": "Journal manuel",
     "metrics": {
@@ -580,82 +590,82 @@
     },
     "nodes": {
       "workspace": {
-        "label": "AccountingWorkspace",
+        "label": "Plan comptable",
         "short": "Plan comptable",
         "description": "Espace hiérarchique pour les comptes du grand livre."
       },
       "booksPage": {
-        "label": "AccountingBooksPage",
+        "label": "Livres",
         "short": "Livres",
         "description": "Registre des livres comptables."
       },
       "bankMappingsPage": {
-        "label": "AccountingBankMappingsPage",
+        "label": "Liaisons bancaires",
         "short": "Mappages bancaires",
         "description": "Pont entre comptes bancaires, livres et comptes de contrôle bancaire."
       },
       "postingPoliciesPage": {
-        "label": "AccountingPostingPoliciesPage",
+        "label": "Règles par catégorie",
         "short": "Politiques d’écriture",
         "description": "Pont entre catégories de trésorerie, livres et comptes du grand livre."
       },
       "journalsPage": {
-        "label": "AccountingJournalsPage",
+        "label": "Journaux",
         "short": "Journaux",
         "description": "Page de création, revue et contrepassation des journaux."
       },
       "reconciliation": {
-        "label": "AccountingReconciliationPage",
+        "label": "Guide de vérification",
         "short": "Rapprochement",
         "description": "Tableau de préparation alimenté par la complétude en amont."
       },
       "ledgerApi": {
-        "label": "API des comptes du grand livre",
+        "label": "Service des comptes",
         "short": "API du grand livre",
         "description": "Source de liste et CRUD du grand livre."
       },
       "booksApi": {
-        "label": "API des livres comptables",
+        "label": "Service des livres",
         "short": "API livres",
         "description": "Source de liste et CRUD des livres."
       },
       "banksApi": {
-        "label": "API des comptes bancaires",
+        "label": "Service bancaire",
         "short": "API banques",
         "description": "Source de recherche de comptes bancaires opérationnels."
       },
       "categoriesApi": {
-        "label": "API des catégories de trésorerie",
+        "label": "Service des catégories",
         "short": "API catégories",
         "description": "Source de recherche de catégories opérationnelles."
       },
       "journalsApi": {
-        "label": "API journaux",
+        "label": "Service des journaux",
         "short": "API journaux",
         "description": "Source de liste / création / contrepassation des journaux."
       },
       "ledgerEntity": {
-        "label": "LedgerAccount",
+        "label": "Compte comptable",
         "short": "Compte du grand livre",
         "description": "Structure principale du plan comptable."
       },
       "bookEntity": {
-        "label": "AccountingBook",
+        "label": "Livre comptable",
         "short": "Livre comptable",
         "description": "Périmètre d’exécution comptable."
       },
       "bankEntity": {
-        "label": "BankAccount",
+        "label": "Compte bancaire",
         "short": "Compte bancaire",
         "description": "Compte bancaire opérationnel."
       },
       "categoryEntity": {
-        "label": "CashflowCategory",
+        "label": "Catégorie de trésorerie",
         "short": "Catégorie de trésorerie",
         "description": "Catégorie opérationnelle utilisée dans le mappage de politiques."
       },
       "journalEntity": {
-        "label": "JournalEntry",
+        "label": "Écriture comptable",
         "short": "Écriture de journal",
         "description": "Sortie d’exécution comptable."
       }
@@ -724,6 +734,135 @@
       "bankMappingArchitectureLabel": "Mappage bancaire",
       "postingPolicyArchitectureLabel": "Politique de comptabilisation",
       "journalArchitectureLabel": "Journal"
+    },
+    "enableDatasets": "Activez au moins un jeu de données pour sélectionner des lignes.",
+    "node": "Enregistrement",
+    "notes": {
+      "selected": "Ligne sélectionnée",
+      "correlated": "Enregistrement lié",
+      "mapping": "Liaison sélectionnée",
+      "policy": "Règle sélectionnée",
+      "journal": "Écriture sélectionnée",
+      "lineAccount": "Compte de la ligne {{number}}",
+      "lineBank": "Banque de la ligne {{number}}"
     }
+  },
+  "redesign": {
+    "title": "Comptabilité",
+    "subtitle": "Reliez votre trésorerie à des écritures comptables claires et cohérentes.",
+    "steps": {
+      "chart": "Organisez vos comptes",
+      "chartDescription": "Regroupez les comptes utilisés pour enregistrer votre activité.",
+      "books": "Choisissez le livre principal",
+      "booksDescription": "Définissez le livre et la devise des écritures automatiques.",
+      "banks": "Reliez vos comptes bancaires",
+      "banksDescription": "Choisissez où les mouvements bancaires apparaissent en comptabilité.",
+      "rules": "Définissez les règles par catégorie",
+      "rulesDescription": "Indiquez les comptes à utiliser pour les encaissements et les paiements."
+    },
+    "reviewChart": "Vérifier le plan comptable",
+    "needsPrimary": "Choisissez un seul livre principal actif",
+    "mappingCount": "{{count}} liaisons actives dans le livre principal",
+    "policyCount": "{{count}} règles avec les deux comptes de règlement",
+    "overviewTitle": "Votre comptabilité connectée",
+    "overviewDescription": "Définissez comment les paiements génèrent des écritures, puis consultez les journaux.",
+    "viewJournals": "Voir les journaux",
+    "setupTitle": "Configuration comptable",
+    "setupHint": "Résumé : vérifiez chaque banque et catégorie",
+    "loadError": "Impossible de charger le résumé.",
+    "retry": "Réessayer",
+    "howTitle": "Que se passe-t-il lors d'un paiement ou encaissement ?",
+    "flow": {
+      "category": "Catégorie de trésorerie",
+      "rule": "Règle de catégorie + liaison bancaire",
+      "journal": "Écriture équilibrée"
+    },
+    "howDescription": "Chaque encaissement ou paiement effectif crée une écriture dans le livre principal actif. Une prévision de trésorerie seule ne crée pas d'écriture.",
+    "reviewTitle": "Vérifier et comprendre",
+    "reviewGuide": "Résoudre les questions de configuration",
+    "reviewGuideDescription": "Trouvez où corriger les règles et liaisons bancaires manquantes.",
+    "explore": "Explorer les liaisons",
+    "exploreDescription": "Examinez les relations entre vos données comptables.",
+    "paymentAccount": "Paiements : débit",
+    "receiptAccount": "Encaissements : crédit",
+    "incompleteRules": "À vérifier",
+    "incompleteRulesDescription": "Règles sans compte de paiement ou d'encaissement.",
+    "policyHelp": "La liaison bancaire définit le côté banque. Ces comptes définissent la contrepartie du paiement ou de l'encaissement. Les deux sont actuellement requis.",
+    "advancedAccounts": "Correspondance avancée des comptes",
+    "advancedAccountsHelp": "Les paramètres de comptabilité d'engagement et de compensation sont conservés séparément et ne sont pas utilisés par les écritures automatiques de règlement.",
+    "guide": {
+      "rule": "Une catégorie n'a pas de règle comptable",
+      "ruleDescription": "Choisissez les comptes de paiement et d'encaissement de cette catégorie dans le livre principal.",
+      "ruleAction": "Vérifier les règles par catégorie",
+      "bank": "Une banque n'est pas reliée",
+      "bankDescription": "Reliez la banque du paiement à un compte de contrôle bancaire actif dans le livre principal.",
+      "bankAction": "Vérifier les liaisons bancaires",
+      "journal": "Une écriture doit être vérifiée",
+      "journalDescription": "Examinez l'écriture et sa source. Une extourne modifie uniquement la comptabilité ; elle n'annule pas le paiement.",
+      "journalAction": "Vérifier les journaux",
+      "title": "Guide de vérification comptable",
+      "description": "Partez du problème indiqué sur votre écriture de trésorerie. Ces raccourcis mènent aux paramètres concernés.",
+      "notice": "Ce guide de dépannage n'affiche pas de files d'exceptions en temps réel et ne rapproche pas les relevés bancaires des écritures."
+    },
+    "searchAccounts": "Rechercher des comptes",
+    "journalDetails": "Détails de l'écriture",
+    "ledgerAccount": "Compte comptable",
+    "total": "Total",
+    "source": "Source"
+  },
+  "currency": {
+    "choose": "Choisir une devise",
+    "inherit": "Aucune devise propre au compte"
+  },
+  "terms": {
+    "learn": "À propos de {{term}}",
+    "basis": "Base de présentation du livre. Les écritures automatiques suivent actuellement les paiements effectifs, quel que soit ce choix.",
+    "primary": "Livre recevant les écritures automatiques de paiement et de virement. Un seul livre actif doit être principal.",
+    "header": "Groupe servant à organiser les comptes. Il ne reçoit pas directement de lignes d'écriture.",
+    "posting": "Les comptes de comptabilisation reçoivent les débits et crédits. Les comptes de regroupement organisent les autres comptes.",
+    "section": "Classement du compte dans les états financiers : actif, passif, capitaux propres, produits ou charges.",
+    "normalBalance": "Côté sur lequel ce compte présente habituellement un solde. Il ne désigne pas une entrée ou une sortie d'argent.",
+    "bankControl": "Compte comptable représentant un solde bancaire. Une liaison relie la banque opérationnelle à ce compte.",
+    "manualPosting": "Indique si ce compte est destiné aux écritures saisies par un comptable, plutôt qu'aux écritures générées par les paiements.",
+    "debit": "Un côté d'une écriture comptable. Un débit augmente le compte bancaire ; pour un paiement sortant, le compte de débit de la catégorie est la contrepartie.",
+    "credit": "L'autre côté d'une écriture. Un crédit diminue le compte bancaire ; pour un encaissement, le compte de crédit de la catégorie enregistre la contrepartie.",
+    "policy": "Règle reliant une catégorie de trésorerie aux comptes comptables d'un livre donné.",
+    "clearing": "Compte intermédiaire pendant le traitement d'une opération. Ce paramètre n'est pas utilisé par le flux actuel de paiements automatiques.",
+    "accrual": "Reconnaissance des produits et charges lorsqu'ils sont acquis ou engagés, avant même le paiement. Ces comptes ne sont pas utilisés par les écritures automatiques de règlement actuelles.",
+    "postingDate": "Date à laquelle l'écriture affecte la comptabilité. Pour les écritures automatiques de paiement, il s'agit de la date de valeur."
+  },
+  "enums": {
+    "basis": {
+      "management": "Gestion",
+      "cash": "Trésorerie",
+      "accrual": "Engagement",
+      "tax": "Fiscalité"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "posted": "Comptabilisé",
+      "reversed": "Extourné",
+      "void": "Annulé",
+      "error": "Erreur"
+    },
+    "source": {
+      "cash_entry": "Écriture de trésorerie",
+      "cash_settlement": "Encaissement ou paiement",
+      "cash_transfer": "Virement bancaire",
+      "manual": "Manuel",
+      "system": "Système"
+    },
+    "direction": {
+      "credit": "Entrée",
+      "debit": "Sortie"
+    }
+  },
+  "chartPage": {
+    "active": "Comptes actifs",
+    "inactive": "Comptes inactifs",
+    "all": "Tous les comptes",
+    "status": "Statut du compte",
+    "noAccess": "Vous n'avez pas l'autorisation de consulter le plan comptable.",
+    "description": "Consultez les comptes utilisés par vos livres comptables et vos règles de comptabilisation."
   }
 }

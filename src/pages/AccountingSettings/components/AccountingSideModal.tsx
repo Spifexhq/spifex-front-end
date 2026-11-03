@@ -1,3 +1,4 @@
+import { useDialogFocus } from "@/shared/ui/useDialogFocus";
 // src/pages/AccountingSettings/components/AccountingSideModal.tsx
 import React from "react";
 import { X } from "lucide-react";
@@ -22,6 +23,7 @@ const AccountingSideModal: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation("accountingSettings");
 
+  const dialogRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(isOpen);
   const [visible, setVisible] = React.useState(isOpen);
 
@@ -66,18 +68,22 @@ const AccountingSideModal: React.FC<Props> = ({
     };
   }, [mounted, onClose]);
 
+  useDialogFocus(isOpen && mounted, dialogRef);
+
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999]">
-      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+    <div className="accounting-dialog fixed inset-0 z-[9999]">
+      <div className="absolute inset-0 bg-gray-950/20 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
 
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="accounting-side-modal-title"
         className={[
-          "absolute inset-y-0 right-0 flex h-full w-full max-w-[880px] flex-col border-l border-gray-200 bg-white",
+          "absolute inset-y-0 right-0 flex h-full w-full max-w-[720px] flex-col border-l border-gray-200 bg-white",
           "transition-transform duration-300 ease-out",
           visible ? "translate-x-0" : "translate-x-full",
         ].join(" ")}

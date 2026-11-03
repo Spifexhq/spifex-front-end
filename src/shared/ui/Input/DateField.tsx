@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, {
   forwardRef,
   useCallback,
@@ -83,6 +84,8 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
     useImperativeHandle(forwardedRef, () => slot1Ref.current as HTMLInputElement, []);
 
+    const { t, i18n } = useTranslation("common");
+    const language = i18n.resolvedLanguage || i18n.language || "en";
     const { code } = getEffectiveDateFormat();
     const effectiveCode: EffectiveDateCode = code as EffectiveDateCode;
 
@@ -463,7 +466,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         curr = addDays(curr, 1);
       }
 
-      const weekdayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+      const weekdayLabels = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(language, { weekday: "short" }).format(new Date(2024, 0, 1 + index)));
 
       return (
         <div
@@ -484,6 +487,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
               type="button"
               onMouseDown={(ev) => ev.preventDefault()}
               onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
+              aria-label={t("input.previousMonth", "Previous month")}
               className={classNames(
                 "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
                 sz.navBtn
@@ -494,13 +498,14 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             </button>
 
             <span className={classNames("font-medium text-gray-800", sz.title)}>
-              {format(calendarMonth, "MMM yyyy")}
+              {new Intl.DateTimeFormat(language, { month: "short", year: "numeric" }).format(calendarMonth)}
             </span>
 
             <button
               type="button"
               onMouseDown={(ev) => ev.preventDefault()}
               onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
+              aria-label={t("input.nextMonth", "Next month")}
               className={classNames(
                 "rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600",
                 sz.navBtn
@@ -661,7 +666,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
               )}
               onMouseDown={(e) => e.preventDefault()}
               onClick={handleCalendarClick}
-              aria-label="Open date picker"
+              aria-label={t("input.openDatePicker", "Open date picker")}
               tabIndex={-1}
               disabled={disabled}
             >

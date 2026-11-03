@@ -1,3 +1,4 @@
+import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -51,9 +52,9 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-4">
+    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
       <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
       <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
     </article>
   );
@@ -67,10 +68,12 @@ const EMPTY_FORM: MappingFormState = {
 
 const AccountingBankMappingsPage: React.FC = () => {
   const { i18n } = useTranslation("accountingSettings");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
-      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
-    [i18n]
+      String(i18n.t(key, {
+          lng: language, ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n, language]
   );
 
   const [loading, setLoading] = React.useState(true);
@@ -145,7 +148,7 @@ const AccountingBankMappingsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadLookups = React.useCallback(async () => {
     try {
@@ -184,7 +187,7 @@ const AccountingBankMappingsPage: React.FC = () => {
     } finally {
       setLookupsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     void load();
@@ -243,12 +246,10 @@ const AccountingBankMappingsPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.sectionLabel", "Bank mappings")}</div>
-          </div>
+        <div className="accounting-page-header">
 
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+
+          <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <h2 className="text-[16px] font-semibold text-gray-900"> {t("bankMappingsPage.title", "Bank control mapping")}</h2>
@@ -258,11 +259,11 @@ const AccountingBankMappingsPage: React.FC = () => {
               </div>
 
               <Button type="button" onClick={() => void openCreate()}>
-                Map bank account
+                {t("bankMappingsPage.newButton", "Map bank account")}
               </Button>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
               <MetricCard
                 label={t("bankMappingsPage.metrics.activeMappings", "Active mappings")}
                 value={items.filter((item) => item.is_active).length}
@@ -319,7 +320,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" variant="outline" size="sm" onClick={() => void openEdit(item)}>
-                        Edit
+                        {t("common.edit", "Edit")}
                       </Button>
                     </td>
                   </tr>
@@ -407,7 +408,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                 />
 
                 <Select<LedgerAccount>
-                  label={t("common.ledgerAccount", "Ledger account")}
+                  label={<AccountingTerm term="bankControl">{t("common.ledgerAccount", "Ledger account")}</AccountingTerm>}
                   items={ledgerAccounts}
                   selected={selectedLedgerAccount}
                   onChange={(selected: LedgerAccount[]) =>
@@ -427,9 +428,9 @@ const AccountingBankMappingsPage: React.FC = () => {
               </div>
             </section>
 
-            <div className="flex items-center justify-end gap-3 pt-1">
+            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-                Cancel
+                {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? t("common.saving", "Saving...") : t("bankMappingsPage.modal.saveMapping", "Save mapping")}

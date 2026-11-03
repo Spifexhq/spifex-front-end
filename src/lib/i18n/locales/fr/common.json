@@ -22,5 +22,13 @@
   "btn.save": "Enregistrer",
   "btn.cancel": "Annuler",
   "toast.loadError": "Échec du chargement des données personnelles.",
-  "toast.updateError": "Échec de la mise à jour des données personnelles."
+  "toast.updateError": "Échec de la mise à jour des données personnelles.",
+  "input": {
+    "clear": "Effacer",
+    "hidePassword": "Masquer le mot de passe",
+    "showPassword": "Afficher le mot de passe",
+    "openDatePicker": "Ouvrir le calendrier",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant"
+  }
 }

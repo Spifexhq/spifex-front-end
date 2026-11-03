@@ -6,7 +6,8 @@
     "organization": "Organisation",
     "banking": "Banque",
     "management": "Gestion",
-    "accounting": "Comptabilité et structure"
+    "accounting": "Comptabilité et structure",
+    "profile": "Votre compte"
   },
   "items": {
     "personal": "Paramètres personnels",
@@ -26,5 +27,13 @@
     "ledger-accounts": "Comptes du grand livre",
     "departments": "Départements",
     "accounting": "Comptabilité"
+  },
+  "title": "Paramètres",
+  "actions": {
+    "expand": "Développer le menu",
+    "collapse": "Réduire le menu",
+    "close": "Fermer la navigation",
+    "open": "Ouvrir la navigation des paramètres",
+    "back": "Retour à l'espace de travail"
   }
 }

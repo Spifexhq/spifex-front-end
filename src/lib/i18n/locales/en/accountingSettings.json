@@ -64,13 +64,14 @@
   },
   "nav": {
     "ariaLabel": "Accounting settings navigation",
-    "chart": "Chart",
+    "chart": "Chart of accounts",
     "books": "Books",
-    "bankMappings": "Bank mappings",
-    "postingPolicies": "Posting policies",
+    "bankMappings": "Bank connections",
+    "postingPolicies": "Category rules",
     "journals": "Journals",
-    "correlation": "Correlation",
-    "reconciliation": "Reconciliation"
+    "correlation": "Connections",
+    "reconciliation": "Review guide",
+    "overview": "Overview"
   },
   "shell": {
     "title": "Accounting settings",
@@ -284,8 +285,13 @@
       "isPrimary": "Primary",
       "isActive": "Active",
       "saveChanges": "Save changes",
-      "createBook": "Create book"
-    }
+      "createBook": "Create book",
+      "identity": "Identity",
+      "configuration": "Configuration",
+      "primaryBook": "Primary book"
+    },
+    "listTitle": "Accounting books",
+    "empty": "No accounting books found."
   },
   "bankMappingsPage": {
     "loadError": "Failed to load bank mappings.",
@@ -294,8 +300,8 @@
     "savedSuccess": "Bank mapping saved.",
     "saveError": "Failed to save bank mapping.",
     "sectionLabel": "Bank mappings",
-    "title": "Bank mappings",
-    "description": "Link operational bank accounts to accounting books and bank-control ledger accounts for reliable posting and reconciliation.",
+    "title": "Bank connections",
+    "description": "Connect each bank to the ledger account used for its receipts, payments, and transfers.",
     "newButton": "New mapping",
     "metrics": {
       "activeMappings": "Active mappings",
@@ -318,8 +324,11 @@
       "selectBank": "Select bank",
       "selectBook": "Select book",
       "selectLedgerAccount": "Select ledger account",
-      "saveMapping": "Save mapping"
-    }
+      "saveMapping": "Save mapping",
+      "definition": "Connection details"
+    },
+    "listTitle": "Bank connections",
+    "empty": "No bank connections found."
   },
   "postingPoliciesPage": {
     "loadError": "Failed to load posting policies.",
@@ -328,8 +337,8 @@
     "savedSuccess": "Posting policy saved.",
     "saveError": "Failed to save posting policy.",
     "sectionLabel": "Posting policies",
-    "title": "Posting policies",
-    "description": "Define how operational cashflow categories translate into ledger accounts for settlement, accrual, and clearing workflows.",
+    "title": "Category rules",
+    "description": "Choose which accounts record payments and receipts for each cashflow category.",
     "newButton": "New policy",
     "metrics": {
       "policies": "Policies",
@@ -365,7 +374,8 @@
       "selectBook": "Select book",
       "savePolicy": "Save policy",
       "scopeSection": "Scope",
-      "accountMapping": "Account mapping"
+      "accountMapping": "Account mapping",
+      "selectAccount": "Select account"
     },
     "actions": {
       "newPolicy": "New policy"
@@ -384,7 +394,7 @@
     "reverseError": "Failed to reverse journal.",
     "sectionLabel": "Journals",
     "title": "Journals",
-    "description": "Review accounting entries, create controlled manual journals, and reverse posted entries when needed.",
+    "description": "Review accounting entries created by payments, receipts, and transfers.",
     "searchPlaceholder": "Search",
     "newButton": "Manual journal",
     "metrics": {
@@ -580,82 +590,82 @@
     },
     "nodes": {
       "workspace": {
-        "label": "AccountingWorkspace",
+        "label": "Chart of accounts",
         "short": "Chart of Accounts",
         "description": "Hierarchy workspace for ledger accounts."
       },
       "booksPage": {
-        "label": "AccountingBooksPage",
+        "label": "Books",
         "short": "Books",
         "description": "Accounting books registry."
       },
       "bankMappingsPage": {
-        "label": "AccountingBankMappingsPage",
+        "label": "Bank connections",
         "short": "Bank Mappings",
         "description": "Bridge between bank accounts, books, and bank-control ledger accounts."
       },
       "postingPoliciesPage": {
-        "label": "AccountingPostingPoliciesPage",
+        "label": "Category rules",
         "short": "Posting Policies",
         "description": "Bridge between cashflow categories, books, and ledger accounts."
       },
       "journalsPage": {
-        "label": "AccountingJournalsPage",
+        "label": "Journals",
         "short": "Journals",
         "description": "Journal creation, review, and reversal page."
       },
       "reconciliation": {
-        "label": "AccountingReconciliationPage",
+        "label": "Review guide",
         "short": "Reconciliation",
         "description": "Readiness board fed by upstream completeness."
       },
       "ledgerApi": {
-        "label": "Ledger Accounts API",
+        "label": "Accounts service",
         "short": "Ledger API",
         "description": "Ledger listing and CRUD source."
       },
       "booksApi": {
-        "label": "Accounting Books API",
+        "label": "Books service",
         "short": "Books API",
         "description": "Books listing and CRUD source."
       },
       "banksApi": {
-        "label": "Bank Accounts API",
+        "label": "Banking service",
         "short": "Banks API",
         "description": "Operational bank account lookup source."
       },
       "categoriesApi": {
-        "label": "Cashflow Categories API",
+        "label": "Categories service",
         "short": "Categories API",
         "description": "Operational category lookup source."
       },
       "journalsApi": {
-        "label": "Journals API",
+        "label": "Journals service",
         "short": "Journals API",
         "description": "Journal listing / create / reverse source."
       },
       "ledgerEntity": {
-        "label": "LedgerAccount",
+        "label": "Ledger account",
         "short": "Ledger Account",
         "description": "Main chart-of-accounts structure."
       },
       "bookEntity": {
-        "label": "AccountingBook",
+        "label": "Accounting book",
         "short": "Accounting Book",
         "description": "Accounting execution scope."
       },
       "bankEntity": {
-        "label": "BankAccount",
+        "label": "Bank account",
         "short": "Bank Account",
         "description": "Operational bank account."
       },
       "categoryEntity": {
-        "label": "CashflowCategory",
+        "label": "Cashflow category",
         "short": "Cashflow Category",
         "description": "Operational category used in policy mapping."
       },
       "journalEntity": {
-        "label": "JournalEntry",
+        "label": "Journal entry",
         "short": "Journal Entry",
         "description": "Accounting execution output."
       }
@@ -724,6 +734,135 @@
       "bankMappingArchitectureLabel": "Bank mapping",
       "postingPolicyArchitectureLabel": "Posting policy",
       "journalArchitectureLabel": "Journal"
+    },
+    "enableDatasets": "Enable one or more datasets to start selecting rows.",
+    "node": "Record",
+    "notes": {
+      "selected": "Selected row",
+      "correlated": "Related record",
+      "mapping": "Selected mapping",
+      "policy": "Selected policy",
+      "journal": "Selected journal",
+      "lineAccount": "Line {{number}} account",
+      "lineBank": "Line {{number}} bank"
     }
+  },
+  "redesign": {
+    "title": "Accounting",
+    "subtitle": "Connect your cashflow to a clear, consistent accounting record.",
+    "steps": {
+      "chart": "Organize your accounts",
+      "chartDescription": "Group the accounts used to record your business activity.",
+      "books": "Choose your primary book",
+      "booksDescription": "Set the book and currency used for automatic entries.",
+      "banks": "Connect bank accounts",
+      "banksDescription": "Choose where each bank's movements appear in accounting.",
+      "rules": "Define category rules",
+      "rulesDescription": "Tell Spifex which accounts to use for receipts and payments."
+    },
+    "reviewChart": "Review chart",
+    "needsPrimary": "Choose one active primary book",
+    "mappingCount": "{{count}} active connections in the primary book",
+    "policyCount": "{{count}} rules with both settlement accounts",
+    "overviewTitle": "Your accounting, connected",
+    "overviewDescription": "Set up how payments become accounting entries, then review the results in your journals.",
+    "viewJournals": "View journals",
+    "setupTitle": "Accounting setup",
+    "setupHint": "Configuration summary · review every bank and category",
+    "loadError": "Could not load the setup summary.",
+    "retry": "Try again",
+    "howTitle": "What happens when you pay or receive?",
+    "flow": {
+      "category": "Cashflow category",
+      "rule": "Category rule + bank connection",
+      "journal": "Balanced journal"
+    },
+    "howDescription": "Each actual receipt or payment creates its own accounting record in the active primary book. An expected cashflow entry alone does not post a journal.",
+    "reviewTitle": "Review and understand",
+    "reviewGuide": "Resolve setup questions",
+    "reviewGuideDescription": "Find where to fix missing rules and bank connections.",
+    "explore": "Explore connections",
+    "exploreDescription": "Inspect how your accounting records relate to each other.",
+    "paymentAccount": "Payments · debit",
+    "receiptAccount": "Receipts · credit",
+    "incompleteRules": "Need attention",
+    "incompleteRulesDescription": "Rules missing a payment or receipt account.",
+    "policyHelp": "The bank connection supplies the bank side. These accounts supply the other side of each payment or receipt. Both are currently required.",
+    "advancedAccounts": "Advanced account mapping",
+    "advancedAccountsHelp": "Accrual and clearing settings are stored separately and are not used by automatic settlement posting.",
+    "guide": {
+      "rule": "A category has no accounting rule",
+      "ruleDescription": "Choose the payment and receipt accounts for that category in your primary book.",
+      "ruleAction": "Review category rules",
+      "bank": "A bank is not connected",
+      "bankDescription": "Connect the bank used for the payment to an active bank-control account in your primary book.",
+      "bankAction": "Review bank connections",
+      "journal": "An accounting entry needs review",
+      "journalDescription": "Inspect the journal and its source. Reversing a journal changes accounting only; it does not cancel the payment.",
+      "journalAction": "Review journals",
+      "title": "Accounting review guide",
+      "description": "Start with the issue you see on your cashflow entry. These shortcuts help you find the relevant settings.",
+      "notice": "This is a troubleshooting guide. It does not show live exception queues or match bank statements to journals."
+    },
+    "searchAccounts": "Search accounts",
+    "journalDetails": "Journal details",
+    "ledgerAccount": "Ledger account",
+    "total": "Total",
+    "source": "Source"
+  },
+  "currency": {
+    "choose": "Choose currency",
+    "inherit": "No account currency specified"
+  },
+  "terms": {
+    "learn": "About {{term}}",
+    "basis": "The book's reporting basis. Automatic journals currently follow actual payments, regardless of this label.",
+    "primary": "The book that receives automatic payment and transfer journals. Keep exactly one active book marked as primary.",
+    "header": "A group that organizes other accounts. It cannot receive journal lines itself.",
+    "posting": "Posting accounts receive debit and credit lines. Header accounts only group other accounts.",
+    "section": "Where the account belongs in financial reports: assets, liabilities, equity, income, or expenses.",
+    "normalBalance": "The side on which this account usually has a balance. It does not mean money coming in or going out.",
+    "bankControl": "The ledger account representing a bank balance. A bank connection links an operational bank to this account.",
+    "manualPosting": "Whether this account is intended for journal lines entered directly by an accountant, rather than generated from payments.",
+    "debit": "One side of an accounting entry. Debiting a bank account increases it; for an outgoing payment, the category's debit account is the other side.",
+    "credit": "The other side of an accounting entry. Crediting a bank account reduces it; for a receipt, the category's credit account records the counterpart.",
+    "policy": "A rule connecting a cashflow category to accounting accounts in a particular book.",
+    "clearing": "An intermediate account used while a transaction is being completed. This setting is not used by the current automatic payment flow.",
+    "accrual": "Recognizing income or expenses when earned or incurred, even before payment. These account settings are not used by current automatic settlement journals.",
+    "postingDate": "The date on which an entry affects accounting records. For automatic payment journals, this is the payment's value date."
+  },
+  "enums": {
+    "basis": {
+      "management": "Management",
+      "cash": "Cash",
+      "accrual": "Accrual",
+      "tax": "Tax"
+    },
+    "status": {
+      "draft": "Draft",
+      "posted": "Posted",
+      "reversed": "Reversed",
+      "void": "Void",
+      "error": "Error"
+    },
+    "source": {
+      "cash_entry": "Cashflow entry",
+      "cash_settlement": "Receipt or payment",
+      "cash_transfer": "Bank transfer",
+      "manual": "Manual",
+      "system": "System"
+    },
+    "direction": {
+      "credit": "Incoming",
+      "debit": "Outgoing"
+    }
+  },
+  "chartPage": {
+    "active": "Active accounts",
+    "inactive": "Inactive accounts",
+    "all": "All accounts",
+    "status": "Account status",
+    "noAccess": "You do not have permission to view the chart of accounts.",
+    "description": "Review the accounts used by your accounting books and posting rules."
   }
 }

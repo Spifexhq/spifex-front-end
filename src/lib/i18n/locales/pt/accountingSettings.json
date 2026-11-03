@@ -64,13 +64,14 @@
   },
   "nav": {
     "ariaLabel": "Navegação das definições de contabilidade",
-    "chart": "Plano",
+    "chart": "Plano de contas",
     "books": "Livros",
-    "bankMappings": "Mapeamentos bancários",
-    "postingPolicies": "Políticas de lançamento",
-    "journals": "Diários",
-    "correlation": "Correlação",
-    "reconciliation": "Reconciliação"
+    "bankMappings": "Conexões bancárias",
+    "postingPolicies": "Regras por categoria",
+    "journals": "Diário",
+    "correlation": "Conexões",
+    "reconciliation": "Guia de revisão",
+    "overview": "Visão geral"
   },
   "shell": {
     "title": "Definições de contabilidade",
@@ -213,7 +214,7 @@
         "structure": "Estrutura",
         "reportingIntegrations": "Reporting e integrações"
       },
-      "metadataJson": "Metadata JSON"
+      "metadataJson": "Metadados JSON"
     },
     "accountsList": {
       "title": "Contas",
@@ -284,8 +285,13 @@
       "isPrimary": "Principal",
       "isActive": "Ativo",
       "saveChanges": "Guardar alterações",
-      "createBook": "Criar livro"
-    }
+      "createBook": "Criar livro",
+      "identity": "Identificação",
+      "configuration": "Configuração",
+      "primaryBook": "Livro principal"
+    },
+    "listTitle": "Livros contábeis",
+    "empty": "Nenhum livro contábil encontrado."
   },
   "bankMappingsPage": {
     "loadError": "Falha ao carregar os mapeamentos bancários.",
@@ -294,8 +300,8 @@
     "savedSuccess": "Mapeamento bancário guardado.",
     "saveError": "Falha ao guardar o mapeamento bancário.",
     "sectionLabel": "Mapeamentos bancários",
-    "title": "Mapeamentos bancários",
-    "description": "Associe contas bancárias operacionais a livros contabilísticos e contas de controlo bancário para lançamentos e reconciliação confiáveis.",
+    "title": "Conexões bancárias",
+    "description": "Conecte cada banco à conta contábil de seus recebimentos, pagamentos e transferências.",
     "newButton": "Novo mapeamento",
     "metrics": {
       "activeMappings": "Mapeamentos ativos",
@@ -318,8 +324,11 @@
       "selectBank": "Selecionar banco",
       "selectBook": "Selecionar livro",
       "selectLedgerAccount": "Selecionar conta contabilística",
-      "saveMapping": "Guardar mapeamento"
-    }
+      "saveMapping": "Guardar mapeamento",
+      "definition": "Detalhes da conexão"
+    },
+    "listTitle": "Conexões bancárias",
+    "empty": "Nenhuma conexão bancária encontrada."
   },
   "postingPoliciesPage": {
     "loadError": "Falha ao carregar as políticas de lançamento.",
@@ -328,8 +337,8 @@
     "savedSuccess": "Política de lançamento guardada.",
     "saveError": "Falha ao guardar a política de lançamento.",
     "sectionLabel": "Políticas de lançamento",
-    "title": "Políticas de lançamento",
-    "description": "Defina como categorias operacionais de fluxo de caixa são traduzidas em contas contabilísticas para liquidação, acréscimo e clearing.",
+    "title": "Regras por categoria",
+    "description": "Escolha quais contas registram pagamentos e recebimentos de cada categoria.",
     "newButton": "Nova política",
     "metrics": {
       "policies": "Políticas",
@@ -346,7 +355,7 @@
       "book": "Livro",
       "settlement": "Liquidação",
       "accrual": "Acréscimo",
-      "clearing": "Clearing",
+      "clearing": "Compensação",
       "status": "Estado",
       "actions": "Ações"
     },
@@ -355,7 +364,7 @@
       "settlementCredit": "Crédito de liquidação",
       "accrualDebit": "Débito de acréscimo",
       "accrualCredit": "Crédito de acréscimo",
-      "clearing": "Clearing"
+      "clearing": "Compensação"
     },
     "modal": {
       "title": "Política de lançamento",
@@ -365,7 +374,8 @@
       "selectBook": "Selecionar livro",
       "savePolicy": "Guardar política",
       "scopeSection": "Âmbito",
-      "accountMapping": "Mapeamento de contas"
+      "accountMapping": "Mapeamento de contas",
+      "selectAccount": "Selecionar conta"
     },
     "actions": {
       "newPolicy": "Nova política"
@@ -383,8 +393,8 @@
     "reversedSuccess": "Diário revertido.",
     "reverseError": "Falha ao reverter o diário.",
     "sectionLabel": "Diários",
-    "title": "Diários",
-    "description": "Revise lançamentos contabilísticos, crie diários manuais controlados e reverta lançamentos publicados quando necessário.",
+    "title": "Diário",
+    "description": "Revise os lançamentos gerados por pagamentos, recebimentos e transferências.",
     "searchPlaceholder": "Pesquisar",
     "newButton": "Diário manual",
     "metrics": {
@@ -416,7 +426,7 @@
       "currency": "Moeda",
       "documentDate": "Data do documento",
       "postingDate": "Data de lançamento",
-      "memo": "Memo",
+      "memo": "Descrição",
       "addLine": "Adicionar linha",
       "removeLine": "Remover",
       "account": "Conta",
@@ -580,82 +590,82 @@
     },
     "nodes": {
       "workspace": {
-        "label": "AccountingWorkspace",
+        "label": "Plano de contas",
         "short": "Plano de contas",
         "description": "Área de hierarquia para contas contabilísticas."
       },
       "booksPage": {
-        "label": "AccountingBooksPage",
+        "label": "Livros",
         "short": "Livros",
         "description": "Registo de livros contabilísticos."
       },
       "bankMappingsPage": {
-        "label": "AccountingBankMappingsPage",
+        "label": "Conexões bancárias",
         "short": "Mapeamentos bancários",
         "description": "Ponte entre contas bancárias, livros e contas contabilísticas de controlo bancário."
       },
       "postingPoliciesPage": {
-        "label": "AccountingPostingPoliciesPage",
+        "label": "Regras por categoria",
         "short": "Políticas de lançamento",
         "description": "Ponte entre categorias de fluxo de caixa, livros e contas contabilísticas."
       },
       "journalsPage": {
-        "label": "AccountingJournalsPage",
+        "label": "Diário",
         "short": "Diários",
         "description": "Página de criação, revisão e reversão de diários."
       },
       "reconciliation": {
-        "label": "AccountingReconciliationPage",
+        "label": "Guia de revisão",
         "short": "Reconciliação",
         "description": "Painel de prontidão alimentado pela completude a montante."
       },
       "ledgerApi": {
-        "label": "Ledger Accounts API",
+        "label": "Serviço de contas",
         "short": "API do plano",
         "description": "Origem de listagem e CRUD do plano de contas."
       },
       "booksApi": {
-        "label": "Accounting Books API",
+        "label": "Serviço de livros",
         "short": "API de livros",
         "description": "Origem de listagem e CRUD de livros."
       },
       "banksApi": {
-        "label": "Bank Accounts API",
+        "label": "Serviço bancário",
         "short": "API de bancos",
         "description": "Origem de consulta de contas bancárias operacionais."
       },
       "categoriesApi": {
-        "label": "Cashflow Categories API",
+        "label": "Serviço de categorias",
         "short": "API de categorias",
         "description": "Origem de consulta de categorias operacionais."
       },
       "journalsApi": {
-        "label": "Journals API",
+        "label": "Serviço do diário",
         "short": "API de diários",
         "description": "Origem de listagem / criação / reversão de diários."
       },
       "ledgerEntity": {
-        "label": "LedgerAccount",
+        "label": "Conta contábil",
         "short": "Conta contabilística",
         "description": "Estrutura principal do plano de contas."
       },
       "bookEntity": {
-        "label": "AccountingBook",
+        "label": "Livro contábil",
         "short": "Livro contabilístico",
         "description": "Escopo de execução contabilística."
       },
       "bankEntity": {
-        "label": "BankAccount",
+        "label": "Conta bancária",
         "short": "Conta bancária",
         "description": "Conta bancária operacional."
       },
       "categoryEntity": {
-        "label": "CashflowCategory",
+        "label": "Categoria do fluxo de caixa",
         "short": "Categoria de fluxo de caixa",
         "description": "Categoria operacional usada no mapeamento de políticas."
       },
       "journalEntity": {
-        "label": "JournalEntry",
+        "label": "Lançamento contábil",
         "short": "Entrada de diário",
         "description": "Saída da execução contabilística."
       }
@@ -724,6 +734,135 @@
       "bankMappingArchitectureLabel": "Mapeamento bancário",
       "postingPolicyArchitectureLabel": "Política de lançamento",
       "journalArchitectureLabel": "Lançamento"
+    },
+    "enableDatasets": "Ative um ou mais conjuntos de dados para selecionar registros.",
+    "node": "Registro",
+    "notes": {
+      "selected": "Registro selecionado",
+      "correlated": "Registro relacionado",
+      "mapping": "Conexão selecionada",
+      "policy": "Regra selecionada",
+      "journal": "Lançamento selecionado",
+      "lineAccount": "Conta da linha {{number}}",
+      "lineBank": "Banco da linha {{number}}"
     }
+  },
+  "redesign": {
+    "title": "Contabilidade",
+    "subtitle": "Conecte o fluxo de caixa a registros contábeis claros e consistentes.",
+    "steps": {
+      "chart": "Organize suas contas",
+      "chartDescription": "Agrupe as contas usadas para registrar a atividade da empresa.",
+      "books": "Escolha o livro principal",
+      "booksDescription": "Defina o livro e a moeda dos lançamentos automáticos.",
+      "banks": "Conecte as contas bancárias",
+      "banksDescription": "Escolha onde os movimentos de cada banco aparecem na contabilidade.",
+      "rules": "Defina regras por categoria",
+      "rulesDescription": "Indique quais contas usar nos recebimentos e pagamentos."
+    },
+    "reviewChart": "Revisar plano de contas",
+    "needsPrimary": "Escolha um único livro principal ativo",
+    "mappingCount": "{{count}} conexões ativas no livro principal",
+    "policyCount": "{{count}} regras com as duas contas de liquidação",
+    "overviewTitle": "Sua contabilidade conectada",
+    "overviewDescription": "Configure como os pagamentos geram lançamentos e confira os resultados no diário.",
+    "viewJournals": "Ver diário",
+    "setupTitle": "Configuração contábil",
+    "setupHint": "Resumo da configuração: revise cada banco e categoria",
+    "loadError": "Não foi possível carregar o resumo.",
+    "retry": "Tentar novamente",
+    "howTitle": "O que acontece ao pagar ou receber?",
+    "flow": {
+      "category": "Categoria do fluxo de caixa",
+      "rule": "Regra da categoria + conexão bancária",
+      "journal": "Lançamento equilibrado"
+    },
+    "howDescription": "Cada recebimento ou pagamento efetivo gera seu próprio registro no livro principal ativo. Uma previsão de fluxo de caixa, por si só, não gera lançamento.",
+    "reviewTitle": "Revise e entenda",
+    "reviewGuide": "Resolver dúvidas de configuração",
+    "reviewGuideDescription": "Encontre onde corrigir regras e conexões bancárias ausentes.",
+    "explore": "Explorar conexões",
+    "exploreDescription": "Veja como os registros contábeis se relacionam.",
+    "paymentAccount": "Pagamentos: débito",
+    "receiptAccount": "Recebimentos: crédito",
+    "incompleteRules": "Precisam de atenção",
+    "incompleteRulesDescription": "Regras sem conta de pagamento ou recebimento.",
+    "policyHelp": "A conexão bancária define o lado do banco. Estas contas definem a contrapartida de cada pagamento ou recebimento. Atualmente, ambas são obrigatórias.",
+    "advancedAccounts": "Mapeamento avançado de contas",
+    "advancedAccountsHelp": "As configurações de competência e compensação são armazenadas separadamente e não são usadas nos lançamentos automáticos de liquidação.",
+    "guide": {
+      "rule": "Uma categoria não tem regra contábil",
+      "ruleDescription": "Escolha as contas de pagamento e recebimento da categoria no livro principal.",
+      "ruleAction": "Revisar regras por categoria",
+      "bank": "Um banco não está conectado",
+      "bankDescription": "Conecte o banco do pagamento a uma conta contábil de controle bancário ativa no livro principal.",
+      "bankAction": "Revisar conexões bancárias",
+      "journal": "Um lançamento precisa de revisão",
+      "journalDescription": "Confira o lançamento e sua origem. Estornar um lançamento altera apenas a contabilidade; não cancela o pagamento.",
+      "journalAction": "Revisar diário",
+      "title": "Guia de revisão contábil",
+      "description": "Comece pelo problema indicado no fluxo de caixa. Os atalhos levam às configurações relevantes.",
+      "notice": "Este é um guia de solução de problemas. Não exibe filas de exceções em tempo real nem concilia extratos com lançamentos."
+    },
+    "searchAccounts": "Buscar contas",
+    "journalDetails": "Detalhes do lançamento",
+    "ledgerAccount": "Conta contábil",
+    "total": "Total",
+    "source": "Origem"
+  },
+  "currency": {
+    "choose": "Escolher moeda",
+    "inherit": "Sem moeda específica na conta"
+  },
+  "terms": {
+    "learn": "Sobre {{term}}",
+    "basis": "Base de apresentação do livro. Atualmente, os lançamentos automáticos seguem os pagamentos efetivos, independentemente desta opção.",
+    "primary": "Livro que recebe os lançamentos automáticos de pagamentos e transferências. Mantenha exatamente um livro principal ativo.",
+    "header": "Grupo que organiza outras contas. Não recebe lançamentos diretamente.",
+    "posting": "Contas de lançamento recebem débitos e créditos. Contas de grupo apenas organizam outras contas.",
+    "section": "Classificação da conta nos relatórios: ativo, passivo, patrimônio líquido, receitas ou despesas.",
+    "normalBalance": "Lado em que a conta normalmente apresenta saldo. Não indica entrada ou saída de dinheiro.",
+    "bankControl": "Conta contábil que representa o saldo de um banco. A conexão bancária vincula o banco operacional a esta conta.",
+    "manualPosting": "Indica se a conta se destina a lançamentos inseridos diretamente por um contador, em vez de gerados por pagamentos.",
+    "debit": "Um dos lados de um lançamento contábil. Debitar uma conta bancária aumenta o saldo; num pagamento, a conta de débito da categoria é a contrapartida.",
+    "credit": "O outro lado de um lançamento contábil. Creditar uma conta bancária reduz o saldo; num recebimento, a conta de crédito da categoria registra a contrapartida.",
+    "policy": "Regra que vincula uma categoria do fluxo de caixa às contas contábeis de um livro específico.",
+    "clearing": "Conta intermediária usada enquanto uma transação é concluída. Esta opção não é usada no fluxo automático de pagamentos atual.",
+    "accrual": "Reconhecimento de receitas e despesas quando ocorrem, mesmo antes do pagamento. Estas contas não são usadas pelos lançamentos automáticos de liquidação atuais.",
+    "postingDate": "Data em que o lançamento afeta a contabilidade. Nos lançamentos automáticos, corresponde à data-valor do pagamento."
+  },
+  "enums": {
+    "basis": {
+      "management": "Gerencial",
+      "cash": "Caixa",
+      "accrual": "Competência",
+      "tax": "Fiscal"
+    },
+    "status": {
+      "draft": "Rascunho",
+      "posted": "Contabilizado",
+      "reversed": "Estornado",
+      "void": "Anulado",
+      "error": "Erro"
+    },
+    "source": {
+      "cash_entry": "Lançamento do fluxo de caixa",
+      "cash_settlement": "Recebimento ou pagamento",
+      "cash_transfer": "Transferência bancária",
+      "manual": "Manual",
+      "system": "Sistema"
+    },
+    "direction": {
+      "credit": "Entrada",
+      "debit": "Saída"
+    }
+  },
+  "chartPage": {
+    "active": "Contas ativas",
+    "inactive": "Contas inativas",
+    "all": "Todas as contas",
+    "status": "Estado da conta",
+    "noAccess": "Você não tem permissão para visualizar o plano de contas.",
+    "description": "Revise as contas usadas pelos livros contábeis e pelas regras de lançamento."
   }
 }

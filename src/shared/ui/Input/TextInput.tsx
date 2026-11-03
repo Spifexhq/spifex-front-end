@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   forwardRef,
   useId,
@@ -27,6 +28,7 @@ const BASE =
   "disabled:hover:bg-gray-100 disabled:focus:bg-gray-100 disabled:focus-visible:ring-0";
 
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
+  const { t } = useTranslation("common");
   const {
     variant = "default",
     size = "md",
@@ -194,7 +196,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
                 "pointer-events-auto rounded hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300",
                 sz.trailingBtnPad
               )}
-              aria-label="Clear"
+              aria-label={t("input.clear", "Clear")}
               tabIndex={-1}
             >
               <svg
@@ -219,7 +221,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>((props, ref) => {
                 sz.trailingBtnPad
               )}
               disabled={isLoading}
-              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              aria-label={isPasswordVisible ? t("input.hidePassword", "Hide password") : t("input.showPassword", "Show password")}
               aria-pressed={isPasswordVisible}
               tabIndex={-1}
             >

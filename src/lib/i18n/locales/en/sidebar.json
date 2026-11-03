@@ -2,14 +2,20 @@
   "sidebar": {
     "aria": {
       "nav": "Cashflow quick actions sidebar",
-      "toggleOpen": "Open sidebar",
-      "toggleClose": "Close sidebar"
+      "toggleOpen": "Expand sidebar",
+      "toggleClose": "Collapse sidebar",
+      "close": "Close navigation"
     },
     "items": {
       "credit": "Receipts",
       "debit": "Payments",
-      "transfer": "Transfers"
+      "transfer": "Transfers",
+      "importStatement": "Import statement"
+    },
+    "title": "Workspace",
+    "settings": "Settings",
+    "sections": {
+      "actions": "Quick actions"
     }
   }
 }
-

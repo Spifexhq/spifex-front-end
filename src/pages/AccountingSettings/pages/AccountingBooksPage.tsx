@@ -1,8 +1,9 @@
+import CurrencySelect from "@/shared/ui/CurrencySelect";
+import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
 import Button from "@/shared/ui/Button";
-import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { Select } from "src/shared/ui/Select";
@@ -60,9 +61,9 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-4">
+    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
       <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-2 text-[20px] font-semibold text-gray-900">{value}</div>
+      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
       <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
     </article>
   );
@@ -81,10 +82,12 @@ const EMPTY_FORM: BookFormState = {
 
 const AccountingBooksPage: React.FC = () => {
   const { i18n } = useTranslation("accountingSettings");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = React.useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
-      String(i18n.t(key, { ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
-    [i18n]
+      String(i18n.t(key, {
+          lng: language, ns: "accountingSettings", defaultValue, ...(options ?? {}) })),
+    [i18n, language]
   );
 
   const [loading, setLoading] = React.useState(true);
@@ -113,7 +116,7 @@ const AccountingBooksPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     void load();
@@ -181,12 +184,10 @@ const AccountingBooksPage: React.FC = () => {
   return (
     <>
       <section className="space-y-4">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.sectionLabel", "Accounting books")}</div>
-          </div>
+        <div className="accounting-page-header">
 
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+
+          <div className="flex flex-col gap-5 py-1">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <h2 className="text-[16px] font-semibold text-gray-900"> {t("booksPage.title", "Accounting books")}</h2>
@@ -196,11 +197,11 @@ const AccountingBooksPage: React.FC = () => {
               </div>
 
               <Button type="button" onClick={openCreate}>
-                New book
+                {t("booksPage.newButton", "New book")}
               </Button>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
               <MetricCard
                 label={t("booksPage.metrics.books", "Books")}
                 value={items.length}
@@ -245,13 +246,13 @@ const AccountingBooksPage: React.FC = () => {
                   <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
                     <td className="px-4 py-3 text-[13px] font-medium text-gray-900">{item.code || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-900">{item.name || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.basis || "—"}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-700">{t(`enums.basis.${item.basis}`, item.basis) || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.currency_code || "—"}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_primary ? t("common.yes", "Yes") : t("common.no", "No")}</td>
                     <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_active ? t("common.yes", "Yes") : t("common.no", "No")}</td>
                     <td className="px-4 py-3 text-right">
                       <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
-                        Edit
+                        {t("common.edit", "Edit")}
                       </Button>
                     </td>
                   </tr>
@@ -319,7 +320,7 @@ const AccountingBooksPage: React.FC = () => {
 
             <div className="grid gap-4 px-4 py-4 md:grid-cols-2">
               <Select<AccountingBookBasis>
-                label={t("booksPage.modal.basis", "Basis")}
+                label={<AccountingTerm term="basis">{t("booksPage.modal.basis", "Basis")}</AccountingTerm>}
                 items={BASIS_OPTIONS}
                 selected={selectedBasis}
                 onChange={(selected: AccountingBookBasis[]) =>
@@ -330,54 +331,42 @@ const AccountingBooksPage: React.FC = () => {
                 }
                 getItemKey={(item: AccountingBookBasis) => item}
                 getItemLabel={(item: AccountingBookBasis) =>
-                  item.charAt(0).toUpperCase() + item.slice(1)
+                  t(`enums.basis.${item}`, item)
                 }
                 buttonLabel={t("booksPage.modal.selectBasis", "Select basis")}
                 singleSelect
                 hideCheckboxes
               />
 
-              <Input
-                kind="text"
-                label={t("common.currency", "Currency")}
-                value={form.currency_code}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    currency_code: event.target.value.toUpperCase(),
-                  }))
-                }
-              />
+              <CurrencySelect value={form.currency_code || ""} onChange={currency_code => setForm(prev => ({ ...prev, currency_code }))} />
             </div>
 
             <div className="grid gap-3 px-4 pb-4 md:grid-cols-2">
               <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-700">
-                <Checkbox
+                <input type="checkbox" className="h-4 w-4 shrink-0 accent-gray-900" aria-label={t("booksPage.modal.primaryBook", "Primary book")}
                   checked={form.is_primary}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, is_primary: event.target.checked }))
                   }
-                  size="small"
                 />
-                <span className="font-medium text-gray-900"> {t("booksPage.modal.primaryBook", "Primary book")}</span>
+                <span className="font-medium text-gray-900"> <AccountingTerm term="primary">{t("booksPage.modal.primaryBook", "Primary book")}</AccountingTerm></span>
               </label>
 
               <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-3 text-[13px] text-gray-700">
-                <Checkbox
+                <input type="checkbox" className="h-4 w-4 shrink-0 accent-gray-900" aria-label={t("common.active", "Active")}
                   checked={form.is_active}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, is_active: event.target.checked }))
                   }
-                  size="small"
                 />
                 <span className="font-medium text-gray-900"> {t("common.active", "Active")}</span>
               </label>
             </div>
           </section>
 
-          <div className="flex items-center justify-end gap-3 pt-1">
+          <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white py-4">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-              Cancel
+              {t("common.cancel", "Cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
               {saving ? t("common.saving", "Saving...") : form.id ? t("booksPage.modal.saveChanges", "Save changes") : t("booksPage.modal.createBook", "Create book")}

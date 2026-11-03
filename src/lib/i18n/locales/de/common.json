@@ -22,5 +22,13 @@
   "btn.save": "Speichern",
   "btn.cancel": "Abbrechen",
   "toast.loadError": "Persönliche Daten konnten nicht geladen werden.",
-  "toast.updateError": "Persönliche Daten konnten nicht aktualisiert werden."
+  "toast.updateError": "Persönliche Daten konnten nicht aktualisiert werden.",
+  "input": {
+    "clear": "Leeren",
+    "hidePassword": "Passwort ausblenden",
+    "showPassword": "Passwort anzeigen",
+    "openDatePicker": "Kalender öffnen",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat"
+  }
 }

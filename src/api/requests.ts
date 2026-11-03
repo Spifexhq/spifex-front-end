@@ -522,7 +522,7 @@ export const api = {
     downloadTemplate("ledger/accounts/template/xlsx/", "template_ledger_accounts.xlsx"),
 
   /* --- Accounting --- */
-  getAccountingBooks: () => request<AccountingBook[]>('ledger/books/', 'GET'),
+  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('ledger/books/', 'GET', params),
 
   addAccountingBook: (payload: AddAccountingBookRequest) =>
     request<AccountingBook>('ledger/books/', 'POST', payload),

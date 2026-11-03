@@ -1,45 +1,13 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-const items = [
-  { to: "/settings/accounting/chart", labelKey: "nav.chart", defaultLabel: "Chart" },
-  { to: "/settings/accounting/books", labelKey: "nav.books", defaultLabel: "Books" },
-  { to: "/settings/accounting/bank-mappings", labelKey: "nav.bankMappings", defaultLabel: "Bank mappings" },
-  { to: "/settings/accounting/posting-policies", labelKey: "nav.postingPolicies", defaultLabel: "Posting policies" },
-  { to: "/settings/accounting/journals", labelKey: "nav.journals", defaultLabel: "Journals" },
-  { to: "/settings/accounting/correlation", labelKey: "nav.correlation", defaultLabel: "Correlation" },
-  { to: "/settings/accounting/reconciliation", labelKey: "nav.reconciliation", defaultLabel: "Reconciliation" },
+const groups = [
+  [{ to: "overview", key: "overview", label: "Overview" }],
+  [{ to: "chart", key: "chart", label: "Chart" }, { to: "books", key: "books", label: "Books" }, { to: "bank-mappings", key: "bankMappings", label: "Bank mappings" }, { to: "posting-policies", key: "postingPolicies", label: "Posting policies" }],
+  [{ to: "journals", key: "journals", label: "Journals" }, { to: "reconciliation", key: "reconciliation", label: "Reconciliation" }, { to: "correlation", key: "correlation", label: "Correlation" }],
 ];
-
-const AccountingNav: React.FC = () => {
+export default function AccountingNav() {
   const { t } = useTranslation("accountingSettings");
-
-  return (
-    <nav
-      aria-label={t("nav.ariaLabel", { defaultValue: "Accounting settings navigation" })}
-      className="overflow-x-auto"
-    >
-      <div className="flex min-w-max gap-1 border-b border-gray-200">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              [
-                "inline-flex items-center whitespace-nowrap border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors",
-                isActive
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-600 hover:text-gray-900",
-              ].join(" ")
-            }
-          >
-            {t(item.labelKey, { defaultValue: item.defaultLabel })}
-          </NavLink>
-        ))}
-      </div>
-    </nav>
-  );
-};
-
-export default AccountingNav;
+  return <nav aria-label={t("nav.ariaLabel", { defaultValue: "Accounting settings navigation" })} className="flex gap-x-4 overflow-x-auto border-b border-gray-200">
+    {groups.map((items, index) => <div key={index} className="flex shrink-0 gap-x-1">{items.map(item => <NavLink key={item.to} to={`/settings/accounting/${item.to}`} className={({ isActive }) => `-mb-px inline-flex shrink-0 items-center whitespace-nowrap border-b-2 px-2.5 pb-3 pt-2 text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-gray-400 ${isActive ? "border-gray-900 font-semibold text-gray-900" : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900"}`}>{t(`nav.${item.key}`, { defaultValue: item.label })}</NavLink>)}</div>)}
+  </nav>;
+}

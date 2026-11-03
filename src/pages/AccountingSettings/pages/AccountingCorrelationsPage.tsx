@@ -444,14 +444,14 @@ function buildRowOptions(data: ExplorerData, t: TFunc): RowOption[] {
       id: item.id,
       dataset: "books" as const,
       label: formatBook(item),
-      sublabel: `${item.basis} • ${item.currency_code}`,
+      sublabel: `${t(`enums.basis.${item.basis}`, item.basis)} • ${item.currency_code}`,
       keywords: `${item.code} ${item.name} ${item.basis} ${item.currency_code}`.toLowerCase(),
     })),
     ...data.accounts.map((item) => ({
       id: item.id,
       dataset: "accounts" as const,
       label: formatAccount(item),
-      sublabel: `${item.statement_section} • ${item.account_type}${item.is_bank_control ? " • bank control" : ""}`,
+      sublabel: `${t(`common.sections.${item.statement_section === "off_balance" ? "offBalance" : item.statement_section}`, item.statement_section)} • ${t(`common.accountTypes.${item.account_type}`, item.account_type)}${item.is_bank_control ? ` • ${t("workspace.summary.bankControl.label", "Bank control")}` : ""}`,
       keywords: `${item.code} ${item.name} ${item.statement_section} ${item.account_type} ${item.report_group || ""}`.toLowerCase(),
     })),
     ...data.banks.map((item) => ({
@@ -465,7 +465,7 @@ function buildRowOptions(data: ExplorerData, t: TFunc): RowOption[] {
       id: item.id,
       dataset: "categories" as const,
       label: formatCategory(item),
-      sublabel: `${item.tx_type_hint || t("correlationsPage.rows.noHint", "no hint")}`,
+      sublabel: item.tx_type_hint ? t(`enums.direction.${item.tx_type_hint}`, item.tx_type_hint) : t("correlationsPage.rows.noHint", "no hint"),
       keywords: `${item.code} ${item.name} ${item.tx_type_hint || ""}`.toLowerCase(),
     })),
     ...data.bankMappings.map((item, index) => {
@@ -507,7 +507,7 @@ function buildRowOptions(data: ExplorerData, t: TFunc): RowOption[] {
       id: item.id,
       dataset: "journals" as const,
       label: item.entry_number || item.id,
-      sublabel: `${item.book_code} • ${item.status} • ${t("correlationsPage.rows.lines", "{{count}} lines", { count: item.lines.length })}`,
+      sublabel: `${item.book_code} • ${t(`enums.status.${item.status}`, item.status)} • ${t("correlationsPage.rows.lines", "{{count}} lines", { count: item.lines.length })}`,
       keywords: `${item.entry_number} ${item.book_code} ${item.status} ${item.memo || ""} ${item.lines
         .map((line) => `${line.account_code} ${line.account_name}`)
         .join(" ")}`.toLowerCase(),
@@ -603,13 +603,13 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         selectedBooksSet.has(item.id) ? t("correlationsPage.dynamic.selectedBookRow", "Selected book row") : t("correlationsPage.dynamic.correlatedBookById", "Correlated book by id"),
         2720,
         80 + index * 120,
-        "Book"
+        t("correlationsPage.rows.book", "Book")
       );
       dataEdges.push({
         from: `data-book-${item.id}`,
         to: "bookEntity",
         kind: "relates",
-        note: selectedBooksSet.has(item.id) ? "selected row" : "correlated by id",
+        note: selectedBooksSet.has(item.id) ? t("correlationsPage.notes.selected", "Selected row") : t("correlationsPage.notes.correlated", "Related record"),
       });
     });
 
@@ -623,13 +623,13 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         selectedAccountsSet.has(item.id) ? t("correlationsPage.dynamic.selectedAccountRow", "Selected account row") : t("correlationsPage.dynamic.correlatedAccountById", "Correlated account by id"),
         2720,
         520 + index * 120,
-        "Ledger account"
+        t("correlationsPage.rows.ledgerAccount", "Ledger account")
       );
       dataEdges.push({
         from: `data-account-${item.id}`,
         to: "ledgerEntity",
         kind: "relates",
-        note: selectedAccountsSet.has(item.id) ? "selected row" : "correlated by id",
+        note: selectedAccountsSet.has(item.id) ? t("correlationsPage.notes.selected", "Selected row") : t("correlationsPage.notes.correlated", "Related record"),
       });
     });
 
@@ -643,13 +643,13 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         selectedBanksSet.has(item.id) ? t("correlationsPage.dynamic.selectedBankRow", "Selected bank row") : t("correlationsPage.dynamic.correlatedBankById", "Correlated bank by id"),
         2720,
         1120 + index * 120,
-        "Bank"
+        t("correlationsPage.rows.bank", "Bank")
       );
       dataEdges.push({
         from: `data-bank-${item.id}`,
         to: "bankEntity",
         kind: "relates",
-        note: selectedBanksSet.has(item.id) ? "selected row" : "correlated by id",
+        note: selectedBanksSet.has(item.id) ? t("correlationsPage.notes.selected", "Selected row") : t("correlationsPage.notes.correlated", "Related record"),
       });
     });
 
@@ -663,13 +663,13 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         selectedCategoriesSet.has(item.id) ? t("correlationsPage.dynamic.selectedCategoryRow", "Selected category row") : t("correlationsPage.dynamic.correlatedCategoryById", "Correlated category by id"),
         3360,
         80 + index * 120,
-        "Cashflow category"
+        t("correlationsPage.rows.category", "Cashflow category")
       );
       dataEdges.push({
         from: `data-category-${item.id}`,
         to: "categoryEntity",
         kind: "relates",
-        note: selectedCategoriesSet.has(item.id) ? "selected row" : "correlated by id",
+        note: selectedCategoriesSet.has(item.id) ? t("correlationsPage.notes.selected", "Selected row") : t("correlationsPage.notes.correlated", "Related record"),
       });
     });
 
@@ -689,14 +689,14 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
       pushNode(
         `data-bankmap-${item.id}`,
         t("correlationsPage.rows.mapNumber", "Map {{number}}", { number: index + 1 }),
-        `Bank mapping ${index + 1}`,
+        t("correlationsPage.rows.bankMapping", "Bank mapping {{number}}", { number: index + 1 }),
         `${bankLabel} • ${bookLabel} • ${accountLabel}`,
         3360,
         500 + index * 130,
         t("correlationsPage.dynamic.bankMappingArchitectureLabel", "Bank mapping")
       );
 
-      dataEdges.push({ from: `data-bankmap-${item.id}`, to: "bankMappingsPage", kind: "relates", note: "selected mapping" });
+      dataEdges.push({ from: `data-bankmap-${item.id}`, to: "bankMappingsPage", kind: "relates", note: t("correlationsPage.notes.mapping", "Selected mapping") });
       dataEdges.push({ from: `data-bankmap-${item.id}`, to: `data-book-${item.book_id}`, kind: "relates", note: "book_id" });
       dataEdges.push({
         from: `data-bankmap-${item.id}`,
@@ -725,14 +725,14 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
       pushNode(
         `data-policy-${item.id}`,
         t("correlationsPage.rows.policyNumber", "Policy {{number}}", { number: index + 1 }),
-        `Posting policy ${index + 1}`,
+        t("correlationsPage.rows.postingPolicy", "Posting policy {{number}}", { number: index + 1 }),
         `${categoryLabel} • ${bookLabel}`,
         3360,
         940 + index * 140,
         t("correlationsPage.dynamic.postingPolicyArchitectureLabel", "Posting policy")
       );
 
-      dataEdges.push({ from: `data-policy-${item.id}`, to: "postingPoliciesPage", kind: "relates", note: "selected policy" });
+      dataEdges.push({ from: `data-policy-${item.id}`, to: "postingPoliciesPage", kind: "relates", note: t("correlationsPage.notes.policy", "Selected policy") });
       dataEdges.push({
         from: `data-policy-${item.id}`,
         to: `data-category-${item.cashflow_category_id}`,
@@ -771,29 +771,29 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
         `data-journal-${item.id}`,
         item.entry_number || item.id,
         item.entry_number || item.id,
-        `${item.book_code} • ${item.status} • ${item.lines.length} lines`,
+        `${item.book_code} • ${t(`enums.status.${item.status}`, item.status)} • ${t("correlationsPage.rows.lines", "{{count}} lines", { count: item.lines.length })}`,
         4040,
         500 + index * 150,
         t("correlationsPage.dynamic.journalArchitectureLabel", "Journal")
       );
 
-      dataEdges.push({ from: `data-journal-${item.id}`, to: "journalsPage", kind: "relates", note: "selected journal" });
+      dataEdges.push({ from: `data-journal-${item.id}`, to: "journalsPage", kind: "relates", note: t("correlationsPage.notes.journal", "Selected journal") });
       dataEdges.push({ from: `data-journal-${item.id}`, to: `data-book-${item.book_id}`, kind: "relates", note: "book_id" });
-      dataEdges.push({ from: `data-journal-${item.id}`, to: "journalEntity", kind: "relates", note: item.status });
+      dataEdges.push({ from: `data-journal-${item.id}`, to: "journalEntity", kind: "relates", note: t(`enums.status.${item.status}`, item.status) });
 
       item.lines.forEach((line) => {
         dataEdges.push({
           from: `data-journal-${item.id}`,
           to: `data-account-${line.account_id}`,
           kind: "relates",
-          note: `line ${line.line_no} account_id`,
+          note: t("correlationsPage.notes.lineAccount", "Line {{number}} account", { number: line.line_no }),
         });
         if (line.bank_account_id) {
           dataEdges.push({
             from: `data-journal-${item.id}`,
             to: `data-bank-${line.bank_account_id}`,
             kind: "relates",
-            note: `line ${line.line_no} bank_account_id`,
+            note: t("correlationsPage.notes.lineBank", "Line {{number}} bank", { number: line.line_no }),
           });
         }
       });
@@ -814,16 +814,18 @@ function deriveDataGraph(data: ExplorerData, selectedRows: Record<DatasetKey, Se
 
 export default function AccountingCorrelationsPage() {
   const { i18n } = useTranslation("accountingSettings");
+  const language = i18n.resolvedLanguage || i18n.language || "en";
   const t = useCallback<TFunc>(
     (key, defaultValue, options = {}) =>
       String(
         i18n.t(key, {
+          lng: language,
           ns: "accountingSettings",
           defaultValue,
           ...options,
         })
       ),
-    [i18n]
+    [i18n, language]
   );
 
   const translatedGroupLabels = useMemo<Record<NodeGroup, string>>(
@@ -1576,7 +1578,7 @@ export default function AccountingCorrelationsPage() {
           </div>
         </section>
 
-        <section className={isExpanded ? "grid gap-6" : "grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]"}>
+        <section className={isExpanded ? "grid gap-6" : "grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]"}>
           <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
               <div>
@@ -1802,7 +1804,7 @@ export default function AccountingCorrelationsPage() {
             </div>
           </section>
 
-          <aside className={isExpanded ? "space-y-4 xl:col-span-full" : "space-y-4"}>
+          <aside className={isExpanded ? "space-y-4 xl:col-span-full" : "accounting-inspector space-y-4"}>
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("correlationsPage.inspector.title", "Inspector")}</div>
@@ -1813,7 +1815,7 @@ export default function AccountingCorrelationsPage() {
                   <div className="flex items-center gap-2 text-gray-700">
                     {selected ? legendIcon(selected.label) : <Network className="h-4 w-4" />}
                     <span className="text-[12px] font-medium uppercase tracking-wide">
-                      {selected?.architectureLabel || (selected ? translatedGroupLabels[selected.group] : "Node")}
+                      {selected?.architectureLabel || (selected ? translatedGroupLabels[selected.group] : t("correlationsPage.node", "Node"))}
                     </span>
                   </div>
                   <h2 className="mt-2 text-[16px] font-semibold text-gray-900">
@@ -1942,7 +1944,7 @@ export default function AccountingCorrelationsPage() {
 
                 {!enabledDatasets.length ? (
                   <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-10 text-center text-[13px] text-gray-500">
-                    Enable one or more datasets to start selecting rows.
+                    {t("correlationsPage.enableDatasets", "Enable one or more datasets to start selecting rows.")}
                   </div>
                 ) : (
                   <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">

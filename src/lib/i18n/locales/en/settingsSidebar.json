@@ -6,7 +6,8 @@
     "organization": "Organization",
     "banking": "Banking",
     "management": "Management",
-    "accounting": "Accounting & Structure"
+    "accounting": "Accounting & Structure",
+    "profile": "Your account"
   },
   "items": {
     "personal": "Personal settings",
@@ -26,5 +27,13 @@
     "ledger-accounts": "Ledger Accounts",
     "departments": "Departments",
     "accounting": "Accounting"
+  },
+  "title": "Settings",
+  "actions": {
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "close": "Close navigation",
+    "open": "Open settings navigation",
+    "back": "Back to workspace"
   }
 }
