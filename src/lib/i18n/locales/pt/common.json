@@ -68,5 +68,14 @@
       "account_type": "Tipo de conta",
       "account_number": "Número da conta"
     }
+  },
+  "modalHints": {
+    "book": "Livro",
+    "bankMapping": "Conexão bancária",
+    "journal": "Diário",
+    "postingPolicy": "Regra de lançamento",
+    "ledgerAccount": "Conta contábil",
+    "editShortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar",
+    "previewShortcuts": "Atalhos: Esc fechar"
   }
 }

@@ -63,7 +63,9 @@
     "accounting-posting-policies": "Defina como as categorias geram lançamentos contábeis.",
     "accounting-journals": "Revise os lançamentos do diário e seu status.",
     "accounting-reconciliation": "Identifique e resolva problemas na configuração contábil.",
-    "accounting-correlation": "Explore as conexões entre os registros contábeis."
+    "accounting-correlation": "Explore as conexões entre os registros contábeis.",
+    "accounting-setup": "Configure e valide seu espaço contábil, uma etapa por vez.",
+    "accounting-periods": "Gerencie datas de lançamento e controles de fechamento de períodos."
   },
   "settingsDescription": "Gerencie as configurações do espaço de trabalho."
 }

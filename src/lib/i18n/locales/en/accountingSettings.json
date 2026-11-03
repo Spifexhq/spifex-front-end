@@ -71,7 +71,9 @@
     "journals": "Journals",
     "correlation": "Connections",
     "reconciliation": "Review guide",
-    "overview": "Overview"
+    "overview": "Overview",
+    "setup": "Setup",
+    "periods": "Periods"
   },
   "shell": {
     "title": "Accounting settings",
@@ -864,5 +866,110 @@
     "status": "Account status",
     "noAccess": "You do not have permission to view the chart of accounts.",
     "description": "Review the accounts used by your accounting books and posting rules."
+  },
+  "setupFlow": {
+    "setupTitle": "Set up your accounting workspace",
+    "workspace": "Accounting workspace",
+    "progress": "Your setup progress",
+    "complete": "Validated",
+    "pending": "To review",
+    "blocked": "Prerequisite required",
+    "completedCount": "{{count}} of {{total}} validated",
+    "step": "Step {{current}} of {{total}}",
+    "continue": "Continue setup",
+    "backOverview": "Back to overview",
+    "reviewSetup": "Review setup",
+    "activate": "Activate accounting",
+    "activating": "Validating…",
+    "activeTitle": "Your accounting workspace is ready",
+    "readyTitle": "Ready for a final review",
+    "activationConsequences": "Activation enables future postings. It does not import historical transactions, create opening balances, or change existing journals.",
+    "optionalTitle": "Configure when needed",
+    "optionalGuidance": "Periods and opening balances are optional. Bank connections and category rules are required only for the transactions that use them.",
+    "validationSource": "Progress is validated against your saved configuration.",
+    "notActive": "Finish setup before creating accounting entries.",
+    "attention": "Configuration needs attention. Posting is blocked until the required settings are valid again.",
+    "blockedTitle": "Complete the earlier steps first",
+    "blockedDescription": "Review the pending prerequisites below, then return to this step. Your saved configuration is preserved.",
+    "requiredActions": "What needs your attention",
+    "loadError": "Unable to validate accounting setup",
+    "actionError": "The change could not be saved. Review the details and try again.",
+    "requestAdmin": "An administrator with accounting configuration permission must activate this workspace.",
+    "profileMode": "Workspace profile",
+    "functionalCurrency": "Organization currency",
+    "profileGuidance": "Choose a personal or organizational starting point. Templates are generic, not jurisdiction-specific accounting frameworks. Review the chart and book basis for your reporting needs.",
+    "editProfile": "Change profile",
+    "editCurrency": "Manage currency",
+    "currentPassword": "Current password",
+    "importAccounts": "Import accounts",
+    "chartViews": "Account management views",
+    "afterBooks": "Available after chart and book validation",
+    "periodGuidance": "Optional date controls for each book. Without periods, posting remains date-based. Once periods exist, every posting date must fall in one open period.",
+    "bankGuidance": "Map each bank used for receipts, payments, or transfers to an active bank-control posting account.",
+    "policyGuidance": "Choose the debit and credit accounts for categories used in actual receipts and payments. Unused categories do not block setup.",
+    "openingGuidance": "If opening balances are needed, record a balanced manual journal after activation. Activation never creates balances automatically.",
+    "newPeriod": "New period",
+    "periodName": "Period name",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "periodStatus": "Status",
+    "periodActions": "Actions",
+    "noPeriods": "No periods configured. Dates remain unrestricted until periods are defined.",
+    "periodConsequences": "Soft-closing or closing blocks new postings, including corrections. Reopen before posting. Period dates can be corrected until the period is used in a journal.",
+    "phases": {
+      "profile": "Company profile",
+      "chart": "Chart of accounts",
+      "books": "Books and currency",
+      "review": "Review and activate"
+    },
+    "descriptions": {
+      "profile": "Confirm your workspace profile and organization currency.",
+      "chart": "Import a starting chart or create your own accounts. Classification and hierarchy are validated before continuing.",
+      "books": "Keep one active primary book. Select its currency and accounting basis before posting.",
+      "review": "Review the mandatory configuration and decide which optional controls your organization needs."
+    },
+    "states": {
+      "draft": "Not configured",
+      "configuring": "Setup in progress",
+      "ready": "Ready to activate",
+      "active": "Operational",
+      "needs_attention": "Needs attention"
+    },
+    "modes": {
+      "personal": "Personal",
+      "organizational": "Organizational"
+    },
+    "optional": {
+      "periods": "Fiscal periods",
+      "bank-mappings": "Bank connections",
+      "posting-policies": "Category posting rules",
+      "journals": "Journals and opening balances"
+    },
+    "periodStates": {
+      "open": "Open",
+      "soft_closed": "Soft-closed",
+      "closed": "Closed"
+    },
+    "periodTransitions": {
+      "open": "Reopen",
+      "soft_closed": "Soft-close",
+      "closed": "Close period"
+    },
+    "issues": {
+      "invalid_profile": "Choose a supported workspace profile.",
+      "missing_currency": "Set the organization currency.",
+      "missing_posting_accounts": "Create at least one active posting account.",
+      "account_classification": "Review this account’s type, statement section, and normal balance.",
+      "account_parent": "Choose a header account in this organization as the parent.",
+      "account_section": "Use the same statement section as the parent account.",
+      "inactive_parent": "Activate the parent or deactivate this child account.",
+      "bank_control_posting": "Bank-control accounts must be posting accounts.",
+      "account_cycle": "Remove the circular parent relationship.",
+      "primary_book_required": "Keep exactly one active primary accounting book.",
+      "invalid_book_currency": "Review the currency of every active book."
+    },
+    "continueStep": "Continue",
+    "editPeriod": "Edit period",
+    "scopeLocked": "The bank or category and book identify this configuration. Create a new configuration to use a different scope."
   }
 }

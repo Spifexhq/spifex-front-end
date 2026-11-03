@@ -1,5 +1,6 @@
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
+import type { AccountingSetupStatus, FiscalPeriod } from '@/models/settings/accountingSetup';
 import type { AxiosProgressEvent } from 'axios'
 import type { MfaRequiredPayload, SignInRequest, SignInResend2FARequest,
   SignInResend2FAResponse, SignInResponse, SignInVerify2FARequest, SignOutResponse,
@@ -145,6 +146,8 @@ function filenameFromContentDisposition(
   return match?.[1] ?? fallback;
 }
 
+
+const freshAccountingQuery = (params?: object) => ({ ...params, _r: crypto.randomUUID() });
 
 export const api = {
   /* --- Auth --- */
@@ -474,7 +477,7 @@ export const api = {
 
   /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>
-    request<GetLedgerAccountsResponse>('ledger/accounts/', 'GET', params),
+    request<GetLedgerAccountsResponse>('ledger/accounts/', 'GET', freshAccountingQuery(params)),
 
   getLedgerAccountsBulk: (ids: string[]) =>
     request<LedgerAccountsBulkResponse>('ledger/accounts/bulk/get/', 'POST', {
@@ -522,7 +525,14 @@ export const api = {
     downloadTemplate("ledger/accounts/template/xlsx/", "template_ledger_accounts.xlsx"),
 
   /* --- Accounting --- */
-  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('ledger/books/', 'GET', params),
+  getAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/', 'GET', freshAccountingQuery()),
+  startAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/start/', 'POST', {}),
+  activateAccounting: (revision: string) => request<AccountingSetupStatus>('ledger/setup/activate/', 'POST', { revision }),
+  getFiscalPeriods: () => request<FiscalPeriod[]>('ledger/periods/', 'GET', freshAccountingQuery()),
+  addFiscalPeriod: (payload: Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'> & { book_id: string }) => request<FiscalPeriod>('ledger/periods/', 'POST', payload),
+  updateFiscalPeriod: (id: string, status: FiscalPeriod['status']) => request<FiscalPeriod>(`ledger/periods/${id}/`, 'PATCH', { status }),
+  editFiscalPeriod: (id: string, payload: Partial<Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'>>) => request<FiscalPeriod>(`ledger/periods/${id}/`, 'PATCH', payload),
+  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('ledger/books/', 'GET', freshAccountingQuery(params)),
 
   addAccountingBook: (payload: AddAccountingBookRequest) =>
     request<AccountingBook>('ledger/books/', 'POST', payload),
@@ -531,19 +541,19 @@ export const api = {
     request<AccountingBook>(`ledger/books/${bookId}/`, 'PATCH', payload),
 
   getCategoryPostingPolicies: () =>
-    request<CategoryPostingPolicy[]>('ledger/category-policies/', 'GET'),
+    request<CategoryPostingPolicy[]>('ledger/category-policies/', 'GET', freshAccountingQuery()),
 
   upsertCategoryPostingPolicy: (payload: UpsertCategoryPostingPolicyRequest) =>
     request<CategoryPostingPolicy>('ledger/category-policies/', 'POST', payload),
 
   getBankAccountLedgerMaps: () =>
-    request<BankAccountLedgerMap[]>('ledger/bank-account-maps/', 'GET'),
+    request<BankAccountLedgerMap[]>('ledger/bank-account-maps/', 'GET', freshAccountingQuery()),
 
   upsertBankAccountLedgerMap: (payload: UpsertBankAccountLedgerMapRequest) =>
     request<BankAccountLedgerMap>('ledger/bank-account-maps/', 'POST', payload),
 
   getJournalEntries: (params?: GetJournalEntriesParams) =>
-    request<JournalEntry[]>('ledger/journals/', 'GET', params),
+    request<JournalEntry[]>('ledger/journals/', 'GET', freshAccountingQuery(params)),
 
   getJournalEntry: (journalId: string) =>
     request<JournalEntry>(`ledger/journals/${journalId}/`, 'GET'),
@@ -555,7 +565,7 @@ export const api = {
     request<JournalEntry>(`ledger/journals/${journalId}/reverse/`, 'POST', payload),
 
   getTrialBalance: (params?: GetTrialBalanceParams) =>
-    request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', params),
+    request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', freshAccountingQuery(params)),
 
   getCashflowCategories: (params?: GetCashflowCategoriesParams) =>
     request<GetCashflowCategoriesResponse>("cashflow/categories/", "GET", params),

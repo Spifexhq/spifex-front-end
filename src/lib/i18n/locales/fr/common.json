@@ -68,5 +68,14 @@
       "account_type": "Type de compte",
       "account_number": "Numéro de compte"
     }
+  },
+  "modalHints": {
+    "book": "Livre",
+    "bankMapping": "Connexion bancaire",
+    "journal": "Journal",
+    "postingPolicy": "Règle de comptabilisation",
+    "ledgerAccount": "Compte comptable",
+    "editShortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer",
+    "previewShortcuts": "Raccourcis : Échap fermer"
   }
 }

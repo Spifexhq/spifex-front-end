@@ -86,5 +86,8 @@
     "title": "Onboarding completed",
     "subtitle": "Your account is ready. You can continue to the system.",
     "cta": "Go to Cash Flow"
+  },
+  "accounting": {
+    "subtitle": "Complete and activate accounting setup, then configure the cashflow categories used by your organization."
   }
 }

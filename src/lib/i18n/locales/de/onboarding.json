@@ -86,5 +86,8 @@
     "title": "Onboarding abgeschlossen",
     "subtitle": "Ihr Konto ist bereit. Sie können jetzt im System fortfahren.",
     "cta": "Zu Cash Flow"
+  },
+  "accounting": {
+    "subtitle": "Schließen Sie die Buchhaltungseinrichtung ab, aktivieren Sie sie und konfigurieren Sie die verwendeten Cashflow-Kategorien."
   }
 }

@@ -71,7 +71,9 @@
     "journals": "Journale",
     "correlation": "Verknüpfungen",
     "reconciliation": "Prüfleitfaden",
-    "overview": "Übersicht"
+    "overview": "Übersicht",
+    "setup": "Einrichtung",
+    "periods": "Perioden"
   },
   "shell": {
     "title": "Buchhaltungseinstellungen",
@@ -864,5 +866,110 @@
     "status": "Kontostatus",
     "noAccess": "Sie haben keine Berechtigung, den Kontenplan anzuzeigen.",
     "description": "Prüfen Sie die Konten Ihrer Buchungsbücher und Buchungsregeln."
+  },
+  "setupFlow": {
+    "setupTitle": "Buchhaltung einrichten",
+    "workspace": "Buchhaltungsbereich",
+    "progress": "Einrichtungsfortschritt",
+    "complete": "Validiert",
+    "pending": "Zu prüfen",
+    "blocked": "Voraussetzung fehlt",
+    "completedCount": "{{count}} von {{total}} validiert",
+    "step": "Schritt {{current}} von {{total}}",
+    "continue": "Einrichtung fortsetzen",
+    "backOverview": "Zurück zur Übersicht",
+    "reviewSetup": "Einrichtung prüfen",
+    "activate": "Buchhaltung aktivieren",
+    "activating": "Validierung…",
+    "activeTitle": "Ihre Buchhaltung ist einsatzbereit",
+    "readyTitle": "Bereit für die abschließende Prüfung",
+    "activationConsequences": "Die Aktivierung ermöglicht neue Buchungen. Historische Vorgänge, Eröffnungsbestände und vorhandene Journale bleiben unverändert.",
+    "optionalTitle": "Bei Bedarf konfigurieren",
+    "optionalGuidance": "Perioden und Eröffnungsbestände sind optional. Bankverbindungen und Regeln sind nur für die jeweiligen Vorgänge erforderlich.",
+    "validationSource": "Der Fortschritt wird anhand der gespeicherten Konfiguration validiert.",
+    "notActive": "Schließen Sie die Einrichtung vor neuen Buchungen ab.",
+    "attention": "Die Konfiguration muss korrigiert werden. Neue Buchungen sind bis dahin gesperrt.",
+    "blockedTitle": "Zuerst die vorherigen Schritte abschließen",
+    "blockedDescription": "Prüfen Sie die offenen Voraussetzungen und kehren Sie dann zurück. Gespeicherte Einstellungen bleiben erhalten.",
+    "requiredActions": "Was noch zu prüfen ist",
+    "loadError": "Einrichtung konnte nicht validiert werden",
+    "actionError": "Die Änderung konnte nicht gespeichert werden. Prüfen Sie die Angaben und versuchen Sie es erneut.",
+    "requestAdmin": "Ein Administrator mit Konfigurationsberechtigung muss diesen Bereich aktivieren.",
+    "profileMode": "Bereichsprofil",
+    "functionalCurrency": "Organisationswährung",
+    "profileGuidance": "Wählen Sie ein persönliches oder organisatorisches Profil. Vorlagen sind allgemein und kein landesspezifischer Rechnungslegungsstandard. Prüfen Sie Kontenplan und Buchungsbasis passend zu Ihren Anforderungen.",
+    "editProfile": "Profil ändern",
+    "editCurrency": "Währung verwalten",
+    "currentPassword": "Aktuelles Passwort",
+    "importAccounts": "Konten importieren",
+    "chartViews": "Ansichten zur Kontenverwaltung",
+    "afterBooks": "Nach Validierung von Kontenplan und Buch verfügbar",
+    "periodGuidance": "Optionale Datumskontrollen je Buch. Ohne Perioden gilt das Buchungsdatum. Nach der Einrichtung muss jede Buchung in genau einer offenen Periode liegen.",
+    "bankGuidance": "Verknüpfen Sie jede verwendete Bank mit einem aktiven Bankkontrollkonto für Buchungen.",
+    "policyGuidance": "Wählen Sie Soll- und Habenkonten für verwendete Kategorien. Ungenutzte Kategorien blockieren die Einrichtung nicht.",
+    "openingGuidance": "Erfassen Sie benötigte Eröffnungsbestände nach der Aktivierung als ausgeglichene manuelle Buchung. Die Aktivierung erzeugt keine Bestände.",
+    "newPeriod": "Neue Periode",
+    "periodName": "Periodenname",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "periodStatus": "Status",
+    "periodActions": "Aktionen",
+    "noPeriods": "Keine Perioden eingerichtet. Datumsangaben bleiben bis zur Einrichtung frei.",
+    "periodConsequences": "Vorläufiges oder endgültiges Schließen sperrt neue Buchungen einschließlich Korrekturen. Öffnen Sie die Periode vorher erneut. Datumsbereiche sind bis zur Verwendung in einem Journal korrigierbar.",
+    "phases": {
+      "profile": "Organisationsprofil",
+      "chart": "Kontenplan",
+      "books": "Bücher und Währung",
+      "review": "Prüfen und aktivieren"
+    },
+    "descriptions": {
+      "profile": "Prüfen Sie Profil und Organisationswährung.",
+      "chart": "Importieren Sie eine Vorlage oder legen Sie Konten an. Klassifizierung und Hierarchie werden vor dem Fortfahren geprüft.",
+      "books": "Verwenden Sie genau ein aktives Hauptbuch. Wählen Sie Währung und Buchungsbasis vor der ersten Buchung.",
+      "review": "Prüfen Sie die Pflichtkonfiguration und die benötigten optionalen Kontrollen."
+    },
+    "states": {
+      "draft": "Nicht eingerichtet",
+      "configuring": "Einrichtung läuft",
+      "ready": "Bereit zur Aktivierung",
+      "active": "Einsatzbereit",
+      "needs_attention": "Korrektur erforderlich"
+    },
+    "modes": {
+      "personal": "Persönlich",
+      "organizational": "Organisation"
+    },
+    "optional": {
+      "periods": "Buchungsperioden",
+      "bank-mappings": "Bankverbindungen",
+      "posting-policies": "Buchungsregeln je Kategorie",
+      "journals": "Journale und Eröffnungsbestände"
+    },
+    "periodStates": {
+      "open": "Offen",
+      "soft_closed": "Vorläufig geschlossen",
+      "closed": "Geschlossen"
+    },
+    "periodTransitions": {
+      "open": "Erneut öffnen",
+      "soft_closed": "Vorläufig schließen",
+      "closed": "Periode schließen"
+    },
+    "issues": {
+      "invalid_profile": "Wählen Sie ein unterstütztes Profil.",
+      "missing_currency": "Legen Sie die Organisationswährung fest.",
+      "missing_posting_accounts": "Legen Sie mindestens ein aktives Buchungskonto an.",
+      "account_classification": "Prüfen Sie Kontotyp, Abschlussbereich und normalen Saldo.",
+      "account_parent": "Wählen Sie ein Gruppenkonto dieser Organisation als übergeordnetes Konto.",
+      "account_section": "Verwenden Sie denselben Abschlussbereich wie beim übergeordneten Konto.",
+      "inactive_parent": "Aktivieren Sie das übergeordnete Konto oder deaktivieren Sie dieses Unterkonto.",
+      "bank_control_posting": "Bankkontrollkonten müssen Buchungskonten sein.",
+      "account_cycle": "Entfernen Sie die zyklische Kontenhierarchie.",
+      "primary_book_required": "Verwenden Sie genau ein aktives Hauptbuch.",
+      "invalid_book_currency": "Prüfen Sie die Währung aller aktiven Bücher."
+    },
+    "continueStep": "Weiter",
+    "editPeriod": "Periode bearbeiten",
+    "scopeLocked": "Bank oder Kategorie und Buch bestimmen diese Konfiguration. Legen Sie für einen anderen Geltungsbereich eine neue Konfiguration an."
   }
 }

@@ -63,7 +63,9 @@
     "accounting-posting-policies": "Définissez comment les catégories génèrent des écritures comptables.",
     "accounting-journals": "Consultez les écritures du journal et leur statut.",
     "accounting-reconciliation": "Identifiez et résolvez les problèmes de configuration comptable.",
-    "accounting-correlation": "Explorez les liens entre les données comptables."
+    "accounting-correlation": "Explorez les liens entre les données comptables.",
+    "accounting-setup": "Configurez et validez votre espace comptable, étape par étape.",
+    "accounting-periods": "Gérez les dates de comptabilisation et les clôtures."
   },
   "settingsDescription": "Gérez les paramètres de votre espace de travail."
 }

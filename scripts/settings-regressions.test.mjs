@@ -24,6 +24,9 @@ test("filter panels remain bounded when their anchor scrolls outside the viewpor
 test("shared settings controls have labels in every supported language", () => {
   for (const language of ["en", "pt", "fr", "de"]) {
     const data = JSON.parse(fs.readFileSync(`src/lib/i18n/locales/${language}/common.json`, "utf8"));
+    for (const key of ["book", "bankMapping", "journal", "postingPolicy", "ledgerAccount", "editShortcuts", "previewShortcuts"]) {
+      assert.ok(typeof data.modalHints?.[key] === "string" && data.modalHints[key].length, `${language}: missing modalHints.${key}`);
+    }
     for (const value of [data.settings.filters, data.settings.activeFilters, ...Object.values(data.pagination)]) assert.ok(typeof value === "string" && value.length);
   }
 });

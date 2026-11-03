@@ -1,0 +1,836 @@
+import { SidePanelFooter, SidePanelFrame, SidePanelHeader } from "@/components/Modal/SidePanel";
+
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/Settings/EntitySettings/EntityModal.tsx                             */
+/* -------------------------------------------------------------------------- */
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import Checkbox from "@/shared/ui/Checkbox";
+import Shimmer from "@/shared/ui/Loaders/Shimmer";
+import { Select } from "src/shared/ui/Select";
+
+import { api } from "@/api/requests";
+
+import type { Entity } from "@/models/settings/entities";
+
+/* ------------------------------ Entity Type (fixed options) ------------------------------ */
+const ENTITY_TYPE_VALUES = [
+  "client",
+  "supplier",
+  "employee",
+  "contractor",
+  "partner",
+  "prospect",
+  "affiliate",
+  "advisor",
+  "investor",
+  "other",
+] as const;
+
+type EntityTypeValue = (typeof ENTITY_TYPE_VALUES)[number];
+
+const ENTITY_TYPE_ITEMS: { value: EntityTypeValue }[] = ENTITY_TYPE_VALUES.map((v) => ({ value: v }));
+
+function coerceEntityType(v: unknown): EntityTypeValue {
+  return ENTITY_TYPE_VALUES.includes(v as EntityTypeValue) ? (v as EntityTypeValue) : "other";
+}
+
+type EntityModalMode = "create" | "edit";
+
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
+
+type Tab = "general" | "tax" | "address" | "bank";
+
+export type EntityModalProps = {
+  isOpen: boolean;
+  mode: EntityModalMode;
+  entity?: Entity | null;
+  onClose: () => void;
+
+  onNotify?: (snack: Snack) => void;
+  onSaved?: (result: { mode: EntityModalMode; created?: Entity }) => void;
+};
+
+const IDS = {
+  tabsGeneral: "entity-tab-general",
+  tabsTax: "entity-tab-tax",
+  tabsAddress: "entity-tab-address",
+  tabsBank: "entity-tab-bank",
+} as const;
+
+const TAB_LIST_BASE: { id: Tab; labelKey: string; wrapId: string }[] = [
+  { id: "general", labelKey: "tabs.general", wrapId: IDS.tabsGeneral },
+  { id: "tax", labelKey: "tabs.tax", wrapId: IDS.tabsTax },
+  { id: "address", labelKey: "tabs.address", wrapId: IDS.tabsAddress },
+  { id: "bank", labelKey: "tabs.bank", wrapId: IDS.tabsBank },
+];
+
+const emptyForm = {
+  full_name: "",
+  alias_name: "",
+  entity_type: "client" as EntityTypeValue,
+  is_active: true,
+
+  ssn_tax_id: "",
+  ein_tax_id: "",
+  email: "",
+  phone: "",
+
+  street: "",
+  street_number: "",
+  city: "",
+  state: "",
+  postal_code: "",
+  country: "",
+
+  bank_name: "",
+  bank_branch: "",
+  checking_account: "",
+  account_holder_tax_id: "",
+  account_holder_name: "",
+};
+type FormState = typeof emptyForm;
+
+const ModalSkeleton: React.FC = () => (
+  <div className="space-y-5 py-1">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Shimmer className="h-10 rounded-md sm:col-span-2" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <Shimmer className="h-10 rounded-md" />
+      <div className="flex items-center gap-2 pt-2">
+        <Shimmer className="h-5 w-5 rounded-sm" />
+        <Shimmer className="h-3 w-24 rounded-md" />
+      </div>
+    </div>
+
+    <div className="space-y-3">
+      <Shimmer className="h-3 w-32 rounded-md" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Shimmer className="h-10 rounded-md sm:col-span-2" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+      </div>
+    </div>
+
+    <div className="space-y-3">
+      <Shimmer className="h-3 w-40 rounded-md" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md" />
+        <Shimmer className="h-10 rounded-md sm:col-span-2" />
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-2 pt-1">
+      <Shimmer className="h-9 w-24 rounded-md" />
+      <Shimmer className="h-9 w-28 rounded-md" />
+    </div>
+  </div>
+);
+
+function isDropdownOpen() {
+  return !!document.querySelector('[data-select-open="true"]');
+}
+
+function focusFirstInteractive(wrapId?: string) {
+  if (!wrapId) return;
+  const scope = document.getElementById(wrapId) || document.querySelector<HTMLElement>(`#${wrapId}`);
+  const el = scope?.querySelector<HTMLElement>("input,button,select,textarea,[tabindex]") || scope || null;
+  el?.focus();
+}
+
+function normalizeDirtyComparable(form: FormState) {
+  const trim = (v: string) => (v ?? "").trim();
+  return {
+    ...form,
+    full_name: trim(form.full_name),
+    alias_name: trim(form.alias_name),
+    ssn_tax_id: trim(form.ssn_tax_id),
+    ein_tax_id: trim(form.ein_tax_id),
+    email: trim(form.email),
+    phone: trim(form.phone),
+
+    street: trim(form.street),
+    street_number: trim(form.street_number),
+    city: trim(form.city),
+    state: trim(form.state),
+    postal_code: trim(form.postal_code),
+    country: trim(form.country),
+
+    bank_name: trim(form.bank_name),
+    bank_branch: trim(form.bank_branch),
+    checking_account: trim(form.checking_account),
+    account_holder_tax_id: trim(form.account_holder_tax_id),
+    account_holder_name: trim(form.account_holder_name),
+  };
+}
+
+const EntityModal: React.FC<EntityModalProps> = ({
+  isOpen,
+  mode,
+  entity,
+  onClose,
+  onNotify,
+  onSaved,
+}) => {
+  const { t } = useTranslation("entitySettings");
+
+  const entityId = entity?.id ?? null;
+
+  const [activeTab, setActiveTab] = useState<Tab>("general");
+  const [formData, setFormData] = useState<FormState>(emptyForm);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [warning, setWarning] = useState<{ title: string; message: string; focusWrapId?: string } | null>(null);
+
+  const fullNameRef = useRef<HTMLInputElement>(null);
+  const baselineRef = useRef<string>(JSON.stringify(normalizeDirtyComparable(emptyForm)));
+
+  const TAB_LIST = useMemo(() => TAB_LIST_BASE.map((x) => ({ ...x, label: t(x.labelKey) })), [t]);
+
+  const title = mode === "create" ? t("modal.createTitle") : t("modal.editTitle");
+  const effectiveBusy = isSubmitting || isDetailLoading;
+
+  const isDirty = useMemo(() => {
+    const now = JSON.stringify(normalizeDirtyComparable(formData));
+    return now !== baselineRef.current;
+  }, [formData]);
+
+  const isSaveDisabled = useMemo(() => {
+    if (effectiveBusy) return true;
+    if (!formData.full_name.trim()) return true;
+    return false;
+  }, [formData.full_name, effectiveBusy]);
+
+  const resetInternalState = useCallback(() => {
+    setActiveTab("general");
+    setFormData(emptyForm);
+    setIsSubmitting(false);
+    setIsDetailLoading(false);
+    setShowCloseConfirm(false);
+    setWarning(null);
+    baselineRef.current = JSON.stringify(normalizeDirtyComparable(emptyForm));
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetInternalState();
+    onClose();
+  }, [onClose, resetInternalState]);
+
+  const attemptClose = useCallback(() => {
+    if (effectiveBusy) return;
+    if (isDropdownOpen()) return;
+
+    if (warning) {
+      setWarning(null);
+      return;
+    }
+
+    if (showCloseConfirm) return;
+
+    if (isDirty) {
+      setShowCloseConfirm(true);
+      return;
+    }
+
+    handleClose();
+  }, [effectiveBusy, handleClose, isDirty, showCloseConfirm, warning]);
+
+  const goTabRelative = useCallback(
+    (delta: number) => {
+      const idx = TAB_LIST.findIndex((x) => x.id === activeTab);
+      if (idx === -1) return;
+      const nextIdx = (idx + delta + TAB_LIST.length) % TAB_LIST.length;
+      const next = TAB_LIST[nextIdx];
+      setActiveTab(next.id);
+      setTimeout(() => focusFirstInteractive(next.wrapId), 0);
+    },
+    [activeTab, TAB_LIST]
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let alive = true;
+
+    (async () => {
+      resetInternalState();
+
+      if (mode === "create") {
+        requestAnimationFrame(() => fullNameRef.current?.focus());
+        return;
+      }
+
+      if (!entityId) return;
+
+      setIsDetailLoading(true);
+
+      try {
+        const res = await api.getEntity(entityId);
+        const detail = res.data as Entity;
+        if (!alive) return;
+
+        const next: FormState = {
+          full_name: detail.full_name ?? "",
+          alias_name: detail.alias_name ?? "",
+          entity_type: coerceEntityType(detail.entity_type),
+          is_active: detail.is_active ?? true,
+
+          ssn_tax_id: detail.ssn_tax_id ?? "",
+          ein_tax_id: detail.ein_tax_id ?? "",
+          email: detail.email ?? "",
+          phone: detail.phone ?? "",
+
+          street: detail.street ?? "",
+          street_number: detail.street_number ?? "",
+          city: detail.city ?? "",
+          state: detail.state ?? "",
+          postal_code: detail.postal_code ?? "",
+          country: detail.country ?? "",
+
+          bank_name: detail.bank_name ?? "",
+          bank_branch: detail.bank_branch ?? "",
+          checking_account: detail.checking_account ?? "",
+          account_holder_tax_id: detail.account_holder_tax_id ?? "",
+          account_holder_name: detail.account_holder_name ?? "",
+        };
+
+        setFormData(next);
+        baselineRef.current = JSON.stringify(normalizeDirtyComparable(next));
+        requestAnimationFrame(() => fullNameRef.current?.focus());
+      } catch {
+        if (!alive) return;
+
+        const fallback: FormState = {
+          ...emptyForm,
+          full_name: entity?.full_name ?? "",
+          alias_name: entity?.alias_name ?? "",
+          entity_type: coerceEntityType(entity?.entity_type),
+          is_active: entity?.is_active ?? true,
+
+          ssn_tax_id: entity?.ssn_tax_id ?? "",
+          ein_tax_id: entity?.ein_tax_id ?? "",
+          email: entity?.email ?? "",
+          phone: entity?.phone ?? "",
+
+          street: entity?.street ?? "",
+          street_number: entity?.street_number ?? "",
+          city: entity?.city ?? "",
+          state: entity?.state ?? "",
+          postal_code: entity?.postal_code ?? "",
+          country: entity?.country ?? "",
+
+          bank_name: entity?.bank_name ?? "",
+          bank_branch: entity?.bank_branch ?? "",
+          checking_account: entity?.checking_account ?? "",
+          account_holder_tax_id: entity?.account_holder_tax_id ?? "",
+          account_holder_name: entity?.account_holder_name ?? "",
+        };
+
+        setFormData(fallback);
+        baselineRef.current = JSON.stringify(normalizeDirtyComparable(fallback));
+        onNotify?.({ message: t("errors.detailError"), severity: "error" });
+
+        requestAnimationFrame(() => fullNameRef.current?.focus());
+      } finally {
+        if (alive) setIsDetailLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [isOpen, mode, entityId, resetInternalState, onNotify, t, entity]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        attemptClose();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        (document.getElementById("entityModalForm") as HTMLFormElement | null)?.requestSubmit();
+        return;
+      }
+
+      if (e.ctrlKey && e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        if (warning || showCloseConfirm) return;
+        if (isDropdownOpen()) return;
+        e.preventDefault();
+        goTabRelative(e.key === "ArrowRight" ? 1 : -1);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, attemptClose, goTabRelative, warning, showCloseConfirm]);
+
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((p) => ({ ...p, [name]: value }));
+    },
+    []
+  );
+
+  const submit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      if (!formData.full_name.trim()) {
+        setActiveTab("general");
+        setWarning({
+          title: t("errors.saveError"),
+          message: t("row.untitled"),
+          focusWrapId: IDS.tabsGeneral,
+        });
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        ssn_tax_id: formData.ssn_tax_id.trim() || null,
+        ein_tax_id: formData.ein_tax_id.trim() || null,
+
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+
+        bank_name: formData.bank_name.trim(),
+        bank_branch: formData.bank_branch.trim(),
+        checking_account: formData.checking_account.trim(),
+        account_holder_tax_id: formData.account_holder_tax_id.trim(),
+        account_holder_name: formData.account_holder_name.trim(),
+      };
+
+      setIsSubmitting(true);
+
+      try {
+        if (mode === "create") {
+          const { data: created } = await api.addEntity(payload);
+          onNotify?.({ message: t("toast.saveOk"), severity: "success" });
+          onSaved?.({ mode: "create", created });
+          handleClose();
+          return;
+        }
+
+        if (!entityId) return;
+
+        await api.editEntity(entityId, payload);
+        onNotify?.({ message: t("toast.saveOk"), severity: "success" });
+        onSaved?.({ mode: "edit" });
+        handleClose();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : t("errors.saveError");
+        onNotify?.({ message: msg, severity: "error" });
+        setWarning({ title: t("errors.saveError"), message: msg });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData, mode, entityId, onNotify, onSaved, handleClose, t]
+  );
+
+  const renderTabs = () => (
+    <nav className="settings-modal-tabs" role="tablist" aria-label={title}>
+      {TAB_LIST.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            id={`${tab.wrapId}-tab`}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={tab.wrapId}
+            tabIndex={isActive ? 0 : -1}
+            type="button"
+            onClick={() => {
+              setActiveTab(tab.id);
+
+            }}
+            className="settings-modal-tab"
+            onKeyDown={event => {
+              const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+              if (!keys.includes(event.key)) return;
+              event.preventDefault();
+              const current = TAB_LIST.findIndex(item => item.id === tab.id);
+              const next = event.key === "Home" ? 0 : event.key === "End" ? TAB_LIST.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + TAB_LIST.length) % TAB_LIST.length;
+              setActiveTab(TAB_LIST[next].id);
+              document.getElementById(`${TAB_LIST[next].wrapId}-tab`)?.focus();
+            }}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "general":
+        return (
+          <div id={IDS.tabsGeneral} role="tabpanel" aria-labelledby={`${IDS.tabsGeneral}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <Input
+                kind="text"
+                ref={fullNameRef}
+                label={t("field.full_name")}
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.alias_name")}
+                name="alias_name"
+                value={formData.alias_name}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Select<{ value: EntityTypeValue }>
+                label={t("field.entity_type")}
+                items={ENTITY_TYPE_ITEMS}
+                selected={ENTITY_TYPE_ITEMS.filter((it) => it.value === formData.entity_type)}
+                onChange={(items) => {
+                  const next = items[0]?.value;
+                  if (!next) return;
+                  setFormData((p) => ({ ...p, entity_type: next }));
+                }}
+                getItemKey={(item) => item.value}
+                getItemLabel={(item) => t(`types.${item.value}`)}
+                singleSelect
+                hideCheckboxes
+                buttonLabel={t("field.entity_type")}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.email")}
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.phone")}
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <label className="col-span-1 flex items-center gap-2 text-sm pt-0 md:pt-6">
+              <Checkbox
+                size="small"
+                checked={!!formData.is_active}
+                onChange={(e) => setFormData((p) => ({ ...p, is_active: e.target.checked }))}
+                disabled={effectiveBusy}
+              />
+              {t("field.is_active")}
+            </label>
+          </div>
+        );
+
+      case "tax":
+        return (
+          <div id={IDS.tabsTax} role="tabpanel" aria-labelledby={`${IDS.tabsTax}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Input
+                kind="text"
+                label={t("field.ssn_tax_id")}
+                name="ssn_tax_id"
+                value={formData.ssn_tax_id}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.ein_tax_id")}
+                name="ein_tax_id"
+                value={formData.ein_tax_id}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+          </div>
+        );
+
+      case "address":
+        return (
+          <div id={IDS.tabsAddress} role="tabpanel" aria-labelledby={`${IDS.tabsAddress}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <Input
+                kind="text"
+                label={t("field.street")}
+                name="street"
+                value={formData.street}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.street_number")}
+                name="street_number"
+                value={formData.street_number}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.city")}
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.state")}
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.postal_code")}
+                name="postal_code"
+                value={formData.postal_code}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.country")}
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+          </div>
+        );
+
+      case "bank":
+        return (
+          <div id={IDS.tabsBank} role="tabpanel" aria-labelledby={`${IDS.tabsBank}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Input
+                kind="text"
+                label={t("field.bank_name")}
+                name="bank_name"
+                value={formData.bank_name}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.bank_branch")}
+                name="bank_branch"
+                value={formData.bank_branch}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.checking_account")}
+                name="checking_account"
+                value={formData.checking_account}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div>
+              <Input
+                kind="text"
+                label={t("field.account_holder_tax_id")}
+                name="account_holder_tax_id"
+                value={formData.account_holder_tax_id}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <Input
+                kind="text"
+                label={t("field.account_holder_name")}
+                name="account_holder_name"
+                value={formData.account_holder_name}
+                onChange={handleChange}
+                disabled={effectiveBusy}
+              />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SidePanelFrame isOpen={isOpen} labelledBy="entity-modal-title">
+
+        <SidePanelHeader titleId="entity-modal-title" title={<>{title}</>} onClose={attemptClose} disabled={effectiveBusy}>{renderTabs()}</SidePanelHeader>
+
+        <form
+          id="entityModalForm"
+          className="settings-modal-form"
+          onSubmit={submit}
+        >
+          <div className="settings-modal-scroll">
+            {mode === "edit" && isDetailLoading ? <ModalSkeleton /> : renderTabContent()}
+          </div>
+
+          <SidePanelFooter
+            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-[12px] text-gray-600 hidden md:block">
+                {formData.full_name.trim() ? (
+                  <>
+                    {t("footer.entity")} <b>{formData.full_name.trim()}</b>
+                  </>
+                ) : (
+                  <>{t("footer.enterName")}</>
+                )}
+                <span className="ml-3 text-gray-400">{t("footer.shortcuts")}</span>
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
+                <Button variant="cancel" type="button" onClick={attemptClose} disabled={effectiveBusy} className="w-full md:w-auto">
+                  {t("btn.cancel")}
+                </Button>
+                <Button type="submit" disabled={isSaveDisabled} className="w-full md:w-auto">
+                  {isSubmitting ? t("btn.saving", { defaultValue: "Saving..." }) : t("btn.save")}
+                </Button>
+              </div>
+            </div>
+          </SidePanelFooter>
+        </form>
+
+        {showCloseConfirm && (
+          <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 className="text-[15px] font-semibold text-gray-900">{t("confirmDiscard.title")}</h2>
+                <p className="mt-1 text-[12px] text-gray-600">{t("confirmDiscard.message")}</p>
+              </div>
+              <div
+                className="px-5 py-4 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-end gap-2"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
+                <Button
+                  variant="outline"
+                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  onClick={() => setShowCloseConfirm(false)}
+                >
+                  {t("btn.cancel")}
+                </Button>
+                <Button variant="danger" className="w-full md:w-auto !bg-red-500 hover:!bg-red-600" onClick={handleClose}>
+                  {t("actions.discard")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {warning && (
+          <div className="absolute inset-0 z-30 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-amber-200 bg-white shadow-2xl">
+              <div className="px-5 py-4 border-b border-amber-100">
+                <h2 className="text-[15px] font-semibold text-amber-800">{warning.title}</h2>
+                <p className="mt-1 text-[12px] text-amber-700">{warning.message}</p>
+              </div>
+              <div
+                className="px-5 py-4 flex justify-end"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
+                <Button
+                  variant="primary"
+                  className="w-full md:w-auto"
+                  onClick={() => {
+                    const wrap = warning.focusWrapId;
+                    setWarning(null);
+                    setTimeout(() => {
+                      if (wrap) focusFirstInteractive(wrap);
+                      else fullNameRef.current?.focus();
+                    }, 0);
+                  }}
+                >
+                  {t("actions.ok")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </SidePanelFrame>
+  );
+};
+
+export default EntityModal;

@@ -63,7 +63,9 @@
     "accounting-posting-policies": "Legen Sie die Buchungsregeln für Kategorien fest.",
     "accounting-journals": "Prüfen Sie Journalbuchungen und ihren Status.",
     "accounting-reconciliation": "Finden und beheben Sie Probleme in Ihrer Buchhaltungskonfiguration.",
-    "accounting-correlation": "Erkunden Sie die Verbindungen zwischen Buchhaltungsdaten."
+    "accounting-correlation": "Erkunden Sie die Verbindungen zwischen Buchhaltungsdaten.",
+    "accounting-setup": "Richten Sie Ihre Buchhaltung schrittweise ein und validieren Sie die Konfiguration.",
+    "accounting-periods": "Verwalten Sie Buchungsdaten und Periodenabschlüsse."
   },
   "settingsDescription": "Verwalten Sie die Einstellungen Ihres Arbeitsbereichs."
 }

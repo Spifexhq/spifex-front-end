@@ -68,5 +68,14 @@
       "account_type": "Kontotyp",
       "account_number": "Kontonummer"
     }
+  },
+  "modalHints": {
+    "book": "Buch",
+    "bankMapping": "Bankverbindung",
+    "journal": "Journal",
+    "postingPolicy": "Buchungsregel",
+    "ledgerAccount": "Sachkonto",
+    "editShortcuts": "Tastenkürzel: Esc schließen • Strg/⌘+S speichern",
+    "previewShortcuts": "Tastenkürzel: Esc schließen"
   }
 }

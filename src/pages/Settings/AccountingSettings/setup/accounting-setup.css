@@ -1,0 +1,41 @@
+.accounting-card { border: 1px solid #e3e7ed; border-radius: 9px; background: #fff; padding: 22px; box-shadow: 0 1px 2px #182a4204; }
+.accounting-card dt { font-size: 12px; color: #647084; }
+.accounting-card dd { margin-top: 7px; font-size: 14px; font-weight: 500; color: #243247; }
+.accounting-setup-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.accounting-setup-heading h2 { margin-top: 6px; color: #243247; font-size: 23px; font-weight: 600; letter-spacing: -.025em; }
+.accounting-setup-heading p:not(.accounting-eyebrow) { max-width: 680px; margin-top: 9px; font-size: 13px; line-height: 1.7; color: #6a7585; }
+.accounting-eyebrow { color: #7b8594; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.accounting-status { display: inline-flex; flex-shrink: 0; margin-top: 4px; border: 1px solid #e6dfc9; border-radius: 5px; padding: 4px 8px; font-size: 11px; line-height: 16px; color: #8d6a1c; background: #fffcf4; }
+.accounting-status.is-active { border-color: #d6eae0; color: #26724b; background: #f2faf6; }
+.accounting-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); list-style: none; padding: 0; gap: 10px; }
+.accounting-steps li { min-width: 0; border: 1px solid #e5e8ee; border-radius: 7px; background: #fff; }
+.accounting-steps li > :is(a,span) { display: flex; align-items: center; gap: 10px; height: 100%; padding: 14px 12px; font-size: 12px; font-weight: 500; color: #465368; }
+.accounting-steps .accounting-step-number { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 26px; height: 26px; border: 1px solid #e1e5ec; border-radius: 50%; font-size: 11px; color: #7a8594; }
+.accounting-steps small { display: block; margin-top: 3px; font-size: 10px; font-weight: 400; color: #85909e; }
+.accounting-steps li[data-state="complete"] .accounting-step-number { background: #f1f9f5; border-color: #d6e9df; color: #347653; }
+.accounting-steps li[data-state="current"] { border-color: #9ba8bb; box-shadow: 0 0 0 1px #9ba8bb12; }
+.accounting-steps li[data-state="blocked"] { background: #fafbfc; }
+.accounting-steps li[data-state="blocked"] > span { color: #929aa5; }
+.accounting-steps li a:hover { background: #f8fafc; }
+.accounting-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #34465f; }
+.accounting-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.accounting-primary-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #e0e5ec; border-radius: 6px; background: #fff; padding: 8px 12px; font-size: 12px; font-weight: 500; color: #27364d; box-shadow: 0 1px 2px #24324708; }
+.accounting-primary-link:hover { background: #f7f9fb; }
+.accounting-notice { border: 1px solid #e7e2d4; border-radius: 7px; background: #fdfbf6; padding: 14px 16px; color: #79643d; font-size: 12px; line-height: 1.6; }
+.accounting-state { padding: 32px 24px; border: 1px dashed #dce2ea; border-radius: 8px; font-size: 13px; color: #647084; }
+.accounting-state h2 { color: #344358; font-size: 16px; font-weight: 600; }
+.accounting-state p { margin: 10px 0 18px; line-height: 1.7; }
+.accounting-optional-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #e5e9ef; border-radius: 6px; padding: 12px; color: #465368; font-size: 12px; }
+.accounting-optional-link:hover { border-color: #ccd4df; background: #fafbfc; }
+.accounting-setup-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; border-top: 1px solid #e4e8ee; }
+@media(max-width:767px) {
+ .accounting-card { padding: 17px; }
+ .accounting-setup-heading { flex-wrap: wrap; gap: 10px; }
+ .accounting-setup-heading h2 { font-size: 21px; }
+ .accounting-steps { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+ .accounting-steps li > :is(a,span) { padding: 10px 8px; gap: 7px; font-size: 11px; }
+ .accounting-setup-actions { flex-wrap: wrap; }
+ .accounting-setup-actions > :last-child { margin-left: auto; }
+}
+
+.accounting-steps li:has(a[aria-current="step"]) { border-color: #9ba8bb; box-shadow: 0 0 0 1px #9ba8bb12; }

@@ -86,5 +86,8 @@
     "title": "Onboarding concluído",
     "subtitle": "Sua conta está pronta. Você já pode continuar no sistema.",
     "cta": "Ir para Cash Flow"
+  },
+  "accounting": {
+    "subtitle": "Conclua e ative a configuração contábil e configure as categorias de fluxo de caixa usadas pela organização."
   }
 }

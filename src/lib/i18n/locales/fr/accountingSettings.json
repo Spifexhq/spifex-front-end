@@ -71,7 +71,9 @@
     "journals": "Journaux",
     "correlation": "Liaisons",
     "reconciliation": "Guide de vérification",
-    "overview": "Vue générale"
+    "overview": "Vue générale",
+    "setup": "Configuration",
+    "periods": "Périodes"
   },
   "shell": {
     "title": "Paramètres comptables",
@@ -864,5 +866,110 @@
     "status": "Statut du compte",
     "noAccess": "Vous n'avez pas l'autorisation de consulter le plan comptable.",
     "description": "Consultez les comptes utilisés par vos livres comptables et vos règles de comptabilisation."
+  },
+  "setupFlow": {
+    "setupTitle": "Configurez votre espace comptable",
+    "workspace": "Espace comptable",
+    "progress": "Progression de la configuration",
+    "complete": "Validé",
+    "pending": "À vérifier",
+    "blocked": "Prérequis nécessaire",
+    "completedCount": "{{count}} sur {{total}} validés",
+    "step": "Étape {{current}} sur {{total}}",
+    "continue": "Continuer la configuration",
+    "backOverview": "Retour à la vue d’ensemble",
+    "reviewSetup": "Vérifier la configuration",
+    "activate": "Activer la comptabilité",
+    "activating": "Validation…",
+    "activeTitle": "Votre espace comptable est prêt",
+    "readyTitle": "Prêt pour la vérification finale",
+    "activationConsequences": "L’activation permet de nouvelles écritures. Elle n’importe pas l’historique, ne crée pas de soldes d’ouverture et ne modifie pas les journaux existants.",
+    "optionalTitle": "Configurer selon vos besoins",
+    "optionalGuidance": "Les périodes et soldes d’ouverture sont facultatifs. Les connexions bancaires et règles sont requises uniquement pour les opérations concernées.",
+    "validationSource": "La progression est validée à partir de la configuration enregistrée.",
+    "notActive": "Terminez la configuration avant de créer des écritures.",
+    "attention": "La configuration nécessite une intervention. Les écritures sont bloquées jusqu’à sa correction.",
+    "blockedTitle": "Terminez d’abord les étapes précédentes",
+    "blockedDescription": "Vérifiez les prérequis en attente, puis revenez à cette étape. Votre configuration reste enregistrée.",
+    "requiredActions": "Points à vérifier",
+    "loadError": "Impossible de valider la configuration comptable",
+    "actionError": "Impossible d’enregistrer la modification. Vérifiez les détails et réessayez.",
+    "requestAdmin": "Un administrateur autorisé doit activer cet espace comptable.",
+    "profileMode": "Profil de l’espace",
+    "functionalCurrency": "Devise de l’organisation",
+    "profileGuidance": "Choisissez un profil personnel ou professionnel. Les modèles sont génériques et ne constituent pas un référentiel comptable local. Vérifiez le plan et la base des livres selon vos besoins.",
+    "editProfile": "Modifier le profil",
+    "editCurrency": "Gérer la devise",
+    "currentPassword": "Mot de passe actuel",
+    "importAccounts": "Importer des comptes",
+    "chartViews": "Vues de gestion des comptes",
+    "afterBooks": "Disponible après validation du plan et du livre",
+    "periodGuidance": "Contrôles de dates facultatifs par livre. Sans périodes, les écritures suivent leur date. Dès que des périodes existent, chaque date doit appartenir à une période ouverte.",
+    "bankGuidance": "Associez chaque banque utilisée pour les encaissements, paiements ou virements à un compte actif de contrôle bancaire.",
+    "policyGuidance": "Choisissez les comptes de débit et crédit des catégories utilisées. Les catégories inutilisées ne bloquent pas la configuration.",
+    "openingGuidance": "Si nécessaire, enregistrez les soldes d’ouverture par une écriture manuelle équilibrée après activation. Aucun solde n’est créé automatiquement.",
+    "newPeriod": "Nouvelle période",
+    "periodName": "Nom de la période",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "periodStatus": "Statut",
+    "periodActions": "Actions",
+    "noPeriods": "Aucune période configurée. Les dates restent libres tant qu’aucune période n’est définie.",
+    "periodConsequences": "La clôture provisoire ou définitive bloque les écritures, y compris les corrections. Rouvrez avant de comptabiliser. Les dates sont modifiables tant que la période n’est pas utilisée dans un journal.",
+    "phases": {
+      "profile": "Profil de l’organisation",
+      "chart": "Plan comptable",
+      "books": "Livres et devise",
+      "review": "Vérifier et activer"
+    },
+    "descriptions": {
+      "profile": "Confirmez le profil et la devise de votre organisation.",
+      "chart": "Importez un plan de départ ou créez vos comptes. La classification et la hiérarchie sont validées avant de continuer.",
+      "books": "Conservez un seul livre principal actif. Choisissez sa devise et sa base comptable avant toute écriture.",
+      "review": "Vérifiez la configuration obligatoire et choisissez les contrôles facultatifs nécessaires."
+    },
+    "states": {
+      "draft": "Non configuré",
+      "configuring": "Configuration en cours",
+      "ready": "Prêt à activer",
+      "active": "Opérationnel",
+      "needs_attention": "À corriger"
+    },
+    "modes": {
+      "personal": "Personnel",
+      "organizational": "Organisation"
+    },
+    "optional": {
+      "periods": "Périodes comptables",
+      "bank-mappings": "Connexions bancaires",
+      "posting-policies": "Règles par catégorie",
+      "journals": "Journaux et soldes d’ouverture"
+    },
+    "periodStates": {
+      "open": "Ouverte",
+      "soft_closed": "Clôture provisoire",
+      "closed": "Clôturée"
+    },
+    "periodTransitions": {
+      "open": "Rouvrir",
+      "soft_closed": "Clôturer provisoirement",
+      "closed": "Clôturer"
+    },
+    "issues": {
+      "invalid_profile": "Choisissez un profil pris en charge.",
+      "missing_currency": "Définissez la devise de l’organisation.",
+      "missing_posting_accounts": "Créez au moins un compte d’écriture actif.",
+      "account_classification": "Vérifiez le type, la rubrique et le sens normal de ce compte.",
+      "account_parent": "Choisissez un compte de regroupement de cette organisation comme parent.",
+      "account_section": "Utilisez la même rubrique que le compte parent.",
+      "inactive_parent": "Activez le parent ou désactivez ce compte enfant.",
+      "bank_control_posting": "Les comptes de contrôle bancaire doivent être des comptes d’écriture.",
+      "account_cycle": "Supprimez la relation parent circulaire.",
+      "primary_book_required": "Conservez exactement un livre comptable principal actif.",
+      "invalid_book_currency": "Vérifiez la devise de chaque livre actif."
+    },
+    "continueStep": "Continuer",
+    "editPeriod": "Modifier la période",
+    "scopeLocked": "La banque ou la catégorie et le livre identifient cette configuration. Créez une nouvelle configuration pour changer de périmètre."
   }
 }

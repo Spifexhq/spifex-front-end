@@ -378,7 +378,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
     (async () => {
       try {
-        const [ca, deps, prjs, invs, ents, dts] = await Promise.all([
+        const [ca, deps, prjs, invs, ents, dts] = await Promise.allSettled([
           fetchAllCashflowCategories(),
           fetchAllDepartments(),
           fetchAllProjects(),
@@ -388,12 +388,15 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         ]);
 
         if (!alive) return;
-        setCashflowCategories(ca);
-        setDepartments(deps);
-        setProjects(prjs);
-        setInventoryItems(invs);
-        setEntities(ents);
-        setDocTypes(dts);
+        setCashflowCategories(ca.status === "fulfilled" ? ca.value : []);
+        setDepartments(deps.status === "fulfilled" ? deps.value : []);
+        setProjects(prjs.status === "fulfilled" ? prjs.value : []);
+        setInventoryItems(invs.status === "fulfilled" ? invs.value : []);
+        setEntities(ents.status === "fulfilled" ? ents.value : []);
+        setDocTypes(dts.status === "fulfilled" ? dts.value : []);
+        for (const result of [ca, deps, prjs, invs, ents, dts]) {
+          if (result.status === "rejected") console.error("Error loading entry options:", result.reason);
+        }
       } catch (e) {
         console.error("Error loading modal sources:", e);
       }

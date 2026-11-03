@@ -63,7 +63,9 @@
     "accounting-posting-policies": "Define how categories translate into accounting entries.",
     "accounting-journals": "Review journal entries and their posting status.",
     "accounting-reconciliation": "Find and resolve issues in your accounting setup.",
-    "accounting-correlation": "Explore connections between accounting records."
+    "accounting-correlation": "Explore connections between accounting records.",
+    "accounting-setup": "Configure and validate your accounting workspace, one step at a time.",
+    "accounting-periods": "Manage posting dates and period closing controls."
   },
   "settingsDescription": "Manage your workspace settings."
 }

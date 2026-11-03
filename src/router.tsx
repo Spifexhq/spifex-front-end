@@ -20,34 +20,33 @@ const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
 const PasswordVerification = lazy(() => import("@/pages/Auth/PasswordVerification"));
 
 // Main Pages
-const HomeDashboard = lazy(() => import("@/pages/HomeDashboard"));
-const CashFlow = lazy(() => import("@/pages/CashFlow"));
-const SettledEntries = lazy(() => import("@/pages/SettledEntries"));
-const Reports = lazy(() => import("@/pages/Reports"));
-const PersonalLocaleSetup = lazy(() => import("@/pages/PersonalLocaleSetup"));
-const OnboardingPage = lazy(() => import("@/pages/Onboarding"));
+const HomeDashboard = lazy(() => import("@/pages/Dashboard/HomeDashboard"));
+const CashFlow = lazy(() => import("@/pages/Finance/CashFlow"));
+const SettledEntries = lazy(() => import("@/pages/Finance/SettledEntries"));
+const Reports = lazy(() => import("@/pages/Reporting/Reports"));
+const PersonalLocaleSetup = lazy(() => import("@/pages/Workspace/PersonalLocaleSetup"));
+const OnboardingPage = lazy(() => import("@/pages/Workspace/Onboarding"));
 
 // Settings
-const Personal = lazy(() => import("@/pages/PersonalSettings"));
-const SubscriptionManagement = lazy(() => import("@/pages/SubscriptionManagement"));
-const LimitsAndUsage = lazy(() => import("@/pages/LimitsAndUsage"));
-const SecurityAndPrivacy = lazy(() => import("@/pages/SecurityAndPrivacy"));
-const OrganizationSettings = lazy(() => import("@/pages/OrganizationSettings"));
-const DepartmentSettings = lazy(() => import("@/pages/DepartmentSettings"));
-const BankSettings = lazy(() => import("@/pages/BankSettings"));
-const EntitySettings = lazy(() => import("@/pages/EntitySettings"));
-const InventorySettings = lazy(() => import("@/pages/InventorySettings"));
-const ProjectSettings = lazy(() => import("@/pages/ProjectSettings"));
-const MemberSettings = lazy(() => import("@/pages/MemberSettings"));
-const GroupSettings = lazy(() => import("@/pages/GroupSettings"));
-const CategorySettings = lazy(() => import("@/pages/CategorySettings"));
-const LedgerAccountsRouter = lazy(() => import("@/pages/LedgerAccountSettings/LedgerAccountsRouter"));
-const AccountingSettings = lazy(() => import("@/pages/AccountingSettings"));
-const Statements = lazy(() => import("@/pages/Statements"));
-const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
-const FormatSettings = lazy(() => import("@/pages/FormatSettings"));
-const CurrencySettings = lazy(() => import("@/pages/CurrencySettings"));
-const SubscriptionCanceled = lazy(() => import("@/pages/SubscriptionCanceled"));
+const Personal = lazy(() => import("@/pages/Settings/PersonalSettings"));
+const SubscriptionManagement = lazy(() => import("@/pages/Settings/SubscriptionManagement"));
+const LimitsAndUsage = lazy(() => import("@/pages/Settings/LimitsAndUsage"));
+const SecurityAndPrivacy = lazy(() => import("@/pages/Settings/SecurityAndPrivacy"));
+const OrganizationSettings = lazy(() => import("@/pages/Settings/OrganizationSettings"));
+const DepartmentSettings = lazy(() => import("@/pages/Settings/DepartmentSettings"));
+const BankSettings = lazy(() => import("@/pages/Settings/BankSettings"));
+const EntitySettings = lazy(() => import("@/pages/Settings/EntitySettings"));
+const InventorySettings = lazy(() => import("@/pages/Settings/InventorySettings"));
+const ProjectSettings = lazy(() => import("@/pages/Settings/ProjectSettings"));
+const MemberSettings = lazy(() => import("@/pages/Settings/MemberSettings"));
+const GroupSettings = lazy(() => import("@/pages/Settings/GroupSettings"));
+const CategorySettings = lazy(() => import("@/pages/Settings/CategorySettings"));
+const AccountingSettings = lazy(() => import("@/pages/Settings/AccountingSettings"));
+const Statements = lazy(() => import("@/pages/Settings/Statements"));
+const NotificationSettings = lazy(() => import("@/pages/Settings/NotificationSettings"));
+const FormatSettings = lazy(() => import("@/pages/Settings/FormatSettings"));
+const CurrencySettings = lazy(() => import("@/pages/Settings/CurrencySettings"));
+const SubscriptionCanceled = lazy(() => import("@/pages/Settings/SubscriptionCanceled"));
 
 // Status Pages
 const Status404 = lazy(() => import("@/pages/Status/Status404"));
@@ -286,7 +285,7 @@ const routes: RouteObject[] = [
                     path: 'ledger-accounts',
                     element: (
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <LedgerAccountsRouter />
+                        <Navigate to="/settings/accounting/chart" replace />
                     </PermissionMiddleware>
                     ),
                 },
@@ -294,7 +293,7 @@ const routes: RouteObject[] = [
                     path: 'register/ledger-accounts',
                     element: (
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <LedgerAccountsRouter />
+                        <Navigate to="/settings/accounting/setup/chart" replace />
                     </PermissionMiddleware>
                     ),
                 },

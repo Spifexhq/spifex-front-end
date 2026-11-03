@@ -57,7 +57,6 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         title: t("sections.accounting"),
         id: "acct",
         items: [
-          { id: "ledger-accounts", icon: "ledger", label: t("items.ledger-accounts"), permission: "view_ledger_accounts_page" },
           { id: "accounting", icon: "accounting", label: t("items.accounting"), permission: "view_ledger_accounts_page" }, // view_accounting_accounts_page
         ],
       },

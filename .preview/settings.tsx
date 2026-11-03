@@ -1,19 +1,20 @@
+import { installAccountingPreviewMocks } from "./accounting";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
 import { AuthContext } from "@/contexts/AuthContext";
 import { api } from "@/api/requests";
 import ApplicationShell from "@/layouts/SpifexLayout/ApplicationShell";
 import SettingsLayout from "@/layouts/SettingsLayout";
-import BankSettings from "@/pages/BankSettings";
-import PersonalSettings from "@/pages/PersonalSettings";
-import NotificationSettings from "@/pages/NotificationSettings";
-import GroupSettings from "@/pages/GroupSettings";
-import CategorySettings from "@/pages/CategorySettings";
-import LimitsAndUsage from "@/pages/LimitsAndUsage";
-import AccountingSettings from "@/pages/AccountingSettings";
+import BankSettings from "@/pages/Settings/BankSettings";
+import PersonalSettings from "@/pages/Settings/PersonalSettings";
+import NotificationSettings from "@/pages/Settings/NotificationSettings";
+import GroupSettings from "@/pages/Settings/GroupSettings";
+import CategorySettings from "@/pages/Settings/CategorySettings";
+import LimitsAndUsage from "@/pages/Settings/LimitsAndUsage";
+import AccountingSettings from "@/pages/Settings/AccountingSettings";
 import "@/App.css";
 import "@/index.css";
 import "@/shared/esc/initGlobalEsc";
@@ -29,5 +30,7 @@ for(const name of Object.keys(api)) if(name.startsWith('get')) (api as any)[name
 (api as any).getEntitlementLimits=async()=>({data:{plan:{name:'Business'},items:[{permission:{code:'add_bank',name:'Bank accounts',category:'actions'},limits:{limit:20,period:'monthly',unmetered:false},usage:{used:4,remaining:16}}]}});
 (api as any).getGroups=async()=>({data:{results:[{id:'g1',name:'Finance',permissions_count:12,members_count:4}]}});
 (api as any).getGroup=async()=>({data:{id:'g1',name:'Finance',permissions:[],permissions_count:12,members_count:4}});
+installAccountingPreviewMocks();
+if(new URLSearchParams(location.search).get('scenario')==='readonly') { auth.isOwner=false; auth.permissions=['view_ledger_accounts_page','view_ledger_account'] as never[]; }
 const initial=new URLSearchParams(location.search).get('route')||'/settings/banks';
-createRoot(document.getElementById('root')!).render(<Provider store={store}><AuthContext.Provider value={auth as any}><MemoryRouter initialEntries={[initial]}><ApplicationShell><Routes><Route path="/settings" element={<SettingsLayout/>}><Route path="banks" element={<BankSettings/>}/><Route path="personal" element={<PersonalSettings/>}/><Route path="notifications" element={<NotificationSettings/>}/><Route path="groups" element={<GroupSettings/>}/><Route path="categories" element={<CategorySettings/>}/><Route path="limits" element={<LimitsAndUsage/>}/><Route path="accounting/*" element={<AccountingSettings/>}/></Route></Routes></ApplicationShell></MemoryRouter></AuthContext.Provider></Provider>);
+createRoot(document.getElementById('root')!).render(<Provider store={store}><AuthContext.Provider value={auth as any}><MemoryRouter initialEntries={[initial]}><ApplicationShell><Routes><Route path="/settings" element={<SettingsLayout/>}><Route path="banks" element={<BankSettings/>}/><Route path="personal" element={<PersonalSettings/>}/><Route path="notifications" element={<NotificationSettings/>}/><Route path="groups" element={<GroupSettings/>}/><Route path="categories" element={<CategorySettings/>}/><Route path="limits" element={<LimitsAndUsage/>}/><Route path="ledger-accounts" element={<Navigate to="/settings/accounting/chart" replace/>}/><Route path="register/ledger-accounts" element={<Navigate to="/settings/accounting/setup/chart" replace/>}/><Route path="accounting/*" element={<AccountingSettings/>}/></Route></Routes></ApplicationShell></MemoryRouter></AuthContext.Provider></Provider>);

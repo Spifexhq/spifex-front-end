@@ -71,7 +71,9 @@
     "journals": "Diário",
     "correlation": "Conexões",
     "reconciliation": "Guia de revisão",
-    "overview": "Visão geral"
+    "overview": "Visão geral",
+    "setup": "Configuração",
+    "periods": "Períodos"
   },
   "shell": {
     "title": "Definições de contabilidade",
@@ -864,5 +866,110 @@
     "status": "Estado da conta",
     "noAccess": "Você não tem permissão para visualizar o plano de contas.",
     "description": "Revise as contas usadas pelos livros contábeis e pelas regras de lançamento."
+  },
+  "setupFlow": {
+    "setupTitle": "Configure seu espaço contábil",
+    "workspace": "Espaço contábil",
+    "progress": "Progresso da configuração",
+    "complete": "Validado",
+    "pending": "Para revisar",
+    "blocked": "Requer pré-requisito",
+    "completedCount": "{{count}} de {{total}} validados",
+    "step": "Etapa {{current}} de {{total}}",
+    "continue": "Continuar configuração",
+    "backOverview": "Voltar à visão geral",
+    "reviewSetup": "Revisar configuração",
+    "activate": "Ativar contabilidade",
+    "activating": "Validando…",
+    "activeTitle": "Seu espaço contábil está pronto",
+    "readyTitle": "Pronto para a revisão final",
+    "activationConsequences": "A ativação permite novos lançamentos. Não importa transações históricas, cria saldos iniciais ou altera diários existentes.",
+    "optionalTitle": "Configure quando necessário",
+    "optionalGuidance": "Períodos e saldos iniciais são opcionais. Conexões bancárias e regras são necessárias apenas para as transações que as utilizam.",
+    "validationSource": "O progresso é validado com base na configuração salva.",
+    "notActive": "Conclua a configuração antes de criar lançamentos contábeis.",
+    "attention": "A configuração precisa de atenção. Os lançamentos estão bloqueados até que os requisitos sejam válidos novamente.",
+    "blockedTitle": "Conclua primeiro as etapas anteriores",
+    "blockedDescription": "Revise os pré-requisitos pendentes e volte a esta etapa. A configuração salva será preservada.",
+    "requiredActions": "O que precisa de atenção",
+    "loadError": "Não foi possível validar a configuração contábil",
+    "actionError": "Não foi possível salvar. Revise os detalhes e tente novamente.",
+    "requestAdmin": "Um administrador com permissão de configuração contábil deve ativar este espaço.",
+    "profileMode": "Perfil do espaço",
+    "functionalCurrency": "Moeda da organização",
+    "profileGuidance": "Escolha um ponto de partida pessoal ou organizacional. Os modelos são genéricos, sem um referencial contábil específico por país. Revise o plano e a base dos livros conforme suas necessidades.",
+    "editProfile": "Alterar perfil",
+    "editCurrency": "Gerenciar moeda",
+    "currentPassword": "Senha atual",
+    "importAccounts": "Importar contas",
+    "chartViews": "Visões de gestão de contas",
+    "afterBooks": "Disponível após validar plano e livro",
+    "periodGuidance": "Controles opcionais de datas por livro. Sem períodos, os lançamentos usam a data informada. Com períodos definidos, cada lançamento deve pertencer a um período aberto.",
+    "bankGuidance": "Vincule cada banco usado em recebimentos, pagamentos ou transferências a uma conta ativa de controle bancário.",
+    "policyGuidance": "Escolha as contas de débito e crédito das categorias usadas em recebimentos e pagamentos efetivos. Categorias não utilizadas não bloqueiam a configuração.",
+    "openingGuidance": "Se precisar de saldos iniciais, registre um lançamento manual equilibrado após a ativação. A ativação nunca cria saldos automaticamente.",
+    "newPeriod": "Novo período",
+    "periodName": "Nome do período",
+    "startDate": "Data inicial",
+    "endDate": "Data final",
+    "periodStatus": "Status",
+    "periodActions": "Ações",
+    "noPeriods": "Nenhum período configurado. As datas permanecem livres até que períodos sejam definidos.",
+    "periodConsequences": "O fechamento provisório ou definitivo bloqueia novos lançamentos, incluindo correções. Reabra antes de lançar. As datas podem ser corrigidas até que o período seja utilizado em um diário.",
+    "phases": {
+      "profile": "Perfil da organização",
+      "chart": "Plano de contas",
+      "books": "Livros e moeda",
+      "review": "Revisar e ativar"
+    },
+    "descriptions": {
+      "profile": "Confirme o perfil do espaço e a moeda da organização.",
+      "chart": "Importe um plano inicial ou crie suas contas. A classificação e a hierarquia são validadas antes de continuar.",
+      "books": "Mantenha um único livro principal ativo. Escolha a moeda e a base contábil antes dos lançamentos.",
+      "review": "Revise a configuração obrigatória e escolha os controles opcionais necessários."
+    },
+    "states": {
+      "draft": "Não configurado",
+      "configuring": "Em configuração",
+      "ready": "Pronto para ativar",
+      "active": "Operacional",
+      "needs_attention": "Requer atenção"
+    },
+    "modes": {
+      "personal": "Pessoal",
+      "organizational": "Organizacional"
+    },
+    "optional": {
+      "periods": "Períodos contábeis",
+      "bank-mappings": "Conexões bancárias",
+      "posting-policies": "Regras de lançamento por categoria",
+      "journals": "Diários e saldos iniciais"
+    },
+    "periodStates": {
+      "open": "Aberto",
+      "soft_closed": "Fechado provisoriamente",
+      "closed": "Fechado"
+    },
+    "periodTransitions": {
+      "open": "Reabrir",
+      "soft_closed": "Fechar provisoriamente",
+      "closed": "Fechar período"
+    },
+    "issues": {
+      "invalid_profile": "Escolha um perfil válido para o espaço.",
+      "missing_currency": "Defina a moeda da organização.",
+      "missing_posting_accounts": "Crie ao menos uma conta ativa de lançamento.",
+      "account_classification": "Revise o tipo, a classificação e a natureza do saldo desta conta.",
+      "account_parent": "Escolha uma conta agrupadora desta organização como superior.",
+      "account_section": "Use a mesma classificação da conta superior.",
+      "inactive_parent": "Ative a conta superior ou desative esta conta filha.",
+      "bank_control_posting": "Contas de controle bancário devem permitir lançamentos.",
+      "account_cycle": "Remova a relação circular entre contas.",
+      "primary_book_required": "Mantenha exatamente um livro contábil principal ativo.",
+      "invalid_book_currency": "Revise a moeda de todos os livros ativos."
+    },
+    "continueStep": "Continuar",
+    "editPeriod": "Editar período",
+    "scopeLocked": "O banco ou a categoria e o livro identificam esta configuração. Crie uma nova configuração para usar outro escopo."
   }
 }

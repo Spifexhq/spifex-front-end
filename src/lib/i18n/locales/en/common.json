@@ -68,5 +68,14 @@
       "account_type": "Account type",
       "account_number": "Account number"
     }
+  },
+  "modalHints": {
+    "book": "Book",
+    "bankMapping": "Bank connection",
+    "journal": "Journal",
+    "postingPolicy": "Posting rule",
+    "ledgerAccount": "Ledger account",
+    "editShortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save",
+    "previewShortcuts": "Shortcuts: Esc close"
   }
 }

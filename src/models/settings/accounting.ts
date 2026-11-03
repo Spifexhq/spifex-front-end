@@ -101,6 +101,7 @@ export interface UpsertBankAccountLedgerMapRequest {
   bank_account_id: string;
   book_id: string;
   ledger_account_id: string;
+  is_active?: boolean;
 }
 
 export interface JournalLineDimension {
