@@ -33,7 +33,8 @@ export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children 
     if (didCheckKey.current === checkKey) return;
     didCheckKey.current = checkKey;
 
-    setShouldRenderChildren(false);
+    // Revalidate navigation in the background once the shell is available.
+    // Unmounting children here resets sidebar scroll and local UI state.
     setStatus("loading");
 
     (async () => {
@@ -81,7 +82,7 @@ export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children 
     };
   }, [currentPath, isLocalePage, navigate, returnTo]);
 
-  if (status === "loading" || status === "redirecting") {
+  if ((status === "loading" && !shouldRenderChildren) || status === "redirecting") {
     return <TopProgress active variant="center" />;
   }
 

@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { SettingsUiContext } from "@/shared/ui/Settings/SettingsUiContext";
 import "./settings.css";
 import { Outlet, useLocation } from "react-router-dom";
@@ -10,7 +12,7 @@ export const SettingsLayout = () => {
   const activeItem = slug === "register" && setupSlug === "ledger-accounts" ? "ledger-accounts" : slug || "personal";
   return <>
     <SidebarSettings activeItem={activeItem} topOffsetPx={0} collapsed={shell?.collapsed ?? false} onToggleCollapsed={shell?.toggleCollapsed} mobileOpen={shell?.mobileOpen ?? false} onMobileClose={shell?.closeMobile} />
-    <SettingsUiContext.Provider value={{ settings: true }}><div className="settings-surface"><Outlet /></div></SettingsUiContext.Provider>
+    <SettingsUiContext.Provider value={{ settings: true }}><div className="settings-surface"><Suspense fallback={<PageSkeleton />}><Outlet /></Suspense></div></SettingsUiContext.Provider>
   </>;
 };
 export default SettingsLayout;
