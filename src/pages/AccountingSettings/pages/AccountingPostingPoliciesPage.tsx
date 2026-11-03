@@ -383,7 +383,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         {lookupsLoading ? (
           <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
         ) : (
-          <SettingsModalForm recordLabel={commonT("modalHints.postingPolicy")} recordName={categories.find(category => category.id === form.category_id)?.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
+          <SettingsModalForm recordLabel={commonT("modalHints.postingPolicy")} recordName={categories.find(category => category.id === form.cashflow_category_id)?.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("postingPoliciesPage.modal.scopeSection", "Scope")}</div>
