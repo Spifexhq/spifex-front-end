@@ -251,7 +251,7 @@ const LedgerAccountModal: React.FC<Props> = ({
   };
 
   return (
-    <SidePanelFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" className="accounting-dialog" onBackdropClose={() => { if (!busy) onClose(); }}>
+    <SidePanelFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" className="accounting-dialog">
         <SidePanelHeader titleId="ledger-account-modal-title" title={<>{mode === "create"
                   ? t("modal.createTitle", "Create ledger account")
                   : t("modal.editTitle", "Edit ledger account")}</>} subtitle={<>{mode === "create"
