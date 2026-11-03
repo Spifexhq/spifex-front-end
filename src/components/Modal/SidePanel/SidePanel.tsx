@@ -14,6 +14,7 @@ type Props = {
   className?: string;
   /** Optional preview actions. Rendered in the pinned footer. */
   footer?: ReactNode;
+  showFooterHint?: boolean;
 };
 
 /**
@@ -33,6 +34,7 @@ export default function SidePanel({
   contentClassName = "",
   className,
   footer,
+  showFooterHint = true,
 }: Props) {
   const generatedId = useId();
   const titleId = `side-panel-${generatedId.replace(/:/g, "")}`;
@@ -59,6 +61,7 @@ export default function SidePanel({
       isOpen={isOpen}
       labelledBy={titleId}
       className={className}
+      onBackdropClose={onClose}
     >
       <SidePanelHeader
         titleId={titleId}
@@ -74,8 +77,8 @@ export default function SidePanel({
                 <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>{children}</div>
               </div>
               <footer className="settings-modal-footer">
-                <div className="settings-modal-footer-layout">
-                  <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? subtitle} />
+                <div className="settings-modal-footer-layout" style={!showFooterHint ? { justifyContent: "flex-end" } : undefined}>
+                  {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? subtitle} />}
                   <div className="settings-modal-action-buttons">
                     {footer}
                   </div>
