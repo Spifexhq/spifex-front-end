@@ -1,3 +1,4 @@
+import { SettingsModalContent } from "@/shared/ui/Settings/SettingsModalContent";
 import { useDialogFocus } from "@/shared/ui/useDialogFocus";
 // src/pages/AccountingSettings/components/AccountingSideModal.tsx
 import React from "react";
@@ -74,7 +75,7 @@ const AccountingSideModal: React.FC<Props> = ({
 
   return (
     <div className="accounting-dialog fixed inset-0 z-[9999]">
-      <div className="absolute inset-0 bg-gray-950/20 backdrop-blur-[1px]" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-gray-950/20" onClick={onClose} aria-hidden="true" />
 
       <div
         ref={dialogRef}
@@ -83,13 +84,13 @@ const AccountingSideModal: React.FC<Props> = ({
         aria-modal="true"
         aria-labelledby="accounting-side-modal-title"
         className={[
-          "absolute inset-y-0 right-0 flex h-full w-full max-w-[720px] flex-col border-l border-gray-200 bg-white",
+          "settings-drawer settings-modal",
           "transition-transform duration-300 ease-out",
           visible ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="shrink-0 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <header className="shrink-0 border-b border-gray-200 bg-white/95">
           <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4">
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
@@ -107,7 +108,7 @@ const AccountingSideModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={onClose}
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center shrink-0"
+              className="settings-modal-close"
               aria-label={t("modal.close", { defaultValue: "Close" })}
             >
               <X size={18} />
@@ -115,10 +116,8 @@ const AccountingSideModal: React.FC<Props> = ({
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 md:px-6 md:pt-6">
-          <div className={`flex flex-col ${contentClassName}`}>
-            {children}
-          </div>
+        <div className="settings-modal-content">
+          <SettingsModalContent><div className={`settings-modal-inner ${contentClassName}`}>{children}</div></SettingsModalContent>
         </div>
       </div>
     </div>

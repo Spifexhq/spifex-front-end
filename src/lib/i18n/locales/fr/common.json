@@ -39,6 +39,34 @@
     "previous": "Page précédente",
     "next": "Page suivante",
     "noPrevious": "Aucune page précédente",
-    "noNext": "Aucune page suivante"
+    "noNext": "Aucune page suivante",
+    "range": "{{start}}–{{end}} résultats",
+    "rangeTotal": "{{start}}–{{end}} sur {{count}} résultats",
+    "perPage": "Résultats par page"
+  },
+  "records": {
+    "list": "Enregistrements",
+    "name": "Nom",
+    "details": "Détails",
+    "actions": "Autres actions",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirmDelete": "Confirmer la suppression",
+    "cancel": "Annuler la sélection",
+    "selected": "{{count}} sélectionnés",
+    "selectAll": "Sélectionner toutes les lignes de cette page",
+    "select": "Sélectionner {{name}}",
+    "resize": "Redimensionner {{name}}",
+    "deleteError": "Certains enregistrements ne peuvent pas être supprimés. Ils restent sélectionnés.",
+    "fields": {
+      "email": "Email",
+      "role": "Rôle",
+      "country": "Pays",
+      "code": "Code",
+      "description": "Description",
+      "sku": "SKU",
+      "account_type": "Type de compte",
+      "account_number": "Numéro de compte"
+    }
   }
 }

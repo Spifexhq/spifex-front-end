@@ -27,3 +27,11 @@ test("shared settings controls have labels in every supported language", () => {
     for (const value of [data.settings.filters, data.settings.activeFilters, ...Object.values(data.pagination)]) assert.ok(typeof value === "string" && value.length);
   }
 });
+const nameModule = ts.transpileModule(fs.readFileSync("src/shared/ui/Settings/settingsRecordName.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.ESNext } });
+const { settingsRecordName } = await import(`data:text/javascript;base64,${Buffer.from(nameModule.outputText).toString("base64")}`);
+test("entities use the API full_name field in the shared record grid", () => {
+  assert.equal(settingsRecordName({ id: "entity", full_name: "Edgar Moraes", email: "edgar@example.com" }), "Edgar Moraes");
+  assert.equal(settingsRecordName({ full_name: null, name: "Operations" }), "Operations");
+  assert.equal(settingsRecordName({ full_name: "  ", institution: "Bank" }), "Bank");
+  assert.equal(settingsRecordName({ full_name: null }), "—");
+});

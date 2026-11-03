@@ -1,3 +1,4 @@
+import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/AccountingSettings/components/AccountingTerm";
@@ -396,7 +397,7 @@ const AccountingJournalsPage: React.FC = () => {
         {lookupsLoading ? (
           <PageSkeleton rows={5} />
         ) : (
-          <form onSubmit={submit} className="space-y-5">
+          <SettingsModalForm onSubmit={submit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
@@ -602,7 +603,7 @@ const AccountingJournalsPage: React.FC = () => {
                 {saving ? t("common.saving", "Saving...") : t("journalsPage.modal.createJournal", "Create journal")}
               </Button>
             </div>
-          </form>
+          </SettingsModalForm>
         )}
       </AccountingSideModal>
       <AccountingSideModal isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}>

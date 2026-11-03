@@ -57,6 +57,7 @@ export function useShiftSelect<T, K extends string | number = string>(
 
   return {
     selectedIds,
+    setSelectedIds,
     handleSelectRow,
     handleSelectAll,
     clearSelection,

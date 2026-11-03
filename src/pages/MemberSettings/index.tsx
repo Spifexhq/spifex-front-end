@@ -1,3 +1,5 @@
+import SettingsRow from "@/shared/ui/Settings/SettingsRow";
+import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -85,7 +87,7 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+  <SettingsRow onOpen={() => onEdit(member)} disabled={busy} permission="change_member" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[13px] font-medium text-gray-900 truncate">{member.name}</p>
       <p className="text-[12px] text-gray-600 truncate">{member.email}</p>
@@ -103,7 +105,7 @@ const Row = ({
         </Button>
       </PermissionMiddleware>
     </div>
-  </div>
+  </SettingsRow>
 );
 
 /* ----------------------------- Component --------------------------------- */
@@ -487,8 +489,8 @@ const MemberSettings: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_member"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 settings-panel-heading">
+              <SettingsList deleteRecord={api.deleteMember} deletePermission="delete_member" onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy}>
+                <div className="settings-panel-heading border-b border-gray-200 px-4 py-3">
                   <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
                     <SettingsFilters active={hasAppliedFilters}>
@@ -558,7 +560,7 @@ const MemberSettings: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="divide-y divide-gray-200">
+                <SettingsRecords className="divide-y divide-gray-200">
                   {members.length === 0 ? (
                     <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
                   ) : (
@@ -576,8 +578,8 @@ const MemberSettings: React.FC = () => {
                       );
                     })
                   )}
-                </div>
-              </div>
+                </SettingsRecords>
+              </SettingsList>
             </section>
           </PermissionMiddleware>
         </div>

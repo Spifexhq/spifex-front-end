@@ -1,3 +1,5 @@
+import SettingsRow from "@/shared/ui/Settings/SettingsRow";
+import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -13,7 +15,7 @@ import Snackbar from "@/shared/ui/Snackbar";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+
 import Select from "src/shared/ui/Select/Select";
 import Popover from "src/shared/ui/Popover";
 
@@ -115,7 +117,7 @@ const Row = ({
   t: TFunction;
   busy?: boolean;
 }) => (
-  <div className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+  <SettingsRow onOpen={() => onEdit(item)} disabled={busy} permission="change_inventory" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-wide text-gray-600">
         {t("row.skuPrefix")} {item.sku || "—"} {item.uom ? `• ${item.uom}` : ""}
@@ -145,7 +147,7 @@ const Row = ({
         </PermissionMiddleware>
       </div>
     </div>
-  </div>
+  </SettingsRow>
 );
 
 /* -------------------------------------------------------------------------- */
@@ -266,7 +268,7 @@ const InventorySettings: React.FC = () => {
   const inflightRef = useRef(false);
 
   const fetchItemsPage = useCallback(
-    async (cursor?: string) => {
+    async (cursor?: string, pageSize = 20) => {
       if (!canViewInventory) {
         return { items: [] as InventoryItem[], nextCursor: undefined as string | undefined };
       }
@@ -279,6 +281,7 @@ const InventorySettings: React.FC = () => {
       try {
         const params: GetInventoryItemsParams = {
           cursor,
+          ...{ page_size: pageSize, include_count: "true" },
           active: toActiveParamFromStatusKeys(appliedStatuses),
 
           sku: appliedSku.trim() || undefined,
@@ -296,7 +299,7 @@ const InventorySettings: React.FC = () => {
         const nextUrl = meta?.pagination?.next ?? (data as unknown as { next?: string | null }).next ?? null;
         const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
 
-        return { items, nextCursor };
+        return { items, nextCursor, totalCount: (data as unknown as { count?: number }).count };
       } finally {
         inflightRef.current = false;
       }
@@ -615,8 +618,8 @@ const InventorySettings: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_inventory"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 settings-panel-heading">
+              <SettingsList deleteRecord={api.deleteInventoryItem} deletePermission="delete_inventory" onDeleted={() => pager.refresh()} pager={pager} busy={globalBusy}>
+                <div className="settings-panel-heading border-b border-gray-200 px-4 py-3">
                   <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
                     <SettingsFilters active={hasAppliedFilters}>
@@ -722,7 +725,7 @@ const InventorySettings: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="divide-y divide-gray-200">
+                    <SettingsRecords className="divide-y divide-gray-200">
                       {visibleItems.length === 0 ? (
                         <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
                       ) : (
@@ -740,17 +743,12 @@ const InventorySettings: React.FC = () => {
                           );
                         })
                       )}
-                    </div>
+                    </SettingsRecords>
 
-                    <PaginationArrows
-                      onPrev={pager.prev}
-                      onNext={pager.next}
-                      disabledPrev={!pager.canPrev || globalBusy}
-                      disabledNext={!pager.canNext || globalBusy}
-                    />
+
                   </>
                 )}
-              </div>
+              </SettingsList>
             </section>
           </PermissionMiddleware>
         </div>

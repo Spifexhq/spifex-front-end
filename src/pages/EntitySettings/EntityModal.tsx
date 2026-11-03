@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/EntitySettings/EntityModal.tsx                             */
 /* -------------------------------------------------------------------------- */
@@ -98,8 +99,8 @@ type FormState = typeof emptyForm;
 
 const ModalSkeleton: React.FC = () => (
   <div className="space-y-5 py-1">
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Shimmer className="h-10 rounded-md lg:col-span-2" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Shimmer className="h-10 rounded-md sm:col-span-2" />
       <Shimmer className="h-10 rounded-md" />
       <Shimmer className="h-10 rounded-md" />
       <Shimmer className="h-10 rounded-md" />
@@ -114,8 +115,8 @@ const ModalSkeleton: React.FC = () => (
 
     <div className="space-y-3">
       <Shimmer className="h-3 w-32 rounded-md" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Shimmer className="h-10 rounded-md lg:col-span-2" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Shimmer className="h-10 rounded-md sm:col-span-2" />
         <Shimmer className="h-10 rounded-md" />
         <Shimmer className="h-10 rounded-md" />
         <Shimmer className="h-10 rounded-md" />
@@ -126,12 +127,12 @@ const ModalSkeleton: React.FC = () => (
 
     <div className="space-y-3">
       <Shimmer className="h-3 w-40 rounded-md" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Shimmer className="h-10 rounded-md" />
         <Shimmer className="h-10 rounded-md" />
         <Shimmer className="h-10 rounded-md" />
         <Shimmer className="h-10 rounded-md" />
-        <Shimmer className="h-10 rounded-md lg:col-span-2" />
+        <Shimmer className="h-10 rounded-md sm:col-span-2" />
       </div>
     </div>
 
@@ -486,24 +487,33 @@ const EntityModal: React.FC<EntityModalProps> = ({
     [formData, mode, entityId, onNotify, onSaved, handleClose, t]
   );
 
-  const Tabs: React.FC = () => (
-    <nav className="flex gap-3 overflow-x-auto">
+  const renderTabs = () => (
+    <nav className="settings-modal-tabs" role="tablist" aria-label={title}>
       {TAB_LIST.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
+            id={`${tab.wrapId}-tab`}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={tab.wrapId}
+            tabIndex={isActive ? 0 : -1}
             type="button"
             onClick={() => {
               setActiveTab(tab.id);
-              setTimeout(() => focusFirstInteractive(tab.wrapId), 0);
+
             }}
-            className={`px-3 py-2 text-[13px] border-b-2 ${
-              isActive
-                ? "border-[color:var(--accentPrimary)] text-[color:var(--accentPrimary)]"
-                : "border-transparent text-gray-600 hover:text-gray-800"
-            }`}
-            aria-current={isActive ? "page" : undefined}
+            className="settings-modal-tab"
+            onKeyDown={event => {
+              const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+              if (!keys.includes(event.key)) return;
+              event.preventDefault();
+              const current = TAB_LIST.findIndex(item => item.id === tab.id);
+              const next = event.key === "Home" ? 0 : event.key === "End" ? TAB_LIST.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + TAB_LIST.length) % TAB_LIST.length;
+              setActiveTab(TAB_LIST[next].id);
+              document.getElementById(`${TAB_LIST[next].wrapId}-tab`)?.focus();
+            }}
           >
             {tab.label}
           </button>
@@ -516,8 +526,8 @@ const EntityModal: React.FC<EntityModalProps> = ({
     switch (activeTab) {
       case "general":
         return (
-          <div id={IDS.tabsGeneral} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-2">
+          <div id={IDS.tabsGeneral} role="tabpanel" aria-labelledby={`${IDS.tabsGeneral}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <Input
                 kind="text"
                 ref={fullNameRef}
@@ -595,7 +605,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
       case "tax":
         return (
-          <div id={IDS.tabsTax} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div id={IDS.tabsTax} role="tabpanel" aria-labelledby={`${IDS.tabsTax}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Input
                 kind="text"
@@ -622,8 +632,8 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
       case "address":
         return (
-          <div id={IDS.tabsAddress} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-2">
+          <div id={IDS.tabsAddress} role="tabpanel" aria-labelledby={`${IDS.tabsAddress}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <Input
                 kind="text"
                 label={t("field.street")}
@@ -693,7 +703,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
       case "bank":
         return (
-          <div id={IDS.tabsBank} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div id={IDS.tabsBank} role="tabpanel" aria-labelledby={`${IDS.tabsBank}-tab`} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Input
                 kind="text"
@@ -738,7 +748,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
               />
             </div>
 
-            <div className="lg:col-span-2">
+            <div className="sm:col-span-2">
               <Input
                 kind="text"
                 label={t("field.account_holder_name")}
@@ -756,28 +766,23 @@ const EntityModal: React.FC<EntityModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+
 
   return (
-    <div
+    <AnimatePresence>{isOpen && (<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.18,ease:"easeOut"}}
       className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center" >
-      <div
+      <motion.div initial={{x:"100%"}} animate={{x:0}} exit={{x:"100%"}} transition={{duration:.18,ease:"easeOut"}}
         role="dialog"
         aria-modal="true"
         aria-labelledby="entity-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
-        className={[
-          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
-          "md:static md:w-[1100px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
-          "md:rounded-lg md:border md:border-gray-200",
-        ].join(" ")}
+        className="settings-drawer settings-modal"
       >
         <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
         </div>
 
-        <header className="border-b border-gray-200 bg-white shrink-0">
+        <header className="settings-modal-header-with-tabs border-b border-gray-200 bg-white shrink-0">
           <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
@@ -794,7 +799,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
             <button
               type="button"
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
+              className="settings-modal-close"
               onClick={attemptClose}
               aria-label={t("modal.close")}
               disabled={effectiveBusy}
@@ -804,16 +809,16 @@ const EntityModal: React.FC<EntityModalProps> = ({
           </div>
 
           <div className="px-4 md:px-5 pb-2">
-            <Tabs />
+            {renderTabs()}
           </div>
         </header>
 
         <form
           id="entityModalForm"
-          className="flex flex-1 min-h-0 flex-col md:block md:flex-none"
+          className="settings-modal-form"
           onSubmit={submit}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
+          <div className="settings-modal-scroll">
             {mode === "edit" && isDetailLoading ? <ModalSkeleton /> : renderTabContent()}
           </div>
 
@@ -900,8 +905,8 @@ const EntityModal: React.FC<EntityModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>)}</AnimatePresence>
   );
 };
 

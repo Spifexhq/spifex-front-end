@@ -1,3 +1,4 @@
+import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -383,7 +384,7 @@ const CategorySettingsPage: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto settings-table-scroll">
-              <SettingsTable className="min-w-full">
+              <SettingsTable className="min-w-full" onRowOpen={index => openEdit(items[index])}>
                 <thead>
                   <tr className="border-b border-gray-200 text-left text-[10px] uppercase tracking-wide text-gray-600">
                     <th className="px-4 py-3">{t("table.code")}</th>
@@ -450,7 +451,7 @@ const CategorySettingsPage: React.FC = () => {
         subtitle={t("modal.subtitle")}
         contentClassName="pb-4 md:pb-6"
       >
-        <form onSubmit={submit} className="space-y-4">
+        <SettingsModalForm onSubmit={submit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Input
               kind="text"
@@ -533,7 +534,7 @@ const CategorySettingsPage: React.FC = () => {
               {saving ? t("actions.saving") : form.id ? t("actions.saveChanges") : t("actions.createCategory")}
             </Button>
           </div>
-        </form>
+        </SettingsModalForm>
       </AccountingSideModal>
 
       {snackbar ? (

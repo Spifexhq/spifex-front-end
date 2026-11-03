@@ -1,13 +1,16 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { SettingsUiContext } from "../Settings/SettingsUiContext";
+import { useId, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useDialogFocus } from "@/shared/ui/useDialogFocus";
 import type { PopoverProps } from "./Popover";
 import { settingsPopoverPosition } from "./settingsPopoverPosition";
 
-export default function SettingsPopover({ open, onClose, children, anchorRef, width = 320, height, isMobile, title, className }: PopoverProps) {
+export default function SettingsPopover({ open, onClose, children, anchorRef, width = 280, height, isMobile, title, className }: PopoverProps) {
   const { t } = useTranslation("common");
+  const owner = useId();
   const panel = useRef<HTMLDivElement>(null);
   const [smallScreen, setSmallScreen] = useState(() => matchMedia("(max-width: 767px)").matches);
   const mobile = smallScreen || !!isMobile;
@@ -26,7 +29,7 @@ export default function SettingsPopover({ open, onClose, children, anchorRef, wi
       const anchor = anchorRef?.current?.getBoundingClientRect();
       const element = panel.current;
       if (!element) return;
-      const preferredWidth = typeof width === "number" ? width : element.getBoundingClientRect().width;
+      const preferredWidth = typeof width === "number" ? Math.min(width, 320) : element.getBoundingClientRect().width;
       const next = settingsPopoverPosition(anchor ?? { left: 12, top: 64, bottom: 64 }, { width: preferredWidth, height: element.scrollHeight }, { width: innerWidth, height: innerHeight });
       setPosition(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
     };
@@ -41,22 +44,22 @@ export default function SettingsPopover({ open, onClose, children, anchorRef, wi
     if (!open) return;
     const outside = (event: PointerEvent) => {
       const target = event.target as Node;
+      if ((target as Element).closest?.("[data-filter-owner]")?.getAttribute("data-filter-owner") === owner) return;
       if (!panel.current?.contains(target) && !anchorRef?.current?.contains(target)) onClose();
     };
     document.addEventListener("pointerdown", outside);
     return () => document.removeEventListener("pointerdown", outside);
-  }, [open, onClose, anchorRef]);
-  if (!open) return null;
-  return createPortal(<>
+  }, [open, onClose, anchorRef, owner]);
+  return createPortal(<AnimatePresence>{open && <>
     {mobile && <div className="fixed inset-0 z-[10020] bg-gray-950/25 backdrop-blur-[2px]" aria-hidden="true" />}
-    <div ref={panel} role="dialog" aria-modal={mobile || undefined} aria-label={title} tabIndex={-1} data-popover-open="true"
+    <motion.div initial={{ opacity: 0, y: mobile ? 12 : -4, scale: mobile ? 1 : .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: mobile ? 12 : -4, scale: mobile ? 1 : .985 }} transition={{ duration: .15, ease: "easeOut" }} ref={panel} role="dialog" aria-modal={mobile || undefined} aria-label={title} tabIndex={-1} data-popover-open="true"
       className={`settings-popover fixed z-[10021] overflow-y-auto overscroll-contain ${mobile ? "inset-x-0 bottom-0 max-h-[85dvh] pb-[env(safe-area-inset-bottom)]" : ""} ${className ?? ""}`}
       style={mobile ? undefined : { ...position, height }}>
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3">
         <span className="text-xs font-semibold text-gray-800">{title}</span>
         <button type="button" onClick={onClose} aria-label={t("modal.close")} className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"><X size={16} /></button>
       </div>
-      <div className="p-4">{children}</div>
-    </div>
-  </>, document.body);
+      <SettingsUiContext.Provider value={{ settings: true, owner }}><div className="p-3">{children}</div></SettingsUiContext.Provider>
+    </motion.div>
+  </>}</AnimatePresence>, document.body);
 }

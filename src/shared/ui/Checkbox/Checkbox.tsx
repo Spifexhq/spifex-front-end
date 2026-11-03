@@ -16,7 +16,7 @@
  * ```
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './Checkbox.module.css';
 import { CheckboxProps } from './Checkbox.types';
 
@@ -28,7 +28,11 @@ const Checkbox: React.FC<CheckboxProps> = ({
   size = 'medium',
   colorClass = 'defaultColor',
   required = false,
+  indeterminate = false,
+  ...inputProps
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (inputRef.current) inputRef.current.indeterminate = indeterminate; }, [indeterminate]);
   // Determine which size class to apply
   let sizeClass = '';
   if (size === 'small') {
@@ -54,6 +58,8 @@ const Checkbox: React.FC<CheckboxProps> = ({
     <div className={styles.checkboxContainer}>
       <label className={styles.checkboxLabel}>
         <input
+          {...inputProps}
+          ref={inputRef}
           type="checkbox"
           checked={checked}
           onClick={(e) => {

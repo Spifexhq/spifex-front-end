@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/ProjectSettings/ProjectModal.tsx                           */
 /* -------------------------------------------------------------------------- */
@@ -322,22 +323,17 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     [formData, mode, projectId, onNotify, onSaved, handleClose, t]
   );
 
-  if (!isOpen) return null;
+
 
   return (
-    <div
+    <AnimatePresence>{isOpen && (<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.18,ease:"easeOut"}}
       className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center" >
-      <div
+      <motion.div initial={{x:"100%"}} animate={{x:0}} exit={{x:"100%"}} transition={{duration:.18,ease:"easeOut"}}
         role="dialog"
         aria-modal="true"
         aria-labelledby="project-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
-        className={[
-          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
-          "md:static md:w-[860px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
-          "md:rounded-lg md:border md:border-gray-200",
-        ].join(" ")}
+        className="settings-drawer settings-modal"
       >
         <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
@@ -359,7 +355,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
             <button
               type="button"
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
+              className="settings-modal-close"
               onClick={attemptClose}
               aria-label={t("modal.close")}
               disabled={effectiveBusy}
@@ -371,10 +367,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
         <form
           id="projectModalForm"
-          className="flex flex-1 min-h-0 flex-col md:block md:flex-none"
+          className="settings-modal-form"
           onSubmit={submit}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
+          <div className="settings-modal-scroll">
             {mode === "edit" && isDetailLoading ? (
               <ModalSkeleton />
             ) : (
@@ -517,8 +513,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>)}</AnimatePresence>
   );
 };
 

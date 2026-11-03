@@ -1,3 +1,6 @@
+import Input from "@/shared/ui/Input";
+import { useContext } from "react";
+import { SettingsUiContext } from "../Settings/SettingsUiContext";
 // src/shared/ui/Select/Select.tsx
 import {
   useState,
@@ -58,6 +61,7 @@ function Select<T>({
   virtualRowHeight,
 }: SelectProps<T>) {
   const { t } = useTranslation("select");
+  const settingsUi = useContext(SettingsUiContext);
 
   const sz = SELECT_SIZE[size];
   const effectiveRowHeight = virtualRowHeight ?? sz.rowHeight;
@@ -706,6 +710,8 @@ function Select<T>({
       ? createPortal(
           <div
             ref={floatingRef}
+            data-filter-owner={settingsUi.owner}
+            data-settings-select={settingsUi.settings || undefined}
             className={cn(
               "fixed overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg",
               "origin-top transition-all duration-150 ease-out",
@@ -782,16 +788,14 @@ function Select<T>({
                     )}
                   >
                     <div className="relative rounded-t-md">
-                      <input
+                      <Input
+                        kind="text"
+                        size={size}
                         type="text"
                         placeholder={t("filter.placeholder")}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         ref={searchInputRef}
-                        className={cn(
-                          "w-full border border-gray-200 outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-200",
-                          sz.filterInput
-                        )}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") e.preventDefault();
                           if (e.key === "Escape") {
@@ -802,23 +806,7 @@ function Select<T>({
                         }}
                         aria-label={t("filter.aria")}
                       />
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        className={cn(
-                          "absolute left-2 top-1/2 -translate-y-1/2 text-gray-400",
-                          size === "xl" ? "h-5 w-5" : "h-4 w-4"
-                        )}
-                        fill="none"
-                      >
-                        <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                        />
-                      </svg>
+
                     </div>
                   </div>
                 )}

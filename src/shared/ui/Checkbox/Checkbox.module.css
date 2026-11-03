@@ -80,3 +80,6 @@
   background-color: #007BFF !important;
   border-color: #007BFF !important;
 }
+.checkboxInput:indeterminate { background-color: #1e293b; border-color: #1e293b; }
+.checkboxInput:indeterminate + .checkIcon { opacity: 1; height: 2px; width: 8px; background: white; }
+.checkboxInput:indeterminate + .checkIcon svg { display: none; }

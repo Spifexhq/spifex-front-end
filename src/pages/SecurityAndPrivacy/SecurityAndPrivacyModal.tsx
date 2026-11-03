@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
@@ -126,23 +127,18 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
       ? !canSubmitEmail
       : !twoFactorConfirm.email || !twoFactorConfirm.password || twoFactorIntentEnabled === null);
 
-  if (!isOpen || !modalMode) return null;
+
 
   return (
-    <div
+    <AnimatePresence>{isOpen && !!modalMode && (<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.18,ease:"easeOut"}}
       className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center"
     >
-      <div
+      <motion.div initial={{opacity:0,y:12,scale:.985}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:12,scale:.985}} transition={{duration:.18,ease:"easeOut"}}
         role="dialog"
         aria-modal="true"
         aria-labelledby="security-and-privacy-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
-        className={[
-          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
-          "md:static md:w-[640px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
-          "md:rounded-lg md:border md:border-gray-200",
-        ].join(" ")}
+        className="settings-drawer settings-modal"
       >
         <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
           <div className="h-1.5 w-12 rounded-full bg-gray-300" />
@@ -162,7 +158,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
 
             <button
               type="button"
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center disabled:opacity-50 shrink-0"
+              className="settings-modal-close"
               onClick={onClose}
               aria-label={t("modal.close")}
               disabled={isBusy}
@@ -173,7 +169,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
         </header>
 
         <form
-          className="flex flex-1 min-h-0 flex-col md:block md:flex-none"
+          className="settings-modal-form"
           onSubmit={(e) => {
             e.preventDefault();
             if (modalMode === "password") void onPasswordSubmit();
@@ -181,7 +177,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
             else void onTwoFactorSubmit();
           }}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
+          <div className="settings-modal-scroll">
             <div className={`space-y-3 ${isBusy ? "opacity-70 pointer-events-none" : ""}`}>
               {modalMode === "password" ? (
                 <>
@@ -337,8 +333,8 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
             </div>
           </footer>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>)}</AnimatePresence>
   );
 };
 

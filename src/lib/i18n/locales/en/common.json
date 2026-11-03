@@ -39,6 +39,34 @@
     "previous": "Previous page",
     "next": "Next page",
     "noPrevious": "No previous page",
-    "noNext": "No next page"
+    "noNext": "No next page",
+    "range": "{{start}}–{{end}} results",
+    "rangeTotal": "{{start}}–{{end}} of {{count}} results",
+    "perPage": "Results per page"
+  },
+  "records": {
+    "list": "Records",
+    "name": "Name",
+    "details": "Details",
+    "actions": "More actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Confirm deletion",
+    "cancel": "Cancel selection",
+    "selected": "{{count}} selected",
+    "selectAll": "Select all rows on this page",
+    "select": "Select {{name}}",
+    "resize": "Resize {{name}}",
+    "deleteError": "Some records could not be deleted. They remain selected.",
+    "fields": {
+      "email": "Email",
+      "role": "Role",
+      "country": "Country",
+      "code": "Code",
+      "description": "Description",
+      "sku": "SKU",
+      "account_type": "Account type",
+      "account_number": "Account number"
+    }
   }
 }

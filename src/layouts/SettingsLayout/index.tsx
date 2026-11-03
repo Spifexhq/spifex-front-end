@@ -1,3 +1,4 @@
+import { SettingsUiContext } from "@/shared/ui/Settings/SettingsUiContext";
 import "./settings.css";
 import { Outlet, useLocation } from "react-router-dom";
 import { SidebarSettings } from "@/shared/layout/Sidebar";
@@ -9,7 +10,7 @@ export const SettingsLayout = () => {
   const activeItem = slug === "register" && setupSlug === "ledger-accounts" ? "ledger-accounts" : slug || "personal";
   return <>
     <SidebarSettings activeItem={activeItem} topOffsetPx={0} collapsed={shell?.collapsed ?? false} onToggleCollapsed={shell?.toggleCollapsed} mobileOpen={shell?.mobileOpen ?? false} onMobileClose={shell?.closeMobile} />
-    <div className="settings-surface"><Outlet /></div>
+    <SettingsUiContext.Provider value={{ settings: true }}><div className="settings-surface"><Outlet /></div></SettingsUiContext.Provider>
   </>;
 };
 export default SettingsLayout;

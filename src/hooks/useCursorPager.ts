@@ -1,9 +1,10 @@
 // src/hooks/useCursorPager.ts
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export type FetchPage<T> = (cursor?: string) => Promise<{
+export type FetchPage<T> = (cursor?: string, pageSize?: number) => Promise<{
   items: T[];
   nextCursor?: string;
+  totalCount?: number;
 }>;
 
 export type UseCursorPagerOptions = {
@@ -15,6 +16,9 @@ export type UseCursorPagerOptions = {
 
 export type UseCursorPagerReturn<T> = {
   items: T[];
+  pageSize: number;
+  setPageSize(size: number): void;
+  totalCount?: number;
   index: number;
   knownPages: number;
   reachedEnd: boolean;
@@ -35,6 +39,11 @@ export function useCursorPager<T>(
   fetchPage: FetchPage<T>,
   opts: UseCursorPagerOptions = {}
 ): UseCursorPagerReturn<T> {
+  const fetchRef = useRef(fetchPage);
+  fetchRef.current = fetchPage;
+  const refreshPromise = useRef<Promise<void> | null>(null);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState<number>();
   const { autoLoadFirst = true, deps = [] } = opts;
 
   /** ---------- Internal refs (source of truth, no staleness) ---------- */
@@ -80,7 +89,8 @@ export function useCursorPager<T>(
       setError(null);
 
       try {
-        const { items, nextCursor } = await fetchPage(startToken);
+        const { items, nextCursor, totalCount } = await fetchRef.current(startToken, pageSize);
+        setTotalCount(totalCount ?? (!nextCursor ? i * pageSize + items.length : undefined));
 
         const p = pagesRef.current.slice();
         p[i] = { items, nextCursor };
@@ -110,7 +120,7 @@ export function useCursorPager<T>(
         setLoading(false);
       }
     },
-    [fetchPage, syncDerivedState]
+    [syncDerivedState, pageSize]
   );
 
   /** Go to target page (load if needed). */
@@ -150,7 +160,7 @@ export function useCursorPager<T>(
     syncDerivedState();
   }, [ensurePage, syncDerivedState]);
 
-  const refresh = useCallback(async () => {
+  const refreshInternal = useCallback(async () => {
     pagesRef.current = [];
     tokensRef.current = [undefined];
     reachedEndRef.current = false;
@@ -170,6 +180,16 @@ export function useCursorPager<T>(
       syncDerivedState();
     }
   }, [ensurePage, syncDerivedState]);
+
+  // Several settings pages refresh on mount as well as enabling auto-load.
+  // Share that request; a second request used to trip their in-flight guard,
+  // cache an empty page, and incorrectly mark pagination as finished.
+  const refresh = useCallback((): Promise<void> => {
+    if (refreshPromise.current) return refreshPromise.current;
+    const request = refreshInternal().finally(() => { refreshPromise.current = null; });
+    refreshPromise.current = request;
+    return request;
+  }, [refreshInternal]);
 
   /** ========= Effects without spread-in-deps ========= */
 
@@ -207,6 +227,7 @@ export function useCursorPager<T>(
   );
 
   return {
+    pageSize, setPageSize, totalCount,
     items,
     index,
     knownPages,

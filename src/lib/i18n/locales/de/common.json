@@ -39,6 +39,34 @@
     "previous": "Vorherige Seite",
     "next": "Nächste Seite",
     "noPrevious": "Keine vorherige Seite",
-    "noNext": "Keine nächste Seite"
+    "noNext": "Keine nächste Seite",
+    "range": "{{start}}–{{end}} Ergebnisse",
+    "rangeTotal": "{{start}}–{{end}} von {{count}} Ergebnissen",
+    "perPage": "Ergebnisse pro Seite"
+  },
+  "records": {
+    "list": "Datensätze",
+    "name": "Name",
+    "details": "Details",
+    "actions": "Weitere Aktionen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "confirmDelete": "Löschen bestätigen",
+    "cancel": "Auswahl aufheben",
+    "selected": "{{count}} ausgewählt",
+    "selectAll": "Alle Zeilen dieser Seite auswählen",
+    "select": "{{name}} auswählen",
+    "resize": "{{name}} skalieren",
+    "deleteError": "Einige Datensätze konnten nicht gelöscht werden. Sie bleiben ausgewählt.",
+    "fields": {
+      "email": "E-Mail",
+      "role": "Rolle",
+      "country": "Land",
+      "code": "Code",
+      "description": "Beschreibung",
+      "sku": "SKU",
+      "account_type": "Kontotyp",
+      "account_number": "Kontonummer"
+    }
   }
 }

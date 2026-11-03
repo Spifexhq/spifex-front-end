@@ -1,3 +1,5 @@
+import AccountingSideModal from "@/pages/AccountingSettings/components/AccountingSideModal";
+import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 /* --------------------------------------------------------------------------
  * File: src/pages/CurrencySettings.tsx
  * -------------------------------------------------------------------------- */
@@ -264,28 +266,7 @@ const CurrencySettings: React.FC = () => {
           </section>
         </div>
 
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-            <div
-              className="bg-white border border-gray-200 rounded-lg p-5 w-full max-w-md settings-panel"
-              role="dialog"
-              aria-modal="true"
-            >
-              <header className="flex justify-between items-center mb-3 border-b border-gray-200 pb-2">
-                <h3 className="text-[14px] font-semibold text-gray-800">
-                  {t("currencySettings:modal.title")}
-                </h3>
-                <button
-                  className="text-[20px] text-gray-400 hover:text-gray-700 leading-none"
-                  onClick={closeModal}
-                  aria-label={t("currencySettings:modal.close")}
-                  disabled={isSubmitting}
-                >
-                  &times;
-                </button>
-              </header>
-
-              <form
+        <AccountingSideModal isOpen={modalOpen} onClose={closeModal} title={t("currencySettings:modal.title")}><SettingsModalForm
                 className={`space-y-3 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -358,10 +339,7 @@ const CurrencySettings: React.FC = () => {
                     {t("currencySettings:btn.save")}
                   </Button>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
+              </SettingsModalForm></AccountingSideModal>
       </main>
 
       <Snackbar

@@ -39,6 +39,34 @@
     "previous": "Página anterior",
     "next": "Próxima página",
     "noPrevious": "Sem página anterior",
-    "noNext": "Sem próxima página"
+    "noNext": "Sem próxima página",
+    "range": "{{start}}–{{end}} resultados",
+    "rangeTotal": "{{start}}–{{end}} de {{count}} resultados",
+    "perPage": "Resultados por página"
+  },
+  "records": {
+    "list": "Registos",
+    "name": "Nome",
+    "details": "Detalhes",
+    "actions": "Mais ações",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "confirmDelete": "Confirmar exclusão",
+    "cancel": "Cancelar seleção",
+    "selected": "{{count}} selecionados",
+    "selectAll": "Selecionar todas as linhas desta página",
+    "select": "Selecionar {{name}}",
+    "resize": "Redimensionar {{name}}",
+    "deleteError": "Alguns registos não puderam ser excluídos. Continuam selecionados.",
+    "fields": {
+      "email": "Email",
+      "role": "Função",
+      "country": "País",
+      "code": "Código",
+      "description": "Descrição",
+      "sku": "SKU",
+      "account_type": "Tipo de conta",
+      "account_number": "Número da conta"
+    }
   }
 }

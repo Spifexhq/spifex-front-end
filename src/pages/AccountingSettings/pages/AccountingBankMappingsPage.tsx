@@ -1,3 +1,4 @@
+import { SettingsModalForm } from "@/shared/ui/Settings/SettingsModalContent";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
@@ -290,7 +291,7 @@ const AccountingBankMappingsPage: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto settings-table-scroll">
-            <SettingsTable className="min-w-full">
+            <SettingsTable className="min-w-full" onRowOpen={index => void openEdit(items[index])}>
               <thead>
                 <tr className="border-b border-gray-200 text-left">
                   {[t("bankMappingsPage.columns.bankAccount", "Bank account"), t("bankMappingsPage.columns.book", "Book"), t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), t("bankMappingsPage.columns.active", "Active"), t("bankMappingsPage.columns.actions", "Actions")].map((column) => (
@@ -363,7 +364,7 @@ const AccountingBankMappingsPage: React.FC = () => {
         {lookupsLoading ? (
           <PageSkeleton rows={4} />
         ) : (
-          <form onSubmit={submit} className="space-y-5">
+          <SettingsModalForm onSubmit={submit} className="space-y-5">
             <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.modal.definition", "Mapping definition")}</div>
@@ -437,7 +438,7 @@ const AccountingBankMappingsPage: React.FC = () => {
                 {saving ? t("common.saving", "Saving...") : t("bankMappingsPage.modal.saveMapping", "Save mapping")}
               </Button>
             </div>
-          </form>
+          </SettingsModalForm>
         )}
       </AccountingSideModal>
     </>

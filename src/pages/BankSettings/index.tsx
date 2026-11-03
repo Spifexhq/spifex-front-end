@@ -1,3 +1,5 @@
+import SettingsRow from "@/shared/ui/Settings/SettingsRow";
+import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -15,7 +17,7 @@ import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
 import Popover from "src/shared/ui/Popover";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
-import PaginationArrows from "@/components/PaginationArrows/PaginationArrows";
+
 import Select from "src/shared/ui/Select/Select";
 
 import BankModal from "./BankModal";
@@ -114,7 +116,7 @@ const Row = ({
   const line2 = [bank.branch, bank.account_number].filter(Boolean).join(" / ") || bank.iban || "—";
 
   return (
-    <div className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
+    <SettingsRow onOpen={() => onEdit(bank)} disabled={busy} permission="change_bank" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
       <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-wide text-gray-600">
           {t("tags.type")}: {typeLabel}
@@ -137,7 +139,7 @@ const Row = ({
           </Button>
         </PermissionMiddleware>
       </div>
-    </div>
+    </SettingsRow>
   );
 };
 
@@ -287,7 +289,7 @@ const BankSettings: React.FC = () => {
   const inflightRef = useRef(false);
 
   const fetchBanksPage = useCallback(
-    async (cursor?: string) => {
+    async (cursor?: string, pageSize = 20) => {
       if (!canViewBanks) {
         return { items: [] as BankAccount[], nextCursor: undefined as string | undefined };
       }
@@ -300,6 +302,7 @@ const BankSettings: React.FC = () => {
       try {
         const params: GetBanksParams = {
           cursor,
+          ...{ page_size: pageSize, include_count: "true" },
           institution: appliedInstitution.trim() || undefined,
           account_type: appliedAccountTypeParam,
           branch: appliedBranch.trim() || undefined,
@@ -315,7 +318,7 @@ const BankSettings: React.FC = () => {
         const nextUrl = meta?.pagination?.next ?? (data as unknown as { next?: string | null }).next ?? null;
         const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
 
-        return { items, nextCursor };
+        return { items, nextCursor, totalCount: (data as unknown as { count?: number }).count };
       } catch {
         throw new Error(t("errors.fetchError"));
       } finally {
@@ -625,8 +628,8 @@ const BankSettings: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_bank"} behavior="lock">
             <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 settings-panel-heading">
+              <SettingsList deleteRecord={api.deleteBank} deletePermission="delete_bank" onDeleted={() => pager.refresh()} pager={pager} busy={globalBusy}>
+                <div className="settings-panel-heading border-b border-gray-200 px-4 py-3">
                   <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
                     <SettingsFilters active={hasAppliedFilters}>
@@ -732,7 +735,7 @@ const BankSettings: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="divide-y divide-gray-200">
+                    <SettingsRecords className="divide-y divide-gray-200">
                       {visibleItems.length === 0 ? (
                         <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
                       ) : (
@@ -750,17 +753,12 @@ const BankSettings: React.FC = () => {
                           );
                         })
                       )}
-                    </div>
+                    </SettingsRecords>
 
-                    <PaginationArrows
-                      onPrev={pager.prev}
-                      onNext={pager.next}
-                      disabledPrev={!pager.canPrev || globalBusy}
-                      disabledNext={!pager.canNext || globalBusy}
-                    />
+
                   </>
                 )}
-              </div>
+              </SettingsList>
             </section>
           </PermissionMiddleware>
         </div>
