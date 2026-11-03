@@ -469,7 +469,13 @@ const DepartmentSettings: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_department"} behavior="lock">
             <section className="mt-6">
-              <SettingsList deleteRecord={api.deleteDepartment} deletePermission="delete_department" onDeleted={() => pager.refresh()} pager={pager} busy={globalBusy}>
+              <SettingsList deleteRecord={api.deleteDepartment} deletePermission="delete_department" onDeleted={ids => {
+                if (!ids.length) return;
+                const removed = new Set(ids);
+                setDeletedIds(current => new Set([...current, ...removed]));
+                setAdded(current => current.filter(item => !removed.has(String(item.id))));
+                return pager.refresh();
+              }} pager={pager} busy={globalBusy}>
                 <div className="settings-panel-heading border-b border-gray-200 px-4 py-3">
                   <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
