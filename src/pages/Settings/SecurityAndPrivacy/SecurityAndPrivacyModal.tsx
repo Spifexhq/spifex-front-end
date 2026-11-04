@@ -1,4 +1,4 @@
-import { SidePanelFooter, SidePanelFrame, SidePanelHeader } from "@/components/Modal/SidePanel";
+import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -113,9 +113,9 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
       : !twoFactorConfirm.email || !twoFactorConfirm.password || twoFactorIntentEnabled === null);
 
   return (
-    <SidePanelFrame isOpen={isOpen && !!modalMode} labelledBy="security-and-privacy-modal-title">
+    <SidePanel mode="edit" isOpen={isOpen && !!modalMode} title={<>{title}</>} onClose={onClose} busy={isBusy}>
 
-        <SidePanelHeader titleId="security-and-privacy-modal-title" title={<>{title}</>} onClose={onClose} disabled={isBusy}></SidePanelHeader>
+
 
         <form
           className="settings-modal-form"
@@ -258,8 +258,6 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
           </div>
 
           <SidePanelFooter
-            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
               <Button
@@ -282,7 +280,7 @@ const SecurityAndPrivacyModal: React.FC<SecurityAndPrivacyModalProps> = ({
             </div>
           </SidePanelFooter>
         </form>
-      </SidePanelFrame>
+      </SidePanel>
   );
 };
 

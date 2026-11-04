@@ -82,12 +82,12 @@ test("legacy route aliases target the canonical workspace", () => {
   assert.equal(destinations.get("register/ledger-accounts"), "/accounting/setup/chart");
 });
 
-const { accountingErrorMessage } = await load("src/pages/Accounting/accountingError.ts");
+const { apiErrorMessage } = await load("src/lib/apiErrorMessage.ts");
 test("structured API validation errors retain actionable field messages", () => {
- assert.equal(accountingErrorMessage({ message: "Validation error", fields: { parent: ["Circular hierarchy is not allowed."] } }, "Try again"), "Circular hierarchy is not allowed.");
- assert.equal(accountingErrorMessage({ fields: { code: "setup_changed", message: "Reload the review." } }, "Try again"), "Reload the review.");
+ assert.equal(apiErrorMessage({ message: "Validation error", fields: { parent: ["Circular hierarchy is not allowed."] } }, "Try again"), "Circular hierarchy is not allowed.");
+ assert.equal(apiErrorMessage({ fields: { code: "setup_changed", message: "Reload the review." } }, "Try again"), "Reload the review.");
 });
 test("connection errors and unknown failures have usable messages", () => {
- assert.equal(accountingErrorMessage(new Error("Connection failed"), "Try again"), "Connection failed");
- assert.equal(accountingErrorMessage(null, "Try again"), "Try again");
+ assert.equal(apiErrorMessage(new Error("Connection failed"), "Try again"), "Connection failed");
+ assert.equal(apiErrorMessage(null, "Try again"), "Try again");
 });

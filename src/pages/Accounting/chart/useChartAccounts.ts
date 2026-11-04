@@ -1,4 +1,4 @@
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/api/requests";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -24,7 +24,7 @@ export function useChartAccounts() {
       const items = await fetchAllCursor<LedgerAccount>(params => api.getLedgerAccounts(params));
       if (current === sequence.current) setAccounts(items);
     } catch (cause) {
-      if (current === sequence.current) setError(accountingErrorMessage(cause, ""));
+      if (current === sequence.current) setError(apiErrorMessage(cause, ""));
     } finally { if (current === sequence.current) setLoading(false); }
   }, [canView]);
   const cancel = useCallback(() => { sequence.current++; }, []);
@@ -37,7 +37,7 @@ export function useChartAccounts() {
       setAccounts(previous => [...previous.filter(item => item.id !== response.data.id), response.data]);
       return true;
     } catch (cause) {
-      setError(accountingErrorMessage(cause, ""));
+      setError(apiErrorMessage(cause, ""));
       throw cause;
     } finally { setBusy(false); }
   };
@@ -51,7 +51,7 @@ export function useChartAccounts() {
       await refreshSetup();
       return true;
     } catch (cause) {
-      setError(accountingErrorMessage(cause, ""));
+      setError(apiErrorMessage(cause, ""));
       return false;
     } finally { setBusy(false); }
   };

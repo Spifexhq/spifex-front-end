@@ -67,7 +67,8 @@
       "sku": "SKU",
       "account_type": "Account type",
       "account_number": "Account number"
-    }
+    },
+    "deleteConfirm": "Delete the selected records?"
   },
   "modalHints": {
     "book": "Book",
@@ -77,5 +78,12 @@
     "ledgerAccount": "Ledger account",
     "editShortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save",
     "previewShortcuts": "Shortcuts: Esc close"
+  },
+  "tableFilters": {
+    "search": "Search",
+    "placeholder": "Search records…",
+    "filters": "Filters",
+    "clear": "Clear filters",
+    "apply": "Apply filters"
   }
 }

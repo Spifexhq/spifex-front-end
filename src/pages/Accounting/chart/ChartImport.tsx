@@ -1,4 +1,4 @@
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useAccountingDraft } from "../setup/useAccountingSetup";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -173,7 +173,7 @@ const ChartImport: React.FC<Props> = ({
     } catch (error) {
       setSnack({
         message:
-          accountingErrorMessage(error, t("setup.genericError", "Could not configure ledger accounts.")),
+          apiErrorMessage(error, t("setup.genericError", "Could not configure ledger accounts.")),
         severity: "error",
       });
     } finally {

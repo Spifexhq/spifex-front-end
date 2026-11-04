@@ -1,9 +1,9 @@
-import { useRecordFilters } from "../components/useRecordFilters";
-import AccountingRecords from "../components/AccountingRecords";
+import { useAccountingSource } from "@/api/hooks/useAccountingRecords";
+import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
+import DataTable from "@/shared/ui/DataTable";
 import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
-import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import SettingsTable from "@/shared/ui/Settings/SettingsTable";
+import SidePanel, { SidePanelForm, SidePanelDetails } from "@/components/Modal/SidePanel";
 import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -138,13 +138,14 @@ const AccountingJournalsPage: React.FC = () => {
 
   const balanced = totals.debit === totals.credit && totals.debit > 0;
 
+  const source = useAccountingSource<JournalEntry>("journals");
   const recordFilters = useRecordFilters(items, [
  {key:"status",label:t("table.status","Status"),value:item=>item.status,format:value=>t(`enums.status.${value}`,value)},
  {key:"book",label:t("journalsPage.columns.book","Book"),value:item=>item.book_code||""},
  {key:"source",label:t("journalsPage.columns.source","Source"),value:item=>item.source_type,format:value=>t(`enums.source.${value}`,value)},
  {key:"from",label:t("filters.dateFrom","From"),value:item=>item.posting_date,date:"from"},
  {key:"to",label:t("filters.dateTo","To"),value:item=>item.posting_date,date:"to"}
-], item=>[item.entry_number,item.memo,item.book_code,item.source_external_id].join(" "), { resource: "journals", placeholder: t("filters.search.journals", "Search records"), onItems: setItems });
+], item=>[item.entry_number,item.memo,item.book_code,item.source_external_id].join(" "), { ...source, placeholder: t("filters.search.journals", "Search records"), onItems: setItems });
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -263,7 +264,7 @@ const AccountingJournalsPage: React.FC = () => {
         </div>
 
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <AccountingRecords pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
+        <DataTable<JournalEntry> pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
 { key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => item.entry_number || item.id },
 { key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
 { key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
@@ -286,7 +287,7 @@ const AccountingJournalsPage: React.FC = () => {
       </section>
 
       <SidePanel
-        className="accounting-dialog"
+
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={t("journalsPage.modal.title", "Manual journal")}
@@ -505,19 +506,19 @@ const AccountingJournalsPage: React.FC = () => {
           </SidePanelForm>
         )}
       </SidePanel>
-      <SidePanel className="accounting-dialog" isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}
+      <SidePanel  isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}
         recordLabel={t("footer.journal", "Journal")} recordName={selectedJournal?.entry_number || selectedJournal?.id}
         footer={<Button type="button" variant="cancel" className="w-full md:w-auto" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button>}>
         {selectedJournal && <div className="space-y-6">
-          <dl className="grid grid-cols-2 gap-4 rounded-lg border border-gray-200 p-4 text-[13px]">
-            {[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label, value]) => <div key={label}><dt className="text-xs text-gray-500">{label}</dt><dd className="mt-1 font-medium text-gray-900">{value}</dd></div>)}
-          </dl>
+          <SidePanelDetails fields={[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label,value]) => ({label,value}))} />
           {selectedJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{selectedJournal.memo}</p>}
           <div className="overflow-x-auto rounded-lg border border-gray-200 settings-table-scroll">
-            <SettingsTable className="w-full text-[13px]"><thead><tr className="border-b border-gray-200 bg-gray-50 text-left border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600"><th className="p-3 font-medium">{t("redesign.ledgerAccount", "Ledger account")}</th><th className="p-3 text-right font-medium">{t("common.balances.debit", "Debit")}</th><th className="p-3 text-right font-medium">{t("common.balances.credit", "Credit")}</th></tr></thead>
-              <tbody>{selectedJournal.lines.map(line => <tr key={line.line_no} className="border-b border-gray-100 last:border-0"><td className="p-3"><p className="font-medium">{line.account_name}</p><p className="mt-1 text-xs text-gray-500">{line.account_code}</p>{line.memo && <p className="mt-1 text-xs text-gray-500">{line.memo}</p>}</td><td className="p-3 text-right tabular-nums">{(line.debit_minor / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(line.credit_minor / 100).toFixed(2)}</td></tr>)}</tbody>
-              <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold"><tr><td className="p-3">{t("redesign.total", "Total")}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.debit_minor, 0) / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.credit_minor, 0) / 100).toFixed(2)}</td></tr></tfoot>
-            </SettingsTable>
+            <DataTable inspectable={false} items={selectedJournal.lines.map(line=>({...line,id:String(line.line_no)}))} emptyLabel={t("journalsPage.empty", "No journals found.")} columns={[
+              {key:"name",label:t("redesign.ledgerAccount", "Ledger account"),render:line=>line.account_name},
+              {key:"debit",label:t("common.balances.debit", "Debit"),render:line=>(line.debit_minor/100).toFixed(2)},
+              {key:"credit",label:t("common.balances.credit", "Credit"),render:line=>(line.credit_minor/100).toFixed(2)},
+            ]} summary={<div className="flex justify-between gap-3 border-t border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold"><span>{t("redesign.total", "Total")}</span><span>{(selectedJournal.lines.reduce((sum,line)=>sum+line.debit_minor,0)/100).toFixed(2)}</span><span>{(selectedJournal.lines.reduce((sum,line)=>sum+line.credit_minor,0)/100).toFixed(2)}</span></div>}/>
+
           </div>
           <p className="break-all text-xs leading-5 text-gray-500">{t("redesign.source", "Source")}: {t(`enums.source.${selectedJournal.source_type}`, selectedJournal.source_type)} · {selectedJournal.source_external_id || "—"}</p>
         </div>}

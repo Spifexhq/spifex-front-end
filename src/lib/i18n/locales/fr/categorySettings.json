@@ -2,7 +2,8 @@
   "common": {
     "yes": "Oui",
     "no": "Non",
-    "empty": "—"
+    "empty": "—",
+    "cancel": "Annuler"
   },
   "header": {
     "eyebrow": "Paramètres de trésorerie",
@@ -21,22 +22,27 @@
   },
   "filters": {
     "search": "Recherche",
-    "transactionHint": "Indice de transaction",
+    "transactionHint": "Type suggéré",
     "includeInactive": "Inclure les inactives",
     "any": "Tous",
     "credit": "Crédit",
-    "debit": "Débit"
+    "debit": "Débit",
+    "searchPlaceholder": "Rechercher par nom, code ou description…"
   },
   "table": {
     "code": "Code",
     "name": "Nom",
     "parent": "Parent",
-    "txHint": "Indice",
+    "txHint": "Type suggéré",
     "entries": "Écritures",
-    "sort": "Ordre",
+    "sort": "Ordre d’affichage",
     "active": "Active",
     "actions": "Actions",
-    "empty": "Aucune catégorie trouvée."
+    "empty": "Aucune catégorie trouvée.",
+    "status": "Statut",
+    "deleteConfirm": "Supprimer cette catégorie ?",
+    "delete": "Supprimer",
+    "deleteError": "Impossible de supprimer cette catégorie."
   },
   "modal": {
     "createTitle": "Nouvelle catégorie",
@@ -75,5 +81,9 @@
     "saveError": "Impossible d’enregistrer la catégorie.",
     "deleteError": "Impossible de supprimer la catégorie.",
     "deleteConfirm": "Supprimer la catégorie {{name}} ?"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
   }
 }

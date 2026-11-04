@@ -1,4 +1,4 @@
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ export default function ProfileConfiguration() {
         event.preventDefault(); if (busy) return;
         setBusy(true); setError(null);
         try { await api.updateOrgLedgerProfile({ mode, current_password: password }); setOpen(false); setPassword(""); await refresh(); }
-        catch (cause) { setError(accountingErrorMessage(cause, t("setupFlow.actionError"))); }
+        catch (cause) { setError(apiErrorMessage(cause, t("setupFlow.actionError"))); }
         finally { setBusy(false); }
       }}>
         <Select label={t("setupFlow.profileMode")} items={options} selected={options.filter(option => option.value === mode)} onChange={selected => setMode(selected[0]?.value ?? "organizational")} getItemKey={option => option.value} getItemLabel={option => option.label} singleSelect hideCheckboxes />

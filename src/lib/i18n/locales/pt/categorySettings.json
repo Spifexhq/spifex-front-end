@@ -2,7 +2,8 @@
   "common": {
     "yes": "Sim",
     "no": "Não",
-    "empty": "—"
+    "empty": "—",
+    "cancel": "Cancelar"
   },
   "header": {
     "eyebrow": "Definições de cashflow",
@@ -21,22 +22,27 @@
   },
   "filters": {
     "search": "Pesquisar",
-    "transactionHint": "Indicação de transação",
+    "transactionHint": "Tipo sugerido",
     "includeInactive": "Incluir inativas",
     "any": "Qualquer",
     "credit": "Crédito",
-    "debit": "Débito"
+    "debit": "Débito",
+    "searchPlaceholder": "Pesquisar por nome, código ou descrição…"
   },
   "table": {
     "code": "Código",
     "name": "Nome",
     "parent": "Pai",
-    "txHint": "Indicação",
+    "txHint": "Tipo sugerido",
     "entries": "Lançamentos",
-    "sort": "Ordem",
+    "sort": "Ordem de exibição",
     "active": "Ativa",
     "actions": "Ações",
-    "empty": "Nenhuma categoria encontrada."
+    "empty": "Nenhuma categoria encontrada.",
+    "status": "Status",
+    "deleteConfirm": "Excluir esta categoria?",
+    "delete": "Excluir",
+    "deleteError": "Não foi possível excluir esta categoria."
   },
   "modal": {
     "createTitle": "Nova categoria",
@@ -75,5 +81,9 @@
     "saveError": "Não foi possível guardar a categoria.",
     "deleteError": "Não foi possível apagar a categoria.",
     "deleteConfirm": "Apagar a categoria {{name}}?"
+  },
+  "status": {
+    "active": "Ativa",
+    "inactive": "Inativa"
   }
 }

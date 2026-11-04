@@ -1,11 +1,16 @@
-import { Children, isValidElement, useEffect, useId, type ReactNode } from "react";
+import { Children, isValidElement, useEffect, useId, type ReactNode, type RefObject } from "react";
 import { SidePanelFrame, SidePanelHeader } from "./SidePanelFrame";
-import { SidePanelContent, SidePanelForm, SidePanelHint } from "./SidePanelContent";
+import { SidePanelForm, SidePanelHint } from "./SidePanelForm";
 
 type Props = {
   isOpen: boolean;
-  title: string;
-  subtitle?: string;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  mode?: "preview" | "edit";
+  busy?: boolean;
+  tabs?: ReactNode;
+  dialogRef?: RefObject<HTMLDivElement>;
+  overlay?: ReactNode;
   onClose(): void;
   children: ReactNode;
   recordLabel?: ReactNode;
@@ -34,7 +39,8 @@ export default function SidePanel({
   contentClassName = "",
   className,
   footer,
-  showFooterHint = true,
+  showFooterHint = false,
+  mode, busy = false, tabs, dialogRef, overlay,
 }: Props) {
   const generatedId = useId();
   const titleId = `side-panel-${generatedId.replace(/:/g, "")}`;
@@ -44,32 +50,32 @@ export default function SidePanel({
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
       event.preventDefault();
-      onClose();
+      if (!busy) onClose();
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, busy]);
 
   const nodes = Children.toArray(children);
-  const onlyChild = nodes.length === 1 ? nodes[0] : null;
-  const isForm = isValidElement(onlyChild) &&
-    (onlyChild.type === SidePanelForm || onlyChild.type === "form");
-  const isPreviewContent = isValidElement(onlyChild) && onlyChild.type === SidePanelContent;
+  const isForm = nodes.some(node => isValidElement(node) && (node.type === SidePanelForm || node.type === "form"));
+  const editing = mode === "edit" || isForm;
 
   return (
     <SidePanelFrame
       isOpen={isOpen}
       labelledBy={titleId}
       className={className}
-      onBackdropClose={onClose}
+      dialogRef={dialogRef}
+      onBackdropClose={!editing && !busy ? onClose : undefined}
     >
       <SidePanelHeader
         titleId={titleId}
         title={title}
         subtitle={subtitle}
         onClose={onClose}
-      />
-      {isForm ? children : (
+        disabled={busy}
+      >{tabs}</SidePanelHeader>
+      {editing ? children : (
         <div className="settings-modal-form flex min-h-0 flex-1 flex-col overflow-hidden">
           {footer ? (
             <>
@@ -78,22 +84,23 @@ export default function SidePanel({
               </div>
               <footer className="settings-modal-footer">
                 <div className="settings-modal-footer-layout" style={!showFooterHint ? { justifyContent: "flex-end" } : undefined}>
-                  {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? subtitle} />}
+                  {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? (typeof subtitle === "string" ? subtitle : undefined)} />}
                   <div className="settings-modal-action-buttons">
                     {footer}
                   </div>
                 </div>
               </footer>
             </>
-          ) : isPreviewContent ? children : (
-            <SidePanelContent recordLabel={recordLabel ?? title} recordName={recordName ?? subtitle}>
+          ) : (
+            <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
               <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>
                 {children}
               </div>
-            </SidePanelContent>
+            </div>
           )}
         </div>
       )}
+      {overlay}
     </SidePanelFrame>
   );
 }

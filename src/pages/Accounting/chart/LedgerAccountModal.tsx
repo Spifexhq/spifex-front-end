@@ -1,5 +1,5 @@
-import { SidePanelFrame, SidePanelHeader, SidePanelFooter } from "@/components/Modal/SidePanel";
-import { accountingErrorMessage } from "../accountingError";
+import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
@@ -246,13 +246,12 @@ const LedgerAccountModal: React.FC<Props> = ({
         form.account_type === "posting" ? !!form.allows_manual_posting : false,
     });
     } catch (cause) {
-      setError(accountingErrorMessage(cause, t("workspace.requestError", "Something went wrong. Please try again.")));
+      setError(apiErrorMessage(cause, t("workspace.requestError", "Something went wrong. Please try again.")));
     }
   };
 
   return (
-    <SidePanelFrame isOpen={isOpen} labelledBy="ledger-account-modal-title" className="accounting-dialog">
-        <SidePanelHeader titleId="ledger-account-modal-title" title={<>{mode === "create"
+    <SidePanel mode="edit" isOpen={isOpen}  title={<>{mode === "create"
                   ? t("modal.createTitle", "Create ledger account")
                   : t("modal.editTitle", "Edit ledger account")}</>} subtitle={<>{mode === "create"
                   ? t(
@@ -262,7 +261,8 @@ const LedgerAccountModal: React.FC<Props> = ({
                   : t(
                       "modal.editSubtitle",
                       "Update the ledger account structure, classification, and posting controls."
-                    )}</>} onClose={onClose} disabled={busy} />
+                    )}</>} onClose={onClose} busy={busy}>
+
 
         <form className="settings-modal-form" onSubmit={submit} onKeyDown={event => {
           if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
@@ -488,8 +488,6 @@ const LedgerAccountModal: React.FC<Props> = ({
 
           </div>
           <SidePanelFooter
-            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="hidden text-[12px] text-gray-600 md:block">
@@ -505,7 +503,7 @@ const LedgerAccountModal: React.FC<Props> = ({
             </div>
           </SidePanelFooter>
         </form>
-      </SidePanelFrame>
+      </SidePanel>
   );
 };
 

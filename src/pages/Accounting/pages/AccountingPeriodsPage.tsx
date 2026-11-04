@@ -1,6 +1,7 @@
-import { useRecordFilters } from "../components/useRecordFilters";
+import { useAccountingSource } from "@/api/hooks/useAccountingRecords";
+import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import { useAuthContext } from "@/hooks/useAuth";
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/api/requests";
@@ -8,7 +9,7 @@ import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import { Select } from "@/shared/ui/Select";
-import AccountingRecords from "../components/AccountingRecords";
+import DataTable from "@/shared/ui/DataTable";
 import AccountingStatus from "../components/AccountingStatus";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
@@ -31,15 +32,16 @@ export default function AccountingPeriodsPage() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useAccountingDraft("fiscal-period", empty);
   const [transition, setTransition] = useState<{ period: FiscalPeriod; status: FiscalPeriod["status"] } | null>(null);
+  const source = useAccountingSource<FiscalPeriod>("periods");
   const recordFilters = useRecordFilters(periods, [
  {key:"status",label:t("table.status"),value:item=>item.status,format:value=>t(`setupFlow.periodStates.${value}`)},
  {key:"book",label:t("nav.books"),value:item=>item.book,format:value=>books.find(book=>book.id===value)?.name||"—"},
  {key:"from",label:t("filters.dateFrom"),value:item=>item.starts_at,date:"from"},
  {key:"to",label:t("filters.dateTo"),value:item=>item.ends_at,date:"to"}
-], item=>[item.period_key,books.find(book=>book.id===item.book)?.name].join(" "), { resource: "periods", placeholder: t("filters.search.periods"), onItems: setPeriods });
+], item=>[item.period_key,books.find(book=>book.id===item.book)?.name].join(" "), { ...source, placeholder: t("filters.search.periods"), onItems: setPeriods });
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
-  useEffect(() => { void fetchAllCursor<AccountingBook>(params => api.getAccountingBooks(params)).then(setBooks).catch(cause => setError(accountingErrorMessage(cause, ""))); }, []);
+  useEffect(() => { void fetchAllCursor<AccountingBook>(params => api.getAccountingBooks(params)).then(setBooks).catch(cause => setError(apiErrorMessage(cause, ""))); }, []);
 
   const save = async () => {
     if (busy) return;
@@ -49,14 +51,14 @@ export default function AccountingPeriodsPage() {
       else await api.addFiscalPeriod({ ...form, status: "open" });
       setOpen(false); setEditing(null); setForm(empty); await load();
     }
-    catch (cause) { setError(accountingErrorMessage(cause, t("setupFlow.actionError"))); }
+    catch (cause) { setError(apiErrorMessage(cause, t("setupFlow.actionError"))); }
     finally { setBusy(false); }
   };
   return <section className="space-y-4">
     <div className="flex flex-wrap items-start justify-between gap-3"><p className="max-w-2xl text-xs leading-6 text-gray-500">{t("setupFlow.periodGuidance")}</p>{canManage && <Button onClick={() => { setEditing(null); setForm(previous => ({ ...previous, book_id: previous.book_id || status?.primary_book_id || "" })); setOpen(true); }}>{t("setupFlow.newPeriod")}</Button>}</div>
     {error !== null && <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-900">{error || t("setupFlow.actionError")}</p>}
     {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-    {loading && !periods.length ? <PageSkeleton rows={5} /> : <AccountingRecords pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit")} emptyLabel={t("setupFlow.noPeriods")} columns={[
+    {loading && !periods.length ? <PageSkeleton rows={5} /> : <DataTable pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit")} emptyLabel={t("setupFlow.noPeriods")} columns={[
 { key: "name", label: t("setupFlow.periodName"), render: item => item.period_key },
 { key: "book", label: t("nav.books"), render: item => books.find(book => book.id === item.book)?.name || item.book },
 { key: "start", label: t("setupFlow.startDate"), render: item => item.starts_at },
@@ -76,7 +78,7 @@ export default function AccountingPeriodsPage() {
     <ConfirmToast open={!!transition} busy={busy} text={t("setupFlow.periodConsequences")} onCancel={() => setTransition(null)} confirmLabel={t("common.save")} cancelLabel={t("common.cancel")} onConfirm={() => {
       if (!transition || busy) return;
       setBusy(true);
-      void api.updateFiscalPeriod(transition.period.id, transition.status).then(() => { setTransition(null); return load(); }).catch(cause => { setError(accountingErrorMessage(cause, t("setupFlow.actionError"))); }).finally(() => setBusy(false));
+      void api.updateFiscalPeriod(transition.period.id, transition.status).then(() => { setTransition(null); return load(); }).catch(cause => { setError(apiErrorMessage(cause, t("setupFlow.actionError"))); }).finally(() => setBusy(false));
     }} />
   </section>;
 }

@@ -1,5 +1,5 @@
-import SettingsRow from "@/shared/ui/Settings/SettingsRow";
-import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
+import DataTable from "@/shared/ui/DataTable";
+import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -14,7 +14,6 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
-import ConfirmToast from "@/shared/ui/ConfirmToast";
 
 import Select from "src/shared/ui/Select/Select";
 import Popover from "src/shared/ui/Popover";
@@ -27,7 +26,6 @@ import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
-import type { TFunction } from "i18next";
 import type { Project, GetProjectsParams } from "@/models/settings/projects";
 
 /* ----------------------------- Snackbar type ----------------------------- */
@@ -109,57 +107,13 @@ function selectedTypeParamFromKeys(keys: ProjectType[]): GetProjectsParams["type
 
 /* --------------------------------- Row ------------------------------------ */
 
-const Row = ({
-  project,
-  onEdit,
-  onDelete,
-  t,
-  busy,
-  typeLabel,
-}: {
-  project: Project;
-  onEdit: (p: Project) => void;
-  onDelete: (p: Project) => void;
-  t: TFunction;
-  busy?: boolean;
-  typeLabel: string;
-}) => (
-  <SettingsRow onOpen={() => onEdit(project)} disabled={busy} permission="change_project" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
-    <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        {t("row.codePrefix")} {project.code || "—"} {typeLabel ? `• ${typeLabel}` : ""}
-      </p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">
-        {project.name || t("row.untitled")}
-        {project.description ? ` — ${project.description}` : ""}
-      </p>
-    </div>
 
-    <div className="flex items-center gap-3 shrink-0">
-      <span className="text-[12px] text-gray-700">{project.is_active ? t("row.active") : t("row.inactive")}</span>
-
-      <div className="flex gap-2">
-        <PermissionMiddleware codeName={"change_project"}>
-          <Button variant="outline" onClick={() => onEdit(project)} disabled={busy}>
-            {t("btn.edit")}
-          </Button>
-        </PermissionMiddleware>
-
-        <PermissionMiddleware codeName={"delete_project"}>
-          <Button variant="outline" onClick={() => onDelete(project)} disabled={busy} aria-busy={busy || undefined}>
-            {t("btn.delete")}
-          </Button>
-        </PermissionMiddleware>
-      </div>
-    </div>
-  </SettingsRow>
-);
 
 /* -------------------------------------------------------------------------- */
 
 const ProjectSettings: React.FC = () => {
   const { t, i18n } = useTranslation("projectSettings");
-  const { isOwner, permissions } = useAuthContext();
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
 
   const canViewProjects = useMemo(() => {
     if (isOwner) return true;
@@ -182,13 +136,13 @@ const ProjectSettings: React.FC = () => {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  /* ConfirmToast */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+
+
+
+
+
 
   /* Overlay */
   const [added, setAdded] = useState<Project[]>([]);
@@ -282,7 +236,7 @@ const ProjectSettings: React.FC = () => {
   }, [appliedTypes, typeOptions, t]);
 
   /* --------------------------- Pagination (reusable) ----------------------- */
-  const inflightRef = useRef(false);
+
 
   const fetchProjectsPage = useCallback(
     async (cursor?: string, pageSize = 20) => {
@@ -290,12 +244,10 @@ const ProjectSettings: React.FC = () => {
         return { items: [] as Project[], nextCursor: undefined as string | undefined };
       }
 
-      if (inflightRef.current) {
-        return { items: [] as Project[], nextCursor: undefined as string | undefined };
-      }
 
-      inflightRef.current = true;
-      try {
+
+
+      {
         const params: GetProjectsParams = {
           cursor,
           ...{ page_size: pageSize, include_count: "true" },
@@ -313,8 +265,6 @@ const ProjectSettings: React.FC = () => {
         const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
 
         return { items, nextCursor, totalCount: (data as unknown as { count?: number }).count };
-      } finally {
-        inflightRef.current = false;
       }
     },
     [canViewProjects, appliedCode, appliedSearch, appliedStatuses, appliedTypeParam]
@@ -324,7 +274,7 @@ const ProjectSettings: React.FC = () => {
     autoLoadFirst: canViewProjects,
     deps: [canViewProjects, appliedCode, appliedSearch, appliedStatuses, appliedTypeParam],
   });
-  
+
   const { refresh } = pager;
 
   useEffect(() => {
@@ -481,19 +431,9 @@ const ProjectSettings: React.FC = () => {
   }, [added, deletedIds, pager.items, matchesFilters]);
 
   /* ------------------------------ Type label helper ------------------------ */
-  const typeLabelMap = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const v of PROJECT_TYPE_VALUES) m.set(v, t(`types.${v}`));
-    return m;
-  }, [t]);
 
-  const getTypeLabel = useCallback(
-    (value: unknown) => {
-      if (!isProjectType(value)) return (value as string | undefined) ?? "—";
-      return typeLabelMap.get(value) ?? "—";
-    },
-    [typeLabelMap]
-  );
+
+
 
   /* ------------------------------ Handlers -------------------------------- */
   const openCreateModal = () => {
@@ -513,44 +453,13 @@ const ProjectSettings: React.FC = () => {
     setEditingProject(null);
   };
 
-  const requestDeleteProject = (project: Project) => {
-    const name = project.name ?? project.code ?? "";
-    setConfirmText(t("confirm.deleteTitle", { name }));
 
-    setConfirmAction(() => async () => {
-      setDeleteTargetId(project.id);
-
-      try {
-        setDeletedIds((prev) => new Set(prev).add(project.id));
-        await api.deleteProject(project.id);
-
-        await pager.refresh();
-        setAdded((prev) => prev.filter((p) => p.id !== project.id));
-
-        setSnack({ message: t("toast.deleted"), severity: "info" });
-      } catch (err) {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(project.id);
-          return next;
-        });
-
-        setSnack({ message: err instanceof Error ? err.message : t("errors.deleteError"), severity: "error" });
-      } finally {
-        setDeleteTargetId(null);
-        setConfirmOpen(false);
-        setConfirmBusy(false);
-      }
-    });
-
-    setConfirmOpen(true);
-  };
 
   /* ------------------------------ Loading --------------------------------- */
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+  const globalBusy = isBackgroundSync  || modalOpen;
 
   const codeChipValue = appliedCode.trim() ? truncate(appliedCode.trim(), 22) : "";
   const searchChipValue = appliedSearch.trim() ? truncate(appliedSearch.trim(), 22) : "";
@@ -575,10 +484,10 @@ const ProjectSettings: React.FC = () => {
       <main className="settings-page">
         <div className="settings-content ">
           <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
-              
+
 
               <div className="flex items-center gap-3">
-                
+
 
                 {isBackgroundSync && (<span className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
                     {t("badge.syncing")}
@@ -659,50 +568,13 @@ const ProjectSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<SettingsList deleteRecord={api.deleteProject} deletePermission="delete_project" onDeleted={ids => {
+<DataTable onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy}>
-                
-
-                {pager.error ? (
-                  <div className="p-6 text-center">
-                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
-                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                      {t("btn.retry")}
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <SettingsRecords className="divide-y divide-gray-200">
-                      {visibleItems.length === 0 ? (
-                        <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                      ) : (
-                        visibleItems.map((p) => {
-                          const rowBusy = globalBusy || deleteTargetId === p.id || deletedIds.has(p.id);
-                          return (
-                            <Row
-                              key={p.id}
-                              project={p}
-                              onEdit={openEditModal}
-                              onDelete={requestDeleteProject}
-                              t={t}
-                              busy={rowBusy}
-                              typeLabel={getTypeLabel(p.type)}
-                            />
-                          );
-                        })
-                      )}
-                    </SettingsRecords>
-
-
-                  </>
-                )}
-              </SettingsList>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"code",label:t("common:records.fields.code"),render:item=>String(item.code??"—")},{key:"description",label:t("common:records.fields.description"),render:item=>String(item.description??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_project")} canDelete={isOwner||isSuperUser||permissions.includes("delete_project")} onEdit={openEditModal} onDelete={item=>api.deleteProject(item.id)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>
@@ -731,7 +603,7 @@ const ProjectSettings: React.FC = () => {
       {/* CODE POPOVER */}
       <Popover appearance="settings" open={openFilter === "code"} anchorRef={codeAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byCodeTitle", { defaultValue: "Filter by code" })}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -774,7 +646,7 @@ const ProjectSettings: React.FC = () => {
         onClose={() => setOpenFilter(null)}
        title={t("filters.bySearchTitle", { defaultValue: "Search projects" })}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -818,7 +690,7 @@ const ProjectSettings: React.FC = () => {
         width={420}
        title={t("filters.byTypeTitle", { defaultValue: "Filter by type" })}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -865,7 +737,7 @@ const ProjectSettings: React.FC = () => {
         width={420}
        title={t("filters.byStatusTitle", { defaultValue: "Filter by status" })}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -900,25 +772,7 @@ const ProjectSettings: React.FC = () => {
         </div>
       </Popover>
 
-      <ConfirmToast
-        open={confirmOpen}
-        text={confirmText}
-        confirmLabel={t("btn.delete")}
-        cancelLabel={t("btn.cancel")}
-        variant="danger"
-        onCancel={() => {
-          if (confirmBusy) return;
-          setConfirmOpen(false);
-        }}
-        onConfirm={() => {
-          if (confirmBusy || !confirmAction) return;
-          setConfirmBusy(true);
-          confirmAction()
-            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
-            .finally(() => setConfirmBusy(false));
-        }}
-        busy={confirmBusy}
-      />
+
 
       <Snackbar
         open={!!snack}

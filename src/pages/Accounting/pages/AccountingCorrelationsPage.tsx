@@ -1883,7 +1883,7 @@ export default function AccountingCorrelationsPage() {
         </section>
 
         <SidePanel
-        className="accounting-dialog"
+
           isOpen={filtersOpen}
           onClose={() => setFiltersOpen(false)}
           title={t("correlationsPage.filters.title", "Correlation filters")}

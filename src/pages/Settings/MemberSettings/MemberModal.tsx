@@ -1,4 +1,4 @@
-import { SidePanelFooter, SidePanelFrame, SidePanelHeader } from "@/components/Modal/SidePanel";
+import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/MemberSettings/MemberModal.tsx                             */
@@ -313,9 +313,9 @@ const MemberModal: React.FC<MemberModalProps> = ({
   );
 
   return (
-    <SidePanelFrame dialogRef={panelRef} isOpen={isOpen} labelledBy="member-modal-title">
+    <SidePanel mode="edit" dialogRef={panelRef} isOpen={isOpen} title={<>{title}</>} onClose={attemptClose} busy={busy}>
 
-        <SidePanelHeader titleId="member-modal-title" title={<>{title}</>} onClose={attemptClose} disabled={busy}></SidePanelHeader>
+
 
         <form
           id="memberModalForm"
@@ -401,8 +401,6 @@ const MemberModal: React.FC<MemberModalProps> = ({
           </div>
 
           <SidePanelFooter
-            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-[12px] text-gray-600 hidden md:block">{t("footer.shortcuts")}</p>
@@ -484,7 +482,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
             </div>
           </div>
         )}
-      </SidePanelFrame>
+      </SidePanel>
   );
 };
 

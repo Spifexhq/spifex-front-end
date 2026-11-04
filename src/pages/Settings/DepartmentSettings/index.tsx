@@ -1,5 +1,5 @@
-import SettingsRow from "@/shared/ui/Settings/SettingsRow";
-import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
+import DataTable from "@/shared/ui/DataTable";
+import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* --------------------------------------------------------------------------
@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
-import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
@@ -27,7 +26,6 @@ import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
-import type { TFunction } from "i18next";
 import type { Department, GetDepartmentsParams } from "@/models/settings/departments";
 
 /* ------------------------------ Snackbar type ----------------------------- */
@@ -83,49 +81,13 @@ function toActiveParamFromStatusKeys(keys: StatusKey[]): GetDepartmentsParams["a
 
 /* ------------------------------ Row component ------------------------------ */
 
-const Row = ({
-  dept,
-  onEdit,
-  onDelete,
-  t,
-  busy,
-}: {
-  dept: Department;
-  onEdit: (d: Department) => void;
-  onDelete: (d: Department) => void;
-  t: TFunction;
-  busy?: boolean;
-}) => (
-  <SettingsRow onOpen={() => onEdit(dept)} disabled={busy} permission="change_department" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
-    <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">
-        {dept.code ? `${t("tags.code")}: ${dept.code}` : "—"}
-        {dept.is_active === false ? ` • ${t("tags.inactive")}` : ""}
-      </p>
-      <p className="text-[13px] font-medium text-gray-900 truncate">{dept.name || t("tags.noName")}</p>
-    </div>
 
-    <div className="flex gap-2 shrink-0 settings-row-actions">
-      <PermissionMiddleware codeName={"change_department"}>
-        <Button variant="outline" onClick={() => onEdit(dept)} disabled={busy}>
-          {t("buttons.edit")}
-        </Button>
-      </PermissionMiddleware>
-
-      <PermissionMiddleware codeName={"delete_department"}>
-        <Button variant="outline" onClick={() => onDelete(dept)} disabled={busy} aria-busy={busy || undefined}>
-          {t("buttons.delete")}
-        </Button>
-      </PermissionMiddleware>
-    </div>
-  </SettingsRow>
-);
 
 /* -------------------------------------------------------------------------- */
 
 const DepartmentSettings: React.FC = () => {
   const { t, i18n } = useTranslation("departmentSettings");
-  const { isOwner, permissions } = useAuthContext();
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
 
   const canViewDepartments = useMemo(() => {
     if (isOwner) return true;
@@ -148,14 +110,14 @@ const DepartmentSettings: React.FC = () => {
   /* Snackbar */
   const [snack, setSnack] = useState<Snack>(null);
 
-  /* ConfirmToast */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+
+
+
+
 
   /* Standard flags */
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
 
   /* Overlay */
   const [added, setAdded] = useState<Department[]>([]);
@@ -216,7 +178,7 @@ const DepartmentSettings: React.FC = () => {
   }, [draftStatuses, statusOptions]);
 
   /* --------------------------- Pagination (reusable) ----------------------- */
-  const inflightRef = useRef(false);
+
 
   const fetchDepartmentsPage = useCallback(
     async (cursor?: string, pageSize = 20) => {
@@ -224,12 +186,10 @@ const DepartmentSettings: React.FC = () => {
         return { items: [] as Department[], nextCursor: undefined as string | undefined };
       }
 
-      if (inflightRef.current) {
-        return { items: [] as Department[], nextCursor: undefined as string | undefined };
-      }
 
-      inflightRef.current = true;
-      try {
+
+
+      {
         const params: GetDepartmentsParams = {
           cursor,
           ...{ page_size: pageSize, include_count: "true" },
@@ -246,8 +206,6 @@ const DepartmentSettings: React.FC = () => {
         const nextCursor = nextUrl ? (getCursorFromUrl(nextUrl) || nextUrl) : undefined;
 
         return { items, nextCursor, totalCount: (data as unknown as { count?: number }).count };
-      } finally {
-        inflightRef.current = false;
       }
     },
     [canViewDepartments, appliedCode, appliedName, appliedStatuses]
@@ -400,49 +358,15 @@ const DepartmentSettings: React.FC = () => {
     setOpenFilter((prev) => (prev === key ? null : key));
   }, []);
 
-  /* ---------- ConfirmToast delete ----------------------------------------- */
-  const requestDeleteDepartment = (dept: Department) => {
-    const name = dept.name ?? "";
 
-    setConfirmText(t("confirm.deleteTitle", { name }));
-    setConfirmAction(() => async () => {
-      setDeleteTargetId(dept.id);
 
-      try {
-        setDeletedIds((prev) => new Set(prev).add(dept.id));
-        await api.deleteDepartment(dept.id);
-
-        await pager.refresh();
-        setAdded((prev) => prev.filter((d) => d.id !== dept.id));
-
-        setSnack({ message: t("toast.deleteOk"), severity: "info" });
-      } catch (err) {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(dept.id);
-          return next;
-        });
-
-        setSnack({
-          message: err instanceof Error ? err.message : t("errors.deleteFailed"),
-          severity: "error",
-        });
-      } finally {
-        setDeleteTargetId(null);
-        setConfirmOpen(false);
-        setConfirmBusy(false);
-      }
-    });
-
-    setConfirmOpen(true);
-  };
 
   /* ------------------------------- Loading UI ------------------------------ */
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
   /* -------------------------------- Derived UI ---------------------------- */
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+  const globalBusy = isBackgroundSync  || modalOpen;
 
   const codeChipValue = appliedCode.trim() ? truncate(appliedCode.trim(), 22) : "";
   const nameChipValue = appliedName.trim() ? truncate(appliedName.trim(), 22) : "";
@@ -465,7 +389,7 @@ const DepartmentSettings: React.FC = () => {
 
       <main className="settings-page">
         <div className="settings-content ">
-          
+
 
           <PermissionMiddleware codeName={"view_department"} behavior="lock">
             <section className="mt-6">
@@ -528,50 +452,13 @@ const DepartmentSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<SettingsList deleteRecord={api.deleteDepartment} deletePermission="delete_department" onDeleted={ids => {
+<DataTable onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy}>
-                
-
-                {pager.error ? (
-                  <div className="p-6 text-center">
-                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.fetchError")}</p>
-                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                      {t("buttons.tryAgain")}
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <SettingsRecords className="divide-y divide-gray-200">
-                      {visibleItems.length === 0 ? (
-                        <p className="p-4 text-center text-sm text-gray-500">{t("alerts.noData")}</p>
-                      ) : (
-                        visibleItems.map((d) => {
-                          const rowBusy = globalBusy || deleteTargetId === d.id || deletedIds.has(d.id);
-
-                          return (
-                            <Row
-                              key={d.id}
-                              dept={d}
-                              onEdit={openEditModal}
-                              onDelete={requestDeleteDepartment}
-                              t={t}
-                              busy={rowBusy}
-                            />
-                          );
-                        })
-                      )}
-                    </SettingsRecords>
-
-
-                  </>
-                )}
-              </SettingsList>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"code",label:t("common:records.fields.code"),render:item=>String(item.code??"—")},{key:"status",label:t("filters.statusLabel"),render:item=>item.is_active?activeLabel:inactiveLabel}]} emptyLabel={t("alerts.noData")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_department")} canDelete={isOwner||isSuperUser||permissions.includes("delete_department")} onEdit={openEditModal} onDelete={item=>api.deleteDepartment(item.id)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>
@@ -604,7 +491,7 @@ const DepartmentSettings: React.FC = () => {
         onClose={() => setOpenFilter(null)}
        title={t("filters.byCodeTitle", { defaultValue: "Filter by code" })}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -648,7 +535,7 @@ const DepartmentSettings: React.FC = () => {
         onClose={() => setOpenFilter(null)}
        title={t("filters.byNameTitle", { defaultValue: "Filter by name" })}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -693,7 +580,7 @@ const DepartmentSettings: React.FC = () => {
         width={420}
        title={t("filters.byStatusTitle", { defaultValue: "Filter by status" })}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -728,25 +615,7 @@ const DepartmentSettings: React.FC = () => {
         </div>
       </Popover>
 
-      <ConfirmToast
-        open={confirmOpen}
-        text={confirmText}
-        confirmLabel={t("buttons.delete")}
-        cancelLabel={t("buttons.cancel")}
-        variant="danger"
-        onCancel={() => {
-          if (confirmBusy) return;
-          setConfirmOpen(false);
-        }}
-        onConfirm={() => {
-          if (confirmBusy || !confirmAction) return;
-          setConfirmBusy(true);
-          confirmAction()
-            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
-            .finally(() => setConfirmBusy(false));
-        }}
-        busy={confirmBusy}
-      />
+
 
       <Snackbar
         open={!!snack}

@@ -1,11 +1,12 @@
-import { useRecordFilters } from "../components/useRecordFilters";
+import { useAccountingSource } from "@/api/hooks/useAccountingRecords";
+import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import { useAuthContext } from "@/hooks/useAuth";
 import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import Checkbox from "@/shared/ui/Checkbox";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import AccountingRecords from "../components/AccountingRecords";
+import DataTable from "@/shared/ui/DataTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -149,11 +150,12 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     });
   }, [categories]);
 
+  const source = useAccountingSource<CategoryPostingPolicy>("category-rules");
   const recordFilters = useRecordFilters(items, [
  {key:"status",label:t("table.status","Status"),value:item=>item.status,format:value=>t(value==="active"?"table.active":"table.inactive",value)},
  {key:"book",label:t("postingPoliciesPage.columns.book","Book"),value:item=>item.book_id,format:value=>books.find(book=>book.id===value)?.name||"—"},
  {key:"category",label:t("postingPoliciesPage.columns.category","Category"),value:item=>item.cashflow_category_id,format:value=>categories.find(category=>category.id===value)?.name||"—"}
-], item=>[item.cashflow_category_label,item.book_label,item.settlement_debit_account_label,item.settlement_credit_account_label].join(" "), { resource: "category-rules", placeholder: t("filters.search.category-rules", "Search records"), onItems: setItems });
+], item=>[item.cashflow_category_label,item.book_label,item.settlement_debit_account_label,item.settlement_credit_account_label].join(" "), { ...source, placeholder: t("filters.search.category-rules", "Search records"), onItems: setItems });
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -252,7 +254,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       setForm(EMPTY_FORM);
       await load();
     } catch (cause) {
-      setSnackbar({ severity: "error", message: accountingErrorMessage(cause, t("postingPoliciesPage.saveError", "Failed to save posting policy.")) });
+      setSnackbar({ severity: "error", message: apiErrorMessage(cause, t("postingPoliciesPage.saveError", "Failed to save posting policy.")) });
     } finally {
       setSaving(false);
     }
@@ -284,7 +286,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         </div>
 
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <AccountingRecords pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteCategoryPostingPolicy(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteCategoryPostingPolicy(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("postingPoliciesPage.columns.category", "Category"), render: item => displayValue(item.cashflow_category_label, item.cashflow_category_id) },
               { key: "book", label: t("postingPoliciesPage.columns.book", "Book"), render: item => displayValue(item.book_label, item.book_id) },
               { key: "debit", label: t("redesign.paymentAccount", "Payments · debit"), render: item => displayValue(item.settlement_debit_account_label, item.settlement_debit_account_id) },
@@ -307,7 +309,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       </section>
 
       <SidePanel
-        className="accounting-dialog"
+
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={t("postingPoliciesPage.modal.title", "Posting policy")}

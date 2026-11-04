@@ -67,7 +67,8 @@
       "sku": "SKU",
       "account_type": "Tipo de conta",
       "account_number": "Número da conta"
-    }
+    },
+    "deleteConfirm": "Excluir os registros selecionados?"
   },
   "modalHints": {
     "book": "Livro",
@@ -77,5 +78,12 @@
     "ledgerAccount": "Conta contábil",
     "editShortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar",
     "previewShortcuts": "Atalhos: Esc fechar"
+  },
+  "tableFilters": {
+    "search": "Pesquisar",
+    "placeholder": "Pesquisar registros…",
+    "filters": "Filtros",
+    "clear": "Limpar filtros",
+    "apply": "Aplicar filtros"
   }
 }

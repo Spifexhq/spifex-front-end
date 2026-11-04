@@ -1,4 +1,4 @@
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { api } from "@/api/requests";
@@ -26,7 +26,7 @@ export function AccountingSetupProvider({ children }: { children: ReactNode }) {
     } catch (cause) {
       if (request === sequence.current) {
         setStatus(null);
-        setError(accountingErrorMessage(cause, ""));
+        setError(apiErrorMessage(cause, ""));
       }
     } finally {
       if (request === sequence.current) { setPending(false); setLoadedKey(key); }

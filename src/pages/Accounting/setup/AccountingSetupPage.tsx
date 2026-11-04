@@ -1,4 +1,4 @@
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -35,7 +35,7 @@ export default function AccountingSetupPage() {
       await refresh();
       if (next) navigate(`/accounting/setup/${next}`);
     } catch (cause) {
-      setError(accountingErrorMessage(cause, t("setupFlow.actionError")));
+      setError(apiErrorMessage(cause, t("setupFlow.actionError")));
       await refresh();
     } finally { setBusy(false); }
   };

@@ -1,5 +1,5 @@
-import SettingsRow from "@/shared/ui/Settings/SettingsRow";
-import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
+import DataTable from "@/shared/ui/DataTable";
+import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -15,12 +15,10 @@ import React, {
   startTransition,
 } from "react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
-import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Select from "src/shared/ui/Select/Select";
@@ -74,44 +72,12 @@ function selectedSingle<T>(keys: T[]): T | undefined {
 
 
 /* ----------------------------- UI: Row ----------------------------------- */
-const Row = ({
-  member,
-  onEdit,
-  onDelete,
-  t,
-  busy,
-}: {
-  member: Member;
-  onEdit: (e: Member) => void;
-  onDelete: (e: Member) => void;
-  t: TFunction;
-  busy?: boolean;
-}) => (
-  <SettingsRow onOpen={() => onEdit(member)} disabled={busy} permission="change_member" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
-    <div className="min-w-0">
-      <p className="text-[13px] font-medium text-gray-900 truncate">{member.name}</p>
-      <p className="text-[12px] text-gray-600 truncate">{member.email}</p>
-    </div>
-    <div className="flex gap-2 shrink-0 settings-row-actions">
-      <PermissionMiddleware codeName={"change_member"}>
-        <Button variant="outline" onClick={() => onEdit(member)} disabled={busy}>
-          {t("btn.edit")}
-        </Button>
-      </PermissionMiddleware>
 
-      <PermissionMiddleware codeName={"delete_member"}>
-        <Button variant="outline" onClick={() => onDelete(member)} disabled={busy} aria-busy={busy || undefined}>
-          {t("btn.delete")}
-        </Button>
-      </PermissionMiddleware>
-    </div>
-  </SettingsRow>
-);
 
 /* ----------------------------- Component --------------------------------- */
 const MemberSettings: React.FC = () => {
   const { t, i18n } = useTranslation("memberSettings");
-  const { isOwner, permissions } = useAuthContext();
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
 
   const canViewMembers = useMemo(() => {
     if (isOwner) return true;
@@ -136,7 +102,7 @@ const MemberSettings: React.FC = () => {
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isBackgroundSync, setIsBackgroundSync] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -144,10 +110,10 @@ const MemberSettings: React.FC = () => {
 
   const [snack, setSnack] = useState<Snack>(null);
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+
+
+
 
   const fetchSeqRef = useRef(0);
   const mountedRef = useRef(true);
@@ -422,28 +388,8 @@ const MemberSettings: React.FC = () => {
     setEditingMember(null);
   }, []);
 
-  /* ---------- ConfirmToast delete ----------------- */
-  const requestDeleteMember = (member: Member) => {
-    setConfirmText(t("confirm.delete", { name: member.name }));
-    setConfirmAction(() => async () => {
-      setDeleteTargetId(member.id);
 
-      try {
-        await api.deleteMember(member.id);
-        await fetchList({ background: true });
-        setSnack({ message: t("toast.deleteOk"), severity: "info" });
-      } catch (err: unknown) {
-        console.error(err);
-        setSnack({ message: t("errors.deleteError"), severity: "error" });
-      } finally {
-        setDeleteTargetId(null);
-        setConfirmOpen(false);
-        setConfirmBusy(false);
-      }
-    });
 
-    setConfirmOpen(true);
-  };
 
   /* ------------------------------ Render ---------------------------------- */
   const shouldBlockOnInitial = isInitialLoading && (canViewMembers || canViewGroups);
@@ -466,7 +412,7 @@ const MemberSettings: React.FC = () => {
     </span>
   ) : null;
 
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+  const globalBusy = isBackgroundSync  || modalOpen;
 
   const nameChipValue = appliedName.trim() ? truncate(appliedName.trim(), 22) : "";
   const emailChipValue = appliedEmail.trim() ? truncate(appliedEmail.trim(), 22) : "";
@@ -480,9 +426,9 @@ const MemberSettings: React.FC = () => {
       <main className="settings-page">
         <div className="settings-content ">
           <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
-              
+
               <div className="flex items-center gap-3">
-                
+
                 {headerBadge}
               </div>
             </div></div>
@@ -558,29 +504,7 @@ const MemberSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<SettingsList deleteRecord={api.deleteMember} deletePermission="delete_member" onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy}>
-                
-
-                <SettingsRecords className="divide-y divide-gray-200">
-                  {members.length === 0 ? (
-                    <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                  ) : (
-                    members.map((m) => {
-                      const rowBusy = globalBusy || deleteTargetId === m.id;
-                      return (
-                        <Row
-                          key={m.id}
-                          member={m}
-                          onEdit={openEditModal}
-                          onDelete={requestDeleteMember}
-                          t={t}
-                          busy={rowBusy}
-                        />
-                      );
-                    })
-                  )}
-                </SettingsRecords>
-              </SettingsList>
+<DataTable onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy} items={members} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"role",label:t("common:records.fields.role"),render:item=>String(item.role??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_member")} canDelete={isOwner||isSuperUser||permissions.includes("delete_member")} onEdit={openEditModal} onDelete={item=>api.deleteMember(item.id)} />
             </section>
           </PermissionMiddleware>
         </div>
@@ -603,7 +527,7 @@ const MemberSettings: React.FC = () => {
       {/* NAME POPOVER */}
       <Popover appearance="settings" open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byNameTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -642,7 +566,7 @@ const MemberSettings: React.FC = () => {
       {/* EMAIL POPOVER */}
       <Popover appearance="settings" open={openFilter === "email"} anchorRef={emailAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byEmailTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -681,7 +605,7 @@ const MemberSettings: React.FC = () => {
       {/* ROLE POPOVER */}
       <Popover appearance="settings" open={openFilter === "role"} anchorRef={roleAnchorRef} onClose={() => setOpenFilter(null)} width={420} title={t("filters.byRoleTitle")}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -721,7 +645,7 @@ const MemberSettings: React.FC = () => {
       {/* GROUP POPOVER */}
       <Popover appearance="settings" open={openFilter === "group"} anchorRef={groupAnchorRef} onClose={() => setOpenFilter(null)} width={420} title={t("filters.byGroupTitle")}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -758,25 +682,7 @@ const MemberSettings: React.FC = () => {
         </div>
       </Popover>
 
-      <ConfirmToast
-        open={confirmOpen}
-        text={confirmText}
-        confirmLabel={t("btn.delete")}
-        cancelLabel={t("btn.cancel")}
-        variant="danger"
-        onCancel={() => {
-          if (confirmBusy) return;
-          setConfirmOpen(false);
-        }}
-        onConfirm={() => {
-          if (confirmBusy || !confirmAction) return;
-          setConfirmBusy(true);
-          confirmAction()
-            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
-            .finally(() => setConfirmBusy(false));
-        }}
-        busy={confirmBusy}
-      />
+
 
       <Snackbar
         open={!!snack}

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import ts from "typescript";
-const code = ts.transpileModule(fs.readFileSync("src/pages/Accounting/components/recordFiltering.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText;
+const code = ts.transpileModule(fs.readFileSync("src/shared/ui/DataTable/recordFiltering.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText;
 const { matchesRecordFilters } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
 const controls=[{key:"status",value:item=>item.status},{key:"book",value:item=>item.book},{key:"from",value:item=>item.date,date:"from"},{key:"to",value:item=>item.date,date:"to"}];
 const row={name:"Primary Book",status:"active",book:"main",date:"2026-11-04"};

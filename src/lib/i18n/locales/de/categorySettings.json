@@ -2,7 +2,8 @@
   "common": {
     "yes": "Ja",
     "no": "Nein",
-    "empty": "—"
+    "empty": "—",
+    "cancel": "Abbrechen"
   },
   "header": {
     "eyebrow": "Cashflow-Einstellungen",
@@ -21,22 +22,27 @@
   },
   "filters": {
     "search": "Suche",
-    "transactionHint": "Transaktionshinweis",
+    "transactionHint": "Vorgeschlagener Typ",
     "includeInactive": "Inaktive einbeziehen",
     "any": "Alle",
     "credit": "Kredit",
-    "debit": "Debit"
+    "debit": "Debit",
+    "searchPlaceholder": "Nach Name, Code oder Beschreibung suchen…"
   },
   "table": {
     "code": "Code",
     "name": "Name",
     "parent": "Übergeordnet",
-    "txHint": "Hinweis",
+    "txHint": "Vorgeschlagener Typ",
     "entries": "Einträge",
-    "sort": "Sortierung",
+    "sort": "Anzeigereihenfolge",
     "active": "Aktiv",
     "actions": "Aktionen",
-    "empty": "Keine Kategorien gefunden."
+    "empty": "Keine Kategorien gefunden.",
+    "status": "Status",
+    "deleteConfirm": "Diese Kategorie löschen?",
+    "delete": "Löschen",
+    "deleteError": "Diese Kategorie konnte nicht gelöscht werden."
   },
   "modal": {
     "createTitle": "Neue Kategorie",
@@ -75,5 +81,9 @@
     "saveError": "Kategorie konnte nicht gespeichert werden.",
     "deleteError": "Kategorie konnte nicht gelöscht werden.",
     "deleteConfirm": "Kategorie {{name}} löschen?"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
   }
 }

@@ -1,10 +1,11 @@
-import { useRecordFilters } from "../components/useRecordFilters";
+import { useAccountingSource } from "@/api/hooks/useAccountingRecords";
+import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import { useAuthContext } from "@/hooks/useAuth";
 import AccountingStatus from "../components/AccountingStatus";
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useAccountingSetup, useAccountingDraft } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import AccountingRecords from "../components/AccountingRecords";
+import DataTable from "@/shared/ui/DataTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
 import React from "react";
@@ -76,12 +77,13 @@ const AccountingBooksPage: React.FC = () => {
     [form.basis]
   );
 
+  const source = useAccountingSource<AccountingBook>("books");
   const recordFilters = useRecordFilters(items, [
  {key:"status",label:t("table.status","Status"),value:item=>String(item.is_active),format:value=>t(value==="true"?"table.active":"table.inactive",value==="true"?"Active":"Inactive")},
  {key:"basis",label:t("booksPage.columns.basis","Basis"),value:item=>item.basis,format:value=>t(`enums.basis.${value}`,value)},
  {key:"currency",label:t("booksPage.columns.currency","Currency"),value:item=>item.currency_code},
  {key:"primary",label:t("booksPage.columns.primary","Primary"),value:item=>String(item.is_primary),format:value=>t(value==="true"?"common.yes":"common.no",value==="true"?"Yes":"No")}
-], item=>[item.name,item.code,item.basis,item.currency_code].join(" "), { resource: "books", placeholder: t("filters.search.books", "Search records"), onItems: setItems });
+], item=>[item.name,item.code,item.basis,item.currency_code].join(" "), { ...source, placeholder: t("filters.search.books", "Search records"), onItems: setItems });
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -139,7 +141,7 @@ const AccountingBooksPage: React.FC = () => {
       await load();
       await refreshSetup();
     } catch (cause) {
-      setSnackbar({ severity: "error", message: accountingErrorMessage(cause, t("booksPage.saveError", "Failed to save accounting book.")) });
+      setSnackbar({ severity: "error", message: apiErrorMessage(cause, t("booksPage.saveError", "Failed to save accounting book.")) });
     } finally {
       setSaving(false);
     }
@@ -171,7 +173,7 @@ const AccountingBooksPage: React.FC = () => {
         </div>
 
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <AccountingRecords pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteAccountingBook(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteAccountingBook(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("booksPage.columns.name", "Name"), render: item => item.name || "—" },
               { key: "code", label: t("booksPage.columns.code", "Code"), render: item => item.code || "—" },
               { key: "basis", label: t("booksPage.columns.basis", "Basis"), render: item => t(`enums.basis.${item.basis}`, item.basis) },
@@ -195,7 +197,7 @@ const AccountingBooksPage: React.FC = () => {
       </section>
 
       <SidePanel
-        className="accounting-dialog"
+
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={form.id ? t("booksPage.modal.editTitle", "Edit accounting book") : t("booksPage.modal.newTitle", "New accounting book")}

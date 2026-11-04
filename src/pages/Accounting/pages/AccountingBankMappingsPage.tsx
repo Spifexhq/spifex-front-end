@@ -1,12 +1,13 @@
-import { useRecordFilters } from "../components/useRecordFilters";
+import { useAccountingSource } from "@/api/hooks/useAccountingRecords";
+import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import { fetchAllCursor } from "@/lib/list";
 import { useAuthContext } from "@/hooks/useAuth";
 import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
-import { accountingErrorMessage } from "../accountingError";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import Checkbox from "@/shared/ui/Checkbox";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import AccountingRecords from "../components/AccountingRecords";
+import DataTable from "@/shared/ui/DataTable";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -114,12 +115,13 @@ const AccountingBankMappingsPage: React.FC = () => {
     [ledgerAccounts]
   );
 
+  const source = useAccountingSource<BankAccountLedgerMap>("bank-connections");
   const recordFilters = useRecordFilters(items, [
  {key:"status",label:t("table.status","Status"),value:item=>String(item.is_active),format:value=>t(value==="true"?"table.active":"table.inactive",value==="true"?"Active":"Inactive")},
  {key:"book",label:t("bankMappingsPage.columns.book","Book"),value:item=>item.book_id,format:value=>bookMap.get(value)||"—"},
  {key:"bank",label:t("bankMappingsPage.columns.bankAccount","Bank account"),value:item=>item.bank_account_id,format:value=>bankMap.get(value)||"—"},
  {key:"account",label:t("bankMappingsPage.columns.ledgerAccount","Ledger account"),value:item=>item.ledger_account_id,format:value=>accountMap.get(value)||"—"}
-], item=>[bankMap.get(item.bank_account_id),bookMap.get(item.book_id),accountMap.get(item.ledger_account_id)].join(" "), { resource: "bank-connections", placeholder: t("filters.search.bank-connections", "Search records"), onItems: setItems });
+], item=>[bankMap.get(item.bank_account_id),bookMap.get(item.book_id),accountMap.get(item.ledger_account_id)].join(" "), { ...source, placeholder: t("filters.search.bank-connections", "Search records"), onItems: setItems });
   const loading = recordFilters.pager.loading;
   const load = recordFilters.pager.refresh;
 
@@ -196,7 +198,7 @@ const AccountingBankMappingsPage: React.FC = () => {
       setForm(EMPTY_FORM);
       await load();
     } catch (cause) {
-      setSnackbar({ severity: "error", message: accountingErrorMessage(cause, t("bankMappingsPage.saveError", "Failed to save bank mapping.")) });
+      setSnackbar({ severity: "error", message: apiErrorMessage(cause, t("bankMappingsPage.saveError", "Failed to save bank mapping.")) });
     } finally {
       setSaving(false);
     }
@@ -229,7 +231,7 @@ const AccountingBankMappingsPage: React.FC = () => {
         </div>
 
         {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-        <AccountingRecords pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteBankAccountLedgerMap(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        <DataTable pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteBankAccountLedgerMap(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("bankMappingsPage.columns.bankAccount", "Bank account"), render: item => bankMap.get(item.bank_account_id) || "—" },
               { key: "book", label: t("bankMappingsPage.columns.book", "Book"), render: item => bookMap.get(item.book_id) || "—" },
               { key: "account", label: t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), render: item => accountMap.get(item.ledger_account_id) || "—" },
@@ -251,7 +253,7 @@ const AccountingBankMappingsPage: React.FC = () => {
       </section>
 
       <SidePanel
-        className="accounting-dialog"
+
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={t("bankMappingsPage.modal.title", "Bank mapping")}

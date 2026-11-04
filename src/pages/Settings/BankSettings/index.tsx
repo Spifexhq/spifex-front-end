@@ -1,5 +1,5 @@
-import SettingsRow from "@/shared/ui/Settings/SettingsRow";
-import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
+import DataTable from "@/shared/ui/DataTable";
+import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -8,7 +8,6 @@ import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
@@ -16,7 +15,6 @@ import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Snackbar from "@/shared/ui/Snackbar";
 import Popover from "src/shared/ui/Popover";
-import ConfirmToast from "@/shared/ui/ConfirmToast";
 
 import Select from "src/shared/ui/Select/Select";
 
@@ -96,58 +94,13 @@ function selectedAccountTypeParamFromKeys(keys: AccountType[]): GetBanksParams["
 
 /* --------------------------------- Row ------------------------------------ */
 
-const Row = ({
-  bank,
-  onEdit,
-  onDelete,
-  t,
-  busy,
-}: {
-  bank: BankAccount;
-  onEdit: (b: BankAccount) => void;
-  onDelete: (b: BankAccount) => void;
-  t: TFunction;
-  busy?: boolean;
-}) => {
-  const typeLabel = bank.account_type
-    ? t(`accountType.${bank.account_type}`, { defaultValue: bank.account_type })
-    : "—";
 
-  const line2 = [bank.branch, bank.account_number].filter(Boolean).join(" / ") || bank.iban || "—";
-
-  return (
-    <SettingsRow onOpen={() => onEdit(bank)} disabled={busy} permission="change_bank" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-          {t("tags.type")}: {typeLabel}
-          {bank.is_active === false ? ` • ${t("tags.inactive")}` : ""}
-        </p>
-        <p className="text-[13px] font-medium text-gray-900 truncate">{bank.institution || "—"}</p>
-        <p className="text-[12px] text-gray-600 truncate">{line2}</p>
-      </div>
-
-      <div className="flex gap-2 shrink-0 settings-row-actions">
-        <PermissionMiddleware codeName={"change_bank"}>
-          <Button variant="outline" onClick={() => onEdit(bank)} disabled={busy}>
-            {t("btn.edit")}
-          </Button>
-        </PermissionMiddleware>
-
-        <PermissionMiddleware codeName={"delete_bank"}>
-          <Button variant="outline" onClick={() => onDelete(bank)} disabled={busy} aria-busy={busy || undefined}>
-            {t("btn.delete")}
-          </Button>
-        </PermissionMiddleware>
-      </div>
-    </SettingsRow>
-  );
-};
 
 /* -------------------------------------------------------------------------- */
 
 const BankSettings: React.FC = () => {
   const { t, i18n } = useTranslation("bankSettings");
-  const { organization: authOrg, isOwner, permissions } = useAuthContext();
+  const { organization: authOrg, isOwner, isSuperUser, permissions } = useAuthContext();
 
   const canViewBanks = useMemo(() => {
     if (isOwner) return true;
@@ -172,12 +125,12 @@ const BankSettings: React.FC = () => {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingBank, setEditingBank] = useState<BankAccount | null>(null);
 
-  /* ConfirmToast */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+
+
+
+
+
 
   /* Overlay */
   const [added, setAdded] = useState<BankAccount[]>([]);
@@ -286,7 +239,7 @@ const BankSettings: React.FC = () => {
   }, [appliedAccountTypes, accountTypeOptions, t]);
 
   /* --------------------------- Pagination (reusable) ----------------------- */
-  const inflightRef = useRef(false);
+
 
   const fetchBanksPage = useCallback(
     async (cursor?: string, pageSize = 20) => {
@@ -294,11 +247,9 @@ const BankSettings: React.FC = () => {
         return { items: [] as BankAccount[], nextCursor: undefined as string | undefined };
       }
 
-      if (inflightRef.current) {
-        return { items: [] as BankAccount[], nextCursor: undefined as string | undefined };
-      }
 
-      inflightRef.current = true;
+
+
       try {
         const params: GetBanksParams = {
           cursor,
@@ -321,8 +272,6 @@ const BankSettings: React.FC = () => {
         return { items, nextCursor, totalCount: (data as unknown as { count?: number }).count };
       } catch {
         throw new Error(t("errors.fetchError"));
-      } finally {
-        inflightRef.current = false;
       }
     },
     [
@@ -360,7 +309,7 @@ const BankSettings: React.FC = () => {
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+  const globalBusy = isBackgroundSync  || modalOpen;
 
   /* ------------------------------ Filter apply/clear ------------------------ */
   const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
@@ -550,42 +499,8 @@ const BankSettings: React.FC = () => {
     setEditingBank(null);
   };
 
-  /* ---------- ConfirmToast delete ----------------------------------------- */
-  const requestDeleteBank = (bank: BankAccount) => {
-    const name = bank.institution ?? "";
-    setConfirmText(t("confirm.delete", { name }));
 
-    setConfirmAction(() => async () => {
-      setDeleteTargetId(bank.id);
 
-      try {
-        setDeletedIds((prev) => new Set(prev).add(bank.id));
-        await api.deleteBank(bank.id);
-
-        await pager.refresh();
-        setAdded((prev) => prev.filter((x) => x.id !== bank.id));
-
-        setSnack({ message: t("toast.deleteOk"), severity: "info" });
-      } catch (err) {
-        setDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(bank.id);
-          return next;
-        });
-
-        setSnack({
-          message: err instanceof Error ? err.message : t("errors.deleteError"),
-          severity: "error",
-        });
-      } finally {
-        setDeleteTargetId(null);
-        setConfirmOpen(false);
-        setConfirmBusy(false);
-      }
-    });
-
-    setConfirmOpen(true);
-  };
 
   /* ------------------------------ Loading --------------------------------- */
   const shouldBlockOnInitial = isInitialLoading && canViewBanks;
@@ -610,15 +525,15 @@ const BankSettings: React.FC = () => {
 
   return (
     <>
-      <TopProgress active={isBackgroundSync || confirmBusy} variant="top" topOffset={64} />
+      <TopProgress active={isBackgroundSync } variant="top" topOffset={64} />
 
       <main className="settings-page">
         <div className="settings-content ">
           <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
-              
+
 
               <div className="flex items-center gap-3">
-                
+
 
                 {isBackgroundSync && (<span className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm">
                     {t("badge.syncing")}
@@ -723,49 +638,13 @@ const BankSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<SettingsList deleteRecord={api.deleteBank} deletePermission="delete_bank" onDeleted={ids => {
+<DataTable onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy}>
-                
-
-                {pager.error ? (
-                  <div className="p-6 text-center">
-                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
-                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                      {t("btn.retry")}
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <SettingsRecords className="divide-y divide-gray-200">
-                      {visibleItems.length === 0 ? (
-                        <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                      ) : (
-                        visibleItems.map((b) => {
-                          const rowBusy = globalBusy || deleteTargetId === b.id || deletedIds.has(b.id);
-                          return (
-                            <Row
-                              key={b.id}
-                              bank={b}
-                              onEdit={openEditModal}
-                              onDelete={requestDeleteBank}
-                              t={t}
-                              busy={rowBusy}
-                            />
-                          );
-                        })
-                      )}
-                    </SettingsRecords>
-
-
-                  </>
-                )}
-              </SettingsList>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"account_type",label:t("common:records.fields.account_type"),render:item=>t(`accountType.${item.account_type}`,{defaultValue:item.account_type})},{key:"account_number",label:t("common:records.fields.account_number"),render:item=>String(item.account_number??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_bank")} canDelete={isOwner||isSuperUser||permissions.includes("delete_bank")} onEdit={openEditModal} onDelete={item=>api.deleteBank(item.id)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>
@@ -799,7 +678,7 @@ const BankSettings: React.FC = () => {
         onClose={() => setOpenFilter(null)}
        title={t("filters.byInstitutionTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -844,7 +723,7 @@ const BankSettings: React.FC = () => {
         width={420}
        title={t("filters.byAccountTypeTitle")}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -884,7 +763,7 @@ const BankSettings: React.FC = () => {
       {/* BRANCH POPOVER */}
       <Popover appearance="settings" open={openFilter === "branch"} anchorRef={branchAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byBranchTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -928,7 +807,7 @@ const BankSettings: React.FC = () => {
         onClose={() => setOpenFilter(null)}
        title={t("filters.byAccountNumberTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -968,7 +847,7 @@ const BankSettings: React.FC = () => {
       {/* IBAN POPOVER */}
       <Popover appearance="settings" open={openFilter === "iban"} anchorRef={ibanAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byIbanTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -1013,7 +892,7 @@ const BankSettings: React.FC = () => {
         width={420}
        title={t("filters.byStatusTitle")}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -1048,25 +927,7 @@ const BankSettings: React.FC = () => {
         </div>
       </Popover>
 
-      <ConfirmToast
-        open={confirmOpen}
-        text={confirmText}
-        confirmLabel={t("confirm.confirmLabel")}
-        cancelLabel={t("confirm.cancelLabel")}
-        variant="danger"
-        onCancel={() => {
-          if (confirmBusy) return;
-          setConfirmOpen(false);
-        }}
-        onConfirm={() => {
-          if (confirmBusy || !confirmAction) return;
-          setConfirmBusy(true);
-          confirmAction()
-            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
-            .finally(() => setConfirmBusy(false));
-        }}
-        busy={confirmBusy}
-      />
+
 
       <Snackbar
         open={!!snack}

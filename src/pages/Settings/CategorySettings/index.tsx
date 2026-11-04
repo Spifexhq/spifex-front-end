@@ -1,6 +1,6 @@
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import SettingsList from "@/shared/ui/Settings/SettingsList";
-import SettingsRecordGrid from "@/shared/ui/Settings/SettingsRecordGrid";
+import DataTable from "@/shared/ui/DataTable";
+import AccountingStatus from "@/pages/Accounting/components/AccountingStatus";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -100,11 +100,6 @@ const CategorySettingsPage: React.FC = () => {
     [t]
   );
 
-  const booleanLabel = React.useCallback(
-    (value: boolean) => (value ? t("common.yes") : t("common.no")),
-    [t]
-  );
-
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
@@ -191,15 +186,6 @@ const CategorySettingsPage: React.FC = () => {
     [draftTxFilter, TX_TYPE_OPTIONS]
   );
 
-  const stats = React.useMemo(() => {
-    return {
-      total: items.length,
-      active: items.filter((item) => item.is_active).length,
-      credit: items.filter((item) => item.tx_type_hint === "credit").length,
-      debit: items.filter((item) => item.tx_type_hint === "debit").length,
-    };
-  }, [items]);
-
   const openCreate = () => {
     setForm(EMPTY_FORM);
     setModalOpen(true);
@@ -270,12 +256,10 @@ const CategorySettingsPage: React.FC = () => {
   };
 
   const removeCategory = async (item: CashflowCategory) => {
-    const confirmed = window.confirm(t("feedback.deleteConfirm", { name: item.code || item.name }));
-    if (!confirmed) return;
-
     try {
       setDeletingId(item.id);
       await api.deleteCashflowCategory(item.id);
+      setItems(current => current.filter(category => category.id !== item.id));
       setSnackbar({ severity: "success", message: t("feedback.deleted") });
       await load();
     } catch (error) {
@@ -283,6 +267,7 @@ const CategorySettingsPage: React.FC = () => {
         (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         t("feedback.deleteError");
       setSnackbar({ severity: "error", message });
+      throw error;
     } finally {
       setDeletingId(null);
     }
@@ -294,59 +279,13 @@ const CategorySettingsPage: React.FC = () => {
     <>
       <main className="settings-page">
         <div className="settings-content space-y-6">
-          <section className="settings-intro">
-            <div className="w-full">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  
-                  <p className="mt-2 max-w-3xl text-[13px] text-gray-600">{t("header.description")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button type="button" onClick={openCreate}>
-                    {t("actions.new")}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.total")}</div>
-              <div className="px-4 py-4">
-                <div className="text-[24px] font-semibold text-gray-900">{stats.total}</div>
-                <p className="mt-1 text-[12px] text-gray-600">{t("stats.totalHelp")}</p>
-              </div>
-            </article>
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.active")}</div>
-              <div className="px-4 py-4">
-                <div className="text-[24px] font-semibold text-gray-900">{stats.active}</div>
-                <p className="mt-1 text-[12px] text-gray-600">{t("stats.activeHelp")}</p>
-              </div>
-            </article>
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.credit")}</div>
-              <div className="px-4 py-4">
-                <div className="text-[24px] font-semibold text-gray-900">{stats.credit}</div>
-                <p className="mt-1 text-[12px] text-gray-600">{t("stats.creditHelp")}</p>
-              </div>
-            </article>
-            <article className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-[10px] uppercase tracking-wide text-gray-600 settings-panel-heading">{t("stats.debit")}</div>
-              <div className="px-4 py-4">
-                <div className="text-[24px] font-semibold text-gray-900">{stats.debit}</div>
-                <p className="mt-1 text-[12px] text-gray-600">{t("stats.debitHelp")}</p>
-              </div>
-            </article>
-          </section>
-
           <section className="space-y-4">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 settings-panel-heading">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_220px_auto_auto] lg:items-end">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <form className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(180px,1fr)_180px_auto_auto] xl:items-end" onSubmit={event => { event.preventDefault(); applyFilters(); }}>
                 <Input
                   kind="text"
                   label={t("filters.search")}
+                  placeholder={t("filters.searchPlaceholder")}
                   value={draftSearch}
                   onChange={(e) => setDraftSearch(e.target.value)}
                 />
@@ -363,7 +302,7 @@ const CategorySettingsPage: React.FC = () => {
                   hideCheckboxes
                 />
 
-                <label className="flex items-center gap-3 rounded-md border border-gray-300 bg-white px-3 py-3 text-[13px] font-medium text-gray-700">
+                <label className="flex min-h-8 items-center gap-2 text-xs text-gray-600">
                   <Checkbox
                     checked={draftIncludeInactive}
                     onChange={(e) => setDraftIncludeInactive(e.target.checked)}
@@ -376,18 +315,33 @@ const CategorySettingsPage: React.FC = () => {
                   <Button type="button" variant="outline" onClick={clearFilters}>
                     {t("actions.clear")}
                   </Button>
-                  <Button type="button" onClick={applyFilters}>
+                  <Button type="submit" variant="outline">
                     {t("actions.apply")}
                   </Button>
                 </div>
-              </div>
+              </form>
+              <Button type="button" onClick={openCreate} disabled={saving || !!deletingId}>{t("actions.new")}</Button>
             </div>
 
-            <div className="min-w-0">
-              <SettingsList busy={!!deletingId}>
-                <SettingsRecordGrid selectable={false} paginate records={items.map(item=>({id:item.id,name:item.name,labels:[t("table.code"),t("table.parent"),t("table.txHint"),t("table.entries"),t("table.sort"),t("table.active"),t("modal.description")],values:[item.code||t("common.empty"),item.parent_label||t("common.empty"),txHintLabel(item.tx_type_hint),item.entry_count??0,item.sort_order??0,<span className="inline-flex items-center gap-1.5" key="status"><span className={`h-1.5 w-1.5 rounded-full ${item.is_active?"bg-emerald-500":"bg-gray-300"}`}/>{booleanLabel(!!item.is_active)}</span>,item.description||t("common.empty")],onEdit:()=>openEdit(item),onDelete:()=>void removeCategory(item)}))}/>
-                {!items.length&&<p className="px-5 py-12 text-center text-sm text-gray-500">{t("table.empty")}</p>}
-              </SettingsList>
+            <div className="[&_table]:min-w-0! md:[&_table]:min-w-[740px]!">
+            <DataTable
+              key={JSON.stringify([appliedSearch, appliedIncludeInactive, appliedTxFilter])}
+              translationNamespace="categorySettings"
+              items={items}
+              editLabel={t("actions.edit")}
+              emptyLabel={t("table.empty")}
+              onEdit={openEdit}
+              onDelete={removeCategory}
+              previewFields={[{ key: "order", label: t("table.sort"), render: item => item.sort_order ?? 0 }, { key: "description", label: t("modal.description"), render: item => item.description || t("common.empty") }]}
+              columns={[
+                { key: "name", label: t("table.name"), render: item => item.name },
+                { key: "code", label: t("table.code"), render: item => item.code || t("common.empty") },
+                { key: "parent", label: t("table.parent"), render: item => item.parent_label || t("common.empty") },
+                { key: "type", label: t("table.txHint"), render: item => txHintLabel(item.tx_type_hint) },
+                { key: "entries", label: t("table.entries"), render: item => item.entry_count ?? 0 },
+                { key: "status", label: t("table.status"), render: item => <AccountingStatus active={!!item.is_active} label={t(item.is_active ? "status.active" : "status.inactive")} /> },
+              ]}
+            />
             </div>
           </section>
         </div>

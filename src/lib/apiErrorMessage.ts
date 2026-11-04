@@ -1,5 +1,5 @@
 /** The HTTP client throws both Error instances and structured API error bodies. */
-export function accountingErrorMessage(cause: unknown, fallback: string) {
+export function apiErrorMessage(cause: unknown, fallback: string) {
   if (cause instanceof Error) return cause.message || fallback;
   if (!cause || typeof cause !== "object") return fallback;
   const error = cause as { fields?: unknown; detail?: unknown; message?: unknown };

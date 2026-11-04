@@ -1,5 +1,5 @@
-import SettingsRow from "@/shared/ui/Settings/SettingsRow";
-import SettingsList, { SettingsRecords } from "@/shared/ui/Settings/SettingsList";
+import DataTable from "@/shared/ui/DataTable";
+import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 /* -------------------------------------------------------------------------- */
@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
 import Snackbar from "@/shared/ui/Snackbar";
-import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
@@ -27,7 +26,6 @@ import { PermissionMiddleware } from "src/middlewares";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { getCursorFromUrl } from "@/lib/list";
 
-import type { TFunction } from "i18next";
 import type { Entity, EntityTypeValue, GetEntitiesParams } from "@/models/settings/entities";
 
 /* ------------------------------ Snackbar type ----------------------------- */
@@ -81,9 +79,7 @@ function normalizeEntityType(v: Entity["entity_type"]) {
 }
 
 /** Since the backend is now constrained, a small cast is acceptable. */
-function asEntityTypeValue(v: string): EntityTypeValue {
-  return v as EntityTypeValue;
-}
+
 
 /* ------------------------------- Chip UI ---------------------------------- */
 
@@ -93,49 +89,13 @@ function asEntityTypeValue(v: string): EntityTypeValue {
 
 /* ------------------------------ Row component ------------------------------ */
 
-const Row: React.FC<{
-  entity: Entity;
-  onEdit: (e: Entity) => void;
-  onDelete: (e: Entity) => void;
-  t: TFunction;
-  busy?: boolean;
-}> = ({ entity, onEdit, onDelete, t, busy }) => {
-  const normalized = normalizeEntityType(entity.entity_type);
-  const type: EntityTypeValue = normalized ? asEntityTypeValue(normalized) : "other";
-  const typeLabel = t(`types.${type}`);
 
-  return (
-    <SettingsRow onOpen={() => onEdit(entity)} disabled={busy} permission="change_entity" className={`flex items-center justify-between px-4 py-2.5  settings-row ${busy ? "opacity-70 pointer-events-none" : ""}`}>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-          {typeLabel}
-          {entity.is_active === false ? ` ${t("row.inactive")}` : ""}
-        </p>
-        <p className="text-[13px] font-medium text-gray-900 truncate">{entity.full_name || t("row.untitled")}</p>
-      </div>
-
-      <div className="flex gap-2 shrink-0 settings-row-actions">
-        <PermissionMiddleware codeName={"change_entity"}>
-          <Button variant="outline" onClick={() => onEdit(entity)} disabled={busy}>
-            {t("btn.edit")}
-          </Button>
-        </PermissionMiddleware>
-
-        <PermissionMiddleware codeName={"delete_entity"}>
-          <Button variant="outline" onClick={() => onDelete(entity)} disabled={busy} aria-busy={busy || undefined}>
-            {t("btn.delete")}
-          </Button>
-        </PermissionMiddleware>
-      </div>
-    </SettingsRow>
-  );
-};
 
 /* -------------------------------------------------------------------------- */
 
 const EntitySettings: React.FC = () => {
   const { t, i18n } = useTranslation("entitySettings");
-  const { isOwner, permissions } = useAuthContext();
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
 
   const canViewEntities = useMemo(() => {
     if (isOwner) return true;
@@ -154,13 +114,13 @@ const EntitySettings: React.FC = () => {
   const [snack, setSnack] = useState<Snack>(null);
 
   /* ------------------------------ Confirm delete ------------------------------ */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+
+
+
 
   /* ------------------------------ Deletion optimistic UI ------------------------------ */
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
   /* ------------------------------ Added overlay ------------------------------ */
@@ -339,7 +299,7 @@ const EntitySettings: React.FC = () => {
   }, []);
 
   /* ------------------------------ Pager ------------------------------------ */
-  const inflightRef = useRef(false);
+
 
   const fetchEntitiesPage = useCallback(
     async (cursor?: string, pageSize = 20) => {
@@ -347,10 +307,10 @@ const EntitySettings: React.FC = () => {
         return { items: [] as Entity[], nextCursor: undefined as string | undefined };
       }
 
-      if (inflightRef.current) return { items: [] as Entity[], nextCursor: undefined as string | undefined };
-      inflightRef.current = true;
 
-      try {
+
+
+      {
         const typeParam = appliedTypes.length === 0 ? undefined : uniq(appliedTypes).slice().sort().join(",");
 
         const params: GetEntitiesParams = {
@@ -370,8 +330,6 @@ const EntitySettings: React.FC = () => {
         const nextCursor = nextUrl ? getCursorFromUrl(nextUrl) || nextUrl : undefined;
 
         return { items, nextCursor, totalCount: (data as unknown as { count?: number }).count };
-      } finally {
-        inflightRef.current = false;
       }
     },
     [canViewEntities, appliedName, appliedAlias, appliedTypes, appliedStatuses]
@@ -432,50 +390,13 @@ const EntitySettings: React.FC = () => {
   }, [added, deletedIds, pager.items, matchesFilters]);
 
   /* ------------------------------ Delete flow ------------------------------ */
-  const requestDeleteEntity = useCallback(
-    (entity: Entity) => {
-      const name = entity.full_name ?? "";
 
-      setConfirmText(t("confirm.deleteTitle", { name }));
-      setConfirmAction(() => async () => {
-        setDeleteTargetId(entity.id);
-
-        try {
-          setDeletedIds((prev) => new Set(prev).add(entity.id));
-
-          await api.deleteEntity(entity.id);
-          await pager.refresh();
-
-          setAdded((prev) => prev.filter((e) => e.id !== entity.id));
-          setSnack({ message: t("toast.deleteOk"), severity: "info" });
-        } catch (err) {
-          setDeletedIds((prev) => {
-            const next = new Set(prev);
-            next.delete(entity.id);
-            return next;
-          });
-
-          setSnack({
-            message: err instanceof Error ? err.message : t("errors.deleteError"),
-            severity: "error",
-          });
-        } finally {
-          setConfirmOpen(false);
-          setConfirmBusy(false);
-          setDeleteTargetId(null);
-        }
-      });
-
-      setConfirmOpen(true);
-    },
-    [pager, t]
-  );
 
   /* ------------------------------ Loading UI ------------------------------ */
   const isInitialLoading = pager.loading && pager.items.length === 0;
   const isBackgroundSync = pager.loading && pager.items.length > 0;
 
-  const globalBusy = isBackgroundSync || confirmBusy || modalOpen;
+  const globalBusy = isBackgroundSync  || modalOpen;
 
   const nameChipValue = appliedName.trim() ? `• ${truncate(appliedName.trim(), 22)}` : "";
   const aliasChipValue = appliedAlias.trim() ? `• ${truncate(appliedAlias.trim(), 22)}` : "";
@@ -499,7 +420,7 @@ const EntitySettings: React.FC = () => {
 
       <main className="settings-page">
         <div className="settings-content ">
-          
+
 
           <PermissionMiddleware codeName={"view_entity"} behavior="lock">
             <section className="mt-6">
@@ -574,46 +495,13 @@ const EntitySettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<SettingsList deleteRecord={api.deleteEntity} deletePermission="delete_entity" onDeleted={ids => {
+<DataTable onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy}>
-                
-
-                {pager.error ? (
-                  <div className="p-6 text-center">
-                    <p className="text-[13px] font-medium text-red-700 mb-2">{t("errors.loadFailedTitle")}</p>
-                    <p className="text-[11px] text-red-600 mb-4">{pager.error}</p>
-                    <Button variant="outline" size="sm" onClick={pager.refresh} disabled={globalBusy}>
-                      {t("btn.retry")}
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <SettingsRecords className="divide-y divide-gray-200">
-                      {visibleItems.length === 0 ? (
-                        <p className="p-4 text-center text-sm text-gray-500">{t("empty")}</p>
-                      ) : (
-                        visibleItems.map((e) => (
-                          <Row
-                            key={e.id}
-                            entity={e}
-                            onEdit={openEditModal}
-                            onDelete={requestDeleteEntity}
-                            t={t}
-                            busy={globalBusy || deleteTargetId === e.id || deletedIds.has(e.id)}
-                          />
-                        ))
-                      )}
-                    </SettingsRecords>
-
-
-                  </>
-                )}
-              </SettingsList>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"country",label:t("common:records.fields.country"),render:item=>String(item.country??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_entity")} canDelete={isOwner||isSuperUser||permissions.includes("delete_entity")} onEdit={openEditModal} onDelete={item=>api.deleteEntity(item.id)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>
@@ -640,7 +528,7 @@ const EntitySettings: React.FC = () => {
       {/* NAME POPOVER */}
       <Popover appearance="settings" open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byNameTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -680,7 +568,7 @@ const EntitySettings: React.FC = () => {
       {/* ALIAS POPOVER */}
       <Popover appearance="settings" open={openFilter === "alias"} anchorRef={aliasAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byAliasTitle")}>
         <div className="p-4">
-          
+
 
           <div className="mt-3">
             <Input
@@ -725,7 +613,7 @@ const EntitySettings: React.FC = () => {
         width={420}
        title={t("filters.byTypeTitle")}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -775,7 +663,7 @@ const EntitySettings: React.FC = () => {
         width={420}
        title={t("filters.byStatusTitle")}>
         <div className="p-4 overflow-visible">
-          
+
 
           <div className="mt-3 relative z-[1000000] overflow-visible">
             <div className="[&_input[type=text]]:hidden overflow-visible">
@@ -810,25 +698,7 @@ const EntitySettings: React.FC = () => {
         </div>
       </Popover>
 
-      <ConfirmToast
-        open={confirmOpen}
-        text={confirmText}
-        confirmLabel={t("btn.confirmDelete")}
-        cancelLabel={t("btn.cancel")}
-        variant="danger"
-        onCancel={() => {
-          if (confirmBusy) return;
-          setConfirmOpen(false);
-        }}
-        onConfirm={() => {
-          if (confirmBusy || !confirmAction) return;
-          setConfirmBusy(true);
-          confirmAction()
-            .catch(() => setSnack({ message: t("errors.confirmFailed"), severity: "error" }))
-            .finally(() => setConfirmBusy(false));
-        }}
-        busy={confirmBusy}
-      />
+
 
       <Snackbar
         open={!!snack}

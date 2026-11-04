@@ -67,7 +67,8 @@
       "sku": "SKU",
       "account_type": "Kontotyp",
       "account_number": "Kontonummer"
-    }
+    },
+    "deleteConfirm": "Ausgewählte Datensätze löschen?"
   },
   "modalHints": {
     "book": "Buch",
@@ -77,5 +78,12 @@
     "ledgerAccount": "Sachkonto",
     "editShortcuts": "Tastenkürzel: Esc schließen • Strg/⌘+S speichern",
     "previewShortcuts": "Tastenkürzel: Esc schließen"
+  },
+  "tableFilters": {
+    "search": "Suchen",
+    "placeholder": "Datensätze suchen…",
+    "filters": "Filter",
+    "clear": "Filter zurücksetzen",
+    "apply": "Filter anwenden"
   }
 }
