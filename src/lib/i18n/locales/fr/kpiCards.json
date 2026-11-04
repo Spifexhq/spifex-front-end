@@ -1,42 +1,53 @@
 {
-    "loading": "Chargement…",
-    "panel": {
-        "consolidatedBalance": "Solde consolidé",
-        "accountsCount": "comptes : {{count}}",
-        "header": "Comptes bancaires • Solde consolidé :"
+  "loading": "Chargement…",
+  "panel": {
+    "consolidatedBalance": "Solde consolidé",
+    "accountsCount": "{{count}} comptes",
+    "header": "Comptes bancaires • Solde consolidé :",
+    "accountsCount_one": "{{count}} compte",
+    "accountsCount_other": "{{count}} comptes"
+  },
+  "aria": {
+    "goToBanks": "Aller aux paramètres des banques",
+    "openBanks": "Ouvrir Banques"
+  },
+  "actions": {
+    "close": "Fermer"
+  },
+  "delta": {
+    "mom": "{{value}} par rapport au mois précédent",
+    "noBase": "Aucun solde du mois précédent à comparer"
+  },
+  "cashflow": {
+    "labels": {
+      "mtdNet": "Ce mois · résultat net",
+      "overdueNet": "En retard (non soldé)",
+      "next7Net": "7 prochains jours"
     },
-    "aria": {
-        "goToBanks": "Aller aux paramètres des banques",
-        "openBanks": "Ouvrir Banques"
-    },
-    "actions": {
-        "close": "Fermer"
-    },
-    "delta": {
-        "mom": "M/M {{value}}"
-    },
-    "cashflow": {
-        "labels": {
-        "mtdNet": "MTD : Résultat",
-        "overdueNet": "En retard (non soldé)",
-        "next7Net": "7 prochains jours"
-        },
-        "hints": {
-        "mtd": "Entrées {{inAmt}} • Sorties -{{outAmt}}",
-        "overdue": "Encaissements {{recAmt}} • Paiements -{{payAmt}}",
-        "next7": "Encaissements {{recAmt}} • Paiements {{payAmt}}"
-        }
-    },
-    "settled": {
-        "labels": {
-        "mtdSettledNet": "Réalisé (mois en cours)",
-        "prevSettledNet": "Mois précédent",
-        "last7Settled": "7 derniers jours"
-        },
-        "hints": {
-        "mtd": "Enc. {{recAmt}} • Pai. -{{payAmt}}",
-        "prev": "Enc. {{recAmt}} • Pai. -{{payAmt}}",
-        "last7": "Enc. {{recAmt}} • Pai. -{{payAmt}}"
-        }
+    "hints": {
+      "mtd": "Entrées {{inAmt}} • Sorties -{{outAmt}}",
+      "overdue": "Encaissements {{recAmt}} • Paiements -{{payAmt}}",
+      "next7": "Encaissements {{recAmt}} • Paiements {{payAmt}}"
     }
+  },
+  "settled": {
+    "labels": {
+      "mtdSettledNet": "Réalisé (mois en cours)",
+      "prevSettledNet": "Mois précédent",
+      "last7Settled": "7 derniers jours"
+    },
+    "hints": {
+      "mtd": "Enc. {{recAmt}} • Pai. -{{payAmt}}",
+      "prev": "Enc. {{recAmt}} • Pai. -{{payAmt}}",
+      "last7": "Enc. {{recAmt}} • Pai. -{{payAmt}}"
+    }
+  },
+  "overview": {
+    "title": "Vue d’ensemble",
+    "scopeLabel": "Comment ces montants sont calculés",
+    "cashflowScope": "Les indicateurs utilisent les échéances et des périodes fixes. La recherche, les observations et les catégories sont prises en compte. Les filtres de date, montant, type et banque concernent uniquement la liste.",
+    "settledScope": "Les indicateurs utilisent les dates de règlement et des périodes fixes. La recherche, les observations, les catégories et les banques sont prises en compte. Les filtres de date, montant et type concernent uniquement la liste.",
+    "loadError": "Impossible de charger les indicateurs. Les écritures restent disponibles ci-dessous.",
+    "retry": "Réessayer"
+  }
 }

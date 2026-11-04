@@ -34,7 +34,7 @@ export const AmountEditor: React.FC<FilterEditorProps> = ({ t, localFilters, set
       <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={onRemove}>
         {t("filterBar:buttons.remove")}
       </Button>
-      <Button variant="outline" size="sm" className="bg-white hover:bg-gray-50" onClick={onApply}>
+      <Button variant="outlineBlack" size="sm" onClick={onApply}>
         {t("filterBar:buttons.apply")}
       </Button>
     </div>

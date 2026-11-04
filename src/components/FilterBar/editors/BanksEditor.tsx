@@ -29,7 +29,7 @@ export const BanksEditor: React.FC<FilterEditorProps> = ({
       <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={onRemove}>
         {t("filterBar:buttons.remove")}
       </Button>
-      <Button variant="outline" size="sm" className="font-semibold bg-white hover:bg-gray-50" onClick={onApply}>
+      <Button variant="outlineBlack" size="sm" onClick={onApply}>
         {t("filterBar:buttons.apply")}
       </Button>
     </div>

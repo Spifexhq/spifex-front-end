@@ -1,12 +1,16 @@
 {
-  "search": { "placeholder": "Search or filter... (Ctrl/⌘+K)" },
+  "search": {
+    "placeholder": "Search by description…",
+    "label": "Search entries"
+  },
   "buttons": {
     "config": "Settings",
     "saveView": "Save view",
     "views": "Views",
     "apply": "Apply",
     "clear": "Clear filters",
-    "remove": "Remove"
+    "remove": "Remove",
+    "toggleFilters": "Filters"
   },
   "menu": {
     "addFilter": "Add filter +",
@@ -39,10 +43,21 @@
       "thisQuarter": "Quarter",
       "thisYear": "Year"
     },
-    "banks": { "label": "Banks", "button": "Select banks" },
-    "categories": { "label": "Categories", "button": "Select category" },
-    "observation": { "placeholder": "Type an observation..." },
-    "txType": { "credit": "Income", "debit": "Expense" },
+    "banks": {
+      "label": "Banks",
+      "button": "Select banks"
+    },
+    "categories": {
+      "label": "Categories",
+      "button": "Select category"
+    },
+    "observation": {
+      "placeholder": "Type an observation..."
+    },
+    "txType": {
+      "credit": "Income",
+      "debit": "Expense"
+    },
     "amount": {
       "min": "Minimum",
       "max": "Maximum"
@@ -83,5 +98,8 @@
     "defaultShort": "default",
     "overwriteHint": "The selected view will be replaced with the current filters."
   },
-  "aria": { "removeFilter": "remove filter" }
+  "aria": {
+    "removeFilter": "remove filter"
+  },
+  "pendingChanges": "Changes not applied"
 }

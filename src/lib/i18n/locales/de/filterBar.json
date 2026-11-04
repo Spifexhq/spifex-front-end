@@ -1,12 +1,16 @@
 {
-  "search": { "placeholder": "Suchen oder filtern... (Ctrl/⌘+K)" },
+  "search": {
+    "placeholder": "Nach Beschreibung suchen…",
+    "label": "Buchungen durchsuchen"
+  },
   "buttons": {
     "config": "Einstellungen",
     "saveView": "Ansicht speichern",
     "views": "Ansichten",
     "apply": "Anwenden",
     "clear": "Filter löschen",
-    "remove": "Entfernen"
+    "remove": "Entfernen",
+    "toggleFilters": "Filter"
   },
   "menu": {
     "addFilter": "Filter hinzufügen +",
@@ -39,10 +43,21 @@
       "thisQuarter": "Quartal",
       "thisYear": "Jahr"
     },
-    "banks": { "label": "Banken", "button": "Banken auswählen" },
-    "categories": { "label": "Kategorie", "button": "Kategorien auswählen" },
-    "observation": { "placeholder": "Bemerkung eingeben..." },
-    "txType": { "credit": "Einnahme", "debit": "Ausgabe" },
+    "banks": {
+      "label": "Banken",
+      "button": "Banken auswählen"
+    },
+    "categories": {
+      "label": "Kategorie",
+      "button": "Kategorien auswählen"
+    },
+    "observation": {
+      "placeholder": "Bemerkung eingeben..."
+    },
+    "txType": {
+      "credit": "Einnahme",
+      "debit": "Ausgabe"
+    },
     "amount": {
       "min": "Minimum",
       "max": "Maximum"
@@ -83,5 +98,8 @@
     "defaultShort": "Standard",
     "overwriteHint": "Die ausgewählte Ansicht wird durch die aktuellen Filter ersetzt."
   },
-  "aria": { "removeFilter": "Filter entfernen" }
+  "aria": {
+    "removeFilter": "Filter entfernen"
+  },
+  "pendingChanges": "Änderungen nicht angewendet"
 }

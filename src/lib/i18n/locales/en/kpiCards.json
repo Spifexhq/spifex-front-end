@@ -1,42 +1,53 @@
 {
-    "loading": "Loading...",
-    "panel": {
-        "consolidatedBalance": "Consolidated balance",
-        "accountsCount": "accounts: {{count}}",
-        "header": "Bank accounts • Consolidated balance:"
+  "loading": "Loading...",
+  "panel": {
+    "consolidatedBalance": "Consolidated balance",
+    "accountsCount": "{{count}} accounts",
+    "header": "Bank accounts • Consolidated balance:",
+    "accountsCount_one": "{{count}} account",
+    "accountsCount_other": "{{count}} accounts"
+  },
+  "aria": {
+    "goToBanks": "Go to bank settings",
+    "openBanks": "Open Banks"
+  },
+  "actions": {
+    "close": "Close"
+  },
+  "delta": {
+    "mom": "{{value}} vs. previous month",
+    "noBase": "No previous-month balance to compare"
+  },
+  "cashflow": {
+    "labels": {
+      "mtdNet": "This month · net",
+      "overdueNet": "Overdue (unsettled)",
+      "next7Net": "Next 7 days"
     },
-    "aria": {
-        "goToBanks": "Go to bank settings",
-        "openBanks": "Open Banks"
-    },
-    "actions": {
-        "close": "Close"
-    },
-    "delta": {
-        "mom": "M/M {{value}}"
-    },
-    "cashflow": {
-        "labels": {
-        "mtdNet": "MTD: Result",
-        "overdueNet": "Overdue (unsettled)",
-        "next7Net": "Next 7 days"
-        },
-        "hints": {
-        "mtd": "In {{inAmt}} • Out -{{outAmt}}",
-        "overdue": "Receipts {{recAmt}} • Payments -{{payAmt}}",
-        "next7": "Receipts {{recAmt}} • Payments {{payAmt}}"
-        }
-    },
-    "settled": {
-        "labels": {
-        "mtdSettledNet": "Realized (current month)",
-        "prevSettledNet": "Previous month",
-        "last7Settled": "Last 7 days"
-        },
-        "hints": {
-        "mtd": "Rec. {{recAmt}} • Pay. -{{payAmt}}",
-        "prev": "Rec. {{recAmt}} • Pay. -{{payAmt}}",
-        "last7": "Rec. {{recAmt}} • Pay. -{{payAmt}}"
-        }
+    "hints": {
+      "mtd": "In {{inAmt}} • Out -{{outAmt}}",
+      "overdue": "Receipts {{recAmt}} • Payments -{{payAmt}}",
+      "next7": "Receipts {{recAmt}} • Payments {{payAmt}}"
     }
+  },
+  "settled": {
+    "labels": {
+      "mtdSettledNet": "Realized (current month)",
+      "prevSettledNet": "Previous month",
+      "last7Settled": "Last 7 days"
+    },
+    "hints": {
+      "mtd": "Rec. {{recAmt}} • Pay. -{{payAmt}}",
+      "prev": "Rec. {{recAmt}} • Pay. -{{payAmt}}",
+      "last7": "Rec. {{recAmt}} • Pay. -{{payAmt}}"
+    }
+  },
+  "overview": {
+    "title": "Overview",
+    "scopeLabel": "How these figures are calculated",
+    "cashflowScope": "Metrics use due dates and fixed reporting periods. Search, observation and category filters apply. Date, amount, type and bank filters apply to the list only.",
+    "settledScope": "Metrics use settlement dates and fixed reporting periods. Search, observation, category and bank filters apply. Date, amount and type filters apply to the list only.",
+    "loadError": "Unable to load the overview. Your entries are still available below.",
+    "retry": "Try again"
+  }
 }

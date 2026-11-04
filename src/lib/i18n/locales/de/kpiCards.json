@@ -1,42 +1,53 @@
 {
-    "loading": "Wird geladen…",
-    "panel": {
-        "consolidatedBalance": "Konsolidierter Bestand",
-        "accountsCount": "Konten: {{count}}",
-        "header": "Bankkonten • Konsolidierter Bestand:"
+  "loading": "Wird geladen…",
+  "panel": {
+    "consolidatedBalance": "Konsolidierter Bestand",
+    "accountsCount": "{{count}} Konten",
+    "header": "Bankkonten • Konsolidierter Bestand:",
+    "accountsCount_one": "{{count}} Konto",
+    "accountsCount_other": "{{count}} Konten"
+  },
+  "aria": {
+    "goToBanks": "Zu den Bankeinstellungen",
+    "openBanks": "Banken öffnen"
+  },
+  "actions": {
+    "close": "Schließen"
+  },
+  "delta": {
+    "mom": "{{value}} zum Vormonat",
+    "noBase": "Kein Saldo im Vormonat zum Vergleich"
+  },
+  "cashflow": {
+    "labels": {
+      "mtdNet": "Dieser Monat · Nettoergebnis",
+      "overdueNet": "Überfällig (offen)",
+      "next7Net": "Nächste 7 Tage"
     },
-    "aria": {
-        "goToBanks": "Zu den Bankeinstellungen",
-        "openBanks": "Banken öffnen"
-    },
-    "actions": {
-        "close": "Schließen"
-    },
-    "delta": {
-        "mom": "M/M {{value}}"
-    },
-    "cashflow": {
-        "labels": {
-        "mtdNet": "MTD: Ergebnis",
-        "overdueNet": "Überfällig (offen)",
-        "next7Net": "Nächste 7 Tage"
-        },
-        "hints": {
-        "mtd": "Eingänge {{inAmt}} • Ausgänge -{{outAmt}}",
-        "overdue": "Einnahmen {{recAmt}} • Ausgaben -{{payAmt}}",
-        "next7": "Einnahmen {{recAmt}} • Ausgaben {{payAmt}}"
-        }
-    },
-    "settled": {
-        "labels": {
-        "mtdSettledNet": "Realisierte Summe (aktueller Monat)",
-        "prevSettledNet": "Vormonat",
-        "last7Settled": "Letzte 7 Tage"
-        },
-        "hints": {
-        "mtd": "Einn. {{recAmt}} • Ausg. -{{payAmt}}",
-        "prev": "Einn. {{recAmt}} • Ausg. -{{payAmt}}",
-        "last7": "Einn. {{recAmt}} • Ausg. -{{payAmt}}"
-        }
+    "hints": {
+      "mtd": "Eingänge {{inAmt}} • Ausgänge -{{outAmt}}",
+      "overdue": "Einnahmen {{recAmt}} • Ausgaben -{{payAmt}}",
+      "next7": "Einnahmen {{recAmt}} • Ausgaben {{payAmt}}"
     }
+  },
+  "settled": {
+    "labels": {
+      "mtdSettledNet": "Realisierte Summe (aktueller Monat)",
+      "prevSettledNet": "Vormonat",
+      "last7Settled": "Letzte 7 Tage"
+    },
+    "hints": {
+      "mtd": "Einn. {{recAmt}} • Ausg. -{{payAmt}}",
+      "prev": "Einn. {{recAmt}} • Ausg. -{{payAmt}}",
+      "last7": "Einn. {{recAmt}} • Ausg. -{{payAmt}}"
+    }
+  },
+  "overview": {
+    "title": "Übersicht",
+    "scopeLabel": "So werden diese Werte berechnet",
+    "cashflowScope": "Die Kennzahlen verwenden Fälligkeitstermine und feste Zeiträume. Suche, Anmerkung und Kategorie werden berücksichtigt. Datums-, Betrags-, Typ- und Bankfilter gelten nur für die Liste.",
+    "settledScope": "Die Kennzahlen verwenden Abrechnungstermine und feste Zeiträume. Suche, Anmerkung, Kategorie und Bank werden berücksichtigt. Datums-, Betrags- und Typfilter gelten nur für die Liste.",
+    "loadError": "Die Kennzahlen konnten nicht geladen werden. Die Buchungen bleiben unten verfügbar.",
+    "retry": "Erneut versuchen"
+  }
 }

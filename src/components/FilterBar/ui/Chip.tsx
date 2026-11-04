@@ -1,44 +1,18 @@
-import React, { useMemo } from "react";
+import type { MouseEvent } from "react";
 import type { TFunction } from "i18next";
+import { Calendar, Landmark, Receipt, StickyNote, X } from "lucide-react";
 import type { FilterIcon } from "../FilterBar.types";
-import { Calendar, Landmark, Receipt, StickyNote } from "lucide-react";
 
-export const Chip: React.FC<{
-  t: TFunction;
-  icon?: FilterIcon;
-  label: string;
-  onClick(): void;
-  onRemove(): void;
-}> = ({ t, icon, label, onClick, onRemove }) => {
-  const iconNode = useMemo(() => {
-    const cls = "h-4 w-4 text-gray-600";
-    if (icon === "calendar") return <Calendar className={cls} aria-hidden />;
-    if (icon === "bank") return <Landmark className={cls} aria-hidden />;
-    if (icon === "accounts") return <Receipt className={cls} aria-hidden />;
-    if (icon === "note") return <StickyNote className={cls} aria-hidden />;
-    return null;
-  }, [icon]);
-
-  return (
-    <div
-      className="shrink-0 inline-flex items-center gap-1 text-xs border border-gray-300 rounded-md px-2 h-7 sm:h-6 bg-white cursor-pointer"
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={onClick}
-    >
-      {iconNode}
-      <span className="truncate max-w-[160px] sm:max-w-[220px]">{label}</span>
-      <button
-        aria-label={t("filterBar:aria.removeFilter")}
-        className="ml-1 rounded px-1 text-gray-500 hover:bg-gray-200"
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
-        type="button"
-      >
-        ×
-      </button>
-    </div>
-  );
-};
+export function Chip({ t, icon, label, onClick, onRemove }: {
+  t: TFunction; icon?: FilterIcon; label: string;
+  onClick(event: MouseEvent<HTMLButtonElement>): void; onRemove(): void;
+}) {
+  const Icon = icon === "calendar" ? Calendar : icon === "bank" ? Landmark : icon === "accounts" ? Receipt : StickyNote;
+  return <span className="inline-flex max-w-full items-center rounded-md border border-gray-200 bg-gray-50 text-[11px] text-gray-600">
+    <button type="button" onClick={onClick} className="inline-flex min-w-0 items-center gap-1.5 rounded-l-md py-1 pl-2 pr-1 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
+      <Icon size={12} className="shrink-0 text-gray-400" aria-hidden /><span className="max-w-52 truncate">{label}</span>
+    </button>
+    <button type="button" aria-label={`${t("filterBar:aria.removeFilter")}: ${label}`} onClick={onRemove}
+      className="mr-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]"><X size={11} aria-hidden /></button>
+  </span>;
+}

@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Search,
-  ChevronUp,
+  SlidersHorizontal,
   ChevronDown,
-  Settings,
+  Settings2,
   Save,
   Eye,
   Star,
@@ -15,7 +14,7 @@ import Button from "@/shared/ui/Button";
 import type { EntryFilters, ChipKey, Visualization, LocalFilters } from "@/models/components/filterBar";
 
 import { useMediaQuery } from "@/components/FilterBar/hooks/useMediaQuery";
-import { useOnClickOutside } from "@/components/FilterBar/hooks/useOnClickOutside";
+import { Chip } from "./ui/Chip";
 import { useBankOptions } from "@/components/FilterBar/hooks/useBankOptions";
 import { useCashflowCategories } from "src/components/FilterBar/hooks/useCategories";
 import { useSavedViews } from "@/components/FilterBar/hooks/useSavedViews";
@@ -108,40 +107,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
     ? "view_settlement_entry_view"
     : "view_cash_flow_entry_view";
 
-  useOnClickOutside(addFilterMenuRef, () => setAddFilterMenuOpen(false), addFilterMenuOpen);
-  useOnClickOutside(viewsMenuRef, () => setViewsMenuOpen(false), viewsMenuOpen);
+  const editorAnchorRef = useRef<HTMLElement | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [panelOpen, setPanelOpen] = useState<boolean>(false);
   const [lastAppliedSig, setLastAppliedSig] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isMobile) {
-      setPanelOpen(true);
-      return;
-    }
-    setPanelOpen((prev) => (typeof prev === "boolean" ? prev : false));
-  }, [isMobile]);
-
-  const panelVisible = !isMobile || panelOpen;
-
   const closeEditorsAndMenus = useCallback(() => {
     setOpenEditor(null);
     setViewsMenuOpen(false);
     setAddFilterMenuOpen(false);
   }, []);
-
-  const togglePanel = useCallback(() => {
-    if (!isMobile) return;
-    setPanelOpen((prev) => {
-      const next = !prev;
-      if (!next) closeEditorsAndMenus();
-      return next;
-    });
-  }, [closeEditorsAndMenus, isMobile]);
 
   const removeChip = useCallback(
     (key: ChipKey) => {
@@ -207,8 +184,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   const closeEditorsAndApply = useCallback(() => {
     const applied = tryApplyCurrentFilters();
-    if (applied) setOpenEditor(null);
-  }, [tryApplyCurrentFilters]);
+    if (applied || !canApply) setOpenEditor(null);
+  }, [tryApplyCurrentFilters, canApply]);
 
   const clearAll = useCallback(() => {
     const cleared = buildClearedLocalFilters(contextSettlement);
@@ -231,9 +208,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const onEsc = useCallback(() => {
     if (saveModalOpen) return void setSaveModalOpen(false);
     if (configModalOpen) return void setConfigModalOpen(false);
-    if (openEditor !== null) return void setOpenEditor(null);
-    if (viewsMenuOpen) return void setViewsMenuOpen(false);
-    if (addFilterMenuOpen) return void setAddFilterMenuOpen(false);
+    if (openEditor !== null) {
+      setOpenEditor(null);
+      const trigger = editorAnchorRef.current;
+      (trigger?.matches("button") ? trigger : trigger?.querySelector("button"))?.focus();
+      return;
+    }
+    if (viewsMenuOpen) { setViewsMenuOpen(false); viewsMenuRef.current?.querySelector("button")?.focus(); return; }
+    if (addFilterMenuOpen) { setAddFilterMenuOpen(false); addFilterMenuRef.current?.querySelector("button")?.focus(); }
   }, [addFilterMenuOpen, configModalOpen, openEditor, saveModalOpen, viewsMenuOpen]);
 
   window.useGlobalEsc(escEnabled, onEsc);
@@ -246,7 +228,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
       if (cmdOrCtrl && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        if (panelVisible) searchInputRef.current?.focus();
+        searchInputRef.current?.focus();
         return;
       }
 
@@ -258,7 +240,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [shortcutsEnabled, panelVisible, tryApplyCurrentFilters]);
+  }, [shortcutsEnabled, tryApplyCurrentFilters]);
 
   const bootstrappedRef = useRef(false);
   useEffect(() => {
@@ -309,7 +291,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       out.push({
         key: d.key,
         label: t(d.menuLabelKey),
-        onAction: () => setOpenEditor(d.key),
+        onAction: () => { editorAnchorRef.current = addFilterMenuRef.current; setOpenEditor(d.key); },
       });
     }
 
@@ -318,230 +300,56 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   const activeEditorDef = openEditor ? defsByKey.get(openEditor) ?? null : null;
 
-  const toggleEditorFromChip = useCallback((key: ChipKey) => {
-    setOpenEditor((curr) => (curr === key ? null : key));
-  }, []);
-
   return (
-    <div className="w-full">
-      {isMobile && (
-        <div className="flex items-center gap-2 mb-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="font-semibold bg-white hover:bg-gray-50"
-            onClick={togglePanel}
-            aria-expanded={panelOpen}
-            aria-label={t("filterBar:buttons.toggleFilters", { defaultValue: "Filters" })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              <span>{t("filterBar:buttons.toggleFilters", { defaultValue: "Filters" })}</span>
-
-              {activeFiltersCount > 0 && (
-                <span className="text-[11px] px-2 py-[1px] rounded-full border border-gray-200 bg-gray-50 text-gray-700">
-                  {activeFiltersCount}
-                </span>
-              )}
-
-              <span className="text-xs text-gray-500" aria-hidden>
-                {panelOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </span>
-            </span>
+    <div className="relative min-w-0 border-y border-gray-200 bg-white px-4 py-3 sm:px-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <ChipsSearchBar t={t} localFilters={localFilters} searchInputRef={searchInputRef}
+          onSearchEnter={() => void tryApplyCurrentFilters()}
+          onSearchChange={value => setLocalFilters(prev => ({ ...prev, description: value }))} />
+        <div className="relative" ref={addFilterMenuRef}>
+          <Button variant="outline" size="sm" className="gap-1.5 bg-white" aria-haspopup="menu" aria-expanded={addFilterMenuOpen}
+            onClick={() => { setOpenEditor(null); setViewsMenuOpen(false); setAddFilterMenuOpen(value => !value); }}>
+            <SlidersHorizontal size={13} aria-hidden />{t("filterBar:buttons.toggleFilters")}
+            {activeFiltersCount > 0 && <span className="rounded bg-gray-100 px-1.5 text-[10px] text-gray-600">{activeFiltersCount}</span>}
           </Button>
-
-          {!panelOpen && (
-            <div className="ml-auto">
-              <button
-                className={`text-xs font-semibold text-red-600 ${
-                  hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"
-                }`}
-                onClick={() => hasActiveFilters && clearAll()}
-                type="button"
-              >
-                {t("filterBar:buttons.clear", { defaultValue: "Clear" })}
-              </button>
-            </div>
-          )}
+          {addFilterMenuOpen && <Menu anchorRef={addFilterMenuRef} roleLabel={t("filterBar:menu.aria")} items={addFilterItems}
+            onClose={() => setAddFilterMenuOpen(false)} onAfterAction={() => setAddFilterMenuOpen(false)} />}
         </div>
-      )}
-
-      {panelVisible && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <ChipsSearchBar
-              t={t}
-              filterDefs={filterDefs}
-              localFilters={localFilters}
-              selectedBanks={selectedBanks}
-              selectedCategories={selectedCategories}
-              onToggleEditor={(key) => toggleEditorFromChip(key)}
-              onRemoveChip={removeChip}
-              searchInputRef={searchInputRef}
-              onSearchEnter={() => void tryApplyCurrentFilters()}
-              onSearchChange={(value) => setLocalFilters((prev) => ({ ...prev, description: value }))}
-            />
-
-            <div className="flex items-center gap-2 justify-end flex-wrap">
-              {isMobile && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="font-semibold bg-white hover:bg-gray-50 flex-1"
-                  onClick={() => void tryApplyCurrentFilters()}
-                  disabled={!canApply}
-                >
-                  {t("filterBar:buttons.apply")}
-                </Button>
-              )}
-
-              <PermissionMiddleware codeName={configPermission}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t("filterBar:buttons.config")}
-                  onClick={() => setConfigModalOpen(true)}
-                  className="text-sm bg-white hover:bg-gray-50"
-                >
-                  <Settings className="h-4 w-4" aria-hidden />
-                </Button>
-              </PermissionMiddleware>
-
-              <PermissionMiddleware codeName="add_entry_view">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t("filterBar:buttons.saveView")}
-                  className="font-semibold bg-white hover:bg-gray-50"
-                  onClick={() => setSaveModalOpen(true)}
-                >
-                  <span className="sm:hidden" aria-hidden>
-                    <Save className="h-4 w-4" />
-                  </span>
-                  <span className="hidden sm:inline">{t("filterBar:buttons.saveView")}</span>
-                </Button>
-              </PermissionMiddleware>
-
-              <PermissionMiddleware codeName={configPermission}>
-                <div className="relative" ref={viewsMenuRef}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    aria-label={t("filterBar:buttons.views")}
-                    className={`font-semibold bg-white hover:bg-gray-50 ${
-                      viewsMenuOpen ? "!bg-white !border-gray-400" : ""
-                    }`}
-                    onClick={() => setViewsMenuOpen((v) => !v)}
-                    aria-haspopup="menu"
-                    aria-expanded={viewsMenuOpen}
-                  >
-                    <span className="sm:hidden" aria-hidden>
-                      <Eye className="h-4 w-4" />
-                    </span>
-                    <span className="hidden sm:inline">{t("filterBar:buttons.views")}</span>
-                  </Button>
-
-                  {viewsMenuOpen && (
-                    <Menu
-                      roleLabel={t("filterBar:viewsMenu.aria")}
-                      align="right"
-                      emptyLabel={t("filterBar:viewsMenu.empty")}
-                      items={scopedViews.map((v) => ({
-                        key: v.id,
-                        label: (
-                          <span className="flex items-center justify-between w-full">
-                            <span className="truncate">{v.name}</span>
-                            {v.is_default && <Star className="w-3 h-3 text-amber-500 shrink-0 ml-2" aria-hidden />}
-                          </span>
-                        ),
-                        onAction: () => {
-                          setViewsMenuOpen(false);
-                          applyViewToForm(v);
-                        },
-                      }))}
-                      onClose={() => setViewsMenuOpen(false)}
-                    />
-                  )}
-                </div>
-              </PermissionMiddleware>
-            </div>
-          </div>
-
-          <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
-            <div className="relative w-full sm:w-auto" ref={addFilterMenuRef}>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`w-full sm:w-auto font-semibold bg-white hover:bg-gray-50 ${
-                  addFilterMenuOpen ? "!bg-white !border-gray-400" : ""
-                }`}
-                onClick={() => setAddFilterMenuOpen((v) => !v)}
-              >
-                {t("filterBar:menu.addFilter")}
+        <Button variant="outlineBlack" size="sm" disabled={!canApply} onClick={() => void tryApplyCurrentFilters()}>{t("filterBar:buttons.apply")}</Button>
+        <div className="ml-auto flex items-center gap-1">
+          <PermissionMiddleware codeName={configPermission}>
+            <div className="relative" ref={viewsMenuRef}>
+              <Button variant="ghost" size="sm" className="gap-1.5" aria-label={t("filterBar:buttons.views")} aria-haspopup="menu" aria-expanded={viewsMenuOpen}
+                onClick={() => { setOpenEditor(null); setAddFilterMenuOpen(false); setViewsMenuOpen(value => !value); }}>
+                <Eye size={14} aria-hidden /><span className="hidden sm:inline">{t("filterBar:buttons.views")}</span><ChevronDown size={12} className="hidden sm:block" aria-hidden />
               </Button>
-
-              {addFilterMenuOpen && (
-                <Menu
-                  roleLabel={t("filterBar:menu.aria")}
-                  align="left"
-                  items={addFilterItems}
-                  onClose={() => setAddFilterMenuOpen(false)}
-                  onAfterAction={() => setAddFilterMenuOpen(false)}
-                />
-              )}
+              {viewsMenuOpen && <Menu anchorRef={viewsMenuRef} roleLabel={t("filterBar:viewsMenu.aria")} align="right"
+                emptyLabel={t("filterBar:viewsMenu.empty")} onClose={() => setViewsMenuOpen(false)}
+                items={scopedViews.map(view => ({ key: view.id, label: <span className="flex w-full items-center justify-between gap-2"><span className="truncate">{view.name}</span>{view.is_default && <Star size={12} className="shrink-0 text-amber-500" aria-hidden />}</span>, onAction: () => applyViewToForm(view) }))} />}
             </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              {!isMobile && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto font-semibold bg-white hover:bg-gray-50"
-                  onClick={() => void tryApplyCurrentFilters()}
-                  disabled={!canApply}
-                >
-                  {t("filterBar:buttons.apply")}
-                </Button>
-              )}
-            </div>
-
-            <div className="flex">
-              <button
-                className={`text-xs font-semibold text-red-600 ${
-                  hasActiveFilters ? "" : "opacity-40 cursor-not-allowed"
-                }`}
-                onClick={() => hasActiveFilters && clearAll()}
-                type="button"
-              >
-                {t("filterBar:buttons.clear")}
-              </button>
-            </div>
-          </div>
-
-          <div className="relative">
-            {activeEditorDef && (
-              <Popover
-                isMobile={isMobile}
-                title={t(activeEditorDef.editorTitleKey)}
-                onClose={() => setOpenEditor(null)}
-                className={activeEditorDef.popoverClassName}
-              >
-                <activeEditorDef.Editor
-                  t={t}
-                  isMobile={isMobile}
-                  localFilters={localFilters}
-                  setLocalFilters={setLocalFilters}
-                  bankOptions={bankOptions}
-                  selectedBanks={selectedBanks}
-                  categoriesForPicker={categoriesForPicker}
-                  selectedCategories={selectedCategories}
-                  onRemove={() => removeChip(activeEditorDef.key)}
-                  onApply={closeEditorsAndApply}
-                />
-              </Popover>
-            )}
-          </div>
-
+          </PermissionMiddleware>
+          <PermissionMiddleware codeName="add_entry_view">
+            <Button variant="ghost" size="iconSm" aria-label={t("filterBar:buttons.saveView")} title={t("filterBar:buttons.saveView")} onClick={() => setSaveModalOpen(true)}><Save size={14} aria-hidden /></Button>
+          </PermissionMiddleware>
+          <PermissionMiddleware codeName={configPermission}>
+            <Button variant="ghost" size="iconSm" aria-label={t("filterBar:buttons.config")} title={t("filterBar:buttons.config")} onClick={() => setConfigModalOpen(true)}><Settings2 size={14} aria-hidden /></Button>
+          </PermissionMiddleware>
+        </div>
+      </div>
+      {(hasActiveFilters || canApply) && <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        {filterDefs.filter(def => def.isActive(localFilters)).map(def => <Chip key={def.key} t={t} icon={def.icon}
+          label={def.getChipLabel({ t, filters: localFilters, selectedBanks, selectedCategories })}
+          onClick={event => { editorAnchorRef.current = event.currentTarget; setOpenEditor(current => current === def.key ? null : def.key); setAddFilterMenuOpen(false); setViewsMenuOpen(false); }}
+          onRemove={() => removeChip(def.key)} />)}
+        {hasActiveFilters && <button type="button" onClick={clearAll} className="rounded px-1.5 py-1 text-[11px] text-gray-500 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">{t("filterBar:buttons.clear")}</button>}
+        {canApply && <span role="status" className="ml-auto text-[11px] text-amber-700">{t("filterBar:pendingChanges")}</span>}
+      </div>}
+      {activeEditorDef && <Popover key={activeEditorDef.key} anchorRef={editorAnchorRef} isMobile={isMobile}
+        title={t(activeEditorDef.editorTitleKey)} onClose={() => setOpenEditor(null)} className={activeEditorDef.popoverClassName}>
+        <activeEditorDef.Editor t={t} isMobile={isMobile} localFilters={localFilters} setLocalFilters={setLocalFilters}
+          bankOptions={bankOptions} selectedBanks={selectedBanks} categoriesForPicker={categoriesForPicker}
+          selectedCategories={selectedCategories} onRemove={() => { removeChip(activeEditorDef.key); setOpenEditor(null); }} onApply={closeEditorsAndApply} />
+      </Popover>}
           <ViewsConfigModal
             t={t}
             open={configModalOpen}
@@ -559,8 +367,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
             localFilters={localFilters}
             onRefreshViews={refreshViews}
           />
-        </>
-      )}
     </div>
   );
 };

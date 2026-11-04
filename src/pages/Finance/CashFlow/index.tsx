@@ -6,8 +6,7 @@ import { Sidebar } from '@/shared/layout/Sidebar';
 import type { SidebarEntryModalState } from '@/shared/layout/Sidebar/Sidebar';
 import { SettlementModal } from '@/components/Modal';
 import { CashFlowTable, type CashFlowTableHandle } from '@/components/Table/CashFlowTable';
-import FilterBar from '@/components/FilterBar';
-import KpiCards from '@/components/KpiCards';
+import FinancialActivityPanel from '@/components/FinancialActivityPanel';
 import { SelectionActionsBar } from '@/components/SelectionActionsBar';
 import TopProgress from '@/shared/ui/Loaders/TopProgress';
 
@@ -228,25 +227,10 @@ const CashFlow = () => {
       </div>
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
-        <div className="mt-[15px] pb-6 h-[calc(100vh-80px)] grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden px-4 sm:px-10">
-          <PermissionMiddleware codeName={['view_filters']} requireAll>
-            <FilterBar
-              onApply={handleApplyFilters}
-              bankActive
-              contextSettlement={false}
-              shortcutsEnabled={filterBarHotkeysEnabled}
-            />
-          </PermissionMiddleware>
-
-          <KpiCards
-            selectedBankIds={filters.bank_id}
-            filters={filters}
-            contextSettlement={false}
-            refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey}
-          />
-
-          <div className="min-h-0 h-full">
+        <div className="mt-[15px] pb-6 h-[calc(100dvh-80px)] min-h-0 overflow-hidden px-4 sm:px-10">
+          <FinancialActivityPanel filters={filters} onApply={handleApplyFilters}
+            contextSettlement={false} refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
             <PermissionMiddleware codeName={['view_cash_flow_entries']} requireAll>
               <CashFlowTable
                 ref={tableRef}
@@ -258,7 +242,7 @@ const CashFlow = () => {
                 accountingStateById={readinessByEntryId}
               />
             </PermissionMiddleware>
-          </div>
+          </FinancialActivityPanel>
 
           {hasSelection ? (
             <SelectionActionsBar

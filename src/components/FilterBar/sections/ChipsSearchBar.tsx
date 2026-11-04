@@ -1,77 +1,18 @@
-import React from "react";
+import type { RefObject } from "react";
 import type { TFunction } from "i18next";
+import { Search } from "lucide-react";
+import TextInput from "@/shared/ui/Input/TextInput";
+import type { LocalFilters } from "@/models/components/filterBar";
 
-import type { FilterDefinition } from "../FilterBar.types";
-import type { LocalFilters, ChipKey } from "@/models/components/filterBar";
-import type { BankAccountTableRow } from "@/models/settings/banking";
-import type { CashflowCategory } from "@/models/settings/categories";
-
-import { Chip } from "../ui/Chip";
-
-export const ChipsSearchBar: React.FC<{
-  t: TFunction;
-
-  filterDefs: FilterDefinition[];
-  localFilters: LocalFilters;
-  selectedBanks: BankAccountTableRow[];
-  selectedCategories: CashflowCategory[];
-
-  onToggleEditor: (key: ChipKey) => void;
-  onRemoveChip: (key: ChipKey) => void;
-
-  searchInputRef: React.RefObject<HTMLInputElement>;
-  onSearchEnter: () => void;
-  onSearchChange: (value: string) => void;
-}> = ({
-  t,
-  filterDefs,
-  localFilters,
-  selectedBanks,
-  selectedCategories,
-  onToggleEditor,
-  onRemoveChip,
-  searchInputRef,
-  onSearchEnter,
-  onSearchChange,
-}) => {
-  return (
-    <div
-      className={[
-        "flex-1",
-        "flex flex-wrap items-center gap-2",
-        "border border-gray-300 rounded-md px-2",
-        "min-h-10 sm:min-h-8 py-1",
-        "bg-white",
-      ].join(" ")}
-    >
-      {filterDefs
-        .filter((d) => d.isActive(localFilters))
-        .map((d) => (
-          <Chip
-            key={d.key}
-            t={t}
-            icon={d.icon}
-            label={d.getChipLabel({ t, filters: localFilters, selectedBanks, selectedCategories })}
-            onClick={() => onToggleEditor(d.key)}
-            onRemove={() => onRemoveChip(d.key)}
-          />
-        ))}
-
-      <input
-        ref={searchInputRef}
-        className={[
-          "flex-1",
-          "min-w-[160px] sm:min-w-[200px]",
-          "h-7 sm:h-6",
-          "bg-transparent outline-none text-xs placeholder-gray-400",
-        ].join(" ")}
-        placeholder={t("filterBar:search.placeholder")}
-        value={localFilters.description || ""}
-        onChange={(e) => onSearchChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") onSearchEnter();
-        }}
-      />
-    </div>
-  );
-};
+export function ChipsSearchBar({ t, localFilters, searchInputRef, onSearchEnter, onSearchChange }: {
+  t: TFunction; localFilters: LocalFilters; searchInputRef: RefObject<HTMLInputElement>;
+  onSearchEnter(): void; onSearchChange(value: string): void;
+}) {
+  return <div className="relative min-w-0 basis-full sm:max-w-sm sm:flex-1 sm:basis-52">
+    <Search size={14} aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-gray-400" />
+    <TextInput ref={searchInputRef} size="sm" className="h-8! pl-8! text-xs!"
+      aria-label={t("filterBar:search.label")} placeholder={t("filterBar:search.placeholder")}
+      value={localFilters.description || ""} onChange={event => onSearchChange(event.target.value)}
+      onKeyDown={event => { if (event.key === "Enter") onSearchEnter(); }} />
+  </div>;
+}

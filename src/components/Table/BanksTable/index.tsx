@@ -1,20 +1,12 @@
-/* --------------------------------------------------------------------------
- * File: src/components/Table/BanksTable/index.tsx
- * Updates requested:
- * - Collapsed card on mobile (xs): show ONLY consolidated balance (no accounts count, no top bank)
- * - Mobile: hide scrollbars (banks list scroll still works, but scrollbar invisible)
- * - Desktop: unchanged behavior/layout
- * -------------------------------------------------------------------------- */
-
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
-
-import Spinner from "@/shared/ui/Loaders/Spinner";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ChevronDown, ArrowUpRight, Landmark } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/lib";
 import { api } from "@/api/requests";
-import { PermissionMiddleware } from "src/middlewares";
-
+import { PermissionMiddleware } from "@/middlewares";
+import Button from "@/shared/ui/Button";
 import type { BankAccountTableRow, GetBanksTableResponse } from "@/models/settings/banking";
 import type { ApiSuccess } from "@/models/Api";
 
@@ -46,79 +38,32 @@ function getInitials(name: string) {
 }
 
 type BanksTableProps = {
-  /** FilterBar selection (ids). If empty, fetch all. */
   selectedBankIds?: Array<string | number>;
   active?: boolean;
-
-  /** External refresh token to refetch. */
   refreshKey?: number;
-
-  /** Controls expanded state (KpiCards keeps layout). */
   expanded: boolean;
   onExpandedChange(next: boolean): void;
-
   onGoToBanks?(): void;
 };
+type State = { banks: BankAccountTableRow[]; count: number; total: number; loading: boolean; error: string | null };
 
-type State = {
-  banks: BankAccountTableRow[];
-  count: number;
-  total: number;
-  loading: boolean;
-  error: string | null;
-};
-
-const BanksTable: React.FC<BanksTableProps> = ({
-  selectedBankIds,
-  active = true,
-  refreshKey = 0,
-  expanded,
-  onExpandedChange,
-  onGoToBanks,
-}) => {
+export default function BanksTable({ selectedBankIds, active = true, refreshKey = 0, expanded, onExpandedChange, onGoToBanks }: BanksTableProps) {
   const { t } = useTranslation(["banksTable", "kpiCards"]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 639px)");
-    const apply = () => setIsMobile(mql.matches);
-
-    apply();
-
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", apply);
-      return () => mql.removeEventListener("change", apply);
-    }
-
-    const legacy = mql as unknown as {
-      addListener?: (cb: () => void) => void;
-      removeListener?: (cb: () => void) => void;
-    };
-
-    if (typeof legacy.addListener === "function") legacy.addListener(apply);
-    return () => {
-      if (typeof legacy.removeListener === "function") legacy.removeListener(apply);
-    };
-  }, []);
-
-  const hideScrollbarCls = useMemo(() => {
-    if (!isMobile) return "";
-    return "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
-  }, [isMobile]);
-
+  const navigate = useNavigate();
+  const detailsId = useId();
+  const reduced = useReducedMotion();
   const ids = useMemo(() => {
     const raw = Array.isArray(selectedBankIds) ? selectedBankIds : [];
     return raw.map(toKey).filter(Boolean).sort();
   }, [selectedBankIds]);
 
-  const idsKey = useMemo(() => ids.join(","), [ids]);
+  const [retryKey, setRetryKey] = useState(0);
 
   const [state, setState] = useState<State>({
     banks: [],
     count: 0,
     total: 0,
-    loading: false,
+    loading: true,
     error: null,
   });
 
@@ -158,7 +103,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
           count: 0,
           total: 0,
           loading: false,
-          error: getErrorMessage(err, t("banksTable:errors.loadEntryDetailsUnexpected", "Failed to load banks.")),
+          error: getErrorMessage(err, t("banksTable:loadError")),
         });
       }
     })();
@@ -166,7 +111,7 @@ const BanksTable: React.FC<BanksTableProps> = ({
     return () => {
       alive = false;
     };
-  }, [active, idsKey, ids, refreshKey, t]);
+  }, [active, ids, refreshKey, retryKey, t]);
 
   const sorted = useMemo(
     () => state.banks.slice().sort((a, b) => a.institution.localeCompare(b.institution)),
@@ -175,180 +120,49 @@ const BanksTable: React.FC<BanksTableProps> = ({
 
   const totalFmt = useMemo(() => formatCurrency(Number(state.total || 0)), [state.total]);
 
-  const topBank = useMemo(() => {
-    if (!sorted.length) return null;
-    return [...sorted].sort((a, b) =>
-      Number(a.consolidated_balance || 0) < Number(b.consolidated_balance || 0) ? 1 : -1,
-    )[0];
-  }, [sorted]);
 
-  const handleGoToBanks = () => {
-    if (onGoToBanks) return onGoToBanks();
-    window.location.assign("/settings/banks");
-  };
-
-  return (
+  return <>
+    <div className="min-w-0 px-4 py-3 sm:px-5">
+      <div className="text-xs leading-5 text-gray-500">{t("kpiCards:panel.consolidatedBalance")}</div>
+      <PermissionMiddleware codeName="view_consolidated_balance">
+        <div aria-busy={state.loading} className="mt-1 whitespace-nowrap text-base font-semibold leading-7 tracking-tight text-gray-900 tabular-nums sm:text-2xl">
+          {state.loading || state.error ? "—" : totalFmt}
+        </div>
+      </PermissionMiddleware>
+      <button type="button" onClick={() => onExpandedChange(!expanded)} aria-expanded={expanded} aria-controls={detailsId}
+        className="mt-1 inline-flex min-h-7 max-w-full items-center gap-1 rounded text-[11px] font-medium text-gray-600 transition-colors hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
+        <span>{state.error ? t("banksTable:details") : t("kpiCards:panel.accountsCount", { count: state.loading ? 0 : state.count })}</span>
+        <ChevronDown size={13} aria-hidden className={`shrink-0 transition-transform duration-150 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
+      </button>
+      <p className="hidden text-[11px] leading-4 text-gray-400 sm:block">{t(ids.length ? "banksTable:balanceScope" : "banksTable:allAccountsScope")}</p>
+    </div>
     <AnimatePresence initial={false}>
-      {!expanded ? (
-        <motion.button
-          key="banks-card"
-          layout
-          transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
-          onClick={() => onExpandedChange(true)}
-          className="col-span-12 sm:col-span-6 lg:col-span-3 w-full max-w-full h-[70px] sm:h-[100px] border border-gray-300 rounded-md bg-white px-3 py-2 text-left hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 overflow-hidden"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <PermissionMiddleware codeName="view_consolidated_balance">
-              <span className="text-[11px] uppercase tracking-wide text-gray-600">
-                {t("kpiCards:panel.consolidatedBalance")}
-              </span>
-            </PermissionMiddleware>
-
-            {/* Desktop only: accounts count */}
-            <span className="hidden sm:inline text-[11px] text-gray-500">
-              {t("kpiCards:panel.accountsCount", { count: state.loading ? 0 : state.count || 0 })}
-            </span>
-          </div>
-
-          <PermissionMiddleware codeName="view_consolidated_balance">
-            <div className="mt-1 text-lg font-semibold text-gray-800 tabular-nums">
-              {state.loading ? "—" : totalFmt}
-            </div>
-          </PermissionMiddleware>
-
-          {/* Desktop only: top bank preview */}
-          {!state.loading && topBank && (
-            <div className="hidden sm:flex mt-1 items-center gap-2 min-w-0">
-              <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
-                {getInitials(topBank.institution)}
-              </div>
-
-              <div className="min-w-0">
-                <div className="text-[12px] text-gray-800 truncate leading-tight">{topBank.institution}</div>
-                <div className="text-[10px] text-gray-500 truncate leading-tight">
-                  {formatCurrency(Number(topBank.consolidated_balance ?? 0))}
-                </div>
+      {expanded && <motion.section id={detailsId} key="bank-details" aria-label={t("banksTable:aria.section")}
+        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+        transition={{ duration: reduced ? 0 : .16, ease: "easeOut" }}
+        className="order-last col-span-full min-w-0 overflow-hidden border-t border-gray-100 bg-gray-50/40">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 sm:px-5">
+          <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-700"><Landmark size={14} aria-hidden />{t("banksTable:aria.section")}</h3>
+          <button type="button" onClick={() => onGoToBanks ? onGoToBanks() : navigate("/settings/banks")}
+            className="inline-flex items-center gap-1 rounded py-1 text-[11px] font-medium text-gray-600 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
+            {t("banksTable:manage")}<ArrowUpRight size={12} aria-hidden />
+          </button>
+        </div>
+        <div className="max-h-44 overflow-y-auto overscroll-contain px-4 pb-2 sm:px-5">
+          {state.loading ? <p role="status" className="py-4 text-xs text-gray-500">{t("banksTable:aria.loading")}</p>
+          : state.error ? <div role="status" className="flex items-center justify-between gap-3 py-3"><p className="text-xs text-red-700">{state.error}</p><Button variant="outline" size="xs" onClick={() => setRetryKey(key => key + 1)}>{t("kpiCards:overview.retry")}</Button></div>
+          : !sorted.length ? <p className="py-4 text-xs text-gray-500">{t("banksTable:empty")}</p>
+          : <ul className="divide-y divide-gray-100">{sorted.map(bank => <li key={bank.id} className="flex items-center justify-between gap-3 py-2">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-[10px] font-semibold text-gray-500">{getInitials(bank.institution)}</span>
+              <div className="min-w-0"><div className="truncate text-xs font-medium text-gray-800">{bank.institution}</div>
+                <div className="truncate text-[11px] text-gray-500">{bank.iban || t("banksTable:labels.branchAccount", { branch: bank.branch || "—", account: bank.account_number || "—" })}</div>
               </div>
             </div>
-          )}
-        </motion.button>
-      ) : (
-        <motion.div
-          key="banks-panel"
-          layout
-          transition={{ layout: { type: "spring", stiffness: 380, damping: 32 } }}
-          className="col-span-12 lg:col-span-6 lg:col-start-1 row-span-2 w-full max-w-full h-[35vh] sm:h-full"
-        >
-          <div className="border border-gray-300 rounded-md bg-white overflow-hidden flex flex-col h-full w-full max-w-full">
-            <div className="sticky top-0 z-10 flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-300">
-              <PermissionMiddleware codeName="view_consolidated_balance">
-                <div className="text-[12px] text-gray-700">
-                  {t("kpiCards:panel.header")}{" "}
-                  <button
-                    type="button"
-                    onClick={handleGoToBanks}
-                    className="font-semibold text-gray-800 tabular-nums px-1 -mx-1 rounded hover:text-gray-600 focus:outline-none transition"
-                    aria-label={t("kpiCards:aria.goToBanks")}
-                    title={t("kpiCards:aria.openBanks")}
-                  >
-                    {state.loading ? "—" : totalFmt}
-                  </button>
-                </div>
-              </PermissionMiddleware>
-
-              <button
-                className="text-[12px] px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-100"
-                onClick={() => onExpandedChange(false)}
-              >
-                {t("kpiCards:actions.close")}
-              </button>
-            </div>
-
-            {/* Hide scrollbar on mobile; keep scroll */}
-            <div className={`flex-1 min-h-0 overflow-y-auto ${hideScrollbarCls}`}>
-              {state.loading ? (
-                <div
-                  className="flex justify-center py-3"
-                  role="status"
-                  aria-live="polite"
-                  aria-label={t("banksTable:aria.loading")}
-                >
-                  <Spinner />
-                </div>
-              ) : state.error ? (
-                <div className="text-red-600 text-xs px-3 py-2">{state.error}</div>
-              ) : (
-                <section aria-label={t("banksTable:aria.section")} className="h-full flex flex-col bg-white">
-                  <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b border-gray-300 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-wide text-gray-600">
-                        {t("banksTable:labels.banks")}
-                      </span>
-                      <span className="text-[10px] text-gray-500">
-                        {t("banksTable:labels.count", { count: state.count || sorted.length })}
-                      </span>
-                    </div>
-                    <PermissionMiddleware codeName="view_consolidated_balance">
-                      <div className="text-[11px] text-gray-600">
-                        {t("banksTable:labels.total")}{" "}
-                        <span className="font-semibold text-gray-800 tabular-nums">{totalFmt}</span>
-                      </div>
-                    </PermissionMiddleware>
-                  </div>
-
-                  <div className={`flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 ${hideScrollbarCls}`}>
-                    {sorted.length === 0 ? (
-                      <div className="px-4 py-3 text-xs text-gray-600 text-center">{t("banksTable:empty")}</div>
-                    ) : (
-                      sorted.map((bank) => {
-                        const balance = formatCurrency(Number(bank.consolidated_balance || 0));
-                        return (
-                          <div
-                            key={bank.id}
-                            role="listitem"
-                            className="flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 focus-within:bg-gray-50"
-                            aria-label={t("banksTable:aria.row", {
-                              bank: bank.institution,
-                              branch: bank.branch,
-                              account: bank.account_number,
-                              balance,
-                            })}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="h-6 w-6 shrink-0 rounded-md border border-gray-300 bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700">
-                                {getInitials(bank.institution)}
-                              </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className="text-[13px] text-gray-800 truncate leading-tight">
-                                  {bank.institution}
-                                </span>
-
-                                {/* Desktop only: branch/account line */}
-                                <span className="hidden sm:block text-[10px] text-gray-500 truncate leading-tight">
-                                  {t("banksTable:labels.branchAccount", {
-                                    branch: bank.branch,
-                                    account: bank.account_number,
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="ml-3 shrink-0 text-[13px] font-semibold text-gray-800 tabular-nums">
-                              {balance}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </section>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      )}
+            <span className="shrink-0 text-xs font-medium text-gray-800 tabular-nums">{formatCurrency(Number(bank.consolidated_balance || 0))}</span>
+          </li>)}</ul>}
+        </div>
+      </motion.section>}
     </AnimatePresence>
-  );
-};
-
-export default BanksTable;
+  </>;
+}

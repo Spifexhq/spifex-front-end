@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/shared/layout/Sidebar";
 import { SettledEntriesTable, type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
-import FilterBar from "@/components/FilterBar";
-import KpiCards from "@/components/KpiCards";
+import FinancialActivityPanel from "@/components/FinancialActivityPanel";
 import { SelectionActionsBar, type MinimalEntry } from "@/components/SelectionActionsBar";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
@@ -112,30 +111,14 @@ const Settled = () => {
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <div
           className={[
-            "mt-[15px] pb-6 h-[calc(100vh-80px)]",
-            "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-4 overflow-hidden",
+            "mt-[15px] pb-6 h-[calc(100dvh-80px)]",
+            "min-h-0 overflow-hidden",
             "px-4 sm:px-10",
           ].join(" ")}
         >
-          <PermissionMiddleware codeName={["view_filters"]} requireAll>
-            <FilterBar
-              onApply={handleApplyFilters}
-              bankActive={true}
-              contextSettlement={true}
-              shortcutsEnabled={filterBarHotkeysEnabled}
-              initial={filters}
-            />
-          </PermissionMiddleware>
-
-          <KpiCards
-            selectedBankIds={filters.bank_id}
-            filters={filters}
-            contextSettlement={true}
-            refreshToken={kpiRefresh}
-            banksRefreshKey={banksKey}
-          />
-
-          <div className="min-h-0 h-full">
+          <FinancialActivityPanel filters={filters} onApply={handleApplyFilters}
+            contextSettlement={true} refreshToken={kpiRefresh}
+            banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
             <PermissionMiddleware codeName={["view_settled_entries"]} requireAll>
               <SettledEntriesTable
                 ref={tableRef}
@@ -144,7 +127,7 @@ const Settled = () => {
                 onSelectionChange={handleSelectionChange}
               />
             </PermissionMiddleware>
-          </div>
+          </FinancialActivityPanel>
 
           {hasSelection && (
             <SelectionActionsBar

@@ -120,7 +120,7 @@ export const ViewsConfigModal: React.FC<{
             const isRenaming = renamingId === v.id;
 
             return (
-              <div key={v.id} className="px-3 py-2 flex items-center gap-3">
+              <div key={v.id} className="flex flex-wrap items-center gap-3 px-3 py-3">
                 <label className="inline-flex items-center gap-2">
                   <Checkbox
                     checked={!!v.is_default}
@@ -141,7 +141,7 @@ export const ViewsConfigModal: React.FC<{
                   )}
                 </label>
 
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex flex-wrap items-center gap-2">
                   {isRenaming ? (
                     <>
                       <Button

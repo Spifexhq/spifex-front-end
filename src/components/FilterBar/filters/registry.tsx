@@ -17,7 +17,7 @@ export function getFilterDefinitions(): FilterDefinition[] {
       menuGroup: 0,
       menuLabelKey: "filterBar:menu.date",
       editorTitleKey: "filterBar:menu.date",
-      popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[360px] sm:max-w-[360px]",
+      popoverClassName: "w-[360px]",
       isActive: (f) => !!f.start_date || !!f.end_date,
       getChipLabel: ({ t, filters }) =>
         `${t("filterBar:chips.date")}  ${
@@ -33,7 +33,7 @@ export function getFilterDefinitions(): FilterDefinition[] {
       menuGroup: 0,
       menuLabelKey: "filterBar:menu.bank",
       editorTitleKey: "filterBar:menu.bank",
-      popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[360px] sm:max-w-[360px]",
+      popoverClassName: "w-[360px]",
       isActive: (f) => f.bank_id.length > 0,
       getChipLabel: ({ t, selectedBanks }) =>
         `${t("filterBar:chips.bank")}  ${selectedBanks
@@ -50,7 +50,7 @@ export function getFilterDefinitions(): FilterDefinition[] {
       menuGroup: 0,
       menuLabelKey: "filterBar:menu.categories",
       editorTitleKey: "filterBar:menu.categories",
-      popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[360px] sm:max-w-[360px]",
+      popoverClassName: "w-[360px]",
       isActive: (f) => f.cashflow_category_id.length > 0,
       getChipLabel: ({ t, selectedCategories }) =>
         `${t("filterBar:chips.categories")}  ${selectedCategories
@@ -67,7 +67,7 @@ export function getFilterDefinitions(): FilterDefinition[] {
       menuGroup: 1,
       menuLabelKey: "filterBar:menu.observation",
       editorTitleKey: "filterBar:menu.observation",
-      popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[260px] sm:max-w-[360px]",
+      popoverClassName: "w-72",
       isActive: (f) => !!f.observation,
       getChipLabel: ({ t, filters }) => `${t("filterBar:chips.observation")}  ${filters.observation}`,
       clear: (prev) => ({ ...prev, observation: "" }),
@@ -80,7 +80,7 @@ export function getFilterDefinitions(): FilterDefinition[] {
       menuGroup: 1,
       menuLabelKey: "filterBar:menu.txType",
       editorTitleKey: "filterBar:menu.txType",
-      popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[260px] sm:max-w-[360px]",
+      popoverClassName: "w-72",
       isActive: (f) => !!f.tx_type,
       getChipLabel: ({ t, filters }) =>
         `${t("filterBar:chips.type")} ${
@@ -96,7 +96,7 @@ export function getFilterDefinitions(): FilterDefinition[] {
       menuGroup: 1,
       menuLabelKey: "filterBar:menu.amount",
       editorTitleKey: "filterBar:menu.amount",
-      popoverClassName: "w-[calc(100vw-1rem)] sm:min-w-[260px] sm:max-w-[360px]",
+      popoverClassName: "w-72",
       isActive: (f) => isPositiveMajor(f.amount_min) || isPositiveMajor(f.amount_max),
       getChipLabel: ({ t, filters }) =>
         amountChipLabel(

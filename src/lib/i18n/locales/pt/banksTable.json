@@ -10,5 +10,10 @@
     "total": "Total:",
     "branchAccount": "Agência {{branch}} • Conta {{account}}"
   },
-  "empty": "Nenhum banco disponível"
+  "empty": "Nenhum banco disponível",
+  "details": "Ver contas",
+  "balanceScope": "Saldo atual · contas selecionadas",
+  "manage": "Gerenciar bancos",
+  "loadError": "Não foi possível carregar os saldos bancários.",
+  "allAccountsScope": "Saldo atual · todas as contas ativas"
 }

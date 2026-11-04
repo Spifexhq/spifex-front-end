@@ -10,5 +10,10 @@
     "total": "Summe:",
     "branchAccount": "Filiale {{branch}} • Konto {{account}}"
   },
-  "empty": "Keine Banken verfügbar"
+  "empty": "Keine Banken verfügbar",
+  "details": "Konten anzeigen",
+  "balanceScope": "Aktueller Saldo · ausgewählte Konten",
+  "manage": "Banken verwalten",
+  "loadError": "Die Banksalden konnten nicht geladen werden.",
+  "allAccountsScope": "Aktueller Saldo · alle aktiven Konten"
 }
