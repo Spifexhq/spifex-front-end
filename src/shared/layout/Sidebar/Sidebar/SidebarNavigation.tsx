@@ -43,8 +43,8 @@ export default function SidebarNavigation({ isOpen, toggleSidebar, handleOpenMod
     { key: "importStatement", Icon: FileUp, permission: "add_statement", subscription: true, onClick: handleOpenStatementImportModal },
   ];
   return <>
-    {mobile && isOpen && <div className="fixed inset-0 z-[90] bg-gray-950/25 backdrop-blur-[2px]" onClick={toggleSidebar} aria-hidden="true" />}
-    {(!mobile || isOpen) && <nav ref={navRef} id="workspace-sidebar" data-collapsed={collapsed} tabIndex={-1} aria-label={t("sidebar.aria.nav")} role={mobile ? "dialog" : undefined} aria-modal={mobile || undefined}
+    {mobile && <div data-open={isOpen} className="sidebar-mobile-backdrop fixed inset-0 z-[90] bg-gray-950/25 backdrop-blur-[2px]" onClick={toggleSidebar} aria-hidden="true" />}
+    <nav ref={navRef} id="workspace-sidebar" data-mobile={mobile} data-open={isOpen} data-collapsed={collapsed} tabIndex={-1} aria-label={t("sidebar.aria.nav")} role={mobile && isOpen ? "dialog" : undefined} aria-modal={(mobile && isOpen) || undefined}
       className={`workspace-sidebar sidebar-motion flex h-[100dvh] flex-col border-r border-gray-200 bg-gray-50 ${mobile ? "fixed left-0 top-0 z-[95] w-[280px] max-w-[85vw]" : `sticky top-0 ${collapsed ? "w-[72px]" : "w-[248px]"}`}`}>
       <div className="sidebar-header h-20 shrink-0 items-center">
         <div className="sidebar-header-copy sidebar-label"><p className="text-[15px] font-semibold tracking-tight text-gray-900"><Link to="/home" tabIndex={collapsed ? -1 : undefined}>Spifex</Link></p><p className="mt-0.5 truncate text-xs text-gray-500">{organization?.organization?.name || t("sidebar.title")}</p></div>
@@ -76,6 +76,6 @@ export default function SidebarNavigation({ isOpen, toggleSidebar, handleOpenMod
       </div>
       <div className="shrink-0 border-t border-gray-200 p-3"><Link to="/settings" onClick={() => { if (mobile && isOpen) toggleSidebar(); }} aria-label={t("sidebar.settings")} title={collapsed ? t("sidebar.settings") : undefined} className="sidebar-row rounded-md text-xs text-gray-500 hover:bg-gray-100"><Settings2 size={16} className="sidebar-icon" /><span className="sidebar-label">{t("sidebar.settings")}</span></Link></div>
       <SidebarUserConfiguration collapsed={collapsed} />
-    </nav>}
+    </nav>
   </>;
 }

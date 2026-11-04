@@ -80,3 +80,32 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar-motion, .sidebar-row, .sidebar-label, .sidebar-section-title::after, .settings-sidebar-content { transition: none; }
 }
+
+/* Keep drawers mounted so closing can finish before they become hidden. */
+.sidebar-mobile-backdrop {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 240ms ease, visibility 0s linear 240ms;
+}
+.sidebar-mobile-backdrop[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+@media (max-width: 767px) {
+  .sidebar-motion[data-mobile="true"] {
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 260ms cubic-bezier(.22, 1, .36, 1), visibility 0s linear 260ms;
+  }
+  .sidebar-motion[data-mobile="true"][data-open="true"] {
+    transform: translateX(0);
+    visibility: visible;
+    transition-delay: 0s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-mobile-backdrop, .sidebar-motion[data-mobile="true"] { transition: none; }
+}

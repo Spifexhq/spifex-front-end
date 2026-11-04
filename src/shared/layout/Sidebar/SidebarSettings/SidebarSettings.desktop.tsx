@@ -84,9 +84,9 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
     return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onKey); previous?.focus(); };
   }, [mobileOpen, onMobileClose]);
   return <>
-    {mobileOpen && <div className="fixed inset-0 z-40 bg-gray-950/25 backdrop-blur-[2px] md:hidden" onClick={onMobileClose} aria-hidden="true" />}
-    <nav ref={navRef} id="settings-navigation" data-collapsed={collapsed && !mobileOpen} aria-label={t("aria.nav")} role={mobileOpen ? "dialog" : undefined} aria-modal={mobileOpen || undefined}
-      className={`sidebar-motion fixed left-0 z-50 flex flex-col border-r border-gray-200 bg-gray-50 ${collapsed ? "md:w-[72px]" : "md:w-[248px]"} w-[280px] max-w-[85vw] ${mobileOpen ? "translate-x-0" : "invisible -translate-x-full md:visible md:translate-x-0"}`}
+    {<div data-open={mobileOpen} className="sidebar-mobile-backdrop fixed inset-0 z-40 bg-gray-950/25 backdrop-blur-[2px] md:hidden" onClick={onMobileClose} aria-hidden="true" />}
+    <nav ref={navRef} id="settings-navigation" data-mobile="true" data-open={mobileOpen} data-collapsed={collapsed && !mobileOpen} aria-label={t("aria.nav")} role={mobileOpen ? "dialog" : undefined} aria-modal={mobileOpen || undefined}
+      className={`sidebar-motion fixed left-0 z-50 flex flex-col border-r border-gray-200 bg-gray-50 ${collapsed ? "md:w-[72px]" : "md:w-[248px]"} w-[280px] max-w-[85vw] `}
       style={{ top: topOffsetPx, height: `calc(100dvh - ${topOffsetPx}px)` }}>
       <div className="sidebar-header h-20 shrink-0 items-center">
         <div className="sidebar-header-copy sidebar-label">
