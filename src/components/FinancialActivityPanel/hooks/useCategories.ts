@@ -19,10 +19,11 @@ function extractCollection<T>(input: unknown): T[] {
   return [];
 }
 
-export function useCashflowCategories() {
+export function useCashflowCategories(enabled = true) {
   const [categories, setCategories] = useState<CashflowCategory[]>([]);
 
   useEffect(() => {
+    if (!enabled) return;
     let alive = true;
 
     (async () => {
@@ -43,7 +44,7 @@ export function useCashflowCategories() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [enabled]);
 
   return categories;
 }

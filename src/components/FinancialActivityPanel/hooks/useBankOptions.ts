@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { api } from "@/api/requests";
 import type { BankAccountTableRow, GetBanksTableParams } from "@/models/settings/banking";
 
-export function useBankOptions(bankActive?: boolean) {
+export function useBankOptions(bankActive?: boolean, enabled = true) {
   const [banks, setBanks] = useState<BankAccountTableRow[]>([]);
 
   useEffect(() => {
+    if (!enabled) return;
     let alive = true;
 
     (async () => {
@@ -27,7 +28,7 @@ export function useBankOptions(bankActive?: boolean) {
     return () => {
       alive = false;
     };
-  }, [bankActive]);
+  }, [bankActive, enabled]);
 
   return banks;
 }

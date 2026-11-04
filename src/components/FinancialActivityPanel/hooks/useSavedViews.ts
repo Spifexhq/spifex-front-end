@@ -4,7 +4,7 @@ import type { ApiResponse } from "@/models/Api";
 import type { Visualization } from "@/models/components/filterBar";
 import { extractArray, isApiError } from "../FilterBar.utils";
 
-export function useSavedViews(settlementStatus: boolean) {
+export function useSavedViews(settlementStatus: boolean, enabled = true) {
   const [views, setViews] = useState<Visualization[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -26,8 +26,8 @@ export function useSavedViews(settlementStatus: boolean) {
   }, [settlementStatus]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (enabled) void refresh();
+  }, [refresh, enabled]);
 
   return { views, loaded, refresh };
 }
