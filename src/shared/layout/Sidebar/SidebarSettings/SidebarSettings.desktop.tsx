@@ -68,6 +68,8 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
   const visibleSections = sections.map(section => ({ ...section, items: section.items.filter(item => isOwner || permissions.includes(item.permission)) })).filter(section => section.items.length);
   useEffect(() => {
     if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const previous = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
@@ -79,7 +81,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     };
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("keydown", onKey); previous?.focus(); };
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", onKey); previous?.focus(); };
   }, [mobileOpen, onMobileClose]);
   return <>
     {mobileOpen && <div className="fixed inset-0 z-40 bg-gray-950/25 backdrop-blur-[2px] md:hidden" onClick={onMobileClose} aria-hidden="true" />}
