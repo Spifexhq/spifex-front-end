@@ -977,5 +977,18 @@
     "bankMapping": "Bank connection",
     "postingPolicy": "Posting rule",
     "journal": "Journal"
+  },
+  "section": {
+    "title": "Accounting",
+    "navigation": "Accounting navigation",
+    "workspace": "Workspace",
+    "operations": "Operations",
+    "configuration": "Configuration",
+    "settings": "Settings",
+    "back": "Back to workspace",
+    "expand": "Expand navigation",
+    "collapse": "Collapse navigation",
+    "close": "Close navigation",
+    "brand": "Spifex"
   }
 }

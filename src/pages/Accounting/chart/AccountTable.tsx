@@ -21,7 +21,7 @@ export default function AccountTable({ rows, childIds, closed, viewMode, toggle,
           <td className="hidden px-3 text-xs text-gray-500 md:table-cell">{t(`modal.${account.account_type}`)}</td>
           <td className="hidden px-3 text-xs text-gray-500 md:table-cell">{t(`modal.${account.normal_balance}`)}</td>
           <td className="hidden px-3 md:table-cell"><span className={`inline-flex items-center gap-1.5 text-xs ${account.is_active ? "text-gray-600" : "text-gray-400"}`}><span className={`h-1.5 w-1.5 rounded-full ${account.is_active ? "bg-emerald-500" : "bg-gray-300"}`} />{t(account.is_active ? "modal.active" : "workspace.inactive")}</span></td>
-          <td className="px-2">{!!onEdit && <button type="button" className="explorer-tool" onClick={() => onEdit(account)} title={t("workspace.edit")} aria-label={t("explorer.editAccount", "Edit {{name}}", { name: account.name })}><Pencil size={13} /></button>}</td>
+          <td className="px-2">{!!onEdit && <button type="button" className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-gray-400" onClick={() => onEdit(account)} title={t("workspace.edit")} aria-label={t("explorer.editAccount", "Edit {{name}}", { name: account.name })}><Pencil size={13} /></button>}</td>
         </tr>)}</tbody>
       </table>
       {!rows.length && <div className="px-5 py-12 text-center"><p className="text-sm font-medium text-gray-900">{t("workspace.emptyTitle")}</p><p className="mt-2 text-xs text-gray-500">{t("workspace.emptySubtitle")}</p></div>}

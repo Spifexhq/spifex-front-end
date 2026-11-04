@@ -2,6 +2,10 @@ const settingsPages = new Set(["personal", "organization-settings", "subscriptio
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", reconciliation: "reconciliation", correlation: "correlation", setup: "setup", periods: "periods" };
 export function getPageTitleKey(pathname: string): string {
   const [, root, page, detail, phase] = pathname.split("/");
+  if (root === "accounting") {
+    if (page === "setup" && ["profile", "chart", "books", "review"].includes(detail)) return `accountingSettings:setupFlow.phases.${detail}`;
+    return `accountingSettings:nav.${accountingPages[page || "overview"] || "overview"}`;
+  }
   if (root === "settings") {
     if (page === "ledger-accounts") return "accountingSettings:nav.chart";
     if (page === "accounting" && detail === "setup" && ["profile", "chart", "books", "review"].includes(phase)) return `accountingSettings:setupFlow.phases.${phase}`;
@@ -20,8 +24,8 @@ export function getPageTitleKey(pathname: string): string {
 export type PageCrumb = { titleKey: string; to?: string };
 export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
   const titleKey = getPageTitleKey(pathname);
-  if (pathname.startsWith("/settings/accounting/setup/")) return [{ titleKey: "settingsSidebar:items.accounting", to: "/settings/accounting/overview" }, { titleKey: "accountingSettings:nav.setup", to: "/settings/accounting/setup" }, { titleKey }];
-  if ((pathname === "/settings/accounting" || pathname.startsWith("/settings/accounting/"))) return [{ titleKey: "settingsSidebar:items.accounting", to: "/settings/accounting/overview" }, { titleKey }];
+  if (pathname.startsWith("/accounting/setup/")) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey: "accountingSettings:nav.setup", to: "/accounting/setup" }, { titleKey }];
+  if ((pathname === "/accounting" || pathname.startsWith("/accounting/"))) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey }];
   const parents: Record<string, PageCrumb> = {
     "/settings/manage-currency": { titleKey: "settingsSidebar:items.organization-settings", to: "/settings/organization-settings" },
     "/settings/manage-formats": { titleKey: "settingsSidebar:items.personal", to: "/settings/personal" },

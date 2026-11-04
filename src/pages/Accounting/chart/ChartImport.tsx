@@ -201,7 +201,7 @@ const ChartImport: React.FC<Props> = ({
   const content = (
     <>
       {!embedded ? (
-        <div className="settings-intro"><div className="flex items-start gap-3 px-5 py-4">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div className="flex items-start gap-3 px-5 py-4">
             
 
             <div className="min-w-0">
@@ -221,7 +221,7 @@ const ChartImport: React.FC<Props> = ({
 
       <section className={embeddedShellClass}>
         {!embedded ? (
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">
               {t("setup.setupMethod", "Setup method")}
             </div>
@@ -388,7 +388,7 @@ const ChartImport: React.FC<Props> = ({
   if (embedded) return <>{content}</>;
 
   return (
-    <main className="settings-page">
+    <main className="min-w-0">
       <div className="mx-auto max-w-6xl space-y-6">{content}</div>
     </main>
   );

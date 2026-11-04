@@ -2,7 +2,7 @@ import SidebarUserConfiguration from "../SidebarUserConfiguration";
 import { useEffect, useRef } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileUp, PanelLeftClose, PanelLeftOpen, Settings2, X, LayoutDashboard, Wallet, CircleCheck, ChartNoAxesCombined } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileUp, PanelLeftClose, PanelLeftOpen, Settings2, BookOpen, X, LayoutDashboard, Wallet, CircleCheck, ChartNoAxesCombined } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
 import { useDialogFocus } from "@/shared/ui/useDialogFocus";
@@ -60,6 +60,7 @@ export default function SidebarNavigation({ isOpen, toggleSidebar, handleOpenMod
             { to: "/cashflow", label: t("navbar:links.cashflow"), Icon: Wallet, permission: "view_cash_flow_page" },
             { to: "/settled", label: t("navbar:links.settled"), Icon: CircleCheck, permission: "view_settlement_page" },
             ...((isSubscribed || isSuperUser) ? [{ to: "/reports", label: t("navbar:links.reports"), Icon: ChartNoAxesCombined, permission: "view_report_page" }] : []),
+            { to: "/accounting", label: t("accountingSettings:section.title"), Icon: BookOpen, permission: "view_ledger_accounts_page" },
           ].map(({ to, label, Icon, permission }) => {
             const item = <NavLink to={to} aria-label={label} title={collapsed ? label : undefined} onClick={() => { if (mobile && isOpen) toggleSidebar(); }} className={({ isActive }) => `sidebar-row rounded-md text-[13px] transition-colors ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Icon size={16} className="sidebar-icon" /><span className="sidebar-label">{label}</span></NavLink>;
             return <div key={to} className="mb-1">{permission ? <PermissionMiddleware codeName={permission}>{item}</PermissionMiddleware> : item}</div>;

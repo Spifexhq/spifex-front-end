@@ -770,7 +770,7 @@ const OnboardingPage: React.FC = () => {
                           icon={<CreditCard className="h-4 w-4" />}
                         />
 
-                        <div className="mt-4"><Button variant="outline" onClick={() => navigate("/settings/accounting/setup")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
+                        <div className="mt-4"><Button variant="outline" onClick={() => navigate("/accounting/setup")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
                       </div>
 
                       <div className="rounded-2xl border border-gray-200 p-4">

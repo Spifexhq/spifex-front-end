@@ -3,7 +3,7 @@ import { useAccountingSetup, useAccountingDraft } from "../setup/useAccountingSe
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
-import AccountingTerm from "@/pages/Settings/AccountingSettings/components/AccountingTerm";
+import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -228,8 +228,8 @@ const AccountingBooksPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
             <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.listTitle", "Book list")}</div>
           </div>
 
@@ -299,8 +299,8 @@ const AccountingBooksPage: React.FC = () => {
         subtitle={t("booksPage.modal.subtitle", "Create or update the accounting basis and posting currency.")}
       >
         <SidePanelForm recordLabel={t("footer.book", "Book")} recordName={form.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>
             </div>
 
@@ -320,8 +320,8 @@ const AccountingBooksPage: React.FC = () => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.configuration", "Configuration")}</div>
             </div>
 

@@ -4,7 +4,7 @@ import { RouteObject } from "react-router";
 import { Navigate } from 'react-router-dom';
 
 // Layouts
-import { BaseLayout, SpifexLayout, SettingsLayout } from "@/layouts";
+import { BaseLayout, SpifexLayout, SettingsLayout, AccountingLayout } from "@/layouts";
 
 //import Loader from "@/components/Loaders/LazyLoader";
 
@@ -41,7 +41,7 @@ const ProjectSettings = lazy(() => import("@/pages/Settings/ProjectSettings"));
 const MemberSettings = lazy(() => import("@/pages/Settings/MemberSettings"));
 const GroupSettings = lazy(() => import("@/pages/Settings/GroupSettings"));
 const CategorySettings = lazy(() => import("@/pages/Settings/CategorySettings"));
-const AccountingSettings = lazy(() => import("@/pages/Settings/AccountingSettings"));
+const Accounting = lazy(() => import("@/pages/Accounting"));
 const Statements = lazy(() => import("@/pages/Settings/Statements"));
 const NotificationSettings = lazy(() => import("@/pages/Settings/NotificationSettings"));
 const FormatSettings = lazy(() => import("@/pages/Settings/FormatSettings"));
@@ -159,6 +159,10 @@ const routes: RouteObject[] = [
                         </PermissionMiddleware>
                     </SubscriptionMiddleware>
                 )
+            },
+            {
+                path: 'accounting/*',
+                element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/settings"><AccountingLayout><Accounting /></AccountingLayout></PermissionMiddleware>,
             },
             // Settings
             {
@@ -285,7 +289,7 @@ const routes: RouteObject[] = [
                     path: 'ledger-accounts',
                     element: (
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/settings/accounting/chart" replace />
+                        <Navigate to="/accounting/chart" replace />
                     </PermissionMiddleware>
                     ),
                 },
@@ -293,16 +297,8 @@ const routes: RouteObject[] = [
                     path: 'register/ledger-accounts',
                     element: (
                     <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Navigate to="/settings/accounting/setup/chart" replace />
+                        <Navigate to="/accounting/setup/chart" replace />
                     </PermissionMiddleware>
-                    ),
-                },
-                {
-                    path: 'accounting/*',
-                    element: (
-                        <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo={'/settings'}>
-                        <AccountingSettings />
-                        </PermissionMiddleware>
                     ),
                 },
                 {

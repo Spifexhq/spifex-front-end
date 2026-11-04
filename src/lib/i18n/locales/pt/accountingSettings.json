@@ -977,5 +977,18 @@
     "bankMapping": "Conexão bancária",
     "postingPolicy": "Regra de lançamento",
     "journal": "Diário"
+  },
+  "section": {
+    "title": "Contabilidade",
+    "navigation": "Navegação da contabilidade",
+    "workspace": "Espaço de trabalho",
+    "operations": "Operações",
+    "configuration": "Configuração",
+    "settings": "Definições",
+    "back": "Voltar ao espaço de trabalho",
+    "expand": "Expandir navegação",
+    "collapse": "Recolher navegação",
+    "close": "Fechar navegação",
+    "brand": "Spifex"
   }
 }

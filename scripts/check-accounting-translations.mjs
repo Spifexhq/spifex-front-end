@@ -26,7 +26,7 @@ function inspect(directory, namespace) {
     visit(source);
   }
 }
-inspect("src/pages/Settings/AccountingSettings", "accountingSettings");
+inspect("src/pages/Accounting", "accountingSettings");
 
 
 
@@ -38,6 +38,7 @@ function collectSetupKeys(node, prefix = "setupFlow") {
   }
 }
 collectSetupKeys(catalogues.en.accountingSettings.setupFlow);
+collectSetupKeys(catalogues.en.accountingSettings.section, "section");
 for (const [group, values] of Object.entries({ basis: ["management", "cash", "accrual", "tax"], status: ["draft", "posted", "reversed", "void", "error"], source: ["cash_entry", "cash_settlement", "cash_transfer", "manual", "system"] })) for (const value of values) required.accountingSettings.add(`enums.${group}.${value}`);
 for (const term of ["basis", "primary", "header", "posting", "section", "normalBalance", "bankControl", "manualPosting", "debit", "credit", "policy", "clearing", "accrual", "postingDate"]) required.accountingSettings.add(`terms.${term}`);
 for (const key of ["currency.choose", "currency.inherit"]) required.accountingSettings.add(key);

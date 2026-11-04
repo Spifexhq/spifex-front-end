@@ -295,8 +295,8 @@ const AccountingBankMappingsPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
             <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.listTitle", "Mapping list")}</div>
           </div>
 
@@ -376,8 +376,8 @@ const AccountingBankMappingsPage: React.FC = () => {
         ) : (
           <SidePanelForm recordLabel={t("footer.bankMapping", "Bank mapping")} recordName={banks.find(bank => bank.id === form.bank_account_id)?.institution} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             {editingScope && <p className="text-xs leading-6 text-gray-500">{t("setupFlow.scopeLocked", "The bank or category and book identify this configuration. Create a new configuration to use a different scope.")}</p>}
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.modal.definition", "Mapping definition")}</div>
               </div>
 

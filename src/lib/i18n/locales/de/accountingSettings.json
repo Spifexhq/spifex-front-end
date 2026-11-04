@@ -977,5 +977,18 @@
     "bankMapping": "Bankverbindung",
     "postingPolicy": "Buchungsregel",
     "journal": "Journal"
+  },
+  "section": {
+    "title": "Buchhaltung",
+    "navigation": "Buchhaltungsnavigation",
+    "workspace": "Arbeitsbereich",
+    "operations": "Vorgänge",
+    "configuration": "Konfiguration",
+    "settings": "Einstellungen",
+    "back": "Zurück zum Arbeitsbereich",
+    "expand": "Navigation erweitern",
+    "collapse": "Navigation reduzieren",
+    "close": "Navigation schließen",
+    "brand": "Spifex"
   }
 }

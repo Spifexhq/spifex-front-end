@@ -1,7 +1,7 @@
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
-import AccountingTerm from "@/pages/Settings/AccountingSettings/components/AccountingTerm";
+import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -318,8 +318,8 @@ const AccountingJournalsPage: React.FC = () => {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
             <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.listTitle", "Journal list")}</div>
           </div>
 
@@ -402,8 +402,8 @@ const AccountingJournalsPage: React.FC = () => {
           <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
         ) : (
           <SidePanelForm recordLabel={t("footer.journal", "Journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
               </div>
 
@@ -461,8 +461,8 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 settings-panel-heading">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+              <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
                   <Button
@@ -581,7 +581,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-4 settings-panel">
+            <section className="rounded-lg border border-gray-200 bg-white p-4 rounded-lg border border-gray-200 bg-white shadow-xs">
               <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.debitTotal", "Debit total")}</div>
@@ -620,7 +620,7 @@ const AccountingJournalsPage: React.FC = () => {
           </dl>
           {selectedJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{selectedJournal.memo}</p>}
           <div className="overflow-x-auto rounded-lg border border-gray-200 settings-table-scroll">
-            <SettingsTable className="w-full text-[13px]"><thead><tr className="border-b border-gray-200 bg-gray-50 text-left settings-panel-heading"><th className="p-3 font-medium">{t("redesign.ledgerAccount", "Ledger account")}</th><th className="p-3 text-right font-medium">{t("common.balances.debit", "Debit")}</th><th className="p-3 text-right font-medium">{t("common.balances.credit", "Credit")}</th></tr></thead>
+            <SettingsTable className="w-full text-[13px]"><thead><tr className="border-b border-gray-200 bg-gray-50 text-left border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600"><th className="p-3 font-medium">{t("redesign.ledgerAccount", "Ledger account")}</th><th className="p-3 text-right font-medium">{t("common.balances.debit", "Debit")}</th><th className="p-3 text-right font-medium">{t("common.balances.credit", "Credit")}</th></tr></thead>
               <tbody>{selectedJournal.lines.map(line => <tr key={line.line_no} className="border-b border-gray-100 last:border-0"><td className="p-3"><p className="font-medium">{line.account_name}</p><p className="mt-1 text-xs text-gray-500">{line.account_code}</p>{line.memo && <p className="mt-1 text-xs text-gray-500">{line.memo}</p>}</td><td className="p-3 text-right tabular-nums">{(line.debit_minor / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(line.credit_minor / 100).toFixed(2)}</td></tr>)}</tbody>
               <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold"><tr><td className="p-3">{t("redesign.total", "Total")}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.debit_minor, 0) / 100).toFixed(2)}</td><td className="p-3 text-right tabular-nums">{(selectedJournal.lines.reduce((sum, line) => sum + line.credit_minor, 0) / 100).toFixed(2)}</td></tr></tfoot>
             </SettingsTable>

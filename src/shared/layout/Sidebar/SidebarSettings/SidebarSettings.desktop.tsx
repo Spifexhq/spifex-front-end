@@ -53,13 +53,6 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
           { id: "departments", icon: "departments", label: t("items.departments"), permission: "view_department_settings_page" },
         ],
       },
-      {
-        title: t("sections.accounting"),
-        id: "acct",
-        items: [
-          { id: "accounting", icon: "accounting", label: t("items.accounting"), permission: "view_ledger_accounts_page" }, // view_accounting_accounts_page
-        ],
-      },
     ],
     [t]
   );

@@ -286,7 +286,7 @@ const CashFlow = () => {
                 }
               }}
               accountingReviewCount={selectedIds.length}
-              onAccountingReview={() => navigate('/settings/accounting/reconciliation')}
+              onAccountingReview={() => navigate('/accounting/reconciliation')}
             />
           ) : null}
         </div>
@@ -314,7 +314,7 @@ const CashFlow = () => {
         open={!!reasonEntryId}
         accounting={selectedAccounting}
         onClose={() => setReasonEntryId(null)}
-        onOpenAccountingSettings={() => navigate('/settings/accounting/reconciliation')}
+        onOpenAccountingSettings={() => navigate('/accounting/reconciliation')}
       />
     </div>
   );

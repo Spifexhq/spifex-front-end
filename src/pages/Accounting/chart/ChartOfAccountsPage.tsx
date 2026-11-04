@@ -40,7 +40,7 @@ export default function ChartOfAccountsPage() {
     const excluded = descendantIds(chart.accounts, modal?.account?.id);
     return chart.accounts.filter(account => !excluded.has(account.id) && account.account_type === "header").sort(sortAccounts).map(account => ({ value: account.id, label: `${account.code} — ${account.name}` }));
   }, [chart.accounts, modal]);
-  if (!chart.canView) return <p className="accounting-state">{accounting("chartPage.noAccess")}</p>;
+  if (!chart.canView) return <p className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6">{accounting("chartPage.noAccess")}</p>;
   return <section className="min-w-0 space-y-4">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <p className="max-w-xl text-xs leading-5 text-gray-500">{accounting("chartPage.description")}</p>
@@ -56,7 +56,7 @@ export default function ChartOfAccountsPage() {
     </nav>
     <ChartFilters onApply={setFilters} /></>}
     {chart.error !== null && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"><p>{chart.error || t("workspace.requestError")}</p><Button variant="outline" onClick={() => void chart.reload()}>{accounting("redesign.retry")}</Button></div>}
-    {chart.loading ? <PageSkeleton rows={6} /> : chart.accounts.length > 0 ? view === "accounts" ? <ChartOfAccounts items={filtered} allAccounts={chart.accounts} viewMode={display} onViewModeChange={setDisplay} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? account => setDeleting({ account }) : undefined} /> : <AccountInsights accounts={filtered} view={view} /> : !chart.canAdd && <p className="accounting-state">{t("workspace.emptyTitle")}</p>}
+    {chart.loading ? <PageSkeleton rows={6} /> : chart.accounts.length > 0 ? view === "accounts" ? <ChartOfAccounts items={filtered} allAccounts={chart.accounts} viewMode={display} onViewModeChange={setDisplay} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? account => setDeleting({ account }) : undefined} /> : <AccountInsights accounts={filtered} view={view} /> : !chart.canAdd && <p className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6">{t("workspace.emptyTitle")}</p>}
     <LedgerAccountModal isOpen={!!modal} mode={modal?.account ? "edit" : "create"} initial={modal?.account} parentOptions={parents} busy={chart.busy} onClose={() => { if (!chart.busy) setModal(null); }} onSubmit={async payload => { if (await chart.save(modal?.account ?? null, payload)) { setModal(null); await refresh(); } else throw new Error(t("workspace.requestError")); }} />
     <ConfirmToast open={!!deleting} variant="danger" busy={chart.busy} text={deleting?.account ? `${t("workspace.delete")} ${deleting.account.code} — ${deleting.account.name}?` : t("workspace.deleteAllConfirm")} confirmLabel={t("workspace.delete")} cancelLabel={accounting("common.cancel")} onCancel={() => setDeleting(null)} onConfirm={() => { void chart.remove(deleting?.account).then(done => { if (done) setDeleting(null); }); }} />
   </section>;

@@ -7,8 +7,8 @@ async function load(file) {
   const { outputText } = ts.transpileModule(fs.readFileSync(file, "utf8"), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext } });
   return import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 }
-const { buildAccountRows, descendantIds } = await load("src/pages/Settings/AccountingSettings/chart/accountHierarchy.ts");
-const { accountingRouteAllowed } = await load("src/pages/Settings/AccountingSettings/setup/setupNavigation.ts");
+const { buildAccountRows, descendantIds } = await load("src/pages/Accounting/chart/accountHierarchy.ts");
+const { accountingRouteAllowed } = await load("src/pages/Accounting/setup/setupNavigation.ts");
 const account = (id, parent_id = null, code = id) => ({ id, parent_id, code, name: id });
 
 test("hierarchy rows preserve sorted nesting and collapse only descendants", () => {
@@ -78,11 +78,11 @@ test("legacy route aliases target the canonical workspace", () => {
     ts.forEachChild(node, visit);
   }
   visit(source);
-  assert.equal(destinations.get("ledger-accounts"), "/settings/accounting/chart");
-  assert.equal(destinations.get("register/ledger-accounts"), "/settings/accounting/setup/chart");
+  assert.equal(destinations.get("ledger-accounts"), "/accounting/chart");
+  assert.equal(destinations.get("register/ledger-accounts"), "/accounting/setup/chart");
 });
 
-const { accountingErrorMessage } = await load("src/pages/Settings/AccountingSettings/accountingError.ts");
+const { accountingErrorMessage } = await load("src/pages/Accounting/accountingError.ts");
 test("structured API validation errors retain actionable field messages", () => {
  assert.equal(accountingErrorMessage({ message: "Validation error", fields: { parent: ["Circular hierarchy is not allowed."] } }, "Try again"), "Circular hierarchy is not allowed.");
  assert.equal(accountingErrorMessage({ fields: { code: "setup_changed", message: "Reload the review." } }, "Try again"), "Reload the review.");

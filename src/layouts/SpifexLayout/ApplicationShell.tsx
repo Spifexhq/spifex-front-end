@@ -13,21 +13,24 @@ const readCollapsed = (key: string, fallback: boolean) => {
 export default function ApplicationShell({ children, onboarding, showOnboardingWarning }: { children: ReactNode; onboarding?: OnboardingStatus | null; showOnboardingWarning?: boolean }) {
   const { pathname } = useLocation();
   const settings = pathname.startsWith("/settings");
+  const accounting = /^\/accounting(?:\/|$)/.test(pathname);
+  const section = settings || accounting;
   const pageHasActions = /^\/(cashflow|settled)\/?$/.test(pathname);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(() => readCollapsed("spifex.workspace.collapsed", false));
   const [settingsCollapsed, setSettingsCollapsed] = useState(() => readCollapsed("spifex.settings.collapsed", false));
+  const [accountingCollapsed, setAccountingCollapsed] = useState(() => readCollapsed("spifex.accounting.collapsed", false));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarSlot, setSidebarSlot] = useState<HTMLDivElement | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
-  const collapsed = settings ? settingsCollapsed : workspaceCollapsed;
+  const collapsed = accounting ? accountingCollapsed : settings ? settingsCollapsed : workspaceCollapsed;
   const toggleCollapsed = useCallback(() => {
-    const setter = settings ? setSettingsCollapsed : setWorkspaceCollapsed;
+    const setter = accounting ? setAccountingCollapsed : settings ? setSettingsCollapsed : setWorkspaceCollapsed;
     setter(previous => {
       const next = !previous;
-      try { localStorage.setItem(settings ? "spifex.settings.collapsed" : "spifex.workspace.collapsed", String(next)); } catch { /* Optional persistence. */ }
+      try { localStorage.setItem(accounting ? "spifex.accounting.collapsed" : settings ? "spifex.settings.collapsed" : "spifex.workspace.collapsed", String(next)); } catch { /* Optional persistence. */ }
       return next;
     });
-  }, [settings]);
+  }, [settings, accounting]);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const toggleMobile = useCallback(() => setMobileOpen(previous => !previous), []);
   const openHelp = useCallback(() => { setMobileOpen(false); setHelpOpen(true); }, []);
@@ -41,8 +44,8 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
   const value = useMemo(() => ({ collapsed, toggleCollapsed, mobileOpen, toggleMobile, closeMobile, sidebarSlot, openHelp }), [collapsed, toggleCollapsed, mobileOpen, toggleMobile, closeMobile, sidebarSlot, openHelp]);
   return <AppShellContext.Provider value={value}>
     <div className="app-shell h-[100dvh] overflow-hidden bg-white text-gray-900">
-      {!settings && <div ref={setSidebarSlot} className="fixed inset-y-0 left-0 z-40" />}
-      {!settings && !pageHasActions && <Sidebar isOpen={!collapsed} toggleSidebar={toggleCollapsed} mode="default" />}
+      {!section && <div ref={setSidebarSlot} className="fixed inset-y-0 left-0 z-40" />}
+      {!section && !pageHasActions && <Sidebar isOpen={!collapsed} toggleSidebar={toggleCollapsed} mode="default" />}
       <div className={`app-shell-content flex h-full min-w-0 flex-col ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>
         <Navbar onboarding={onboarding} showOnboardingWarning={showOnboardingWarning} />
         <div id="app-page-scroll" className="min-h-0 flex-1 overflow-y-auto">{children}</div>

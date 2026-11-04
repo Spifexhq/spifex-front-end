@@ -2,7 +2,7 @@ import { SidePanelFrame, SidePanelHeader, SidePanelFooter } from "@/components/M
 import { accountingErrorMessage } from "../accountingError";
 
 import CurrencySelect from "@/shared/ui/CurrencySelect";
-import AccountingTerm from "@/pages/Settings/AccountingSettings/components/AccountingTerm";
+import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
 
 // Chart account editing form; shared SidePanel owns the dialog structure.
 import React, { useEffect, useMemo, useState } from "react";

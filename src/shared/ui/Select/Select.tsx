@@ -713,7 +713,7 @@ function Select<T>({
             data-filter-owner={settingsUi.owner}
             data-settings-select={settingsUi.settings || undefined}
             className={cn(
-              "fixed overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg",
+              "fixed overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg data-[settings-select]:[&_:is(button,_input):focus-visible]:[outline:none]! data-[settings-select]:[&_:is(button,_input):focus-visible]:[outline-offset:0] data-[settings-select]:[border-radius:8px]! data-[settings-select]:[box-shadow:0_6px_24px_#26334d20] data-[settings-select]:[font-size:12px] data-[settings-select]:[&_[role=option]]:[min-height:32px] data-[settings-select]:[&_[role=option]]:[font-size:12px] data-[settings-select]:[border-color:#dce1e8] data-[settings-select]:[border-radius:8px] data-[settings-select]:[box-shadow:0_6px_24px_#26334d18] data-[settings-select]:[&_[role=option]:hover]:[background:#f4f6f9]",
               "origin-top transition-all duration-150 ease-out",
               isOpen
                 ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
