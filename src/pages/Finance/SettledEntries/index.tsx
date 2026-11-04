@@ -1,16 +1,12 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Sidebar } from "@/shared/layout/Sidebar";
-import { SettledEntriesTable, type SettledEntriesTableHandle } from "@/components/Table/SettledEntriesTable";
+import { SettledEntriesTable } from "./SettledEntriesTable";
 import FinancialActivityPanel from "@/components/FinancialActivityPanel";
-import { SelectionActionsBar, type MinimalEntry } from "@/components/SelectionActionsBar";
-import TopProgress from "@/shared/ui/Loaders/TopProgress";
 
-import { api } from "@/api/requests";
 import { PermissionMiddleware } from "@/middlewares";
 
-import type { SettledEntry } from "@/models/entries/settlements";
 import type { EntryFilters } from "@/models/components/filterBar";
 
 const DEFAULT_FILTERS: EntryFilters = {
@@ -49,12 +45,6 @@ const Settled = () => {
 
   const [filters, setFilters] = useState<EntryFilters>(() => DEFAULT_FILTERS);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedEntries, setSelectedEntries] = useState<SettledEntry[]>([]);
-  const [isReturning, setIsReturning] = useState(false);
-
-  const tableRef = useRef<SettledEntriesTableHandle>(null);
-
   const filterBarHotkeysEnabled = useMemo(() => true, []);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -67,27 +57,9 @@ const Settled = () => {
     [bumpAll]
   );
 
-  const handleSelectionChange = useCallback((ids: string[], rows: SettledEntry[]) => {
-    setSelectedIds(ids);
-    setSelectedEntries(rows);
-  }, []);
-
-  const hasSelection = selectedIds.length > 0;
-
-  const selectedAsMinimal: MinimalEntry[] = useMemo(
-    () =>
-      selectedEntries.map((entry) => ({
-        amount: entry.amount,
-        transaction_type: entry.tx_type?.toLowerCase().includes("credit") ? "credit" : "debit",
-        due_date: entry.value_date,
-        settlement_due_date: entry.value_date,
-      })),
-    [selectedEntries]
-  );
-
   return (
     <div className="flex min-h-0">
-      <TopProgress active={isReturning} variant="top" topOffset={64} />
+
 
       <div className="shrink-0">
         <Sidebar
@@ -121,45 +93,14 @@ const Settled = () => {
             banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
             <PermissionMiddleware codeName={["view_settled_entries"]} requireAll>
               <SettledEntriesTable
-                ref={tableRef}
                 key={tableKey}
                 filters={filters}
-                onSelectionChange={handleSelectionChange}
+                onChanged={()=>{bumpBanks();bumpKpis();}}
               />
             </PermissionMiddleware>
           </FinancialActivityPanel>
 
-          {hasSelection && (
-            <SelectionActionsBar
-              contextSettlement={true}
-              selectedIds={selectedIds}
-              selectedEntries={selectedAsMinimal}
-              isProcessing={isReturning}
-              onCancel={() => tableRef.current?.clearSelection()}
-              onReturn={async () => {
-                if (!selectedIds.length) return;
 
-                setIsReturning(true);
-                try {
-                  if (selectedIds.length > 1) {
-                    await api.deleteSettledEntriesBulk(selectedIds as string[]);
-                  } else {
-                    await api.deleteSettledEntry(selectedIds[0] as string);
-                  }
-
-                  bumpAll();
-                  setSelectedIds([]);
-                  setSelectedEntries([]);
-                  tableRef.current?.clearSelection();
-                } catch (err) {
-                  console.error(err);
-                  alert(t("settled:errors.returnSettlements"));
-                } finally {
-                  setIsReturning(false);
-                }
-              }}
-            />
-          )}
         </div>
       </div>
     </div>

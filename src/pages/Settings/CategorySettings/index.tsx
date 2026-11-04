@@ -326,7 +326,7 @@ const CategorySettingsPage: React.FC = () => {
             <div className="[&_table]:min-w-0! md:[&_table]:min-w-[740px]!">
             <DataTable
               key={JSON.stringify([appliedSearch, appliedIncludeInactive, appliedTxFilter])}
-              translationNamespace="categorySettings"
+
               items={items}
               editLabel={t("actions.edit")}
               emptyLabel={t("table.empty")}

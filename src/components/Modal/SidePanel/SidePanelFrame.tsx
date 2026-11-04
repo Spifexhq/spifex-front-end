@@ -21,10 +21,10 @@ export function SidePanelFrame({ isOpen, labelledBy, children, dialogRef, classN
     </motion.div>
   </motion.div>}</AnimatePresence>;
 }
-export function SidePanelHeader({ title, titleId, subtitle, onClose, disabled = false, children }: { title: ReactNode; titleId: string; subtitle?: ReactNode; onClose(): void; disabled?: boolean; children?: ReactNode }) {
+export function SidePanelHeader({ title, titleId, subtitle, eyebrow, onClose, disabled = false, children }: { title: ReactNode; titleId: string; subtitle?: ReactNode; eyebrow?: ReactNode; onClose(): void; disabled?: boolean; children?: ReactNode }) {
   const { t } = useTranslation("common");
   return <header className={children ? "settings-modal-standard-header settings-modal-header-with-tabs" : "settings-modal-standard-header"}>
-    <div className="settings-modal-heading-row"><div className="min-w-0"><p className="settings-modal-kicker">{t("header.settings")}</p><h2 id={titleId} className="settings-modal-title">{title}</h2>{subtitle && <p className="settings-modal-subtitle">{subtitle}</p>}</div>
+    <div className="settings-modal-heading-row"><div className="min-w-0"><p className="settings-modal-kicker">{eyebrow ?? t("header.settings")}</p><h2 id={titleId} className="settings-modal-title">{title}</h2>{subtitle && <p className="settings-modal-subtitle">{subtitle}</p>}</div>
       <button type="button" className="settings-modal-close" onClick={onClose} disabled={disabled} aria-label={t("modal.close")}><X size={18} /></button>
     </div>{children}
   </header>;

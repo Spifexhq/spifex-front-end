@@ -1,3 +1,7 @@
+import enFinanceEntries from "./locales/en/financeEntries.json";
+import ptFinanceEntries from "./locales/pt/financeEntries.json";
+import frFinanceEntries from "./locales/fr/financeEntries.json";
+import deFinanceEntries from "./locales/de/financeEntries.json";
 // src/lib/i18n/index.tsx
 import i18n, { type Resource } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -120,10 +124,6 @@ import deReports from "./locales/de/reports.json";
 /* Generic UI                                                                   */
 /* -------------------------------------------------------------------------- */
 
-import ptSelectionActionsBar from "./locales/pt/selectionActionsBar.json";
-import enSelectionActionsBar from "./locales/en/selectionActionsBar.json";
-import frSelectionActionsBar from "./locales/fr/selectionActionsBar.json";
-import deSelectionActionsBar from "./locales/de/selectionActionsBar.json";
 
 import ptSelect from "./locales/pt/select.json";
 import enSelect from "./locales/en/select.json";
@@ -164,15 +164,7 @@ import enBanksTable from "./locales/en/banksTable.json";
 import frBanksTable from "./locales/fr/banksTable.json";
 import deBanksTable from "./locales/de/banksTable.json";
 
-import ptCashFlowTable from "./locales/pt/cashFlowTable.json";
-import enCashFlowTable from "./locales/en/cashFlowTable.json";
-import frCashFlowTable from "./locales/fr/cashFlowTable.json";
-import deCashFlowTable from "./locales/de/cashFlowTable.json";
 
-import ptSettledTable from "./locales/pt/settledTable.json";
-import enSettledTable from "./locales/en/settledTable.json";
-import frSettledTable from "./locales/fr/settledTable.json";
-import deSettledTable from "./locales/de/settledTable.json";
 
 import ptStatements from "./locales/pt/statements.json";
 import enStatements from "./locales/en/statements.json";
@@ -371,7 +363,6 @@ const NAMESPACES = [
   "settled",
   "reports",
 
-  "selectionActionsBar",
   "select",
 
   "filterBar",
@@ -380,8 +371,6 @@ const NAMESPACES = [
   "transferenceModal",
   "settlementModal",
   "banksTable",
-  "cashFlowTable",
-  "settledTable",
   "statements",
 
   "simulatedAI",
@@ -446,7 +435,7 @@ const resources: Resource = {
     settled: ptSettled,
     reports: ptReports,
 
-    selectionActionsBar: ptSelectionActionsBar,
+    financeEntries: ptFinanceEntries,
     select: ptSelect,
 
     filterBar: ptFilterBar,
@@ -455,8 +444,6 @@ const resources: Resource = {
     transferenceModal: ptTransferenceModal,
     settlementModal: ptSettlementModal,
     banksTable: ptBanksTable,
-    cashFlowTable: ptCashFlowTable,
-    settledTable: ptSettledTable,
     statements: ptStatements,
 
     simulatedAI: ptSimulatedAI,
@@ -516,7 +503,7 @@ const resources: Resource = {
     settled: enSettled,
     reports: enReports,
 
-    selectionActionsBar: enSelectionActionsBar,
+    financeEntries: enFinanceEntries,
     select: enSelect,
 
     filterBar: enFilterBar,
@@ -525,8 +512,6 @@ const resources: Resource = {
     transferenceModal: enTransferenceModal,
     settlementModal: enSettlementModal,
     banksTable: enBanksTable,
-    cashFlowTable: enCashFlowTable,
-    settledTable: enSettledTable,
     statements: enStatements,
 
     simulatedAI: enSimulatedAI,
@@ -586,7 +571,7 @@ const resources: Resource = {
     settled: frSettled,
     reports: frReports,
 
-    selectionActionsBar: frSelectionActionsBar,
+    financeEntries: frFinanceEntries,
     select: frSelect,
 
     filterBar: frFilterBar,
@@ -595,8 +580,6 @@ const resources: Resource = {
     transferenceModal: frTransferenceModal,
     settlementModal: frSettlementModal,
     banksTable: frBanksTable,
-    cashFlowTable: frCashFlowTable,
-    settledTable: frSettledTable,
     statements: frStatements,
 
     simulatedAI: frSimulatedAI,
@@ -656,7 +639,7 @@ const resources: Resource = {
     settled: deSettled,
     reports: deReports,
 
-    selectionActionsBar: deSelectionActionsBar,
+    financeEntries: deFinanceEntries,
     select: deSelect,
 
     filterBar: deFilterBar,
@@ -665,8 +648,6 @@ const resources: Resource = {
     transferenceModal: deTransferenceModal,
     settlementModal: deSettlementModal,
     banksTable: deBanksTable,
-    cashFlowTable: deCashFlowTable,
-    settledTable: deSettledTable,
     statements: deStatements,
 
     simulatedAI: deSimulatedAI,

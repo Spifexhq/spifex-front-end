@@ -6,6 +6,7 @@ type Props = {
   isOpen: boolean;
   title: ReactNode;
   subtitle?: ReactNode;
+  eyebrow?: ReactNode;
   mode?: "preview" | "edit";
   busy?: boolean;
   tabs?: ReactNode;
@@ -32,6 +33,7 @@ export default function SidePanel({
   isOpen,
   title,
   subtitle,
+  eyebrow,
   onClose,
   children,
   recordLabel,
@@ -72,6 +74,7 @@ export default function SidePanel({
         titleId={titleId}
         title={title}
         subtitle={subtitle}
+        eyebrow={eyebrow}
         onClose={onClose}
         disabled={busy}
       >{tabs}</SidePanelHeader>

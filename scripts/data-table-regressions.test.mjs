@@ -43,3 +43,7 @@ test('adjacent column resizing preserves total width and minimum sizes',()=>{
  const context=vm.createContext({exports:{},require:()=>({})});vm.runInContext(code,context);
  const widths=context.exports.resizeColumns([35,25,40],0,200);assert.equal(widths.reduce((sum,value)=>sum+value,0),100);assert.equal(widths[1],6);assert.equal(widths[2],40);
 });
+test('infinite mode accumulates cursor pages and refresh clears the accumulated collection',async()=>{
+ const fetch=async(cursor,size)=>{const start=Number(cursor||0);return{items:records.slice(start,start+size),nextCursor:start+size<records.length?String(start+size):undefined,totalCount:53};};
+ const h=harness('src/hooks/useCursorPager.ts','useCursorPager',()=>[fetch,{accumulate:true}]);h.render();await h.flush();await h.result.next();await h.flush();assert.equal(h.result.items.length,40);await h.result.next();await h.flush();assert.equal(h.result.items.length,53);assert.equal(h.result.canNext,false);await h.result.refresh();await h.flush();assert.equal(h.result.items.length,20);
+});

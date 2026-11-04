@@ -1,23 +1,19 @@
 import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { Sidebar } from '@/shared/layout/Sidebar';
 import type { SidebarEntryModalState } from '@/shared/layout/Sidebar/Sidebar';
 import { SettlementModal } from '@/components/Modal';
-import { CashFlowTable, type CashFlowTableHandle } from '@/components/Table/CashFlowTable';
+import { CashFlowTable, type CashFlowTableHandle } from './CashFlowTable';
 import FinancialActivityPanel from '@/components/FinancialActivityPanel';
-import { SelectionActionsBar } from '@/components/SelectionActionsBar';
 import TopProgress from '@/shared/ui/Loaders/TopProgress';
 
-import AccountingReasonDrawer from '@/components/CashFlowAccounting/AccountingReasonDrawer';
 
 import { api } from '@/api/requests';
 import { PermissionMiddleware } from '@/middlewares';
 import { fetchAllCursor } from '@/lib/list';
 
 import type { Entry } from '@/models/entries/entries';
-import type { AccountingReadiness } from '@/models/entries/accountingReadiness';
 import type { EntryFilters } from '@/models/components/filterBar';
 import { type ModalType } from '@/components/Modal/Modal.types';
 import type { BankAccount } from '@/models/settings/banking';
@@ -51,7 +47,6 @@ const DEFAULT_FILTERS: EntryFilters = {
 
 const CashFlow = () => {
   const { t } = useTranslation(['cashFlow']);
-  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = t('cashFlow:documentTitle');
@@ -77,12 +72,7 @@ const CashFlow = () => {
   const [editingModalType, setEditingModalType] = useState<ModalType | null>(null);
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedEntries, setSelectedEntries] = useState<Entry[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const [readinessByEntryId, setReadinessByEntryId] = useState<Record<string, AccountingReadiness>>({});
-  const [reasonEntryId, setReasonEntryId] = useState<string | null>(null);
 
   const tableRef = useRef<CashFlowTableHandle>(null);
   const [filters, setFilters] = useState<EntryFilters>(() => DEFAULT_FILTERS);
@@ -169,39 +159,6 @@ const CashFlow = () => {
     [bumpAll]
   );
 
-  const handleSelectionChange = useCallback((ids: string[], rows: Entry[]) => {
-    setSelectedIds(ids);
-    setSelectedEntries(rows);
-  }, []);
-
-  const handleReasonRequest = useCallback(
-    async (entry: Entry) => {
-      setReasonEntryId(entry.id);
-      if (readinessByEntryId[entry.id]) return;
-
-      try {
-        const res = await api.getEntryAccountingReadiness(entry.id);
-        setReadinessByEntryId((prev) => ({
-          ...prev,
-          [entry.id]: res.data.accounting,
-        }));
-      } catch {
-        setReadinessByEntryId((prev) => ({
-          ...prev,
-          [entry.id]: {
-            status: 'uncategorised',
-            label: 'Unknown',
-            message: 'Accounting readiness could not be loaded for this entry.',
-          },
-        }));
-      }
-    },
-    [readinessByEntryId]
-  );
-
-  const hasSelection = selectedIds.length > 0;
-  const selectedAccounting = reasonEntryId ? readinessByEntryId[reasonEntryId] : null;
-
   return (
     <div className="flex min-h-0">
       <TopProgress active={banksLoading} variant="top" topOffset={64} />
@@ -237,42 +194,13 @@ const CashFlow = () => {
                 key={cashflowKey}
                 filters={filters}
                 onEdit={handleEditEntry}
-                onSelectionChange={handleSelectionChange}
-                onOpenAccountingReason={handleReasonRequest}
-                accountingStateById={readinessByEntryId}
+                onSettle={entries=>{setSelectedEntries(entries);setIsSettlementModalOpen(true);}}
+                onChanged={bumpKpis}
               />
             </PermissionMiddleware>
           </FinancialActivityPanel>
 
-          {hasSelection ? (
-            <SelectionActionsBar
-              contextSettlement={false}
-              selectedIds={selectedIds}
-              selectedEntries={selectedEntries}
-              isProcessing={isDeleting}
-              onCancel={() => tableRef.current?.clearSelection()}
-              onLiquidate={() => setIsSettlementModalOpen(true)}
-              onDelete={async () => {
-                if (!selectedIds.length) return;
-                setIsDeleting(true);
-                try {
-                  if (selectedIds.length > 1) await api.deleteEntriesBulk(selectedIds as string[]);
-                  else await api.deleteEntry(selectedIds[0] as string);
-                  bumpCashflow();
-                  bumpKpis();
-                  setSelectedIds([]);
-                  setSelectedEntries([]);
-                  tableRef.current?.clearSelection();
-                } catch {
-                  alert(t('cashFlow:errors.deleteEntries'));
-                } finally {
-                  setIsDeleting(false);
-                }
-              }}
-              accountingReviewCount={selectedIds.length}
-              onAccountingReview={() => navigate('/accounting/reconciliation')}
-            />
-          ) : null}
+
         </div>
       </div>
 
@@ -285,7 +213,6 @@ const CashFlow = () => {
             onSave={() => {
               setIsSettlementModalOpen(false);
               bumpAll();
-              setSelectedIds([]);
               setSelectedEntries([]);
               tableRef.current?.clearSelection();
             }}
@@ -294,12 +221,7 @@ const CashFlow = () => {
         </PermissionMiddleware>
       ) : null}
 
-      <AccountingReasonDrawer
-        open={!!reasonEntryId}
-        accounting={selectedAccounting}
-        onClose={() => setReasonEntryId(null)}
-        onOpenAccountingSettings={() => navigate('/accounting/reconciliation')}
-      />
+
     </div>
   );
 };

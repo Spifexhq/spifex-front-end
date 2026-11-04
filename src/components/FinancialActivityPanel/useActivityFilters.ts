@@ -189,6 +189,7 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
     if (!enabled || !shortcutsEnabled) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"]')) return;
       const cmdOrCtrl = e.metaKey || e.ctrlKey;
 
       if (cmdOrCtrl && e.key.toLowerCase() === "k") {
