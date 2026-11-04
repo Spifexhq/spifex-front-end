@@ -47,6 +47,13 @@ export function installAccountingPreviewMocks() {
   api.getAccountingBooks = async () => ({ data: books } as never);
   api.addAccountingBook = async payload => { const book = { ...payload, id: `book-${++revision}` } as AccountingBook; books = [...books, book]; return { data: book } as never; };
   api.editAccountingBook = async (id, payload) => { const book = { ...books.find(book => book.id === id), ...payload, id } as AccountingBook; books = books.map(row => row.id === id ? book : row); revision++; return { data: book } as never; };
+  api.getAccountingList = async (resource, params) => {
+    let rows: any[] = resource === "books" && scenario === "pagination" ? Array.from({length:27},(_,i)=>({id:`book-${i}`,code:`B${String(i).padStart(2,"0")}`,name:`Book ${String(i).padStart(2,"0")}`,basis:"management",currency_code:"EUR",is_active:i!==26,is_primary:i===0})) : resource === "books" ? books : resource === "accounts" ? accounts : [];
+    if(params.search)rows=rows.filter(row=>`${row.name} ${row.code}`.toLowerCase().includes(String(params.search).toLowerCase()));
+    if(params.status)rows=rows.filter(row=>String(row.is_active)===params.status);
+    const start=Number(params.cursor||0),size=Number(params.page_size||20);
+    return {data:{results:rows.slice(start,start+size),count:rows.length,next:start+size<rows.length?String(start+size):null,filters:{status:["true","false"],basis:["management"],currency:["EUR"],primary:["true","false"]}}} as never;
+  };
   api.getJournalEntries = async () => ({ data: [] } as never);
   api.getFiscalPeriods = async () => ({ data: [] } as never);
 }

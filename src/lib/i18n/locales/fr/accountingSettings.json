@@ -990,5 +990,25 @@
     "collapse": "Réduire la navigation",
     "close": "Fermer la navigation",
     "brand": "Spifex"
+  },
+  "table": {
+    "actions": "Actions",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer cette configuration ? Les écritures existantes seront conservées.",
+    "deleteError": "Impossible de supprimer cet enregistrement.",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif"
+  },
+  "filters": {
+    "dateFrom": "Du",
+    "dateTo": "Au",
+    "search": {
+      "books": "Rechercher un livre par nom, code ou devise…",
+      "journals": "Rechercher une écriture, un libellé ou un livre…",
+      "periods": "Rechercher une période par nom ou livre…",
+      "bank-connections": "Rechercher une banque, un livre ou un compte…",
+      "category-rules": "Rechercher une catégorie, un livre ou un compte…"
+    }
   }
 }

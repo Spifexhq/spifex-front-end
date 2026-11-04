@@ -990,5 +990,25 @@
     "collapse": "Navigation reduzieren",
     "close": "Navigation schließen",
     "brand": "Spifex"
+  },
+  "table": {
+    "actions": "Aktionen",
+    "delete": "Löschen",
+    "deleteConfirm": "Diese Konfiguration löschen? Bestehende Buchungen bleiben erhalten.",
+    "deleteError": "Der Eintrag konnte nicht gelöscht werden.",
+    "status": "Status",
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  },
+  "filters": {
+    "dateFrom": "Von",
+    "dateTo": "Bis",
+    "search": {
+      "books": "Bücher nach Name, Code oder Währung suchen…",
+      "journals": "Buchungen nach Nummer, Text oder Buch suchen…",
+      "periods": "Perioden nach Name oder Buch suchen…",
+      "bank-connections": "Banken, Bücher oder Konten suchen…",
+      "category-rules": "Kategorien, Bücher oder Buchungskonten suchen…"
+    }
   }
 }

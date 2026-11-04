@@ -1,5 +1,6 @@
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import SettingsTable from "@/shared/ui/Settings/SettingsTable";
+import SettingsList from "@/shared/ui/Settings/SettingsList";
+import SettingsRecordGrid from "@/shared/ui/Settings/SettingsRecordGrid";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -340,7 +341,7 @@ const CategorySettingsPage: React.FC = () => {
             </article>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
+          <section className="space-y-4">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 settings-panel-heading">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_220px_auto_auto] lg:items-end">
                 <Input
@@ -382,62 +383,11 @@ const CategorySettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto settings-table-scroll">
-              <SettingsTable className="min-w-full" onRowOpen={index => openEdit(items[index])}>
-                <thead>
-                  <tr className="border-b border-gray-200 text-left text-[10px] uppercase tracking-wide text-gray-600">
-                    <th className="px-4 py-3">{t("table.code")}</th>
-                    <th className="px-4 py-3">{t("table.name")}</th>
-                    <th className="px-4 py-3">{t("table.parent")}</th>
-                    <th className="px-4 py-3">{t("table.txHint")}</th>
-                    <th className="px-4 py-3">{t("table.entries")}</th>
-                    <th className="px-4 py-3">{t("table.sort")}</th>
-                    <th className="px-4 py-3">{t("table.active")}</th>
-                    <th className="px-4 py-3 text-right">{t("table.actions")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                      <td className="px-4 py-3 text-[13px] font-medium text-gray-900">{item.code || t("common.empty")}</td>
-                      <td className="px-4 py-3 text-[13px] text-gray-900">
-                        <div className="min-w-[220px]">
-                          <div className="font-medium">{item.name}</div>
-                          {item.description ? <div className="mt-1 text-[12px] text-gray-500">{item.description}</div> : null}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-[13px] text-gray-700">{item.parent_label || t("common.empty")}</td>
-                      <td className="px-4 py-3 text-[13px] text-gray-700">{txHintLabel(item.tx_type_hint)}</td>
-                      <td className="px-4 py-3 text-[13px] text-gray-700">{item.entry_count ?? 0}</td>
-                      <td className="px-4 py-3 text-[13px] text-gray-700">{item.sort_order ?? 0}</td>
-                      <td className="px-4 py-3 text-[13px] text-gray-700">{booleanLabel(!!item.is_active)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
-                            {t("actions.edit")}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={deletingId === item.id}
-                            onClick={() => void removeCategory(item)}
-                          >
-                            {deletingId === item.id ? t("actions.deleting") : t("actions.delete")}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {!items.length ? (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                        {t("table.empty")}
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </SettingsTable>
+            <div className="min-w-0">
+              <SettingsList busy={!!deletingId}>
+                <SettingsRecordGrid selectable={false} paginate records={items.map(item=>({id:item.id,name:item.name,labels:[t("table.code"),t("table.parent"),t("table.txHint"),t("table.entries"),t("table.sort"),t("table.active"),t("modal.description")],values:[item.code||t("common.empty"),item.parent_label||t("common.empty"),txHintLabel(item.tx_type_hint),item.entry_count??0,item.sort_order??0,<span className="inline-flex items-center gap-1.5" key="status"><span className={`h-1.5 w-1.5 rounded-full ${item.is_active?"bg-emerald-500":"bg-gray-300"}`}/>{booleanLabel(!!item.is_active)}</span>,item.description||t("common.empty")],onEdit:()=>openEdit(item),onDelete:()=>void removeCategory(item)}))}/>
+                {!items.length&&<p className="px-5 py-12 text-center text-sm text-gray-500">{t("table.empty")}</p>}
+              </SettingsList>
             </div>
           </section>
         </div>

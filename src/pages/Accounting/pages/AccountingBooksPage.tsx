@@ -1,3 +1,6 @@
+import { useRecordFilters } from "../components/useRecordFilters";
+import { useAuthContext } from "@/hooks/useAuth";
+import AccountingStatus from "../components/AccountingStatus";
 import { accountingErrorMessage } from "../accountingError";
 import { useAccountingSetup, useAccountingDraft } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
@@ -36,42 +39,6 @@ type BookFormState = {
   metadata: Record<string, unknown>;
 };
 
-function extractCollection<T>(input: unknown): T[] {
-  if (Array.isArray(input)) return input as T[];
-  if (!input || typeof input !== "object") return [];
-
-  const obj = input as Record<string, unknown>;
-  const directKeys = ["results", "items", "data", "books"];
-  for (const key of directKeys) {
-    const value = obj[key];
-    if (Array.isArray(value)) return value as T[];
-  }
-
-  if (obj.data && obj.data !== input) {
-    const nested = extractCollection<T>(obj.data);
-    if (nested.length || Array.isArray(obj.data)) return nested;
-  }
-
-  return [];
-}
-
-function MetricCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string | number;
-  detail: string;
-}) {
-  return (
-    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
-      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
-    </article>
-  );
-}
 
 const BASIS_OPTIONS: AccountingBookBasis[] = ["management", "cash", "accrual", "tax"];
 
@@ -96,8 +63,9 @@ const AccountingBooksPage: React.FC = () => {
     [i18n, language]
   );
 
-  const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
+  const canDelete = isOwner || isSuperUser || permissions.includes("delete_ledger_account");
   const [items, setItems] = React.useState<AccountingBook[]>([]);
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -108,28 +76,18 @@ const AccountingBooksPage: React.FC = () => {
     [form.basis]
   );
 
-  const load = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.getAccountingBooks();
-      const nextItems = extractCollection<AccountingBook>(
-        (response as { data?: unknown })?.data ?? response
-      );
-      setItems(nextItems);
-    } catch {
-      setItems([]);
-      setSnackbar({ severity: "error", message: t("booksPage.loadError", "Failed to load accounting books.") });
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const recordFilters = useRecordFilters(items, [
+ {key:"status",label:t("table.status","Status"),value:item=>String(item.is_active),format:value=>t(value==="true"?"table.active":"table.inactive",value==="true"?"Active":"Inactive")},
+ {key:"basis",label:t("booksPage.columns.basis","Basis"),value:item=>item.basis,format:value=>t(`enums.basis.${value}`,value)},
+ {key:"currency",label:t("booksPage.columns.currency","Currency"),value:item=>item.currency_code},
+ {key:"primary",label:t("booksPage.columns.primary","Primary"),value:item=>String(item.is_primary),format:value=>t(value==="true"?"common.yes":"common.no",value==="true"?"Yes":"No")}
+], item=>[item.name,item.code,item.basis,item.currency_code].join(" "), { resource: "books", placeholder: t("filters.search.books", "Search records"), onItems: setItems });
+  const loading = recordFilters.pager.loading;
+  const load = recordFilters.pager.refresh;
 
-  React.useEffect(() => {
-    void load();
-  }, [load]);
 
   const openCreate = () => {
-    setForm({ ...EMPTY_FORM, currency_code: setupStatus?.profile.currency || "", is_primary: !items.some(item => item.is_active && item.is_primary) });
+    setForm({ ...EMPTY_FORM, currency_code: setupStatus?.profile.currency || "", is_primary: !setupStatus?.primary_book_id });
     setModalOpen(true);
   };
 
@@ -187,7 +145,7 @@ const AccountingBooksPage: React.FC = () => {
     }
   };
 
-  if (loading) return <PageSkeleton rows={6} />;
+  if (loading && !items.length) return <PageSkeleton rows={6} />;
 
   return (
     <>
@@ -208,42 +166,19 @@ const AccountingBooksPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
-              <MetricCard
-                label={t("booksPage.metrics.books", "Books")}
-                value={items.length}
-                detail={t("booksPage.metrics.booksDetail", "Total books currently configured.")}
-              />
-              <MetricCard
-                label={t("booksPage.metrics.primary", "Primary")}
-                value={items.filter((item) => item.is_primary).length}
-                detail={t("booksPage.metrics.primaryDetail", "Books marked as the primary accounting base.")}
-              />
-              <MetricCard
-                label={t("booksPage.metrics.active", "Active")}
-                value={items.filter((item) => item.is_active).length}
-                detail={t("booksPage.metrics.activeDetail", "Books available for operational posting flows.")}
-              />
-            </div>
+
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.listTitle", "Book list")}</div>
-          </div>
-
-          <div className="overflow-x-auto settings-table-scroll">
-            <AccountingRecords items={items} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
+        <AccountingRecords pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteAccountingBook(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("booksPage.columns.name", "Name"), render: item => item.name || "—" },
               { key: "code", label: t("booksPage.columns.code", "Code"), render: item => item.code || "—" },
               { key: "basis", label: t("booksPage.columns.basis", "Basis"), render: item => t(`enums.basis.${item.basis}`, item.basis) },
               { key: "currency", label: t("booksPage.columns.currency", "Currency"), render: item => item.currency_code || "—" },
               { key: "primary", label: t("booksPage.columns.primary", "Primary"), render: item => t(item.is_primary ? "common.yes" : "common.no", item.is_primary ? "Yes" : "No") },
-              { key: "active", label: t("booksPage.columns.active", "Active"), render: item => t(item.is_active ? "common.yes" : "common.no", item.is_active ? "Yes" : "No") }
+              { key: "active", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.is_active} label={t(item.is_active ? "table.active" : "table.inactive", item.is_active ? "Active" : "Inactive")} /> }
             ]} />
-          </div>
-        </section>
 
         {snackbar ? (
           <Snackbar
@@ -267,7 +202,7 @@ const AccountingBooksPage: React.FC = () => {
         subtitle={t("booksPage.modal.subtitle", "Create or update the accounting basis and posting currency.")}
       >
         <SidePanelForm recordLabel={t("footer.book", "Book")} recordName={form.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.identity", "Identity")}</div>
             </div>
@@ -288,7 +223,7 @@ const AccountingBooksPage: React.FC = () => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+          <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
               <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("booksPage.modal.configuration", "Configuration")}</div>
             </div>

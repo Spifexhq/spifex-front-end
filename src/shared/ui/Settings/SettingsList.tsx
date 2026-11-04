@@ -6,7 +6,7 @@ import { ListContext } from "./SettingsListContext";
 import { Children, isValidElement, useContext, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-type Pager = { index: number; pageSize: number; setPageSize(size: number): void; totalCount?: number; items: unknown[]; canPrev: boolean; canNext: boolean; loading: boolean; prev(): unknown; next(): unknown };
+export type Pager = { index: number; pageSize: number; setPageSize(size: number): void; totalCount?: number; items: unknown[]; canPrev: boolean; canNext: boolean; loading: boolean; prev(): unknown; next(): unknown };
 export function SettingsRecords({ children, className }: { children: ReactNode; className?: string }) {
   const { index, size, server, setCount } = useContext(ListContext);
   const records = Children.toArray(children);
@@ -32,9 +32,9 @@ export default function SettingsList({ children, pager, busy = false, className 
   const start = shown ? page * pageSize + 1 : 0, end = shown ? start + shown - 1 : 0;
   useEffect(() => { if (!pager && index > 0 && index * size >= count) setIndex(Math.max(0, Math.ceil(count / size) - 1)); }, [count, index, size, pager]);
   const disabled = busy || pager?.loading;
-  return <RecordActionsContext.Provider value={{ deleteRecord, onDeleted, permission: deletePermission }}><ListContext.Provider value={{ index: page, size: pageSize, server: !!pager, setCount }}><section className={`settings-list settings-panel ${className}`} aria-busy={disabled || undefined}>
+  return <RecordActionsContext.Provider value={{ deleteRecord, onDeleted, permission: deletePermission }}><ListContext.Provider value={{ index: page, size: pageSize, server: !!pager, setCount }}><section className={`min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-none ${className}`} aria-busy={disabled || undefined}>
     {children}
-    <footer className="settings-list-footer flex flex-wrap items-center justify-end gap-1 border-t border-gray-100 bg-white px-3 py-2 [&_button]:inline-flex [&_button]:min-h-8 [&_button]:items-center [&_button]:justify-center [&_button]:rounded-md [&_button]:px-2 [&_button]:py-1.5 [&_button]:text-xs [&_button]:text-slate-600 [&_button:hover:not(:disabled)]:bg-gray-100 [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-40 max-md:[&_button]:min-h-10">
+    <footer className="flex flex-wrap items-center justify-end gap-1 border-t border-gray-200 bg-gray-50/50 px-3 py-2 [&_button]:inline-flex [&_button]:min-h-8 [&_button]:items-center [&_button]:justify-center [&_button]:rounded-md [&_button]:px-2 [&_button]:py-1.5 [&_button]:text-xs [&_button]:text-slate-600 [&_button:hover:not(:disabled)]:bg-gray-100 [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-40 max-md:[&_button]:min-h-10">
       <button type="button" disabled={disabled || (pager ? !pager.canPrev : page === 0)} onClick={() => { if (pager) pager.prev(); else setIndex(value => value - 1); }} aria-label={t("pagination.previous")}><ChevronLeft size={15} /></button>
       <button type="button" disabled={disabled || (pager ? !pager.canNext : end >= count)} onClick={() => { if (pager) pager.next(); else setIndex(value => value + 1); }} aria-label={t("pagination.next")}><ChevronRight size={15} /></button>
       <ResultsPerPage value={pageSize} disabled={disabled} onChange={value => { if (pager) pager.setPageSize(value); else { setSize(value); setIndex(0); } }}>

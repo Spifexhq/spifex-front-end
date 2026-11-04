@@ -1,3 +1,7 @@
+import { useRecordFilters } from "../components/useRecordFilters";
+import { fetchAllCursor } from "@/lib/list";
+import { useAuthContext } from "@/hooks/useAuth";
+import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import { accountingErrorMessage } from "../accountingError";
 import Checkbox from "@/shared/ui/Checkbox";
@@ -30,41 +34,6 @@ type MappingFormState = {
   is_active: boolean;
 };
 
-function extractCollection<T>(input: unknown): T[] {
-  if (Array.isArray(input)) return input as T[];
-  if (!input || typeof input !== "object") return [];
-
-  const obj = input as Record<string, unknown>;
-  for (const key of ["results", "items", "data", "mappings"]) {
-    const value = obj[key];
-    if (Array.isArray(value)) return value as T[];
-  }
-
-  if (obj.data && obj.data !== input) {
-    const nested = extractCollection<T>(obj.data);
-    if (nested.length || Array.isArray(obj.data)) return nested;
-  }
-
-  return [];
-}
-
-function MetricCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string | number;
-  detail: string;
-}) {
-  return (
-    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
-      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
-    </article>
-  );
-}
 
 const EMPTY_FORM: MappingFormState = {
   bank_account_id: "",
@@ -85,8 +54,9 @@ const AccountingBankMappingsPage: React.FC = () => {
     [i18n, language]
   );
 
-  const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
+  const canDelete = isOwner || isSuperUser || permissions.includes("delete_ledger_account");
   const [items, setItems] = React.useState<BankAccountLedgerMap[]>([]);
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
@@ -96,7 +66,8 @@ const AccountingBankMappingsPage: React.FC = () => {
   const [books, setBooks] = React.useState<AccountingBook[]>([]);
   const [banks, setBanks] = React.useState<BankAccount[]>([]);
   const [ledgerAccounts, setLedgerAccounts] = React.useState<LedgerAccount[]>([]);
-  const [lookupsLoading, setLookupsLoading] = React.useState(false);
+  const [lookupsReady, setLookupsReady] = React.useState(false);
+  const [lookupsLoading, setLookupsLoading] = React.useState(true);
 
   const selectedBank = React.useMemo(
     () => banks.filter((bank) => bank.id === form.bank_account_id),
@@ -143,51 +114,29 @@ const AccountingBankMappingsPage: React.FC = () => {
     [ledgerAccounts]
   );
 
-  const load = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.getBankAccountLedgerMaps();
-      const nextItems = extractCollection<BankAccountLedgerMap>(
-        (response as { data?: unknown })?.data ?? response
-      );
-      setItems(nextItems);
-    } catch {
-      setItems([]);
-      setSnackbar({ severity: "error", message: t("bankMappingsPage.loadError", "Failed to load bank mappings.") });
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const recordFilters = useRecordFilters(items, [
+ {key:"status",label:t("table.status","Status"),value:item=>String(item.is_active),format:value=>t(value==="true"?"table.active":"table.inactive",value==="true"?"Active":"Inactive")},
+ {key:"book",label:t("bankMappingsPage.columns.book","Book"),value:item=>item.book_id,format:value=>bookMap.get(value)||"—"},
+ {key:"bank",label:t("bankMappingsPage.columns.bankAccount","Bank account"),value:item=>item.bank_account_id,format:value=>bankMap.get(value)||"—"},
+ {key:"account",label:t("bankMappingsPage.columns.ledgerAccount","Ledger account"),value:item=>item.ledger_account_id,format:value=>accountMap.get(value)||"—"}
+], item=>[bankMap.get(item.bank_account_id),bookMap.get(item.book_id),accountMap.get(item.ledger_account_id)].join(" "), { resource: "bank-connections", placeholder: t("filters.search.bank-connections", "Search records"), onItems: setItems });
+  const loading = recordFilters.pager.loading;
+  const load = recordFilters.pager.refresh;
 
   const loadLookups = React.useCallback(async () => {
     try {
       setLookupsLoading(true);
+      setLookupsReady(false);
 
-      const [booksResponse, banksResponse, ledgerAccountsResponse] = await Promise.all([
-        api.getAccountingBooks(),
-        api.getBanks({ active: "true" }),
-        api.getLedgerAccounts({
-          active: "true",
-          account_type: "posting",
-          is_bank_control: "true",
-        }),
+      const [nextBooks, nextBanks, nextLedgerAccounts] = await Promise.all([
+        fetchAllCursor<AccountingBook>(params => api.getAccountingBooks(params)),
+        fetchAllCursor<BankAccount>(params => api.getBanks(params)),
+        fetchAllCursor<LedgerAccount>(params => api.getLedgerAccounts(params)),
       ]);
-
-      const nextBooks = extractCollection<AccountingBook>(
-        (booksResponse as { data?: unknown })?.data ?? booksResponse
-      );
-
-      const nextBanks = extractCollection<BankAccount>(
-        (banksResponse as { data?: unknown })?.data ?? banksResponse
-      );
-
-      const nextLedgerAccounts = extractCollection<LedgerAccount>(
-        (ledgerAccountsResponse as { data?: unknown })?.data ?? ledgerAccountsResponse
-      );
-
       setBooks(nextBooks);
       setBanks(nextBanks);
       setLedgerAccounts(nextLedgerAccounts);
+      setLookupsReady(true);
     } catch {
       setSnackbar({
         severity: "error",
@@ -199,7 +148,6 @@ const AccountingBankMappingsPage: React.FC = () => {
   }, [t]);
 
   React.useEffect(() => {
-    void load();
     void loadLookups();
   }, [load, loadLookups]);
 
@@ -254,7 +202,8 @@ const AccountingBankMappingsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <PageSkeleton rows={6} />;
+  if ((loading && !items.length) || lookupsLoading) return <PageSkeleton rows={6} />;
+  if (!lookupsReady) return <div role="alert" className="space-y-3 rounded-lg border border-gray-200 p-5"><p className="text-sm text-red-700">{t("bankMappingsPage.lookupError", "Failed to load mapping form lookups.")}</p><Button variant="outline" onClick={() => void loadLookups()}>{t("redesign.retry", "Retry")}</Button></div>;
 
   return (
     <>
@@ -275,40 +224,17 @@ const AccountingBankMappingsPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
-              <MetricCard
-                label={t("bankMappingsPage.metrics.activeMappings", "Active mappings")}
-                value={items.filter((item) => item.is_active).length}
-                detail={t("bankMappingsPage.metrics.activeMappingsDetail", "Mappings available for posting operations.")}
-              />
-              <MetricCard
-                label={t("bankMappingsPage.metrics.booksCovered", "Books covered")}
-                value={new Set(items.map((item) => item.book_id)).size}
-                detail={t("bankMappingsPage.metrics.booksCoveredDetail", "Accounting books already linked to banks.")}
-              />
-              <MetricCard
-                label={t("bankMappingsPage.metrics.uniqueBanks", "Unique banks")}
-                value={new Set(items.map((item) => item.bank_account_id)).size}
-                detail={t("bankMappingsPage.metrics.uniqueBanksDetail", "Operational bank accounts with mapping coverage.")}
-              />
-            </div>
+
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.listTitle", "Mapping list")}</div>
-          </div>
-
-          <div className="overflow-x-auto settings-table-scroll">
-            <AccountingRecords items={items} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
-              { key: "name", label: t("bankMappingsPage.columns.bankAccount", "Bank account"), render: item => bankMap.get(item.bank_account_id) || item.bank_account_id },
-              { key: "book", label: t("bankMappingsPage.columns.book", "Book"), render: item => bookMap.get(item.book_id) || item.book_id },
-              { key: "account", label: t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), render: item => accountMap.get(item.ledger_account_id) || item.ledger_account_id },
-              { key: "active", label: t("bankMappingsPage.columns.active", "Active"), render: item => t(item.is_active ? "common.yes" : "common.no", item.is_active ? "Yes" : "No") }
+        {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
+        <AccountingRecords pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteBankAccountLedgerMap(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+              { key: "name", label: t("bankMappingsPage.columns.bankAccount", "Bank account"), render: item => bankMap.get(item.bank_account_id) || "—" },
+              { key: "book", label: t("bankMappingsPage.columns.book", "Book"), render: item => bookMap.get(item.book_id) || "—" },
+              { key: "account", label: t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), render: item => accountMap.get(item.ledger_account_id) || "—" },
+              { key: "active", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.is_active} label={t(item.is_active ? "table.active" : "table.inactive", item.is_active ? "Active" : "Inactive")} /> }
             ]} />
-          </div>
-        </section>
 
         {snackbar ? (
           <Snackbar
@@ -336,7 +262,7 @@ const AccountingBankMappingsPage: React.FC = () => {
         ) : (
           <SidePanelForm recordLabel={t("footer.bankMapping", "Bank mapping")} recordName={banks.find(bank => bank.id === form.bank_account_id)?.institution} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             {editingScope && <p className="text-xs leading-6 text-gray-500">{t("setupFlow.scopeLocked", "The bank or category and book identify this configuration. Create a new configuration to use a different scope.")}</p>}
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("bankMappingsPage.modal.definition", "Mapping definition")}</div>
               </div>

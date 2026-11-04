@@ -489,8 +489,7 @@ const MemberSettings: React.FC = () => {
 
           <PermissionMiddleware codeName={"view_member"} behavior="lock">
             <section className="mt-6">
-              <SettingsList deleteRecord={api.deleteMember} deletePermission="delete_member" onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy}>
-                <div className="settings-panel-heading border-b border-gray-200 px-4 py-3">
+              <div className="mb-4">
                   <div className="flex items-center justify-between gap-3 settings-toolbar">
                     {/* LEFT: chips */}
                     <SettingsFilters active={hasAppliedFilters}>
@@ -559,6 +558,8 @@ const MemberSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
+<SettingsList deleteRecord={api.deleteMember} deletePermission="delete_member" onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy}>
+                
 
                 <SettingsRecords className="divide-y divide-gray-200">
                   {members.length === 0 ? (

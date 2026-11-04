@@ -1,3 +1,6 @@
+import { useRecordFilters } from "../components/useRecordFilters";
+import AccountingRecords from "../components/AccountingRecords";
+import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import SettingsTable from "@/shared/ui/Settings/SettingsTable";
@@ -81,23 +84,6 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function MetricCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string | number;
-  detail: string;
-}) {
-  return (
-    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
-      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
-    </article>
-  );
-}
 
 const EMPTY_FORM: ManualJournalForm = {
   book_id: "",
@@ -121,11 +107,9 @@ const AccountingJournalsPage: React.FC = () => {
   );
 
   const requestKey = React.useRef("");
-  const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [reversingId, setReversingId] = React.useState<string | null>(null);
   const [items, setItems] = React.useState<JournalEntry[]>([]);
-  const [search, setSearch] = React.useState("");
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
   const [selectedJournal, setSelectedJournal] = React.useState<JournalEntry | null>(null);
@@ -154,25 +138,16 @@ const AccountingJournalsPage: React.FC = () => {
 
   const balanced = totals.debit === totals.credit && totals.debit > 0;
 
-  const load = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.getJournalEntries(search ? { search } : undefined);
-      const nextItems = extractCollection<JournalEntry>(
-        (response as { data?: unknown })?.data ?? response
-      );
-      setItems(nextItems);
-    } catch {
-      setItems([]);
-      setSnackbar({ severity: "error", message: t("journalsPage.loadError", "Failed to load journals.") });
-    } finally {
-      setLoading(false);
-    }
-  }, [search, t]);
+  const recordFilters = useRecordFilters(items, [
+ {key:"status",label:t("table.status","Status"),value:item=>item.status,format:value=>t(`enums.status.${value}`,value)},
+ {key:"book",label:t("journalsPage.columns.book","Book"),value:item=>item.book_code||""},
+ {key:"source",label:t("journalsPage.columns.source","Source"),value:item=>item.source_type,format:value=>t(`enums.source.${value}`,value)},
+ {key:"from",label:t("filters.dateFrom","From"),value:item=>item.posting_date,date:"from"},
+ {key:"to",label:t("filters.dateTo","To"),value:item=>item.posting_date,date:"to"}
+], item=>[item.entry_number,item.memo,item.book_code,item.source_external_id].join(" "), { resource: "journals", placeholder: t("filters.search.journals", "Search records"), onItems: setItems });
+  const loading = recordFilters.pager.loading;
+  const load = recordFilters.pager.refresh;
 
-  React.useEffect(() => {
-    void load();
-  }, [load]);
 
   const loadLookups = React.useCallback(async () => {
     try {
@@ -264,7 +239,7 @@ const AccountingJournalsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <PageSkeleton rows={6} />;
+  if (loading && !items.length) return <PageSkeleton rows={6} />;
 
   return (
     <>
@@ -280,102 +255,21 @@ const AccountingJournalsPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <div className="min-w-[240px]">
-                  <Input
-                    kind="text"
-                    label={t("common.search", "Search")}
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                  />
-                </div>
-                <Button type="button" variant="outline" onClick={() => void load()}>
-                  {t("common.apply", "Apply")}
-                </Button>
-                <Button type="button" disabled={!setupStatus?.operational || !canManage} onClick={() => void openManualJournal()}>
-                  {t("journalsPage.actions.manualJournal", "Manual journal")}
-                </Button>
-              </div>
+              <Button type="button" disabled={!setupStatus?.operational || !canManage} onClick={openManualJournal}>{t("journalsPage.newButton", "New journal")}</Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
-              <MetricCard
-                label={t("journalsPage.metrics.entries", "Entries")}
-                value={items.length}
-                detail={t("journalsPage.metrics.entriesDetail", "Journals visible in the current search slice.")}
-              />
-              <MetricCard
-                label={t("journalsPage.metrics.reversed", "Reversed")}
-                value={items.filter((item) => item.status === "reversed").length}
-                detail={t("journalsPage.metrics.reversedDetail", "Entries already reversed.")}
-              />
-              <MetricCard
-                label={t("journalsPage.metrics.lines", "Lines")}
-                value={items.reduce((sum, item) => sum + (Array.isArray(item.lines) ? item.lines.length : 0), 0)}
-                detail={t("journalsPage.metrics.linesDetail", "Total journal lines across visible entries.")}
-              />
-            </div>
+
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.listTitle", "Journal list")}</div>
-          </div>
-
-          <div className="overflow-x-auto settings-table-scroll">
-            <SettingsTable className="min-w-full">
-              <thead>
-                <tr className="border-b border-gray-200 text-left">
-                  {[t("journalsPage.columns.entry", "Entry"), t("journalsPage.columns.book", "Book"), t("journalsPage.columns.source", "Source"), t("journalsPage.columns.postingDate", "Posting date"), t("journalsPage.columns.status", "Status"), t("journalsPage.columns.lines", "Lines"), t("journalsPage.columns.actions", "Actions")].map((column) => (
-                    <th
-                      key={column}
-                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
-                    >
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                    <td className="px-4 py-3 text-[13px] font-medium text-gray-900">
-                      <button type="button" onClick={() => setSelectedJournal(item)} className="break-all text-left underline decoration-gray-200 underline-offset-4 hover:decoration-gray-600 focus-visible:outline-2 focus-visible:outline-gray-400">{item.entry_number || item.id}</button>
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.book_code || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{t(`enums.source.${item.source_type}`, item.source_type) || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.posting_date || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700"><span className="inline-flex rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs">{t(`enums.status.${item.status}`, item.status) || "—"}</span></td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {Array.isArray(item.lines) ? item.lines.length : 0}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={!setupStatus?.operational || !canManage || reversingId === item.id || item.status !== "posted"}
-                        onClick={() => void reverseJournal(item.id)}
-                      >
-                        {reversingId === item.id ? t("journalsPage.actions.reversing", "Reversing...") : t("journalsPage.actions.reverse", "Reverse")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-
-                {!items.length ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      {t("journalsPage.empty", "No journals found.")}
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </SettingsTable>
-          </div>
-        </section>
+        {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
+        <AccountingRecords pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("journalsPage.empty", "No journals found.")} onInspect={setSelectedJournal} columns={[
+{ key: "name", label: t("journalsPage.columns.entry", "Entry"), render: item => item.entry_number || item.id },
+{ key: "book", label: t("journalsPage.columns.book", "Book"), render: item => item.book_code },
+{ key: "source", label: t("journalsPage.columns.source", "Source"), render: item => t(`enums.source.${item.source_type}`, item.source_type) },
+{ key: "date", label: t("journalsPage.columns.postingDate", "Posting date"), render: item => item.posting_date },
+{ key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "posted"} label={t(`enums.status.${item.status}`, item.status)} /> }
+]} actions={item => <Button type="button" variant="outline" size="sm" disabled={!setupStatus?.operational || !canManage || reversingId === item.id || item.status !== "posted"} onClick={() => void reverseJournal(item.id)}>{t("journalsPage.actions.reverse", "Reverse")}</Button>} />
 
         {snackbar ? (
           <Snackbar
@@ -402,7 +296,7 @@ const AccountingJournalsPage: React.FC = () => {
           <div className="settings-modal-scroll"><PageSkeleton rows={5} /></div>
         ) : (
           <SidePanelForm recordLabel={t("footer.journal", "Journal")} recordName={form.memo} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.headerSection", "Journal header")}</div>
               </div>
@@ -461,7 +355,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.linesSection", "Journal lines")}</div>
@@ -581,7 +475,7 @@ const AccountingJournalsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white p-4 rounded-lg border border-gray-200 bg-white shadow-xs">
+            <section className="rounded-lg border border-gray-200 bg-white p-4 rounded-lg border border-gray-200 bg-white">
               <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("journalsPage.modal.debitTotal", "Debit total")}</div>

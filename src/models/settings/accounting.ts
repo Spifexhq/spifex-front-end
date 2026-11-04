@@ -184,6 +184,7 @@ export interface ReverseJournalEntryRequest {
 }
 
 export interface GetJournalEntriesParams {
+  cursor?: string;
   book_id?: string;
   source_type?: JournalSourceType;
   status?: JournalStatus;

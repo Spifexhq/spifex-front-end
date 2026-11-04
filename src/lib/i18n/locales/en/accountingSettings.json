@@ -990,5 +990,25 @@
     "collapse": "Collapse navigation",
     "close": "Close navigation",
     "brand": "Spifex"
+  },
+  "table": {
+    "actions": "Actions",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this configuration? Existing journal records are preserved.",
+    "deleteError": "Unable to delete this record.",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "filters": {
+    "dateFrom": "From",
+    "dateTo": "To",
+    "search": {
+      "books": "Search books by name, code or currency…",
+      "journals": "Search journals by entry, memo or book…",
+      "periods": "Search periods by name or book…",
+      "bank-connections": "Search banks, books or ledger accounts…",
+      "category-rules": "Search categories, books or posting accounts…"
+    }
   }
 }

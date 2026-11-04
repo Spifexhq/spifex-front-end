@@ -1,12 +1,15 @@
+import { useRecordFilters } from "../components/useRecordFilters";
+import { useAuthContext } from "@/hooks/useAuth";
 import { accountingErrorMessage } from "../accountingError";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/api/requests";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import { Select } from "@/shared/ui/Select";
-import SettingsTable from "@/shared/ui/Settings/SettingsTable";
+import AccountingRecords from "../components/AccountingRecords";
+import AccountingStatus from "../components/AccountingStatus";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import { fetchAllCursor } from "@/lib/list";
@@ -17,25 +20,27 @@ import { useAccountingDraft, useAccountingSetup } from "../setup/useAccountingSe
 const empty = { book_id: "", period_key: "", starts_at: "", ends_at: "" };
 export default function AccountingPeriodsPage() {
   const { t } = useTranslation("accountingSettings");
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
+  const canDelete = isOwner || isSuperUser || permissions.includes("delete_ledger_account");
   const { canManage, status } = useAccountingSetup();
   const [periods, setPeriods] = useState<FiscalPeriod[]>([]);
   const [books, setBooks] = useState<AccountingBook[]>([]);
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FiscalPeriod | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useAccountingDraft("fiscal-period", empty);
   const [transition, setTransition] = useState<{ period: FiscalPeriod; status: FiscalPeriod["status"] } | null>(null);
-  const load = useCallback(async () => {
-    setLoading(true); setError(null);
-    try {
-      const [response, books] = await Promise.all([api.getFiscalPeriods(), fetchAllCursor<AccountingBook>(params => api.getAccountingBooks(params))]);
-      setPeriods(response.data); setBooks(books);
-    } catch (cause) { setError(accountingErrorMessage(cause, "")); }
-    finally { setLoading(false); }
-  }, []);
-  useEffect(() => { void load(); }, [load]);
+  const recordFilters = useRecordFilters(periods, [
+ {key:"status",label:t("table.status"),value:item=>item.status,format:value=>t(`setupFlow.periodStates.${value}`)},
+ {key:"book",label:t("nav.books"),value:item=>item.book,format:value=>books.find(book=>book.id===value)?.name||"—"},
+ {key:"from",label:t("filters.dateFrom"),value:item=>item.starts_at,date:"from"},
+ {key:"to",label:t("filters.dateTo"),value:item=>item.ends_at,date:"to"}
+], item=>[item.period_key,books.find(book=>book.id===item.book)?.name].join(" "), { resource: "periods", placeholder: t("filters.search.periods"), onItems: setPeriods });
+  const loading = recordFilters.pager.loading;
+  const load = recordFilters.pager.refresh;
+  useEffect(() => { void fetchAllCursor<AccountingBook>(params => api.getAccountingBooks(params)).then(setBooks).catch(cause => setError(accountingErrorMessage(cause, ""))); }, []);
+
   const save = async () => {
     if (busy) return;
     setBusy(true); setError(null);
@@ -50,7 +55,14 @@ export default function AccountingPeriodsPage() {
   return <section className="space-y-4">
     <div className="flex flex-wrap items-start justify-between gap-3"><p className="max-w-2xl text-xs leading-6 text-gray-500">{t("setupFlow.periodGuidance")}</p>{canManage && <Button onClick={() => { setEditing(null); setForm(previous => ({ ...previous, book_id: previous.book_id || status?.primary_book_id || "" })); setOpen(true); }}>{t("setupFlow.newPeriod")}</Button>}</div>
     {error !== null && <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-900">{error || t("setupFlow.actionError")}</p>}
-    {loading ? <PageSkeleton rows={5} /> : <SettingsTable><thead><tr><th>{t("setupFlow.periodName")}</th><th>{t("nav.books")}</th><th>{t("setupFlow.startDate")}</th><th>{t("setupFlow.endDate")}</th><th>{t("setupFlow.periodStatus")}</th><th>{t("setupFlow.periodActions")}</th></tr></thead><tbody>{periods.map(period => <tr key={period.id}><td>{period.period_key}</td><td>{books.find(book => book.id === period.book)?.name || period.book}</td><td>{period.starts_at}</td><td>{period.ends_at}</td><td>{t(`setupFlow.periodStates.${period.status}`)}</td><td>{canManage && <div className="flex flex-wrap gap-2">{!period.has_journals && <Button size="sm" variant="outline" onClick={() => { setEditing(period); setForm({ book_id: period.book, period_key: period.period_key, starts_at: period.starts_at, ends_at: period.ends_at }); setOpen(true); }}>{t("common.edit")}</Button>}{(["open", "soft_closed", "closed"] as const).filter(value => value !== period.status).map(value => <Button size="sm" variant="outline" key={value} onClick={() => setTransition({ period, status: value })}>{t(`setupFlow.periodTransitions.${value}`)}</Button>)}</div>}</td></tr>)}{!periods.length && <tr><td colSpan={6}>{t("setupFlow.noPeriods")}</td></tr>}</tbody></SettingsTable>}
+    {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
+    {loading && !periods.length ? <PageSkeleton rows={5} /> : <AccountingRecords pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit")} emptyLabel={t("setupFlow.noPeriods")} columns={[
+{ key: "name", label: t("setupFlow.periodName"), render: item => item.period_key },
+{ key: "book", label: t("nav.books"), render: item => books.find(book => book.id === item.book)?.name || item.book },
+{ key: "start", label: t("setupFlow.startDate"), render: item => item.starts_at },
+{ key: "end", label: t("setupFlow.endDate"), render: item => item.ends_at },
+{ key: "status", label: t("table.status"), render: item => <AccountingStatus active={item.status === "open"} label={t(`setupFlow.periodStates.${item.status}`)} /> }
+]} actions={canManage ? item => <div className="flex gap-1">{!item.has_journals && <Button size="sm" variant="outline" onClick={() => { setEditing(item); setForm({ book_id: item.book, period_key: item.period_key, starts_at: item.starts_at, ends_at: item.ends_at }); setOpen(true); }}>{t("common.edit")}</Button>}{(["open", "soft_closed", "closed"] as const).filter(value => value !== item.status).map(value => <Button size="sm" variant="outline" key={value} onClick={() => setTransition({ period: item, status: value })}>{t(`setupFlow.periodTransitions.${value}`)}</Button>)}</div> : undefined} onDelete={canDelete ? async item => { await api.deleteFiscalPeriod(item.id); setPeriods(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} />}
     <SidePanel isOpen={open} onClose={() => { if (!busy) setOpen(false); }} title={t(editing ? "setupFlow.editPeriod" : "setupFlow.newPeriod")}>
       <SidePanelForm className="space-y-5" onSubmit={event => { event.preventDefault(); void save(); }}>
         <Select disabled={!!editing || busy} label={t("nav.books")} items={books.filter(book => book.is_active)} selected={books.filter(book => book.id === form.book_id)} onChange={items => setForm(previous => ({ ...previous, book_id: items[0]?.id || "" }))} getItemKey={book => book.id} getItemLabel={book => `${book.name} · ${book.currency_code}`} singleSelect hideCheckboxes />

@@ -1,3 +1,6 @@
+import { useRecordFilters } from "../components/useRecordFilters";
+import { useAuthContext } from "@/hooks/useAuth";
+import AccountingStatus from "../components/AccountingStatus";
 import { useAccountingSetup } from "../setup/useAccountingSetup";
 import { accountingErrorMessage } from "../accountingError";
 import Checkbox from "@/shared/ui/Checkbox";
@@ -60,23 +63,6 @@ function extractCollection<T>(input: unknown): T[] {
   return [];
 }
 
-function MetricCard({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string | number;
-  detail: string;
-}) {
-  return (
-    <article className="min-w-0 border-l border-gray-200 px-4 py-1 first:border-l-0 first:pl-0">
-      <div className="text-[10px] uppercase tracking-wide text-gray-600">{label}</div>
-      <div className="mt-1 text-[24px] font-semibold tracking-tight text-gray-900">{value}</div>
-      <p className="mt-1 text-[12px] text-gray-600">{detail}</p>
-    </article>
-  );
-}
 
 const EMPTY_FORM: PolicyFormState = {
   cashflow_category_id: "",
@@ -125,8 +111,9 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     [t]
   );
 
-  const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
+  const canDelete = isOwner || isSuperUser || permissions.includes("delete_ledger_account");
   const [items, setItems] = React.useState<CategoryPostingPolicy[]>([]);
   const [snackbar, setSnackbar] = React.useState<SnackbarState>(null);
 
@@ -162,21 +149,13 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     });
   }, [categories]);
 
-  const load = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.getCategoryPostingPolicies();
-      const nextItems = extractCollection<CategoryPostingPolicy>(
-        (response as { data?: unknown })?.data ?? response
-      );
-      setItems(nextItems);
-    } catch {
-      setItems([]);
-      setSnackbar({ severity: "error", message: t("postingPoliciesPage.loadError", "Failed to load posting policies.") });
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const recordFilters = useRecordFilters(items, [
+ {key:"status",label:t("table.status","Status"),value:item=>item.status,format:value=>t(value==="active"?"table.active":"table.inactive",value)},
+ {key:"book",label:t("postingPoliciesPage.columns.book","Book"),value:item=>item.book_id,format:value=>books.find(book=>book.id===value)?.name||"—"},
+ {key:"category",label:t("postingPoliciesPage.columns.category","Category"),value:item=>item.cashflow_category_id,format:value=>categories.find(category=>category.id===value)?.name||"—"}
+], item=>[item.cashflow_category_label,item.book_label,item.settlement_debit_account_label,item.settlement_credit_account_label].join(" "), { resource: "category-rules", placeholder: t("filters.search.category-rules", "Search records"), onItems: setItems });
+  const loading = recordFilters.pager.loading;
+  const load = recordFilters.pager.refresh;
 
   const loadLookups = React.useCallback(async () => {
     try {
@@ -214,7 +193,6 @@ const AccountingPostingPoliciesPage: React.FC = () => {
   }, [t]);
 
   React.useEffect(() => {
-    void load();
     void loadLookups();
   }, [load, loadLookups]);
 
@@ -280,7 +258,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
     }
   };
 
-  if (loading) return <PageSkeleton rows={6} />;
+  if (loading && !items.length) return <PageSkeleton rows={6} />;
 
   return (
     <>
@@ -301,36 +279,18 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 border-t border-gray-100 pt-5 sm:grid-cols-3 settings-metrics">
-              <MetricCard
-                label={t("postingPoliciesPage.metrics.policies", "Policies")}
-                value={items.length}
-                detail={t("postingPoliciesPage.metrics.policiesDetail", "Total configured category policies.")}
-              />
-              <MetricCard
-                label={t("postingPoliciesPage.metrics.settlementReady", "Settlement-ready")}
-                value={items.filter((item) => item.settlement_debit_account_id && item.settlement_credit_account_id).length}
-                detail={t("postingPoliciesPage.metrics.settlementReadyDetail", "Policies with full settlement pair mapping.")}
-              />
-              <MetricCard label={t("redesign.incompleteRules", "Need attention")} value={items.filter(item => !item.settlement_debit_account_id || !item.settlement_credit_account_id).length} detail={t("redesign.incompleteRulesDescription", "Rules missing a payment or receipt account.")} />
-            </div>
+
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
-            <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.listTitle", "Policy list")}</div>
-          </div>
-
-          <div className="overflow-x-auto settings-table-scroll">
-            <AccountingRecords items={items} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+        {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
+        <AccountingRecords pager={recordFilters.pager} onDelete={canDelete ? async item => { await api.deleteCategoryPostingPolicy(item.id); setItems(previous => previous.filter(row => row.id !== item.id)); await load(); } : undefined} items={recordFilters.rows} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
               { key: "name", label: t("postingPoliciesPage.columns.category", "Category"), render: item => displayValue(item.cashflow_category_label, item.cashflow_category_id) },
               { key: "book", label: t("postingPoliciesPage.columns.book", "Book"), render: item => displayValue(item.book_label, item.book_id) },
               { key: "debit", label: t("redesign.paymentAccount", "Payments · debit"), render: item => displayValue(item.settlement_debit_account_label, item.settlement_debit_account_id) },
               { key: "credit", label: t("redesign.receiptAccount", "Receipts · credit"), render: item => displayValue(item.settlement_credit_account_label, item.settlement_credit_account_id) }
+              ,{ key: "status", label: t("table.status", "Status"), render: item => <AccountingStatus active={item.status === "active"} label={t(item.status === "active" ? "table.active" : "table.inactive", item.status)} /> }
             ]} />
-          </div>
-        </section>
 
         {snackbar ? (
           <Snackbar
@@ -358,7 +318,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
         ) : (
           <SidePanelForm recordLabel={t("footer.postingPolicy", "Posting policy")} recordName={categories.find(category => category.id === form.cashflow_category_id)?.name} onSubmit={submit} className="space-y-5 pb-4 md:pb-6">
             {editingScope && <p className="text-xs leading-6 text-gray-500">{t("setupFlow.scopeLocked", "The bank or category and book identify this configuration. Create a new configuration to use a different scope.")}</p>}
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("postingPoliciesPage.modal.scopeSection", "Scope")}</div>
               </div>
@@ -402,7 +362,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <section className="overflow-hidden rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <div className="border-b border-gray-200 bg-gray-50 px-4 py-2.5 border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold text-slate-600">
                 <div className="text-[10px] uppercase tracking-wide text-gray-600"> {t("postingPoliciesPage.modal.accountMapping", "Account mapping")}</div>
               </div>
@@ -434,7 +394,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
               </div>
               <p className="border-t border-gray-100 px-4 py-3 text-xs leading-5 text-gray-500">{t("redesign.policyHelp", "The bank connection supplies the bank side. These accounts supply the other side of each payment or receipt. Both are currently required.")}</p>
             </section>
-            <details className="rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white shadow-xs">
+            <details className="rounded-lg border border-gray-200 bg-white rounded-lg border border-gray-200 bg-white">
               <summary className="flex items-center px-4 py-4 text-sm font-medium">{t("redesign.advancedAccounts", "Advanced account mapping")}</summary>
               <p className="px-4 text-xs leading-5 text-gray-500">{t("redesign.advancedAccountsHelp", "Accrual and clearing settings are stored separately and are not used by automatic settlement posting.")}</p>
               <div className="grid gap-4 p-4 md:grid-cols-2">

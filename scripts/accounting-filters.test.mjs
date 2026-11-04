@@ -1,0 +1,13 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import ts from "typescript";
+const code = ts.transpileModule(fs.readFileSync("src/pages/Accounting/components/recordFiltering.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText;
+const { matchesRecordFilters } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
+const controls=[{key:"status",value:item=>item.status},{key:"book",value:item=>item.book},{key:"from",value:item=>item.date,date:"from"},{key:"to",value:item=>item.date,date:"to"}];
+const row={name:"Primary Book",status:"active",book:"main",date:"2026-11-04"};
+const matches=filters=>matchesRecordFilters(row,filters,controls,item=>item.name);
+test("search is trimmed and case insensitive",()=>{assert.equal(matches({search:"  PRIMARY  "}),true);assert.equal(matches({search:"secondary"}),false);});
+test("advanced filters combine with search and each other",()=>{assert.equal(matches({search:"book",status:"active",book:"main"}),true);assert.equal(matches({status:"inactive",book:"main"}),false);});
+test("date boundaries are inclusive and reject out-of-range records",()=>{assert.equal(matches({from:"2026-11-04",to:"2026-11-04"}),true);assert.equal(matches({from:"2026-11-05"}),false);assert.equal(matches({to:"2026-11-03"}),false);});
+test("clearing all filters restores records and does not mutate them",()=>{assert.equal(matches({}),true);assert.equal(row.name,"Primary Book");});

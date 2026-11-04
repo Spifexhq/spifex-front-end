@@ -990,5 +990,25 @@
     "collapse": "Recolher navegação",
     "close": "Fechar navegação",
     "brand": "Spifex"
+  },
+  "table": {
+    "actions": "Ações",
+    "delete": "Eliminar",
+    "deleteConfirm": "Eliminar esta configuração? Os registos do diário serão preservados.",
+    "deleteError": "Não foi possível eliminar este registo.",
+    "status": "Estado",
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "filters": {
+    "dateFrom": "De",
+    "dateTo": "Até",
+    "search": {
+      "books": "Pesquisar livros por nome, código ou moeda…",
+      "journals": "Pesquisar diários por lançamento, descrição ou livro…",
+      "periods": "Pesquisar períodos por nome ou livro…",
+      "bank-connections": "Pesquisar bancos, livros ou contas contábeis…",
+      "category-rules": "Pesquisar categorias, livros ou contas de lançamento…"
+    }
   }
 }
