@@ -2,7 +2,7 @@ import { useAccountingSetup } from "../setup/useAccountingSetup";
 import { accountingErrorMessage } from "../accountingError";
 import Checkbox from "@/shared/ui/Checkbox";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import SettingsTable from "@/shared/ui/Settings/SettingsTable";
+import AccountingRecords from "../components/AccountingRecords";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -301,52 +301,12 @@ const AccountingBankMappingsPage: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto settings-table-scroll">
-            <SettingsTable className="min-w-full" onRowOpen={canManage ? index => void openEdit(items[index]) : undefined}>
-              <thead>
-                <tr className="border-b border-gray-200 text-left">
-                  {[t("bankMappingsPage.columns.bankAccount", "Bank account"), t("bankMappingsPage.columns.book", "Book"), t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), t("bankMappingsPage.columns.active", "Active"), t("bankMappingsPage.columns.actions", "Actions")].map((column) => (
-                    <th
-                      key={column}
-                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
-                    >
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                    <td className="px-4 py-3 text-[13px] text-gray-900">
-                      {bankMap.get(item.bank_account_id) || item.bank_account_id}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {bookMap.get(item.book_id) || item.book_id}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {accountMap.get(item.ledger_account_id) || item.ledger_account_id}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {item.is_active ? t("common.yes", "Yes") : t("common.no", "No")}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Button type="button" variant="outline" size="sm" disabled={!canManage} onClick={() => void openEdit(item)}>
-                        {t("common.edit", "Edit")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-
-                {!items.length ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      {t("bankMappingsPage.empty", "No bank mappings found.")}
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </SettingsTable>
+            <AccountingRecords items={items} editLabel={t("common.edit", "Edit")} emptyLabel={t("bankMappingsPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+              { key: "name", label: t("bankMappingsPage.columns.bankAccount", "Bank account"), render: item => bankMap.get(item.bank_account_id) || item.bank_account_id },
+              { key: "book", label: t("bankMappingsPage.columns.book", "Book"), render: item => bookMap.get(item.book_id) || item.book_id },
+              { key: "account", label: t("bankMappingsPage.columns.ledgerAccount", "Ledger account"), render: item => accountMap.get(item.ledger_account_id) || item.ledger_account_id },
+              { key: "active", label: t("bankMappingsPage.columns.active", "Active"), render: item => t(item.is_active ? "common.yes" : "common.no", item.is_active ? "Yes" : "No") }
+            ]} />
           </div>
         </section>
 

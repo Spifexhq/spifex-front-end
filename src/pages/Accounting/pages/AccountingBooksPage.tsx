@@ -1,7 +1,7 @@
 import { accountingErrorMessage } from "../accountingError";
 import { useAccountingSetup, useAccountingDraft } from "../setup/useAccountingSetup";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import SettingsTable from "@/shared/ui/Settings/SettingsTable";
+import AccountingRecords from "../components/AccountingRecords";
 import CurrencySelect from "@/shared/ui/CurrencySelect";
 import AccountingTerm from "@/pages/Accounting/components/AccountingTerm";
 import React from "react";
@@ -234,46 +234,14 @@ const AccountingBooksPage: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto settings-table-scroll">
-            <SettingsTable className="min-w-full" onRowOpen={canManage ? index => void openEdit(items[index]) : undefined}>
-              <thead>
-                <tr className="border-b border-gray-200 text-left">
-                  {[t("booksPage.columns.code", "Code"), t("booksPage.columns.name", "Name"), t("booksPage.columns.basis", "Basis"), t("booksPage.columns.currency", "Currency"), t("booksPage.columns.primary", "Primary"), t("booksPage.columns.active", "Active"), t("booksPage.columns.actions", "Actions")].map((column) => (
-                    <th
-                      key={column}
-                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
-                    >
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                    <td className="px-4 py-3 text-[13px] font-medium text-gray-900">{item.code || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-900">{item.name || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{t(`enums.basis.${item.basis}`, item.basis) || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.currency_code || "—"}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_primary ? t("common.yes", "Yes") : t("common.no", "No")}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{item.is_active ? t("common.yes", "Yes") : t("common.no", "No")}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Button type="button" variant="outline" size="sm" disabled={!canManage} onClick={() => openEdit(item)}>
-                        {t("common.edit", "Edit")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-
-                {!items.length ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      {t("booksPage.empty", "No accounting books found.")}
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </SettingsTable>
+            <AccountingRecords items={items} editLabel={t("common.edit", "Edit")} emptyLabel={t("booksPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+              { key: "name", label: t("booksPage.columns.name", "Name"), render: item => item.name || "—" },
+              { key: "code", label: t("booksPage.columns.code", "Code"), render: item => item.code || "—" },
+              { key: "basis", label: t("booksPage.columns.basis", "Basis"), render: item => t(`enums.basis.${item.basis}`, item.basis) },
+              { key: "currency", label: t("booksPage.columns.currency", "Currency"), render: item => item.currency_code || "—" },
+              { key: "primary", label: t("booksPage.columns.primary", "Primary"), render: item => t(item.is_primary ? "common.yes" : "common.no", item.is_primary ? "Yes" : "No") },
+              { key: "active", label: t("booksPage.columns.active", "Active"), render: item => t(item.is_active ? "common.yes" : "common.no", item.is_active ? "Yes" : "No") }
+            ]} />
           </div>
         </section>
 

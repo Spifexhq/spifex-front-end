@@ -2,7 +2,7 @@ import { useAccountingSetup } from "../setup/useAccountingSetup";
 import { accountingErrorMessage } from "../accountingError";
 import Checkbox from "@/shared/ui/Checkbox";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
-import SettingsTable from "@/shared/ui/Settings/SettingsTable";
+import AccountingRecords from "../components/AccountingRecords";
 import AccountingTerm from "../components/AccountingTerm";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -323,48 +323,12 @@ const AccountingPostingPoliciesPage: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto settings-table-scroll">
-            <SettingsTable className="min-w-full" onRowOpen={canManage ? index => void openEdit(items[index]) : undefined}>
-              <thead>
-                <tr className="border-b border-gray-200 text-left">
-                  {[t("postingPoliciesPage.columns.category", "Category"), t("postingPoliciesPage.columns.book", "Book"), t("redesign.paymentAccount", "Payments · debit"), t("redesign.receiptAccount", "Receipts · credit"), t("postingPoliciesPage.columns.actions", "Actions")].map((column) => (
-                    <th
-                      key={column}
-                      className="px-4 py-3 text-[10px] uppercase tracking-wide text-gray-600"
-                    >
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                    <td className="px-4 py-3 text-[13px] text-gray-900">
-                      {displayValue(item.cashflow_category_label, item.cashflow_category_id)}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">
-                      {displayValue(item.book_label, item.book_id)}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{displayValue(item.settlement_debit_account_label, item.settlement_debit_account_id)}</td>
-                    <td className="px-4 py-3 text-[13px] text-gray-700">{displayValue(item.settlement_credit_account_label, item.settlement_credit_account_id)}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Button type="button" variant="outline" size="sm" disabled={!canManage} onClick={() => void openEdit(item)}>
-                        {t("common.edit", "Edit")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-
-                {!items.length ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-[13px] text-gray-500">
-                      {t("postingPoliciesPage.empty", "No posting policies found.")}
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </SettingsTable>
+            <AccountingRecords items={items} editLabel={t("common.edit", "Edit")} emptyLabel={t("postingPoliciesPage.empty", "No records found.")} onEdit={canManage ? item => { void openEdit(item); } : undefined} columns={[
+              { key: "name", label: t("postingPoliciesPage.columns.category", "Category"), render: item => displayValue(item.cashflow_category_label, item.cashflow_category_id) },
+              { key: "book", label: t("postingPoliciesPage.columns.book", "Book"), render: item => displayValue(item.book_label, item.book_id) },
+              { key: "debit", label: t("redesign.paymentAccount", "Payments · debit"), render: item => displayValue(item.settlement_debit_account_label, item.settlement_debit_account_id) },
+              { key: "credit", label: t("redesign.receiptAccount", "Receipts · credit"), render: item => displayValue(item.settlement_credit_account_label, item.settlement_credit_account_id) }
+            ]} />
           </div>
         </section>
 

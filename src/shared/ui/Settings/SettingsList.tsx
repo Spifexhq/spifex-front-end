@@ -1,9 +1,10 @@
+import ResultsPerPage from "./ResultsPerPage";
 import { settingsRecordName } from "./settingsRecordName";
 import SettingsRecordGrid from "./SettingsRecordGrid";
 import { RecordActionsContext } from "./RecordActionsContext";
 import { ListContext } from "./SettingsListContext";
-import { Children, isValidElement, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Check } from "lucide-react";
+import { Children, isValidElement, useContext, useEffect, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 type Pager = { index: number; pageSize: number; setPageSize(size: number): void; totalCount?: number; items: unknown[]; canPrev: boolean; canNext: boolean; loading: boolean; prev(): unknown; next(): unknown };
 export function SettingsRecords({ children, className }: { children: ReactNode; className?: string }) {
@@ -24,26 +25,21 @@ export function SettingsRecords({ children, className }: { children: ReactNode; 
 }
 export default function SettingsList({ children, pager, busy = false, className = "", deleteRecord, onDeleted, deletePermission }: { deleteRecord?: (id: string) => Promise<unknown>; onDeleted?: (ids: string[]) => unknown; deletePermission?: string; children: ReactNode; pager?: Pager; busy?: boolean; className?: string }) {
   const { t } = useTranslation("common");
-  const [size, setSize] = useState(20), [index, setIndex] = useState(0), [count, setCount] = useState(0), [open, setOpen] = useState(false);
-  const menu = useRef<HTMLDivElement>(null); const id = useId();
+  const [size, setSize] = useState(20), [index, setIndex] = useState(0), [count, setCount] = useState(0);
   const pageSize = pager?.pageSize ?? size, page = pager?.index ?? index;
   const total = pager?.totalCount ?? (pager ? undefined : count);
   const shown = pager ? pager.items.length : Math.max(0, Math.min(pageSize, count - page * pageSize));
   const start = shown ? page * pageSize + 1 : 0, end = shown ? start + shown - 1 : 0;
   useEffect(() => { if (!pager && index > 0 && index * size >= count) setIndex(Math.max(0, Math.ceil(count / size) - 1)); }, [count, index, size, pager]);
-  useEffect(() => { if (!open) return; const outside = (e: PointerEvent) => { if (!menu.current?.contains(e.target as Node)) setOpen(false); }; document.addEventListener("pointerdown", outside); return () => document.removeEventListener("pointerdown", outside); }, [open]);
   const disabled = busy || pager?.loading;
   return <RecordActionsContext.Provider value={{ deleteRecord, onDeleted, permission: deletePermission }}><ListContext.Provider value={{ index: page, size: pageSize, server: !!pager, setCount }}><section className={`settings-list settings-panel ${className}`} aria-busy={disabled || undefined}>
     {children}
-    <footer className="settings-list-footer">
+    <footer className="settings-list-footer flex flex-wrap items-center justify-end gap-1 border-t border-gray-100 bg-white px-3 py-2 [&_button]:inline-flex [&_button]:min-h-8 [&_button]:items-center [&_button]:justify-center [&_button]:rounded-md [&_button]:px-2 [&_button]:py-1.5 [&_button]:text-xs [&_button]:text-slate-600 [&_button:hover:not(:disabled)]:bg-gray-100 [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-40 max-md:[&_button]:min-h-10">
       <button type="button" disabled={disabled || (pager ? !pager.canPrev : page === 0)} onClick={() => { if (pager) pager.prev(); else setIndex(value => value - 1); }} aria-label={t("pagination.previous")}><ChevronLeft size={15} /></button>
       <button type="button" disabled={disabled || (pager ? !pager.canNext : end >= count)} onClick={() => { if (pager) pager.next(); else setIndex(value => value + 1); }} aria-label={t("pagination.next")}><ChevronRight size={15} /></button>
-      <div ref={menu} className="relative" onKeyDown={e => { if (e.key === "Escape") { setOpen(false); menu.current?.querySelector('button')?.focus(); } }}>
-        <button type="button" className="settings-result-count" disabled={disabled} aria-expanded={open} aria-controls={open ? id : undefined} onClick={() => setOpen(value => !value)}>
-          <span aria-live="polite">{t(total === undefined ? "pagination.range" : "pagination.rangeTotal", { start, end, count: total })}</span><ChevronDown size={12} />
-        </button>
-        {open && <div id={id} className="settings-page-size [position:absolute] [bottom:calc(100%_+_8px)] [right:0] [z-index:60] [min-width:190px] [border:1px_solid_#dce1e8] [border-radius:8px] [background:white] [padding:6px] [box-shadow:0_8px_24px_#26334d20] [&_p]:[font-size:12px] [&_p]:[font-weight:600] [&_p]:[padding:9px_10px] [&_button]:[display:flex] [&_button]:[width:100%] [&_button]:[justify-content:space-between] [&_button]:[align-items:center] [&_button]:[text-align:left] [border-color:#dce1e8] [border-radius:8px] [box-shadow:0_6px_24px_#26334d18] [&_button:hover]:[background:#f4f6f9]" role="group" aria-label={t("pagination.perPage")}><p>{t("pagination.perPage")}</p>{[20, 50, 100].map(value => <button key={value} type="button" aria-pressed={pageSize === value} onClick={() => { if (pager) pager.setPageSize(value); else { setSize(value); setIndex(0); } setOpen(false); menu.current?.querySelector('button')?.focus(); }}>{value}{pageSize === value && <Check size={14} />}</button>)}</div>}
-      </div>
+      <ResultsPerPage value={pageSize} disabled={disabled} onChange={value => { if (pager) pager.setPageSize(value); else { setSize(value); setIndex(0); } }}>
+        <span aria-live="polite">{t(total === undefined ? "pagination.range" : "pagination.rangeTotal", { start, end, count: total })}</span>
+      </ResultsPerPage>
     </footer>
   </section></ListContext.Provider></RecordActionsContext.Provider>;
 }
