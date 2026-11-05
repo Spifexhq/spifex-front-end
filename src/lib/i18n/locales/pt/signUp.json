@@ -3,19 +3,14 @@
   "heading": "Crie sua conta",
   "subheading": "Configure seu workspace em poucos passos.",
   "backgroundAlt": "Pessoas colaborando em um escritório",
-
   "nameLabel": "Nome completo",
   "namePlaceholder": "Digite seu nome completo",
-
   "emailLabel": "E-mail de trabalho",
   "emailPlaceholder": "voce@empresa.com",
-
   "passwordLabel": "Senha",
   "passwordPlaceholder": "Crie uma senha forte",
-
   "confirmPasswordLabel": "Confirmar senha",
   "confirmPasswordPlaceholder": "Repita sua senha",
-
   "fillAllFields": "Preencha todos os campos obrigatórios.",
   "passwordsDontMatch": "As senhas não coincidem.",
   "apiFallbackError": "Não foi possível criar sua conta. Tente novamente.",
@@ -25,36 +20,42 @@
   "signUpButton": "Criar conta",
   "continueButton": "Continuar",
   "backButton": "Voltar",
-
   "hasAccount": "Já tem uma conta?",
   "signInCta": "Entrar",
-
   "languageLabel": "Idioma",
   "languagePlaceholder": "Selecione um idioma",
-
   "countryLabel": "País",
   "countryPlaceholder": "Selecione um país",
-
   "currencyLabel": "Moeda",
   "currencyReal": "Real (BRL)",
   "currencyDollar": "Dólar (USD)",
   "currencyEuro": "Euro (EUR)",
-
   "consentIntro": "Para criar sua conta, revise e aceite os termos abaixo:",
-  "privacyConsent": "Li e aceito a Política de Privacidade.",
+  "privacyConsent": "Li e tomei conhecimento do aviso de privacidade.",
   "viewPrivacyPolicy": "Ver",
   "tosConsent": "Aceito os Termos de Uso.",
   "viewTos": "Ver",
   "marketingConsent": "Aceito receber e-mails ocasionais sobre produto e marketing. (Opcional)",
   "mustAcceptRequiredConsents": "Você precisa aceitar a Política de Privacidade e os Termos de Uso para continuar.",
-
   "redirectPageTitle": "Confirme seu e-mail",
   "redirectHeading": "Confira sua caixa de entrada",
   "redirectDescription": "Enviamos um link de verificação para o seu e-mail. Abra-o para ativar sua conta.",
   "redirectSentTo": "Enviamos um e-mail para:",
   "redirectOpenEmailButton": "Abrir caixa de e-mail",
-
   "invalidEmailFormat": "Por favor, insira um endereço de e-mail válido.",
   "disposableEmailNotAllowed": "Por favor, use um endereço de e-mail pessoal ou comercial.",
-  "emailTypoSuggestion": "Este e-mail parece incorreto. Você quis dizer {{suggestedEmail}}?"
+  "emailTypoSuggestion": "Este e-mail parece incorreto. Você quis dizer {{suggestedEmail}}?",
+  "story": {
+    "eyebrow": "As suas finanças, em foco.",
+    "heading": "Clareza em cada decisão financeira.",
+    "description": "Reúna fluxo de caixa, contabilidade e equipa num único espaço.",
+    "footer": "Para a sua gestão financeira diária."
+  },
+  "stepLabel": "Passo {{current}} de {{total}}",
+  "stepNames": {
+    "1": "A sua conta",
+    "2": "Preferências",
+    "3": "Rever e aceitar"
+  },
+  "reviewEdit": "Editar"
 }

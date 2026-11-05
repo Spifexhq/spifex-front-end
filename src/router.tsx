@@ -12,6 +12,7 @@ import { BaseLayout, SpifexLayout, SettingsLayout, AccountingLayout } from "@/la
 import { PermissionMiddleware, SubscriptionMiddleware, GuestOnlyMiddleware } from "@/middlewares";
 
 // Auth Pages
+const LegalPage = lazy(() => import("@/pages/Legal"));
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
 const SignIn = lazy(() => import("@/pages/Auth/SignIn"));
 const EmailVerification = lazy(() => import("@/pages/Auth/EmailVerification"));
@@ -74,6 +75,8 @@ const routes: RouteObject[] = [
                 index: true,
                 element: <Navigate to="/overview" replace />,
             },
+            { path: "legal/privacy", element: <LegalPage /> },
+            { path: "legal/terms", element: <LegalPage /> },
             // Auth
             {
             path: 'signup',

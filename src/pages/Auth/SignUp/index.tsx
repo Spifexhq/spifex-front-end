@@ -1,3 +1,5 @@
+import AuthStory from "../AuthStory";
+import { motion, useReducedMotion } from "framer-motion";
 /* --------------------------------------------------------------------------
  * File: src/pages/Auth/SignUp.tsx
  * -------------------------------------------------------------------------- */
@@ -412,6 +414,7 @@ const SignUp = () => {
     e: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>
   ) => {
     e.preventDefault();
+    if (isLoading) return;
 
     if (step === 1) {
       const isValid = await validateStep1();
@@ -432,16 +435,18 @@ const SignUp = () => {
     }
   };
 
+  const reducedMotion = useReducedMotion();
+
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex bg-white text-slate-900">
       {/* Left section */}
-      <div className="hidden md:flex md:w-1/2 relative overflow-hidden bg-slate-900">
+      <div className="hidden md:flex md:w-1/2 relative overflow-hidden bg-[#e5c4ad]">
         <img
           src={signUpBackground}
           alt={t("backgroundAlt")}
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/80 to-slate-800/60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f5e9df]/95 via-[#edcfb9]/95 to-[#ba8065]/95" /><AuthStory />
       </div>
 
       {/* Right section */}
@@ -460,7 +465,7 @@ const SignUp = () => {
         </header>
 
         <main className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md py-6 sm:py-10">
             {step < 4 ? (
               <>
                 <div className="mb-8">
@@ -472,7 +477,8 @@ const SignUp = () => {
                     {t("subheading")}
                   </p>
 
-                  <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+                  <p className="mt-5 text-xs font-medium text-[var(--accentPrimary)]" aria-live="polite">{t("stepLabel", { current: step, total: 3 })} · {t(`stepNames.${step}`)}</p>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-500" aria-hidden="true">
                     {[1, 2, 3].map((s) => (
                       <div
                         key={s}
@@ -485,9 +491,10 @@ const SignUp = () => {
                 </div>
 
                 <form className="space-y-6" onSubmit={handleSubmit}>
-                  <div className="relative min-h-[220px]">
+                  <motion.div key={step} initial={{opacity:0,y:reducedMotion ? 0 : 8}} animate={{opacity:1,y:0}} transition={{duration:reducedMotion ? 0 : .22}} className="relative min-h-[280px]">
                     {/* STEP 1 */}
                     <div
+                      hidden={step !== 1}
                       className={`space-y-4 transition-opacity duration-300 ${
                         step === 1
                           ? "opacity-100"
@@ -542,8 +549,6 @@ const SignUp = () => {
                             type="password"
                             value={form.confirmPassword}
                             onChange={handleInputChange("confirmPassword")}
-                            onPaste={(e) => e.preventDefault()}
-                            onCopy={(e) => e.preventDefault()}
                             disabled={isLoading}
                             showTogglePassword
                             autoComplete="new-password"
@@ -555,6 +560,7 @@ const SignUp = () => {
 
                     {/* STEP 2 */}
                     <div
+                      hidden={step !== 2}
                       className={`space-y-4 transition-opacity duration-300 ${
                         step === 2
                           ? "opacity-100"
@@ -635,12 +641,17 @@ const SignUp = () => {
 
                     {/* STEP 3 */}
                     <div
+                      hidden={step !== 3}
                       className={`space-y-4 transition-opacity duration-300 ${
                         step === 3
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none absolute inset-0"
                       }`}
                     >
+                      <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                        <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-900">{form.name}</p><p className="mt-1 break-all text-xs text-slate-500">{form.email}</p></div><button type="button" onClick={() => setStep(1)} disabled={isLoading} className="shrink-0 text-xs font-medium text-[var(--accentPrimary)] hover:text-black">{t("reviewEdit")}</button></div>
+                        <p className="mt-3 border-t border-slate-200 pt-3 text-xs text-slate-500">{selectedCountry[0]?.label} · {selectedCurrency[0]?.label}</p>
+                      </div>
                       <p className="text-sm text-slate-600 mb-1">
                         {t("consentIntro")}
                       </p>
@@ -650,7 +661,7 @@ const SignUp = () => {
                           checked={consents.privacy}
                           onChange={handleConsentChange("privacy")}
                           disabled={isLoading}
-                          required
+                          required={step === 3}
                         />
                         <span>
                           {t("privacyConsent")}{" "}
@@ -670,7 +681,7 @@ const SignUp = () => {
                           checked={consents.tos}
                           onChange={handleConsentChange("tos")}
                           disabled={isLoading}
-                          required
+                          required={step === 3}
                         />
                         <span>
                           {t("tosConsent")}{" "}
@@ -694,7 +705,7 @@ const SignUp = () => {
                         <span>{t("marketingConsent")}</span>
                       </label>
                     </div>
-                  </div>
+                  </motion.div>
 
                   <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {step > 1 && step < 4 && (
@@ -712,7 +723,6 @@ const SignUp = () => {
                     <Button
                       variant="primary"
                       type="submit"
-                      onClick={handleSubmit}
                       isLoading={isLoading}
                       disabled={
                         isLoading ||

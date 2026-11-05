@@ -1,3 +1,5 @@
+import AuthStory from "../AuthStory";
+import { motion, useReducedMotion } from "framer-motion";
 // src/pages/SignIn.tsx
 import React, { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -265,8 +267,10 @@ const SignIn: React.FC = () => {
     return t("twoFactorResend");
   };
 
+  const reducedMotion = useReducedMotion();
+
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex bg-white text-slate-900">
       <div className="flex flex-col w-full md:w-[55%] lg:w-1/2 px-6 py-6 sm:px-10 sm:py-8">
         <header className="flex items-center justify-between mb-8">
           <a
@@ -278,7 +282,7 @@ const SignIn: React.FC = () => {
         </header>
 
         <main className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md py-6 sm:py-10">
             <div className="mb-8">
               <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
                 {step === "credentials" ? t("heading") : t("twoFactorHeading")}
@@ -288,7 +292,7 @@ const SignIn: React.FC = () => {
               </p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <motion.form key={step} initial={{opacity:0,y:reducedMotion ? 0 : 8}} animate={{opacity:1,y:0}} transition={{duration:reducedMotion ? 0 : .22}} className="space-y-6" onSubmit={handleSubmit}>
               {step === "credentials" ? (
                 <>
                   <div className="space-y-4">
@@ -409,7 +413,7 @@ const SignIn: React.FC = () => {
                   </Button>
                 </>
               )}
-            </form>
+            </motion.form>
 
             {step === "credentials" && (
               <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-slate-600">
@@ -439,14 +443,14 @@ const SignIn: React.FC = () => {
         />
       </div>
 
-      <div className="hidden md:flex md:w-[45%] lg:w-1/2 relative overflow-hidden bg-slate-900">
+      <div className="hidden md:flex md:w-[45%] lg:w-1/2 relative overflow-hidden bg-[#e5c4ad]">
         <img
           src={signInBackground}
           alt="Spifex background"
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/80 to-slate-800/60" />
-        <div className="relative z-10 flex items-end justify-end w-full p-8" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f5e9df]/95 via-[#edcfb9]/95 to-[#ba8065]/95" /><AuthStory />
+
       </div>
     </div>
   );

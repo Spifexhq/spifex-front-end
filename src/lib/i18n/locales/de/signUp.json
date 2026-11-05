@@ -3,19 +3,14 @@
   "heading": "Konto erstellen",
   "subheading": "Richte deinen Arbeitsbereich in wenigen Schritten ein.",
   "backgroundAlt": "Menschen, die im Büro zusammenarbeiten",
-
   "nameLabel": "Vollständiger Name",
   "namePlaceholder": "Gib deinen vollständigen Namen ein",
-
   "emailLabel": "Arbeits-E-Mail",
   "emailPlaceholder": "du@firma.com",
-
   "passwordLabel": "Passwort",
   "passwordPlaceholder": "Erstelle ein sicheres Passwort",
-
   "confirmPasswordLabel": "Passwort bestätigen",
   "confirmPasswordPlaceholder": "Wiederhole dein Passwort",
-
   "fillAllFields": "Bitte fülle alle Pflichtfelder aus.",
   "passwordsDontMatch": "Die Passwörter stimmen nicht überein.",
   "apiFallbackError": "Dein Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
@@ -25,36 +20,42 @@
   "signUpButton": "Konto erstellen",
   "continueButton": "Weiter",
   "backButton": "Zurückgehen",
-
   "hasAccount": "Du hast bereits ein Konto?",
   "signInCta": "Anmelden",
-
   "languageLabel": "Sprache",
   "languagePlaceholder": "Sprache auswählen",
-
   "countryLabel": "Land",
   "countryPlaceholder": "Land auswählen",
-
   "currencyLabel": "Währung",
   "currencyReal": "Real (BRL)",
   "currencyDollar": "Dollar (USD)",
   "currencyEuro": "Euro (EUR)",
-
   "consentIntro": "Um dein Konto zu erstellen, lies bitte die folgenden Bedingungen und akzeptiere sie:",
-  "privacyConsent": "Ich habe die Datenschutzerklärung gelesen und akzeptiere sie.",
+  "privacyConsent": "Ich habe die Datenschutzhinweise gelesen und zur Kenntnis genommen.",
   "viewPrivacyPolicy": "Ansehen",
   "tosConsent": "Ich akzeptiere die Nutzungsbedingungen.",
   "viewTos": "Ansehen",
   "marketingConsent": "Ich möchte gelegentlich Produkt- und Marketing-E-Mails erhalten. (Optional)",
   "mustAcceptRequiredConsents": "Du musst die Datenschutzerklärung und die Nutzungsbedingungen akzeptieren, um fortzufahren.",
-
   "redirectPageTitle": "Bestätige deine E-Mail-Adresse",
   "redirectHeading": "Prüfe dein Postfach",
   "redirectDescription": "Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Öffne ihn, um dein Konto zu aktivieren.",
   "redirectSentTo": "Wir haben eine E-Mail gesendet an:",
   "redirectOpenEmailButton": "E-Mail-Postfach öffnen",
-
   "invalidEmailFormat": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
   "disposableEmailNotAllowed": "Bitte verwenden Sie eine private oder geschäftliche E-Mail-Adresse.",
-  "emailTypoSuggestion": "Diese E-Mail-Adresse scheint falsch zu sein. Meinten Sie {{suggestedEmail}}?"
+  "emailTypoSuggestion": "Diese E-Mail-Adresse scheint falsch zu sein. Meinten Sie {{suggestedEmail}}?",
+  "story": {
+    "eyebrow": "Ihre Finanzen im Blick.",
+    "heading": "Klarheit bei jeder Finanzentscheidung.",
+    "description": "Cashflow, Buchhaltung und Team in einem Arbeitsbereich.",
+    "footer": "Für Ihre tägliche Finanzarbeit."
+  },
+  "stepLabel": "Schritt {{current}} von {{total}}",
+  "stepNames": {
+    "1": "Ihr Konto",
+    "2": "Einstellungen",
+    "3": "Prüfen und zustimmen"
+  },
+  "reviewEdit": "Bearbeiten"
 }

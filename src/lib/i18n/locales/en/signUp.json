@@ -3,19 +3,14 @@
   "heading": "Create your account",
   "subheading": "Set up your workspace in a few quick steps.",
   "backgroundAlt": "People collaborating in an office",
-
   "nameLabel": "Full name",
   "namePlaceholder": "Enter your full name",
-
   "emailLabel": "Work email",
   "emailPlaceholder": "you@company.com",
-
   "passwordLabel": "Password",
   "passwordPlaceholder": "Create a strong password",
-
   "confirmPasswordLabel": "Confirm password",
   "confirmPasswordPlaceholder": "Repeat your password",
-
   "fillAllFields": "Please fill in all required fields.",
   "passwordsDontMatch": "Passwords do not match.",
   "apiFallbackError": "We couldn't create your account. Please try again.",
@@ -25,36 +20,42 @@
   "signUpButton": "Create account",
   "continueButton": "Continue",
   "backButton": "Back",
-
   "hasAccount": "Already have an account?",
   "signInCta": "Sign in",
-
   "languageLabel": "Language",
   "languagePlaceholder": "Select a language",
-
   "countryLabel": "Country",
   "countryPlaceholder": "Select a country",
-
   "currencyLabel": "Currency",
   "currencyReal": "Real (BRL)",
   "currencyDollar": "Dollar (USD)",
   "currencyEuro": "Euro (EUR)",
-
   "consentIntro": "To create your account, please review and accept the terms below:",
-  "privacyConsent": "I have read and accept the Privacy Policy.",
+  "privacyConsent": "I have read and acknowledge the privacy notice.",
   "viewPrivacyPolicy": "View",
   "tosConsent": "I accept the Terms of Service.",
   "viewTos": "View",
   "marketingConsent": "I agree to receive occasional product and marketing emails. (Optional)",
   "mustAcceptRequiredConsents": "You must accept the Privacy Policy and the Terms of Service to continue.",
-
   "redirectPageTitle": "Confirm your email",
   "redirectHeading": "Check your inbox",
   "redirectDescription": "We sent a verification link to your email address. Open it to activate your account.",
   "redirectSentTo": "We sent an email to:",
   "redirectOpenEmailButton": "Open email inbox",
-
   "invalidEmailFormat": "Please enter a valid email address.",
   "disposableEmailNotAllowed": "Please use a personal or business email address.",
-  "emailTypoSuggestion": "This email looks incorrect. Did you mean {{suggestedEmail}}?"
+  "emailTypoSuggestion": "This email looks incorrect. Did you mean {{suggestedEmail}}?",
+  "story": {
+    "eyebrow": "Your finances, in focus.",
+    "heading": "Clarity for every financial decision.",
+    "description": "Bring cash flow, accounting and your team together in one workspace.",
+    "footer": "Built for your everyday financial work."
+  },
+  "stepLabel": "Step {{current}} of {{total}}",
+  "stepNames": {
+    "1": "Your account",
+    "2": "Your preferences",
+    "3": "Review & agree"
+  },
+  "reviewEdit": "Edit"
 }
