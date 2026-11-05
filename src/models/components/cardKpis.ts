@@ -24,6 +24,7 @@ export type KpiQueryParams =
 /* ----------------------- Cashflow KPIs (planned / due) ----------------------- */
 
 export type CashflowKpis = {
+  trends?: Record<string, { date: string; net: string }[]>;
   period: {
     current_month: { start: string; end: string };
     previous_month: { start: string; end: string };
@@ -43,6 +44,7 @@ export type CashflowKpis = {
 /* ----------------------- Settled KPIs (realized / value) ---------------------- */
 
 export type SettledKpis = {
+  trends?: Record<string, { date: string; net: string }[]>;
   period: {
     current_month: { start: string; end: string };
     previous_month: { start: string; end: string };

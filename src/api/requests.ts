@@ -25,7 +25,7 @@ import type { AddGroupRequest, EditGroupRequest, GetGroupPermissionsResponse, Ge
   GetGroupsResponse, GetPermissionsResponse, UpdateGroupPermissionsResponse } from '@/models/auth/rbac';
 import type { AddMemberRequest, EditMemberRequest, GetMemberResponse, GetMembersParams, GetMembersResponse } from '@/models/auth/members';
 import type { CashflowKpis, KpiQueryParams, SettledKpis } from '@/models/components/cardKpis';
-import type { DashboardOverview } from '@/models/components/dashboard';
+import type { OverviewData, OverviewQuery } from "@/models/finance/overview";
 import type { ReportsSummaryParams, ReportsSummary } from '@/models/components/reports';
 import type { AddViewPresetRequest, AddViewPresetResponse, EditViewPresetRequest, EditViewPresetResponse,
   GetViewPresetsResponse } from '@/models/components/viewPresets';
@@ -335,9 +335,9 @@ export const api = {
   getSettledKpis: (params: KpiQueryParams) =>
     request<SettledKpis>("cashflow/kpis/settled/", "GET", params),
 
-  /* --- Dashboard --- */
-  getCashflowDashboard: () =>
-    request<DashboardOverview>(`cashflow/dashboard/`, "GET"),
+  /* --- Overview --- */
+  getOverview: (params: OverviewQuery) =>
+    request<OverviewData>("cashflow/overview/", "GET", params),
 
   /* --- Reports --- */
   getReportsSummary: (params: ReportsSummaryParams) =>
@@ -464,7 +464,7 @@ export const api = {
 
     // No ids => GET (HTTP cache + ETag/304 possible)
     const params =
-      payload?.active !== undefined ? { active: payload.active } : undefined;
+      { ...(payload?.active !== undefined ? { active: payload.active } : {}), ...(payload?.include_history ? { include_history: true } : {}) };
 
     return request<GetBanksTableResponse>("banking/accounts/table/", "GET", params);
   },

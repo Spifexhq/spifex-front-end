@@ -9,7 +9,7 @@ import { isSupportedTimezone } from "@/lib/location/timezonesList";
 type Status = "idle" | "loading" | "ready" | "redirecting";
 
 const LOCALE_PAGE = "/locale-setup";
-const DEFAULT_REDIRECT_AFTER_READY = "/cashflow";
+const DEFAULT_REDIRECT_AFTER_READY = "/overview";
 
 export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children }) => {
   const [status, setStatus] = useState<Status>("idle");

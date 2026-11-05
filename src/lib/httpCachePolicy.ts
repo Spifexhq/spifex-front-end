@@ -1,9 +1,9 @@
 /** Resource dependencies shared by HTTP cache invalidation and stale-read fences. */
 const resources: Array<[string, string]> = [
- ["banking/accounts", "banks"], ["banking/statements", "statements"],
+ ["banking/accounts", "banks"], ["banking/statements", "statements"], ["banking/statement-import-sessions", "statements"],
  ["cashflow/entries", "entries"], ["cashflow/settlements", "settlements"],
  ["cashflow/categories", "categories"], ["cashflow/kpis", "metrics"],
- ["cashflow/reports", "metrics"], ["cashflow/dashboard", "metrics"],
+ ["cashflow/reports", "metrics"], ["cashflow/overview", "metrics"],
  ["departments", "departments"], ["projects", "projects"], ["inventory", "inventory"], ["crm/entities", "entities"],
  ["ledger", "ledger"], ["identity", "identity"], ["organizations", "organization"],
  ["rbac", "permissions"], ["billing", "subscription"], ["entitlements", "subscription"],
@@ -19,12 +19,12 @@ export function mutationTags(endpoint: string): string[] | null {
  statements: ["statements", "entries", "settlements", "banks", "metrics", "ledger"],
  entries: ["entries", "settlements", "banks", "metrics", "ledger", "identity"],
  settlements: ["settlements", "entries", "banks", "metrics", "ledger"],
- categories: ["categories", "entries", "settlements", "ledger", "identity"],
+ categories: ["categories", "entries", "settlements", "ledger", "identity", "metrics"],
  departments: ["departments", "entries"], projects: ["projects", "entries"],
  inventory: ["inventory", "entries", "settlements"], entities: ["entities", "entries", "settlements"],
  ledger: ["ledger", "entries", "settlements", "identity"],
- identity: ["identity", "organization"], organization: ["organization", "identity", "ledger"],
- permissions: ["permissions", "identity"], subscription: ["subscription", "identity"],
+ identity: ["identity", "organization", "metrics"], organization: ["organization", "identity", "ledger", "metrics"],
+ permissions: ["permissions", "identity", "metrics"], subscription: ["subscription", "identity", "metrics"],
  };
  return dependencies[tag] || null;
 }

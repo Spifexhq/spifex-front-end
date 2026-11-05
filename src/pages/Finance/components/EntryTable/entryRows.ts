@@ -45,3 +45,10 @@ export function entryQuery(filters: EntryFilters | undefined, settled: boolean) 
     const start = filters?.start_date || undefined, end = filters?.end_date || undefined;
     return { ...(settled ? { value_from: start, value_to: end, include_inactive: true } : { date_from: start, date_to: end }), description: filters?.description || undefined, observation: filters?.observation || undefined, q: [filters?.description, filters?.observation].filter(Boolean).join(" ").trim() || undefined, cashflow_category: filters?.cashflow_category_id?.length ? filters.cashflow_category_id.join(",") : undefined, bank: filters?.bank_id?.length ? filters.bank_id.join(",") : undefined, tx_type: filters?.tx_type === "credit" ? 1 : filters?.tx_type === "debit" ? -1 : undefined, amount_min: optionalAmount(filters?.amount_min), amount_max: optionalAmount(filters?.amount_max) };
 }
+
+/** The settlement dialog reloads authoritative balances; this only controls preview action visibility. */
+export function isOutstandingEntry(entry: FinancialEntry): entry is Entry {
+    if (isSettlement(entry) || entry.is_settled || entry.open_amount == null) return false;
+    const remaining = Number(entry.open_amount);
+    return Number.isFinite(remaining) && remaining > 0;
+}

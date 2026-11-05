@@ -8,6 +8,7 @@ export type AppShellState = {
   closeMobile: () => void;
   sidebarSlot: HTMLDivElement | null;
   openHelp: () => void;
+  financialRevision?: number;
 };
 export const AppShellContext = createContext<AppShellState | null>(null);
 export const useAppShell = () => useContext(AppShellContext);

@@ -1,0 +1,128 @@
+{
+  "title": "Centro de ajuda",
+  "intro": "Respostas práticas sobre o Spifex. Explore um tema ou pesquise os guias abaixo.",
+  "search": "Pesquisar perguntas, funções ou termos contabilísticos…",
+  "browse": "Temas de ajuda",
+  "all": "Todos os temas",
+  "results": "{{count}} respostas",
+  "empty": "Nenhuma resposta encontrada",
+  "emptyHelp": "Experimente uma pesquisa mais curta ou outro tema.",
+  "reset": "Limpar pesquisa e temas",
+  "backTitle": "Quer voltar às suas finanças?",
+  "backText": "A visão geral reúne a atividade e os valores em aberto.",
+  "back": "Ir para a Visão geral",
+  "topics": [
+    {
+      "id": "start",
+      "title": "Primeiros passos",
+      "description": "Conheça o seu espaço de trabalho e a navegação.",
+      "articles": [
+        {
+          "id": "what",
+          "question": "O que é o Spifex?",
+          "answer": "O Spifex ajuda a organizar lançamentos de fluxo de caixa, registar liquidações, gerir contas bancárias e configurar a contabilidade. A visão geral reúne a atividade financeira e os valores em aberto."
+        },
+        {
+          "id": "overview",
+          "question": "Como funcionam os filtros da Visão geral?",
+          "answer": "Escolha atividade liquidada para pagamentos por data-valor ou lançamentos em aberto para os montantes restantes hoje por vencimento. Escolha um período, categoria ou descrição e aplique os filtros. Os bancos filtram a atividade liquidada. A comparação usa o período anterior com a mesma duração."
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "title": "Lançamentos e liquidações",
+      "description": "Separe o que está previsto do que já foi pago.",
+      "articles": [
+        {
+          "id": "difference",
+          "question": "Qual é a diferença entre lançamento e liquidação?",
+          "answer": "Um lançamento regista um recebimento ou pagamento a gerir no fluxo de caixa. Uma liquidação regista um montante efetivamente recebido ou pago numa conta bancária. Liquidações parciais reduzem o saldo em aberto. Criar um lançamento não o liquida."
+        },
+        {
+          "id": "batch",
+          "question": "Posso liquidar vários lançamentos em bancos diferentes?",
+          "answer": "Selecione os lançamentos e abra o fluxo de liquidação. Aplique um banco ou data à seleção, ajuste exceções individuais e reveja o lote antes de confirmar. Cada lançamento mantém o seu banco, montante e data. O valor não pode exceder o saldo em aberto."
+        },
+        {
+          "id": "transfer",
+          "question": "As transferências contam como receita ou despesa?",
+          "answer": "Transferências movem dinheiro entre as suas próprias contas. As métricas operacionais excluem transferências internas para não aumentar artificialmente recebimentos ou pagamentos. Os saldos bancários refletem a movimentação entre contas."
+        }
+      ]
+    },
+    {
+      "id": "imports",
+      "title": "Importações bancárias",
+      "description": "Leia um extrato, reveja transações e retome o trabalho guardado.",
+      "articles": [
+        {
+          "id": "read",
+          "question": "Que ficheiros de extrato posso importar?",
+          "answer": "Abra Importações bancárias na navegação principal. Escolha a conta e envie um PDF, imagem, CSV ou XML compatível com OFX. CSV e OFX são lidos sem IA de extração; ficheiros estruturados e nítidos costumam ser mais fáceis de verificar."
+        },
+        {
+          "id": "review",
+          "question": "Importar um extrato cria lançamentos automaticamente?",
+          "answer": "Não. Verifique datas, montantes e categorias. Reveja ou exclua todas as transações pendentes antes de confirmar. As sugestões ajudam na classificação. Os possíveis duplicados permanecem visíveis para sua decisão. Importar não liquida lançamentos nem gera prestações futuras."
+        },
+        {
+          "id": "resume",
+          "question": "Posso sair de uma importação e continuar depois?",
+          "answer": "Sim. Abra o documento no histórico para retomar o processamento ou a revisão guardada. As revisões confirmadas são guardadas no servidor. Guarde as alterações de uma transação aberta antes de sair."
+        }
+      ]
+    },
+    {
+      "id": "accounting",
+      "title": "Contabilidade",
+      "description": "Configure o plano, os livros e os períodos com cuidado.",
+      "articles": [
+        {
+          "id": "setup",
+          "question": "Onde configuro a contabilidade?",
+          "answer": "Abra Contabilidade na barra lateral. Siga a configuração para rever o perfil, o plano de contas e os livros, e valide antes da ativação. O servidor verifica os pré-requisitos obrigatórios das operações contabilísticas."
+        },
+        {
+          "id": "period",
+          "question": "O que significa um período contabilístico fechado?",
+          "answer": "Um período fechado ou parcialmente fechado bloqueia novos registos contabilísticos. Reabra-o pelo processo autorizado antes de registar. Contas e configurações usadas em registos contabilizados estão protegidas contra alterações destrutivas."
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "title": "Configurações do espaço",
+      "description": "Gira a organização, as categorias e os acessos.",
+      "articles": [
+        {
+          "id": "access",
+          "question": "Porque não consigo ver uma página ou ação?",
+          "answer": "As páginas e ações dependem da função na organização, dos grupos de permissões e do plano. Peça ao administrador para rever as permissões relevantes. O servidor impõe o controlo de acesso mesmo por URL direto."
+        },
+        {
+          "id": "currency",
+          "question": "Porque são importantes as moedas?",
+          "answer": "Os montantes do fluxo de caixa usam a moeda da organização. As contas bancárias também têm uma moeda própria. Uma importação não deve converter silenciosamente um extrato estrangeiro para a moeda da organização; use a conta correta e um processo contabilístico suportado."
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Conta e segurança",
+      "description": "Controle o acesso ao seu espaço financeiro.",
+      "articles": [
+        {
+          "id": "signout",
+          "question": "Onde termino a sessão ou altero os dados pessoais?",
+          "answer": "Abra o menu do utilizador no fundo da barra lateral. Aí pode aceder às configurações pessoais e terminar a sessão. Termine sempre a sessão num computador partilhado."
+        },
+        {
+          "id": "signin",
+          "question": "O que faço se não conseguir iniciar sessão?",
+          "answer": "Verifique o email e a palavra-passe e use a recuperação de palavra-passe se necessário. Se as tentativas estiverem temporariamente limitadas, aguarde antes de tentar novamente. Nunca partilhe palavras-passe ou códigos de verificação, mesmo com quem diz prestar suporte."
+        }
+      ]
+    }
+  ]
+}

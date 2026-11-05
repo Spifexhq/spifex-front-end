@@ -11,12 +11,11 @@ import FinancialActivityPanel from '@/components/FinancialActivityPanel';
 
 import { api } from '@/api/requests';
 import { PermissionMiddleware } from '@/middlewares';
-import { fetchAllCursor } from '@/lib/list';
+import { useSettlementBanks } from "../components/SettlementForm/useSettlementBanks";
 
 import type { Entry } from '@/models/entries/entries';
 import type { EntryFilters } from '@/models/components/filterBar';
 import { type ModalType } from '@/pages/Finance/components/EntryForm/types';
-import type { BankAccount } from '@/models/settings/banking';
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
@@ -82,36 +81,7 @@ const CashFlow = () => {
     [isEditingModalOpen, isSettlementModalOpen]
   );
 
-  const [banks, setBanks] = useState<BankAccount[]>([]);
-  const [banksLoading, setBanksLoading] = useState(false);
-  const [banksError, setBanksError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isSettlementModalOpen) return;
-    let alive = true;
-
-    (async () => {
-      setBanksLoading(true);
-      setBanksError(null);
-      try {
-        const all = await fetchAllCursor<BankAccount>((p?: { cursor?: string }) =>
-          api.getBanks({ cursor: p?.cursor, active: 'true' })
-        );
-        if (!alive) return;
-        setBanks(all);
-      } catch (err) {
-        if (!alive) return;
-        setBanks([]);
-        setBanksError(getErrorMessage(err, t('cashFlow:errors.loadBanksUnexpected')));
-      } finally {
-        if (alive) setBanksLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [banksKey, t, isSettlementModalOpen]);
+  const { banksData, retryBanks } = useSettlementBanks(isSettlementModalOpen, banksKey);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -214,8 +184,8 @@ const CashFlow = () => {
               setSelectedEntries([]);
               tableRef.current?.clearSelection();
             }}
-            banksData={{ banks, loading: banksLoading, error: banksError }}
-            onRetryBanks={bumpBanks}
+            banksData={banksData}
+            onRetryBanks={retryBanks}
           />
         </PermissionMiddleware>
       )}

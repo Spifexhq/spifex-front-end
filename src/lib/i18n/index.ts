@@ -175,20 +175,20 @@ import deStatements from "./locales/de/statements.json";
 /* Misc                                                                         */
 /* -------------------------------------------------------------------------- */
 
-import ptSimulatedAI from "./locales/pt/simulatedAI.json";
-import enSimulatedAI from "./locales/en/simulatedAI.json";
-import frSimulatedAI from "./locales/fr/simulatedAI.json";
-import deSimulatedAI from "./locales/de/simulatedAI.json";
+import ptHelp from "./locales/pt/help.json";
+import enHelp from "./locales/en/help.json";
+import frHelp from "./locales/fr/help.json";
+import deHelp from "./locales/de/help.json";
 
 import ptCookies from "./locales/pt/cookies.json";
 import enCookies from "./locales/en/cookies.json";
 import frCookies from "./locales/fr/cookies.json";
 import deCookies from "./locales/de/cookies.json";
 
-import ptHomeDashboard from "./locales/pt/homeDashboard.json";
-import enHomeDashboard from "./locales/en/homeDashboard.json";
-import frHomeDashboard from "./locales/fr/homeDashboard.json";
-import deHomeDashboard from "./locales/de/homeDashboard.json";
+import ptOverview from "./locales/pt/overview.json";
+import enOverview from "./locales/en/overview.json";
+import frOverview from "./locales/fr/overview.json";
+import deOverview from "./locales/de/overview.json";
 
 /* -------------------------------------------------------------------------- */
 /* Settings / Preferences                                                       */
@@ -373,9 +373,9 @@ const NAMESPACES = [
   "banksTable",
   "statements",
 
-  "simulatedAI",
+  "help",
   "cookies",
-  "homeDashboard",
+  "overview",
 
   "notificationSettings",
   "formatSettings",
@@ -446,9 +446,9 @@ const resources: Resource = {
     banksTable: ptBanksTable,
     statements: ptStatements,
 
-    simulatedAI: ptSimulatedAI,
+    help: ptHelp,
     cookies: ptCookies,
-    homeDashboard: ptHomeDashboard,
+    overview: ptOverview,
 
     notificationSettings: ptNotificationSettings,
     formatSettings: ptFormatSettings,
@@ -514,9 +514,9 @@ const resources: Resource = {
     banksTable: enBanksTable,
     statements: enStatements,
 
-    simulatedAI: enSimulatedAI,
+    help: enHelp,
     cookies: enCookies,
-    homeDashboard: enHomeDashboard,
+    overview: enOverview,
 
     notificationSettings: enNotificationSettings,
     formatSettings: enFormatSettings,
@@ -582,9 +582,9 @@ const resources: Resource = {
     banksTable: frBanksTable,
     statements: frStatements,
 
-    simulatedAI: frSimulatedAI,
+    help: frHelp,
     cookies: frCookies,
-    homeDashboard: frHomeDashboard,
+    overview: frOverview,
 
     notificationSettings: frNotificationSettings,
     formatSettings: frFormatSettings,
@@ -650,9 +650,9 @@ const resources: Resource = {
     banksTable: deBanksTable,
     statements: deStatements,
 
-    simulatedAI: deSimulatedAI,
+    help: deHelp,
     cookies: deCookies,
-    homeDashboard: deHomeDashboard,
+    overview: deOverview,
 
     notificationSettings: deNotificationSettings,
     formatSettings: deFormatSettings,

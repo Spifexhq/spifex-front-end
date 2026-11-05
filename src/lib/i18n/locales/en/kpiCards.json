@@ -49,5 +49,7 @@
     "settledScope": "Metrics use settlement dates and fixed reporting periods. Search, observation, category and bank filters apply. Date, amount and type filters apply to the list only.",
     "loadError": "Unable to load the overview. Your entries are still available below.",
     "retry": "Try again"
-  }
+  },
+  "metricTrend": "Cumulative net movement for the card’s reporting period.",
+  "balanceTrend": "Reconstructed 30-day balance preview, anchored to the current recorded balance and recorded settlement movements. This is not an audited historical balance."
 }

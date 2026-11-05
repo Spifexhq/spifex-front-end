@@ -15,5 +15,6 @@
   "balanceScope": "Current balance · selected accounts",
   "manage": "Manage banks",
   "loadError": "Unable to load bank balances.",
-  "allAccountsScope": "Current balance · all active accounts"
+  "allAccountsScope": "Current balance · all active accounts",
+  "mixedCurrencies": "Multiple currencies"
 }

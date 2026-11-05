@@ -1,0 +1,128 @@
+{
+  "title": "Help center",
+  "intro": "Practical answers about using Spifex. Browse a topic or search the guides below.",
+  "search": "Search questions, features or accounting terms…",
+  "browse": "Help topics",
+  "all": "All topics",
+  "results": "{{count}} answers",
+  "empty": "No matching answers",
+  "emptyHelp": "Try a shorter search or choose another topic.",
+  "reset": "Clear search and topics",
+  "backTitle": "Ready to get back to your finances?",
+  "backText": "Your overview brings activity and outstanding items together.",
+  "back": "Go to Overview",
+  "topics": [
+    {
+      "id": "start",
+      "title": "Getting started",
+      "description": "Understand your workspace and find your way around.",
+      "articles": [
+        {
+          "id": "what",
+          "question": "What is Spifex?",
+          "answer": "Spifex helps you organize cash-flow entries, record settlements, manage bank accounts and configure accounting. The overview brings financial activity and outstanding items into one place."
+        },
+        {
+          "id": "overview",
+          "question": "How do Overview filters work?",
+          "answer": "Choose settled activity for payments by value date, or outstanding entries for today’s remaining amounts by due date. Pick a period, category or description and apply the filters. Bank filters apply to settled activity. Comparisons use the immediately preceding period of the same length."
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "title": "Entries and settlements",
+      "description": "Separate what is expected from what has actually been paid.",
+      "articles": [
+        {
+          "id": "difference",
+          "question": "What is the difference between an entry and a settlement?",
+          "answer": "An entry records a receipt or payment to manage in cash flow. A settlement records an amount actually received or paid through a bank account. Partial settlements reduce the remaining balance. Recording an entry alone does not settle it."
+        },
+        {
+          "id": "batch",
+          "question": "Can I settle many entries through different banks?",
+          "answer": "Select entries and open the settlement flow. Apply a bank or date to the selection, adjust individual exceptions and review the batch before confirming. Each entry keeps its own bank, settlement amount and date. Amounts cannot exceed its remaining balance."
+        },
+        {
+          "id": "transfer",
+          "question": "Do transfers count as income or expenses?",
+          "answer": "Transfers move money between your own bank accounts. Operating cash-flow metrics exclude internal transfers so they do not inflate receipts or payments. Bank balances still reflect the money moving between accounts."
+        }
+      ]
+    },
+    {
+      "id": "imports",
+      "title": "Bank imports",
+      "description": "Read a statement, review transactions and resume saved work.",
+      "articles": [
+        {
+          "id": "read",
+          "question": "Which statement files can I import?",
+          "answer": "Use Bank imports from the main navigation. Choose the source account and upload a PDF, image, CSV or OFX-compatible XML file. CSV and OFX are read without extraction AI; clear structured files are usually the easiest to verify."
+        },
+        {
+          "id": "review",
+          "question": "Will importing a statement create entries automatically?",
+          "answer": "No. Check dates, amounts and categories, then review or exclude every pending transaction before confirming creation. Suggestions assist classification. Possible duplicates remain visible for your decision. Importing does not settle entries or generate future installments."
+        },
+        {
+          "id": "resume",
+          "question": "Can I leave an import and continue later?",
+          "answer": "Yes. Open the document from import history to resume its processing or saved review. Confirmed transaction reviews are saved on the server. Unsaved edits in an open transaction panel must be saved before leaving."
+        }
+      ]
+    },
+    {
+      "id": "accounting",
+      "title": "Accounting",
+      "description": "Configure a chart, books and posting periods carefully.",
+      "articles": [
+        {
+          "id": "setup",
+          "question": "Where do I configure accounting?",
+          "answer": "Open Accounting from the main sidebar. Follow setup to review the accounting profile, chart of accounts and books, then validate the configuration before activation. The backend checks mandatory prerequisites before accounting operations."
+        },
+        {
+          "id": "period",
+          "question": "What does a closed accounting period mean?",
+          "answer": "A closed or soft-closed period blocks new postings. Reopen the period through the authorized workflow before posting. Accounts or configuration referenced by posted records are protected from destructive changes."
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "title": "Workspace settings",
+      "description": "Manage your organization, categories and access.",
+      "articles": [
+        {
+          "id": "access",
+          "question": "Why can’t I see a page or action?",
+          "answer": "Available pages and actions depend on your organization role, permission groups and plan. Ask your organization administrator to review the relevant permissions. The server enforces access even when a direct URL is used."
+        },
+        {
+          "id": "currency",
+          "question": "Why do currency choices matter?",
+          "answer": "Cash-flow amounts use the organization’s currency. Bank accounts also have their own currency. A bank import must not silently convert a foreign-currency statement into the organization currency; use the matching account and a supported accounting workflow."
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Account and security",
+      "description": "Keep access to your financial workspace under control.",
+      "articles": [
+        {
+          "id": "signout",
+          "question": "Where do I sign out or change personal settings?",
+          "answer": "Open the user menu at the bottom of the sidebar. You can access personal settings and sign out there. Always sign out on a shared computer."
+        },
+        {
+          "id": "signin",
+          "question": "What should I do if I cannot sign in?",
+          "answer": "Check your email and password and use the password recovery flow if needed. If repeated attempts are temporarily limited, wait before trying again. Never share passwords or verification codes, including with anyone claiming to provide support."
+        }
+      ]
+    }
+  ]
+}

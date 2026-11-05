@@ -49,5 +49,7 @@
     "settledScope": "Os indicadores usam as datas de liquidação e períodos fixos. Aplicam-se os filtros de pesquisa, observação, categoria e banco. Os filtros de data, valor e tipo aplicam-se apenas à lista.",
     "loadError": "Não foi possível carregar os indicadores. Os lançamentos continuam disponíveis abaixo.",
     "retry": "Tentar novamente"
-  }
+  },
+  "metricTrend": "Movimento líquido acumulado no período apresentado pelo cartão.",
+  "balanceTrend": "Pré-visualização reconstruída de 30 dias, ancorada no saldo atual e nos movimentos de liquidação registados. Não é um saldo histórico auditado."
 }

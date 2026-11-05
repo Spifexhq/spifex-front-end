@@ -101,7 +101,6 @@
       "label": "Entities (data)",
       "description": "Can view entities data."
     },
-
     "add_cash_flow_entries": {
       "label": "Create Cash Flow entry",
       "description": "Allows creating Cash Flow entries."
@@ -154,51 +153,126 @@
       "label": "Delete statement",
       "description": "Allows deleting bank statements."
     },
-
-    "add_user": { "label": "Create user", "description": "Allows creating users." },
-    "change_user": { "label": "Edit user", "description": "Allows editing users." },
-    "delete_user": { "label": "Delete user", "description": "Allows deleting users." },
-
-    "add_member": { "label": "Create member", "description": "Allows creating members." },
-    "change_member": { "label": "Edit member", "description": "Allows editing members." },
-    "delete_member": { "label": "Delete member", "description": "Allows deleting members." },
-
-    "add_group": { "label": "Create group", "description": "Allows creating groups." },
-    "change_group": { "label": "Edit group", "description": "Allows editing groups." },
-    "delete_group": { "label": "Delete group", "description": "Allows deleting groups." },
-
-    "add_bank": { "label": "Create bank account", "description": "Allows creating bank accounts." },
-    "change_bank": { "label": "Edit bank account", "description": "Allows editing bank accounts." },
-    "delete_bank": { "label": "Delete bank account", "description": "Allows deleting bank accounts." },
-
-    "add_ledger_account": { "label": "Create ledger account", "description": "Allows creating ledger accounts." },
-    "change_ledger_account": { "label": "Edit ledger account", "description": "Allows editing ledger accounts." },
-    "delete_ledger_account": { "label": "Delete ledger account", "description": "Allows deleting ledger accounts." },
-
-    "add_department": { "label": "Create department", "description": "Allows creating departments." },
-    "change_department": { "label": "Edit department", "description": "Allows editing departments." },
-    "delete_department": { "label": "Delete department", "description": "Allows deleting departments." },
-
-    "add_project": { "label": "Create project", "description": "Allows creating projects." },
-    "change_project": { "label": "Edit project", "description": "Allows editing projects." },
-    "delete_project": { "label": "Delete project", "description": "Allows deleting projects." },
-
-    "add_inventory": { "label": "Create inventory item", "description": "Allows creating inventory items." },
-    "change_inventory": { "label": "Edit inventory item", "description": "Allows editing inventory items." },
-    "delete_inventory": { "label": "Delete inventory item", "description": "Allows deleting inventory items." },
-
-    "add_entity": { "label": "Create entity", "description": "Allows creating entities." },
-    "change_entity": { "label": "Edit entity", "description": "Allows editing entities." },
-    "delete_entity": { "label": "Delete entity", "description": "Allows deleting entities." },
-
-    "view_home_dashboard_page": {
-      "label": "Home dashboard page",
-      "description": "Can view the home dashboard page."
+    "add_user": {
+      "label": "Create user",
+      "description": "Allows creating users."
     },
-    "view_cash_flow_page": { "label": "Cash Flow page", "description": "Can view the Cash Flow page." },
-    "view_settlement_page": { "label": "Settlement page", "description": "Can view the settlement page." },
-    "view_report_page": { "label": "Reports page", "description": "Can view the reports page." },
-
+    "change_user": {
+      "label": "Edit user",
+      "description": "Allows editing users."
+    },
+    "delete_user": {
+      "label": "Delete user",
+      "description": "Allows deleting users."
+    },
+    "add_member": {
+      "label": "Create member",
+      "description": "Allows creating members."
+    },
+    "change_member": {
+      "label": "Edit member",
+      "description": "Allows editing members."
+    },
+    "delete_member": {
+      "label": "Delete member",
+      "description": "Allows deleting members."
+    },
+    "add_group": {
+      "label": "Create group",
+      "description": "Allows creating groups."
+    },
+    "change_group": {
+      "label": "Edit group",
+      "description": "Allows editing groups."
+    },
+    "delete_group": {
+      "label": "Delete group",
+      "description": "Allows deleting groups."
+    },
+    "add_bank": {
+      "label": "Create bank account",
+      "description": "Allows creating bank accounts."
+    },
+    "change_bank": {
+      "label": "Edit bank account",
+      "description": "Allows editing bank accounts."
+    },
+    "delete_bank": {
+      "label": "Delete bank account",
+      "description": "Allows deleting bank accounts."
+    },
+    "add_ledger_account": {
+      "label": "Create ledger account",
+      "description": "Allows creating ledger accounts."
+    },
+    "change_ledger_account": {
+      "label": "Edit ledger account",
+      "description": "Allows editing ledger accounts."
+    },
+    "delete_ledger_account": {
+      "label": "Delete ledger account",
+      "description": "Allows deleting ledger accounts."
+    },
+    "add_department": {
+      "label": "Create department",
+      "description": "Allows creating departments."
+    },
+    "change_department": {
+      "label": "Edit department",
+      "description": "Allows editing departments."
+    },
+    "delete_department": {
+      "label": "Delete department",
+      "description": "Allows deleting departments."
+    },
+    "add_project": {
+      "label": "Create project",
+      "description": "Allows creating projects."
+    },
+    "change_project": {
+      "label": "Edit project",
+      "description": "Allows editing projects."
+    },
+    "delete_project": {
+      "label": "Delete project",
+      "description": "Allows deleting projects."
+    },
+    "add_inventory": {
+      "label": "Create inventory item",
+      "description": "Allows creating inventory items."
+    },
+    "change_inventory": {
+      "label": "Edit inventory item",
+      "description": "Allows editing inventory items."
+    },
+    "delete_inventory": {
+      "label": "Delete inventory item",
+      "description": "Allows deleting inventory items."
+    },
+    "add_entity": {
+      "label": "Create entity",
+      "description": "Allows creating entities."
+    },
+    "change_entity": {
+      "label": "Edit entity",
+      "description": "Allows editing entities."
+    },
+    "delete_entity": {
+      "label": "Delete entity",
+      "description": "Allows deleting entities."
+    },
+    "view_cash_flow_page": {
+      "label": "Cash Flow page",
+      "description": "Can view the Cash Flow page."
+    },
+    "view_settlement_page": {
+      "label": "Settlement page",
+      "description": "Can view the settlement page."
+    },
+    "view_report_page": {
+      "label": "Reports page",
+      "description": "Can view the reports page."
+    },
     "view_personal_settings_page": {
       "label": "Personal settings page",
       "description": "Can view the personal settings page."
@@ -215,7 +289,6 @@
       "label": "Security & privacy page",
       "description": "Can view the security and privacy page."
     },
-
     "view_organization_settings_page": {
       "label": "Organization settings page",
       "description": "Can view the organization settings page."
@@ -252,8 +325,10 @@
       "label": "Ledger accounts page",
       "description": "Can view the ledger accounts page."
     },
-
-    "view_statements_page": { "label": "Statements page", "description": "Can view the statements page." },
+    "view_statements_page": {
+      "label": "Statements page",
+      "description": "Can view the statements page."
+    },
     "view_notification_settings_page": {
       "label": "Notification settings page",
       "description": "Can view the notification settings page."
@@ -265,6 +340,10 @@
     "view_currency_settings_page": {
       "label": "Currency settings page",
       "description": "Can view the currency settings page."
+    },
+    "view_overview_page": {
+      "label": "Overview",
+      "description": "Can view the overview page."
     }
   }
 }

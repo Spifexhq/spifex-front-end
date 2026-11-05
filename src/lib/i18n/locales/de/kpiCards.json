@@ -49,5 +49,7 @@
     "settledScope": "Die Kennzahlen verwenden Abrechnungstermine und feste Zeiträume. Suche, Anmerkung, Kategorie und Bank werden berücksichtigt. Datums-, Betrags- und Typfilter gelten nur für die Liste.",
     "loadError": "Die Kennzahlen konnten nicht geladen werden. Die Buchungen bleiben unten verfügbar.",
     "retry": "Erneut versuchen"
-  }
+  },
+  "metricTrend": "Kumulierte Nettobewegung im Berichtszeitraum der Karte.",
+  "balanceTrend": "Rekonstruierte 30-Tage-Vorschau auf Basis des aktuellen Saldos und erfasster Zahlungen. Kein geprüfter historischer Saldo."
 }

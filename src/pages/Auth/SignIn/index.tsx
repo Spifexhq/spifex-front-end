@@ -180,7 +180,7 @@ const SignIn: React.FC = () => {
       }
 
       persistRememberedEmail(normalizedEmail);
-      navigate("/cashflow");
+      navigate("/overview");
     } catch (err: unknown) {
       const { message, severity } = resolveErrorMessage(err);
       setSnack({ message, severity });
@@ -208,7 +208,7 @@ const SignIn: React.FC = () => {
       await handleVerifyTwoFactor({ challenge_id: challengeId, code });
 
       persistRememberedEmail(normalizedEmail);
-      navigate("/cashflow");
+      navigate("/overview");
     } catch (err: unknown) {
       if (isApiErrorBody(err) && err.code === "mfa_expired") {
         const { message, severity } = resolveErrorMessage(err);

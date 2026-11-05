@@ -19,7 +19,7 @@ const Status500: React.FC = () => {
   }, [t]);
 
   const handleReturn = () => {
-    navigate("/cashflow");
+    navigate("/overview");
   };
 
   return (

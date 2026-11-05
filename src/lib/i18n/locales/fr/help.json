@@ -1,0 +1,128 @@
+{
+  "title": "Centre d’aide",
+  "intro": "Des réponses pratiques sur Spifex. Parcourez un thème ou recherchez dans les guides.",
+  "search": "Rechercher des questions, fonctions ou termes comptables…",
+  "browse": "Thèmes d’aide",
+  "all": "Tous les thèmes",
+  "results": "{{count}} réponses",
+  "empty": "Aucune réponse correspondante",
+  "emptyHelp": "Essayez une recherche plus courte ou un autre thème.",
+  "reset": "Effacer recherche et thèmes",
+  "backTitle": "Revenir à vos finances ?",
+  "backText": "Votre vue d’ensemble réunit activité et éléments en attente.",
+  "back": "Aller à la vue d’ensemble",
+  "topics": [
+    {
+      "id": "start",
+      "title": "Premiers pas",
+      "description": "Découvrez votre espace de travail et sa navigation.",
+      "articles": [
+        {
+          "id": "what",
+          "question": "Qu’est-ce que Spifex ?",
+          "answer": "Spifex aide à organiser les écritures de trésorerie, enregistrer les règlements, gérer les comptes bancaires et configurer la comptabilité. La vue d’ensemble réunit activité financière et éléments en attente."
+        },
+        {
+          "id": "overview",
+          "question": "Comment fonctionnent les filtres de la vue d’ensemble ?",
+          "answer": "Choisissez l’activité réglée pour les paiements par date de valeur ou les écritures en attente pour les montants restants aujourd’hui par échéance. Choisissez période, catégorie ou description et appliquez les filtres. Les banques filtrent l’activité réglée. La comparaison utilise la période précédente de même durée."
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "title": "Écritures et règlements",
+      "description": "Distinguez les prévisions des paiements effectués.",
+      "articles": [
+        {
+          "id": "difference",
+          "question": "Quelle différence entre écriture et règlement ?",
+          "answer": "Une écriture représente un encaissement ou paiement à gérer en trésorerie. Un règlement enregistre un montant effectivement reçu ou payé via un compte bancaire. Les règlements partiels réduisent le solde restant. Créer une écriture ne la règle pas."
+        },
+        {
+          "id": "batch",
+          "question": "Puis-je régler plusieurs écritures depuis différentes banques ?",
+          "answer": "Sélectionnez les écritures et ouvrez le flux de règlement. Appliquez une banque ou date à la sélection, ajustez les exceptions puis vérifiez le lot avant confirmation. Chaque écriture conserve sa banque, son montant et sa date. Le montant ne peut dépasser le solde restant."
+        },
+        {
+          "id": "transfer",
+          "question": "Les virements comptent-ils comme produits ou charges ?",
+          "answer": "Les virements déplacent l’argent entre vos propres comptes. Les métriques opérationnelles excluent les virements internes afin de ne pas gonfler encaissements ou paiements. Les soldes bancaires reflètent ces mouvements."
+        }
+      ]
+    },
+    {
+      "id": "imports",
+      "title": "Imports bancaires",
+      "description": "Lisez un relevé, vérifiez les transactions et reprenez votre travail.",
+      "articles": [
+        {
+          "id": "read",
+          "question": "Quels fichiers de relevé puis-je importer ?",
+          "answer": "Ouvrez Imports bancaires dans la navigation principale. Choisissez le compte puis envoyez PDF, image, CSV ou XML compatible OFX. CSV et OFX sont lus sans IA d’extraction ; les fichiers structurés et lisibles sont généralement plus simples à vérifier."
+        },
+        {
+          "id": "review",
+          "question": "L’import crée-t-il automatiquement des écritures ?",
+          "answer": "Non. Vérifiez dates, montants et catégories, puis vérifiez ou excluez toutes les transactions en attente avant confirmation. Les suggestions aident au classement. Les doublons possibles restent visibles pour votre décision. L’import ne règle aucune écriture et ne génère aucune échéance future."
+        },
+        {
+          "id": "resume",
+          "question": "Puis-je reprendre un import plus tard ?",
+          "answer": "Oui. Ouvrez le document depuis l’historique pour reprendre le traitement ou la vérification enregistrée. Les transactions confirmées sont sauvegardées sur le serveur. Enregistrez les modifications d’une transaction ouverte avant de quitter."
+        }
+      ]
+    },
+    {
+      "id": "accounting",
+      "title": "Comptabilité",
+      "description": "Configurez plan, livres et périodes avec soin.",
+      "articles": [
+        {
+          "id": "setup",
+          "question": "Où configurer la comptabilité ?",
+          "answer": "Ouvrez Comptabilité dans la barre latérale. Suivez la configuration du profil, du plan de comptes et des livres puis validez avant activation. Le serveur vérifie les prérequis obligatoires des opérations comptables."
+        },
+        {
+          "id": "period",
+          "question": "Que signifie une période comptable fermée ?",
+          "answer": "Une période fermée ou provisoirement fermée bloque les nouvelles comptabilisations. Rouvrez-la par le processus autorisé avant de comptabiliser. Les comptes et configurations liés à des écritures comptabilisées sont protégés contre les changements destructifs."
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "title": "Paramètres de l’espace",
+      "description": "Gérez organisation, catégories et accès.",
+      "articles": [
+        {
+          "id": "access",
+          "question": "Pourquoi une page ou action est-elle absente ?",
+          "answer": "Les pages et actions dépendent du rôle, des groupes d’autorisations et du forfait. Demandez à votre administrateur de vérifier les autorisations concernées. Le serveur contrôle également les accès par URL directe."
+        },
+        {
+          "id": "currency",
+          "question": "Pourquoi le choix des devises est-il important ?",
+          "answer": "Les montants de trésorerie utilisent la devise de l’organisation. Les comptes bancaires ont aussi une devise. Un import ne doit jamais convertir silencieusement un relevé étranger vers la devise de l’organisation ; utilisez le bon compte et un processus comptable pris en charge."
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Compte et sécurité",
+      "description": "Gardez le contrôle des accès à votre espace financier.",
+      "articles": [
+        {
+          "id": "signout",
+          "question": "Où me déconnecter ou modifier mes paramètres personnels ?",
+          "answer": "Ouvrez le menu utilisateur au bas de la barre latérale. Vous y trouverez paramètres personnels et déconnexion. Déconnectez-vous toujours sur un ordinateur partagé."
+        },
+        {
+          "id": "signin",
+          "question": "Que faire si je ne peux pas me connecter ?",
+          "answer": "Vérifiez email et mot de passe et utilisez la récupération si nécessaire. Si les tentatives sont temporairement limitées, attendez avant de réessayer. Ne partagez jamais mots de passe ou codes, y compris avec une personne prétendant fournir une assistance."
+        }
+      ]
+    }
+  ]
+}

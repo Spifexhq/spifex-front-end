@@ -23,7 +23,7 @@ function toKey(v: unknown) {
   return String(v ?? "");
 }
 
-type State = { banks: BankAccountTableRow[]; count: number; total: number; loading: boolean; error: string | null };
+type State = { history?: number[]; currency?: string | null; mixed?: boolean; canViewBalance?: boolean; banks: BankAccountTableRow[]; count: number; total: number; loading: boolean; error: string | null };
 export function useBankBalances(selectedBankIds: string[] | undefined, refreshKey: number, enabled: boolean) {
  const { t } = useTranslation("banksTable");
   const ids = useMemo(() => {
@@ -51,6 +51,7 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
       try {
         const res: ApiSuccess<GetBanksTableResponse> = await api.getBanksTable({
           active: true,
+          include_history: true,
           ids: ids.length ? ids : [],
         });
 
@@ -66,6 +67,10 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
 
         setState({
           banks,
+          history: payload.balance_history?.map(point => Number(point.value)),
+          currency: payload.balance_currency,
+          mixed: payload.mixed_currencies,
+          canViewBalance: payload.can_view_balance,
           count,
           total,
           loading: false,
@@ -93,7 +98,7 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
     [state.banks],
   );
 
-  const totalFmt = useMemo(() => formatCurrency(Number(state.total || 0)), [state.total]);
+  const totalFmt = useMemo(() => state.mixed ? t("mixedCurrencies") : formatCurrency(Number(state.total || 0), state.currency || undefined), [state.total, state.mixed, state.currency, t]);
 
 
  return { state, ids, sorted, totalFmt, retryBanks: () => setRetryKey(key => key + 1) };

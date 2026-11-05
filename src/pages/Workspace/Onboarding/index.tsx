@@ -451,7 +451,7 @@ const OnboardingPage: React.FC = () => {
             icon={<CheckCircle2 className="h-5 w-5" />}
           >
             <div className="flex justify-end">
-              <Button onClick={() => navigate("/cashflow")}>{t("done.cta")}</Button>
+              <Button onClick={() => navigate("/overview")}>{t("done.cta")}</Button>
             </div>
           </SectionCard>
         </div>

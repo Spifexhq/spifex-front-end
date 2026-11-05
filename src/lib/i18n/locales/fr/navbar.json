@@ -25,7 +25,7 @@
     "manage": "Gérer les notifications"
   },
   "pages": {
-    "home": "Tableau de bord",
+    "home": "Vue d’ensemble",
     "cashflow": "Trésorerie",
     "settled": "Écritures réglées",
     "reports": "Rapports",
@@ -36,7 +36,9 @@
     "onboarding": "Configuration de l'espace de travail",
     "locale": "Préférences régionales",
     "status": "État de l'espace de travail",
-    "bankImports": "Imports bancaires"
+    "bankImports": "Imports bancaires",
+    "overview": "Vue d’ensemble",
+    "help": "Centre d’aide"
   },
   "settingsDescriptions": {
     "personal": "Gérez votre profil, vos coordonnées et vos préférences personnelles.",

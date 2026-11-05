@@ -90,7 +90,7 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "delete_entity", category: "actions" },
 
   // PAGES
-  { code: "view_home_dashboard_page", category: "pages" },
+  { code: "view_overview_page", category: "pages" },
   { code: "view_cash_flow_page", category: "pages" },
   { code: "view_settlement_page", category: "pages" },
   { code: "view_report_page", category: "pages" },

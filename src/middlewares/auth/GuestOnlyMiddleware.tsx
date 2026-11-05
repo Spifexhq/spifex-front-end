@@ -10,7 +10,7 @@ type Props = {
 
 export default function GuestOnlyMiddleware({
   children,
-  redirectTo = "/cashflow",
+  redirectTo = "/overview",
   fallback = null,
 }: Props) {
   const { isLogged, isAuthResolved } = useAuthContext();

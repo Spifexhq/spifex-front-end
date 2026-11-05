@@ -23,6 +23,7 @@ import {
   isSameMonth,
   isSameDay,
   addDays,
+  getDaysInMonth,
 } from "date-fns";
 import { getEffectiveDateFormat } from "@/lib/date";
 
@@ -292,6 +293,39 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       const input = e.currentTarget;
       const cursorPos = input.selectionStart || 0;
 
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        if (disabled || rest.readOnly) return;
+
+        const segments: SegmentBag = { day: "", month: "", year: "" };
+        segments[slotConfig.slot1.type] = slot1;
+        segments[slotConfig.slot2.type] = slot2;
+        segments[slotConfig.slot3.type] = slot3;
+        const segment = input === slot1Ref.current
+          ? slotConfig.slot1.type
+          : input === slot2Ref.current
+            ? slotConfig.slot2.type
+            : slotConfig.slot3.type;
+        const today = new Date();
+        const daysInMonth = () => {
+          const date = new Date(0);
+          date.setFullYear(Number(segments.year) || today.getFullYear(), (Number(segments.month) || today.getMonth() + 1) - 1, 1);
+          return getDaysInMonth(date);
+        };
+        const maximum = segment === "year" ? 9999 : segment === "month" ? 12 : daysInMonth();
+        const current = Number(segments[segment]);
+        const next = current
+          ? Math.min(maximum, Math.max(1, current + (e.key === "ArrowUp" ? 1 : -1)))
+          : e.key === "ArrowUp" ? 1 : maximum;
+        segments[segment] = String(next).padStart(segment === "year" ? 4 : 2, "0");
+        // Preserve the day where possible when changing February or a leap year.
+        if (segments.day) segments.day = String(Math.min(Number(segments.day), daysInMonth())).padStart(2, "0");
+        setSlot1(segments[slotConfig.slot1.type]);
+        setSlot2(segments[slotConfig.slot2.type]);
+        setSlot3(segments[slotConfig.slot3.type]);
+        return;
+      }
+
       if (e.key === "Backspace" && cursorPos === 0 && prevRef?.current) {
         e.preventDefault();
         prevRef.current.focus();
@@ -318,8 +352,9 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       }
     };
 
-    const handleFocus = () => {
+    const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true);
+      event.currentTarget.select();
     };
 
     const handleBlur = () => {
@@ -555,7 +590,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
     );
 
     const slotClasses = classNames(
-      "bg-transparent outline-none text-center min-w-0 flex-shrink-0 leading-none placeholder:text-gray-400",
+      "m-0 min-w-0 shrink-0 appearance-none rounded-sm border-0 bg-transparent p-0 text-center font-normal leading-5 tabular-nums tracking-normal text-slate-700 outline-none placeholder:text-slate-400 focus:bg-slate-200/50 selection:bg-slate-200 selection:text-slate-900 disabled:cursor-not-allowed",
       sz.slot
     );
 
@@ -595,7 +630,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
         <div className="relative w-full min-w-0">
           <div className={containerClasses}>
-            <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden pr-10">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden pr-8">
               <input
                 id={id}
                 ref={slot1Ref}
@@ -604,7 +639,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 autoComplete="off"
                 disabled={disabled}
                 className={slotClasses}
-                style={{ width: `${slotConfig.slot1.maxLength * 1.5}ch` }}
+                style={{ width: `${slotConfig.slot1.maxLength + 0.5}ch` }}
                 placeholder={slotConfig.slot1.label}
                 value={slot1}
                 onChange={(e) =>
@@ -618,7 +653,12 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 {...rest}
               />
 
-              <span className={classNames("text-gray-400", sz.sep)}>{slotConfig.separator}</span>
+              <span
+                aria-hidden="true"
+                className={classNames("w-[0.75ch] shrink-0 select-none text-center font-normal leading-5 text-slate-400", sz.sep)}
+              >
+                {slotConfig.separator}
+              </span>
 
               <input
                 ref={slot2Ref}
@@ -627,7 +667,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 autoComplete="off"
                 disabled={disabled}
                 className={slotClasses}
-                style={{ width: `${slotConfig.slot2.maxLength * 1.5}ch` }}
+                style={{ width: `${slotConfig.slot2.maxLength + 0.5}ch` }}
                 placeholder={slotConfig.slot2.label}
                 value={slot2}
                 onChange={(e) =>
@@ -638,7 +678,12 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 onFocus={handleFocus}
               />
 
-              <span className={classNames("text-gray-400", sz.sep)}>{slotConfig.separator}</span>
+              <span
+                aria-hidden="true"
+                className={classNames("w-[0.75ch] shrink-0 select-none text-center font-normal leading-5 text-slate-400", sz.sep)}
+              >
+                {slotConfig.separator}
+              </span>
 
               <input
                 ref={slot3Ref}
@@ -647,7 +692,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
                 autoComplete="off"
                 disabled={disabled}
                 className={slotClasses}
-                style={{ width: `${slotConfig.slot3.maxLength * 1}ch` }}
+                style={{ width: `${slotConfig.slot3.maxLength + 0.5}ch` }}
                 placeholder={slotConfig.slot3.label}
                 value={slot3}
                 onChange={(e) => handleSlotChange(3, e.target.value, slotConfig.slot3.maxLength)}

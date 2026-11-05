@@ -127,7 +127,7 @@ export default function SidebarNavigation({
         <div className="sidebar-header h-20 shrink-0 items-center">
           <div className="sidebar-header-copy sidebar-label">
             <p className="text-[15px] font-semibold tracking-tight text-gray-900">
-              <Link to="/home" tabIndex={collapsed ? -1 : undefined}>
+              <Link to="/overview" tabIndex={collapsed ? -1 : undefined}>
                 Spifex
               </Link>
             </p>
@@ -180,9 +180,10 @@ export default function SidebarNavigation({
 
             {[
               {
-                to: "/home",
-                label: t("navbar:pages.home"),
+                to: "/overview",
+                label: t("navbar:pages.overview"),
                 Icon: LayoutDashboard,
+                permission: "view_overview_page",
               },
               {
                 to: "/cashflow",

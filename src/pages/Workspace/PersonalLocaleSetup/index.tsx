@@ -165,7 +165,7 @@ const PersonalLocaleSetup: React.FC = () => {
         return;
       }
 
-      navigate("/cashflow", { replace: true });
+      navigate("/overview", { replace: true });
     } catch (e) {
       console.error(e);
       setSnack({ message: apiErrorMessage(e, t("toastUpdateError")), severity: "error" });

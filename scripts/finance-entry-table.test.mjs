@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 import ts from 'typescript';
 const code=ts.transpileModule(fs.readFileSync('src/pages/Finance/components/EntryTable/entryRows.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-const {buildEntryRows,entryId,sourceEntryId,entryQuery}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+const {buildEntryRows,entryId,sourceEntryId,entryQuery,isOutstandingEntry}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
 const entry=(id,date,amount,tx_type='credit',running_balance=null)=>({id,due_date:date,amount,tx_type,running_balance});
 test('partial settlements keep their own external ids and their underlying entry id',()=>{
  const a={id:'entry-1',entry_id:'entry-1',external_id:'settlement-1',value_date:'2026-11-01',amount:'10.00',tx_type:'credit'};
@@ -30,4 +30,14 @@ test('the Finance table has all interface and accounting-state translations',()=
 test('only the unfinished final month is marked as a loaded subtotal',()=>{
  const summaries=buildEntryRows([entry('1','2026-11-30','10'),entry('2','2026-12-01','20')],true).filter(row=>row.kind==='summary');
  assert.equal(summaries[0].partial,false);assert.equal(summaries[1].partial,true);
+});
+
+test('settlement preview actions are limited to outstanding source entries with a known balance',()=>{
+ const open={...entry('open','2026-11-05','100'),is_settled:false,open_amount:'25.00'};
+ assert.equal(isOutstandingEntry(open),true);
+ assert.equal(isOutstandingEntry({...open,open_amount:'0.00'}),false);
+ assert.equal(isOutstandingEntry({...open,is_settled:true}),false);
+ assert.equal(isOutstandingEntry({...open,open_amount:undefined}),false);
+ assert.equal(isOutstandingEntry({...open,open_amount:'Infinity'}),false);
+ assert.equal(isOutstandingEntry({...open,external_id:'settlement-1',entry_id:'open'}),false);
 });

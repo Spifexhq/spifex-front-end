@@ -36,7 +36,9 @@
     "onboarding": "Arbeitsbereich einrichten",
     "locale": "Regionale Einstellungen",
     "status": "Arbeitsbereichsstatus",
-    "bankImports": "Bankimporte"
+    "bankImports": "Bankimporte",
+    "overview": "Übersicht",
+    "help": "Hilfezentrum"
   },
   "settingsDescriptions": {
     "personal": "Verwalten Sie Ihr Profil, Ihre Kontaktdaten und persönlichen Einstellungen.",

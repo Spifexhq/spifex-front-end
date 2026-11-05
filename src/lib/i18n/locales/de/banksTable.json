@@ -15,5 +15,6 @@
   "balanceScope": "Aktueller Saldo · ausgewählte Konten",
   "manage": "Banken verwalten",
   "loadError": "Die Banksalden konnten nicht geladen werden.",
-  "allAccountsScope": "Aktueller Saldo · alle aktiven Konten"
+  "allAccountsScope": "Aktueller Saldo · alle aktiven Konten",
+  "mixedCurrencies": "Mehrere Währungen"
 }

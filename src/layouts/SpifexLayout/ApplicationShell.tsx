@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppShellContext } from "@/contexts/AppShellContext";
 import { Sidebar } from "@/shared/layout/Sidebar";
 import { Navbar } from "@/shared/layout/Navbar";
-import SimulatedAI from "@/components/SimulatedAI";
 import type { ConfigurationStatus } from "@/models/auth/configuration";
 import "./shell.css";
 
@@ -12,6 +11,7 @@ const readCollapsed = (key: string, fallback: boolean) => {
 };
 export default function ApplicationShell({ children, onboarding, showOnboardingWarning }: { children: ReactNode; onboarding?: ConfigurationStatus | null; showOnboardingWarning?: boolean }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const settings = pathname.startsWith("/settings");
   const accounting = /^\/accounting(?:\/|$)/.test(pathname);
   const section = settings || accounting;
@@ -20,8 +20,9 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
   const [settingsCollapsed, setSettingsCollapsed] = useState(() => readCollapsed("spifex.settings.collapsed", false));
   const [accountingCollapsed, setAccountingCollapsed] = useState(() => readCollapsed("spifex.accounting.collapsed", false));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [financialRevision, setFinancialRevision] = useState(0);
+  const refreshFinance = useCallback(() => setFinancialRevision(value => value + 1), []);
   const [sidebarSlot, setSidebarSlot] = useState<HTMLDivElement | null>(null);
-  const [helpOpen, setHelpOpen] = useState(false);
   const collapsed = accounting ? accountingCollapsed : settings ? settingsCollapsed : workspaceCollapsed;
   const toggleCollapsed = useCallback(() => {
     const setter = accounting ? setAccountingCollapsed : settings ? setSettingsCollapsed : setWorkspaceCollapsed;
@@ -33,7 +34,7 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
   }, [settings, accounting]);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const toggleMobile = useCallback(() => setMobileOpen(previous => !previous), []);
-  const openHelp = useCallback(() => { setMobileOpen(false); setHelpOpen(true); }, []);
+  const openHelp = useCallback(() => { setMobileOpen(false); navigate("/help"); }, [navigate]);
   useEffect(closeMobile, [pathname, closeMobile]);
   useEffect(() => {
     const media = matchMedia("(min-width: 768px)");
@@ -41,16 +42,15 @@ export default function ApplicationShell({ children, onboarding, showOnboardingW
     media.addEventListener("change", close);
     return () => media.removeEventListener("change", close);
   }, [closeMobile]);
-  const value = useMemo(() => ({ collapsed, toggleCollapsed, mobileOpen, toggleMobile, closeMobile, sidebarSlot, openHelp }), [collapsed, toggleCollapsed, mobileOpen, toggleMobile, closeMobile, sidebarSlot, openHelp]);
+  const value = useMemo(() => ({ collapsed, toggleCollapsed, mobileOpen, toggleMobile, closeMobile, sidebarSlot, openHelp, financialRevision }), [collapsed, toggleCollapsed, mobileOpen, toggleMobile, closeMobile, sidebarSlot, openHelp, financialRevision]);
   return <AppShellContext.Provider value={value}>
     <div className="app-shell h-[100dvh] overflow-hidden bg-white text-gray-900">
       {!section && <div ref={setSidebarSlot} className="fixed inset-y-0 left-0 z-40" />}
-      {!section && !pageHasActions && <Sidebar isOpen={!collapsed} toggleSidebar={toggleCollapsed} mode="default" />}
+      {!section && !pageHasActions && <Sidebar isOpen={!collapsed} toggleSidebar={toggleCollapsed} mode="default" onEntriesSaved={refreshFinance} onTransferenceSaved={refreshFinance} />}
       <div className={`app-shell-content flex h-full min-w-0 flex-col ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>
         <Navbar onboarding={onboarding} showOnboardingWarning={showOnboardingWarning} />
         <div id="app-page-scroll" className="min-h-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
-    <SimulatedAI isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
   </AppShellContext.Provider>;
 }

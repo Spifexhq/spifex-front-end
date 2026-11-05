@@ -15,5 +15,6 @@
   "balanceScope": "Saldo atual · contas selecionadas",
   "manage": "Gerenciar bancos",
   "loadError": "Não foi possível carregar os saldos bancários.",
-  "allAccountsScope": "Saldo atual · todas as contas ativas"
+  "allAccountsScope": "Saldo atual · todas as contas ativas",
+  "mixedCurrencies": "Várias moedas"
 }

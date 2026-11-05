@@ -7,6 +7,7 @@ import type { EntryFilters } from "@/models/components/filterBar";
 
 export type KpiItem = {
   key: string;
+  trend?: number[];
   label: string;
   value: string | number;
   hint?: string;
@@ -247,5 +248,5 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
   const autoKpis = contextSettlement ? settledKpis : cashflowKpis;
 
 
-  return { metrics: autoKpis, loading, error, retry: () => setRetryKey(key => key + 1) };
+  return { metrics: autoKpis.map(metric => ({ ...metric, trend: (contextSettlement ? st?.trends : cf?.trends)?.[metric.key]?.map(point => Number(point.net)) })), loading, error, retry: () => setRetryKey(key => key + 1) };
 }

@@ -20,7 +20,8 @@ const ResetPassword = lazy(() => import("@/pages/Auth/ResetPassword"));
 const PasswordVerification = lazy(() => import("@/pages/Auth/PasswordVerification"));
 
 // Main Pages
-const HomeDashboard = lazy(() => import("@/pages/Dashboard/HomeDashboard"));
+const Overview = lazy(() => import("@/pages/Overview"));
+const Help = lazy(() => import("@/pages/Help"));
 const CashFlow = lazy(() => import("@/pages/Finance/CashFlow"));
 const SettledEntries = lazy(() => import("@/pages/Finance/SettledEntries"));
 const Reports = lazy(() => import("@/pages/Reporting/Reports"));
@@ -71,13 +72,13 @@ const routes: RouteObject[] = [
         children: [
             {
                 index: true,
-                element: <Navigate to="/cashflow" replace />,
+                element: <Navigate to="/overview" replace />,
             },
             // Auth
             {
             path: 'signup',
             element: (
-                    <GuestOnlyMiddleware redirectTo="/cashflow">
+                    <GuestOnlyMiddleware redirectTo="/overview">
                         <SignUp />
                     </GuestOnlyMiddleware>
                 ),
@@ -85,7 +86,7 @@ const routes: RouteObject[] = [
             {
             path: 'signin',
             element: (
-                    <GuestOnlyMiddleware redirectTo="/cashflow">
+                    <GuestOnlyMiddleware redirectTo="/overview">
                         <SignIn />
                     </GuestOnlyMiddleware>
                 ),
@@ -126,10 +127,12 @@ const routes: RouteObject[] = [
             path: "onboarding",
             element: <OnboardingPage />
             },
-            // Dashboard
+            { path: "overview", element: <PermissionMiddleware codeName="view_overview_page" redirectTo="/cashflow"><Overview /></PermissionMiddleware> },
+            { path: "help", element: <Help /> },
+            // Overview
             {
                 path: 'home',
-                element: <HomeDashboard />
+                element: <Navigate to="/overview" replace />
             },
             // Cash Flow
             {

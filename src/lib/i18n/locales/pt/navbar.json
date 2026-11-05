@@ -36,7 +36,9 @@
     "onboarding": "Configuração do espaço de trabalho",
     "locale": "Preferências regionais",
     "status": "Estado do espaço de trabalho",
-    "bankImports": "Importações bancárias"
+    "bankImports": "Importações bancárias",
+    "overview": "Visão geral",
+    "help": "Centro de ajuda"
   },
   "settingsDescriptions": {
     "personal": "Gerencie seu perfil, dados de contato e preferências pessoais.",

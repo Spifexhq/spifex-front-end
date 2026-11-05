@@ -26,7 +26,7 @@ export interface BankAccountTableRow {
   institution: string;
   branch: string;
   account_number: string;
-  consolidated_balance: string;
+  consolidated_balance: string | null;
 
   iban?: string;
   currency?: string;
@@ -54,6 +54,7 @@ export interface GetBanksParams {
  */
 export interface GetBanksTableParams {
   active?: boolean;     // default on backend: true
+  include_history?: boolean;
   ids?: string[];       // keep ONLY in payload
 }
 
@@ -77,6 +78,10 @@ export type EditBankResponse = BankAccount;
 
 /** Table endpoint response */
 export interface GetBanksTableResponse {
+  balance_history?: { date: string; value: string }[];
+  balance_currency?: string | null;
+  mixed_currencies?: boolean;
+  can_view_balance?: boolean;
   banks: BankAccountTableRow[];
   count: number;
   total_consolidated_balance: string;

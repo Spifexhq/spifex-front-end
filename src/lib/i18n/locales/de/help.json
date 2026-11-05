@@ -1,0 +1,128 @@
+{
+  "title": "Hilfezentrum",
+  "intro": "Praktische Antworten zu Spifex. Wählen Sie ein Thema oder durchsuchen Sie die Anleitungen.",
+  "search": "Fragen, Funktionen oder Buchhaltungsbegriffe suchen…",
+  "browse": "Hilfethemen",
+  "all": "Alle Themen",
+  "results": "{{count}} Antworten",
+  "empty": "Keine passenden Antworten",
+  "emptyHelp": "Versuchen Sie eine kürzere Suche oder ein anderes Thema.",
+  "reset": "Suche und Themen zurücksetzen",
+  "backTitle": "Zurück zu Ihren Finanzen?",
+  "backText": "Die Übersicht vereint Aktivitäten und offene Posten.",
+  "back": "Zur Übersicht",
+  "topics": [
+    {
+      "id": "start",
+      "title": "Erste Schritte",
+      "description": "Lernen Sie Ihren Arbeitsbereich und die Navigation kennen.",
+      "articles": [
+        {
+          "id": "what",
+          "question": "Was ist Spifex?",
+          "answer": "Spifex hilft beim Organisieren von Cashflow-Einträgen, Erfassen von Zahlungen, Verwalten von Bankkonten und Einrichten der Buchhaltung. Die Übersicht vereint finanzielle Aktivitäten und offene Posten."
+        },
+        {
+          "id": "overview",
+          "question": "Wie funktionieren die Filter der Übersicht?",
+          "answer": "Wählen Sie abgerechnete Aktivität für Zahlungen nach Valutadatum oder offene Einträge für heute verbleibende Beträge nach Fälligkeit. Wählen Sie Zeitraum, Kategorie oder Beschreibung und wenden Sie die Filter an. Bankfilter gelten für abgerechnete Aktivitäten. Der Vergleich nutzt den unmittelbar vorherigen Zeitraum gleicher Länge."
+        }
+      ]
+    },
+    {
+      "id": "finance",
+      "title": "Einträge und Zahlungen",
+      "description": "Trennen Sie erwartete von tatsächlich erfolgten Zahlungen.",
+      "articles": [
+        {
+          "id": "difference",
+          "question": "Was unterscheidet einen Eintrag von einer Zahlung?",
+          "answer": "Ein Eintrag erfasst einen im Cashflow zu verwaltenden Eingang oder Ausgang. Eine Zahlung erfasst einen tatsächlich über ein Bankkonto erhaltenen oder gezahlten Betrag. Teilzahlungen reduzieren den offenen Rest. Das Erstellen eines Eintrags gleicht ihn nicht aus."
+        },
+        {
+          "id": "batch",
+          "question": "Kann ich mehrere Einträge über verschiedene Banken abrechnen?",
+          "answer": "Wählen Sie die Einträge und öffnen Sie den Zahlungsablauf. Wenden Sie Bank oder Datum auf die Auswahl an, passen Sie Ausnahmen an und prüfen Sie den Stapel vor Bestätigung. Jeder Eintrag behält Bank, Betrag und Datum. Der Betrag darf den offenen Rest nicht überschreiten."
+        },
+        {
+          "id": "transfer",
+          "question": "Zählen Umbuchungen als Einnahmen oder Ausgaben?",
+          "answer": "Umbuchungen verschieben Geld zwischen eigenen Bankkonten. Operative Kennzahlen schließen interne Umbuchungen aus, damit Eingänge und Ausgänge nicht künstlich steigen. Die Bankguthaben berücksichtigen die Bewegungen."
+        }
+      ]
+    },
+    {
+      "id": "imports",
+      "title": "Bankimporte",
+      "description": "Lesen Sie Auszüge ein, prüfen Sie Transaktionen und setzen Sie Ihre Arbeit fort.",
+      "articles": [
+        {
+          "id": "read",
+          "question": "Welche Kontoauszugsdateien kann ich importieren?",
+          "answer": "Öffnen Sie Bankimporte in der Hauptnavigation. Wählen Sie das Quellkonto und laden Sie PDF, Bild, CSV oder OFX-kompatibles XML hoch. CSV und OFX werden ohne Extraktions-KI gelesen; klare strukturierte Dateien sind meist leichter zu prüfen."
+        },
+        {
+          "id": "review",
+          "question": "Erstellt ein Import automatisch Einträge?",
+          "answer": "Nein. Prüfen Sie Daten, Beträge und Kategorien und prüfen oder überspringen Sie alle offenen Transaktionen vor Bestätigung. Vorschläge helfen bei der Zuordnung. Mögliche Duplikate bleiben zur Entscheidung sichtbar. Ein Import bucht keine Zahlungen und erzeugt keine zukünftigen Raten."
+        },
+        {
+          "id": "resume",
+          "question": "Kann ich einen Import später fortsetzen?",
+          "answer": "Ja. Öffnen Sie das Dokument in der Importhistorie, um Verarbeitung oder gespeicherte Prüfung fortzusetzen. Bestätigte Transaktionsprüfungen liegen auf dem Server. Speichern Sie Änderungen einer geöffneten Transaktion vor dem Verlassen."
+        }
+      ]
+    },
+    {
+      "id": "accounting",
+      "title": "Buchhaltung",
+      "description": "Richten Sie Kontenplan, Bücher und Perioden sorgfältig ein.",
+      "articles": [
+        {
+          "id": "setup",
+          "question": "Wo richte ich die Buchhaltung ein?",
+          "answer": "Öffnen Sie Buchhaltung in der Seitenleiste. Prüfen Sie Profil, Kontenplan und Bücher im Einrichtungsablauf und validieren Sie vor der Aktivierung. Der Server prüft die Pflichtvoraussetzungen vor Buchhaltungsvorgängen."
+        },
+        {
+          "id": "period",
+          "question": "Was bedeutet eine geschlossene Buchungsperiode?",
+          "answer": "Geschlossene und vorläufig geschlossene Perioden blockieren neue Buchungen. Öffnen Sie die Periode im autorisierten Ablauf erneut, bevor Sie buchen. Konten und Konfigurationen mit gebuchten Belegen sind vor zerstörerischen Änderungen geschützt."
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "title": "Arbeitsbereich verwalten",
+      "description": "Verwalten Sie Organisation, Kategorien und Zugriffe.",
+      "articles": [
+        {
+          "id": "access",
+          "question": "Warum fehlt eine Seite oder Aktion?",
+          "answer": "Verfügbare Seiten und Aktionen hängen von Rolle, Berechtigungsgruppen und Tarif ab. Bitten Sie Ihren Administrator, die entsprechenden Berechtigungen zu prüfen. Der Server kontrolliert auch direkte URL-Zugriffe."
+        },
+        {
+          "id": "currency",
+          "question": "Warum sind Währungen wichtig?",
+          "answer": "Cashflow-Beträge verwenden die Organisationswährung. Bankkonten haben ebenfalls eine Währung. Ein Import darf einen fremden Kontoauszug nicht unbemerkt in die Organisationswährung umdeuten. Verwenden Sie das passende Konto und einen unterstützten Buchhaltungsablauf."
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Konto und Sicherheit",
+      "description": "Behalten Sie die Kontrolle über den Zugang zu Ihren Finanzen.",
+      "articles": [
+        {
+          "id": "signout",
+          "question": "Wo melde ich mich ab oder ändere persönliche Einstellungen?",
+          "answer": "Öffnen Sie das Benutzermenü unten in der Seitenleiste. Dort finden Sie persönliche Einstellungen und Abmelden. Melden Sie sich auf gemeinsam genutzten Computern immer ab."
+        },
+        {
+          "id": "signin",
+          "question": "Was tun, wenn ich mich nicht anmelden kann?",
+          "answer": "Prüfen Sie E-Mail und Passwort und nutzen Sie bei Bedarf die Wiederherstellung. Bei vorübergehend begrenzten Anmeldeversuchen warten Sie vor dem nächsten Versuch. Teilen Sie niemals Passwörter oder Bestätigungscodes, auch nicht mit vermeintlichen Supportmitarbeitern."
+        }
+      ]
+    }
+  ]
+}

@@ -25,7 +25,7 @@
     "manage": "Manage notifications"
   },
   "pages": {
-    "home": "Dashboard",
+    "home": "Overview",
     "cashflow": "Cash flow",
     "settled": "Settled entries",
     "reports": "Reports",
@@ -36,7 +36,9 @@
     "onboarding": "Workspace setup",
     "locale": "Regional preferences",
     "status": "Workspace status",
-    "bankImports": "Bank imports"
+    "bankImports": "Bank imports",
+    "overview": "Overview",
+    "help": "Help center"
   },
   "settingsDescriptions": {
     "personal": "Manage your profile, contact details, and personal preferences.",

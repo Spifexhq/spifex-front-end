@@ -53,7 +53,7 @@ const StatusComingSoon: React.FC = () => {
   const hasTimeLeft = timeOrder.some((k) => typeof timeLeft[k] === "number");
 
   const handleReturn = () => {
-    navigate("/cashflow");
+    navigate("/overview");
   };
 
   return (

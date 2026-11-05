@@ -38,7 +38,7 @@ export function permissionIcons(code: string): LucideIcon {
   if (code.startsWith("delete_")) return Trash2;
 
   // Pages
-  if (code === "view_home_dashboard_page") return LayoutDashboard;
+  if (code === "view_overview_page") return LayoutDashboard;
   if (code === "view_cash_flow_page") return BarChart3;
   if (code === "view_settlement_page") return Table;
   if (code === "view_report_page") return FileText;

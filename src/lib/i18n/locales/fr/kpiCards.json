@@ -49,5 +49,7 @@
     "settledScope": "Les indicateurs utilisent les dates de règlement et des périodes fixes. La recherche, les observations, les catégories et les banques sont prises en compte. Les filtres de date, montant et type concernent uniquement la liste.",
     "loadError": "Impossible de charger les indicateurs. Les écritures restent disponibles ci-dessous.",
     "retry": "Réessayer"
-  }
+  },
+  "metricTrend": "Mouvement net cumulé sur la période de la carte.",
+  "balanceTrend": "Aperçu reconstruit sur 30 jours, ancré sur le solde actuel et les règlements enregistrés. Il ne s’agit pas d’un solde historique audité."
 }

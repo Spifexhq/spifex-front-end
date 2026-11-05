@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MoreHorizontal } from "lucide-react";
+import SegmentedControl from "@/shared/ui/SegmentedControl";
 import Button from "@/shared/ui/Button";
 import CompactActionMenu from "@/shared/ui/Popover/CompactActionMenu";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
@@ -51,12 +52,12 @@ export default function ChartOfAccountsPage() {
     </div>
     <CompactActionMenu open={menu} onClose={() => setMenu(false)} anchor={menuRef}><button type="button" className="w-full rounded px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50" onClick={() => { setMenu(false); setDeleting({}); }}>{t("workspace.deleteAll")}</button></CompactActionMenu>
     {(importing || (!chart.loading && !chart.accounts.length && chart.error === null)) && chart.canAdd && status && <ChartImport ledgerMode={status.profile.mode} compact={status.profile.mode === "personal"} embedded onSuccess={async () => { setImporting(false); await chart.reload(); await refresh(); }} />}
-    {chart.accounts.length > 0 && <><nav className="flex gap-1 overflow-x-auto border-b border-gray-200" aria-label={accounting("setupFlow.chartViews")}>
-      {(["accounts", "posting-controls", "bank-control", "reporting"] as const).map(item => <button type="button" key={item} aria-pressed={view === item} onClick={() => setView(item)} className={`shrink-0 border-b-2 px-3 py-2.5 text-xs ${view === item ? "border-gray-900 font-medium text-gray-900" : "border-transparent text-gray-500 hover:text-gray-900"}`}>{t(item === "accounts" ? "explorer.accounts" : item === "posting-controls" ? "workspace.managementPostingControlsTitle" : item === "bank-control" ? "workspace.managementBankControlTitle" : "workspace.managementReportingTitle")}</button>)}
-    </nav>
+    {chart.accounts.length > 0 && <><SegmentedControl<"accounts" | AccountInsight> tabs id="chart-views" value={view} label={accounting("setupFlow.chartViews")} onChange={setView} items={(["accounts", "posting-controls", "bank-control", "reporting"] as const).map(value=>({value,panelId:"chart-view-panel",label:t(value === "accounts" ? "explorer.accounts" : value === "posting-controls" ? "workspace.managementPostingControlsTitle" : value === "bank-control" ? "workspace.managementBankControlTitle" : "workspace.managementReportingTitle")}))} />
     <ChartFilters onApply={setFilters} /></>}
     {chart.error !== null && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"><p>{chart.error || t("workspace.requestError")}</p><Button variant="outline" onClick={() => void chart.reload()}>{accounting("redesign.retry")}</Button></div>}
+    <div id="chart-view-panel" role="tabpanel" aria-labelledby={`chart-views-${view}`} tabIndex={0} className="min-w-0 focus-visible:outline-2 focus-visible:outline-indigo-500">
     {chart.loading ? <DataTableSkeleton rows={6} /> : chart.accounts.length > 0 ? view === "accounts" ? <ChartOfAccounts items={filtered} allAccounts={chart.accounts} viewMode={display} onViewModeChange={setDisplay} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? account => setDeleting({ account }) : undefined} /> : <AccountInsights filters={filters} view={view} onEdit={chart.canEdit ? account => setModal({ account }) : undefined} onDelete={chart.canDelete ? async account => { if (!await chart.remove(account)) throw new Error(t("workspace.requestError")); await refresh(); } : undefined} /> : !chart.canAdd && <p className="rounded-lg border border-dashed border-gray-300 p-6 text-[13px] text-gray-500 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-slate-700 [&_p]:my-3 [&_p]:leading-6">{t("workspace.emptyTitle")}</p>}
+    </div>
     <LedgerAccountModal isOpen={!!modal} mode={modal?.account ? "edit" : "create"} initial={modal?.account} parentOptions={parents} busy={chart.busy} onClose={() => { if (!chart.busy) setModal(null); }} onSubmit={async payload => { if (await chart.save(modal?.account ?? null, payload)) { setModal(null); await refresh(); } else throw new Error(t("workspace.requestError")); }} />
     <ConfirmToast open={!!deleting} variant="danger" busy={chart.busy} text={deleting?.account ? `${t("workspace.delete")} ${deleting.account.code} — ${deleting.account.name}?` : t("workspace.deleteAllConfirm")} confirmLabel={t("workspace.delete")} cancelLabel={accounting("common.cancel")} onCancel={() => setDeleting(null)} onConfirm={() => { void chart.remove(deleting?.account).then(done => { if (done) setDeleting(null); }); }} />
   </section>;

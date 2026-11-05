@@ -82,7 +82,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
       style={{ top: topOffsetPx, height: `calc(100dvh - ${topOffsetPx}px)` }}>
       <div className="sidebar-header h-20 shrink-0 items-center">
         <div className="sidebar-header-copy sidebar-label">
-          <p className="text-[15px] font-semibold tracking-tight text-gray-900"><NavLink to="/home" tabIndex={collapsed && !mobileOpen ? -1 : undefined}>Spifex</NavLink></p>
+          <p className="text-[15px] font-semibold tracking-tight text-gray-900"><NavLink to="/overview" tabIndex={collapsed && !mobileOpen ? -1 : undefined}>Spifex</NavLink></p>
           <p className="mt-0.5 truncate text-xs text-gray-500">{t("title", "Settings")}</p>
         </div>
         <button type="button" onClick={onToggleCollapsed} aria-expanded={!collapsed} aria-controls="settings-navigation" title={t(collapsed ? "actions.expand" : "actions.collapse")} aria-label={t(collapsed ? "actions.expand" : "actions.collapse")} className="sidebar-toggle hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200/60 focus-visible:outline-2 focus-visible:outline-gray-500 md:inline-flex">
