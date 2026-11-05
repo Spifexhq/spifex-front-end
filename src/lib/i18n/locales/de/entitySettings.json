@@ -121,5 +121,35 @@
     "confirmFailed": "Bestätigung fehlgeschlagen."
   },
 
-  "toast": { "saveOk": "Entität gespeichert.", "deleteOk": "Entität entfernt." }
+  "toast": { "saveOk": "Entität gespeichert.", "deleteOk": "Entität entfernt." },
+  "preview": {
+  "fields": {
+    "full_name": "Vollständiger Name",
+    "alias_name": "Handelsname / Alias",
+    "entity_type": "Entitätstyp",
+    "is_active": "Entität aktiv",
+    "ssn_tax_id": "SSN (CPF)",
+    "ein_tax_id": "EIN (CNPJ)",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "street": "Straße",
+    "street_number": "Nummer",
+    "city": "Stadt",
+    "state": "Bundesland",
+    "postal_code": "Postleitzahl",
+    "country": "Land",
+    "bank_name": "Bank",
+    "bank_branch": "Filiale",
+    "checking_account": "Girokonto",
+    "account_holder_tax_id": "Kontoinhaber (CPF/CNPJ)",
+    "account_holder_name": "Name des Kontoinhabers"
+  },
+  "active": "Aktiv",
+  "inactive": "Inaktiv",
+  "roles": {
+    "owner": "Inhaber",
+    "admin": "Administrator",
+    "member": "Mitglied"
+  }
+}
 }

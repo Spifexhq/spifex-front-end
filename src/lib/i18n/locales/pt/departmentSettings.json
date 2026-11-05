@@ -80,5 +80,19 @@
     "deleteOk": "Departamento excluído."
   },
 
-  "alerts": { "noData": "Nenhum departamento encontrado nesta página." }
+  "alerts": { "noData": "Nenhum departamento encontrado nesta página." },
+  "preview": {
+  "fields": {
+    "name": "Nome",
+    "code": "Código",
+    "is_active": "Departamento ativo"
+  },
+  "active": "Ativo",
+  "inactive": "Inativo",
+  "roles": {
+    "owner": "Proprietário",
+    "admin": "Administrador",
+    "member": "Membro"
+  }
+}
 }

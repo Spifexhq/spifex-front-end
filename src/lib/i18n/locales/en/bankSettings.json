@@ -111,5 +111,26 @@
   "toast": {
     "saveOk": "Bank account saved.",
     "deleteOk": "Bank account deleted."
+  },
+  "preview": {
+  "fields": {
+    "institution": "Bank / institution",
+    "account_type": "Account type",
+    "branch": "Branch",
+    "account_number": "Account number",
+    "iban": "IBAN",
+    "currency": "Currency",
+    "initial_balance": "Initial balance",
+    "current_balance": "Current balance",
+    "consolidated_balance": "Consolidated balance",
+    "is_active": "Status"
+  },
+  "active": "Active",
+  "inactive": "Inactive",
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
   }
+}
 }

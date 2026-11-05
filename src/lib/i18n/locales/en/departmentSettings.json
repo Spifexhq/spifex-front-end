@@ -80,5 +80,19 @@
     "deleteOk": "Department deleted."
   },
 
-  "alerts": { "noData": "No departments found on this page." }
+  "alerts": { "noData": "No departments found on this page." },
+  "preview": {
+  "fields": {
+    "name": "Name",
+    "code": "Code",
+    "is_active": "Active department"
+  },
+  "active": "Active",
+  "inactive": "Inactive",
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  }
+}
 }

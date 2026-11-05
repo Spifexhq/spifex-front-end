@@ -80,5 +80,19 @@
     "deleteOk": "Département supprimé."
   },
 
-  "alerts": { "noData": "Aucun département trouvé sur cette page." }
+  "alerts": { "noData": "Aucun département trouvé sur cette page." },
+  "preview": {
+  "fields": {
+    "name": "Nom",
+    "code": "Code",
+    "is_active": "Département actif"
+  },
+  "active": "Actif",
+  "inactive": "Inactif",
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
+  }
+}
 }

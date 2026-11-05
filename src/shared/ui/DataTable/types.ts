@@ -42,6 +42,8 @@ export type DataTableProps<T> = {
     columns: Column<T>[];
     pager?: Pager;
     previewFields?: Column<T>[];
+    previewColumns?: Column<T>[];
+    loadPreview?(item: T): Promise<T>;
     emptyLabel: string;
     editLabel?: string;
     className?: string;

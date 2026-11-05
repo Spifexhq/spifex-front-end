@@ -73,5 +73,21 @@
     "validationName": "O nome do projeto é obrigatório.",
     "validationType": "Selecione um tipo de projeto válido."
   },
-  "toast": { "saved": "Projeto salvo.", "deleted": "Projeto excluído." }
+  "toast": { "saved": "Projeto salvo.", "deleted": "Projeto excluído." },
+  "preview": {
+  "fields": {
+    "name": "Nome do projeto",
+    "code": "Código",
+    "type": "Tipo do projeto",
+    "description": "Descrição",
+    "is_active": "Projeto ativo"
+  },
+  "active": "Ativo",
+  "inactive": "Inativo",
+  "roles": {
+    "owner": "Proprietário",
+    "admin": "Administrador",
+    "member": "Membro"
+  }
+}
 }

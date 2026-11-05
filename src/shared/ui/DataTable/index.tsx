@@ -4,10 +4,9 @@ import { ChevronLeft, ChevronRight, MoreHorizontal, Pencil } from "lucide-react"
 import { useShiftSelect } from "@/hooks/useShiftSelect";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import Checkbox from "@/shared/ui/Checkbox";
-import Button from "@/shared/ui/Button";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
 import CompactActionMenu from "@/shared/ui/Popover/CompactActionMenu";
-import SidePanel, { SidePanelDetails } from "@/components/Modal/SidePanel";
+import RecordPreview from "./RecordPreview";
 import ResultsPerPage from "./ResultsPerPage";
 import { useTablePagination } from "./useTablePagination";
 import { useVirtualRows } from "./useVirtualRows";
@@ -116,6 +115,6 @@ export default function DataTable<T extends {
         setDeleting([]); }} onConfirm={() => void remove()}/>
   {props.selectionActions && props.selectionActions({ ids: selection.selectedIds, items: selectableRows.filter(item => selection.selectedIds.includes(item.id)), clear: selection.clearSelection })}
   {!props.selectionActions && selection.selectedIds.length > 0 && <div className="fixed bottom-6 left-1/2 z-[11000] flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs shadow-lg"><span>{t("records.selected", { count: selection.selectedIds.length })}</span><button type="button" disabled={busy} className="text-red-700" onClick={() => setDeleting(page.rows.filter(item => selection.selectedIds.includes(item.id)))}>{t("records.delete")}</button><button type="button" disabled={busy} onClick={selection.clearSelection}>{t("records.cancel")}</button></div>}
-  <SidePanel isOpen={!!selected} title={selected ? String(columns[0]?.render(selected) ?? selected.id) : ""} onClose={() => setPreviewId(null)} footer={selected && onEdit && canEdit ? <Button variant="outline" onClick={() => { setPreviewId(null); onEdit(selected); }}>{editLabel}</Button> : undefined}>{selected && <SidePanelDetails fields={[...columns, ...previewFields].map(column => ({ label: column.label, value: column.render(selected) }))}/>}</SidePanel>
+  <RecordPreview key={selected?.id || "closed"} item={selected} columns={props.previewColumns || [...columns, ...previewFields]} load={props.loadPreview} onClose={() => setPreviewId(null)} onEdit={onEdit && canEdit ? onEdit : undefined} editLabel={editLabel}/>
  </section>;
 }

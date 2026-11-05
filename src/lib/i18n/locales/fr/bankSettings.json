@@ -111,5 +111,26 @@
   "toast": {
     "saveOk": "Compte bancaire enregistré.",
     "deleteOk": "Compte bancaire supprimé."
+  },
+  "preview": {
+  "fields": {
+    "institution": "Banque / établissement",
+    "account_type": "Type de compte",
+    "branch": "Agence",
+    "account_number": "Numéro de compte",
+    "iban": "IBAN",
+    "currency": "Devise",
+    "initial_balance": "Solde initial",
+    "current_balance": "Solde actuel",
+    "consolidated_balance": "Solde consolidé",
+    "is_active": "Statut"
+  },
+  "active": "Actif",
+  "inactive": "Inactif",
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
   }
+}
 }

@@ -80,5 +80,19 @@
     "deleteOk": "Abteilung gelöscht."
   },
 
-  "alerts": { "noData": "Auf dieser Seite wurden keine Abteilungen gefunden." }
+  "alerts": { "noData": "Auf dieser Seite wurden keine Abteilungen gefunden." },
+  "preview": {
+  "fields": {
+    "name": "Name",
+    "code": "Code",
+    "is_active": "Abteilung aktiv"
+  },
+  "active": "Aktiv",
+  "inactive": "Inaktiv",
+  "roles": {
+    "owner": "Inhaber",
+    "admin": "Administrator",
+    "member": "Mitglied"
+  }
+}
 }

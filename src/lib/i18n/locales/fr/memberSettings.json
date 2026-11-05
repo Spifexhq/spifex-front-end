@@ -83,5 +83,22 @@
     "weakPassword": "Le mot de passe ne respecte pas les exigences minimales.",
     "saveOk": "Membre enregistré.",
     "deleteOk": "Membre supprimé."
+  },
+  "preview": {
+  "fields": {
+    "name": "Nom",
+    "email": "E-mail",
+    "role": "Rôle",
+    "groups": "Groupes",
+    "created_at": "Créé le",
+    "updated_at": "Modifié le"
+  },
+  "active": "Actif",
+  "inactive": "Inactif",
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
   }
+}
 }

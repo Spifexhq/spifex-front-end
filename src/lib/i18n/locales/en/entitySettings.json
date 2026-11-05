@@ -121,5 +121,35 @@
     "confirmFailed": "Failed to confirm."
   },
 
-  "toast": { "saveOk": "Entity saved.", "deleteOk": "Entity removed." }
+  "toast": { "saveOk": "Entity saved.", "deleteOk": "Entity removed." },
+  "preview": {
+  "fields": {
+    "full_name": "Full name",
+    "alias_name": "Trade name / alias",
+    "entity_type": "Entity type",
+    "is_active": "Active entity",
+    "ssn_tax_id": "SSN (CPF)",
+    "ein_tax_id": "EIN (CNPJ)",
+    "email": "Email",
+    "phone": "Phone",
+    "street": "Street",
+    "street_number": "Number",
+    "city": "City",
+    "state": "State",
+    "postal_code": "Postal code",
+    "country": "Country",
+    "bank_name": "Bank",
+    "bank_branch": "Branch",
+    "checking_account": "Checking account",
+    "account_holder_tax_id": "Holder (CPF/CNPJ)",
+    "account_holder_name": "Holder name"
+  },
+  "active": "Active",
+  "inactive": "Inactive",
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  }
+}
 }

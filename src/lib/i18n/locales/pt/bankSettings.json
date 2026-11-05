@@ -111,5 +111,26 @@
   "toast": {
     "saveOk": "Conta bancária salva.",
     "deleteOk": "Conta bancária excluída."
+  },
+  "preview": {
+  "fields": {
+    "institution": "Banco / instituição",
+    "account_type": "Tipo de conta",
+    "branch": "Agência",
+    "account_number": "Número da conta",
+    "iban": "IBAN",
+    "currency": "Moeda",
+    "initial_balance": "Saldo inicial",
+    "current_balance": "Saldo atual",
+    "consolidated_balance": "Saldo consolidado",
+    "is_active": "Status"
+  },
+  "active": "Ativo",
+  "inactive": "Inativo",
+  "roles": {
+    "owner": "Proprietário",
+    "admin": "Administrador",
+    "member": "Membro"
   }
+}
 }

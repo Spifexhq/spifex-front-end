@@ -83,5 +83,22 @@
     "weakPassword": "The password does not meet the minimum requirements.",
     "saveOk": "Member saved.",
     "deleteOk": "Member deleted."
+  },
+  "preview": {
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "groups": "Groups",
+    "created_at": "Created",
+    "updated_at": "Updated"
+  },
+  "active": "Active",
+  "inactive": "Inactive",
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
   }
+}
 }

@@ -121,5 +121,35 @@
     "confirmFailed": "Échec de la confirmation."
   },
 
-  "toast": { "saveOk": "Entité enregistrée.", "deleteOk": "Entité supprimée." }
+  "toast": { "saveOk": "Entité enregistrée.", "deleteOk": "Entité supprimée." },
+  "preview": {
+  "fields": {
+    "full_name": "Nom complet",
+    "alias_name": "Nom commercial / alias",
+    "entity_type": "Type d’entité",
+    "is_active": "Entité active",
+    "ssn_tax_id": "SSN (CPF)",
+    "ein_tax_id": "EIN (CNPJ)",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "street": "Rue",
+    "street_number": "Numéro",
+    "city": "Ville",
+    "state": "Région",
+    "postal_code": "Code postal",
+    "country": "Pays",
+    "bank_name": "Banque",
+    "bank_branch": "Agence",
+    "checking_account": "Compte courant",
+    "account_holder_tax_id": "Titulaire (CPF/CNPJ)",
+    "account_holder_name": "Nom du titulaire"
+  },
+  "active": "Actif",
+  "inactive": "Inactif",
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
+  }
+}
 }

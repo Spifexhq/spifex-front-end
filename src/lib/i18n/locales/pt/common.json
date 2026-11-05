@@ -1,4 +1,6 @@
 {
+  "previewError": "Não foi possível carregar os detalhes.",
+  "previewRetry": "Tentar novamente",
   "previewLoading": "A carregar pré-visualização…",
   "title": "Configurações Pessoais",
   "header.settings": "Configurações",

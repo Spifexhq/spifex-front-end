@@ -629,7 +629,7 @@ const InventorySettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getInventoryItem(item.id)).data} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "—"},{key:"sku",label:t("preview.fields.sku"),render:item=>item.sku ?? "—"},{key:"description",label:t("preview.fields.description"),render:item=>item.description ?? "—"},{key:"uom",label:t("preview.fields.uom"),render:item=>item.uom ?? "—"},{key:"quantity_on_hand",label:t("preview.fields.quantity_on_hand"),render:item=>item.quantity_on_hand ?? "—"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));

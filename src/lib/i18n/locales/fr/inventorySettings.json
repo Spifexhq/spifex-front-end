@@ -99,5 +99,22 @@
     "saveOk": "Article créé.",
     "updateOk": "Article mis à jour.",
     "deleteOk": "Article supprimé."
+  },
+  "preview": {
+  "fields": {
+    "name": "Nom",
+    "sku": "SKU",
+    "description": "Description",
+    "uom": "Unité",
+    "quantity_on_hand": "Quantité en stock",
+    "is_active": "Actif"
+  },
+  "active": "Actif",
+  "inactive": "Inactif",
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
   }
+}
 }

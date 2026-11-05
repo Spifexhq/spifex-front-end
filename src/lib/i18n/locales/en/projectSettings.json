@@ -73,5 +73,21 @@
     "validationName": "Project name is required.",
     "validationType": "Please select a valid project type."
   },
-  "toast": { "saved": "Project saved.", "deleted": "Project deleted." }
+  "toast": { "saved": "Project saved.", "deleted": "Project deleted." },
+  "preview": {
+  "fields": {
+    "name": "Project name",
+    "code": "Code",
+    "type": "Project type",
+    "description": "Description",
+    "is_active": "Active project"
+  },
+  "active": "Active",
+  "inactive": "Inactive",
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  }
+}
 }

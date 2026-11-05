@@ -83,5 +83,22 @@
     "weakPassword": "A senha não atende aos requisitos mínimos.",
     "saveOk": "Membro salvo.",
     "deleteOk": "Membro excluído."
+  },
+  "preview": {
+  "fields": {
+    "name": "Nome",
+    "email": "E-mail",
+    "role": "Função",
+    "groups": "Grupos",
+    "created_at": "Criado em",
+    "updated_at": "Atualizado em"
+  },
+  "active": "Ativo",
+  "inactive": "Inativo",
+  "roles": {
+    "owner": "Proprietário",
+    "admin": "Administrador",
+    "member": "Membro"
   }
+}
 }

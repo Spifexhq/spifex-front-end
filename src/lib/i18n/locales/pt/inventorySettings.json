@@ -99,5 +99,22 @@
     "saveOk": "Item criado.",
     "updateOk": "Item atualizado.",
     "deleteOk": "Item excluído."
+  },
+  "preview": {
+  "fields": {
+    "name": "Nome",
+    "sku": "SKU",
+    "description": "Descrição",
+    "uom": "Unidade",
+    "quantity_on_hand": "Quantidade em estoque",
+    "is_active": "Ativo"
+  },
+  "active": "Ativo",
+  "inactive": "Inativo",
+  "roles": {
+    "owner": "Proprietário",
+    "admin": "Administrador",
+    "member": "Membro"
   }
+}
 }

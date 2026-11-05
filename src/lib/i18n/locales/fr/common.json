@@ -1,4 +1,6 @@
 {
+  "previewError": "Impossible de charger les détails.",
+  "previewRetry": "Réessayer",
   "previewLoading": "Chargement de l’aperçu…",
   "title": "Paramètres personnels",
   "header.settings": "Paramètres",

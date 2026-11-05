@@ -111,5 +111,26 @@
   "toast": {
     "saveOk": "Bankkonto gespeichert.",
     "deleteOk": "Bankkonto gelöscht."
+  },
+  "preview": {
+  "fields": {
+    "institution": "Bank / Institut",
+    "account_type": "Kontotyp",
+    "branch": "Filiale",
+    "account_number": "Kontonummer",
+    "iban": "IBAN",
+    "currency": "Währung",
+    "initial_balance": "Anfangssaldo",
+    "current_balance": "Aktueller Saldo",
+    "consolidated_balance": "Konsolidierter Saldo",
+    "is_active": "Status"
+  },
+  "active": "Aktiv",
+  "inactive": "Inaktiv",
+  "roles": {
+    "owner": "Inhaber",
+    "admin": "Administrator",
+    "member": "Mitglied"
   }
+}
 }

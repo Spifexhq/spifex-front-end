@@ -11,3 +11,5 @@ The shared renderer for Settings, Accounting and Finance. Supply typed `items` a
 - `ResultsPerPage`, pagination, filters and column sizing live here. API adapters pass fetch callbacks to the shared hooks; the UI imports no domain API.
 
 `useCursorPager` owns page-size changes, cached navigation, concurrent-request coalescing and stale-response protection. Finance opts into `accumulate` to retain loaded pages. API adapters retain endpoint parameters, organization isolation and authorization.
+
+Record previews can use `loadPreview(item)` to retrieve a full detail model and `previewColumns` to define its complete field layout independently of list columns. Loading uses the shared skeleton; failures offer retry. Switching or closing records discards stale responses, and Edit receives the loaded model.

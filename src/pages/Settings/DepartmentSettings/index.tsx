@@ -452,7 +452,7 @@ const DepartmentSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getDepartment(item.id)).data} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "—"},{key:"code",label:t("preview.fields.code"),render:item=>item.code ?? "—"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
