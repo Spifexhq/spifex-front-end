@@ -1,4 +1,8 @@
 {
+  "previewEmpty": "Nicht angegeben",
+  "previewYes": "Ja",
+  "previewNo": "Nein",
+
   "previewError": "Details konnten nicht geladen werden.",
   "previewRetry": "Erneut versuchen",
   "previewLoading": "Vorschau wird geladen…",

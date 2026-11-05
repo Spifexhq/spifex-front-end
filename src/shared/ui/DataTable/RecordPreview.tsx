@@ -22,7 +22,7 @@ export default function RecordPreview<T extends { id: string }>({ item, columns,
   }, [id, retry]);
   const loaded = !load ? item : state.id === id ? state.item : undefined;
   const error = !!load && state.id === id && state.error;
-  return <SidePanel isOpen={!!item} loading={!!item && !loaded && !error} title={item ? columns[0]?.render(loaded || item) : ""} onClose={onClose}
+  return <SidePanel skeletonRows={columns.length} isOpen={!!item} loading={!!item && !loaded && !error} title={item ? columns[0]?.render(loaded || item) : ""} onClose={onClose}
     footer={onEdit && item ? <Button variant="outline" disabled={!loaded} onClick={() => { if (loaded) { onClose(); onEdit(loaded); } }}>{editLabel}</Button> : undefined}>
     {error ? <div role="alert" className="space-y-3 text-sm text-gray-600"><p>{t("previewError")}</p><Button variant="outline" onClick={() => setRetry(value => value + 1)}>{t("previewRetry")}</Button></div> : loaded && <SidePanelDetails fields={columns.map(column => ({ label: column.label, value: column.render(loaded) }))}/>}
   </SidePanel>;

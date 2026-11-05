@@ -1,4 +1,8 @@
 {
+  "previewEmpty": "Non renseigné",
+  "previewYes": "Oui",
+  "previewNo": "Non",
+
   "previewError": "Impossible de charger les détails.",
   "previewRetry": "Réessayer",
   "previewLoading": "Chargement de l’aperçu…",
