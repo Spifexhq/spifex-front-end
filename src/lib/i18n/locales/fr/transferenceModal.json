@@ -1,6 +1,12 @@
 {
-  "aria": { "dialog": "Fenêtre de virement bancaire" },
-  "header": { "badge": "TR", "kind": "Virement", "title": "Entre comptes" },
+  "aria": {
+    "dialog": "Fenêtre de virement bancaire"
+  },
+  "header": {
+    "badge": "TR",
+    "kind": "Virement",
+    "title": "Entre comptes"
+  },
   "fields": {
     "date": "Date",
     "amount": "Montant",
@@ -38,5 +44,10 @@
   "errors": {
     "save": "Erreur lors de l’enregistrement du virement.",
     "loadBanks": "Erreur lors du chargement des banques."
+  },
+  "guidance": {
+    "intro": "Transférez des fonds entre vos comptes bancaires. Sélectionnez le compte source et le compte destinataire.",
+    "loading": "Chargement des comptes bancaires…",
+    "retry": "Réessayer"
   }
 }

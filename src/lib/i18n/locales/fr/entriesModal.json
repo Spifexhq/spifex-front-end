@@ -13,7 +13,9 @@
     "receipts": "Recettes",
     "payments": "Paiements"
   },
-  "aria": { "close": "Fermer" },
+  "aria": {
+    "close": "Fermer"
+  },
   "details": {
     "dueDate": "Date d'échéance",
     "amount": "Montant",
@@ -198,5 +200,12 @@
     "enterValue": "Entrez un montant pour enregistrer.",
     "shortcuts": "Raccourcis : Échap (fermer), Ctrl/⌘+S (enregistrer), Ctrl+Alt+←/→ (onglets)"
   },
-  "settledInfo": "Une partie de cette écriture a déjà été réglée le {{date}}. Les champs financiers sont verrouillés."
+  "settledInfo": "Une partie de cette écriture a déjà été réglée le {{date}}. Les champs financiers sont verrouillés.",
+  "guidance": {
+    "intro": "Indiquez le montant et la catégorie, puis ajoutez des détails si nécessaire.",
+    "loading": "Chargement des détails de l’écriture…",
+    "loadError": "Certaines options n’ont pas pu être chargées. Réessayez pour afficher la liste complète.",
+    "retry": "Réessayer",
+    "recurrence": "Répétez cette écriture selon le calendrier ci-dessous."
+  }
 }

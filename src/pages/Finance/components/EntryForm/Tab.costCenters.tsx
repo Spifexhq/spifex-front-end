@@ -6,7 +6,7 @@ import type { TFunction } from "i18next";
 import Input from "@/shared/ui/Input";
 import { Select } from "src/shared/ui/Select";
 
-import type { FormData } from "../Modal.types";
+import type { FormData } from "./types";
 import type { Department } from "@/models/settings/departments";
 import type { Project } from "@/models/settings/projects";
 

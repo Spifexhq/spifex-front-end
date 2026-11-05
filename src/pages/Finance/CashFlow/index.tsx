@@ -15,7 +15,7 @@ import { fetchAllCursor } from '@/lib/list';
 
 import type { Entry } from '@/models/entries/entries';
 import type { EntryFilters } from '@/models/components/filterBar';
-import { type ModalType } from '@/components/Modal/Modal.types';
+import { type ModalType } from '@/pages/Finance/components/EntryForm/types';
 import type { BankAccount } from '@/models/settings/banking';
 
 function isRecord(v: unknown): v is Record<string, unknown> {

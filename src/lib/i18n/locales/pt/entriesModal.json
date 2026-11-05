@@ -13,7 +13,9 @@
     "receipts": "Recebimentos",
     "payments": "Pagamentos"
   },
-  "aria": { "close": "Fechar" },
+  "aria": {
+    "close": "Fechar"
+  },
   "details": {
     "dueDate": "Vencimento",
     "amount": "Valor",
@@ -198,5 +200,12 @@
     "enterValue": "Informe um valor para salvar.",
     "shortcuts": "Atalhos: Esc (fechar), Ctrl/⌘+S (salvar), Ctrl+Alt+←/→ (abas)"
   },
-  "settledInfo": "Parte deste lançamento já foi liquidada em {{date}}. Campos financeiros bloqueados."
+  "settledInfo": "Parte deste lançamento já foi liquidada em {{date}}. Campos financeiros bloqueados.",
+  "guidance": {
+    "intro": "Informe o valor e a categoria e adicione outros detalhes se necessário.",
+    "loading": "A carregar os detalhes do lançamento…",
+    "loadError": "Não foi possível carregar algumas opções. Tente novamente para ver a lista completa.",
+    "retry": "Tentar novamente",
+    "recurrence": "Repita este lançamento de acordo com o calendário abaixo."
+  }
 }

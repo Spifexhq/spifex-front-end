@@ -1,8 +1,9 @@
-// src/components/Modal/TransferenceModal.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
+import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
+import { fetchAllCursor } from "@/lib/list";
 
 import { api } from "@/api/requests";
 import Input from "@/shared/ui/Input";
@@ -11,7 +12,6 @@ import { Select } from "src/shared/ui/Select";
 import { formatCurrency } from "@/lib";
 
 import type { BankAccount } from "@/models/settings/banking";
-import type { ApiError } from "@/models/Api";
 
 interface TransferenceModalProps {
   isOpen: boolean;
@@ -72,6 +72,9 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   const { t } = useTranslation("transferenceModal");
 
   const [formData, setFormData] = useState<FormState>(() => buildInitialForm());
+  const [loadingBanks, setLoadingBanks] = useState(true);
+  const [banksError, setBanksError] = useState(false);
+  const [bankAttempt, setBankAttempt] = useState(0);
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -187,13 +190,8 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   useEffect(() => {
     if (!isOpen) return;
 
-    const prevOverflow = document.body.style.overflow;
-    const prevTouchAction = document.body.style.touchAction;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return;
       if (e.key === "Escape") {
         e.preventDefault();
         attemptClose();
@@ -202,46 +200,28 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
 
       if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        formRef.current?.requestSubmit();
+        if (!warning && !showCloseConfirm && !loadingBanks) formRef.current?.requestSubmit();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.touchAction = prevTouchAction;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [isOpen, attemptClose]);
+  }, [isOpen, attemptClose, warning, showCloseConfirm, loadingBanks]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     let alive = true;
-
-    (async () => {
-      try {
-        type ApiOk<T> = { data: T };
-        type ApiResult<T> = ApiOk<T> | ApiError;
-
-        const res = (await api.getBanks()) as ApiResult<{ results?: BankAccount[] }>;
-        if (!("data" in res)) {
-          console.error(t("errors.loadBanks"), res?.error);
-          return;
-        }
-
-        const page = (res.data?.results ?? []) as BankAccount[];
-        if (alive) setBanks(page);
-      } catch (err) {
-        console.error(t("errors.loadBanks"), err);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [isOpen, t]);
+    setLoadingBanks(true);
+    setBanksError(false);
+    fetchAllCursor<BankAccount>(api.getBanks).then(items => {
+      if (alive) setBanks(items);
+    }).catch(() => { if (alive) { setBanks([]); setBanksError(true); } }).finally(() => { if (alive) setLoadingBanks(false); });
+    return () => { alive = false; };
+  }, [isOpen, bankAttempt]);
 
   const handleBankChange = useCallback(
     (field: "source_bank" | "dest_bank", selected: BankAccount[]) => {
@@ -262,7 +242,7 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!isValid || isSubmitting) return;
+      if (!isValid || isSubmitting || loadingBanks || banksError) return;
 
       setIsSubmitting(true);
       try {
@@ -286,136 +266,12 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
         setIsSubmitting(false);
       }
     },
-    [closeModal, formData, isSubmitting, isValid, onSave, t]
+    [closeModal, formData, isSubmitting, isValid, loadingBanks, banksError, onSave, t]
   );
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center" >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("aria.dialog")}
-        onMouseDown={(event) => event.stopPropagation()}
-        className={[
-          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
-          "md:static md:w-[720px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
-          "md:rounded-lg md:border md:border-gray-200",
-        ].join(" ")}
-      >
-        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
-        </div>
-
-        <header className="border-b border-gray-200 bg-white shrink-0">
-          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
-                {t("header.badge")}
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">{t("header.kind")}</div>
-                <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">{t("header.title")}</h1>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center shrink-0"
-              onClick={attemptClose}
-              aria-label={t("actions.close")}
-              title={t("actions.close")}
-              disabled={isSubmitting}
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </header>
-
-        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-1 min-h-0 flex-col md:block md:flex-none">
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Input
-                kind="date"
-                label={t("fields.date")}
-                value={formData.date}
-                onValueChange={(iso: string) => setField("date", iso)}
-              />
-
-              <Input
-                kind="amount"
-                ref={amountRef}
-                label={t("fields.amount")}
-                id="amount-input"
-                value={formData.amount}
-                onValueChange={(next: string) => setField("amount", next)}
-                aria-label={t("fields.amount")}
-                zeroAsEmpty
-              />
-
-              <Input
-                kind="text"
-                label={t("fields.note")}
-                name="description"
-                placeholder={t("placeholders.note")}
-                value={formData.description}
-                onChange={(e) => setField("description", e.target.value)}
-              />
-
-              <Select<BankAccount>
-                label={t("fields.bankOut")}
-                items={bankOutOptions}
-                selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
-                onChange={(sel) => handleBankChange("source_bank", sel)}
-                getItemKey={(b) => b.id}
-                getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
-                singleSelect
-                buttonLabel={t("placeholders.selectBank")}
-                customStyles={{ maxHeight: "180px" }}
-              />
-
-              <div className="flex items-end justify-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                  onClick={swapBanks}
-                  disabled={!formData.source_bank && !formData.dest_bank}
-                  title={t("actions.swap")}
-                  aria-label={t("actions.swap")}
-                >
-                  ⇄
-                </Button>
-              </div>
-
-              <Select<BankAccount>
-                label={t("fields.bankIn")}
-                items={bankInOptions}
-                selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}
-                onChange={(sel) => handleBankChange("dest_bank", sel)}
-                getItemKey={(b) => b.id}
-                getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
-                singleSelect
-                buttonLabel={t("placeholders.selectBank")}
-                customStyles={{ maxHeight: "180px" }}
-              />
-
-              {showSameBankWarning && (
-                <p className="md:col-span-3 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                  {t("warnings.sameBank")}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <footer
-            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-          >
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <FloatingDialog isOpen={isOpen} width={720} height={590} title={t("header.title")} eyebrow={t("header.kind")} description={t("guidance.intro")} closeLabel={t("actions.close")} onClose={attemptClose} busy={isSubmitting} loading={loadingBanks} onSubmit={handleSubmit} formRef={formRef}
+      footer={<>            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="text-[12px] text-gray-600 hidden md:block">
                 {formData.amount > "" ? (
                   <>
@@ -445,18 +301,15 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
               </div>
 
               <div className="grid grid-cols-2 gap-2 md:flex md:gap-2 md:ml-auto">
-                <Button variant="cancel" type="button" onClick={attemptClose} className="w-full md:w-auto">
+                <Button variant="cancel" disabled={isSubmitting} type="button" onClick={attemptClose} className="w-full md:w-auto">
                   {t("actions.cancel")}
                 </Button>
-                <Button type="submit" disabled={!isValid || isSubmitting} className="w-full md:w-auto">
+                <Button type="submit" disabled={!isValid || isSubmitting || loadingBanks || banksError} className="w-full md:w-auto">
                   {isSubmitting ? t("actions.saving") : t("actions.save")}
                 </Button>
               </div>
             </div>
-          </footer>
-        </form>
-
-        {showCloseConfirm && (
+</>} overlay={(showCloseConfirm || warning) ? <>        {showCloseConfirm && (
           <div className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
             <div className="w-full md:max-w-md rounded-t-2xl md:rounded-lg border border-gray-200 bg-white shadow-2xl">
               <div className="px-5 py-4 border-b border-gray-100">
@@ -509,8 +362,85 @@ const TransferenceModal: React.FC<TransferenceModalProps> = ({ isOpen, onClose, 
             </div>
           </div>
         )}
-      </div>
-    </div>
+</> : undefined}
+    >
+      {loadingBanks ? <DialogSkeleton fields={5} label={t("guidance.loading")} /> : banksError ? <div role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p>{t("errors.loadBanks")}</p><Button type="button" variant="outline" className="mt-3" onClick={() => setBankAttempt(value => value + 1)}>{t("guidance.retry")}</Button></div> : <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Input
+                kind="date"
+                label={t("fields.date")}
+                value={formData.date}
+                onValueChange={(iso: string) => setField("date", iso)}
+              />
+
+              <Input
+                kind="amount"
+                ref={amountRef}
+                label={t("fields.amount")}
+                id="amount-input"
+                value={formData.amount}
+                onValueChange={(next: string) => setField("amount", next)}
+                aria-label={t("fields.amount")}
+                zeroAsEmpty
+              />
+
+              <div className="md:col-span-2">
+              <Input
+                kind="text"
+                label={t("fields.note")}
+                name="description"
+                placeholder={t("placeholders.note")}
+                value={formData.description}
+                onChange={(e) => setField("description", e.target.value)}
+              />
+              </div>
+
+              <Select<BankAccount>
+                label={t("fields.bankOut")}
+                items={bankOutOptions}
+                selected={formData.source_bank ? bankOutOptions.filter((b) => b.id === formData.source_bank) : []}
+                onChange={(sel) => handleBankChange("source_bank", sel)}
+                getItemKey={(b) => b.id}
+                getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
+                singleSelect
+                buttonLabel={t("placeholders.selectBank")}
+                customStyles={{ maxHeight: "180px" }}
+              />
+
+              <div className="flex items-end justify-start md:col-span-2 md:order-last">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
+                  onClick={swapBanks}
+                  disabled={!formData.source_bank && !formData.dest_bank}
+                  title={t("actions.swap")}
+                  aria-label={t("actions.swap")}
+                >
+                  <ArrowLeftRight size={16} className="mr-2" />{t("actions.swap")}
+                </Button>
+              </div>
+
+              <Select<BankAccount>
+                label={t("fields.bankIn")}
+                items={bankInOptions}
+                selected={formData.dest_bank ? bankInOptions.filter((b) => b.id === formData.dest_bank) : []}
+                onChange={(sel) => handleBankChange("dest_bank", sel)}
+                getItemKey={(b) => b.id}
+                getItemLabel={(b) => (b ? `${b.institution} • ${b.account_number}` : "")}
+                singleSelect
+                buttonLabel={t("placeholders.selectBank")}
+                customStyles={{ maxHeight: "180px" }}
+              />
+
+              {showSameBankWarning && (
+                <p className="md:col-span-2 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  {t("warnings.sameBank")}
+                </p>
+              )}
+            </div>
+      </>}
+    </FloatingDialog>
   );
 };
 

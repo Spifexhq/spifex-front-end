@@ -4,9 +4,10 @@ import React, { useCallback, useMemo } from "react";
 import type { TFunction } from "i18next";
 
 import Input from "@/shared/ui/Input";
+import ToggleSwitch from "@/shared/ui/ToggleSwitch";
 import { Select } from "src/shared/ui/Select";
 
-import type { FormData, PeriodOption, RecurrenceOption } from "../Modal.types";
+import type { FormData, PeriodOption } from "./types";
 
 type WeekendOption = { id: number; label: string; value: 1 | -1 };
 
@@ -30,24 +31,11 @@ const RecurrenceTab: React.FC<Props> = ({
   installmentsInputId,
   isRecurrenceLocked,
 }) => {
-  const recurrenceOptions = useMemo<RecurrenceOption[]>(
-    () => [
-      { id: 1, label: t("entriesModal:recurrence.yes"), value: 1 },
-      { id: 2, label: t("entriesModal:recurrence.no"), value: 0 },
-    ],
-    [t]
-  );
-
-  const selectedRecurrence = useMemo<RecurrenceOption[]>(
-    () => (formData.recurrence.recurrence === 1 ? [recurrenceOptions[0]] : [recurrenceOptions[1]]),
-    [formData.recurrence.recurrence, recurrenceOptions]
-  );
-
   const handleRecurrenceChange = useCallback(
-    (v: RecurrenceOption[]) => {
+    (enabled: boolean) => {
       if (isRecurrenceLocked) return;
 
-      const next = v[0]?.value ?? 0;
+      const next = enabled ? 1 : 0;
 
       setFormData((p) => {
         // If turning recurrence off, clear recurrence-only fields to prevent stale data.
@@ -117,19 +105,7 @@ const RecurrenceTab: React.FC<Props> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <Select<RecurrenceOption>
-        label={t("entriesModal:recurrence.title")}
-        items={recurrenceOptions}
-        selected={selectedRecurrence}
-        onChange={handleRecurrenceChange}
-        getItemKey={(i) => i.id}
-        getItemLabel={(i) => i.label}
-        buttonLabel={t("entriesModal:misc.select")}
-        singleSelect
-        hideFilter
-        customStyles={{ maxHeight: "140px" }}
-        disabled={isRecurrenceLocked}
-      />
+      <div className="md:col-span-2"><ToggleSwitch label={t("entriesModal:recurrence.title")} description={t("entriesModal:guidance.recurrence")} checked={isRecurring} onChange={handleRecurrenceChange} disabled={isRecurrenceLocked} /></div>
 
       {isRecurring && (
         <>

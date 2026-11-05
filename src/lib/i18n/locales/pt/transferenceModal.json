@@ -1,6 +1,12 @@
 {
-  "aria": { "dialog": "Modal de transferência bancária" },
-  "header": { "badge": "TR", "kind": "Transferência", "title": "Entre contas" },
+  "aria": {
+    "dialog": "Modal de transferência bancária"
+  },
+  "header": {
+    "badge": "TR",
+    "kind": "Transferência",
+    "title": "Entre contas"
+  },
   "fields": {
     "date": "Data",
     "amount": "Valor",
@@ -38,5 +44,10 @@
   "errors": {
     "save": "Erro ao salvar transferência.",
     "loadBanks": "Erro ao carregar bancos."
+  },
+  "guidance": {
+    "intro": "Transfira dinheiro entre as suas contas bancárias. Selecione a origem e o destino.",
+    "loading": "A carregar as contas bancárias…",
+    "retry": "Tentar novamente"
   }
 }

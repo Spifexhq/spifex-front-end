@@ -6,7 +6,7 @@ import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileUp, PanelLeftClose, Pa
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
 import { useDialogFocus } from "@/shared/ui/useDialogFocus";
-import type { ModalType } from "@/components/Modal/Modal.types";
+import type { ModalType } from "@/pages/Finance/components/EntryForm/types";
 import type { SidebarMode } from "./Sidebar";
 import "./sidebar.css";
 import "../sidebar-motion.css";

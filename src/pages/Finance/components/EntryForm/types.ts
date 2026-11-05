@@ -1,4 +1,4 @@
-// src/components/Modal/Modal.types.ts
+// Finance entry form data and public props
 
 import type { Entry } from "@/models/entries/entries";
 
@@ -46,22 +46,10 @@ export interface FormData {
   
   export type Tab = 'details' | 'costCenters' | 'inventory' | 'entities' | 'recurrence';
 
-  export type RecurrenceOption = {
-    id: number;
-    label: string;
-    value: 0 | 1;
-  }
-
   export type IntervalMonths = 0 | 1 | 2 | 3 | 6 | 12;
 
   export type PeriodOption = {
     id: IntervalMonths;
     label: string;
     value: IntervalMonths;
-  };
-
-  export type WeekendOption = {
-    id: number;
-    label: string;
-    value: "postpone" | "antedate";
   };

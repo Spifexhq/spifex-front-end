@@ -13,7 +13,9 @@
     "receipts": "Receipts",
     "payments": "Payments"
   },
-  "aria": { "close": "Close" },
+  "aria": {
+    "close": "Close"
+  },
   "details": {
     "dueDate": "Due date",
     "amount": "Amount",
@@ -198,5 +200,12 @@
     "enterValue": "Enter an amount to save.",
     "shortcuts": "Shortcuts: Esc (close), Ctrl/⌘+S (save), Ctrl+Alt+←/→ (tabs)"
   },
-  "settledInfo": "Part of this entry has already been settled on {{date}}. Financial fields are locked."
+  "settledInfo": "Part of this entry has already been settled on {{date}}. Financial fields are locked.",
+  "guidance": {
+    "intro": "Enter the amount and category, then add optional details as needed.",
+    "loading": "Loading entry details…",
+    "loadError": "Some options could not be loaded. Retry to see the complete list.",
+    "retry": "Try again",
+    "recurrence": "Repeat this entry using the schedule below."
+  }
 }

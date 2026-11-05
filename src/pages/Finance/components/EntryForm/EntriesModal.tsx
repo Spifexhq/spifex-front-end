@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
 
 import Button from "@/shared/ui/Button";
-import Spinner from "@/shared/ui/Loaders/Spinner";
+
 
 import { api } from "@/api/requests";
 import { ApiError } from "@/models/Api";
@@ -17,7 +17,7 @@ import type {
   PeriodOption,
   Tab,
   IntervalMonths,
-} from "@/components/Modal/Modal.types";
+} from "./types";
 
 import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
 import type { CashflowCategory } from "@/models/settings/categories";
@@ -27,11 +27,11 @@ import type { InventoryItem } from "@/models/settings/inventory";
 import type { Entity, EntityTypeValue } from "@/models/settings/entities";
 import type { DocumentType } from "@/models/entries/documentTypes";
 
-import DetailsTab from "@/components/Modal/EntriesModal/Tab.details";
-import CostCentersTab from "@/components/Modal/EntriesModal/Tab.costCenters";
-import InventoryTab from "@/components/Modal/EntriesModal/Tab.inventory";
-import EntitiesTab from "@/components/Modal/EntriesModal/Tab.entities";
-import RecurrenceTab from "@/components/Modal/EntriesModal/Tab.recurrence";
+import DetailsTab from "./Tab.details";
+import CostCentersTab from "./Tab.costCenters";
+import InventoryTab from "./Tab.inventory";
+import EntitiesTab from "./Tab.entities";
+import RecurrenceTab from "./Tab.recurrence";
 
 /* ---------------------------------- Types --------------------------------- */
 
@@ -200,6 +200,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   isLoadingEntry,
 }) => {
   const { t } = useTranslation(["entriesModal"]);
+  const [sourcesLoading, setSourcesLoading] = useState(true);
+  const [sourcesError, setSourcesError] = useState(false);
+  const [sourceAttempt, setSourceAttempt] = useState(0);
 
   const PERIOD_OPTIONS = useMemo(
     () => PERIOD_OPTIONS_BASE.map((p) => ({ ...p, label: t(p.label) })),
@@ -375,6 +378,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     let alive = true;
+    setSourcesLoading(true);
+    setSourcesError(false);
 
     (async () => {
       try {
@@ -394,14 +399,17 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         setInventoryItems(invs.status === "fulfilled" ? invs.value : []);
         setEntities(ents.status === "fulfilled" ? ents.value : []);
         setDocTypes(dts.status === "fulfilled" ? dts.value : []);
+        setSourcesError([ca, deps, prjs, invs, ents, dts].some(result => result.status === "rejected"));
         for (const result of [ca, deps, prjs, invs, ents, dts]) {
           if (result.status === "rejected") console.error("Error loading entry options:", result.reason);
         }
       } catch (e) {
+        if (alive) setSourcesError(true);
         console.error("Error loading modal sources:", e);
       }
 
       if (!alive) return;
+      setSourcesLoading(false);
 
       if (!initialEntry) {
         setFormData((prev) => ({
@@ -425,6 +433,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     fetchAllInventoryItems,
     fetchAllEntities,
     fetchAllDocumentTypes,
+    sourceAttempt,
   ]);
 
   useEffect(() => {
@@ -470,21 +479,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       },
     });
   }, [isOpen, initialEntry]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const previousTouchAction = document.body.style.touchAction;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.touchAction = previousTouchAction;
-    };
-  }, [isOpen]);
 
   const validateAll = useCallback((): {
     ok: boolean;
@@ -650,6 +644,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      if (isSubmitting || sourcesLoading || isLoadingEntry) return;
 
       const v = validateAll();
       if (!v.ok) {
@@ -797,6 +792,9 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     },
     [
       validateAll,
+      isSubmitting,
+      sourcesLoading,
+      isLoadingEntry,
       t,
       buildDepartmentsPayload,
       buildItemsPayload,
@@ -838,8 +836,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     !isInventoryValid ||
     !areDepartmentsValid;
 
-  const Tabs = () => (
-    <nav className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar">
+  const renderTabs = () => (
+    <nav role="tablist" aria-label={t("entriesModal:header.entry")} className="flex gap-[3px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-lg border border-[#e8ebf0] bg-[#f5f7fa] p-[3px]">
       {TAB_LIST.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -847,12 +845,20 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`shrink-0 px-3 py-2 text-[13px] border-b-2 ${
-              isActive
-                ? "border-[color:var(--accentPrimary)] text-[color:var(--accentPrimary)]"
-                : "border-transparent text-gray-600 hover:text-gray-800"
-            }`}
-            aria-current={isActive ? "page" : undefined}
+            role="tab"
+            id={`entry-tab-${tab.id}`}
+            aria-controls="entry-form-panel"
+            aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
+            className="min-h-11 flex-1 shrink-0 whitespace-nowrap rounded-md border border-transparent px-3 py-2 text-xs font-medium text-[#687385] transition-colors hover:bg-[#edf0f5] hover:text-[#26344a] aria-selected:border-[#e1e6ee] aria-selected:bg-white aria-selected:text-[#26344a] focus-visible:outline-2 focus-visible:outline-indigo-500 sm:min-h-8"
+            onKeyDown={event => {
+              if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+              event.preventDefault();
+              const i = TAB_LIST.findIndex(item => item.id === tab.id);
+              const next = event.key === "Home" ? 0 : event.key === "End" ? TAB_LIST.length - 1 : (i + (event.key === "ArrowRight" ? 1 : -1) + TAB_LIST.length) % TAB_LIST.length;
+              setActiveTab(TAB_LIST[next].id);
+              document.getElementById(`entry-tab-${TAB_LIST[next].id}`)?.focus();
+            }}
           >
             {tab.label}
           </button>
@@ -934,79 +940,11 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/40 md:grid md:place-items-center">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={IDS.modalTitle}
-        onMouseDown={(event) => event.stopPropagation()}
-        className={[
-          "relative bg-white shadow-2xl flex flex-col w-full overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] rounded-none border-0 fixed inset-x-0 bottom-0",
-          "md:static md:w-[1100px] md:max-w-[95vw] md:h-auto md:max-h-[calc(100vh-4rem)]",
-          "md:rounded-lg md:border md:border-gray-200",
-        ].join(" ")}
-      >
-        <div className="md:hidden flex justify-center pt-2 pb-1 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-gray-300" />
-        </div>
-
-        <header className="border-b border-gray-200 bg-white shrink-0">
-          <div className="px-4 md:px-5 pt-2 md:pt-4 pb-3 md:pb-2 flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-8 w-8 rounded-md border border-gray-200 bg-gray-50 grid place-items-center text-[11px] font-semibold text-gray-700 shrink-0">
-                {type === "credit" ? t("entriesModal:header.badgeIn") : t("entriesModal:header.badgeOut")}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                  {t("entriesModal:header.entry")}
-                </div>
-                <h1 id={IDS.modalTitle} className="text-[16px] font-semibold text-gray-900 leading-snug">
-                  {type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
-                </h1>
-                {isFinancialLocked && formattedLastSettledOn && (
-                  <p className="mt-0.5 text-[11px] text-amber-700">
-                    {t("entriesModal:settledInfo", { date: formattedLastSettledOn })}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="h-9 w-9 rounded-full border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 grid place-items-center shrink-0"
-              onClick={attemptClose}
-              aria-label={t("entriesModal:aria.close")}
-              disabled={isSubmitting}
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="px-4 md:px-5 pb-2">
-            <Tabs />
-          </div>
-        </header>
-
-        <form id={IDS.form} className="flex flex-1 min-h-0 flex-col md:block md:flex-none" onSubmit={handleSubmit}>
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 md:block md:max-h-none md:overflow-visible md:px-5">
-            {isLoadingEntry ? (
-              <div className="w-full h-full min-h-[280px] flex items-center justify-center">
-                <Spinner />
-              </div>
-            ) : (
-              renderTabContent()
-            )}
-          </div>
-
-          <footer
-            className="border-t border-gray-200 bg-white px-4 py-3 shrink-0 md:px-5"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-          >
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <FloatingDialog isOpen={isOpen} width={880} height={670} title={type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
+      eyebrow={t("entriesModal:header.entry")} description={isFinancialLocked && formattedLastSettledOn ? t("entriesModal:settledInfo", { date: formattedLastSettledOn }) : t("entriesModal:guidance.intro")}
+      closeLabel={t("entriesModal:aria.close")} onClose={attemptClose} busy={isSubmitting} loading={Boolean(isLoadingEntry) || sourcesLoading} onSubmit={handleSubmit} formId={IDS.form} tabs={renderTabs()}
+      footer={<>            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-[12px] text-gray-600 hidden md:block">
                 {formData.details.amount > "" ? (
                   <>
@@ -1028,14 +966,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 >
                   {t("entriesModal:actions.cancel")}
                 </Button>
-                <Button type="submit" disabled={isSaveDisabled} className="w-full md:w-auto">
+                <Button type="submit" disabled={isSaveDisabled || sourcesLoading || Boolean(isLoadingEntry)} className="w-full md:w-auto">
                   {isSubmitting ? t("entriesModal:actions.saving") : t("entriesModal:actions.save")}
                 </Button>
               </div>
             </div>
-          </footer>
-        </form>
-
+</>}
+      overlay={(showCloseConfirm || warning) ? <>
         {showCloseConfirm && (
           <div
             className="absolute inset-0 z-20 bg-black/20 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4"
@@ -1112,8 +1049,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+</> : undefined}
+    >
+      {isLoadingEntry || sourcesLoading ? <DialogSkeleton label={t("entriesModal:guidance.loading")} /> : <>
+        {sourcesError && <div role="status" className="mb-5 flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"><span>{t("entriesModal:guidance.loadError")}</span><Button type="button" variant="outline" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
+        <div id="entry-form-panel" role="tabpanel" aria-labelledby={`entry-tab-${activeTab}`} className="space-y-5">{renderTabContent()}</div>
+      </>}
+    </FloatingDialog>
   );
 };
 

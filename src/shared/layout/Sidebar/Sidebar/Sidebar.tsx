@@ -6,8 +6,10 @@ import { PermissionMiddleware } from "@/middlewares";
 import SidebarDesktop from "./Sidebar.desktop";
 import SidebarMobile from "./Sidebar.mobile";
 
-import { EntriesModal, StatementImportModal, TransferenceModal } from "@/components/Modal";
-import type { ModalType } from "@/components/Modal/Modal.types";
+import { StatementImportModal } from "@/components/Modal";
+import EntriesModal from "@/pages/Finance/components/EntryForm/EntriesModal";
+import TransferenceModal from "@/pages/Finance/components/TransferForm/TransferenceModal";
+import type { ModalType } from "@/pages/Finance/components/EntryForm/types";
 
 import { api } from "@/api/requests";
 import { fetchAllCursor } from "@/lib/list";
@@ -157,12 +159,12 @@ const Sidebar: React.FC<SidebarProps> = ({
     <>
       {shell ? shell.sidebarSlot && createPortal(isMobile ? <SidebarMobile {...actionProps} isOpen={shell.mobileOpen} toggleSidebar={shell.toggleMobile} /> : <SidebarDesktop {...actionProps} />, shell.sidebarSlot) : isMobile ? <SidebarMobile {...actionProps} isOpen={mobileOpen} toggleSidebar={toggleMobile} /> : <SidebarDesktop {...actionProps} />}
 
-      {entryType && (
+      {(
         <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>
           <EntriesModal
             isOpen={entryOpen}
             onClose={closeEntryModal}
-            type={entryType}
+            type={entryType ?? "credit"}
             initialEntry={entryInitial}
             isLoadingEntry={entryLoading}
             onSave={handleEntrySave}
@@ -170,7 +172,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </PermissionMiddleware>
       )}
 
-      {isTransferenceOpen && (
+      {(
         <PermissionMiddleware codeName={"add_transference"}>
           <TransferenceModal
             isOpen={isTransferenceOpen}

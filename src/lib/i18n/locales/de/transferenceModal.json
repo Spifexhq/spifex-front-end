@@ -1,6 +1,12 @@
 {
-  "aria": { "dialog": "Überweisungsmodal" },
-  "header": { "badge": "TR", "kind": "Überweisung", "title": "Zwischen Konten" },
+  "aria": {
+    "dialog": "Überweisungsmodal"
+  },
+  "header": {
+    "badge": "TR",
+    "kind": "Überweisung",
+    "title": "Zwischen Konten"
+  },
   "fields": {
     "date": "Datum",
     "amount": "Betrag",
@@ -38,5 +44,10 @@
   "errors": {
     "save": "Fehler beim Speichern der Überweisung.",
     "loadBanks": "Fehler beim Laden der Banken."
+  },
+  "guidance": {
+    "intro": "Übertragen Sie Geld zwischen Ihren Bankkonten. Wählen Sie das Quell- und Zielkonto aus.",
+    "loading": "Bankkonten werden geladen…",
+    "retry": "Erneut versuchen"
   }
 }

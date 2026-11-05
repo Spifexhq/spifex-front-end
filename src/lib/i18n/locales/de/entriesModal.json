@@ -13,7 +13,9 @@
     "receipts": "Einnahmen",
     "payments": "Zahlungen"
   },
-  "aria": { "close": "Schließen" },
+  "aria": {
+    "close": "Schließen"
+  },
   "details": {
     "dueDate": "Fälligkeitsdatum",
     "amount": "Betrag",
@@ -198,5 +200,12 @@
     "enterValue": "Geben Sie einen Betrag ein, um zu speichern.",
     "shortcuts": "Tastenkombinationen: Esc (schließen), Strg/⌘+S (speichern), Strg+Alt+←/→ (Registerkarten)"
   },
-  "settledInfo": "Ein Teil dieser Buchung wurde bereits am {{date}} ausgeglichen. Finanzfelder sind gesperrt."
+  "settledInfo": "Ein Teil dieser Buchung wurde bereits am {{date}} ausgeglichen. Finanzfelder sind gesperrt.",
+  "guidance": {
+    "intro": "Geben Sie Betrag und Kategorie ein und ergänzen Sie bei Bedarf weitere Details.",
+    "loading": "Buchungsdetails werden geladen…",
+    "loadError": "Einige Optionen konnten nicht geladen werden. Versuchen Sie es erneut, um die vollständige Liste zu sehen.",
+    "retry": "Erneut versuchen",
+    "recurrence": "Wiederholen Sie diese Buchung nach dem untenstehenden Zeitplan."
+  }
 }

@@ -5,7 +5,7 @@ import type { TFunction } from "i18next";
 
 import { Select } from "src/shared/ui/Select";
 
-import type { FormData } from "../Modal.types";
+import type { FormData } from "./types";
 import type { Entity, EntityTypeValue } from "@/models/settings/entities";
 
 type EntityTypeOption = { id: number; label: string; value: EntityTypeValue };

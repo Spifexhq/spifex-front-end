@@ -1,6 +1,12 @@
 {
-  "aria": { "dialog": "Bank transference modal" },
-  "header": { "badge": "TR", "kind": "Transference", "title": "Between accounts" },
+  "aria": {
+    "dialog": "Bank transference modal"
+  },
+  "header": {
+    "badge": "TR",
+    "kind": "Transference",
+    "title": "Between accounts"
+  },
   "fields": {
     "date": "Date",
     "amount": "Amount",
@@ -38,5 +44,10 @@
   "errors": {
     "save": "Error saving transference.",
     "loadBanks": "Error loading banks."
+  },
+  "guidance": {
+    "intro": "Move money between your own bank accounts. Select where it leaves and where it arrives.",
+    "loading": "Loading bank accounts…",
+    "retry": "Try again"
   }
 }

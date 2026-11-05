@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import Input from "@/shared/ui/Input";
 import { Select } from "src/shared/ui/Select";
 
-import type { FormData } from "../Modal.types";
+import type { FormData } from "./types";
 import type { CashflowCategory } from "@/models/settings/categories";
 import type { DocumentType } from "src/models/entries/documentTypes";
 
