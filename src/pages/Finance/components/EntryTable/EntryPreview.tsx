@@ -59,7 +59,7 @@ export default function EntryPreview({ entry, onClose, onEdit }: {
     const shown = details?.entry || entry;
     const accounting = details?.accounting;
     const status = accounting?.status;
-    return <SidePanel eyebrow={t("entryDetails")} isOpen={!!entry} title={entry?.description || t("entryDetails")} subtitle={t(entry && isSettlement(entry) ? "settledEntry" : "plannedEntry")} onClose={onClose} footer={shown && !isSettlement(shown) && onEdit ? <Button variant="outline" disabled={loading} onClick={() => { onClose(); onEdit(shown); }}>{t("edit")}</Button> : undefined}>
+    return <SidePanel loading={loading || (!!entry && !details && !error)} eyebrow={t("entryDetails")} isOpen={!!entry} title={entry?.description || t("entryDetails")} subtitle={t(entry && isSettlement(entry) ? "settledEntry" : "plannedEntry")} onClose={onClose} footer={shown && !isSettlement(shown) && onEdit ? <Button variant="outline" disabled={loading} onClick={() => { onClose(); onEdit(shown); }}>{t("edit")}</Button> : undefined}>
   {loading ? <p role="status" className="py-6 text-xs text-gray-500">{t("loading")}</p> : error ? <div role="alert" className="space-y-3 text-xs text-red-700"><p>{error}</p><Button size="sm" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("retry")}</Button></div> : shown && <div className="space-y-6">
    <section><p className="text-xs text-gray-500">{t("amount")}</p><p className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${signedAmount(shown) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{formatCurrency(signedAmount(shown))}</p></section>
    <SidePanelDetails fields={[

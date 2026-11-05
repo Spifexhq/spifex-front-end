@@ -9,7 +9,7 @@ const react={Children:{toArray:children=>(Array.isArray(children)?children:[chil
 const form=()=>null;
 function load(file,modules={}) {
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
- const context=vm.createContext({exports:{},require:name=>({'react':react,'react/jsx-runtime':jsx,'react-i18next':{useTranslation:()=>({t:key=>key})},'@/shared/ui/Button':{default:'button'},'./SidePanelFrame':{SidePanelFrame:'frame',SidePanelHeader:'header'},'./SidePanelForm':{SidePanelForm:form,SidePanelHint:'hint'},...modules})[name]});
+ const context=vm.createContext({exports:{},require:name=>({'react':{...react,Suspense:'suspense'},'./PreviewSkeleton':{default:'preview-skeleton'},'react/jsx-runtime':jsx,'react-i18next':{useTranslation:()=>({t:key=>key})},'@/shared/ui/Button':{default:'button'},'./SidePanelFrame':{SidePanelFrame:'frame',SidePanelHeader:'header'},'./SidePanelForm':{SidePanelForm:form,SidePanelHint:'hint'},...modules})[name]});
  vm.runInContext(code,context);return context.exports.default;
 }
 const Panel=load('src/components/Modal/SidePanel/SidePanel.tsx');
