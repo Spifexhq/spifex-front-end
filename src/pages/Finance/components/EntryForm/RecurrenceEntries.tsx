@@ -14,11 +14,11 @@ export default function RecurrenceEntries({ currentId, series, selectable, onEdi
   return <section aria-label={t("series.title")} className="overflow-hidden rounded-lg border border-slate-200">
     <div className="flex min-h-11 items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
       <h3 className="text-xs font-semibold text-slate-700">{t("series.title")} <span className="font-normal text-slate-400">({series.total ?? series.entries.length})</span></h3>
-      {selectable && <div className="flex items-center gap-2 text-xs text-slate-500"><Checkbox checked={series.allPageSelected} indeterminate={series.somePageSelected && !series.allPageSelected} onChange={series.selectPage} aria-label={t("series.selectPage")} />{t("series.selectPage")}</div>}
+      {selectable && <div className="flex items-center gap-2 text-xs text-slate-500"><Checkbox checked={series.allSelected} indeterminate={series.someSelected && !series.allSelected} onChange={series.selectAll} aria-label={t("series.selectAll")} />{t("series.selectAll")}</div>}
     </div>
     <div className="max-h-60 divide-y divide-slate-100 overflow-y-auto overscroll-contain">
       {series.pageEntries.map(row => <div key={row.id} className={`flex items-center gap-3 px-3 py-2 ${row.id === currentId ? "bg-slate-50/70" : "bg-white"}`}>
-        {selectable && <Checkbox checked={row.id === currentId || series.selectedIds.includes(row.id)} disabled={row.id === currentId} onClick={event => series.handleSelectRow(row.id, event)} aria-label={t("series.selectEntry", { index: row.installment_index })} />}
+        {selectable && <Checkbox checked={row.id === currentId || series.isSelected(row.id)} disabled={row.id === currentId} onClick={event => series.handleSelectRow(row.id, event)} aria-label={t("series.selectEntry", { index: row.installment_index })} />}
         <div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-slate-700">{row.installment_index}/{row.installment_count} · {formatDateFromISO(row.due_date)}{row.id === currentId && <span className="ml-2 text-[10px] text-slate-400">{t("series.current")}</span>}</p><p className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span className={`size-1.5 rounded-full ${entryFinancialLocked(row) ? "bg-amber-500" : "bg-emerald-500"}`} />{t(row.is_settled ? "series.settled" : entryHasSettlements(row) ? "series.partial" : row.financial_locked ? "series.posted" : "series.open")}</p></div>
         <span className="text-xs font-medium tabular-nums text-slate-700">{formatCurrency(row.amount)}</span>
         {row.id !== currentId && <Button type="button" size="sm" variant="outline" className="min-h-10 sm:min-h-8" onClick={() => onEdit(row.id)}>{t("series.edit")}</Button>}

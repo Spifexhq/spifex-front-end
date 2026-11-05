@@ -232,7 +232,7 @@
     "selected": "Diese und ausgewählte zugehörige Buchungen ({{count}})",
     "explain": "Wählen Sie zugehörige Buchungen im Reiter Wiederholung. Nur geänderte Felder werden kopiert. Ausgewählte Fälligkeiten werden um dieselbe Anzahl von Tagen verschoben; die Abstände bleiben erhalten.",
     "blocked": "Einige ausgewählte Buchungen haben Zahlungen oder gebuchte Journale und erlauben keine finanziellen Änderungen, oder es wurden mehr als 1.000 Buchungen ausgewählt. Prüfen Sie die Auswahl.",
-    "selectAll": "Alle anderen auswählen",
+    "selectAll": "Alle auswählen",
     "selectEntry": "Rate {{index}} auswählen",
     "current": "Aktuelle Buchung",
     "settled": "Beglichen · Finanzfelder gesperrt",

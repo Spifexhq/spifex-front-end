@@ -232,7 +232,7 @@
     "selected": "Este lançamento e os relacionados selecionados ({{count}})",
     "explain": "Escolha os lançamentos relacionados no separador Recorrência. Apenas os campos alterados serão copiados. As datas selecionadas serão deslocadas pelo mesmo número de dias, mantendo o intervalo entre elas.",
     "blocked": "Alguns lançamentos selecionados têm liquidações ou registos contabilísticos e não podem receber alterações financeiras, ou foram selecionados mais de 1.000 lançamentos. Reveja a seleção.",
-    "selectAll": "Selecionar os restantes",
+    "selectAll": "Selecionar todos",
     "selectEntry": "Selecionar a prestação {{index}}",
     "current": "Lançamento atual",
     "settled": "Liquidado · campos financeiros bloqueados",

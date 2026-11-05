@@ -520,7 +520,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       e.preventDefault();
       if (isSubmitting || sourcesLoading || isLoadingEntry || relatedLoading) return;
 
-      if (scope === "selected" && (series.loading || series.error || series.selectedIds.length > 999 || (initialEntry && touchesFinancialFields(getEntryChanges(initialEntry, formData)) && series.entries.some(row => series.selectedIds.includes(row.id) && entryFinancialLocked(row))))) {
+      if (scope === "selected" && (series.loading || series.error || series.selectedCount > 999 || (initialEntry && touchesFinancialFields(getEntryChanges(initialEntry, formData)) && series.entries.some(row => series.selectedIds.includes(row.id) && entryFinancialLocked(row))))) {
         setActiveTab("recurrence");
         setWarning({ title: t("entriesModal:series.applyTo"), message: t("entriesModal:series.blocked") });
         return;
@@ -590,7 +590,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
           if (scope === "selected") {
             const ids = [ie.id, ...series.selectedIds];
             const versions = Object.fromEntries(series.entries.filter(row => ids.includes(row.id)).map(row => [row.id, row.id === ie.id ? ie.version || row.version : row.version]));
-            res = await api.editEntryRecurrence(ie.id, ids, versions, changes);
+            res = await api.editEntryRecurrence(ie.id, ids, versions, changes, series.selectionPayload);
           } else res = await api.editEntry(ie.id, changes, ie.version);
         }
 
@@ -615,7 +615,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     },
     [
       validateAll,
-      scope, series.selectedIds, series.entries, series.loading, series.error, relatedLoading,
+      scope, series.selectedIds, series.selectedCount, series.selectionPayload, series.entries, series.loading, series.error, relatedLoading,
       isSubmitting,
       sourcesLoading,
       isLoadingEntry,
@@ -633,7 +633,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const changes = initialEntry ? getEntryChanges(initialEntry, formData) : {};
   const financialChange = touchesFinancialFields(changes);
   const selectedRows = series.entries.filter(row => series.selectedIds.includes(row.id));
-  const blockedSelection = scope === "selected" && (series.selectedIds.length > 999 || (financialChange && selectedRows.some(entryFinancialLocked)));
+  const blockedSelection = scope === "selected" && (series.selectedCount > 999 || (financialChange && selectedRows.some(entryFinancialLocked)));
   const relatedRequest = useRef(0);
   useEffect(() => () => { relatedRequest.current++; }, [isOpen]);
   const openRelated = useCallback(async (id: string) => {
@@ -771,7 +771,17 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
       case "recurrence":
         return (
-          <div className="space-y-5"><RecurrenceTab
+          <div className="space-y-5">
+            {initialEntry?.installment_group_id && <details className="mb-3 border-b border-slate-100 pb-2">
+          <summary className="cursor-pointer py-1 text-[11px] font-medium text-slate-500">{t("entriesModal:series.applyTo")}</summary>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
+            <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="entry-edit-scope" checked={scope === "single"} onChange={() => setScope("single")} />{t("entriesModal:series.onlyThis")}</label>
+            <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="entry-edit-scope" checked={scope === "selected"} onChange={() => { setScope("selected"); setActiveTab("recurrence"); }} />{t("entriesModal:series.selected", { count: series.selectedCount + 1 })}</label>
+          </div>
+          {scope === "selected" && <details className="mt-1 text-[11px] leading-5 text-slate-500"><summary className="cursor-pointer">{t("entriesModal:series.scopeDetails")}</summary><p>{t("entriesModal:series.explain")}</p></details>}
+          {blockedSelection && <p role="alert" className="mt-2 text-xs text-amber-800">{t("entriesModal:series.blocked")}</p>}
+        </details>}
+            <RecurrenceTab
             t={t}
             formData={formData}
             setFormData={setFormData}
@@ -899,15 +909,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     >
       {isLoadingEntry || sourcesLoading || relatedLoading ? <DialogSkeleton label={t("entriesModal:guidance.loading")} /> : <>
         {sourceIssues.length > 0 && <div role="status" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p className="font-medium">{t("entriesModal:options.title")}</p><ul className="mt-2 space-y-1">{sourceIssues.map(issue => <li key={issue.source}><b>{t(`entriesModal:options.${issue.source}`)}</b> — {issue.status === 403 ? t("entriesModal:options.forbidden") : issue.status ? t("entriesModal:options.failed", { status: issue.status }) : t(issue.invalidResponse ? "entriesModal:options.invalidResponse" : "entriesModal:options.connection")}{issue.requestId && <span className="block text-[10px]">{t("entriesModal:options.reference", { id: issue.requestId })}</span>}</li>)}</ul><Button type="button" variant="outline" className="mt-3" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
-        {initialEntry?.installment_group_id && <section className="mb-4 border-b border-slate-100 pb-3">
-          <p className="mb-1 text-[11px] font-medium text-slate-500">{t("entriesModal:series.applyTo")}</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
-            <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="entry-edit-scope" checked={scope === "single"} onChange={() => setScope("single")} />{t("entriesModal:series.onlyThis")}</label>
-            <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="entry-edit-scope" checked={scope === "selected"} onChange={() => { setScope("selected"); setActiveTab("recurrence"); }} />{t("entriesModal:series.selected", { count: series.selectedIds.length + 1 })}</label>
-          </div>
-          {scope === "selected" && <details className="mt-1 text-[11px] leading-5 text-slate-500"><summary className="cursor-pointer">{t("entriesModal:series.scopeDetails")}</summary><p>{t("entriesModal:series.explain")}</p></details>}
-          {blockedSelection && <p role="alert" className="mt-2 text-xs text-amber-800">{t("entriesModal:series.blocked")}</p>}
-        </section>}
         <div id="entry-form-panel" role="tabpanel" aria-labelledby={`entry-tab-${activeTab}`} className="space-y-5">{renderTabContent()}</div>
       </>}
     </FloatingDialog>

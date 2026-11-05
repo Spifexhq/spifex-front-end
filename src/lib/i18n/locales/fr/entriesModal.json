@@ -232,7 +232,7 @@
     "selected": "Cette écriture et les écritures liées sélectionnées ({{count}})",
     "explain": "Choisissez les écritures liées dans l’onglet Récurrence. Seuls les champs modifiés sont copiés. Les échéances sélectionnées sont décalées du même nombre de jours, en conservant leur espacement.",
     "blocked": "Certaines écritures sélectionnées ont des règlements ou des écritures comptables et ne peuvent pas recevoir de modifications financières, ou plus de 1 000 écritures sont sélectionnées. Vérifiez votre sélection.",
-    "selectAll": "Sélectionner les autres",
+    "selectAll": "Tout sélectionner",
     "selectEntry": "Sélectionner l’échéance {{index}}",
     "current": "Écriture actuelle",
     "settled": "Réglée · champs financiers verrouillés",

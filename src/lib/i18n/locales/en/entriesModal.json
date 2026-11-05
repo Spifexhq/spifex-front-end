@@ -232,7 +232,7 @@
     "selected": "This entry and selected related entries ({{count}})",
     "explain": "Choose related entries in the Recurrence tab. Only fields you change are copied. Date changes shift selected due dates by the same number of days, keeping their spacing.",
     "blocked": "Some selected entries have settlements or posted accounting output and cannot receive financial changes, or more than 1,000 entries are selected. Review your selection.",
-    "selectAll": "Select all others",
+    "selectAll": "Select all",
     "selectEntry": "Select installment {{index}}",
     "current": "Current entry",
     "settled": "Settled · financial fields locked",

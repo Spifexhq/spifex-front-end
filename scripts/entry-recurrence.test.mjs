@@ -112,3 +112,40 @@ test('installment pagination only fetches the requested page, never walks the fu
   assert.equal(calls[1].params.cursor, 'second');
   assert.equal(calls[1].params.include_count, true);
 });
+
+
+test('select all includes unseen rows and exclusions persist when a later page loads', () => {
+  let slot = 0;
+  const key = 'true:anchor:0';
+  const states = [0, true, 'pinned-snapshot', {key, rows: [{id:'anchor'},{id:'first'}]}];
+  const react = {useState: initial => [states[slot++] ?? initial, () => {}], useEffect: () => {}, useMemo: fn => fn()};
+  const {useRecurrenceEntries} = load('src/pages/Finance/components/EntryForm/useRecurrenceEntries.ts', {
+    react, '@/api/requests': {api:{}}, '@/lib/list': {getCursorFromUrl:value=>value},
+    '@/hooks/useCursorPager': {useCursorPager:()=>({items:[{id:'later'},{id:'excluded'}], metadata:{key, current:{id:'anchor'}, selectionVersion:'new-page-snapshot'}, totalCount:25, index:2, knownPages:3})},
+    '@/hooks/useShiftSelect': {useShiftSelect:()=>({selectedIds:['excluded'],setSelectedIds:()=>{}})},
+  });
+  const result = useRecurrenceEntries(true, {id:'anchor', installment_group_id:'group'});
+  assert.equal(result.isSelected('later'), true);
+  assert.equal(result.isSelected('not-loaded'), true);
+  assert.equal(result.isSelected('excluded'), false);
+  assert.equal(result.selectedCount, 23);
+  assert.equal(result.selectionPayload.select_all, true);
+  assert.equal(result.selectionPayload.selection_version, 'pinned-snapshot');
+  assert.equal(result.selectionPayload.exclude_ids[0], 'excluded');
+});
+
+
+test('all-selection requests cannot become a partial explicit selection on an older backend', () => {
+  const file = ts.createSourceFile('requests.ts', fs.readFileSync('src/api/requests.ts', 'utf8'), ts.ScriptTarget.Latest, true);
+  let method;
+  function walk(node) { if (ts.isPropertyAssignment(node) && node.name.getText(file) === 'editEntryRecurrence') method = node.initializer.getText(file); ts.forEachChild(node, walk); }
+  walk(file);
+  const context = vm.createContext({exports:{}, request: (url, method, body) => body});
+  vm.runInContext(ts.transpileModule(`exports.edit = ${method}`, {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText, context);
+  const all = context.exports.edit('anchor', ['anchor','loaded'], {anchor:'v'}, {notes:'Update'}, {select_all:true,exclude_ids:[],selection_version:'snapshot'});
+  assert.equal(all.ids.length, 0);
+  assert.equal(all.select_all, true);
+  assert.equal(all.versions.anchor, 'v');
+  const explicit = context.exports.edit('anchor', ['anchor','loaded'], {anchor:'v'}, {notes:'Update'});
+  assert.equal(explicit.ids.length, 2);
+});
