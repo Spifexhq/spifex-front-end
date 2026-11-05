@@ -117,10 +117,11 @@ test("logout still discards a pending settings write response",async()=>{
 });
 
 
-test("private must-revalidate lists send their ETag and materialize a 304",async()=>{
+test("private lists revalidate with ETags without a Cache-Control request header",async()=>{
  let calls=0;
  const h=httpHarness(async cfg=>{
   calls++;
+  assert.equal(cfg.headers.get("Cache-Control"),undefined);
   if(calls===1)return{status:200,data:{data:[{id:"one"}]},headers:{etag:'W/"revision-1"',"cache-control":"private, max-age=0, must-revalidate"}};
   assert.equal(cfg.headers.get("If-None-Match"),'W/"revision-1"');
   return{status:304,data:undefined,headers:{etag:'W/"revision-1"'}};

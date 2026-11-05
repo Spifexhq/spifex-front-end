@@ -572,7 +572,6 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       method,
       data: method !== "GET" ? payload : undefined,
       params: method === "GET" ? pruneParams(payload) : undefined,
-      headers: method === "GET" ? { "Cache-Control": "no-cache" } : undefined,
       validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
     };
 
