@@ -93,6 +93,7 @@ export interface EditSettledEntryRequest {
 /* ------------------------------ Bulk settle ------------------------------ */
 
 export interface BulkSettleItem {
+  expected_version?: string;
   entry_id: string;
   bank_id: string;
   amount: string;     // decimal string
@@ -119,3 +120,4 @@ export type BulkSettleResponse =
 export interface DeleteSettledEntriesBulkRequest {
   ids: string[];
 }
+export type SettlementSource = Pick<Entry, "id" | "version" | "description" | "due_date" | "amount" | "open_amount" | "tx_type">;

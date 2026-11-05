@@ -1,3 +1,4 @@
+import type { SettlementSource } from "@/models/entries/settlements";
 import type { RecurrenceEntry } from "@/models/entries/entries";
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
@@ -372,6 +373,9 @@ export const api = {
     request<{ results: RecurrenceEntry[]; next: string | null; count?: number; current: RecurrenceEntry; selection_version: string }>(`cashflow/entries/${id}/recurrence/`, "GET", params),
   editEntryRecurrence: (id: string, ids: string[], versions: Record<string, string>, data: Partial<EditEntryRequest>, selection?: { select_all: boolean; exclude_ids: string[]; selection_version?: string }) =>
     request<EntryWriteResponse | { updated_count: number }>(`cashflow/entries/${id}/recurrence/`, "PATCH", { ids: selection?.select_all ? [] : ids, versions, data, ...selection }),
+
+  getSettlementDrafts: (ids: string[]) =>
+    request<SettlementSource[]>("cashflow/entries/settlement-drafts/", "GET", { ids: ids.join(",") }),
 
   getEntriesBulk: (ids: string[]) =>
     request<GetEntriesBulkResponse>(`cashflow/entries/bulk/get/`, "POST", {

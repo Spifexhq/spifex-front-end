@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Sidebar } from '@/shared/layout/Sidebar';
 import type { SidebarEntryModalState } from '@/shared/layout/Sidebar/Sidebar';
-import { SettlementModal } from '@/components/Modal';
+import SettlementModal from "../components/SettlementForm/SettlementModal";
 import { CashFlowTable, type CashFlowTableHandle } from './CashFlowTable';
 import FinancialActivityPanel from '@/components/FinancialActivityPanel';
 
@@ -206,7 +206,7 @@ const CashFlow = () => {
         </div>
       </div>
 
-      {isSettlementModalOpen ? (
+      {(
         <PermissionMiddleware codeName={'add_settled_entries'}>
           <SettlementModal
             isOpen={isSettlementModalOpen}
@@ -219,9 +219,10 @@ const CashFlow = () => {
               tableRef.current?.clearSelection();
             }}
             banksData={{ banks, loading: banksLoading, error: banksError }}
+            onRetryBanks={bumpBanks}
           />
         </PermissionMiddleware>
-      ) : null}
+      )}
 
 
     </div>

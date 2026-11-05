@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import test from 'node:test';
+import ts from 'typescript';
+const code=ts.transpileModule(fs.readFileSync('src/pages/Finance/components/SettlementForm/settlementDraft.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+const context=vm.createContext({exports:{}});vm.runInContext(code,context);
+const {cents,decimal,makeDraft,draftIssue,applyPercentage,settlementPayload,bankSummary}=context.exports;
+const banks=[{id:'b1',is_active:true},{id:'b2',is_active:true}];
+const entry={id:'e1',version:'v1',open_amount:'80.00',amount:'100.00',due_date:'2026-01-15',description:'Invoice',tx_type:'credit'};
+const row=()=>({...makeDraft(entry),bankId:'b1'});
+test('drafts use the live open balance rather than the original amount',()=>{const d=makeDraft(entry);assert.equal(d.amount,'80.00');assert.equal(d.remaining,'80.00');assert.equal(d.version,'v1');assert.throws(()=>makeDraft({...entry,open_amount:undefined}));});
+test('money is validated and rounded in integer cents',()=>{assert.equal(cents('0.10'),10n);assert.equal(cents('1e4'),null);assert.equal(cents('-1'),null);assert.equal(cents('1.001'),null);assert.equal(decimal(123456789012345n),'1234567890123.45');assert.equal(decimal(-10n),'-0.10');});
+test('percentage tools apply to the remaining balance with cent rounding',()=>{assert.equal(applyPercentage(row(),'50').amount,'40.00');assert.equal(applyPercentage({...row(),remaining:'0.05'},'50').amount,'0.03');assert.equal(applyPercentage(row(),'101').amount,'80.00');});
+test('each entry preserves its own bank, amount, date and expected version',()=>{const rows=[row(),{...row(),id:'e2',bankId:'b2',amount:'25.00',date:'2026-02-01'}];const payload=settlementPayload(rows,banks);assert.equal(payload[0].bank_id,'b1');assert.equal(payload[1].bank_id,'b2');assert.equal(payload[1].amount,'25.00');assert.equal(payload[1].value_date,'2026-02-01');assert.equal(payload[0].expected_version,'v1');});
+test('invalid dates, stale amounts and unavailable banks cannot be submitted',()=>{assert.equal(draftIssue({...row(),date:'2026-02-30'},banks),'date');assert.equal(draftIssue({...row(),amount:'80.01'},banks),'amount');assert.equal(draftIssue({...row(),amount:'0'},banks),'amount');assert.equal(draftIssue({...row(),bankId:'missing'},banks),'bank');assert.equal(draftIssue(row(),[{id:'b1',is_active:false}]),'bank');assert.throws(()=>settlementPayload([row(),row()],banks));});
+test('bank review separates incoming and outgoing amounts exactly',()=>{const s=bankSummary([{...row(),amount:'0.10'},{...row(),id:'e2',amount:'0.20'},{...row(),id:'e3',tx:'debit',amount:'0.05'},{...row(),id:'e4',bankId:'b2',amount:'999'}],'b1');assert.equal(s.count,3);assert.equal(s.incoming,'0.30');assert.equal(s.outgoing,'0.05');assert.equal(s.net,'0.25');});
+test('all batch guidance is translated',()=>{for(const lang of ['en','pt','fr','de']){const d=JSON.parse(fs.readFileSync(`src/lib/i18n/locales/${lang}/settlementModal.json`,'utf8'));for(const k of ['title','intro','prepare','review','selectionHelp','reviewHelp','reloadBalances','discardText'])assert.ok(d.batch[k],`${lang}/${k}`);for(const k of ['bank','date','amount'])assert.ok(d.batch.issue[k]);}});
