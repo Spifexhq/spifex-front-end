@@ -1,16 +1,16 @@
 {
   "documentTitle": "Status - Wartung",
   "heading": "Die Website wird derzeit gewartet",
-  "subtitle": "Wir entschuldigen uns für die entstandenen Unannehmlichkeiten.",
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
+  "subtitle": "Wir arbeiten an einigen Verbesserungen für Spifex. Schauen Sie in Kürze wieder vorbei.",
+  "badge": "Ein wenig Feinschliff",
+  "footer": "Eine kleine Pause. Dann geht es klar weiter.",
+  "socialLabel": "Spifex in sozialen Medien",
+  "animation": {
+    "pause": "Animation pausieren",
+    "resume": "Animation abspielen"
   },
-  "images": {
-    "maintenanceAlt": "Wartung",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "actions": {
+    "overview": "Zur Übersicht",
+    "retry": "Erneut versuchen"
   }
 }

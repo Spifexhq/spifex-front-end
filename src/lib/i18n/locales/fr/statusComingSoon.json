@@ -1,26 +1,16 @@
 {
   "documentTitle": "Statut - Bientôt disponible",
   "heading": "Bientôt disponible",
-  "subtitle": "Nous finalisons les derniers détails avant le lancement !",
+  "subtitle": "Nous mettons la touche finale à cet espace. En attendant, votre vue d’ensemble vous attend.",
   "actions": {
-    "back": "Retour à la page précédente"
+    "overview": "Accéder à la vue d’ensemble",
+    "retry": "Réessayer"
   },
-  "timer": {
-    "days": "Jours",
-    "hours": "Heures",
-    "minutes": "Minutes",
-    "seconds": "Secondes",
-    "expired": "Le temps est écoulé !"
-  },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "comingSoonAlt": "Bientôt disponible",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "Du nouveau arrive",
+  "footer": "Une petite pause. La suite en toute clarté.",
+  "socialLabel": "Spifex sur les réseaux sociaux",
+  "animation": {
+    "pause": "Mettre en pause",
+    "resume": "Relancer l’animation"
   }
 }

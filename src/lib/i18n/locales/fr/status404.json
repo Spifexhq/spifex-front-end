@@ -1,19 +1,16 @@
 {
   "documentTitle": "Statut - 404",
   "heading": "Cette page n’existe pas",
-  "subtitle": "Elle a peut-être été supprimée ou déplacée vers une autre adresse.",
+  "subtitle": "Cette page s’est égarée. Vérifiez l’adresse ou revenez en terrain connu.",
   "actions": {
-    "backHome": "Retour à l’accueil"
+    "overview": "Accéder à la vue d’ensemble",
+    "retry": "Réessayer"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "Erreur 404",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "404 · Hors de la carte",
+  "footer": "Une petite pause. La suite en toute clarté.",
+  "socialLabel": "Spifex sur les réseaux sociaux",
+  "animation": {
+    "pause": "Mettre en pause",
+    "resume": "Relancer l’animation"
   }
 }

@@ -1,19 +1,16 @@
 {
   "documentTitle": "Statut - 500",
   "heading": "Une erreur s’est produite. Veuillez réessayer plus tard.",
-  "subtitle": "Le serveur a rencontré une erreur interne et n’a pas pu traiter votre demande.",
+  "subtitle": "Tout ne s’est pas passé comme prévu. Réessayez ou revenez à votre vue d’ensemble.",
   "actions": {
-    "backHome": "Retour à l’accueil"
+    "overview": "Accéder à la vue d’ensemble",
+    "retry": "Réessayer"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "Erreur 500",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "500 · Un petit imprévu",
+  "footer": "Une petite pause. La suite en toute clarté.",
+  "socialLabel": "Spifex sur les réseaux sociaux",
+  "animation": {
+    "pause": "Mettre en pause",
+    "resume": "Relancer l’animation"
   }
 }

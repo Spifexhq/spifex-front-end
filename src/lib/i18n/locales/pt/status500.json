@@ -1,19 +1,16 @@
 {
   "documentTitle": "Status - 500",
   "heading": "Houve um erro, por favor tente novamente mais tarde",
-  "subtitle": "O servidor encontrou um erro interno e não pôde completar sua solicitação.",
+  "subtitle": "Algo não correu como esperado. Tente novamente ou volte à visão geral.",
   "actions": {
-    "backHome": "Voltar à página inicial"
+    "overview": "Ir para a visão geral",
+    "retry": "Tentar novamente"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "Erro 500",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "500 · Um pequeno imprevisto",
+  "footer": "Uma pequena pausa. Um caminho mais claro.",
+  "socialLabel": "Spifex nas redes sociais",
+  "animation": {
+    "pause": "Pausar animação",
+    "resume": "Reproduzir animação"
   }
 }

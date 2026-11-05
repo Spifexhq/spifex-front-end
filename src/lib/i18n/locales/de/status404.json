@@ -1,19 +1,16 @@
 {
   "documentTitle": "Status - 404",
   "heading": "Diese Seite existiert nicht",
-  "subtitle": "Möglicherweise wurde sie entfernt oder an eine andere Adresse verschoben.",
+  "subtitle": "Diese Seite hat sich verirrt. Prüfen Sie die Adresse oder kehren Sie auf vertraute Wege zurück.",
   "actions": {
-    "backHome": "Zur Startseite"
+    "overview": "Zur Übersicht",
+    "retry": "Erneut versuchen"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "404-Fehler",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "404 · Vom Weg abgekommen",
+  "footer": "Eine kleine Pause. Dann geht es klar weiter.",
+  "socialLabel": "Spifex in sozialen Medien",
+  "animation": {
+    "pause": "Animation pausieren",
+    "resume": "Animation abspielen"
   }
 }

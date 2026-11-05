@@ -1,19 +1,16 @@
 {
   "documentTitle": "Status - 500",
   "heading": "Something went wrong. Please try again later.",
-  "subtitle": "The server encountered an internal error and could not complete your request.",
+  "subtitle": "Something didn’t go as planned. Try again, or return to your overview.",
   "actions": {
-    "backHome": "Back to home"
+    "overview": "Go to overview",
+    "retry": "Try again"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "500 error",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "500 · A small hiccup",
+  "footer": "A little pause. A clearer way forward.",
+  "socialLabel": "Spifex on social media",
+  "animation": {
+    "pause": "Pause animation",
+    "resume": "Play animation"
   }
 }

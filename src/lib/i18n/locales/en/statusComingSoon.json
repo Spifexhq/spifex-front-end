@@ -1,26 +1,16 @@
 {
   "documentTitle": "Status - Coming Soon",
   "heading": "Coming soon",
-  "subtitle": "We’re polishing the final details before launch!",
+  "subtitle": "We’re putting the finishing touches on this space. In the meantime, your overview is ready for you.",
   "actions": {
-    "back": "Back to previous page"
+    "overview": "Go to overview",
+    "retry": "Try again"
   },
-  "timer": {
-    "days": "Days",
-    "hours": "Hours",
-    "minutes": "Minutes",
-    "seconds": "Seconds",
-    "expired": "Time’s up!"
-  },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "comingSoonAlt": "Coming soon",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "Something good is coming",
+  "footer": "A little pause. A clearer way forward.",
+  "socialLabel": "Spifex on social media",
+  "animation": {
+    "pause": "Pause animation",
+    "resume": "Play animation"
   }
 }

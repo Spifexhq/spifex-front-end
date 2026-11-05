@@ -1,19 +1,16 @@
 {
   "documentTitle": "Status - 404",
   "heading": "This page doesn’t exist",
-  "subtitle": "It may have been removed or moved to a different address.",
+  "subtitle": "This page has wandered off. Check the address, or let’s get you back to familiar ground.",
   "actions": {
-    "backHome": "Back to home"
+    "overview": "Go to overview",
+    "retry": "Try again"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "404 error",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "404 · Off the map",
+  "footer": "A little pause. A clearer way forward.",
+  "socialLabel": "Spifex on social media",
+  "animation": {
+    "pause": "Pause animation",
+    "resume": "Play animation"
   }
 }

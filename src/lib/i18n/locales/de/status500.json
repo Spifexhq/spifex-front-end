@@ -1,19 +1,16 @@
 {
   "documentTitle": "Status - 500",
   "heading": "Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.",
-  "subtitle": "Der Server ist auf einen internen Fehler gestoßen und konnte deine Anfrage nicht abschließen.",
+  "subtitle": "Etwas hat nicht wie geplant funktioniert. Versuchen Sie es erneut oder kehren Sie zur Übersicht zurück.",
   "actions": {
-    "backHome": "Zur Startseite"
+    "overview": "Zur Übersicht",
+    "retry": "Erneut versuchen"
   },
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
-  },
-  "images": {
-    "errorAlt": "500-Fehler",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "badge": "500 · Ein kleiner Stolperer",
+  "footer": "Eine kleine Pause. Dann geht es klar weiter.",
+  "socialLabel": "Spifex in sozialen Medien",
+  "animation": {
+    "pause": "Animation pausieren",
+    "resume": "Animation abspielen"
   }
 }

@@ -1,16 +1,16 @@
 {
   "documentTitle": "Status - Manutenção",
   "heading": "O site está atualmente em manutenção",
-  "subtitle": "Pedimos desculpas por qualquer inconveniente causado.",
-  "social": {
-    "facebook": "Facebook",
-    "x": "X",
-    "instagram": "Instagram"
+  "subtitle": "Estamos a fazer alguns ajustes no Spifex. Volte a tentar dentro de pouco tempo.",
+  "badge": "Pequenos ajustes",
+  "footer": "Uma pequena pausa. Um caminho mais claro.",
+  "socialLabel": "Spifex nas redes sociais",
+  "animation": {
+    "pause": "Pausar animação",
+    "resume": "Reproduzir animação"
   },
-  "images": {
-    "maintenanceAlt": "Manutenção",
-    "facebookAlt": "Facebook",
-    "xAlt": "X",
-    "instagramAlt": "Instagram"
+  "actions": {
+    "overview": "Ir para a visão geral",
+    "retry": "Tentar novamente"
   }
 }
