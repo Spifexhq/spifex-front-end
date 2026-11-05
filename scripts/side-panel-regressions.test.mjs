@@ -9,7 +9,7 @@ const react={Children:{toArray:children=>(Array.isArray(children)?children:[chil
 const form=()=>null;
 function load(file,modules={}) {
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
- const context=vm.createContext({exports:{},require:name=>({'react':react,'react/jsx-runtime':jsx,'./SidePanelFrame':{SidePanelFrame:'frame',SidePanelHeader:'header'},'./SidePanelForm':{SidePanelForm:form,SidePanelHint:'hint'},...modules})[name]});
+ const context=vm.createContext({exports:{},require:name=>({'react':react,'react/jsx-runtime':jsx,'react-i18next':{useTranslation:()=>({t:key=>key})},'@/shared/ui/Button':{default:'button'},'./SidePanelFrame':{SidePanelFrame:'frame',SidePanelHeader:'header'},'./SidePanelForm':{SidePanelForm:form,SidePanelHint:'hint'},...modules})[name]});
  vm.runInContext(code,context);return context.exports.default;
 }
 const Panel=load('src/components/Modal/SidePanel/SidePanel.tsx');
@@ -31,4 +31,17 @@ test('preview details share Accounting label/value rows and preserve zero values
  assert.equal(result.type,'dl');assert.match(result.props.className,/divide-y/);
  assert.equal(result.props.children[0].props.children[1].props.children,0);
  assert.equal(result.props.children[1].props.children[1].props.children,'—');
+});
+
+
+test('every preview gets a mobile close action even without other footer actions', () => {
+ const walk = node => !node || typeof node !== 'object' ? [] : [node, ...[node.props?.children].flat(Infinity).flatMap(walk)];
+ for (const footer of [undefined, element('button', { children: 'Edit' })]) {
+  const nodes = walk(Panel({ ...base, footer }));
+  const mobile = nodes.find(node => node.type === 'span' && node.props.className === 'md:hidden!');
+  assert.ok(mobile);
+  assert.equal(mobile.props.children.props.onClick, base.onClose);
+  const footerNode = nodes.find(node => node.type === 'footer');
+  assert.equal(footerNode.props.className.includes('md:hidden!'), !footer);
+ }
 });

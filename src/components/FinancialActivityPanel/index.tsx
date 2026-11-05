@@ -56,7 +56,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
    bankOptions, removeChip,
  } = useActivityFilters({initial: filters, onApply, contextSettlement, shortcutsEnabled, enabled: showFilters});
  return <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
-  {(showBanks || showMetrics) && <div className="max-h-[55%] shrink-0 overflow-y-auto overscroll-contain">
+  {(showBanks || showMetrics) && <div className="shrink-0 overflow-hidden">
     <section aria-label={t("kpiCards:overview.title")} className="min-w-0">
       <div className="flex items-center gap-1 px-4 pt-3 sm:px-5">
         <h2 className="text-xs font-semibold text-gray-600">{t("kpiCards:overview.title")}</h2>
@@ -92,13 +92,13 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
             {t("banksTable:manage")}<ArrowUpRight size={12} aria-hidden />
           </button>
         </div>
-        <div className="max-h-44 overflow-y-auto overscroll-contain px-4 pb-2 sm:px-5">
+        <div className="max-h-[min(11rem,20dvh)] overflow-y-auto overscroll-contain px-4 pb-2 sm:px-5">
           {bankState.loading ? <p role="status" className="py-4 text-xs text-gray-500">{t("banksTable:aria.loading")}</p>
           : bankState.error ? <div role="status" className="flex items-center justify-between gap-3 py-3"><p className="text-xs text-red-700">{bankState.error}</p><Button variant="outline" size="xs" onClick={() => retryBanks()}>{t("kpiCards:overview.retry")}</Button></div>
           : !bankRows.length ? <p className="py-4 text-xs text-gray-500">{t("banksTable:empty")}</p>
-          : <ul className="divide-y divide-gray-100">{bankRows.map(bank => <li key={bank.id} className="flex items-center justify-between gap-3 py-2">
+          : <ul className="divide-y divide-gray-100">{bankRows.map(bank => <li key={bank.id} className="flex items-center justify-between gap-3 py-1">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-[10px] font-semibold text-gray-500">{getInitials(bank.institution)}</span>
+              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-[10px] font-semibold text-gray-500">{getInitials(bank.institution)}</span>
               <div className="min-w-0"><div className="truncate text-xs font-medium text-gray-800">{bank.institution}</div>
                 <div className="truncate text-[11px] text-gray-500">{bank.iban || t("banksTable:labels.branchAccount", { branch: bank.branch || "—", account: bank.account_number || "—" })}</div>
               </div>

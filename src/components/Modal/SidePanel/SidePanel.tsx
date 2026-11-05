@@ -1,4 +1,6 @@
 import { Children, isValidElement, useEffect, useId, type ReactNode, type RefObject } from "react";
+import { useTranslation } from "react-i18next";
+import Button from "@/shared/ui/Button";
 import { SidePanelFrame, SidePanelHeader } from "./SidePanelFrame";
 import { SidePanelForm, SidePanelHint } from "./SidePanelForm";
 
@@ -44,6 +46,7 @@ export default function SidePanel({
   showFooterHint = false,
   mode, busy = false, tabs, dialogRef, overlay,
 }: Props) {
+  const { t } = useTranslation("common");
   const generatedId = useId();
   const titleId = `side-panel-${generatedId.replace(/:/g, "")}`;
 
@@ -80,27 +83,18 @@ export default function SidePanel({
       >{tabs}</SidePanelHeader>
       {editing ? children : (
         <div className="settings-modal-form flex min-h-0 flex-1 flex-col overflow-hidden">
-          {footer ? (
-            <>
-              <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
-                <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>{children}</div>
-              </div>
-              <footer className="settings-modal-footer">
-                <div className="settings-modal-footer-layout" style={!showFooterHint ? { justifyContent: "flex-end" } : undefined}>
-                  {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? (typeof subtitle === "string" ? subtitle : undefined)} />}
-                  <div className="settings-modal-action-buttons">
-                    {footer}
-                  </div>
-                </div>
-              </footer>
-            </>
-          ) : (
-            <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
-              <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>
-                {children}
+          <div className="settings-modal-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className={`settings-modal-inner min-w-0 ${contentClassName}`}>{children}</div>
+          </div>
+          <footer className={`settings-modal-footer ${!footer ? "md:hidden!" : ""}`}>
+            <div className="settings-modal-footer-layout" style={!showFooterHint ? { justifyContent: "flex-end" } : undefined}>
+              {showFooterHint && <SidePanelHint recordLabel={recordLabel ?? title} recordName={recordName ?? (typeof subtitle === "string" ? subtitle : undefined)} />}
+              <div className="settings-modal-action-buttons">
+                <span className="md:hidden!"><Button variant="cancel" disabled={busy} onClick={onClose}>{t("modal.close")}</Button></span>
+                {footer}
               </div>
             </div>
-          )}
+          </footer>
         </div>
       )}
       {overlay}

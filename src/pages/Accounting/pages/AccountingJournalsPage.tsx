@@ -508,7 +508,7 @@ const AccountingJournalsPage: React.FC = () => {
       </SidePanel>
       <SidePanel  isOpen={!!selectedJournal} onClose={() => setSelectedJournal(null)} title={t("redesign.journalDetails", "Journal details")} subtitle={selectedJournal?.entry_number || selectedJournal?.id}
         recordLabel={t("footer.journal", "Journal")} recordName={selectedJournal?.entry_number || selectedJournal?.id}
-        footer={<Button type="button" variant="cancel" className="w-full md:w-auto" onClick={() => setSelectedJournal(null)}>{t("modal.close", "Close")}</Button>}>
+        >
         {selectedJournal && <div className="space-y-6">
           <SidePanelDetails fields={[[t("journalsPage.columns.book", "Book"), selectedJournal.book_code], [t("journalsPage.columns.status", "Status"), t(`enums.status.${selectedJournal.status}`, selectedJournal.status)], [t("journalsPage.columns.postingDate", "Posting date"), selectedJournal.posting_date], [t("common.currency", "Currency"), selectedJournal.currency_code]].map(([label,value]) => ({label,value}))} />
           {selectedJournal.memo && <p className="text-[13px] leading-6 text-gray-600">{selectedJournal.memo}</p>}
