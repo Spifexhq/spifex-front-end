@@ -37,5 +37,5 @@ export type LiveSyncEnvelope<
 export function isLiveSyncEnvelope(x: unknown): x is LiveSyncEnvelope {
   if (!x || typeof x !== "object") return false;
   const o = x as Record<string, unknown>;
-  return typeof o.v === "number" && typeof o.type === "string" && typeof o.id === "string";
+  return o.v === 1 && typeof o.type === "string" && typeof o.id === "string" && !!o.id && typeof o.ts === "string" && !!o.scope && typeof o.scope === "object";
 }

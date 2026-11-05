@@ -1,3 +1,4 @@
+import { getAuthGeneration } from "@/lib/authGeneration";
 // src/api/auth.ts
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,12 +8,9 @@ import type { RootState } from "@/redux/store";
 import { api } from "@/api/requests";
 
 import {
-  setUser,
-  setUserOrganization,
+  setAuthSnapshot,
   setIsSubscribed,
-  setPermissions,
   resetAuth,
-  setOrgExternalId,
 } from "@/redux";
 
 import {
@@ -20,12 +18,14 @@ import {
   setTokens,
   clearTokens,
   setOrgExternalIdStored,
+  getOrgExternalIdStored,
   clearOrgExternalIdStored,
   getUserIdStored,
   setUserIdStored,
   clearUserIdStored,
   ORG_EXTERNAL_ID_STORAGE_KEY,
   USER_ID_STORAGE_KEY,
+  reloadStoredIdentity,
 } from "@/lib/tokens";
 
 import { clearHttpCaches, AUTH_SYNC_EVENT, SUBSCRIPTION_BLOCKED_EVENT } from "@/lib/http";
@@ -33,6 +33,7 @@ import type { ApiErrorBody } from "@/models/Api";
 import type { SignInResponse, MfaRequiredPayload } from "@/models/auth/auth";
 
 const AUTH_HINT_KEY = "auth_status";
+const AUTH_SESSION_KEY = "spifex:auth-session";
 const AUTH_BOOTSTRAP_FAILED_KEY = "spifex:auth_bootstrap_failed";
 
 const AUTH_SYNC_MIN_GAP_MS = 5_000;
@@ -144,6 +145,7 @@ export const useAuth = () => {
   }, [auth.user]);
 
   const syncInFlight = useRef<Promise<void> | null>(null);
+  const syncQueued = useRef(false);
   const lastSyncAt = useRef<number>(0);
 
   const applyUserSnapshot = useCallback(
@@ -151,13 +153,9 @@ export const useAuth = () => {
       const uid = String(payload.user?.id || "").trim();
       lockUserIdStrict(uid);
 
-      dispatch(setUser(payload.user));
-      dispatch(setUserOrganization(payload.organization));
-      dispatch(setIsSubscribed(Boolean(payload.is_subscribed)));
-      dispatch(setPermissions(payload.permissions ?? []));
-
       const orgExt = payload.organization?.organization?.id ?? null;
-      dispatch(setOrgExternalId(orgExt));
+      if (orgExt !== (getOrgExternalIdStored() || null)) clearHttpCaches();
+      dispatch(setAuthSnapshot(payload));
 
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
@@ -169,6 +167,9 @@ export const useAuth = () => {
   );
 
   const clearClientSession = useCallback(() => {
+    syncInFlight.current = null;
+    syncQueued.current = false;
+    authUserRef.current = null;
     dispatch(resetAuth());
 
     clearTokens();
@@ -184,12 +185,12 @@ export const useAuth = () => {
   }, [dispatch]);
 
   const handleSignOut = useCallback(async () => {
+    clearClientSession();
     try {
       await api.signOut();
     } catch {
       //
     } finally {
-      clearClientSession();
       setIsAuthResolved(true);
     }
   }, [clearClientSession]);
@@ -209,26 +210,32 @@ export const useAuth = () => {
       if (!opts?.force && now - lastSyncAt.current < AUTH_SYNC_MIN_GAP_MS) return;
       lastSyncAt.current = now;
 
-      if (syncInFlight.current) return syncInFlight.current;
+      if (syncInFlight.current) { syncQueued.current = true; return syncInFlight.current; }
+      const generation = getAuthGeneration();
 
       syncInFlight.current = (async () => {
         try {
           // Do not request access tokens from other tabs.
           // Each tab should recover its own memory-only access token through /auth/refresh/
           // using the HttpOnly refresh/session cookies.
-          const res = await api.getUser();
-          applyUserSnapshot(res.data);
+          do {
+            syncQueued.current = false;
+            const res = await api.getUser();
+            if (generation !== getAuthGeneration()) return;
+            applyUserSnapshot(res.data);
+          } while (syncQueued.current);
 
           emitAuthSync(opts?.reason || "sync_auth");
         } catch (err) {
           console.warn("Auth sync failed:", opts?.reason || "unknown", err);
 
+          if (generation !== getAuthGeneration()) return;
           if (shouldHardSignOut(err)) {
             clearAuthHint();
             await handleSignOut();
           }
         } finally {
-          syncInFlight.current = null;
+          if (generation === getAuthGeneration()) syncInFlight.current = null;
         }
       })();
 
@@ -256,25 +263,21 @@ export const useAuth = () => {
       if (!access) throw new Error("Missing access token");
 
       const uid = String(data.user?.id || "").trim();
-      if (uid) setUserIdStored(uid);
-      else clearUserIdStored();
+      if (!uid) throw new Error("Missing user identity");
+      setUserIdStored(uid);
 
       // Memory-only access token. tokens.ts no longer persists this value.
       setTokens(access);
       setAuthHintActive();
       clearBootstrapFailedFlag();
 
-      dispatch(setUser(data.user));
-      dispatch(setUserOrganization(data.organization));
-      dispatch(setIsSubscribed(Boolean(data.is_subscribed)));
-      dispatch(setPermissions(data.permissions ?? []));
-
+      dispatch(setAuthSnapshot(data));
       const orgExt = data.organization?.organization?.id ?? null;
-      dispatch(setOrgExternalId(orgExt));
 
       if (orgExt) setOrgExternalIdStored(orgExt);
       else clearOrgExternalIdStored();
 
+      try { localStorage.setItem(AUTH_SESSION_KEY, `${Date.now()}:${Math.random()}`); } catch { /* Storage may be blocked. */ }
       emitAuthSync("signed_in");
       setIsAuthResolved(true);
     },
@@ -283,7 +286,10 @@ export const useAuth = () => {
 
   const handleSignIn = useCallback(
     async (email: string, password: string) => {
+      clearClientSession();
+      const generation = getAuthGeneration();
       const res = await api.signIn({ email, password });
+      if (generation !== getAuthGeneration()) throw new Error("Authentication was superseded");
 
       if (isMfaRequiredPayload(res.data)) {
         // MFA challenge is not an authenticated session yet.
@@ -296,12 +302,14 @@ export const useAuth = () => {
       applySignInSnapshot(res.data);
       return res;
     },
-    [applySignInSnapshot],
+    [applySignInSnapshot, clearClientSession],
   );
 
   const handleVerifyTwoFactor = useCallback(
     async (args: { challenge_id: string; code: string }) => {
+      const generation = getAuthGeneration();
       const res = await api.signInVerify2FA(args);
+      if (generation !== getAuthGeneration()) throw new Error("Authentication was superseded");
       applySignInSnapshot(res.data);
       return res;
     },
@@ -324,31 +332,17 @@ export const useAuth = () => {
     const onStorage = (event: StorageEvent) => {
       if (!event.key) return;
 
-      if (event.key === AUTH_HINT_KEY) {
-        if (event.newValue === "active") {
-          void syncAuth({ force: true, reason: "storage_active" }).finally(() => {
-            setIsAuthResolved(true);
-          });
-          return;
-        }
-
-        if (event.oldValue === "active" && event.newValue !== "active") {
-          dispatch(resetAuth());
-          clearTokens();
-          clearOrgExternalIdStored();
-          clearUserIdStored();
-          clearHttpCaches();
-          setIsAuthResolved(true);
-        }
-
-        return;
-      }
-
-      if (event.key === ORG_EXTERNAL_ID_STORAGE_KEY || event.key === USER_ID_STORAGE_KEY) {
+      if (event.key === AUTH_SESSION_KEY || event.key === AUTH_HINT_KEY || event.key === USER_ID_STORAGE_KEY || event.key === ORG_EXTERNAL_ID_STORAGE_KEY) {
+        clearTokens();
+        clearHttpCaches();
+        syncInFlight.current = null;
+        reloadStoredIdentity();
+        dispatch(resetAuth());
+        authUserRef.current = null;
         if (getAuthHintActive()) {
-          void syncAuth({ force: true, reason: "storage_identity_change" }).finally(() => {
-            setIsAuthResolved(true);
-          });
+          void syncAuth({ force: true, reason: "storage_identity_change" }).finally(() => setIsAuthResolved(true));
+        } else {
+          setIsAuthResolved(true);
         }
       }
     };
@@ -388,7 +382,9 @@ export const useAuth = () => {
         reason === "refresh_user_missing" ||
         reason === "session_not_valid" ||
         reason === "token_not_valid" ||
-        reason === "authentication_failed"
+        reason === "authentication_failed" ||
+        reason === "refresh_missing" ||
+        reason === "password_changed"
       ) {
         void handleSignOut();
       }
@@ -406,6 +402,18 @@ export const useAuth = () => {
       window.removeEventListener(SUBSCRIPTION_BLOCKED_EVENT, onSubscriptionBlocked as EventListener);
     };
   }, [dispatch, handleSignOut]);
+
+  useEffect(() => {
+    let lastRecovery = 0;
+    const recover = () => {
+      if (document.hidden || Date.now() - lastRecovery < AUTH_SYNC_MIN_GAP_MS) return;
+      lastRecovery = Date.now();
+      void syncAuth({ force: true, reason: "connection_recovered" });
+    };
+    window.addEventListener("online", recover);
+    window.addEventListener("focus", recover);
+    return () => { window.removeEventListener("online", recover); window.removeEventListener("focus", recover); };
+  }, [syncAuth]);
 
   const accessToken = getAccess();
 

@@ -1,27 +1,12 @@
-// src/lib/ws/url.ts
-type BuildOpts = { token: string; orgExternalId?: string | null };
-
-function normalizeWsBase(raw: string): string {
-  const v = (raw || "").trim();
-  if (!v) throw new Error("Missing VITE_WS_BASE_URL");
-
-  if (/^wss?:[^/]/i.test(v)) {
-    const scheme = v.startsWith("wss:") ? "wss://" : "ws://";
-    return scheme + v.replace(/^wss?:/i, "");
-  }
-  if (/^https?:\/\//i.test(v)) return v.replace(/^http/i, "ws");
-  if (!/^[a-z]+:\/\//i.test(v)) return "ws://" + v;
-  return v;
-}
-
-export function buildWsUrl({ token, orgExternalId }: BuildOpts): string {
-  const baseRaw = import.meta.env.VITE_WS_BASE_URL as string | undefined;
-  const base = normalizeWsBase(baseRaw || "");
-
-  const url = new URL(base);
+type BuildOpts = { ticket: string };
+export function buildWsUrl({ ticket }: BuildOpts): string {
+  const raw = String(import.meta.env.VITE_WS_BASE_URL || "").trim().replace(/^http/i, "ws");
+  const url = new URL(raw);
+  if (!["ws:", "wss:"].includes(url.protocol) || url.username || url.password) throw new Error("Invalid WebSocket URL");
+  if (import.meta.env.PROD && url.protocol !== "wss:") throw new Error("Production live sync requires WSS");
   url.pathname = "/ws/v1/stream/";
-  url.searchParams.set("token", token);
-  if (orgExternalId) url.searchParams.set("org", orgExternalId);
-
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("ticket", ticket);
   return url.toString();
 }

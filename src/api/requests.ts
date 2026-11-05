@@ -214,7 +214,7 @@ export const api = {
 
   /* --- User --- */
   getUser: () =>
-    request<GetUserResponse>("identity/profile/", "GET"),
+    request<GetUserResponse>("identity/profile/", "GET", undefined, { fresh: true, skipAuthGate: true }),
 
   editUser:(payload: Partial<User>) =>
     request<User>("identity/profile/", "PUT", payload),

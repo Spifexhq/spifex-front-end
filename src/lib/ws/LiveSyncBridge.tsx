@@ -1,11 +1,10 @@
 // src/lib/ws/LiveSyncBridge.tsx
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
 
 import { useSpifexWebSocket } from "@/lib/ws/useSpifexWebSocket";
 import type { LiveSyncEnvelope } from "@/lib/ws/types";
-import { getAccess } from "@/lib/tokens";
-import { setAuthGate, clearAuthGate } from "@/lib/http";
+import { setAuthGate, clearAuthGate, clearHttpCaches } from "@/lib/http";
 import { setIsSubscribed } from "@/redux";
 
 type Props = {
@@ -18,18 +17,27 @@ export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAu
   const dispatch = useDispatch();
   const gatePromiseRef = useRef<Promise<void> | null>(null);
 
-  const tokenProvider = useCallback(() => getAccess(), []);
+  const queued = useRef(false);
+  const seen = useRef(new Set<string>());
+  useEffect(() => { seen.current.clear(); }, [orgExternalId]);
 
   const runGatedSync = useCallback(
     (reason: string) => {
-      const p = Promise.resolve(syncAuth({ force: true, reason })) as Promise<void>;
+      if (gatePromiseRef.current) { queued.current = true; return; }
+      const p = (async () => {
+        do {
+          queued.current = false;
+          clearHttpCaches();
+          await syncAuth({ force: true, reason });
+        } while (queued.current);
+      })();
       gatePromiseRef.current = p;
       setAuthGate(p);
 
-      p.finally(() => {
+      void p.catch(() => undefined).finally(() => {
         if (gatePromiseRef.current === p) {
           gatePromiseRef.current = null;
-          clearAuthGate();
+          clearAuthGate(p);
         }
       });
     },
@@ -38,6 +46,9 @@ export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAu
 
   const handleEvent = useCallback(
     (ev: LiveSyncEnvelope) => {
+      if (seen.current.has(ev.id)) return;
+      seen.current.add(ev.id);
+      if (seen.current.size > 500) seen.current.delete(seen.current.values().next().value!);
       const t = ev.type;
 
       // Multi-tenant safety: ignore events for a different org.
@@ -73,10 +84,10 @@ export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAu
 
   useSpifexWebSocket({
     enabled: wsEnabled,
-    tokenProvider,
     orgExternalId,
     onEvent: handleEvent,
     onAuthError,
+    onConnected: () => runGatedSync("ws_connected"),
   });
 
   return null;

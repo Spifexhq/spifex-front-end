@@ -10,7 +10,7 @@ export interface User {
   is_superuser?: boolean;
   is_email_verified: boolean;
   date_joined: string;
-  verified_at: string;
+  verified_at: string | null;
   last_password_change: string | null;
 }
 

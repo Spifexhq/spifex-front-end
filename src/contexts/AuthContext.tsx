@@ -9,6 +9,7 @@ export interface AuthContextType {
   organization: UserOrganizationDetail | null;
 
   isLogged: boolean;
+  isAuthResolved: boolean;
   isOwner: boolean;
   isSuperUser: boolean;
   isStaff: boolean;

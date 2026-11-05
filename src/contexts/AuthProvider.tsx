@@ -49,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     handleResendTwoFactor,
     handleSignOut,
     syncAuth,
+    isAuthResolved,
   } = useAuthHook();
   const userInfo = useCombinedUserInfo();
 
@@ -60,6 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const authContextValue = useMemo(
     () => ({
       ...userInfo,
+      isAuthResolved,
       handleInitUser,
       handleSignIn,
       handleVerifyTwoFactor,
@@ -69,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }),
     [
       userInfo,
-      handleInitUser,
+      isAuthResolved,      handleInitUser,
       handleSignIn,
       handleVerifyTwoFactor,
       handleResendTwoFactor,

@@ -1,3 +1,4 @@
+import { advanceAuthGeneration } from "./authGeneration";
 // src/lib/tokens.ts
 
 export const ORG_EXTERNAL_ID_STORAGE_KEY = "spx_tenant";
@@ -18,8 +19,10 @@ function getLocalStorage(): Storage | null {
 
 function loadFrom(storage: Storage | null, key: string): string {
   if (!storage) return "";
-  const value = storage.getItem(key);
-  return typeof value === "string" ? value : "";
+  try {
+    const value = storage.getItem(key);
+    return typeof value === "string" ? value : "";
+  } catch { return ""; }
 }
 
 // Access token is memory-only.
@@ -36,6 +39,7 @@ export const setTokens = (access: string): void => {
 
 export const clearTokens = (): void => {
   _access = "";
+  advanceAuthGeneration();
 };
 
 // -----------------------------------------------------------------------------
@@ -51,8 +55,10 @@ export const setOrgExternalIdStored = (externalId: string): void => {
   const storage = getLocalStorage();
   if (!storage) return;
 
-  if (value) storage.setItem(ORG_EXTERNAL_ID_STORAGE_KEY, value);
-  else storage.removeItem(ORG_EXTERNAL_ID_STORAGE_KEY);
+  try {
+    if (value) storage.setItem(ORG_EXTERNAL_ID_STORAGE_KEY, value);
+    else storage.removeItem(ORG_EXTERNAL_ID_STORAGE_KEY);
+  } catch { /* Memory state remains usable when storage is blocked. */ }
 };
 
 export const clearOrgExternalIdStored = (): void => {
@@ -72,10 +78,16 @@ export const setUserIdStored = (userId: string): void => {
   const storage = getLocalStorage();
   if (!storage) return;
 
-  if (value) storage.setItem(USER_ID_STORAGE_KEY, value);
-  else storage.removeItem(USER_ID_STORAGE_KEY);
+  try {
+    if (value) storage.setItem(USER_ID_STORAGE_KEY, value);
+    else storage.removeItem(USER_ID_STORAGE_KEY);
+  } catch { /* Memory state remains usable when storage is blocked. */ }
 };
 
 export const clearUserIdStored = (): void => {
   setUserIdStored("");
 };
+export function reloadStoredIdentity() {
+  _orgExternalId = loadFrom(getLocalStorage(), ORG_EXTERNAL_ID_STORAGE_KEY);
+  _userId = loadFrom(getLocalStorage(), USER_ID_STORAGE_KEY);
+}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/api/auth";
+import { useAuthContext } from "@/hooks/useAuth";
 
 type Props = {
   children: ReactNode;
@@ -13,7 +13,7 @@ export default function GuestOnlyMiddleware({
   redirectTo = "/cashflow",
   fallback = null,
 }: Props) {
-  const { isLogged, isAuthResolved } = useAuth();
+  const { isLogged, isAuthResolved } = useAuthContext();
 
   if (!isAuthResolved) {
     return <>{fallback}</>;

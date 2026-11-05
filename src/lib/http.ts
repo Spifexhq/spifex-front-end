@@ -1,3 +1,4 @@
+import { getAuthGeneration } from "./authGeneration";
 /* -----------------------------------------------------------------------------
  * File: src/lib/http.ts
  * ---------------------------------------------------------------------------- */
@@ -17,7 +18,6 @@ import {
   getOrgExternalIdStored,
   getUserIdStored,
   setUserIdStored,
-  clearUserIdStored,
 } from "@/lib/tokens";
 import "@/lib/netReport";
 import { store } from "@/redux/store";
@@ -95,6 +95,8 @@ function sanitizeUrl(fullUrl: string): string {
       }
     }
 
+    const sensitivePath = /\/(reset-password|verify-pending-password|verify-email|password\/reset|verify-change)\//;
+    if (sensitivePath.test(urlObj.pathname)) { urlObj.pathname = urlObj.pathname.replace(/(\/(?:reset-password|verify-pending-password|verify-email|password\/reset|verify-change)\/).*/, "$1[REDACTED]"); changed = true; }
     if (!changed) return fullUrl;
     return hasProtocol ? urlObj.toString() : urlObj.pathname + urlObj.search;
   } catch {
@@ -110,8 +112,8 @@ let gate: Promise<void> | null = null;
 export function setAuthGate(p: Promise<void>) {
   gate = p;
 }
-export function clearAuthGate() {
-  gate = null;
+export function clearAuthGate(expected?: Promise<void>) {
+  if (!expected || gate === expected) gate = null;
 }
 
 export async function waitAuthGate(timeoutMs = 4000): Promise<void> {
@@ -138,15 +140,18 @@ export async function waitAuthGate(timeoutMs = 4000): Promise<void> {
 export const http = axios.create({
   baseURL,
   withCredentials: true,
+  timeout: 20_000,
 });
 
 const startAt = new WeakMap<AxiosRequestConfig, number>();
 
 http.interceptors.request.use(async (cfg) => {
+  const stamped = cfg as AxiosRequestConfig & { _authGeneration?: number };
+  stamped._authGeneration ??= getAuthGeneration();
   const method = ((cfg.method || "GET").toUpperCase() as Method) ?? "GET";
   const url = cfg.url || "";
 
-  if (!String(url).includes("/auth/")) {
+  if (!(cfg as AxiosRequestConfig & { _skipAuthGate?: boolean })._skipAuthGate && !/(^|\/)auth\//.test(String(url))) {
     await waitAuthGate(4000);
   }
 
@@ -156,6 +161,7 @@ http.interceptors.request.use(async (cfg) => {
     await new Promise((r) => setTimeout(r, pauseUntil - Date.now()));
   }
 
+  if (stamped._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale request discarded");
   startAt.set(cfg, typeof performance !== "undefined" ? performance.now() : Date.now());
 
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
@@ -166,7 +172,7 @@ http.interceptors.request.use(async (cfg) => {
     window.NetReport?.push({
       t: Date.now(),
       method,
-      url,
+      url: sanitizeUrl(url),
       fullUrl: safeUrl,
       reqId: typeof headers["X-Request-Id"] === "string" ? (headers["X-Request-Id"] as string) : undefined,
     });
@@ -298,7 +304,7 @@ function finishLog(cfg: AxiosRequestConfig, res?: AxiosResponse, err?: AxiosErro
     window.NetReport?.push({
       t: Date.now(),
       method: (cfg.method || "GET").toUpperCase() as Method,
-      url: cfg.url || "",
+      url: sanitizeUrl(cfg.url || ""),
       fullUrl: safeUrl,
       status,
       ms,
@@ -326,23 +332,19 @@ function unwrapRefreshPayload(payload: unknown): RefreshPayload | null {
 }
 
 let refreshingPromise: Promise<void> | null = null;
-const refreshSubscribers: Array<() => void> = [];
-
-function notifyRefreshSubscribers() {
-  refreshSubscribers.splice(0).forEach((fn) => fn());
-}
-
 const REFRESH_FATAL_REASONS = new Set([
   "refresh_user_mismatch",
   "refresh_user_missing",
   "session_not_valid",
   "token_not_valid",
-  "refresh_failed",
+  "refresh_missing",
+  "password_changed",
 ]);
 
 const rawHttp = axios.create({
   baseURL,
   withCredentials: true,
+  timeout: 20_000,
   validateStatus: (s) => s < 500,
 });
 
@@ -367,14 +369,17 @@ for (const client of [http, rawHttp]) client.interceptors.request.use(async cfg 
 });
 
 async function doRefresh(): Promise<void> {
+  const generation = getAuthGeneration();
   const res = await rawHttp.post("auth/refresh/", {});
+  if (generation !== getAuthGeneration()) throw new axios.CanceledError("Identity changed during refresh");
 
   const { data, status } = res as AxiosResponse<unknown>;
 
   if (status !== 200) {
     // If backend used the envelope error format, preserve the code as a reason.
     const code = extractApiErrorCode(data);
-    throw new Error(code || "refresh_failed");
+    if (status === 401) throw new Error(code || "token_not_valid");
+    throw new Error(`refresh_temporarily_unavailable:${status}`);
   }
 
   const parsed = unwrapRefreshPayload(data);
@@ -397,6 +402,28 @@ async function doRefresh(): Promise<void> {
   emitWindowEvent(AUTH_SYNC_EVENT, { reason: "token_refreshed" });
 }
 
+export function refreshAccess(): Promise<void> {
+  if (!refreshingPromise) {
+    const generation = getAuthGeneration();
+    const run = () => {
+      if (generation !== getAuthGeneration()) throw new axios.CanceledError("Identity changed before refresh");
+      return doRefresh();
+    };
+    // Tabs share rotating cookies. Serialize exchanges without sharing access JWTs.
+    const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+    const task = locks ? locks.request("spifex:refresh", run) : run();
+    const promise = task.catch(error => {
+      if (generation === getAuthGeneration() && error instanceof Error && REFRESH_FATAL_REASONS.has(error.message)) {
+        clearTokens();
+        emitWindowEvent(AUTH_SYNC_EVENT, { reason: error.message });
+      }
+      throw error;
+    }).finally(() => { if (refreshingPromise === promise) refreshingPromise = null; });
+    refreshingPromise = promise;
+  }
+  return refreshingPromise;
+}
+
 type RetriableConfig = AxiosRequestConfig & { _retry?: boolean; _retried429?: number };
 
 function isProfileUrl(url: string): boolean {
@@ -404,7 +431,7 @@ function isProfileUrl(url: string): boolean {
 }
 
 function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig): boolean {
-  if (cfg._retry) return false;
+  if (cfg._retry || /(?:^|\/)auth\/(?:signin|signup|signout|csrf)(?:\/|$)/.test(cfg.url || "")) return false;
 
   if (status === 401) return true;
 
@@ -421,11 +448,13 @@ function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig):
 
 http.interceptors.response.use(
   (r) => {
+    if ((r.config as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale response discarded");
     finishLog(r.config, r);
     return r;
   },
   async (error: AxiosError) => {
     const original = (error.config || {}) as RetriableConfig;
+    if ((original as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== undefined && (original as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale response discarded");
     const status = error.response?.status;
 
     if (axios.isAxiosError(error) && isSubscriptionBlocked(error)) {
@@ -448,9 +477,9 @@ http.interceptors.response.use(
         retryAfterMs: delay,
       });
 
-      setGlobalPause(delay * 1.1);
+      if (/^(GET|HEAD|OPTIONS)$/i.test(original.method || "GET")) setGlobalPause(Math.min(delay * 1.1, 60_000));
 
-      if (original._retried429 <= 3) {
+      if (/^(GET|HEAD|OPTIONS)$/i.test(original.method || "GET") && original._retried429 <= 2) {
         await new Promise((r) => setTimeout(r, delay));
         return http(original);
       }
@@ -459,28 +488,7 @@ http.interceptors.response.use(
     if (shouldTryRefreshOnce(status, original)) {
       original._retry = true;
 
-      if (!refreshingPromise) {
-        refreshingPromise = doRefresh()
-          .catch((e) => {
-            clearTokens();
-            clearUserIdStored();
-
-            const msg = e instanceof Error ? (e.message || "").trim() : "";
-            const reason = REFRESH_FATAL_REASONS.has(msg) ? msg : "refresh_failed";
-
-            emitWindowEvent(AUTH_SYNC_EVENT, { reason });
-            throw e;
-          })
-          .finally(() => {
-            notifyRefreshSubscribers();
-            refreshingPromise = null;
-          });
-      }
-
-      await new Promise<void>((resolve, reject) => {
-        refreshSubscribers.push(resolve);
-        refreshingPromise?.catch(reject);
-      });
+      await refreshAccess();
 
       if (!getAccess()) {
         finishLog(original, undefined, error);
@@ -538,7 +546,9 @@ function pruneParams(p: unknown) {
   return out;
 }
 
+let cacheGeneration = 0;
 export function clearHttpCaches() {
+  cacheGeneration++;
   inflight.clear();
   responseCache.clear();
   lastByScope.clear();
@@ -549,12 +559,16 @@ function normalizeEndpoint(ep: string): string {
   return String(ep || "").replace(/^\/+/, "");
 }
 
-export async function request<T>(endpoint: string, method: Method = "GET", payload?: object): Promise<ApiSuccess<T>> {
+export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean }): Promise<ApiSuccess<T>> {
   try {
     const ep = normalizeEndpoint(endpoint);
+    const generation = getAuthGeneration();
+    const cacheVersion = cacheGeneration;
+    const organization = readOrgExternalId();
 
     const cfg: AxiosRequestConfig = {
       url: ep,
+      ...({ _skipAuthGate: options?.skipAuthGate, _authGeneration: generation } as AxiosRequestConfig),
       method,
       data: method !== "GET" ? payload : undefined,
       params: method === "GET" ? pruneParams(payload) : undefined,
@@ -563,7 +577,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
 
     let res: AxiosResponse<unknown>;
 
-    if ((cfg.method || "GET").toUpperCase() === "GET") {
+    if ((cfg.method || "GET").toUpperCase() === "GET" && !options?.fresh) {
       const k = keyFrom(cfg);
 
       const hit = responseCache.get(k);
@@ -571,7 +585,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
         res = hit.res;
       } else {
         if (!inflight.has(k)) {
-          inflight.set(k, http.request(cfg).finally(() => inflight.delete(k)));
+          inflight.set(k, http.request(cfg).finally(() => cacheVersion === cacheGeneration && inflight.delete(k)));
         }
         res = await inflight.get(k)!;
 
@@ -587,7 +601,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
             const forceCfg: AxiosRequestConfig = { ...cfg, params: { ...baseParams, _r: ts } };
 
             if (!inflight.has(refreshKey)) {
-              inflight.set(refreshKey, http.request(forceCfg).finally(() => inflight.delete(refreshKey)));
+              inflight.set(refreshKey, http.request(forceCfg).finally(() => cacheVersion === cacheGeneration && inflight.delete(refreshKey)));
             }
 
             const fresh = await inflight.get(refreshKey)!;
@@ -596,14 +610,19 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
           }
         }
 
-        if (res.status >= 200 && res.status < 300) {
+        if (cacheVersion === cacheGeneration && generation === getAuthGeneration() && res.status >= 200 && res.status < 300) {
+          for (const [key, value] of responseCache) if (Date.now() - value.t >= CACHE_TTL_MS) responseCache.delete(key);
+          if (responseCache.size >= 200) responseCache.delete(responseCache.keys().next().value!);
           responseCache.set(k, { t: Date.now(), res });
         }
       }
     } else {
-      res = await http.request(cfg);
+      const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+      const changesSession = /^auth\/(signin|signout)(?:\/|$)/.test(ep);
+      res = locks && changesSession ? await locks.request("spifex:refresh", () => http.request(cfg)) : await http.request(cfg);
     }
 
+    if (generation !== getAuthGeneration() || (!options?.fresh && cacheVersion !== cacheGeneration) || (!ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
     const body = res.data;
 
     if (res.status === 204 || body == null || (typeof body === "string" && body.trim() === "")) {
@@ -617,7 +636,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     const err = e as AxiosError<unknown>;
     if (axios.isAxiosError(err)) {
       const body = err.response?.data;
-      if (hasApiError(body)) throw body.error;
+      if (hasApiError(body)) throw { ...body.error, status: err.response?.status };
 
       const msg = err.response ? `${err.response.status} ${err.response.statusText || "Request error"}` : err.message;
       throw new Error(msg);
