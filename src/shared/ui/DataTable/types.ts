@@ -28,7 +28,7 @@ export type DataTableProps<T> = {
     getRowName?(item: T): string;
     fillHeight?: boolean;
     virtualize?: boolean;
-    rowHeight?: number;
+    rowHeight?: number | ((item: T) => number);
     loadingMore?: boolean;
     onEndReached?(): void;
     selectionPadding?: number;

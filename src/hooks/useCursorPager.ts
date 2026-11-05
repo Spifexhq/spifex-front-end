@@ -63,9 +63,14 @@ export function useCursorPager<T, M = unknown>(fetchPage: FetchPage<T, M>, opts:
                 pages.current.set(page, result);
                 currentIndex.current = page;
                 setIndex(page);
-                setItems(settings.current.accumulate ? [...pages.current.entries()].sort((a, b) => a[0] - b[0]).flatMap(([, value]) => value.items) : result.items);
+                const loadedItems = [...pages.current.entries()].sort((a, b) => a[0] - b[0]).flatMap(([, value]) => value.items);
+                setItems(settings.current.accumulate ? loadedItems : result.items);
                 setMetadata(result.metadata);
-                setTotal(result.totalCount ?? (!result.nextCursor ? page * settings.current.pageSize + result.items.length : undefined));
+                // An endpoint may enforce a different batch size from the one requested.
+                // Infinite lists can count actual responses once the final cursor is reached.
+                setTotal(previous => result.totalCount ?? (!result.nextCursor
+                    ? settings.current.accumulate ? loadedItems.length : page * settings.current.pageSize + result.items.length
+                    : previous));
                 setNext(!!result.nextCursor);
                 setKnown(pages.current.size);
                 setEnd(!result.nextCursor);

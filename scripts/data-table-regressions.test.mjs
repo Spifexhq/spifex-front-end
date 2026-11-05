@@ -47,3 +47,45 @@ test('infinite mode accumulates cursor pages and refresh clears the accumulated 
  const fetch=async(cursor,size)=>{const start=Number(cursor||0);return{items:records.slice(start,start+size),nextCursor:start+size<records.length?String(start+size):undefined,totalCount:53};};
  const h=harness('src/hooks/useCursorPager.ts','useCursorPager',()=>[fetch,{accumulate:true}]);h.render();await h.flush();await h.result.next();await h.flush();assert.equal(h.result.items.length,40);await h.result.next();await h.flush();assert.equal(h.result.items.length,53);assert.equal(h.result.canNext,false);await h.result.refresh();await h.flush();assert.equal(h.result.items.length,20);
 });
+
+
+test('infinite totals count actual server batches when requested and enforced sizes differ', async () => {
+ const records = Array.from({ length: 198 }, (_, id) => ({ id: String(id) }));
+ const fetch = async (cursor, requestedSize) => {
+  assert.equal(requestedSize, 20);
+  const start = Number(cursor || 0);
+  return { items: records.slice(start, start + 100), nextCursor: start + 100 < records.length ? String(start + 100) : undefined };
+ };
+ const h = harness('src/hooks/useCursorPager.ts', 'useCursorPager', () => [fetch, { accumulate: true }]);
+ h.render(); await h.flush();
+ assert.equal(h.result.items.length, 100);
+ await h.result.next(); await h.flush();
+ assert.equal(h.result.items.length, 198);
+ assert.equal(h.result.totalCount, 198);
+ assert.equal(h.result.reachedEnd, true);
+});
+
+test('a server total survives subsequent pages that omit the optional count', async () => {
+ const fetch = async cursor => cursor ? { items: [{ id: 'last' }] } : { items: [{ id: 'first' }], nextCursor: 'next', totalCount: 2 };
+ const h = harness('src/hooks/useCursorPager.ts', 'useCursorPager', () => [fetch, { accumulate: true }]);
+ h.render(); await h.flush(); assert.equal(h.result.totalCount, 2);
+ await h.result.next(); await h.flush(); assert.equal(h.result.totalCount, 2);
+});
+
+test('mixed-height virtual rows preserve exact spacer heights through the final row', () => {
+ const code = ts.transpileModule(fs.readFileSync('src/shared/ui/DataTable/virtualRows.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+ const context = vm.createContext({ exports: {} }); vm.runInContext(code, context);
+ const { buildRowOffsets, virtualRowRange } = context.exports;
+ const heights = Array.from({ length: 220 }, (_, index) => index % 11 === 10 ? 30 : 40);
+ const offsets = buildRowOffsets(heights);
+ for (let top = 0; top <= offsets.at(-1); top += 37) {
+  const range = virtualRowRange(offsets, top, 410);
+  assert.equal(range.before + heights.slice(range.start, range.end).reduce((a, b) => a + b, 0) + range.after, offsets.at(-1));
+  assert.ok(offsets[range.start] <= top);
+  assert.ok(offsets[range.end] >= Math.min(top + 410, offsets.at(-1)));
+ }
+ const last = virtualRowRange(offsets, offsets.at(-1) - 410, 410);
+ assert.equal(last.end, heights.length); assert.equal(last.after, 0);
+ const empty = virtualRowRange(buildRowOffsets([]), 0, 410);
+ assert.equal(empty.start, 0); assert.equal(empty.end, 0); assert.equal(empty.before + empty.after, 0);
+});
