@@ -7,7 +7,7 @@ import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import ApplicationShell from "./ApplicationShell";
 import { CookieBanner } from "@/components/Cookies/CookieBanner";
 import { api } from "@/api/requests";
-import type { OnboardingStatus } from "@/models/auth/onboarding";
+import type { ConfigurationStatus } from "@/models/auth/configuration";
 import { AUTH_SYNC_EVENT } from "@/lib/http";
 
 
@@ -15,7 +15,7 @@ export const SpifexLayout: FC = () => {
   const { handleInitUser, user, organization } = useAuthContext();
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingOnboarding, setLoadingOnboarding] = useState(true);
-  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+  const [onboarding, setOnboarding] = useState<ConfigurationStatus | null>(null);
 
   const onboardingValidatedAt = useRef(0);
   const onboardingInFlight = useRef(false);
@@ -23,7 +23,7 @@ export const SpifexLayout: FC = () => {
     if (onboardingInFlight.current) return;
     onboardingInFlight.current = true;
     try {
-      const { data } = await api.getOnboardingStatus();
+      const { data } = await api.getConfigurationStatus();
       setOnboarding(data);
       onboardingValidatedAt.current = Date.now();
     } finally { onboardingInFlight.current = false; }
@@ -52,7 +52,7 @@ export const SpifexLayout: FC = () => {
 
     (async () => {
       try {
-        const { data } = await api.getOnboardingStatus();
+        const { data } = await api.getConfigurationStatus();
         if (mounted) { setOnboarding(data); onboardingValidatedAt.current = Date.now(); }
       } catch (error) {
         console.error("Failed to load onboarding status:", error);

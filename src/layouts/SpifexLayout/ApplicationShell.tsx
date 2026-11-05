@@ -4,13 +4,13 @@ import { AppShellContext } from "@/contexts/AppShellContext";
 import { Sidebar } from "@/shared/layout/Sidebar";
 import { Navbar } from "@/shared/layout/Navbar";
 import SimulatedAI from "@/components/SimulatedAI";
-import type { OnboardingStatus } from "@/models/auth/onboarding";
+import type { ConfigurationStatus } from "@/models/auth/configuration";
 import "./shell.css";
 
 const readCollapsed = (key: string, fallback: boolean) => {
   try { const value = localStorage.getItem(key); return value === null ? fallback : value === "true"; } catch { return fallback; }
 };
-export default function ApplicationShell({ children, onboarding, showOnboardingWarning }: { children: ReactNode; onboarding?: OnboardingStatus | null; showOnboardingWarning?: boolean }) {
+export default function ApplicationShell({ children, onboarding, showOnboardingWarning }: { children: ReactNode; onboarding?: ConfigurationStatus | null; showOnboardingWarning?: boolean }) {
   const { pathname } = useLocation();
   const settings = pathname.startsWith("/settings");
   const accounting = /^\/accounting(?:\/|$)/.test(pathname);

@@ -115,3 +115,25 @@ test("logout still discards a pending settings write response",async()=>{
  pending.resolve({status:200,data:{data:{name:"Updated"}}});
  await assert.rejects(update,/Stale response/);
 });
+
+
+test("private must-revalidate lists send their ETag and materialize a 304",async()=>{
+ let calls=0;
+ const h=httpHarness(async cfg=>{
+  calls++;
+  if(calls===1)return{status:200,data:{data:[{id:"one"}]},headers:{etag:'W/"revision-1"',"cache-control":"private, max-age=0, must-revalidate"}};
+  assert.equal(cfg.headers.get("If-None-Match"),'W/"revision-1"');
+  return{status:304,data:undefined,headers:{etag:'W/"revision-1"'}};
+ });
+ assert.equal((await h.request("items/")).data[0].id,"one");
+ assert.equal((await h.request("items/")).data[0].id,"one");
+ assert.equal(calls,2);
+});
+
+test("no-store responses never supply validators on a subsequent request",async()=>{
+ const h=httpHarness(async cfg=>{
+  assert.equal(cfg.headers.get("If-None-Match"),undefined);
+  return{status:200,data:{data:"ready"},headers:{etag:'"secret"',"cache-control":"no-store"}};
+ });
+ await h.request("ledger/setup/");await h.request("ledger/setup/");
+});

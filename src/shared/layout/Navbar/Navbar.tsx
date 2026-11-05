@@ -3,10 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, BellOff, Menu, AlertTriangle, PanelsTopLeft, ChevronRight } from "lucide-react";
 import { useAppShell } from "@/contexts/AppShellContext";
-import type { OnboardingStatus } from "@/models/auth/onboarding";
+import type { ConfigurationStatus } from "@/models/auth/configuration";
 import { getPageBreadcrumbs } from "./pageTitle";
 
-type NavbarProps = { onboarding?: OnboardingStatus | null; showOnboardingWarning?: boolean };
+type NavbarProps = { onboarding?: ConfigurationStatus | null; showOnboardingWarning?: boolean };
 export default function Navbar({ showOnboardingWarning = false }: NavbarProps) {
   const { t } = useTranslation(["navbar", "settingsSidebar", "accountingSettings"]);
   const { pathname } = useLocation();

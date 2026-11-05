@@ -578,44 +578,39 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
 
     let res: AxiosResponse<unknown>;
 
-    if ((cfg.method || "GET").toUpperCase() === "GET" && !options?.fresh) {
+    if ((cfg.method || "GET").toUpperCase() === "GET") {
       const k = keyFrom(cfg);
-
       const hit = responseCache.get(k);
-      if (hit && Date.now() - hit.t < CACHE_TTL_MS) {
+      const controls = String(hit?.res.headers?.["cache-control"] || "").toLowerCase();
+      const mustValidate = /no-cache|max-age=0|must-revalidate/.test(controls);
+      if (!options?.fresh && hit && !mustValidate && Date.now() - hit.t < CACHE_TTL_MS) {
         res = hit.res;
       } else {
+        const etag = hit?.res.headers?.etag;
+        if (typeof etag === "string") cfg.headers = { ...cfg.headers, "If-None-Match": etag };
         if (!inflight.has(k)) {
           inflight.set(k, http.request(cfg).finally(() => cacheVersion === cacheGeneration && inflight.delete(k)));
         }
         res = await inflight.get(k)!;
-
         if (res.status === 304) {
-          const cached = responseCache.get(k);
-          if (cached) {
-            res = cached.res;
+          if (hit && typeof etag === "string") {
+            // A 304 validates a stored representation; it is not an empty list.
+            res = { ...res, status: 200, data: hit.res.data, headers: { ...hit.res.headers, ...res.headers } } as AxiosResponse<unknown>;
           } else {
-            const refreshKey = `REFRESH ${k}`;
-
-            const baseParams =
-              cfg.params && typeof cfg.params === "object" ? (cfg.params as Record<string, unknown>) : {};
-            const forceCfg: AxiosRequestConfig = { ...cfg, params: baseParams, headers: { ...cfg.headers, "Cache-Control": "no-cache" } };
-
-            if (!inflight.has(refreshKey)) {
-              inflight.set(refreshKey, http.request(forceCfg).finally(() => cacheVersion === cacheGeneration && inflight.delete(refreshKey)));
-            }
-
-            const fresh = await inflight.get(refreshKey)!;
-            if (fresh.status >= 200 && fresh.status < 300) res = fresh;
-            else throw new Error(`Revalidation returned ${fresh.status} — no materialized response available.`);
+            const unconditional: AxiosRequestConfig = { ...cfg, headers: { ...cfg.headers } };
+            delete (unconditional.headers as Record<string, unknown>)["If-None-Match"];
+            res = await http.request(unconditional);
+            if (res.status === 304) throw new Error("304 received without a stored representation");
           }
         }
-
-        const controls = String(res.headers?.["cache-control"] || "").toLowerCase();
-        if (!/no-store|no-cache|max-age=0|must-revalidate/.test(controls) && cacheVersion === cacheGeneration && generation === getAuthGeneration() && res.status >= 200 && res.status < 300) {
-          for (const [key, value] of responseCache) if (Date.now() - value.t >= CACHE_TTL_MS) responseCache.delete(key);
-          if (responseCache.size >= 200) responseCache.delete(responseCache.keys().next().value!);
+        const responseControls = String(res.headers?.["cache-control"] || "").toLowerCase();
+        if (!/no-store/.test(responseControls) && cacheVersion === cacheGeneration && generation === getAuthGeneration() && res.status >= 200 && res.status < 300) {
+          if (responseCache.size >= 200 && !responseCache.has(k)) responseCache.delete(responseCache.keys().next().value!);
+          // Keep validators/bodies after freshness expires so the next GET can
+          // revalidate. must-revalidate/no-cache forbids reuse, not storage.
           responseCache.set(k, { t: Date.now(), res });
+        } else if (/no-store/.test(responseControls)) {
+          responseCache.delete(k);
         }
       }
     } else {

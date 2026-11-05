@@ -24,7 +24,7 @@ import { TIMEZONES } from "@/lib/location/timezonesList";
 import { formatTimezoneLabel } from "@/lib/location/formatTimezoneLabel";
 import { getCountries, type CountryOption } from "@/lib/location/countries";
 
-import type { OnboardingStatus } from "@/models/auth/onboarding";
+import type { ConfigurationStatus } from "@/models/auth/configuration";
 import type { EditPersonalSettingsRequest } from "@/models/auth/user";
 
 type Snack =
@@ -188,7 +188,7 @@ const OnboardingPage: React.FC = () => {
   const [loadingOnboarding, setLoadingOnboarding] = useState(false);
 
   const [snack, setSnack] = useState<Snack>(null);
-  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+  const [onboarding, setOnboarding] = useState<ConfigurationStatus | null>(null);
 
   const [personalForm, setPersonalForm] = useState<PersonalForm>({
     phone: "",
@@ -222,7 +222,7 @@ const OnboardingPage: React.FC = () => {
       (permissions.includes("add_ledger_account") || permissions.includes("change_ledger_account")));
 
   const loadAll = useCallback(async () => {
-    const tasks: Promise<unknown>[] = [api.getOnboardingStatus()];
+    const tasks: Promise<unknown>[] = [api.getConfigurationStatus()];
 
     if (canViewPersonal) tasks.push(api.getPersonalSettings());
     if (canViewOrganization) tasks.push(api.getOrganization());
@@ -230,7 +230,7 @@ const OnboardingPage: React.FC = () => {
     const results = await Promise.all(tasks);
 
     let idx = 0;
-    const onboardingRes = results[idx++] as Awaited<ReturnType<typeof api.getOnboardingStatus>>;
+    const onboardingRes = results[idx++] as Awaited<ReturnType<typeof api.getConfigurationStatus>>;
     setOnboarding(onboardingRes.data);
 
     if (canViewPersonal) {
@@ -300,7 +300,7 @@ const OnboardingPage: React.FC = () => {
   const refreshOnboarding = useCallback(async () => {
     try {
       setLoadingOnboarding(true);
-      const { data } = await api.getOnboardingStatus();
+      const { data } = await api.getConfigurationStatus();
       setOnboarding(data);
     } finally {
       setLoadingOnboarding(false);

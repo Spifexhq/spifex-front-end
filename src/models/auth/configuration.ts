@@ -1,4 +1,4 @@
-export type OnboardingStatus = {
+export type ConfigurationStatus = {
   personal_locale_setup: boolean;
   org_locale_setup: boolean;
   personal_info_setup: boolean;
