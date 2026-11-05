@@ -368,8 +368,8 @@ export const api = {
   getEntry: (id: string) =>
     request<Entry>(`cashflow/entries/${id}/`, "GET"),
 
-  getEntryRecurrence: (id: string, params?: { cursor?: string }) =>
-    request<{ results: RecurrenceEntry[]; next: string | null }>(`cashflow/entries/${id}/recurrence/`, "GET", params),
+  getEntryRecurrence: (id: string, params?: { cursor?: string; include_count?: boolean }) =>
+    request<{ results: RecurrenceEntry[]; next: string | null; count?: number; current: RecurrenceEntry }>(`cashflow/entries/${id}/recurrence/`, "GET", params),
   editEntryRecurrence: (id: string, ids: string[], versions: Record<string, string>, data: Partial<EditEntryRequest>) =>
     request<EntryWriteResponse>(`cashflow/entries/${id}/recurrence/`, "PATCH", { ids, versions, data }),
 

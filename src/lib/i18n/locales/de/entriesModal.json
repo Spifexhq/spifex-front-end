@@ -242,6 +242,11 @@
     "protection": "Finanzfelder beglichener, teilweise beglichener und gebuchter Buchungen bleiben gesperrt. Beschreibende Details können geändert werden. Lehnt eine Buchung eine Änderung ab, wird nichts gespeichert.",
     "conflict": "Eine ausgewählte Buchung wurde seit dem Laden geändert. Ihr Entwurf bleibt erhalten. Laden Sie die zugehörigen Buchungen neu, prüfen Sie den Status und versuchen Sie es erneut.",
     "limit": "Wählen Sie bis zu 1.000 Buchungen pro Speichervorgang.",
-    "posted": "Gebucht · Finanzfelder gesperrt"
+    "posted": "Gebucht · Finanzfelder gesperrt",
+    "selectPage": "Diese Seite auswählen",
+    "pageRange": "{{start}}–{{end}} von {{total}} Raten",
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "scopeDetails": "So werden Änderungen angewendet"
   }
 }

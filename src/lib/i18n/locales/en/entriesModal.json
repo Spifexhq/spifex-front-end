@@ -242,6 +242,11 @@
     "protection": "Settled, partially settled and posted entries keep their financial fields locked. Descriptive details remain editable. If any selected entry rejects a change, nothing is saved.",
     "conflict": "A selected entry changed since it was loaded. Your draft is preserved. Refresh the related entries, review their status, and try again.",
     "limit": "Select up to 1,000 entries per save.",
-    "posted": "Posted · financial fields locked"
+    "posted": "Posted · financial fields locked",
+    "selectPage": "Select this page",
+    "pageRange": "{{start}}–{{end}} of {{total}} installments",
+    "previous": "Previous page",
+    "next": "Next page",
+    "scopeDetails": "How changes are applied"
   }
 }

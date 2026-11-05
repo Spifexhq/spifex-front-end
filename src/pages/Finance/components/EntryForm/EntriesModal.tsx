@@ -899,13 +899,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     >
       {isLoadingEntry || sourcesLoading || relatedLoading ? <DialogSkeleton label={t("entriesModal:guidance.loading")} /> : <>
         {sourceIssues.length > 0 && <div role="status" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p className="font-medium">{t("entriesModal:options.title")}</p><ul className="mt-2 space-y-1">{sourceIssues.map(issue => <li key={issue.source}><b>{t(`entriesModal:options.${issue.source}`)}</b> — {issue.status === 403 ? t("entriesModal:options.forbidden") : issue.status ? t("entriesModal:options.failed", { status: issue.status }) : t(issue.invalidResponse ? "entriesModal:options.invalidResponse" : "entriesModal:options.connection")}{issue.requestId && <span className="block text-[10px]">{t("entriesModal:options.reference", { id: issue.requestId })}</span>}</li>)}</ul><Button type="button" variant="outline" className="mt-3" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
-        {initialEntry?.installment_group_id && <section className="mb-5 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-          <p className="mb-2 text-xs font-medium text-slate-700">{t("entriesModal:series.applyTo")}</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
-            <label className="flex min-h-11 items-center gap-2 sm:min-h-9"><input type="radio" name="entry-edit-scope" checked={scope === "single"} onChange={() => setScope("single")} />{t("entriesModal:series.onlyThis")}</label>
-            <label className="flex min-h-11 items-center gap-2 sm:min-h-9"><input type="radio" name="entry-edit-scope" checked={scope === "selected"} onChange={() => { setScope("selected"); setActiveTab("recurrence"); }} />{t("entriesModal:series.selected", { count: series.selectedIds.length + 1 })}</label>
+        {initialEntry?.installment_group_id && <section className="mb-4 border-b border-slate-100 pb-3">
+          <p className="mb-1 text-[11px] font-medium text-slate-500">{t("entriesModal:series.applyTo")}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
+            <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="entry-edit-scope" checked={scope === "single"} onChange={() => setScope("single")} />{t("entriesModal:series.onlyThis")}</label>
+            <label className="flex min-h-10 items-center gap-1.5 sm:min-h-7"><input type="radio" className="size-3 accent-[var(--accentPrimary)]" name="entry-edit-scope" checked={scope === "selected"} onChange={() => { setScope("selected"); setActiveTab("recurrence"); }} />{t("entriesModal:series.selected", { count: series.selectedIds.length + 1 })}</label>
           </div>
-          {scope === "selected" && <p className="mt-2 text-xs leading-5 text-slate-500">{t("entriesModal:series.explain")}</p>}
+          {scope === "selected" && <details className="mt-1 text-[11px] leading-5 text-slate-500"><summary className="cursor-pointer">{t("entriesModal:series.scopeDetails")}</summary><p>{t("entriesModal:series.explain")}</p></details>}
           {blockedSelection && <p role="alert" className="mt-2 text-xs text-amber-800">{t("entriesModal:series.blocked")}</p>}
         </section>}
         <div id="entry-form-panel" role="tabpanel" aria-labelledby={`entry-tab-${activeTab}`} className="space-y-5">{renderTabContent()}</div>

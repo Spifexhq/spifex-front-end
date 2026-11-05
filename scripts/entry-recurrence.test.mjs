@@ -88,3 +88,27 @@ test('recurrence selection, conflict and option diagnostics are translated', () 
     for (const key of ['documents', 'departments', 'forbidden', 'failed']) assert.ok(d.options[key], `${language}: ${key}`);
   }
 });
+
+
+test('installment pagination only fetches the requested page, never walks the full series', async () => {
+  let fetchPage;
+  const calls = [];
+  const react = { useState: initial => [initial, () => {}], useEffect: () => {}, useMemo: fn => fn() };
+  const api = { getEntryRecurrence: async (id, params) => { calls.push({ id, params }); return { data: { results: [{ id: params.cursor || 'first' }], current: { id: 'anchor' }, next: params.cursor ? null : 'second', count: 25 } }; } };
+  const { useRecurrenceEntries } = load('src/pages/Finance/components/EntryForm/useRecurrenceEntries.ts', {
+    react, '@/api/requests': { api }, '@/lib/list': { getCursorFromUrl: value => value },
+    '@/hooks/useCursorPager': { useCursorPager: (fetch, opts) => { fetchPage = fetch; assert.equal(opts.autoLoadFirst, true); return { items: [], metadata: undefined, index: 0, knownPages: 0 }; } },
+    '@/hooks/useShiftSelect': { useShiftSelect: () => ({ selectedIds: [], setSelectedIds: () => {} }) },
+  });
+  useRecurrenceEntries(true, { id: 'anchor', installment_group_id: 'group' });
+  assert.equal(calls.length, 0);
+  const first = await fetchPage();
+  assert.equal(calls.length, 1);
+  assert.equal(first.items.length, 1);
+  assert.equal(first.nextCursor, 'second');
+  assert.equal(first.metadata.current.id, 'anchor');
+  await fetchPage('second');
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].params.cursor, 'second');
+  assert.equal(calls[1].params.include_count, true);
+});

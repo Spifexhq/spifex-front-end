@@ -63,5 +63,6 @@
   },
   "unavailable": "Nicht verfügbar",
   "unknown": "Unbekannt",
-  "monthPartial": "{{month}} · geladene Zwischensumme"
+  "monthPartial": "{{month}} · geladene Zwischensumme",
+  "installmentNumber": "Rate {{index}} von {{count}}"
 }

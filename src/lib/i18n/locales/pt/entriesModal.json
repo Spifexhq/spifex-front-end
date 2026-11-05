@@ -242,6 +242,11 @@
     "protection": "Os campos financeiros dos lançamentos liquidados, parcialmente liquidados ou contabilizados permanecem bloqueados. Pode alterar detalhes descritivos. Se algum lançamento rejeitar a alteração, nada será guardado.",
     "conflict": "Um lançamento selecionado foi alterado desde o carregamento. As suas alterações foram preservadas. Atualize a lista de relacionados, reveja os estados e tente novamente.",
     "limit": "Selecione até 1.000 lançamentos por gravação.",
-    "posted": "Contabilizado · campos financeiros bloqueados"
+    "posted": "Contabilizado · campos financeiros bloqueados",
+    "selectPage": "Selecionar esta página",
+    "pageRange": "{{start}}–{{end}} de {{total}} prestações",
+    "previous": "Página anterior",
+    "next": "Página seguinte",
+    "scopeDetails": "Como são aplicadas as alterações"
   }
 }

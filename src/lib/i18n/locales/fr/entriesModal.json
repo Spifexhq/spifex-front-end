@@ -242,6 +242,11 @@
     "protection": "Les champs financiers des écritures réglées, partiellement réglées ou comptabilisées restent verrouillés. Les détails descriptifs restent modifiables. Si une écriture refuse une modification, rien n’est enregistré.",
     "conflict": "Une écriture sélectionnée a changé depuis son chargement. Votre brouillon est conservé. Actualisez les écritures liées, vérifiez leurs états et réessayez.",
     "limit": "Sélectionnez jusqu’à 1 000 écritures par enregistrement.",
-    "posted": "Comptabilisée · champs financiers verrouillés"
+    "posted": "Comptabilisée · champs financiers verrouillés",
+    "selectPage": "Sélectionner cette page",
+    "pageRange": "{{start}}–{{end}} sur {{total}} échéances",
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "scopeDetails": "Comment les modifications sont appliquées"
   }
 }

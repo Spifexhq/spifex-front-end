@@ -63,5 +63,6 @@
   },
   "unavailable": "Unavailable",
   "unknown": "Unknown",
-  "monthPartial": "{{month}} · loaded subtotal"
+  "monthPartial": "{{month}} · loaded subtotal",
+  "installmentNumber": "Installment {{index}} of {{count}}"
 }
