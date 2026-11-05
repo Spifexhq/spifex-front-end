@@ -9,7 +9,7 @@ export function useAccountingSource<T>(resource:string|undefined){
  const {organization}=useAuthContext();
  return{key:JSON.stringify([resource,organization?.organization?.id]),enabled:!!resource,fetchPage:async(filters:Record<string,string>,cursor?:string,pageSize=20)=>{
   if(!resource)return{items:[] as T[]};
-  try{const {data}=await api.getAccountingList<T>(resource,{...filters,cursor,page_size:pageSize,include_count:"true",_r:String(Date.now())});
+  try{const {data}=await api.getAccountingList<T>(resource,{...filters,cursor,page_size:pageSize,include_count:"true"});
    if(!Array.isArray(data.results))throw new Error("Unexpected record list response.");
    return{items:data.results,nextCursor:getCursorFromUrl(data.next),totalCount:data.count,metadata:{options:data.filters||{},optionLabels:data.filter_labels||{}}};
   }catch(cause){throw new Error(apiErrorMessage(cause,"Unable to load accounting records."));}

@@ -1,4 +1,4 @@
-import { useState, useEffect, FC, useMemo, useCallback } from "react";
+import { useState, useEffect, FC, useMemo, useCallback, useRef } from "react";
 import { Outlet } from "react-router-dom";
 
 import { useAuthContext } from "@/hooks/useAuth";
@@ -12,14 +12,21 @@ import { AUTH_SYNC_EVENT } from "@/lib/http";
 
 
 export const SpifexLayout: FC = () => {
-  const { handleInitUser } = useAuthContext();
+  const { handleInitUser, user, organization } = useAuthContext();
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingOnboarding, setLoadingOnboarding] = useState(true);
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
 
+  const onboardingValidatedAt = useRef(0);
+  const onboardingInFlight = useRef(false);
   const loadOnboarding = useCallback(async () => {
-    const { data } = await api.getOnboardingStatus();
-    setOnboarding(data);
+    if (onboardingInFlight.current) return;
+    onboardingInFlight.current = true;
+    try {
+      const { data } = await api.getOnboardingStatus();
+      setOnboarding(data);
+      onboardingValidatedAt.current = Date.now();
+    } finally { onboardingInFlight.current = false; }
   }, []);
 
   useEffect(() => {
@@ -46,7 +53,7 @@ export const SpifexLayout: FC = () => {
     (async () => {
       try {
         const { data } = await api.getOnboardingStatus();
-        if (mounted) setOnboarding(data);
+        if (mounted) { setOnboarding(data); onboardingValidatedAt.current = Date.now(); }
       } catch (error) {
         console.error("Failed to load onboarding status:", error);
         if (mounted) setOnboarding(null);
@@ -58,10 +65,14 @@ export const SpifexLayout: FC = () => {
     return () => {
       mounted = false;
     };
-  }, [loadingAuth]);
+  }, [loadingAuth, user?.id, organization?.organization?.id]);
 
   useEffect(() => {
-    const onAuthSync = () => {
+    const onAuthSync = (event: Event) => {
+      const reason = (event as CustomEvent<{ reason?: string }>).detail?.reason || "";
+      const relevant = ["ws:onboarding.updated", "ws:profile.updated", "ws_connected", "connection_recovered"].includes(reason);
+      const staleFocus = reason === "focus_revalidated" && Date.now() - onboardingValidatedAt.current >= 300_000;
+      if (!relevant && !staleFocus) return;
       void loadOnboarding().catch((error) => {
         console.error("Failed to refresh onboarding status:", error);
       });

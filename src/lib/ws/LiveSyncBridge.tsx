@@ -18,17 +18,19 @@ export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAu
   const gatePromiseRef = useRef<Promise<void> | null>(null);
 
   const queued = useRef(false);
+  const latestReason = useRef("");
   const seen = useRef(new Set<string>());
   useEffect(() => { seen.current.clear(); }, [orgExternalId]);
 
   const runGatedSync = useCallback(
     (reason: string) => {
+      latestReason.current = reason;
       if (gatePromiseRef.current) { queued.current = true; return; }
       const p = (async () => {
         do {
           queued.current = false;
           clearHttpCaches();
-          await syncAuth({ force: true, reason });
+          await syncAuth({ force: true, reason: latestReason.current });
         } while (queued.current);
       })();
       gatePromiseRef.current = p;

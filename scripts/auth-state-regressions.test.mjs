@@ -17,7 +17,7 @@ function httpHarness(adapter) {
  const tokens={getAccess:()=>access,setTokens:value=>{access=value;},clearTokens:()=>{access="";generation++;},getOrgExternalIdStored:()=>"org",getUserIdStored:()=>"user",setUserIdStored:()=>{}};
  const fakeAxios={...axios,create:options=>axios.create({...options,adapter:async cfg=>{
    const result=await adapter(cfg);
-   const response={data:result.data,status:result.status,statusText:"",headers:{},config:cfg};
+   const response={data:result.data,status:result.status,statusText:"",headers:result.headers||{},config:cfg};
    if(!cfg.validateStatus||cfg.validateStatus(response.status))return response;
    throw new axios.AxiosError("Request failed",undefined,cfg,undefined,response);
  }})};
@@ -79,4 +79,39 @@ test("an old request's 401 cannot refresh or log out a replacement identity",asy
  const request=h.request("items/");await new Promise(r=>setImmediate(r));h.tokens.clearTokens();h.tokens.setTokens("replacement");
  pending.resolve({status:401,data:{error:{code:"token_not_valid"}}});
  await assert.rejects(request,/Stale response/);assert.equal(h.access,"replacement");assert.equal(refreshes,0);assert.equal(h.events.length,0);
+});
+
+
+test("no-store and revalidation-only responses are never reused from the application cache",async()=>{
+ for (const directive of ["no-store","private, max-age=0, must-revalidate"]) {
+  let calls=0;
+  const h=httpHarness(async()=>({status:200,data:{data:++calls},headers:{"cache-control":directive}}));
+  assert.equal((await h.request("items/")).data,1);
+  assert.equal((await h.request("items/")).data,2);
+ }
+});
+
+test("a successful mutation invalidates a cached list on the same stable URL",async()=>{
+ let version=1;
+ const h=httpHarness(async cfg=>{assert.ok(!cfg.params?._r);if(cfg.method==="post")version++;return{status:200,data:{data:version}};});
+ assert.equal((await h.request("items/")).data,1);
+ await h.request("items/","POST",{});
+ assert.equal((await h.request("items/")).data,2);
+});
+
+
+test("live-sync invalidation during a successful settings write does not discard its response",async()=>{
+ const pending=deferred();const h=httpHarness(async()=>pending.promise);
+ const update=h.request("identity/profile/settings/","PATCH",{name:"Updated"});
+ await new Promise(r=>setImmediate(r));h.clearHttpCaches();
+ pending.resolve({status:200,data:{data:{name:"Updated"}}});
+ assert.equal((await update).data.name,"Updated");
+});
+
+test("logout still discards a pending settings write response",async()=>{
+ const pending=deferred();const h=httpHarness(async()=>pending.promise);
+ const update=h.request("identity/profile/settings/","PATCH",{name:"Updated"});
+ await new Promise(r=>setImmediate(r));h.tokens.clearTokens();
+ pending.resolve({status:200,data:{data:{name:"Updated"}}});
+ await assert.rejects(update,/Stale response/);
 });

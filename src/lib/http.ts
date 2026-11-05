@@ -515,7 +515,7 @@ function keyFrom(cfg: AxiosRequestConfig) {
     cfg.params && typeof cfg.params === "object"
       ? JSON.stringify(cfg.params, Object.keys(cfg.params as Record<string, unknown>).sort())
       : "";
-  return `${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
+  return `${getUserIdStored()}:${readOrgExternalId() || ""}:${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
 }
 
 function pruneParams(p: unknown) {
@@ -572,6 +572,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       method,
       data: method !== "GET" ? payload : undefined,
       params: method === "GET" ? pruneParams(payload) : undefined,
+      headers: method === "GET" ? { "Cache-Control": "no-cache" } : undefined,
       validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
     };
 
@@ -595,10 +596,10 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
             res = cached.res;
           } else {
             const refreshKey = `REFRESH ${k}`;
-            const ts = Date.now();
+
             const baseParams =
               cfg.params && typeof cfg.params === "object" ? (cfg.params as Record<string, unknown>) : {};
-            const forceCfg: AxiosRequestConfig = { ...cfg, params: { ...baseParams, _r: ts } };
+            const forceCfg: AxiosRequestConfig = { ...cfg, params: baseParams, headers: { ...cfg.headers, "Cache-Control": "no-cache" } };
 
             if (!inflight.has(refreshKey)) {
               inflight.set(refreshKey, http.request(forceCfg).finally(() => cacheVersion === cacheGeneration && inflight.delete(refreshKey)));
@@ -610,7 +611,8 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
           }
         }
 
-        if (cacheVersion === cacheGeneration && generation === getAuthGeneration() && res.status >= 200 && res.status < 300) {
+        const controls = String(res.headers?.["cache-control"] || "").toLowerCase();
+        if (!/no-store|no-cache|max-age=0|must-revalidate/.test(controls) && cacheVersion === cacheGeneration && generation === getAuthGeneration() && res.status >= 200 && res.status < 300) {
           for (const [key, value] of responseCache) if (Date.now() - value.t >= CACHE_TTL_MS) responseCache.delete(key);
           if (responseCache.size >= 200) responseCache.delete(responseCache.keys().next().value!);
           responseCache.set(k, { t: Date.now(), res });
@@ -622,7 +624,8 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       res = locks && changesSession ? await locks.request("spifex:refresh", () => http.request(cfg)) : await http.request(cfg);
     }
 
-    if (generation !== getAuthGeneration() || (!options?.fresh && cacheVersion !== cacheGeneration) || (!ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
+    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !options?.fresh && cacheVersion !== cacheGeneration) || (!ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
+    if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) clearHttpCaches();
     const body = res.data;
 
     if (res.status === 204 || body == null || (typeof body === "string" && body.trim() === "")) {

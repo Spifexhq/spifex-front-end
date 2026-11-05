@@ -147,6 +147,7 @@ export const useAuth = () => {
   const syncInFlight = useRef<Promise<void> | null>(null);
   const syncQueued = useRef(false);
   const lastSyncAt = useRef<number>(0);
+  const lastValidatedAt = useRef(0);
 
   const applyUserSnapshot = useCallback(
     (payload: Awaited<ReturnType<typeof api.getUser>>["data"]) => {
@@ -223,6 +224,7 @@ export const useAuth = () => {
             const res = await api.getUser();
             if (generation !== getAuthGeneration()) return;
             applyUserSnapshot(res.data);
+            lastValidatedAt.current = Date.now();
           } while (syncQueued.current);
 
           emitAuthSync(opts?.reason || "sync_auth");
@@ -278,6 +280,7 @@ export const useAuth = () => {
       else clearOrgExternalIdStored();
 
       try { localStorage.setItem(AUTH_SESSION_KEY, `${Date.now()}:${Math.random()}`); } catch { /* Storage may be blocked. */ }
+      lastValidatedAt.current = Date.now();
       emitAuthSync("signed_in");
       setIsAuthResolved(true);
     },
@@ -404,15 +407,17 @@ export const useAuth = () => {
   }, [dispatch, handleSignOut]);
 
   useEffect(() => {
-    let lastRecovery = 0;
+    let lastFocusAttempt = 0;
     const recover = () => {
-      if (document.hidden || Date.now() - lastRecovery < AUTH_SYNC_MIN_GAP_MS) return;
-      lastRecovery = Date.now();
-      void syncAuth({ force: true, reason: "connection_recovered" });
+      if (document.hidden || Date.now() - lastValidatedAt.current < 60_000 || Date.now() - lastFocusAttempt < 5_000) return;
+      lastFocusAttempt = Date.now();
+      void syncAuth({ force: true, reason: "focus_revalidated" });
     };
-    window.addEventListener("online", recover);
+    const reconnect = () => { void syncAuth({ force: true, reason: "connection_recovered" }); };
+    window.addEventListener("online", reconnect);
+    document.addEventListener("visibilitychange", recover);
     window.addEventListener("focus", recover);
-    return () => { window.removeEventListener("online", recover); window.removeEventListener("focus", recover); };
+    return () => { window.removeEventListener("online", reconnect); document.removeEventListener("visibilitychange", recover); window.removeEventListener("focus", recover); };
   }, [syncAuth]);
 
   const accessToken = getAccess();

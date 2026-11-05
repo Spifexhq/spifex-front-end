@@ -147,7 +147,7 @@ function filenameFromContentDisposition(
 }
 
 
-const freshAccountingQuery = (params?: object) => ({ ...params, _r: crypto.randomUUID() });
+
 
 export const api = {
   /* --- Auth --- */
@@ -477,7 +477,7 @@ export const api = {
 
   /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>
-    request<GetLedgerAccountsResponse>('ledger/accounts/', 'GET', freshAccountingQuery(params)),
+    request<GetLedgerAccountsResponse>('ledger/accounts/', 'GET', params, { fresh: true }),
 
   getLedgerAccountsBulk: (ids: string[]) =>
     request<LedgerAccountsBulkResponse>('ledger/accounts/bulk/get/', 'POST', {
@@ -525,7 +525,7 @@ export const api = {
     downloadTemplate("ledger/accounts/template/xlsx/", "template_ledger_accounts.xlsx"),
 
   /* --- Accounting --- */
-  getAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/', 'GET', freshAccountingQuery()),
+  getAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/', 'GET', undefined, { fresh: true }),
   startAccountingSetup: () => request<AccountingSetupStatus>('ledger/setup/start/', 'POST', {}),
   activateAccounting: (revision: string) => request<AccountingSetupStatus>('ledger/setup/activate/', 'POST', { revision }),
   deleteAccountingBook: (id: string) => request(`ledger/books/${id}/`, "DELETE"),
@@ -533,11 +533,11 @@ export const api = {
   deleteCategoryPostingPolicy: (id: string) => request(`ledger/category-policies/${id}/`, "DELETE"),
   deleteFiscalPeriod: (id: string) => request(`ledger/periods/${id}/`, "DELETE"),
   getAccountingList: <T>(resource: string, params: Record<string, string | number | undefined>) => request<{ results: T[]; next: string | null; count?: number; filters: Record<string, string[]>; filter_labels?: Record<string, Record<string,string>> }>(`ledger/lists/${resource}/`, "GET", params),
-  getFiscalPeriods: () => request<FiscalPeriod[]>('ledger/periods/', 'GET', freshAccountingQuery()),
+  getFiscalPeriods: () => request<FiscalPeriod[]>('ledger/periods/', 'GET', undefined, { fresh: true }),
   addFiscalPeriod: (payload: Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'> & { book_id: string }) => request<FiscalPeriod>('ledger/periods/', 'POST', payload),
   updateFiscalPeriod: (id: string, status: FiscalPeriod['status']) => request<FiscalPeriod>(`ledger/periods/${id}/`, 'PATCH', { status }),
   editFiscalPeriod: (id: string, payload: Partial<Omit<FiscalPeriod, 'id' | 'book' | 'has_journals'>>) => request<FiscalPeriod>(`ledger/periods/${id}/`, 'PATCH', payload),
-  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('ledger/books/', 'GET', freshAccountingQuery(params)),
+  getAccountingBooks: (params?: { cursor?: string }) => request<AccountingBook[]>('ledger/books/', 'GET', params, { fresh: true }),
 
   addAccountingBook: (payload: AddAccountingBookRequest) =>
     request<AccountingBook>('ledger/books/', 'POST', payload),
@@ -546,19 +546,19 @@ export const api = {
     request<AccountingBook>(`ledger/books/${bookId}/`, 'PATCH', payload),
 
   getCategoryPostingPolicies: () =>
-    request<CategoryPostingPolicy[]>('ledger/category-policies/', 'GET', freshAccountingQuery()),
+    request<CategoryPostingPolicy[]>('ledger/category-policies/', 'GET', undefined, { fresh: true }),
 
   upsertCategoryPostingPolicy: (payload: UpsertCategoryPostingPolicyRequest) =>
     request<CategoryPostingPolicy>('ledger/category-policies/', 'POST', payload),
 
   getBankAccountLedgerMaps: () =>
-    request<BankAccountLedgerMap[]>('ledger/bank-account-maps/', 'GET', freshAccountingQuery()),
+    request<BankAccountLedgerMap[]>('ledger/bank-account-maps/', 'GET', undefined, { fresh: true }),
 
   upsertBankAccountLedgerMap: (payload: UpsertBankAccountLedgerMapRequest) =>
     request<BankAccountLedgerMap>('ledger/bank-account-maps/', 'POST', payload),
 
   getJournalEntries: (params?: GetJournalEntriesParams) =>
-    request<JournalEntry[]>('ledger/journals/', 'GET', freshAccountingQuery(params)),
+    request<JournalEntry[]>('ledger/journals/', 'GET', params, { fresh: true }),
 
   getJournalEntry: (journalId: string) =>
     request<JournalEntry>(`ledger/journals/${journalId}/`, 'GET'),
@@ -570,7 +570,7 @@ export const api = {
     request<JournalEntry>(`ledger/journals/${journalId}/reverse/`, 'POST', payload),
 
   getTrialBalance: (params?: GetTrialBalanceParams) =>
-    request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', freshAccountingQuery(params)),
+    request<GetTrialBalanceResponse>('ledger/journals/trial-balance/', 'GET', params, { fresh: true }),
 
   getCashflowCategories: (params?: GetCashflowCategoriesParams) =>
     request<GetCashflowCategoriesResponse>("cashflow/categories/", "GET", params),
