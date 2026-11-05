@@ -36,6 +36,10 @@ if (!rawBaseURL) {
   throw new Error("Missing VITE_API_BASE_URL (set it in .env.dev / .env.prod).");
 }
 
+const apiOrigin = new URL(rawBaseURL);
+if (!["http:", "https:"].includes(apiOrigin.protocol) || apiOrigin.username || apiOrigin.password || apiOrigin.search || apiOrigin.hash) throw new Error("Invalid API base URL.");
+if (import.meta.env.PROD && apiOrigin.protocol !== "https:") throw new Error("Production API requests require HTTPS.");
+
 export const baseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
 /* ------------------------------ Global scheduling --------------------------- */
@@ -340,6 +344,26 @@ const rawHttp = axios.create({
   baseURL,
   withCredentials: true,
   validateStatus: (s) => s < 500,
+});
+
+// Fetch the masked CSRF token from the API origin (works across subdomains).
+// Share in-flight bootstrap requests, but do not persist the token in storage.
+let csrfRequest: Promise<string> | null = null;
+function getCsrfToken(): Promise<string> {
+  if (!csrfRequest) csrfRequest = rawHttp.get("auth/csrf/").then(res => {
+    const token = res.data?.data?.csrf_token ?? res.data?.csrf_token;
+    if (res.status !== 200 || typeof token !== "string" || !token) throw new Error("csrf_bootstrap_failed");
+    return token;
+  }).finally(() => { csrfRequest = null; });
+  return csrfRequest;
+}
+for (const client of [http, rawHttp]) client.interceptors.request.use(async cfg => {
+  const destination = new URL(cfg.url || "", cfg.baseURL || baseURL);
+  if (destination.origin !== apiOrigin.origin || !destination.pathname.startsWith(apiOrigin.pathname)) throw new Error("Refusing credentials to an untrusted API destination.");
+  if (!/^(GET|HEAD|OPTIONS)$/i.test(cfg.method || "GET") && /\/auth\//.test(destination.pathname)) {
+    cfg.headers.set("X-CSRFToken", await getCsrfToken());
+  }
+  return cfg;
 });
 
 async function doRefresh(): Promise<void> {

@@ -611,7 +611,7 @@ export const DismissedTooltipsCookie = {
  * cookie. If the cookie is HttpOnly, JavaScript cannot and should not read it.
  */
 export const CSRFCookie = {
-  NAME: "csrf_token",
+  NAME: "csrftoken",
 
   get(): string | null {
     return Cookies.get(this.NAME);
