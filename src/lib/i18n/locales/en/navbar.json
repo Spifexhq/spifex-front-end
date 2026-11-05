@@ -35,7 +35,8 @@
     "limits": "Limits and usage",
     "onboarding": "Workspace setup",
     "locale": "Regional preferences",
-    "status": "Workspace status"
+    "status": "Workspace status",
+    "bankImports": "Bank imports"
   },
   "settingsDescriptions": {
     "personal": "Manage your profile, contact details, and personal preferences.",

@@ -42,7 +42,7 @@ const MemberSettings = lazy(() => import("@/pages/Settings/MemberSettings"));
 const GroupSettings = lazy(() => import("@/pages/Settings/GroupSettings"));
 const CategorySettings = lazy(() => import("@/pages/Settings/CategorySettings"));
 const Accounting = lazy(() => import("@/pages/Accounting"));
-const Statements = lazy(() => import("@/pages/Settings/Statements"));
+const BankImports = lazy(() => import("@/pages/Finance/BankImports"));
 const NotificationSettings = lazy(() => import("@/pages/Settings/NotificationSettings"));
 const FormatSettings = lazy(() => import("@/pages/Settings/FormatSettings"));
 const CurrencySettings = lazy(() => import("@/pages/Settings/CurrencySettings"));
@@ -163,6 +163,14 @@ const routes: RouteObject[] = [
             {
                 path: 'accounting/*',
                 element: <PermissionMiddleware codeName="view_ledger_accounts_page" behavior="redirect" redirectTo="/settings"><AccountingLayout><Accounting /></AccountingLayout></PermissionMiddleware>,
+            },
+            {
+                path: 'bank-imports',
+                element: <PermissionMiddleware codeName="view_statements_page" redirectTo="/settings"><BankImports /></PermissionMiddleware>,
+            },
+            {
+                path: 'bank-imports/:statementId',
+                element: <PermissionMiddleware codeName="view_statements_page" redirectTo="/settings"><BankImports /></PermissionMiddleware>,
             },
             // Settings
             {
@@ -305,7 +313,7 @@ const routes: RouteObject[] = [
                     path: 'bank-statements',
                     element: (
                     <PermissionMiddleware codeName="view_statements_page" behavior="redirect" redirectTo={'/settings'}>
-                        <Statements />
+                        <Navigate to="/bank-imports" replace />
                     </PermissionMiddleware>
                     ),
                 },

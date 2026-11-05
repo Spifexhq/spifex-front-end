@@ -35,7 +35,8 @@
     "limits": "Limites e utilização",
     "onboarding": "Configuração do espaço de trabalho",
     "locale": "Preferências regionais",
-    "status": "Estado do espaço de trabalho"
+    "status": "Estado do espaço de trabalho",
+    "bankImports": "Importações bancárias"
   },
   "settingsDescriptions": {
     "personal": "Gerencie seu perfil, dados de contato e preferências pessoais.",

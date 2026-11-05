@@ -35,7 +35,8 @@
     "limits": "Limits und Nutzung",
     "onboarding": "Arbeitsbereich einrichten",
     "locale": "Regionale Einstellungen",
-    "status": "Arbeitsbereichsstatus"
+    "status": "Arbeitsbereichsstatus",
+    "bankImports": "Bankimporte"
   },
   "settingsDescriptions": {
     "personal": "Verwalten Sie Ihr Profil, Ihre Kontaktdaten und persönlichen Einstellungen.",

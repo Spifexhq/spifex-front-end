@@ -1,4 +1,4 @@
-// src/models/settings/statements.ts
+// src/models/finance/imports.ts
 import type { Paginated } from "@/models/Api";
 
 export type ImportSessionStatus =
@@ -23,6 +23,7 @@ export type StatementSummary = {
 };
 
 export type Statement = {
+  status?: "uploaded" | "processing" | "ready" | "failed";
   id: string;
   bank_account_id: string | null;
   bank_account_label: string | null;
@@ -105,6 +106,8 @@ export type AiCompletionPayload = {
 };
 
 export type CandidatePayload = {
+  suggested_category_id?: string | null;
+  category_source?: string;
   row_candidates: RowCandidate[];
   field_suggestions: {
     document_type?: FieldSuggestionOption[];
@@ -136,6 +139,7 @@ export type StatementImportRow = {
   final_due_date: string | null;
   final_amount_minor: number | null;
   final_tx_type: number | null;
+  cashflow_category?: LookupOption | null;
   document_type: LookupOption | null;
   entity: LookupOption | null;
   ledger_account: LookupOption | null;
@@ -170,6 +174,7 @@ export type StatementImportSession = {
   status: ImportSessionStatus;
   error_message: string;
   summary: {
+    ai_failed?: boolean;
     total_rows?: number;
     ready_rows?: number;
     pending_rows?: number;
@@ -185,6 +190,7 @@ export type StatementImportSession = {
 };
 
 export type StatementImportLookups = {
+  cashflow_categories: LookupOption[];
   document_types: LookupOption[];
   entities: LookupOption[];
   ledger_accounts: LookupOption[];
@@ -194,6 +200,11 @@ export type StatementImportLookups = {
 };
 
 export type GetStatementsParams = {
+  cursor?: string;
+  include_count?: boolean;
+  q?: string;
+  bank?: string;
+  status?: string;
   page?: number;
   page_size?: number;
   search?: string;
@@ -202,7 +213,7 @@ export type GetStatementsParams = {
   ordering?: string;
 };
 
-export type GetStatementsResponse = Paginated<Statement>;
+export type GetStatementsResponse = Paginated<Statement> & { count?: number };
 
 export type UploadStatementResponse = Statement;
 
@@ -232,7 +243,7 @@ export type PrepareStatementImportResponse = {
   status: string;
 };
 
-export type StatementImportRowsResponse = Paginated<StatementImportRow>;
+export type StatementImportRowsResponse = Paginated<StatementImportRow> & { count?: number };
 
 export type UpdateStatementImportRowRequest = Partial<{
   due_date: string | null;
@@ -244,6 +255,7 @@ export type UpdateStatementImportRowRequest = Partial<{
   document_type: string | null;
   entity_id: string | null;
   entity_type: string;
+  cashflow_category_id: string | null;
   ledger_account_id: string | null;
   project_id: string | null;
   departments: StatementImportDepartment[];

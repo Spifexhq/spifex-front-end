@@ -74,10 +74,6 @@ const Settled = () => {
           onTransferenceSaved={() => {
             bumpBanks();
           }}
-          onStatementImportSaved={() => {
-            bumpTable();
-            bumpKpis();
-          }}
         />
       </div>
 

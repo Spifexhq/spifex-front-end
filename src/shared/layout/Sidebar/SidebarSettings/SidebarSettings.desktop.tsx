@@ -40,7 +40,6 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         items: [
           { id: "banks", icon: "bank", label: t("items.banks"), permission: "view_bank_settings_page" },
           { id: "categories", icon: "category", label: t("items.categories"), permission: "view_bank_settings_page" }, // view_category_settings_page
-          { id: "bank-statements", icon: "card", label: t("items.bank-statements"), permission: "view_statements_page" },
         ],
       },
       {

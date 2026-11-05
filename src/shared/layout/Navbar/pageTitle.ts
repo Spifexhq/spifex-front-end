@@ -1,4 +1,4 @@
-const settingsPages = new Set(["personal", "organization-settings", "subscription-management", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "bank-statements", "notifications"]);
+const settingsPages = new Set(["personal", "organization-settings", "subscription-management", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", reconciliation: "reconciliation", correlation: "correlation", setup: "setup", periods: "periods" };
 export function getPageTitleKey(pathname: string): string {
   const [, root, page, detail, phase] = pathname.split("/");
@@ -18,12 +18,13 @@ export function getPageTitleKey(pathname: string): string {
     if (page === "subscription") return "settingsSidebar:items.subscription-management";
     return "navbar:pages.settings";
   }
-  const keys: Record<string, string> = { home: "home", cashflow: "cashflow", settled: "settled", reports: "reports", onboarding: "onboarding", "locale-setup": "locale", status: "status" };
+  const keys: Record<string, string> = { "bank-imports": "bankImports", home: "home", cashflow: "cashflow", settled: "settled", reports: "reports", onboarding: "onboarding", "locale-setup": "locale", status: "status" };
   return `navbar:pages.${keys[root] || "home"}`;
 }
 export type PageCrumb = { titleKey: string; to?: string };
 export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
   const titleKey = getPageTitleKey(pathname);
+  if (pathname.startsWith("/bank-imports/")) return [{ titleKey: "navbar:pages.bankImports", to: "/bank-imports" }, { titleKey: "statements:workspace.reviewTitle" }];
   if (pathname.startsWith("/accounting/setup/")) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey: "accountingSettings:nav.setup", to: "/accounting/setup" }, { titleKey }];
   if ((pathname === "/accounting" || pathname.startsWith("/accounting/"))) return [{ titleKey: "accountingSettings:section.title", to: "/accounting/overview" }, { titleKey }];
   const parents: Record<string, PageCrumb> = {

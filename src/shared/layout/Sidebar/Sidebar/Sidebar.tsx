@@ -1,20 +1,15 @@
+
 import { createPortal } from "react-dom";
 import { useAppShell } from "@/contexts/AppShellContext";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { PermissionMiddleware } from "@/middlewares";
 
 import SidebarDesktop from "./Sidebar.desktop";
 import SidebarMobile from "./Sidebar.mobile";
 
-import { StatementImportModal } from "@/components/Modal";
 import EntriesModal from "@/pages/Finance/components/EntryForm/EntriesModal";
 import TransferenceModal from "@/pages/Finance/components/TransferForm/TransferenceModal";
 import type { ModalType } from "@/pages/Finance/components/EntryForm/types";
-
-import { api } from "@/api/requests";
-import { fetchAllCursor } from "@/lib/list";
-
-import type { BankAccount } from "@/models/settings/banking";
 import type { Entry } from "@/models/entries/entries";
 
 export type SidebarMode = "default" | "settled";
@@ -33,7 +28,6 @@ export interface SidebarProps {
 
   onEntriesSaved?: () => void;
   onTransferenceSaved?: () => void;
-  onStatementImportSaved?: () => void;
 
   entryModalState?: SidebarEntryModalState;
   onEntryModalClose?: () => void;
@@ -49,23 +43,31 @@ const Sidebar: React.FC<SidebarProps> = ({
   onEntryModalClose,
 }) => {
   const shell = useAppShell();
+
   const isOpen = shell ? !shell.collapsed : providedOpen;
   const toggleSidebar = shell?.toggleCollapsed ?? providedToggle;
+
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const toggleMobile = useCallback(() => setMobileOpen(open => !open), []);
-  useEffect(() => { if (!isMobile) setMobileOpen(false); }, [isMobile]);
+
+  const toggleMobile = useCallback(
+    () => setMobileOpen((open) => !open),
+    []
+  );
+
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false);
+  }, [isMobile]);
 
   const [localEntryOpen, setLocalEntryOpen] = useState(false);
-  const [localEntryType, setLocalEntryType] = useState<ModalType | null>(null);
+  const [localEntryType, setLocalEntryType] =
+    useState<ModalType | null>(null);
 
   const [isTransferenceOpen, setIsTransferenceOpen] = useState(false);
-  const [isStatementImportOpen, setIsStatementImportOpen] = useState(false);
-
-  const [banks, setBanks] = useState<BankAccount[]>([]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
+
     const update = (event?: MediaQueryListEvent) => {
       setIsMobile(event ? event.matches : mediaQuery.matches);
     };
@@ -78,44 +80,24 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (!isStatementImportOpen) return;
+  const controlledEntryOpen =
+    !!entryModalState?.isOpen && !!entryModalState?.type;
 
-    let alive = true;
+  const entryType = controlledEntryOpen
+    ? entryModalState?.type ?? null
+    : localEntryType;
 
-    (async () => {
-      try {
-        const allBanks = await fetchAllCursor<BankAccount>((params?: { cursor?: string }) =>
-          api.getBanks({ cursor: params?.cursor, active: "true" }),
-        );
+  const entryInitial = controlledEntryOpen
+    ? entryModalState?.initialEntry ?? null
+    : null;
 
-        if (!alive) return;
-        setBanks(allBanks);
-      } catch {
-        if (!alive) return;
-        setBanks([]);
-      }
-    })();
+  const entryLoading = controlledEntryOpen
+    ? !!entryModalState?.isLoadingEntry
+    : false;
 
-    return () => {
-      alive = false;
-    };
-  }, [isStatementImportOpen]);
-
-  const controlledEntryOpen = !!entryModalState?.isOpen && !!entryModalState?.type;
-  const entryType = controlledEntryOpen ? entryModalState?.type ?? null : localEntryType;
-  const entryInitial = controlledEntryOpen ? entryModalState?.initialEntry ?? null : null;
-  const entryLoading = controlledEntryOpen ? !!entryModalState?.isLoadingEntry : false;
-  const entryOpen = controlledEntryOpen ? true : localEntryOpen;
-
-  const bankOptions = useMemo(
-    () =>
-      banks.map((bank) => ({
-        label: `${bank.institution} • ${bank.branch ?? "-"} / ${bank.account_number ?? "-"}`,
-        value: bank.id,
-      })),
-    [banks],
-  );
+  const entryOpen = controlledEntryOpen
+    ? true
+    : localEntryOpen;
 
   const openEntryModal = (type: ModalType) => {
     setLocalEntryType(type);
@@ -142,55 +124,64 @@ const Sidebar: React.FC<SidebarProps> = ({
     onTransferenceSaved?.();
   };
 
-  const handleStatementImportClose = () => {
-    setIsStatementImportOpen(false);
-  };
-
   const actionProps = {
     isOpen,
     toggleSidebar,
     mode,
     handleOpenModal: openEntryModal,
-    handleOpenTransferenceModal: () => setIsTransferenceOpen(true),
-    handleOpenStatementImportModal: () => setIsStatementImportOpen(true),
+    handleOpenTransferenceModal: () =>
+      setIsTransferenceOpen(true),
   };
 
   return (
     <>
-      {shell ? shell.sidebarSlot && createPortal(isMobile ? <SidebarMobile {...actionProps} isOpen={shell.mobileOpen} toggleSidebar={shell.toggleMobile} /> : <SidebarDesktop {...actionProps} />, shell.sidebarSlot) : isMobile ? <SidebarMobile {...actionProps} isOpen={mobileOpen} toggleSidebar={toggleMobile} /> : <SidebarDesktop {...actionProps} />}
-
-      {(
-        <PermissionMiddleware codeName={["add_cash_flow_entries", "add_settled_entries"]}>
-          <EntriesModal
-            isOpen={entryOpen}
-            onClose={closeEntryModal}
-            type={entryType ?? "credit"}
-            initialEntry={entryInitial}
-            isLoadingEntry={entryLoading}
-            onSave={handleEntrySave}
+      {shell
+        ? shell.sidebarSlot &&
+          createPortal(
+            isMobile ? (
+              <SidebarMobile
+                {...actionProps}
+                isOpen={shell.mobileOpen}
+                toggleSidebar={shell.toggleMobile}
+              />
+            ) : (
+              <SidebarDesktop {...actionProps} />
+            ),
+            shell.sidebarSlot
+          )
+        : isMobile ? (
+          <SidebarMobile
+            {...actionProps}
+            isOpen={mobileOpen}
+            toggleSidebar={toggleMobile}
           />
-        </PermissionMiddleware>
-      )}
+        ) : (
+          <SidebarDesktop {...actionProps} />
+        )}
 
-      {(
-        <PermissionMiddleware codeName={"add_transference"}>
-          <TransferenceModal
-            isOpen={isTransferenceOpen}
-            onClose={() => setIsTransferenceOpen(false)}
-            onSave={handleTransferenceSave}
-          />
-        </PermissionMiddleware>
-      )}
+      <PermissionMiddleware
+        codeName={[
+          "add_cash_flow_entries",
+          "add_settled_entries",
+        ]}
+      >
+        <EntriesModal
+          isOpen={entryOpen}
+          onClose={closeEntryModal}
+          type={entryType ?? "credit"}
+          initialEntry={entryInitial}
+          isLoadingEntry={entryLoading}
+          onSave={handleEntrySave}
+        />
+      </PermissionMiddleware>
 
-      {isStatementImportOpen && (
-        <PermissionMiddleware codeName={"add_statement"} requireSubscription>
-          <StatementImportModal
-            open={isStatementImportOpen}
-            onClose={handleStatementImportClose}
-            bankOptions={bankOptions}
-          />
-        </PermissionMiddleware>
-      )}
+      <PermissionMiddleware codeName="add_transference">
+        <TransferenceModal
+          isOpen={isTransferenceOpen}
+          onClose={() => setIsTransferenceOpen(false)}
+          onSave={handleTransferenceSave}
+        />
+      </PermissionMiddleware>
     </>
   );
 };

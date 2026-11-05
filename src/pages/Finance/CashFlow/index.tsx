@@ -174,10 +174,6 @@ const CashFlow = () => {
             bumpKpis();
           }}
           onTransferenceSaved={() => bumpBanks()}
-          onStatementImportSaved={() => {
-            bumpCashflow();
-            bumpKpis();
-          }}
           entryModalState={editingEntryModalState}
           onEntryModalClose={handleCloseEditingModal}
         />

@@ -103,7 +103,7 @@ import type {
   CommitStatementImportSessionResponse,
   BulkUpdateStatementImportRowsRequest,
   UpdateStatementImportRowRequest,
-} from "@/models/settings/statements";
+} from "@/models/finance/imports";
 import type {
   EntryAccountingPreviewEnvelope,
   EntryAccountingReadinessEnvelope,
@@ -706,6 +706,10 @@ export const api = {
     request<void>(`crm/entities/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   // -------------- Statements / AI Import Flow --------------
+  getStatement: async (id: string) => {
+    const res = await request<UploadStatementResponse>(`banking/statements/${id}/`, "GET");
+    return res.data;
+  },
   getStatements: async (params?: GetStatementsParams) => {
     const res = await request<GetStatementsResponse>("banking/statements/", "GET", params);
     return res.data;
@@ -758,7 +762,7 @@ export const api = {
   getStatementImportSession: async (sessionId: string) => {
     const res = await request<StatementImportSession>(
       `banking/statement-import-sessions/${sessionId}/`,
-      "GET"
+      "GET", { include_rows: false }
     );
     return res.data;
   },
