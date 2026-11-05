@@ -206,6 +206,42 @@
     "loading": "Loading entry details…",
     "loadError": "Some options could not be loaded. Retry to see the complete list.",
     "retry": "Try again",
-    "recurrence": "Repeat this entry using the schedule below."
+    "recurrence": "Repeat this entry using the schedule below.",
+    "financialLocked": "Financial fields and recurrence settings are locked because this entry has settlements or posted accounting output. Descriptive details remain editable."
+  },
+  "options": {
+    "title": "Some lists are unavailable",
+    "categories": "Categories",
+    "departments": "Departments",
+    "projects": "Projects",
+    "inventory": "Inventory",
+    "entities": "Entities",
+    "documents": "Document types",
+    "forbidden": "Your role cannot access this list. Ask an administrator for access.",
+    "failed": "Request failed (HTTP {{status}}). Retry, or contact support if it continues.",
+    "connection": "The list could not be loaded. Check your connection and retry.",
+    "reference": "Support reference: {{id}}",
+    "invalidResponse": "The server returned an unexpected or repeated page. Retry or contact support."
+  },
+  "series": {
+    "title": "Related entries",
+    "loading": "Loading related entries…",
+    "loadError": "Could not load this recurrence. Retry before applying changes to other entries.",
+    "applyTo": "Apply these changes to",
+    "onlyThis": "This entry only",
+    "selected": "This entry and selected related entries ({{count}})",
+    "explain": "Choose related entries in the Recurrence tab. Only fields you change are copied. Date changes shift selected due dates by the same number of days, keeping their spacing.",
+    "blocked": "Some selected entries have settlements or posted accounting output and cannot receive financial changes, or more than 1,000 entries are selected. Review your selection.",
+    "selectAll": "Select all others",
+    "selectEntry": "Select installment {{index}}",
+    "current": "Current entry",
+    "settled": "Settled · financial fields locked",
+    "partial": "Partially settled · financial fields locked",
+    "open": "Open",
+    "edit": "Edit",
+    "protection": "Settled, partially settled and posted entries keep their financial fields locked. Descriptive details remain editable. If any selected entry rejects a change, nothing is saved.",
+    "conflict": "A selected entry changed since it was loaded. Your draft is preserved. Refresh the related entries, review their status, and try again.",
+    "limit": "Select up to 1,000 entries per save.",
+    "posted": "Posted · financial fields locked"
   }
 }

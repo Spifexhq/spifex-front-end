@@ -1,3 +1,4 @@
+import type { RecurrenceEntry } from "@/models/entries/entries";
 // src/api/requests.ts
 import { request, http } from '@/lib/http';
 import type { AccountingSetupStatus, FiscalPeriod } from '@/models/settings/accountingSetup';
@@ -367,6 +368,11 @@ export const api = {
   getEntry: (id: string) =>
     request<Entry>(`cashflow/entries/${id}/`, "GET"),
 
+  getEntryRecurrence: (id: string, params?: { cursor?: string }) =>
+    request<{ results: RecurrenceEntry[]; next: string | null }>(`cashflow/entries/${id}/recurrence/`, "GET", params),
+  editEntryRecurrence: (id: string, ids: string[], versions: Record<string, string>, data: Partial<EditEntryRequest>) =>
+    request<EntryWriteResponse>(`cashflow/entries/${id}/recurrence/`, "PATCH", { ids, versions, data }),
+
   getEntriesBulk: (ids: string[]) =>
     request<GetEntriesBulkResponse>(`cashflow/entries/bulk/get/`, "POST", {
       ids
@@ -375,8 +381,8 @@ export const api = {
   addEntry: (payload: AddEntryRequest) =>
     request<EntryWriteResponse>(`cashflow/entries/`, "POST", payload),
 
-  editEntry: (id: string, payload: Partial<EditEntryRequest>) =>
-    request<EntryWriteResponse>(`cashflow/entries/${id}/`, "PATCH", payload),
+  editEntry: (id: string, payload: Partial<EditEntryRequest>, version?: string) =>
+    request<EntryWriteResponse>(`cashflow/entries/${id}/`, "PATCH", payload, { ifMatch: version }),
 
   editEntriesBulk: (ids: string[], data: Partial<EditEntryRequest>, atomic: boolean = true) =>
     request<EditEntriesBulkResponse>(`cashflow/entries/bulk/update/`, "PATCH",
@@ -472,8 +478,8 @@ export const api = {
     request<void>(`banking/accounts/${bankId}/`, "DELETE"),
 
   /* --- Document Types --- */
-  getDocumentTypes: () =>
-    request<GetDocumentTypesResponse>(`cashflow/document-types/`, "GET"),
+  getDocumentTypes: (params?: { cursor?: string; page_size?: number }) =>
+    request<GetDocumentTypesResponse>(`cashflow/document-types/`, "GET", params),
 
   /* --- Ledger Acccounts --- */
   getLedgerAccounts: (params?: GetLedgerAccountsRequest) =>

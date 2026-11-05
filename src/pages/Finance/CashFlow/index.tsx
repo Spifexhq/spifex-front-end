@@ -1,3 +1,4 @@
+import FinancePageFrame from "../components/FinancePageFrame";
 import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,7 +7,6 @@ import type { SidebarEntryModalState } from '@/shared/layout/Sidebar/Sidebar';
 import { SettlementModal } from '@/components/Modal';
 import { CashFlowTable, type CashFlowTableHandle } from './CashFlowTable';
 import FinancialActivityPanel from '@/components/FinancialActivityPanel';
-import TopProgress from '@/shared/ui/Loaders/TopProgress';
 
 
 import { api } from '@/api/requests';
@@ -87,6 +87,7 @@ const CashFlow = () => {
   const [banksError, setBanksError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isSettlementModalOpen) return;
     let alive = true;
 
     (async () => {
@@ -110,7 +111,7 @@ const CashFlow = () => {
     return () => {
       alive = false;
     };
-  }, [banksKey, t]);
+  }, [banksKey, t, isSettlementModalOpen]);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -161,7 +162,6 @@ const CashFlow = () => {
 
   return (
     <div className="flex min-h-0">
-      <TopProgress active={banksLoading} variant="top" topOffset={64} />
 
       <div className="shrink-0">
         <Sidebar
@@ -185,6 +185,7 @@ const CashFlow = () => {
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <div className="mt-[15px] pb-6 h-[calc(100dvh-80px)] min-h-0 overflow-hidden px-4 sm:px-10">
+          <FinancePageFrame settled={false}>
           <FinancialActivityPanel filters={filters} onApply={handleApplyFilters}
             contextSettlement={false} refreshToken={kpiRefresh}
             banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
@@ -199,6 +200,7 @@ const CashFlow = () => {
               />
             </PermissionMiddleware>
           </FinancialActivityPanel>
+          </FinancePageFrame>
 
 
         </div>

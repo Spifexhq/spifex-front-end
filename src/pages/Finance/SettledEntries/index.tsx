@@ -1,3 +1,4 @@
+import FinancePageFrame from "../components/FinancePageFrame";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -88,6 +89,7 @@ const Settled = () => {
             "px-4 sm:px-10",
           ].join(" ")}
         >
+          <FinancePageFrame settled={true}>
           <FinancialActivityPanel filters={filters} onApply={handleApplyFilters}
             contextSettlement={true} refreshToken={kpiRefresh}
             banksRefreshKey={banksKey} shortcutsEnabled={filterBarHotkeysEnabled}>
@@ -99,6 +101,7 @@ const Settled = () => {
               />
             </PermissionMiddleware>
           </FinancialActivityPanel>
+          </FinancePageFrame>
 
 
         </div>

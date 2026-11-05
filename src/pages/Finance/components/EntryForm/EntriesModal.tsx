@@ -1,5 +1,10 @@
+import { useEntryOptions } from "./useEntryOptions";
+import { getEntryChanges, entryFinancialLocked, touchesFinancialFields } from "./entryChanges";
+import RecurrenceEntries from "./RecurrenceEntries";
+import { useRecurrenceEntries } from "./useRecurrenceEntries";
+import type { Entry } from "@/models/entries/entries";
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { apiErrorMessage } from "@/lib/apiErrorMessage";
+import { apiErrorMessage, isPreconditionFailure } from "@/lib/apiErrorMessage";
 import { useTranslation } from "react-i18next";
 import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
 
@@ -8,7 +13,6 @@ import Button from "@/shared/ui/Button";
 
 import { api } from "@/api/requests";
 import { ApiError } from "@/models/Api";
-import { fetchAllCursor } from "@/lib/list";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 
 import type {
@@ -19,12 +23,8 @@ import type {
   IntervalMonths,
 } from "./types";
 
-import type { AddEntryRequest, EditEntryRequest } from "@/models/entries/entries";
-import type { CashflowCategory } from "@/models/settings/categories";
-import type { Department } from "@/models/settings/departments";
-import type { Project } from "@/models/settings/projects";
-import type { InventoryItem } from "@/models/settings/inventory";
-import type { Entity, EntityTypeValue } from "@/models/settings/entities";
+import type { AddEntryRequest } from "@/models/entries/entries";
+import type { EntityTypeValue } from "@/models/settings/entities";
 import type { DocumentType } from "@/models/entries/documentTypes";
 
 import DetailsTab from "./Tab.details";
@@ -36,25 +36,6 @@ import RecurrenceTab from "./Tab.recurrence";
 /* ---------------------------------- Types --------------------------------- */
 
 type DocumentTypeItem = { id: DocumentType["code"]; label: string };
-
-type EntryDiffable = {
-  id: string;
-  due_date: string;
-  description?: string | null;
-  observation?: string | null;
-  notes?: string | null;
-  amount: string;
-  tx_type: "credit" | "debit";
-  cashflow_category?: string | null;
-  document_type?: string | null;
-  project?: string | null;
-  entity?: string | null;
-  installment_count?: number | null;
-  interval_months?: number | null;
-  weekend_action?: number | null;
-  last_settled_on?: string | null;
-  departments?: Array<{ department_id: string; percent: string | number }>;
-};
 
 /* ------------------------------ Stable constants ------------------------------ */
 
@@ -102,7 +83,7 @@ const ENTITY_TYPE_OPTIONS_BASE: Array<{ id: number; label: string; value: Entity
 function getEmptyFormData(): FormData {
   return {
     details: {
-      dueDate: "",
+      dueDate: toLocalISODate(new Date()),
       description: "",
       observation: "",
       amount: "",
@@ -170,25 +151,6 @@ function closeTransientOverlays() {
   return true;
 }
 
-function extractCollection<T>(input: unknown): T[] {
-  if (Array.isArray(input)) return input as T[];
-  if (!input || typeof input !== "object") return [];
-
-  const obj = input as Record<string, unknown>;
-
-  for (const key of ["results", "items", "data", "categories"]) {
-    const value = obj[key];
-    if (Array.isArray(value)) return value as T[];
-  }
-
-  if (obj.data && obj.data !== input) {
-    const nested = extractCollection<T>(obj.data);
-    if (nested.length || Array.isArray(obj.data)) return nested;
-  }
-
-  return [];
-}
-
 /* -------------------------------- Component -------------------------------- */
 
 const EntriesModal: React.FC<EntriesModalProps> = ({
@@ -196,13 +158,20 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   onClose,
   type,
   onSave,
-  initialEntry,
+  initialEntry: providedEntry,
   isLoadingEntry,
 }) => {
   const { t } = useTranslation(["entriesModal"]);
-  const [sourcesLoading, setSourcesLoading] = useState(true);
-  const [sourcesError, setSourcesError] = useState(false);
   const [sourceAttempt, setSourceAttempt] = useState(0);
+  const [overrideEntry, setOverrideEntry] = useState<Entry | null>(null);
+  const initialEntry = overrideEntry ?? providedEntry;
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const [pendingEntryId, setPendingEntryId] = useState<string | null>(null);
+  const [scope, setScope] = useState<"single" | "selected">("single");
+  const options = useEntryOptions(isOpen, type, sourceAttempt);
+  const { categories: cashflowCategories, departments, projects, inventory: inventoryItems, entities, documents: docTypes, loading: sourcesLoading, issues: sourceIssues } = options;
+  const series = useRecurrenceEntries(isOpen, initialEntry);
+  useEffect(() => { setOverrideEntry(null); setScope("single"); setPendingEntryId(null); setRelatedLoading(false); }, [isOpen, providedEntry?.id]);
 
   const PERIOD_OPTIONS = useMemo(
     () => PERIOD_OPTIONS_BASE.map((p) => ({ ...p, label: t(p.label) })),
@@ -219,7 +188,6 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     [t]
   );
 
-  const [docTypes, setDocTypes] = useState<DocumentType[]>([]);
   const DOCUMENT_TYPES = useMemo<DocumentTypeItem[]>(() => {
     return docTypes
       .filter((dt) => dt.is_active !== false)
@@ -242,19 +210,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     null
   );
 
-  const [cashflowCategories, setCashflowCategories] = useState<CashflowCategory[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [entities, setEntities] = useState<Entity[]>([]);
-
   const lastSettledOnStr = useMemo(() => {
     if (!initialEntry) return null;
     const ie = initialEntry as unknown as { last_settled_on?: string | null };
     return ie.last_settled_on ?? null;
   }, [initialEntry]);
 
-  const isFinancialLocked = !!lastSettledOnStr;
+  const isFinancialLocked = Boolean(initialEntry && entryFinancialLocked(initialEntry));
 
   const formattedLastSettledOn = useMemo(() => {
     if (!lastSettledOnStr) return "";
@@ -264,8 +226,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const isRecurrenceLocked = useMemo(() => {
     if (!initialEntry) return false;
     const count = (initialEntry as unknown as { installment_count?: number }).installment_count ?? 1;
-    return count > 1 || !!lastSettledOnStr;
-  }, [initialEntry, lastSettledOnStr]);
+    return count > 1 || isFinancialLocked;
+  }, [initialEntry, isFinancialLocked]);
 
   const percentageSum = useMemo(() => {
     const nums = formData.costCenters.department_percentage
@@ -276,6 +238,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   }, [formData.costCenters.department_percentage]);
 
   const hasMeaningfulData = useMemo(() => {
+    if (initialEntry) return Object.keys(getEntryChanges(initialEntry, formData)).length > 0;
     if (formData.details.amount > "") return true;
 
     const d = formData.details;
@@ -304,7 +267,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     }
 
     return false;
-  }, [formData]);
+  }, [formData, initialEntry]);
 
   const resetInternalState = useCallback(() => {
     setFormData(getEmptyFormData());
@@ -322,6 +285,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     if (isDropdownOpen()) return;
     if (isSubmitting) return;
 
+    setPendingEntryId(null);
     if (hasMeaningfulData) {
       setShowCloseConfirm(true);
       return;
@@ -338,6 +302,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       return;
     }
     if (showCloseConfirm) {
+      setPendingEntryId(null);
       setShowCloseConfirm(false);
       return;
     }
@@ -345,101 +310,10 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     attemptClose();
   }, [attemptClose, showCloseConfirm, warning, isSubmitting]);
 
-  const fetchAllCashflowCategories = useCallback(async () => {
-    const response = await api.getCashflowCategories();
-    const categories = extractCollection<CashflowCategory>(
-      (response as { data?: unknown })?.data ?? response
-    );
-
-    const wantedType = type;
-
-    return categories
-      .filter((c) => c.is_active !== false)
-      .filter((c) => c.tx_type_hint == null || c.tx_type_hint === wantedType)
-      .sort((a, b) => {
-        const ao = Number(a.sort_order ?? 0);
-        const bo = Number(b.sort_order ?? 0);
-        if (ao !== bo) return ao - bo;
-
-        const ac = a.code || "";
-        const bc = b.code || "";
-        if (ac && bc && ac !== bc) return ac.localeCompare(bc, "en", { numeric: true });
-
-        return (a.name || "").localeCompare(b.name || "", "en");
-      });
-  }, [type]);
-
-  const fetchAllDepartments = useCallback(() => fetchAllCursor<Department>(api.getDepartmentsOptions), []);
-  const fetchAllProjects = useCallback(() => fetchAllCursor<Project>(api.getProjectsOptions), []);
-  const fetchAllInventoryItems = useCallback(() => fetchAllCursor<InventoryItem>(api.getInventoryOptions), []);
-  const fetchAllEntities = useCallback(() => fetchAllCursor<Entity>(api.getEntitiesOptions), []);
-  const fetchAllDocumentTypes = useCallback(() => fetchAllCursor<DocumentType>(api.getDocumentTypes), []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    let alive = true;
-    setSourcesLoading(true);
-    setSourcesError(false);
-
-    (async () => {
-      try {
-        const [ca, deps, prjs, invs, ents, dts] = await Promise.allSettled([
-          fetchAllCashflowCategories(),
-          fetchAllDepartments(),
-          fetchAllProjects(),
-          fetchAllInventoryItems(),
-          fetchAllEntities(),
-          fetchAllDocumentTypes(),
-        ]);
-
-        if (!alive) return;
-        setCashflowCategories(ca.status === "fulfilled" ? ca.value : []);
-        setDepartments(deps.status === "fulfilled" ? deps.value : []);
-        setProjects(prjs.status === "fulfilled" ? prjs.value : []);
-        setInventoryItems(invs.status === "fulfilled" ? invs.value : []);
-        setEntities(ents.status === "fulfilled" ? ents.value : []);
-        setDocTypes(dts.status === "fulfilled" ? dts.value : []);
-        setSourcesError([ca, deps, prjs, invs, ents, dts].some(result => result.status === "rejected"));
-        for (const result of [ca, deps, prjs, invs, ents, dts]) {
-          if (result.status === "rejected") console.error("Error loading entry options:", result.reason);
-        }
-      } catch (e) {
-        if (alive) setSourcesError(true);
-        console.error("Error loading modal sources:", e);
-      }
-
-      if (!alive) return;
-      setSourcesLoading(false);
-
-      if (!initialEntry) {
-        setFormData((prev) => ({
-          ...prev,
-          details: { ...prev.details, dueDate: toLocalISODate(new Date()) },
-        }));
-      }
-
-      requestAnimationFrame(() => amountRef.current?.focus());
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [
-    isOpen,
-    initialEntry,
-    fetchAllCashflowCategories,
-    fetchAllDepartments,
-    fetchAllProjects,
-    fetchAllInventoryItems,
-    fetchAllEntities,
-    fetchAllDocumentTypes,
-    sourceAttempt,
-  ]);
-
   useEffect(() => {
     if (!isOpen || !initialEntry) return;
 
-    const ie = initialEntry as unknown as EntryDiffable;
+    const ie = initialEntry;
 
     const recCount = ie.installment_count ?? 1;
     const interval = ie.interval_months ?? 1;
@@ -466,7 +340,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         department_percentage: depPercs,
         projects: ie.project || "",
       },
-      inventory: { product: "", quantity: "" },
+      inventory: { product: ie.items?.length === 1 ? ie.items[0].item_id || "" : "", quantity: ie.items?.length === 1 ? ie.items[0].quantity : "" },
       entities: {
         entityType: "",
         entity: ie.entity || "",
@@ -644,8 +518,13 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (isSubmitting || sourcesLoading || isLoadingEntry) return;
+      if (isSubmitting || sourcesLoading || isLoadingEntry || relatedLoading) return;
 
+      if (scope === "selected" && (series.loading || series.error || series.selectedIds.length > 999 || (initialEntry && touchesFinancialFields(getEntryChanges(initialEntry, formData)) && series.entries.some(row => series.selectedIds.includes(row.id) && entryFinancialLocked(row))))) {
+        setActiveTab("recurrence");
+        setWarning({ title: t("entriesModal:series.applyTo"), message: t("entriesModal:series.blocked") });
+        return;
+      }
       const v = validateAll();
       if (!v.ok) {
         setActiveTab(v.tab || "details");
@@ -700,75 +579,19 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
           res = await api.addEntry(payload);
         } else {
-          const ie = initialEntry as unknown as EntryDiffable;
-          const changes: Partial<EditEntryRequest> = {};
-
-          if (formData.details.dueDate !== ie.due_date) changes.due_date = formData.details.dueDate;
-
-          if ((formData.details.description || "") !== (ie.description || "")) {
-            changes.description = formData.details.description || "";
-          }
-
-          if ((formData.details.observation || "") !== (ie.observation || "")) {
-            changes.observation = formData.details.observation || "";
-          }
-
-          if ((formData.details.notes || "") !== (ie.notes || "")) {
-            changes.notes = formData.details.notes || "";
-          }
-
-          if (!isFinancialLocked && formData.details.amount !== ie.amount) {
-            changes.amount = formData.details.amount;
-          }
-
-          const initialCategory = ie.cashflow_category || "";
-          const newCategory = formData.details.cashflowCategory || "";
-          if (!isFinancialLocked && newCategory !== initialCategory) {
-            changes.cashflow_category = newCategory || null;
-          }
-
-          const initialDocType = ie.document_type || "";
-          const newDocType = formData.details.documentType || "";
-          if (newDocType !== initialDocType) {
-            changes.document_type = newDocType || null;
-          }
-
-          const initialProject = ie.project || "";
-          const newProject = formData.costCenters.projects || "";
-          if (!isFinancialLocked && newProject !== initialProject) {
-            changes.project = newProject || null;
-          }
-
-          const initialEntity = ie.entity || "";
-          const newEntity = formData.entities.entity || "";
-          if (!isFinancialLocked && newEntity !== initialEntity) {
-            changes.entity = newEntity || null;
-          }
-
-          if (!isFinancialLocked && deps) changes.departments = deps;
-          if (!isFinancialLocked && items) changes.items = items;
-
-          const initialRecCount = ie.installment_count ?? 1;
-          if (initialRecCount <= 1) {
-            const wantRecurring = formData.recurrence.recurrence === 1;
-            const count = wantRecurring ? Number(formData.recurrence.installments || 1) : 1;
-
-            if (wantRecurring && count > 1) {
-              changes.installment_count = count;
-              changes.interval_months = formData.recurrence.periods as IntervalMonths;
-              if (formData.recurrence.weekend) {
-                changes.weekend_action = formData.recurrence.weekend;
-              }
-            }
-          }
-
+          const ie = initialEntry;
+          const changes = getEntryChanges(ie, formData);
           if (Object.keys(changes).length === 0) {
             handleClose();
             onSave();
             return;
           }
 
-          res = await api.editEntry(ie.id, changes);
+          if (scope === "selected") {
+            const ids = [ie.id, ...series.selectedIds];
+            const versions = Object.fromEntries(series.entries.filter(row => ids.includes(row.id)).map(row => [row.id, row.id === ie.id ? ie.version || row.version : row.version]));
+            res = await api.editEntryRecurrence(ie.id, ids, versions, changes);
+          } else res = await api.editEntry(ie.id, changes, ie.version);
         }
 
         if (!("data" in res)) {
@@ -783,7 +606,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         handleClose();
         onSave();
       } catch (err) {
-        const message = apiErrorMessage(err, t("entriesModal:saveError.unexpected"));
+        const message = isPreconditionFailure(err) ? t("entriesModal:series.conflict") : apiErrorMessage(err, t("entriesModal:saveError.unexpected"));
 
         setWarning({ title: t("entriesModal:saveError.title"), message });
       } finally {
@@ -792,6 +615,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
     },
     [
       validateAll,
+      scope, series.selectedIds, series.entries, series.loading, series.error, relatedLoading,
       isSubmitting,
       sourcesLoading,
       isLoadingEntry,
@@ -801,11 +625,33 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
       initialEntry,
       formData,
       type,
-      isFinancialLocked,
       handleClose,
       onSave,
     ]
   );
+
+  const changes = initialEntry ? getEntryChanges(initialEntry, formData) : {};
+  const financialChange = touchesFinancialFields(changes);
+  const selectedRows = series.entries.filter(row => series.selectedIds.includes(row.id));
+  const blockedSelection = scope === "selected" && (series.selectedIds.length > 999 || (financialChange && selectedRows.some(entryFinancialLocked)));
+  const relatedRequest = useRef(0);
+  useEffect(() => () => { relatedRequest.current++; }, [isOpen]);
+  const openRelated = useCallback(async (id: string) => {
+    const request = ++relatedRequest.current;
+    setShowCloseConfirm(false);
+    setPendingEntryId(null);
+    setRelatedLoading(true);
+    try {
+      const response = await api.getEntry(id);
+      if (request === relatedRequest.current) { setOverrideEntry(response.data); setScope("single"); setPendingEntryId(null); setShowCloseConfirm(false); }
+    } catch (error) {
+      if (request === relatedRequest.current) setWarning({ title: t("entriesModal:saveError.title"), message: apiErrorMessage(error, t("entriesModal:series.loadError")) });
+    } finally { if (request === relatedRequest.current) setRelatedLoading(false); }
+  }, [t]);
+  const requestRelated = (id: string) => {
+    if (Object.keys(changes).length) { setPendingEntryId(id); setShowCloseConfirm(true); }
+    else void openRelated(id);
+  };
 
   const isAmountValid = formData.details.amount > "";
   const isCategoryValid = !!formData.details.cashflowCategory;
@@ -925,14 +771,14 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
       case "recurrence":
         return (
-          <RecurrenceTab
+          <div className="space-y-5"><RecurrenceTab
             t={t}
             formData={formData}
             setFormData={setFormData}
             periodOptions={PERIOD_OPTIONS}
             installmentsInputId={IDS.installmentsInput}
             isRecurrenceLocked={isRecurrenceLocked}
-          />
+          />{initialEntry?.installment_group_id && <RecurrenceEntries currentId={initialEntry.id} series={series} selectable={scope === "selected"} onEdit={requestRelated} />}</div>
         );
 
       default:
@@ -942,8 +788,8 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
 
   return (
     <FloatingDialog isOpen={isOpen} width={880} height={670} title={type === "credit" ? t("entriesModal:header.receipts") : t("entriesModal:header.payments")}
-      eyebrow={t("entriesModal:header.entry")} description={isFinancialLocked && formattedLastSettledOn ? t("entriesModal:settledInfo", { date: formattedLastSettledOn }) : t("entriesModal:guidance.intro")}
-      closeLabel={t("entriesModal:aria.close")} onClose={attemptClose} busy={isSubmitting} loading={Boolean(isLoadingEntry) || sourcesLoading} onSubmit={handleSubmit} formId={IDS.form} tabs={renderTabs()}
+      eyebrow={t("entriesModal:header.entry")} description={isFinancialLocked ? (formattedLastSettledOn ? t("entriesModal:settledInfo", { date: formattedLastSettledOn }) : t("entriesModal:guidance.financialLocked")) : t("entriesModal:guidance.intro")}
+      closeLabel={t("entriesModal:aria.close")} onClose={attemptClose} busy={isSubmitting} loading={Boolean(isLoadingEntry) || sourcesLoading || relatedLoading} onSubmit={handleSubmit} formId={IDS.form} tabs={renderTabs()}
       footer={<>            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-[12px] text-gray-600 hidden md:block">
                 {formData.details.amount > "" ? (
@@ -966,7 +812,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 >
                   {t("entriesModal:actions.cancel")}
                 </Button>
-                <Button type="submit" disabled={isSaveDisabled || sourcesLoading || Boolean(isLoadingEntry)} className="w-full md:w-auto">
+                <Button type="submit" disabled={isSaveDisabled || sourcesLoading || Boolean(isLoadingEntry) || relatedLoading || blockedSelection || (scope === "selected" && (series.loading || Boolean(series.error)))} className="w-full md:w-auto">
                   {isSubmitting ? t("entriesModal:actions.saving") : t("entriesModal:actions.save")}
                 </Button>
               </div>
@@ -997,14 +843,14 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
                 <Button
                   variant="outline"
                   className="w-full md:w-auto !border-gray-200 !text-gray-700 hover:!bg-gray-50"
-                  onClick={() => setShowCloseConfirm(false)}
+                  onClick={() => { setShowCloseConfirm(false); setPendingEntryId(null); }}
                 >
                   {t("entriesModal:actions.back")}
                 </Button>
                 <Button
                   variant="danger"
                   className="w-full md:w-auto !bg-red-500 hover:!bg-red-600"
-                  onClick={handleClose}
+                  onClick={() => { if (pendingEntryId) void openRelated(pendingEntryId); else handleClose(); }}
                 >
                   {t("entriesModal:actions.discard")}
                 </Button>
@@ -1051,8 +897,17 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         )}
 </> : undefined}
     >
-      {isLoadingEntry || sourcesLoading ? <DialogSkeleton label={t("entriesModal:guidance.loading")} /> : <>
-        {sourcesError && <div role="status" className="mb-5 flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"><span>{t("entriesModal:guidance.loadError")}</span><Button type="button" variant="outline" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
+      {isLoadingEntry || sourcesLoading || relatedLoading ? <DialogSkeleton label={t("entriesModal:guidance.loading")} /> : <>
+        {sourceIssues.length > 0 && <div role="status" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><p className="font-medium">{t("entriesModal:options.title")}</p><ul className="mt-2 space-y-1">{sourceIssues.map(issue => <li key={issue.source}><b>{t(`entriesModal:options.${issue.source}`)}</b> — {issue.status === 403 ? t("entriesModal:options.forbidden") : issue.status ? t("entriesModal:options.failed", { status: issue.status }) : t(issue.invalidResponse ? "entriesModal:options.invalidResponse" : "entriesModal:options.connection")}{issue.requestId && <span className="block text-[10px]">{t("entriesModal:options.reference", { id: issue.requestId })}</span>}</li>)}</ul><Button type="button" variant="outline" className="mt-3" onClick={() => setSourceAttempt(value => value + 1)}>{t("entriesModal:guidance.retry")}</Button></div>}
+        {initialEntry?.installment_group_id && <section className="mb-5 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+          <p className="mb-2 text-xs font-medium text-slate-700">{t("entriesModal:series.applyTo")}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+            <label className="flex min-h-11 items-center gap-2 sm:min-h-9"><input type="radio" name="entry-edit-scope" checked={scope === "single"} onChange={() => setScope("single")} />{t("entriesModal:series.onlyThis")}</label>
+            <label className="flex min-h-11 items-center gap-2 sm:min-h-9"><input type="radio" name="entry-edit-scope" checked={scope === "selected"} onChange={() => { setScope("selected"); setActiveTab("recurrence"); }} />{t("entriesModal:series.selected", { count: series.selectedIds.length + 1 })}</label>
+          </div>
+          {scope === "selected" && <p className="mt-2 text-xs leading-5 text-slate-500">{t("entriesModal:series.explain")}</p>}
+          {blockedSelection && <p role="alert" className="mt-2 text-xs text-amber-800">{t("entriesModal:series.blocked")}</p>}
+        </section>}
         <div id="entry-form-panel" role="tabpanel" aria-labelledby={`entry-tab-${activeTab}`} className="space-y-5">{renderTabContent()}</div>
       </>}
     </FloatingDialog>

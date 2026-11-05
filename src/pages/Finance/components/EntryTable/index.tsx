@@ -1,3 +1,4 @@
+import { useFinanceLoading } from "../financeLoading";
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "@/hooks/useAuth";
@@ -29,6 +30,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
     const auth = useAuthContext();
     const allowed = (permission: string) => auth.isOwner || auth.isSuperUser || auth.permissions.includes(permission);
     const pager = useEntries(filters, settled);
+    useFinanceLoading("entries", (!pager.knownPages && !pager.error) || (pager.loading && !pager.items.length));
     const rows = useMemo(() => buildEntryRows(pager.items, !pager.reachedEnd), [pager.items, pager.reachedEnd]);
     const loadedCount = rows.filter(row => row.kind === "record").length;
     const { refresh } = pager;

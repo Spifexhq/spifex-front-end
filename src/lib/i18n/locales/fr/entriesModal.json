@@ -206,6 +206,42 @@
     "loading": "Chargement des détails de l’écriture…",
     "loadError": "Certaines options n’ont pas pu être chargées. Réessayez pour afficher la liste complète.",
     "retry": "Réessayer",
-    "recurrence": "Répétez cette écriture selon le calendrier ci-dessous."
+    "recurrence": "Répétez cette écriture selon le calendrier ci-dessous.",
+    "financialLocked": "Les champs financiers et la récurrence sont verrouillés car cette écriture a des règlements ou des écritures comptables. Les détails descriptifs restent modifiables."
+  },
+  "options": {
+    "title": "Certaines listes sont indisponibles",
+    "categories": "Catégories",
+    "departments": "Départements",
+    "projects": "Projets",
+    "inventory": "Inventaire",
+    "entities": "Entités",
+    "documents": "Types de document",
+    "forbidden": "Votre rôle ne permet pas de consulter cette liste. Demandez l’accès à un administrateur.",
+    "failed": "La requête a échoué (HTTP {{status}}). Réessayez ou contactez le support si le problème persiste.",
+    "connection": "Impossible de charger la liste. Vérifiez votre connexion et réessayez.",
+    "reference": "Référence pour le support : {{id}}",
+    "invalidResponse": "Le serveur a renvoyé une page inattendue ou répétée. Réessayez ou contactez le support."
+  },
+  "series": {
+    "title": "Écritures liées",
+    "loading": "Chargement des écritures liées…",
+    "loadError": "Impossible de charger cette récurrence. Réessayez avant de modifier d’autres écritures.",
+    "applyTo": "Appliquer les modifications à",
+    "onlyThis": "Cette écriture uniquement",
+    "selected": "Cette écriture et les écritures liées sélectionnées ({{count}})",
+    "explain": "Choisissez les écritures liées dans l’onglet Récurrence. Seuls les champs modifiés sont copiés. Les échéances sélectionnées sont décalées du même nombre de jours, en conservant leur espacement.",
+    "blocked": "Certaines écritures sélectionnées ont des règlements ou des écritures comptables et ne peuvent pas recevoir de modifications financières, ou plus de 1 000 écritures sont sélectionnées. Vérifiez votre sélection.",
+    "selectAll": "Sélectionner les autres",
+    "selectEntry": "Sélectionner l’échéance {{index}}",
+    "current": "Écriture actuelle",
+    "settled": "Réglée · champs financiers verrouillés",
+    "partial": "Partiellement réglée · champs financiers verrouillés",
+    "open": "En cours",
+    "edit": "Modifier",
+    "protection": "Les champs financiers des écritures réglées, partiellement réglées ou comptabilisées restent verrouillés. Les détails descriptifs restent modifiables. Si une écriture refuse une modification, rien n’est enregistré.",
+    "conflict": "Une écriture sélectionnée a changé depuis son chargement. Votre brouillon est conservé. Actualisez les écritures liées, vérifiez leurs états et réessayez.",
+    "limit": "Sélectionnez jusqu’à 1 000 écritures par enregistrement.",
+    "posted": "Comptabilisée · champs financiers verrouillés"
   }
 }

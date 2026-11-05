@@ -1,3 +1,4 @@
+import { useFinanceLoading } from "@/pages/Finance/components/financeLoading";
 import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
 import FinancialActivitySkeleton from "./FinancialActivitySkeleton";
 import { useId, useState, type ReactNode } from "react";
@@ -43,6 +44,8 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
  const showFilters = canView("view_filters");
  const { metrics, loading, error, retry } = useActivityMetrics({filters, contextSettlement, refreshToken, enabled: showMetrics});
  const { state: bankState, ids: bankIds, sorted: bankRows, totalFmt: bankTotal, retryBanks } = useBankBalances(filters.bank_id, banksRefreshKey, showBanks);
+ useFinanceLoading("banks", showBanks && bankState.loading);
+ useFinanceLoading("metrics", showMetrics && loading);
  const [expanded, setExpanded] = useState(false);
  const detailsId = useId();
  const reduced = useReducedMotion();

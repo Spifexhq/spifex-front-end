@@ -206,6 +206,42 @@
     "loading": "A carregar os detalhes do lançamento…",
     "loadError": "Não foi possível carregar algumas opções. Tente novamente para ver a lista completa.",
     "retry": "Tentar novamente",
-    "recurrence": "Repita este lançamento de acordo com o calendário abaixo."
+    "recurrence": "Repita este lançamento de acordo com o calendário abaixo.",
+    "financialLocked": "Os campos financeiros e a recorrência estão bloqueados porque este lançamento tem liquidações ou registos contabilísticos. Pode alterar os detalhes descritivos."
+  },
+  "options": {
+    "title": "Algumas listas estão indisponíveis",
+    "categories": "Categorias",
+    "departments": "Departamentos",
+    "projects": "Projetos",
+    "inventory": "Inventário",
+    "entities": "Entidades",
+    "documents": "Tipos de documento",
+    "forbidden": "O seu perfil não tem acesso a esta lista. Solicite acesso ao administrador.",
+    "failed": "O pedido falhou (HTTP {{status}}). Tente novamente ou contacte o suporte se o problema continuar.",
+    "connection": "Não foi possível carregar a lista. Verifique a ligação e tente novamente.",
+    "reference": "Referência para o suporte: {{id}}",
+    "invalidResponse": "O servidor devolveu uma página inesperada ou repetida. Tente novamente ou contacte o suporte."
+  },
+  "series": {
+    "title": "Lançamentos relacionados",
+    "loading": "A carregar os lançamentos relacionados…",
+    "loadError": "Não foi possível carregar esta recorrência. Tente novamente antes de aplicar alterações a outros lançamentos.",
+    "applyTo": "Aplicar estas alterações a",
+    "onlyThis": "Apenas este lançamento",
+    "selected": "Este lançamento e os relacionados selecionados ({{count}})",
+    "explain": "Escolha os lançamentos relacionados no separador Recorrência. Apenas os campos alterados serão copiados. As datas selecionadas serão deslocadas pelo mesmo número de dias, mantendo o intervalo entre elas.",
+    "blocked": "Alguns lançamentos selecionados têm liquidações ou registos contabilísticos e não podem receber alterações financeiras, ou foram selecionados mais de 1.000 lançamentos. Reveja a seleção.",
+    "selectAll": "Selecionar os restantes",
+    "selectEntry": "Selecionar a prestação {{index}}",
+    "current": "Lançamento atual",
+    "settled": "Liquidado · campos financeiros bloqueados",
+    "partial": "Parcialmente liquidado · campos financeiros bloqueados",
+    "open": "Em aberto",
+    "edit": "Editar",
+    "protection": "Os campos financeiros dos lançamentos liquidados, parcialmente liquidados ou contabilizados permanecem bloqueados. Pode alterar detalhes descritivos. Se algum lançamento rejeitar a alteração, nada será guardado.",
+    "conflict": "Um lançamento selecionado foi alterado desde o carregamento. As suas alterações foram preservadas. Atualize a lista de relacionados, reveja os estados e tente novamente.",
+    "limit": "Selecione até 1.000 lançamentos por gravação.",
+    "posted": "Contabilizado · campos financeiros bloqueados"
   }
 }

@@ -33,6 +33,7 @@ export type GetEntryResponse = Paginated<Entry>;
 
 export interface Entry {
   id: string;
+  version?: string;
   due_date: string;
   description: string;
   observation: string | null;
@@ -40,6 +41,9 @@ export interface Entry {
 
   amount: string;
   open_amount?: string;
+  document_type?: string | null;
+  settled_count?: number;
+  financial_locked?: boolean;
   tx_type: string;
 
   installment_group_id: string | null;
@@ -133,3 +137,17 @@ export interface EditEntriesBulkPartial {
 
 export type EditEntriesBulkResponse = EditEntriesBulkSuccess | EditEntriesBulkPartial;
 export type EntryWriteResponse = Entry | Entry[];
+
+export interface RecurrenceEntry {
+  id: string;
+  due_date: string;
+  description: string;
+  amount: string;
+  installment_index: number | null;
+  installment_count: number | null;
+  last_settled_on: string | null;
+  settled_count: number;
+  financial_locked: boolean;
+  is_settled: boolean;
+  version: string;
+}

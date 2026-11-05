@@ -206,6 +206,42 @@
     "loading": "Buchungsdetails werden geladen…",
     "loadError": "Einige Optionen konnten nicht geladen werden. Versuchen Sie es erneut, um die vollständige Liste zu sehen.",
     "retry": "Erneut versuchen",
-    "recurrence": "Wiederholen Sie diese Buchung nach dem untenstehenden Zeitplan."
+    "recurrence": "Wiederholen Sie diese Buchung nach dem untenstehenden Zeitplan.",
+    "financialLocked": "Finanzfelder und Wiederholung sind gesperrt, da diese Buchung Zahlungen oder gebuchte Journale hat. Beschreibende Details bleiben bearbeitbar."
+  },
+  "options": {
+    "title": "Einige Listen sind nicht verfügbar",
+    "categories": "Kategorien",
+    "departments": "Abteilungen",
+    "projects": "Projekte",
+    "inventory": "Inventar",
+    "entities": "Kontakte",
+    "documents": "Dokumenttypen",
+    "forbidden": "Ihre Rolle hat keinen Zugriff auf diese Liste. Bitten Sie einen Administrator um Zugriff.",
+    "failed": "Anfrage fehlgeschlagen (HTTP {{status}}). Versuchen Sie es erneut oder kontaktieren Sie den Support.",
+    "connection": "Die Liste konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "reference": "Support-Referenz: {{id}}",
+    "invalidResponse": "Der Server hat eine unerwartete oder wiederholte Seite zurückgegeben. Versuchen Sie es erneut oder kontaktieren Sie den Support."
+  },
+  "series": {
+    "title": "Zugehörige Buchungen",
+    "loading": "Zugehörige Buchungen werden geladen…",
+    "loadError": "Die Wiederholung konnte nicht geladen werden. Versuchen Sie es erneut, bevor Sie andere Buchungen ändern.",
+    "applyTo": "Änderungen anwenden auf",
+    "onlyThis": "Nur diese Buchung",
+    "selected": "Diese und ausgewählte zugehörige Buchungen ({{count}})",
+    "explain": "Wählen Sie zugehörige Buchungen im Reiter Wiederholung. Nur geänderte Felder werden kopiert. Ausgewählte Fälligkeiten werden um dieselbe Anzahl von Tagen verschoben; die Abstände bleiben erhalten.",
+    "blocked": "Einige ausgewählte Buchungen haben Zahlungen oder gebuchte Journale und erlauben keine finanziellen Änderungen, oder es wurden mehr als 1.000 Buchungen ausgewählt. Prüfen Sie die Auswahl.",
+    "selectAll": "Alle anderen auswählen",
+    "selectEntry": "Rate {{index}} auswählen",
+    "current": "Aktuelle Buchung",
+    "settled": "Beglichen · Finanzfelder gesperrt",
+    "partial": "Teilweise beglichen · Finanzfelder gesperrt",
+    "open": "Offen",
+    "edit": "Bearbeiten",
+    "protection": "Finanzfelder beglichener, teilweise beglichener und gebuchter Buchungen bleiben gesperrt. Beschreibende Details können geändert werden. Lehnt eine Buchung eine Änderung ab, wird nichts gespeichert.",
+    "conflict": "Eine ausgewählte Buchung wurde seit dem Laden geändert. Ihr Entwurf bleibt erhalten. Laden Sie die zugehörigen Buchungen neu, prüfen Sie den Status und versuchen Sie es erneut.",
+    "limit": "Wählen Sie bis zu 1.000 Buchungen pro Speichervorgang.",
+    "posted": "Gebucht · Finanzfelder gesperrt"
   }
 }
