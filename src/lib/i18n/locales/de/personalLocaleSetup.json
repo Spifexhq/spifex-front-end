@@ -16,5 +16,18 @@
   "btnSaveContinue": "Speichern & Weiter",
   "toastLoadError": "Einstellungen konnten nicht geladen werden.",
   "toastUpdateOk": "Erfolgreich aktualisiert.",
-  "toastUpdateError": "Einstellungen konnten nicht aktualisiert werden."
+  "toastUpdateError": "Einstellungen konnten nicht aktualisiert werden.",
+  "retry": "Erneut versuchen",
+  "reviewIdentity": "Kontodaten bestätigen",
+  "emailVerified": "E-Mail bestätigt",
+  "emailUnverified": "E-Mail-Bestätigung erforderlich",
+  "name": "Vollständiger Name",
+  "accuracyHint": "Wählen Sie Ihr tatsächliches Land und Ihre Zeitzone. Sie bestimmen Datums- und Periodengrenzen, bestätigen aber nicht Ihre Identität.",
+  "setupTitle": "Regionale Einstellungen einrichten",
+  "setupDescription": "Bestätigen Sie diese Angaben, bevor Sie Ihren Arbeitsbereich öffnen.",
+  "personalSection": "Ihre persönlichen Einstellungen",
+  "personalDescription": "Diese Einstellungen gelten für Ihr Konto und die Datumsanzeige.",
+  "organizationSection": "Organisationseinstellungen",
+  "organizationDescription": "Wählen Sie als Inhaber das Land und die Zeitzone Ihrer Organisation.",
+  "signOut": "Abmelden"
 }

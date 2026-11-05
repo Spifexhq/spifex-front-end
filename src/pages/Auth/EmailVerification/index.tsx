@@ -83,14 +83,14 @@ const EmailVerification = () => {
   ]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+    <div className="w-full">
       <div className="max-w-md w-full">
         {isVerifying ? (
           <div className="flex justify-center items-center h-60">
             <TopProgress active={true} variant="center" />
           </div>
         ) : (
-          <div className="bg-white shadow-sm rounded-2xl p-6 sm:p-8 text-center">
+          <div className="bg-white py-2 text-center">
             <h1 className="text-2xl font-semibold text-slate-900 mb-4">
               {success
                 ? isCancellation
@@ -101,7 +101,7 @@ const EmailVerification = () => {
 
             <p className="text-sm text-slate-500 mb-6">{verificationMessage}</p>
 
-            {success && (
+            {(
               <Button
                 variant="primary"
                 onClick={() => navigate("/signin")}

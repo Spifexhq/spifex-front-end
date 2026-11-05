@@ -16,5 +16,18 @@
   "btnSaveContinue": "Save & Continue",
   "toastLoadError": "Couldn't load your settings.",
   "toastUpdateOk": "Updated successfully.",
-  "toastUpdateError": "Couldn't update your settings."
+  "toastUpdateError": "Couldn't update your settings.",
+  "retry": "Try again",
+  "reviewIdentity": "Confirm your account details",
+  "emailVerified": "Email verified",
+  "emailUnverified": "Email verification required",
+  "name": "Full name",
+  "accuracyHint": "Choose your actual country and timezone. These control dates and period boundaries; they do not verify your identity.",
+  "setupTitle": "Set up your regional preferences",
+  "setupDescription": "Confirm the details below before entering your workspace.",
+  "personalSection": "Your personal preferences",
+  "personalDescription": "These settings apply to your account and how dates are displayed.",
+  "organizationSection": "Organization preferences",
+  "organizationDescription": "As the owner, choose the country and timezone used by your organization.",
+  "signOut": "Sign out"
 }

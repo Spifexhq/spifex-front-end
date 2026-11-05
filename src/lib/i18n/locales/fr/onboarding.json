@@ -58,7 +58,8 @@
     "personalAddress": "Renseignez au moins une ligne d’adresse personnelle.",
     "orgTimezone": "Le fuseau horaire de l’organisation est requis.",
     "orgCountry": "Le pays de l’organisation est requis.",
-    "orgAddress": "Renseignez au moins une ligne d’adresse de l’organisation."
+    "orgAddress": "Renseignez au moins une ligne d’adresse de l’organisation.",
+    "phoneFormat": "Utilisez un numéro international, par exemple +351911234567."
   },
   "actions": {
     "saveContinue": "Enregistrer et continuer",
@@ -89,5 +90,11 @@
   },
   "accounting": {
     "subtitle": "Terminez et activez la configuration comptable, puis configurez les catégories de trésorerie de votre organisation."
+  },
+  "status": {
+    "done": "Terminé",
+    "required": "Obligatoire",
+    "configured": "Configuré",
+    "pending": "À compléter"
   }
 }

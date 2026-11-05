@@ -58,7 +58,8 @@
     "personalAddress": "Füllen Sie mindestens eine persönliche Adresszeile aus.",
     "orgTimezone": "Die Zeitzone der Organisation ist erforderlich.",
     "orgCountry": "Das Land der Organisation ist erforderlich.",
-    "orgAddress": "Füllen Sie mindestens eine Adresszeile der Organisation aus."
+    "orgAddress": "Füllen Sie mindestens eine Adresszeile der Organisation aus.",
+    "phoneFormat": "Verwenden Sie eine internationale Nummer, z. B. +351911234567."
   },
   "actions": {
     "saveContinue": "Speichern und fortfahren",
@@ -89,5 +90,11 @@
   },
   "accounting": {
     "subtitle": "Schließen Sie die Buchhaltungseinrichtung ab, aktivieren Sie sie und konfigurieren Sie die verwendeten Cashflow-Kategorien."
+  },
+  "status": {
+    "done": "Abgeschlossen",
+    "required": "Erforderlich",
+    "configured": "Konfiguriert",
+    "pending": "Noch erforderlich"
   }
 }

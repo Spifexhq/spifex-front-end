@@ -1,3 +1,5 @@
+import SegmentedControl from "@/shared/ui/SegmentedControl";
+import { motion, useReducedMotion } from "framer-motion";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -76,8 +78,8 @@ const SectionCard = ({
   icon?: React.ReactNode;
   children: React.ReactNode;
 }) => (
-  <section className="rounded-2xl border border-gray-200 bg-white">
-    <div className="border-b border-gray-200 bg-gray-50 px-5 py-4">
+  <section className="rounded-xl border border-[#e1e6ee] bg-white">
+    <div className="border-b border-[#e8ebf0] bg-white px-5 py-5">
       <div className="flex items-start gap-3">
         {icon ? (
           <div className="mt-0.5 rounded-xl border border-gray-200 bg-white p-2 text-gray-700">
@@ -85,7 +87,7 @@ const SectionCard = ({
           </div>
         ) : null}
         <div>
-          <h2 className="text-[15px] font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-[15px] font-semibold text-[#26344a]">{title}</h2>
           {subtitle ? <p className="mt-1 text-[12px] text-gray-600">{subtitle}</p> : null}
         </div>
       </div>
@@ -94,45 +96,8 @@ const SectionCard = ({
   </section>
 );
 
-const StepBadge = ({
-  active,
-  done,
-  label,
-  index,
-}: {
-  active: boolean;
-  done: boolean;
-  label: string;
-  index: number;
-}) => (
-  <div
-    className={[
-      "flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors",
-      active
-        ? "border-gray-900 bg-gray-900 text-white"
-        : done
-          ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-          : "border-gray-200 bg-white text-gray-700",
-    ].join(" ")}
-  >
-    <div
-      className={[
-        "grid h-7 w-7 place-items-center rounded-full text-[12px] font-semibold",
-        active
-          ? "bg-white/15 text-white"
-          : done
-            ? "bg-emerald-100 text-emerald-800"
-            : "bg-gray-100 text-gray-700",
-      ].join(" ")}
-    >
-      {done ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
-    </div>
-    <span className="text-[13px] font-medium">{label}</span>
-  </div>
-);
-
 const missingBlockClass = (missing: boolean) =>
-  missing ? "rounded-xl border border-amber-300 bg-amber-50/40 p-2" : "";
+  missing ? "rounded-xl border border-amber-200 bg-amber-50/30 p-2" : "";
 
 const RequirementRow = ({
   done,
@@ -144,11 +109,13 @@ const RequirementRow = ({
   title: string;
   description: string;
   icon: React.ReactNode;
-}) => (
+}) => {
+  const { t } = useTranslation("onboarding");
+  return (
   <div
     className={[
-      "flex items-start gap-3 rounded-2xl border px-4 py-4",
-      done ? "border-emerald-200 bg-emerald-50" : "border-gray-200 bg-white",
+      "flex items-start gap-3 rounded-lg border px-4 py-4",
+      done ? "border-[#e1e6ee] bg-white" : "border-gray-200 bg-white",
     ].join(" ")}
   >
     <div
@@ -162,14 +129,14 @@ const RequirementRow = ({
 
     <div className="min-w-0 flex-1">
       <div className="flex items-center gap-2">
-        <h3 className="text-[14px] font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-[14px] font-semibold text-[#26344a]">{title}</h3>
         {done ? (
           <span className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-            Done
+            {t("status.done")}
           </span>
         ) : (
           <span className="rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-700">
-            Required
+            {t("status.required")}
           </span>
         )}
       </div>
@@ -177,10 +144,12 @@ const RequirementRow = ({
     </div>
   </div>
 );
+};
 
 const OnboardingPage: React.FC = () => {
   const { t, i18n } = useTranslation("onboarding");
   const navigate = useNavigate();
+  const reduced = useReducedMotion();
   const { permissions, isOwner } = useAuthContext();
 
   const [loading, setLoading] = useState(true);
@@ -342,8 +311,8 @@ const OnboardingPage: React.FC = () => {
   const personalMissing = {
     phone: isBlank(personalForm.phone),
     national_id: isBlank(personalForm.national_id),
-    timezone: isBlank(personalForm.timezone),
-    country: isBlank(personalForm.country),
+    timezone: !TIMEZONES.some(z => z.value === personalForm.timezone),
+    country: !countries.some(c => c.value === normalizeCountry(personalForm.country)),
     addressGroup: !hasAtLeastOneAddressLine(personalForm.line1, personalForm.line2),
     line1:
       !hasAtLeastOneAddressLine(personalForm.line1, personalForm.line2) &&
@@ -354,8 +323,8 @@ const OnboardingPage: React.FC = () => {
   };
 
   const orgMissing = {
-    timezone: isBlank(orgForm.timezone),
-    country: isBlank(orgForm.country),
+    timezone: !TIMEZONES.some(z => z.value === orgForm.timezone),
+    country: !countries.some(c => c.value === normalizeCountry(orgForm.country)),
     addressGroup: !hasAtLeastOneAddressLine(orgForm.line1, orgForm.line2),
     line1:
       !hasAtLeastOneAddressLine(orgForm.line1, orgForm.line2) &&
@@ -365,8 +334,10 @@ const OnboardingPage: React.FC = () => {
       isBlank(orgForm.line2),
   };
 
+  const phoneValid = /^\+?[1-9]\d{6,14}$/.test(personalForm.phone.trim());
+
   const isPersonalStepValid =
-    !personalMissing.phone &&
+    !personalMissing.phone && phoneValid &&
     !personalMissing.national_id &&
     !personalMissing.timezone &&
     !personalMissing.country &&
@@ -378,6 +349,7 @@ const OnboardingPage: React.FC = () => {
     !orgMissing.addressGroup;
 
   const savePersonal = async () => {
+    if (savingPersonal) return;
     if (!isPersonalStepValid) {
       setSnack({ message: t("errors.personalInvalid"), severity: "warning" });
       return;
@@ -407,6 +379,7 @@ const OnboardingPage: React.FC = () => {
   };
 
   const saveOrg = async () => {
+    if (savingOrg) return;
     if (!isOrgStepValid) {
       setSnack({ message: t("errors.organizationInvalid"), severity: "warning" });
       return;
@@ -443,8 +416,8 @@ const OnboardingPage: React.FC = () => {
 
   if (!steps.length || onboarding?.completed) {
     return (
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-4xl mx-auto">
+      <main className="min-h-full bg-[#f7f8fa] text-[#26344a] px-4 py-6 md:px-7 md:py-6">
+        <div className="mx-auto w-full min-w-0 max-w-[1440px]">
           <SectionCard
             title={t("done.title")}
             subtitle={t("done.subtitle")}
@@ -469,41 +442,15 @@ const OnboardingPage: React.FC = () => {
         topOffset={64}
       />
 
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <aside className="lg:col-span-4 xl:col-span-3 space-y-4">
-              <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                <div className="border-b border-gray-200 bg-gray-50 px-5 py-4">
-                  <h1 className="text-[17px] font-semibold text-gray-900">
-                    {t("header.title")}
-                  </h1>
-                  <p className="mt-1 text-[12px] text-gray-600">
-                    {t("header.subtitle")}
-                  </p>
-                </div>
+      <main className="min-h-full bg-[#f7f8fa] text-[#26344a] px-4 py-6 md:px-7 md:py-6">
+        <div className="mx-auto w-full min-w-0 max-w-[1440px]">
+          <div className="flex flex-col gap-6">
+            <header className="space-y-5">
+              <div><h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t("header.title")}</h1><p className="mt-2 text-sm leading-6 text-slate-500">{t("header.subtitle")}</p></div>
+              <SegmentedControl<StepKey> value={currentStep?.key || "personal"} onChange={key => setStep(steps.findIndex(item => item.key === key))} label={t("header.title")} disabled={savingPersonal || savingOrg} items={steps.map(item => ({ value: item.key, label: <span className="inline-flex items-center gap-2">{item.done && <CheckCircle2 size={13} className="text-emerald-600"/>}{item.label}</span> }))}/>
+            </header>
 
-                <div className="px-4 py-4 space-y-3">
-                  {steps.map((item, index) => (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() => setStep(index)}
-                      className="w-full text-left"
-                    >
-                      <StepBadge
-                        active={step === index}
-                        done={item.done}
-                        label={item.label}
-                        index={index}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </section>
-            </aside>
-
-            <div className="lg:col-span-8 xl:col-span-9">
+            <motion.div key={currentStep?.key} initial={{ opacity: 0, y: reduced ? 0 : 6 }} animate={{ opacity: 1, y: 0 }} transition={{duration: reduced ? 0 : .18}} className="min-w-0">
               {currentStep?.key === "personal" && (
                 <SectionCard
                   title={t("personal.title")}
@@ -516,6 +463,8 @@ const OnboardingPage: React.FC = () => {
                         kind="text"
                         label={t("fields.phoneRequired")}
                         name="phone"
+                        autoComplete="tel"
+                        errorMessage={!personalMissing.phone && !phoneValid ? t("validations.phoneFormat") : undefined}
                         value={personalForm.phone}
                         onChange={(e) =>
                           setPersonalForm((p) => ({ ...p, phone: e.target.value }))
@@ -760,7 +709,7 @@ const OnboardingPage: React.FC = () => {
                 >
                   <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.65fr] gap-5">
                     <div className="space-y-5">
-                      <div className="rounded-2xl border border-gray-200 p-4">
+                      <div className="rounded-lg border border-gray-200 p-4">
                         <RequirementRow
                           done={ledgerDone}
                           title={t("accounting.ledgerTitle", { defaultValue: "Ledger accounts" })}
@@ -774,7 +723,7 @@ const OnboardingPage: React.FC = () => {
                         <div className="mt-4"><Button variant="outline" onClick={() => navigate("/accounting/setup")}>{i18n.t("setupFlow.continue", { ns: "accountingSettings" })}</Button></div>
                       </div>
 
-                      <div className="rounded-2xl border border-gray-200 p-4">
+                      <div className="rounded-lg border border-gray-200 p-4">
                         <RequirementRow
                           done={categoriesDone}
                           title={t("accounting.categoriesTitle", {
@@ -788,7 +737,7 @@ const OnboardingPage: React.FC = () => {
                         />
 
                         {!categoriesDone ? (
-                          <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50/40 p-4">
+                          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/30 p-4">
                             <MissingFieldNotice
                               text={t("accounting.categoryRequired", {
                                 defaultValue:
@@ -827,7 +776,7 @@ const OnboardingPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <div className="text-[11px] uppercase tracking-wide text-gray-600">
                         {t("accounting.checklistLabel", { defaultValue: "Checklist" })}
                       </div>
@@ -836,13 +785,13 @@ const OnboardingPage: React.FC = () => {
                         <RequirementRow
                           done={ledgerDone}
                           title={t("accounting.ledgerTitle", { defaultValue: "Ledger accounts" })}
-                          description={ledgerDone ? "Configured" : "Still required"}
+                          description={t(ledgerDone ? "status.configured" : "status.pending")}
                           icon={<CreditCard className="h-4 w-4" />}
                         />
                         <RequirementRow
                           done={categoriesDone}
                           title={t("accounting.categoriesTitle", { defaultValue: "Cashflow categories" })}
-                          description={categoriesDone ? "Configured" : "Still required"}
+                          description={t(categoriesDone ? "status.configured" : "status.pending")}
                           icon={<ListTree className="h-4 w-4" />}
                         />
                       </div>
@@ -850,7 +799,7 @@ const OnboardingPage: React.FC = () => {
                   </div>
                 </SectionCard>
               )}
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>

@@ -1,367 +1,93 @@
-import { apiErrorMessage } from "@/lib/apiErrorMessage";
-// src/pages/Workspace/PersonalLocaleSetup/index.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import Button from "@/shared/ui/Button";
-import Checkbox from "@/shared/ui/Checkbox";
-import Snackbar from "@/shared/ui/Snackbar";
-import { Select } from "src/shared/ui/Select";
-
+import { useAuthContext } from "@/hooks/useAuth";
 import { api } from "@/api/requests";
-import { useAuth } from "@/api";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
+import { getCountries } from "@/lib/location/countries";
 import { TIMEZONES } from "@/lib/location/timezonesList";
-import { formatTimezoneLabel } from "@/lib/location/formatTimezoneLabel";
-import type { TimezoneOption } from "@/lib/location/timezonesList";
-import { getCountries, CountryOption } from "@/lib/location/countries";
-import { fetchCountryByIP } from "@/lib/location/getCountryFromLocale";
+import type { ConfigurationStatus } from "@/models/auth/configuration";
+import { PreferenceSection } from "@/shared/ui/Settings/PreferenceSection";
+import { Select } from "@/shared/ui/Select";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 
-type Snack =
-  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
-  | null;
+type Region = { name: string; email?: string; timezone: string; country: string };
+const emptyRegion: Region = { name: "", timezone: "", country: "" };
+type SetupContext = { configuration: ConfigurationStatus; refreshConfiguration(): Promise<void> };
 
-type PersonalSettingsModel = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  job_title?: string;
-  department?: string;
-  timezone: string;
-  country?: string; // "US" | "PT" | ...
-};
-
-const PersonalLocaleSetup: React.FC = () => {
+export default function PersonalLocaleSetup() {
   const { t, i18n } = useTranslation("personalLocaleSetup");
-  const navigate = useNavigate();
-  const { search } = useLocation();
-  const { handleSignOut } = useAuth();
-
-  useEffect(() => {
-    document.title = t("title");
-  }, [t]);
-
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
-  const params = useMemo(() => new URLSearchParams(search), [search]);
-  const step = params.get("step");
-  const returnTo = params.get("return");
-
+  const { configuration, refreshConfiguration } = useOutletContext<SetupContext>();
+  const { isOwner, isEmailVerified, handleInitUser, handleSignOut, user, organization } = useAuthContext();
+  const [personalRequired] = useState(() => configuration.personal_locale_setup !== true);
+  const [orgRequired] = useState(() => isOwner && configuration.org_locale_setup !== true);
+  const countries = useMemo(() => getCountries(i18n.language), [i18n.language]);
+  const [personal, setPersonal] = useState<Region>(emptyRegion);
+  const [org, setOrg] = useState<Region>(emptyRegion);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  // Detected via GeoIP (ipapi.co + ipwho.is in parallel, first non-null wins).
-  // Stays null until the async fetch resolves, so the checkbox is hidden until ready.
-  const [deviceCountry, setDeviceCountry] = useState<string | null>(null);
-
-  // Fetch real country from IP (race between two GeoIP providers, 3.5 s timeout).
+  useEffect(() => { document.title = t("setupTitle"); }, [t]);
   useEffect(() => {
-    let mounted = true;
-    fetchCountryByIP().then((cc) => {
-      if (mounted && cc) setDeviceCountry(cc.toUpperCase());
-    });
-    return () => { mounted = false; };
-  }, []);
-
-  const COUNTRIES = useMemo<CountryOption[]>(() => getCountries(i18n.language), [i18n.language]);
-
-  const [useDeviceTz, setUseDeviceTz] = useState(true);
-  const [useDeviceCountry, setUseDeviceCountry] = useState(false);
-
-  const [tzSelected, setTzSelected] = useState<TimezoneOption[]>([]);
-  const [countrySelected, setCountrySelected] = useState<CountryOption[]>([]);
-  const [form, setForm] = useState<PersonalSettingsModel>({ timezone: "", country: "" });
-
-  const [snack, setSnack] = useState<Snack>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
+    let active = true;
+    setLoading(true);
+    setLoadFailed(false);
+    const load = async () => {
       try {
-        const { data } = await api.getPersonalSettings();
-        const tz = data.timezone || deviceTz || "";
-        const cc = (data.country ?? "").toString().toUpperCase();
-
-        if (!mounted) return;
-
-        setForm({
-          timezone: tz,
-          country: cc,
-          name: data.name,
-          email: data.email,
-          phone: data.phone ?? "",
-          job_title: data.job_title ?? "",
-          department: data.department ?? ""
-        });
-
-        const tzObj = TIMEZONES.find((z) => z.value === tz);
-        setTzSelected(tzObj ? [tzObj] : []);
-        setUseDeviceTz(tz === deviceTz);
-
-        const countryObj = COUNTRIES.find((c) => c.value === cc);
-        setCountrySelected(countryObj ? [countryObj] : []);
-      } catch (notificationCause) {
-        setSnack({ message: apiErrorMessage(notificationCause, t("toastLoadError")), severity: "error" });
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
+        const [personalResult, orgResult] = await Promise.all([
+          personalRequired ? api.getPersonalSettings() : Promise.resolve(null),
+          orgRequired ? api.getOrganization() : Promise.resolve(null),
+        ]);
+        if (!active) return;
+        if (personalResult) { const data = personalResult.data; setPersonal({ name: data.name, email: data.email, timezone: data.timezone || "", country: (data.country || "").toUpperCase() }); }
+        if (orgResult) { const data = orgResult.data; setOrg({ name: data.name, timezone: data.timezone || "", country: (data.country || "").toUpperCase() }); }
+      } catch { if (active) setLoadFailed(true); }
+      finally { if (active) setLoading(false); }
     };
-  }, [deviceTz, t, COUNTRIES]);
+    void load();
+    return () => { active = false; };
+  }, [personalRequired, orgRequired, retry, user?.id, organization?.organization?.id]);
 
-  // Once the GeoIP result arrives, auto-tick if it matches what's already saved.
-  useEffect(() => {
-    if (!deviceCountry || loading) return;
-    if (form.country && form.country.toUpperCase() === deviceCountry) {
-      setUseDeviceCountry(true);
-    }
-  }, [deviceCountry, loading, form.country]);
+  const validRegion = (region: Region) => countries.some(c => c.value === region.country) && TIMEZONES.some(z => z.value === region.timezone);
+  const valid = !loadFailed && isEmailVerified && (!personalRequired || (!!personal.name.trim() && validRegion(personal))) && (!orgRequired || validRegion(org));
 
-  const updateField = (name: keyof PersonalSettingsModel, value: string) =>
-    setForm((p) => ({ ...p, [name]: value }));
-
-  const isComplete =
-    (form.timezone?.trim() ?? "").length > 0 && (form.country?.trim() ?? "").length === 2;
-
-  const handleCancel = useCallback(() => {
-    if (cancelling || saving) return;
-    setCancelling(true);
-    try {
-      handleSignOut();
-    } finally {
-      navigate("/signin", { replace: true });
-    }
-  }, [handleSignOut, navigate, cancelling, saving]);
-
-  const handleSave = useCallback(async () => {
-    if (!isComplete || saving) return;
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!valid || saving) return;
     setSaving(true);
     try {
-      const payload: Partial<PersonalSettingsModel> = {
-        timezone: form.timezone,
-        ...(form.country && form.country.trim()
-          ? { country: form.country.trim().toUpperCase() }
-          : {})
-      };
-      const { data } = await api.editPersonalSettings(payload);
+      if (personalRequired) await api.editPersonalSettings({ name: personal.name.trim(), timezone: personal.timezone, country: personal.country });
+      if (orgRequired) await api.editOrganization({ timezone: org.timezone, country: org.country });
+      await handleInitUser();
+      // Only backend-confirmed completion releases the full application layout.
+      await refreshConfiguration();
+    } catch (error) { setMessage(apiErrorMessage(error, t("toastUpdateError"))); }
+    finally { setSaving(false); }
+  };
 
-      setForm((p) => ({
-        ...p,
-        timezone: data.timezone,
-        country: (data.country ?? "").toString().toUpperCase()
-      }));
+  const fields = (region: Region, update: (region: Region) => void) => <div className="grid min-w-0 gap-5 sm:grid-cols-2">
+    <Select label={t("fieldCountry")} items={countries} selected={countries.filter(c => c.value === region.country)} onChange={items => update({ ...region, country: items[0]?.value || "" })} getItemKey={item => item.value} getItemLabel={item => item.label} singleSelect hideCheckboxes clearOnClickOutside={false} buttonLabel={t("fieldCountry")} disabled={saving}/>
+    <Select label={t("fieldTimezone")} items={TIMEZONES} selected={TIMEZONES.filter(z => z.value === region.timezone)} onChange={items => update({ ...region, timezone: items[0]?.value || "" })} getItemKey={item => item.value} getItemLabel={item => item.label} singleSelect hideCheckboxes clearOnClickOutside={false} buttonLabel={t("btnLabelTz")} disabled={saving}/>
+  </div>;
 
-      if (step === "locale" && returnTo) {
-        navigate(decodeURIComponent(returnTo), { replace: true });
-        return;
-      }
-
-      navigate("/overview", { replace: true });
-    } catch (e) {
-      console.error(e);
-      setSnack({ message: apiErrorMessage(e, t("toastUpdateError")), severity: "error" });
-    } finally {
-      setSaving(false);
-    }
-  }, [form.timezone, form.country, isComplete, navigate, returnTo, saving, step, t]);
-
-  if (loading) {
-    return (
-      <>
-        <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
-      </>
-    );
-  }
-
-  const Callout = () => (
-    <div className="rounded-md border border-amber-200 bg-amber-50 text-amber-900 px-4 py-3 text-[13px]">
-      <div className="font-medium mb-0.5">{t("calloutTitle")}</div>
-      <div className="text-[12px] text-amber-800">{t("calloutBody")}</div>
-    </div>
-  );
-
-  const countryLabel =
-    (form.country && COUNTRIES.find((c) => c.value === form.country)?.label) || "";
-
-  return (
-    <>
-      <TopProgress active={saving || cancelling} variant="top" topOffset={64} />
-
-      <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-        <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          <header className="bg-white border border-gray-200 rounded-lg mb-6">
-            <div className="px-5 py-4">
-              <div className="text-[10px] uppercase tracking-wide text-gray-600">
-                {t("headerSettings")}
-              </div>
-              <h1 className="text-[16px] font-semibold text-gray-900 leading-snug">
-                {t("headerPersonal")}
-              </h1>
-            </div>
-          </header>
-
-          {step === "locale" && <Callout />}
-
-          {/* Locale card */}
-          <section className="mt-6 rounded-lg border border-gray-200 bg-white">
-            <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50">
-              <span className="text-[11px] uppercase tracking-wide text-gray-700">
-                {t("sectionLocale")}
-              </span>
-            </div>
-
-            <div className="px-4 py-4 space-y-4">
-              {/* Timezone */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("fieldTimezone")}
-                  </p>
-                  <p className="text-[13px] font-medium text-gray-900">
-                    {form.timezone ? (formatTimezoneLabel(form.timezone) || form.timezone) : "—"}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <label className="text-[12px] text-gray-700">{t("modalUseDeviceTz")}</label>
-                    <Checkbox
-                      checked={useDeviceTz}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setUseDeviceTz(checked);
-                        if (checked) {
-                          updateField("timezone", deviceTz);
-                          const tzObj = TIMEZONES.find((z) => z.value === deviceTz);
-                          setTzSelected(tzObj ? [tzObj] : []);
-                        }
-                      }}
-                      size="sm"
-                      colorClass="defaultColor"
-                      disabled={saving || cancelling}
-                    />
-                  </div>
-                </div>
-
-                <div className="w-80">
-                  <Select<TimezoneOption>
-                    label={t("modalTzLabel")}
-                    items={TIMEZONES}
-                    selected={tzSelected}
-                    onChange={(tz) => {
-                      setTzSelected(tz);
-                      if (tz.length > 0) {
-                        updateField("timezone", tz[0].value);
-                        setUseDeviceTz(tz[0].value === deviceTz);
-                      }
-                    }}
-                    getItemKey={(item) => item.value}
-                    getItemLabel={(item) => item.label}
-                    singleSelect
-                    hideCheckboxes
-                    clearOnClickOutside={false}
-                    buttonLabel={t("btnLabelTz")}
-                    customStyles={{ maxHeight: "260px" }}
-                    disabled={saving || cancelling}
-                  />
-                </div>
-              </div>
-
-              {/* Country */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                    {t("fieldCountry")}
-                  </p>
-                  <p className="text-[13px] font-medium text-gray-900">
-                    {countryLabel ? `${countryLabel} (${form.country})` : "—"}
-                  </p>
-
-                  {/* "Use device country" — only rendered when GeoIP has resolved */}
-                  {deviceCountry && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <label className="text-[12px] text-gray-700">
-                        {t("modalUseDeviceCountry")}
-                      </label>
-                      <Checkbox
-                        checked={useDeviceCountry}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setUseDeviceCountry(checked);
-                          if (checked) {
-                            const cc = deviceCountry.toUpperCase();
-                            updateField("country", cc);
-                            const countryObj = COUNTRIES.find((c) => c.value === cc);
-                            setCountrySelected(countryObj ? [countryObj] : []);
-                          }
-                        }}
-                        size="sm"
-                        colorClass="defaultColor"
-                        disabled={saving || cancelling}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="w-80">
-                  <Select<CountryOption>
-                    label={t("fieldCountry")}
-                    items={COUNTRIES}
-                    selected={countrySelected}
-                    onChange={(items) => {
-                      const v = (items[0]?.value ?? "").toString().toUpperCase();
-                      setCountrySelected(items);
-                      updateField("country", v);
-                      // Untick "use device" when the user picks a different country manually
-                      setUseDeviceCountry(!!deviceCountry && v === deviceCountry);
-                    }}
-                    getItemKey={(item) => item.value}
-                    getItemLabel={(item) => item.label}
-                    singleSelect
-                    hideCheckboxes
-                    clearOnClickOutside={false}
-                    buttonLabel={t("fieldCountry")}
-                    customStyles={{ maxHeight: "260px" }}
-                    disabled={saving || cancelling}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
-              <Button variant="outline" onClick={handleCancel} disabled={saving || cancelling}>
-                {t("btnCancel")}
-              </Button>
-              <Button onClick={handleSave} disabled={!isComplete || saving || cancelling} isLoading={saving}>
-                {step === "locale" ? t("btnSaveContinue") : t("btnSave")}
-              </Button>
-            </div>
-          </section>
-        </div>
-      </main>
-
-      <Snackbar
-        notificationKey={snack}
-        open={!!snack}
-        onClose={() => setSnack(null)}
-        autoHideDuration={4500}
-        message={snack?.message}
-        severity={snack?.severity}
-        anchor={{ vertical: "bottom", horizontal: "center" }}
-        pauseOnHover
-        showCloseButton
-      />
-    </>
-  );
-};
-
-export default PersonalLocaleSetup;
+  return <div className="min-h-dvh bg-[#f7f8fa] text-[#26344a]">
+    <header className="border-b border-[#e8ebf0] bg-white"><div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-5 sm:px-8"><span className="text-lg font-semibold tracking-tight text-slate-900">Spifex</span><button type="button" disabled={saving} onClick={async () => { try { await handleSignOut(); } catch (error) { setMessage(apiErrorMessage(error, t("toastUpdateError"))); } }} className="text-xs font-medium text-slate-500 hover:text-slate-900">{t("signOut")}</button></div></header>
+    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t("setupTitle")}</h1>
+      <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">{t("setupDescription")}</p>
+      {loading ? <div className="mt-8"><PageSkeleton rows={4}/></div> : loadFailed ? <div role="alert" className="mt-8 space-y-4 rounded-lg border border-slate-200 bg-white p-5"><p className="text-sm">{t("toastLoadError")}</p><Button variant="outline" onClick={() => setRetry(n => n + 1)}>{t("retry")}</Button></div> : <form onSubmit={save} className="mt-8 space-y-6">
+        {personalRequired && <PreferenceSection title={t("personalSection")}><div className="space-y-5 px-5 py-5"><p className="text-xs leading-6 text-slate-500">{t("personalDescription")}</p><Input kind="text" label={t("name")} value={personal.name} onChange={event => setPersonal({ ...personal, name: event.target.value })} maxLength={150} required autoComplete="name" disabled={saving}/><p className="break-all text-xs text-slate-500">{personal.email} · {t(isEmailVerified ? "emailVerified" : "emailUnverified")}</p>{fields(personal, setPersonal)}</div></PreferenceSection>}
+        {orgRequired && <PreferenceSection title={t("organizationSection")}><div className="space-y-5 px-5 py-5"><div><p className="text-sm font-medium text-slate-900">{org.name}</p><p className="mt-1 text-xs leading-6 text-slate-500">{t("organizationDescription")}</p></div>{fields(org, setOrg)}</div></PreferenceSection>}
+        <p className="text-xs leading-6 text-slate-500">{t("accuracyHint")}</p>
+        <div className="flex justify-end border-t border-[#e8ebf0] pt-5"><Button type="submit" isLoading={saving} disabled={!valid || saving}>{t("btnSaveContinue")}</Button></div>
+      </form>}
+    </main>
+    <Snackbar notificationKey={message} open={!!message} onClose={() => setMessage("")} message={message} severity="error" autoHideDuration={6000} showCloseButton/>
+  </div>;
+}

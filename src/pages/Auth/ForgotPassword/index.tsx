@@ -47,6 +47,7 @@ const ForgotPassword = () => {
 
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
 
   useEffect(() => {
@@ -56,6 +57,7 @@ const ForgotPassword = () => {
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if (isLoading) return;
 
       const normalizedEmail = email.trim();
       if (!normalizedEmail) {
@@ -73,6 +75,7 @@ const ForgotPassword = () => {
           (res as unknown as { data?: { message?: string } })?.data?.message ||
           t("resetRequestedMessage");
 
+        setSubmitted(true);
         setSnack({ message: msg, severity: "info" });
         setEmail("");
       } catch (err: unknown) {
@@ -91,15 +94,16 @@ const ForgotPassword = () => {
         setIsLoading(false);
       }
     },
-    [email, t],
+    [email, t, isLoading],
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-md bg-white shadow-sm rounded-2xl p-6 sm:p-8">
+    <div className="w-full">
+      <div className="w-full max-w-md bg-white py-2">
         <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("heading")}</h1>
         <p className="text-sm text-slate-500 mb-6">{t("description")}</p>
 
+        {submitted && <p role="status" className="mb-5 rounded-lg border border-[#ead7c7] bg-[#fbf4ed] p-4 text-sm leading-6 text-black/70">{t("resetRequestedMessage")}</p>}
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
             kind="text"
@@ -126,7 +130,7 @@ const ForgotPassword = () => {
         <div className="mt-4 text-sm">
           <Link
             to="/signin"
-            className="text-slate-700 hover:text-slate-900 hover:underline underline-offset-4"
+            className="text-sm font-medium text-slate-700 hover:text-slate-900 hover:underline underline-offset-4"
           >
             {t("backToLogin")}
           </Link>

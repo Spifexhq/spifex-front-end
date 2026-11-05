@@ -16,5 +16,18 @@
   "btnSaveContinue": "Enregistrer et continuer",
   "toastLoadError": "Impossible de charger vos paramètres.",
   "toastUpdateOk": "Mise à jour réussie.",
-  "toastUpdateError": "Impossible de mettre à jour vos paramètres."
+  "toastUpdateError": "Impossible de mettre à jour vos paramètres.",
+  "retry": "Réessayer",
+  "reviewIdentity": "Confirmez les informations du compte",
+  "emailVerified": "E-mail vérifié",
+  "emailUnverified": "Vérification de l’e-mail requise",
+  "name": "Nom complet",
+  "accuracyHint": "Choisissez votre pays et fuseau horaire réels. Ils déterminent les dates et périodes, sans vérifier votre identité.",
+  "setupTitle": "Configurez vos préférences régionales",
+  "setupDescription": "Confirmez ces informations avant d’accéder à votre espace de travail.",
+  "personalSection": "Vos préférences personnelles",
+  "personalDescription": "Ces paramètres s’appliquent à votre compte et à l’affichage des dates.",
+  "organizationSection": "Préférences de l’organisation",
+  "organizationDescription": "En tant que propriétaire, choisissez le pays et le fuseau horaire de l’organisation.",
+  "signOut": "Se déconnecter"
 }

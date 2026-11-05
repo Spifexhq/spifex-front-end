@@ -58,7 +58,8 @@
     "personalAddress": "Preencha pelo menos uma linha do endereço pessoal.",
     "orgTimezone": "O fuso horário da organização é obrigatório.",
     "orgCountry": "O país da organização é obrigatório.",
-    "orgAddress": "Preencha pelo menos uma linha do endereço da organização."
+    "orgAddress": "Preencha pelo menos uma linha do endereço da organização.",
+    "phoneFormat": "Use um número internacional, por exemplo +351911234567."
   },
   "actions": {
     "saveContinue": "Salvar e continuar",
@@ -89,5 +90,11 @@
   },
   "accounting": {
     "subtitle": "Conclua e ative a configuração contábil e configure as categorias de fluxo de caixa usadas pela organização."
+  },
+  "status": {
+    "done": "Concluído",
+    "required": "Obrigatório",
+    "configured": "Configurado",
+    "pending": "Por concluir"
   }
 }

@@ -92,8 +92,8 @@ const ResetPassword: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-md bg-white shadow-sm rounded-2xl p-6 sm:p-8">
+    <div className="w-full">
+      <div className="w-full max-w-md bg-white py-2">
         <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t("heading")}</h1>
         <p className="text-sm text-slate-500 mb-6">{t("description")}</p>
 
@@ -127,9 +127,6 @@ const ResetPassword: React.FC = () => {
             showTogglePassword
             disabled={isLoading}
             autoComplete="new-password"
-            onPaste={(e) => e.preventDefault()}
-            onDrop={(e) => e.preventDefault()}
-            onDragOver={(e) => e.preventDefault()}
           />
 
           {pwMismatch && (

@@ -1,90 +1,23 @@
-// src/middlewares/LocaleProfileMiddleware.tsx
-import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import type { PropsWithChildren } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useAuthContext } from "@/hooks/useAuth";
+import { needsLocaleSetup, safeSetupReturn } from "@/lib/localeSetup";
+import type { ConfigurationStatus } from "@/models/auth/configuration";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
-import { api } from "@/api/requests";
-import { isSupportedCountryAlpha2 } from "@/lib/location/countries";
-import { isSupportedTimezone } from "@/lib/location/timezonesList";
+import Button from "@/shared/ui/Button";
 
-type Status = "idle" | "loading" | "ready" | "redirecting";
+type Props = PropsWithChildren<{ configuration: ConfigurationStatus | null; loading: boolean; failed: boolean; retry(): Promise<void> }>;
 
-const LOCALE_PAGE = "/locale-setup";
-const DEFAULT_REDIRECT_AFTER_READY = "/overview";
-
-export const LocaleProfileMiddleware: React.FC<PropsWithChildren> = ({ children }) => {
-  const [status, setStatus] = useState<Status>("idle");
-  const [shouldRenderChildren, setShouldRenderChildren] = useState(false);
-  const didCheckKey = useRef<string | null>(null);
-
+export const LocaleProfileMiddleware = ({ children, configuration, loading, failed, retry }: Props) => {
+  const { isOwner } = useAuthContext();
+  const { t } = useTranslation("personalLocaleSetup");
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const currentPath = location.pathname + (location.search || "");
-  const isLocalePage = location.pathname === LOCALE_PAGE;
-
-  const returnTo = useMemo(() => {
-    return encodeURIComponent(currentPath);
-  }, [currentPath]);
-
-  useEffect(() => {
-    let mounted = true;
-    const checkKey = currentPath;
-
-    if (didCheckKey.current === checkKey) return;
-    didCheckKey.current = checkKey;
-
-    // Revalidate navigation in the background once the shell is available.
-    // Unmounting children here resets sidebar scroll and local UI state.
-    setStatus("loading");
-
-    (async () => {
-      try {
-        const res = await api.getPersonalSettings();
-
-        const tz = String(res?.data?.timezone || "").trim();
-        const country = String(res?.data?.country || "").trim().toUpperCase();
-
-        const tzOk =
-          tz.length > 0 &&
-          tz.toUpperCase() !== "UTC" &&
-          isSupportedTimezone(tz);
-
-        const countryOk = isSupportedCountryAlpha2(country);
-
-        const ok = tzOk && countryOk;
-
-        if (!mounted) return;
-
-        if (isLocalePage && ok) {
-          setStatus("redirecting");
-          navigate(DEFAULT_REDIRECT_AFTER_READY, { replace: true });
-          return;
-        }
-
-        if (!isLocalePage && !ok) {
-          setStatus("redirecting");
-          navigate(`${LOCALE_PAGE}?step=locale&return=${returnTo}`, { replace: true });
-          return;
-        }
-
-        setStatus("ready");
-        setShouldRenderChildren(true);
-      } catch {
-        if (!mounted) return;
-
-        setStatus("ready");
-        setShouldRenderChildren(true);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [currentPath, isLocalePage, navigate, returnTo]);
-
-  if ((status === "loading" && !shouldRenderChildren) || status === "redirecting") {
-    return <TopProgress active variant="center" />;
-  }
-
-  return shouldRenderChildren ? <>{children}</> : null;
+  if (loading || (!configuration && !failed)) return <TopProgress active variant="center" />;
+  // A failed prerequisite check must never expose the application shell.
+  if (!configuration) return <main className="grid min-h-dvh place-items-center bg-white p-6"><div className="max-w-sm space-y-4 text-center"><p className="text-sm text-slate-600">{t("toastLoadError")}</p><Button variant="outline" onClick={() => { void retry().catch(() => undefined); }}>{t("retry")}</Button></div></main>;
+  const setup = location.pathname === "/locale-setup";
+  if (needsLocaleSetup(configuration, isOwner) && !setup) return <Navigate replace to={`/locale-setup?return=${encodeURIComponent(location.pathname + location.search)}`} />;
+  if (!needsLocaleSetup(configuration, isOwner) && setup) return <Navigate replace to={safeSetupReturn(new URLSearchParams(location.search).get("return"))} />;
+  return <>{children}</>;
 };

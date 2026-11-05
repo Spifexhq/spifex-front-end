@@ -11,6 +11,8 @@ import { BaseLayout, SpifexLayout, SettingsLayout, AccountingLayout } from "@/la
 // Middlewares
 import { PermissionMiddleware, SubscriptionMiddleware, GuestOnlyMiddleware } from "@/middlewares";
 
+const AuthLayout = lazy(() => import("@/pages/Auth/AuthLayout"));
+
 // Auth Pages
 const LegalPage = lazy(() => import("@/pages/Legal"));
 const SignUp = lazy(() => import("@/pages/Auth/SignUp"));
@@ -86,6 +88,7 @@ const routes: RouteObject[] = [
                     </GuestOnlyMiddleware>
                 ),
             },
+            { element: <AuthLayout />, children: [
             {
             path: 'signin',
             element: (
@@ -114,6 +117,7 @@ const routes: RouteObject[] = [
                 path: "verify-pending-password/:uidb64/:token/",
                 element: <PasswordVerification />,
             },
+            ] },
         ]
     },
     {

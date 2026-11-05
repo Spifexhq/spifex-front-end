@@ -16,5 +16,18 @@
   "btnSaveContinue": "Salvar e continuar",
   "toastLoadError": "Não foi possível carregar suas configurações.",
   "toastUpdateOk": "Atualizado com sucesso.",
-  "toastUpdateError": "Não foi possível atualizar suas configurações."
+  "toastUpdateError": "Não foi possível atualizar suas configurações.",
+  "retry": "Tentar novamente",
+  "reviewIdentity": "Confirme os dados da sua conta",
+  "emailVerified": "Email verificado",
+  "emailUnverified": "Verificação de email necessária",
+  "name": "Nome completo",
+  "accuracyHint": "Escolha o seu país e fuso horário reais. Estes definem datas e limites dos períodos; não verificam a sua identidade.",
+  "setupTitle": "Configure as preferências regionais",
+  "setupDescription": "Confirme os dados abaixo antes de entrar no seu espaço de trabalho.",
+  "personalSection": "As suas preferências pessoais",
+  "personalDescription": "Estas definições aplicam-se à sua conta e à apresentação das datas.",
+  "organizationSection": "Preferências da organização",
+  "organizationDescription": "Como proprietário, escolha o país e fuso horário utilizados pela organização.",
+  "signOut": "Terminar sessão"
 }

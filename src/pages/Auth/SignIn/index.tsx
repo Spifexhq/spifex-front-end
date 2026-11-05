@@ -1,4 +1,3 @@
-import AuthStory from "../AuthStory";
 import { motion, useReducedMotion } from "framer-motion";
 // src/pages/SignIn.tsx
 import React, { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
@@ -12,8 +11,6 @@ import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
 import Checkbox from "@/shared/ui/Checkbox";
 
-import signInBackground from "@/assets/Images/background/signin-background.svg";
-import logoBlack from "@/assets/Icons/logo/logo-black.svg";
 
 type Snack =
   | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
@@ -270,19 +267,8 @@ const SignIn: React.FC = () => {
   const reducedMotion = useReducedMotion();
 
   return (
-    <div className="min-h-screen flex bg-white text-slate-900">
-      <div className="flex flex-col w-full md:w-[55%] lg:w-1/2 px-6 py-6 sm:px-10 sm:py-8">
-        <header className="flex items-center justify-between mb-8">
-          <a
-            href="https://www.spifex.com/"
-            className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/10 rounded-lg"
-          >
-            <img src={logoBlack} alt="Spifex logo" className="h-7 w-auto sm:h-8" />
-          </a>
-        </header>
-
-        <main className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-md py-6 sm:py-10">
+    <>
+          <div className="w-full max-w-md">
             <div className="mb-8">
               <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
                 {step === "credentials" ? t("heading") : t("twoFactorHeading")}
@@ -424,7 +410,6 @@ const SignIn: React.FC = () => {
               </div>
             )}
           </div>
-        </main>
 
         <footer className="mt-8 flex flex-col gap-2 text-[11px] text-slate-400">
           <div>{t("copyright")}</div>
@@ -441,18 +426,7 @@ const SignIn: React.FC = () => {
           pauseOnHover
           showCloseButton
         />
-      </div>
-
-      <div className="hidden md:flex md:w-[45%] lg:w-1/2 relative overflow-hidden bg-[#e5c4ad]">
-        <img
-          src={signInBackground}
-          alt="Spifex background"
-          className="absolute inset-0 h-full w-full object-cover opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#f5e9df]/95 via-[#edcfb9]/95 to-[#ba8065]/95" /><AuthStory />
-
-      </div>
-    </div>
+    </>
   );
 };
 

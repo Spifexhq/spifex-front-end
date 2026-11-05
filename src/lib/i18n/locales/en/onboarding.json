@@ -58,7 +58,8 @@
     "personalAddress": "Fill at least one personal address line.",
     "orgTimezone": "Organization timezone is required.",
     "orgCountry": "Organization country is required.",
-    "orgAddress": "Fill at least one organization address line."
+    "orgAddress": "Fill at least one organization address line.",
+    "phoneFormat": "Use an international phone number, for example +351911234567."
   },
   "actions": {
     "saveContinue": "Save and continue",
@@ -89,5 +90,11 @@
   },
   "accounting": {
     "subtitle": "Complete and activate accounting setup, then configure the cashflow categories used by your organization."
+  },
+  "status": {
+    "done": "Complete",
+    "required": "Required",
+    "configured": "Configured",
+    "pending": "Still required"
   }
 }
