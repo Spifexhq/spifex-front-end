@@ -1,50 +1,16 @@
-import React from "react";
-import Shimmer from "./Shimmer";
+import { useTranslation } from "react-i18next";
+import DataTableSkeleton, { SkeletonLine } from "../DataTable/DataTableSkeleton";
 
-const Line = ({ w = "w-40" }: { w?: string }) => <Shimmer className={`h-3 ${w}`} rounded="rounded-md" />;
-
-const RowSkeleton: React.FC = () => (
-  <div className="flex items-center justify-between px-4 py-2.5">
-    <div className="min-w-0">
-      <Line w="w-44" />
-      <div className="mt-2"><Line w="w-64" /></div>
+/** Content only: the section layout already renders the page heading. */
+export default function PageSkeleton({ rows = 6, variant = "table" }: { rows?: number; variant?: "table" | "form" | "groups" }) {
+  const { t } = useTranslation("common");
+  return <div role="status" aria-busy="true" className="min-w-0 px-4 py-6 sm:px-7">
+    <span className="sr-only">{t("previewLoading")}</span>
+    <div aria-hidden="true" className="mx-auto max-w-[1440px] space-y-5">
+      <div className="flex items-center justify-between gap-4"><SkeletonLine className="h-9 w-56 max-w-[60%]" /><SkeletonLine className="h-9 w-24" /></div>
+      {variant === "table" ? <DataTableSkeleton rows={rows} /> : <div className={`grid items-start gap-6 ${variant === "groups" ? "lg:grid-cols-[260px_1fr]" : "xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]"}`}>
+        {[rows, 3].map((count, section) => <div key={section} className="overflow-hidden rounded-lg border border-gray-200"><div className="border-b border-gray-100 p-5"><SkeletonLine className="h-4 w-32" /></div>{Array.from({ length: count }, (_, i) => <div key={i} className="flex items-center justify-between gap-6 border-b border-gray-100 px-5 py-4 last:border-0"><div className="flex-1 space-y-3"><SkeletonLine className="h-3 w-24" /><SkeletonLine className="h-3 w-3/5" /></div><SkeletonLine className="h-7 w-16" /></div>)}</div>)}
+      </div>}
     </div>
-    <div className="flex gap-2">
-      <Shimmer className="h-8 w-20 rounded-md" />
-      <Shimmer className="h-8 w-24 rounded-md" />
-    </div>
-  </div>
-);
-
-const PageSkeleton: React.FC<{ rows?: number }> = ({ rows = 6 }) => (
-  <main className="min-h-full bg-transparent text-gray-900 px-4 sm:px-6 py-6 sm:py-8">
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header card */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5">
-        <div className="flex items-center gap-3">
-          <Shimmer className="h-9 w-9 rounded-md" />
-          <div className="space-y-2">
-            <Line w="w-24" />
-            <Line w="w-48" />
-          </div>
-        </div>
-      </div>
-
-      {/* List card */}
-      <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-          <Line w="w-24" />
-          <Shimmer className="h-8 w-28 rounded-md" />
-        </div>
-        {/* </div><div className="divide-y divide-gray-200"> */}
-        <div className="flex flex-col">
-          {Array.from({ length: rows }).map((_, i) => (
-            <RowSkeleton key={i} />
-          ))}
-        </div>
-      </div>
-    </div>
-  </main>
-);
-
-export default PageSkeleton;
+  </div>;
+}

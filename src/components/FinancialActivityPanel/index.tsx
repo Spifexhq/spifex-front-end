@@ -1,3 +1,5 @@
+import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
+import FinancialActivitySkeleton from "./FinancialActivitySkeleton";
 import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -70,12 +72,12 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
       <div className="text-xs leading-5 text-gray-500">{t("kpiCards:panel.consolidatedBalance")}</div>
       <PermissionMiddleware codeName="view_consolidated_balance">
         <div aria-busy={bankState.loading} className="mt-1 whitespace-nowrap text-base font-semibold leading-7 tracking-tight text-gray-900 tabular-nums sm:text-2xl">
-          {bankState.loading || bankState.error ? "—" : bankTotal}
+          {bankState.loading ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankTotal}
         </div>
       </PermissionMiddleware>
       <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={detailsId}
         className="mt-1 inline-flex min-h-7 max-w-full items-center gap-1 rounded text-[11px] font-medium text-gray-600 transition-colors hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
-        <span>{bankState.error ? t("banksTable:details") : t("kpiCards:panel.accountsCount", { count: bankState.loading ? 0 : bankState.count })}</span>
+        <span>{bankState.loading ? <SkeletonLine className="h-3 w-20" /> : bankState.error ? t("banksTable:details") : t("kpiCards:panel.accountsCount", { count: bankState.count })}</span>
         <ChevronDown size={13} aria-hidden className={`shrink-0 transition-transform duration-150 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
       </button>
       <p className="hidden text-[11px] leading-4 text-gray-400 sm:block">{t(bankIds.length ? "banksTable:balanceScope" : "banksTable:allAccountsScope")}</p>
@@ -93,7 +95,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           </button>
         </div>
         <div className="max-h-[min(11rem,20dvh)] overflow-y-auto overscroll-contain px-4 pb-2 sm:px-5">
-          {bankState.loading ? <p role="status" className="py-4 text-xs text-gray-500">{t("banksTable:aria.loading")}</p>
+          {bankState.loading ? <FinancialActivitySkeleton variant="banks" />
           : bankState.error ? <div role="status" className="flex items-center justify-between gap-3 py-3"><p className="text-xs text-red-700">{bankState.error}</p><Button variant="outline" size="xs" onClick={() => retryBanks()}>{t("kpiCards:overview.retry")}</Button></div>
           : !bankRows.length ? <p className="py-4 text-xs text-gray-500">{t("banksTable:empty")}</p>
           : <ul className="divide-y divide-gray-100">{bankRows.map(bank => <li key={bank.id} className="flex items-center justify-between gap-3 py-1">
@@ -118,7 +120,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           <div key={metric.key} aria-busy={loading} className="min-w-0 border-l border-gray-100 px-4 py-3 sm:px-5">
             <div className="flex items-center gap-1 text-xs leading-5 text-gray-500"><span>{metric.label}</span><span className="inline-flex sm:hidden"><InfoTooltip label={metric.label}>{metric.hint}{metric.delta ? ` · ${metric.delta.value}` : ""}</InfoTooltip></span></div>
             <div className="mt-1 whitespace-nowrap text-base font-semibold leading-7 tracking-tight text-gray-900 tabular-nums sm:text-2xl">
-              {loading ? <span className="text-gray-300">—</span> : metric.value}
+              {loading ? <FinancialActivitySkeleton /> : metric.value}
             </div>
             {metric.delta && !loading && <div className={`mt-1 hidden text-[11px] font-medium sm:block ${metric.delta.positive ? "text-emerald-700" : "text-rose-700"}`}>{metric.delta.value}</div>}
             {metric.hint && <p className="mt-1 hidden text-[11px] leading-4 text-gray-500 sm:block">{loading ? t("kpiCards:loading") : metric.hint}</p>}

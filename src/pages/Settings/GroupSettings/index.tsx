@@ -291,7 +291,7 @@ const GroupSettings: React.FC = () => {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
+        <PageSkeleton variant="groups" rows={6} />
       </>
     );
   }
@@ -309,9 +309,9 @@ const GroupSettings: React.FC = () => {
     <>
       <TopProgress active={isBackgroundSync || isSubmitting} variant="top" topOffset={64} />
 
-      <main className="settings-page">
-        <div className="settings-content ">
-          <div className="settings-intro"><div className="px-4 sm:px-5 py-4 flex items-start sm:items-center gap-3">
+      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start sm:items-center gap-3">
               
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
@@ -321,11 +321,11 @@ const GroupSettings: React.FC = () => {
             </div></div>
 
           <PermissionMiddleware codeName={"view_group"} behavior="lock">
-            <section className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <aside className="lg:col-span-3">
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden settings-panel">
-                  <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 settings-panel-heading">
-                    <div className="text-[11px] uppercase tracking-wide text-gray-700">{t("left.groups")}</div>
+            <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              <aside className="xl:col-span-3">
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden ">
+                  <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between gap-3 ">
+                    <div className="text-xs font-semibold text-gray-700">{t("left.groups")}</div>
 
                     <PermissionMiddleware codeName={"add_group"}>
                       <Button className="!py-1.5 !px-3" onClick={openCreateModal} disabled={busy}>
@@ -345,13 +345,15 @@ const GroupSettings: React.FC = () => {
                     />
                   </div>
 
-                  <div className="max-h-[380px] overflow-auto divide-y divide-gray-200">
+                  <div className="max-h-56 xl:max-h-[60dvh] overflow-auto divide-y divide-gray-200">
                     {filteredGroups.map((group) => (
                       <button
                         key={group.id}
+                        aria-pressed={selectedGroupId === group.id}
+                        disabled={busy}
                         onClick={() => !busy && setSelectedGroupId((prev) => (prev === group.id ? null : group.id))}
                         className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${
-                          selectedGroupId === group.id ? "bg-gray-50" : ""
+                          selectedGroupId === group.id ? "bg-gray-100/70 border-l-2 border-gray-900" : "border-l-2 border-transparent"
                         } ${busy ? "pointer-events-none opacity-70" : ""}`}
                       >
                         <div className="text-[13px] font-medium text-gray-900 truncate">{group.name}</div>
@@ -368,16 +370,16 @@ const GroupSettings: React.FC = () => {
                 </div>
               </aside>
 
-              <section className="lg:col-span-9">
+              <section className="xl:col-span-9">
                 {!selectedGroupDetail ? (
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500 settings-panel">
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500 ">
                     {t("right.selectPrompt")}
                   </div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden settings-panel">
-                    <div className="p-4 border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden ">
+                    <div className="p-4 border-gray-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex flex-col min-w-0 sm:max-w-[70%]">
-                        <label className="text-[11px] uppercase tracking-wide text-gray-700">
+                        <label className="text-xs font-semibold text-gray-700">
                           {t("right.nameLabel")}
                         </label>
                         <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">

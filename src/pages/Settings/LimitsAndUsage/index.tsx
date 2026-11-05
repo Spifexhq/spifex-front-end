@@ -205,10 +205,10 @@ const LimitsAndUsage: React.FC = () => {
     );
 
   return (
-    <main className="settings-page">
-      <div className="settings-content">
+    <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+      <div className="mx-auto w-full max-w-[1440px] space-y-5">
         {/* Header */}
-        <div className="settings-intro"><div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><div>
             
             
             <p className="text-[12px] text-gray-600">
@@ -226,12 +226,12 @@ const LimitsAndUsage: React.FC = () => {
             </div>
           </div>
 <div className="flex items-center gap-2">
-            <Input kind="text" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchPlaceholder")} className="h-9 w-64 text-[13px] rounded-md border border-gray-300 px-3 outline-none focus:ring-2 focus:ring-amber-500/40"/>
+            <Input kind="text" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchPlaceholder")} className="h-9 w-full sm:w-64 text-[13px] rounded-md border border-gray-200 px-3"/>
           </div></div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white settings-panel">
-          <div className="settings-usage-heading grid grid-cols-12 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-[11px] font-medium text-gray-700 uppercase tracking-wide settings-panel-heading">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white ">
+          <div className="settings-usage-heading grid grid-cols-12 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 ">
             <button className="text-left col-span-4 hover:underline" onClick={() => toggleSort("permission")}>
               {t("th.permission")}
             </button>

@@ -13,3 +13,5 @@ The shared renderer for Settings, Accounting and Finance. Supply typed `items` a
 `useCursorPager` owns page-size changes, cached navigation, concurrent-request coalescing and stale-response protection. Finance opts into `accumulate` to retain loaded pages. API adapters retain endpoint parameters, organization isolation and authorization.
 
 Record previews can use `loadPreview(item)` to retrieve a full detail model and `previewColumns` to define its complete field layout independently of list columns. Loading uses the shared skeleton; failures offer retry. Switching or closing records discards stale responses, and Edit receives the loaded model.
+
+Initial loading with no records uses `DataTableSkeleton`; existing records stay visible during refreshes. The skeleton is also exported for page-level loading and accepts `rows`, `columns`, `selectable`, and `pagination`. `PageSkeleton` provides table, form, and groups layouts without duplicating the section heading.

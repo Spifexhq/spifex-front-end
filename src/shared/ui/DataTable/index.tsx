@@ -1,3 +1,5 @@
+import DataTableSkeleton from "./DataTableSkeleton";
+export { default as DataTableSkeleton } from "./DataTableSkeleton";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, MoreHorizontal, Pencil } from "lucide-react";
@@ -85,6 +87,7 @@ export default function DataTable<T extends {
         }
     };
     const footerClass = "flex flex-wrap items-center justify-end gap-1 border-t border-gray-200 bg-gray-50/50 px-3 py-2 [&_button]:inline-flex [&_button]:min-h-8 [&_button]:items-center [&_button]:justify-center [&_button]:rounded-md [&_button]:px-2 [&_button]:py-1.5 [&_button]:text-xs [&_button]:text-slate-600 [&_button:hover:not(:disabled)]:bg-gray-100 [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-40 max-md:[&_button]:min-h-10";
+    if (busy && !items.length && !props.error && !error) return <DataTableSkeleton columns={columns.length} selectable={selectable} pagination={pagination} />;
     return <section aria-busy={busy || undefined} className={`${props.fillHeight ? "flex h-full min-h-0 flex-col" : ""} min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-none ${props.className || ""}`}>
   {(error || props.error) && <div role="alert" className="p-3 text-xs text-red-700">{props.errorContent || error || props.error}</div>}
   <div ref={scroller} style={selection.selectedIds.length && props.selectionPadding ? { paddingBottom: props.selectionPadding } : undefined} onScroll={() => { virtual.onScroll(); const node = scroller.current; if (node && node.scrollHeight - node.scrollTop - node.clientHeight < 150)

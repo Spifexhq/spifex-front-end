@@ -1,3 +1,4 @@
+import { PreferenceSection as SectionCard, PreferenceRow as Row } from "@/shared/ui/Settings/PreferenceSection";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/SecurityAndPrivacy/index.tsx                                     */
 /* -------------------------------------------------------------------------- */
@@ -32,44 +33,7 @@ type ModalMode = "password" | "email" | "twofactor" | null;
 /* -------------------------------- Helpers -------------------------------- */
 
 
-const Row = ({
-  label,
-  value,
-  action,
-  disabled,
-}: {
-  label: string;
-  value: React.ReactNode;
-  action?: React.ReactNode;
-  disabled?: boolean;
-}) => (
-  <div
-    className={`settings-row ${
-      disabled ? "opacity-70 pointer-events-none" : ""
-    }`}
-  >
-    <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
-      <p className="text-[13px] font-medium text-gray-900 break-words sm:truncate">{value}</p>
-    </div>
-    {action ? <div className="shrink-0">{action}</div> : null}
-  </div>
-);
 
-const SectionCard = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 settings-panel-heading">
-      <span className="text-[11px] uppercase tracking-wide text-gray-700">{title}</span>
-    </div>
-    {children}
-  </div>
-);
 
 /**
  * Type guard for ApiErrorBody thrown by our `request<T>` helper.
@@ -464,7 +428,7 @@ const SecurityAndPrivacy: React.FC = () => {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={5} />
+        <PageSkeleton variant="form" rows={5} />
       </>
     );
   }
@@ -479,8 +443,8 @@ const SecurityAndPrivacy: React.FC = () => {
     <>
       <TopProgress active={isSubmitting || isTwoFactorSubmitting} variant="top" topOffset={64} />
 
-      <main className="settings-page">
-        <div className="settings-content ">
+      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
           
 
           <PermissionMiddleware codeName={"view_security_and_privacy_page"} behavior="lock">

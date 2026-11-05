@@ -1,3 +1,4 @@
+import { PreferenceSection as SectionCard, PreferenceRow as Row } from "@/shared/ui/Settings/PreferenceSection";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/PersonalSettings/index.tsx                                       */
 /* -------------------------------------------------------------------------- */
@@ -101,38 +102,7 @@ function toFormData(profile: PersonalSettingsModel | null): FormData {
   };
 }
 
-const Row = ({
-  label,
-  value,
-  action,
-}: {
-  label: string;
-  value: React.ReactNode;
-  action?: React.ReactNode;
-}) => (
-  <div className="settings-row">
-    <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-gray-600">{label}</p>
-      <p className="text-[13px] font-medium text-gray-900 break-words sm:truncate">{value || "—"}</p>
-    </div>
-    {action ? <div className="shrink-0">{action}</div> : null}
-  </div>
-);
 
-const SectionCard = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-    <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 settings-panel-heading">
-      <span className="text-[11px] uppercase tracking-wide text-gray-700">{title}</span>
-    </div>
-    {children}
-  </div>
-);
 
 const PersonalSettings: React.FC = () => {
   const { t, i18n } = useTranslation("personalSettings");
@@ -298,7 +268,7 @@ const PersonalSettings: React.FC = () => {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={8} />
+        <PageSkeleton variant="form" rows={8} />
       </>
     );
   }
@@ -316,9 +286,9 @@ const PersonalSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="settings-page">
-        <div className="settings-content ">
-          <div className="settings-intro"><div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               
 
               <div className="self-start sm:self-auto">
@@ -326,8 +296,8 @@ const PersonalSettings: React.FC = () => {
               </div>
             </div></div>
 
-          <section className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 space-y-6">
+          <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <div className="xl:col-span-7 space-y-6">
               {isOwner && orgProfile && (
                 <SectionCard title={t("section.company")}>
                   <div className="flex flex-col">
@@ -442,12 +412,12 @@ const PersonalSettings: React.FC = () => {
               </SectionCard>
             </div>
 
-            <div className="lg:col-span-5 space-y-6">
+            <div className="xl:col-span-5 space-y-6">
               <SectionCard title={t("section.timezone")}>
                 <div className="px-4 py-3">
                   <div className="flex items-start sm:items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide text-gray-600">{t("label.current")}</p>
+                      <p className="text-xs text-gray-500">{t("label.current")}</p>
                       <p className="text-[13px] font-medium text-gray-900 break-words">{timezoneLabel}</p>
                     </div>
                     <Button variant="outline" onClick={() => openModal("timezone")} disabled={isSubmitting}>

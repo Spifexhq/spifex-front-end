@@ -81,9 +81,9 @@ const Badge: React.FC<{
 };
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
-  <div className="flex items-center justify-between px-4 py-2.5 settings-row">
+  <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-5 last:border-0 sm:flex-row sm:items-center sm:justify-between">
     <div className="min-w-0">
-      <p className="text-[13px] font-medium text-gray-900 truncate">{left}</p>
+      <p className="text-sm font-semibold text-gray-900">{left}</p>
     </div>
     {right}
   </div>
@@ -466,7 +466,7 @@ const SubscriptionManagement: React.FC = () => {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={6} />
+        <PageSkeleton variant="form" rows={6} />
       </>
     );
   }
@@ -476,12 +476,12 @@ const SubscriptionManagement: React.FC = () => {
       <>
         <TopProgress active={isProcessing} variant="top" topOffset={64} />
 
-        <main className="settings-page">
-          <div className="settings-content ">
+        <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+          <div className="mx-auto w-full max-w-[1440px] space-y-5">
             
 
-            <section className="mt-6">
-              <div className="rounded-lg border border-gray-200 bg-white p-4 settings-panel">
+            <section className="space-y-5">
+              <div className="rounded-lg border border-gray-200 bg-white p-4 ">
                 <p className="text-[13px] text-gray-700 mb-4">
                   {t(
                     "subscription:errors.ownerOnly",
@@ -524,9 +524,9 @@ const SubscriptionManagement: React.FC = () => {
     <>
       <TopProgress active={isProcessing} variant="top" topOffset={64} />
 
-      <main className="settings-page">
-        <div className="settings-content ">
-          <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
+      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-3">
               
 
               <div className="flex items-center gap-3 min-w-0">
@@ -537,10 +537,10 @@ const SubscriptionManagement: React.FC = () => {
               </div>
             </div></div>
 
-          <section className="mt-6">
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-              <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3 settings-panel-heading">
-                <span className="text-[11px] uppercase tracking-wide text-gray-700">
+          <section className="space-y-5">
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden ">
+              <div className="px-5 py-4 border-b border-gray-100 bg-white flex flex-wrap items-center justify-between gap-3 ">
+                <span className="text-xs font-semibold text-gray-700">
                   {hasSubscription
                     ? t("subscription:section.withPlan", "Your current plan")
                     : t("subscription:section.noPlan", "No active plan")}

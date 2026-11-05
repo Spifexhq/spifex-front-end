@@ -12,7 +12,7 @@ import { Select } from "@/shared/ui/Select";
 import DataTable from "@/shared/ui/DataTable";
 import AccountingStatus from "../components/AccountingStatus";
 import ConfirmToast from "@/shared/ui/ConfirmToast";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import DataTableSkeleton from "@/shared/ui/DataTable/DataTableSkeleton";
 import { fetchAllCursor } from "@/lib/list";
 import type { FiscalPeriod } from "@/models/settings/accountingSetup";
 import type { AccountingBook } from "@/models/settings/accounting";
@@ -58,7 +58,7 @@ export default function AccountingPeriodsPage() {
     <div className="flex flex-wrap items-start justify-between gap-3"><p className="max-w-2xl text-xs leading-6 text-gray-500">{t("setupFlow.periodGuidance")}</p>{canManage && <Button onClick={() => { setEditing(null); setForm(previous => ({ ...previous, book_id: previous.book_id || status?.primary_book_id || "" })); setOpen(true); }}>{t("setupFlow.newPeriod")}</Button>}</div>
     {error !== null && <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-900">{error || t("setupFlow.actionError")}</p>}
     {recordFilters.pager.error && <p role="alert" className="text-sm text-red-700">{recordFilters.pager.error}</p>}{recordFilters.filters}
-    {loading && !periods.length ? <PageSkeleton rows={5} /> : <DataTable pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit")} emptyLabel={t("setupFlow.noPeriods")} columns={[
+    {loading && !periods.length ? <DataTableSkeleton rows={5} /> : <DataTable pager={recordFilters.pager} items={recordFilters.rows} editLabel={t("common.edit")} emptyLabel={t("setupFlow.noPeriods")} columns={[
 { key: "name", label: t("setupFlow.periodName"), render: item => item.period_key },
 { key: "book", label: t("nav.books"), render: item => books.find(book => book.id === item.book)?.name || item.book },
 { key: "start", label: t("setupFlow.startDate"), render: item => item.starts_at },

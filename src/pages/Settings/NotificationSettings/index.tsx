@@ -80,7 +80,7 @@ const CategoryRow: React.FC<{
 
   return (
     <div
-      className={`flex items-start justify-between px-4 py-3 ${
+      className={`flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4 transition-colors hover:bg-gray-50/50 last:border-0 ${
         disabled ? "" : "cursor-pointer"
       }`}
       onClick={handleRowClick}
@@ -211,7 +211,7 @@ const NotificationSettings: React.FC = () => {
     return (
       <>
         <TopProgress active variant="top" topOffset={64} />
-        <PageSkeleton rows={5} />
+        <PageSkeleton variant="form" rows={5} />
       </>
     );
   }
@@ -221,17 +221,17 @@ const NotificationSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="settings-page">
-        <div className="settings-content ">
+      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
           {/* Header card */}
           
 
           {/* Main card */}
-          <section className="mt-6 grid grid-cols-12 gap-6">
-            <div className="col-span-12 lg:col-span-8">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 flex items-center justify-between settings-panel-heading">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+          <section className="grid grid-cols-12 gap-6">
+            <div className="col-span-12 xl:col-span-8">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden ">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-white flex items-center justify-between ">
+                  <span className="text-xs font-semibold text-gray-700">
                     {t("section.email")}
                   </span>
                   <span className="text-[11px] text-gray-500">
@@ -266,10 +266,10 @@ const NotificationSettings: React.FC = () => {
             </div>
 
             {/* Informational side card */}
-            <div className="col-span-12 lg:col-span-4">
-              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden settings-panel">
-                <div className="px-4 py-2.5 border-b border-gray-200 bg-gray-50 settings-panel-heading">
-                  <span className="text-[11px] uppercase tracking-wide text-gray-700">
+            <div className="col-span-12 xl:col-span-4">
+              <div className="rounded-lg border border-gray-200 bg-white overflow-hidden ">
+                <div className="px-4 py-2.5 border-b border-gray-200 bg-white ">
+                  <span className="text-xs font-semibold text-gray-700">
                     {t("sidebar.title")}
                   </span>
                 </div>
