@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
 import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
@@ -285,7 +286,7 @@ const MemberSettings: React.FC = () => {
       } catch (err) {
         if (mountedRef.current) {
           console.error("Fetch members/groups failed", err);
-          setSnack({ message: t("errors.fetchError"), severity: "error" });
+          setSnack({ message: apiErrorMessage(err, t("errors.fetchError")), severity: "error" });
         }
       } finally {
           if (mountedRef.current) {
@@ -504,7 +505,7 @@ const MemberSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getMember(item.id)).data.member} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "—"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "—"},{key:"role",label:t("preview.fields.role"),render:item=>t(`preview.roles.${item.role}`)},{key:"groups",label:t("preview.fields.groups"),render:item=>item.groups?.map(group => group.name).join(", ") || "—"},{key:"created_at",label:t("preview.fields.created_at"),render:item=>item.created_at ?? "—"},{key:"updated_at",label:t("preview.fields.updated_at"),render:item=>item.updated_at ?? "—"}]} onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy} items={members} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"â€”")},{key:"role",label:t("common:records.fields.role"),render:item=>String(item.role??"â€”")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_member")} canDelete={isOwner||isSuperUser||permissions.includes("delete_member")} onEdit={openEditModal} onDelete={item=>api.deleteMember(item.id)} />
+<DataTable loadPreview={async item => (await api.getMember(item.id)).data.member} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "ï¿½"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "ï¿½"},{key:"role",label:t("preview.fields.role"),render:item=>t(`preview.roles.${item.role}`)},{key:"groups",label:t("preview.fields.groups"),render:item=>item.groups?.map(group => group.name).join(", ") || "ï¿½"},{key:"created_at",label:t("preview.fields.created_at"),render:item=>item.created_at ?? "ï¿½"},{key:"updated_at",label:t("preview.fields.updated_at"),render:item=>item.updated_at ?? "ï¿½"}]} onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy} items={members} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"â€”")},{key:"role",label:t("common:records.fields.role"),render:item=>String(item.role??"â€”")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_member")} canDelete={isOwner||isSuperUser||permissions.includes("delete_member")} onEdit={openEditModal} onDelete={item=>api.deleteMember(item.id)} />
             </section>
           </PermissionMiddleware>
         </div>
@@ -684,7 +685,7 @@ const MemberSettings: React.FC = () => {
 
 
 
-      <Snackbar
+      <Snackbar notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

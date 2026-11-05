@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 /* -------------------------------------------------------------------------- */
 /* File: src/components/Modal/StatementImportModal.tsx                        */
 /* -------------------------------------------------------------------------- */
@@ -50,9 +51,9 @@ const StatementImportModal: React.FC<Props> = ({
       if (shouldClose !== false) {
         onClose();
       }
-    } catch {
+    } catch (notificationCause) {
       setSnack({
-        message: "Could not close the review right now.",
+        message: apiErrorMessage(notificationCause, "Could not close the review right now."),
         severity: "error",
       });
     } finally {
@@ -147,6 +148,7 @@ const StatementImportModal: React.FC<Props> = ({
       </div>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

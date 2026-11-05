@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 /* --------------------------------------------------------------------------
  * File: src/pages/Settings/Statements/index.tsx
  * -------------------------------------------------------------------------- */
@@ -103,7 +104,7 @@ const Statements: React.FC = () => {
       setBanks(res.data?.results ?? []);
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, t("toast.banksFetchError")),
+        message: apiErrorMessage(err, getErrorMessage(err, t("toast.banksFetchError"))),
         severity: "error",
       });
     }
@@ -121,7 +122,7 @@ const Statements: React.FC = () => {
       setRows(res.results ?? []);
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, t("toast.listFetchError")),
+        message: apiErrorMessage(err, getErrorMessage(err, t("toast.listFetchError"))),
         severity: "error",
       });
     } finally {
@@ -180,7 +181,7 @@ const Statements: React.FC = () => {
         await api.downloadStatement(statement.id);
       } catch (err) {
         setSnack({
-          message: getErrorMessage(err, t("toast.downloadJsonFail")),
+          message: apiErrorMessage(err, getErrorMessage(err, t("toast.downloadJsonFail"))),
           severity: "error",
         });
       }
@@ -215,7 +216,7 @@ const Statements: React.FC = () => {
       });
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, t("toast.deleteFail")),
+        message: apiErrorMessage(err, getErrorMessage(err, t("toast.deleteFail"))),
         severity: "error",
       });
     } finally {
@@ -451,6 +452,7 @@ const Statements: React.FC = () => {
       />
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

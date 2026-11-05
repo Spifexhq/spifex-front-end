@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
 import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
@@ -452,7 +453,7 @@ const DepartmentSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getDepartment(item.id)).data} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "—"},{key:"code",label:t("preview.fields.code"),render:item=>item.code ?? "—"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getDepartment(item.id)).data} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "ï¿½"},{key:"code",label:t("preview.fields.code"),render:item=>item.code ?? "ï¿½"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
@@ -476,8 +477,8 @@ const DepartmentSettings: React.FC = () => {
                   setAdded((prev) => [res.created!, ...prev]);
                 }
                 await pager.refresh();
-              } catch {
-                setSnack({ message: t("errors.fetchError"), severity: "error" });
+              } catch (notificationCause) {
+                setSnack({ message: apiErrorMessage(notificationCause, t("errors.fetchError")), severity: "error" });
               }
             }}
           />
@@ -617,7 +618,7 @@ const DepartmentSettings: React.FC = () => {
 
 
 
-      <Snackbar
+      <Snackbar notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

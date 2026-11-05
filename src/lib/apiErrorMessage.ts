@@ -1,16 +1,35 @@
-/** The HTTP client throws both Error instances and structured API error bodies. */
-export function apiErrorMessage(cause: unknown, fallback: string) {
-  if (cause instanceof Error) return cause.message || fallback;
-  if (!cause || typeof cause !== "object") return fallback;
-  const error = cause as { fields?: unknown; detail?: unknown; message?: unknown };
+/** Extract safe, useful messages from Error, DRF, Axios and envelope failures. */
+export function apiErrorMessage(cause: unknown, fallback: string): string {
+  const seen = new Set<object>();
   const messages: string[] = [];
-  function collect(value: unknown) {
-    if (typeof value === "string") messages.push(value);
-    else if (Array.isArray(value)) value.forEach(collect);
-    else if (value && typeof value === "object") Object.entries(value).forEach(([key, value]) => {
-      if (!["code", "phase", "steps", "account_id", "account_code"].includes(key)) collect(value);
-    });
+  const ignored = new Set(["code", "status", "status_code", "request_id", "phase", "steps", "account_id", "account_code", "traceback", "stack", "config", "headers"]);
+  function collect(value: unknown, depth = 0) {
+    if (depth > 6 || messages.length >= 12) return;
+    if (typeof value === "string") {
+      const text = value.trim();
+      if (text && !/^\s*<(?:!doctype|html)/i.test(text) && !["[object Object]", "undefined", "null"].includes(text)) messages.push(text);
+    } else if (value && typeof value === "object" && !seen.has(value)) {
+      seen.add(value);
+      if (Array.isArray(value)) value.forEach(item => collect(item, depth + 1));
+      else Object.entries(value).forEach(([key, item]) => { if (!ignored.has(key)) collect(item, depth + 1); });
+    }
   }
-  collect(error.fields ?? error.detail);
-  return [...new Set(messages)].join(" · ") || (typeof error.message === "string" ? error.message : fallback);
+  if (cause && typeof cause === "object") {
+    const error = cause as { response?: { data?: unknown }; error?: unknown; fields?: unknown; detail?: unknown; details?: unknown; message?: unknown };
+    collect(error.response?.data ?? error.error ?? error.fields ?? error.detail ?? error.details);
+    if (!messages.length) collect(error.message);
+  } else collect(cause);
+  return [...new Set(messages)].join(" · ").slice(0, 1200) || fallback;
+}
+
+/** Preserve API codes/fields while supporting existing instanceof Error callers. */
+export function normalizeApiError(cause: unknown, fallback: string): Error {
+  const message = apiErrorMessage(cause, fallback);
+  const error = new Error(message);
+  Object.defineProperty(error, "cause", { value: cause, configurable: true });
+  if (cause && typeof cause === "object") {
+    const source = cause as Record<string, unknown>;
+    for (const key of ["code", "status", "request_id", "fields", "detail", "details"]) if (source[key] !== undefined) Object.assign(error, { [key]: source[key] });
+  }
+  return error;
 }

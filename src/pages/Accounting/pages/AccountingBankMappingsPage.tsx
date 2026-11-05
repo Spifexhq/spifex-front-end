@@ -139,10 +139,10 @@ const AccountingBankMappingsPage: React.FC = () => {
       setBanks(nextBanks);
       setLedgerAccounts(nextLedgerAccounts);
       setLookupsReady(true);
-    } catch {
+    } catch (notificationCause) {
       setSnackbar({
         severity: "error",
-        message: t("bankMappingsPage.lookupError", "Failed to load mapping form lookups."),
+        message: apiErrorMessage(notificationCause, t("bankMappingsPage.lookupError", "Failed to load mapping form lookups.")),
       });
     } finally {
       setLookupsLoading(false);
@@ -240,6 +240,7 @@ const AccountingBankMappingsPage: React.FC = () => {
 
         {snackbar ? (
           <Snackbar
+            notificationKey={snackbar}
             open={!!snackbar}
             onClose={() => setSnackbar(null)}
             autoHideDuration={6000}

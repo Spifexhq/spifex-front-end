@@ -184,6 +184,7 @@ const AccountingBooksPage: React.FC = () => {
 
         {snackbar ? (
           <Snackbar
+            notificationKey={snackbar}
             open={!!snackbar}
             onClose={() => setSnackbar(null)}
             autoHideDuration={6000}

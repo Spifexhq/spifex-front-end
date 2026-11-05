@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 /* --------------------------------------------------------------------------
  * File: src/pages/Settings/NotificationSettings/index.tsx
  * Standards aligned with Settings pages:
@@ -144,7 +145,7 @@ const NotificationSettings: React.FC = () => {
       } catch (err) {
         console.error("Error loading notification preferences", err);
         setSnack({
-          message: t("toast.loadError"),
+          message: apiErrorMessage(err, t("toast.loadError")),
           severity: "error",
         });
       } finally {
@@ -198,7 +199,7 @@ const NotificationSettings: React.FC = () => {
     } catch (err) {
       console.error("Error updating notification preferences", err);
       setSnack({
-        message: t("toast.saveError"),
+        message: apiErrorMessage(err, t("toast.saveError")),
         severity: "error",
       });
     } finally {
@@ -288,6 +289,7 @@ const NotificationSettings: React.FC = () => {
 
         {/* Snackbar */}
         <Snackbar
+          notificationKey={snack}
           open={!!snack}
           onClose={() => setSnack(null)}
           autoHideDuration={5000}

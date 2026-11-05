@@ -2,7 +2,6 @@
   "previewEmpty": "Non renseigné",
   "previewYes": "Oui",
   "previewNo": "Non",
-
   "previewError": "Impossible de charger les détails.",
   "previewRetry": "Réessayer",
   "previewLoading": "Chargement de l’aperçu…",
@@ -92,5 +91,9 @@
     "filters": "Filtres",
     "clear": "Effacer les filtres",
     "apply": "Appliquer les filtres"
+  },
+  "notifications": {
+    "dismiss": "Fermer la notification",
+    "genericError": "Une erreur est survenue. Veuillez réessayer."
   }
 }

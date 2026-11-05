@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
 import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
@@ -495,7 +496,7 @@ const EntitySettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getEntity(item.id)).data} previewColumns={[{key:"full_name",label:t("preview.fields.full_name"),render:item=>item.full_name ?? "—"},{key:"alias_name",label:t("preview.fields.alias_name"),render:item=>item.alias_name ?? "—"},{key:"entity_type",label:t("preview.fields.entity_type"),render:item=>item.entity_type ? t(`types.${item.entity_type}`, {defaultValue:item.entity_type}) : "—"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")},{key:"ssn_tax_id",label:t("preview.fields.ssn_tax_id"),render:item=>item.ssn_tax_id ?? "—"},{key:"ein_tax_id",label:t("preview.fields.ein_tax_id"),render:item=>item.ein_tax_id ?? "—"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "—"},{key:"phone",label:t("preview.fields.phone"),render:item=>item.phone ?? "—"},{key:"street",label:t("preview.fields.street"),render:item=>item.street ?? "—"},{key:"street_number",label:t("preview.fields.street_number"),render:item=>item.street_number ?? "—"},{key:"city",label:t("preview.fields.city"),render:item=>item.city ?? "—"},{key:"state",label:t("preview.fields.state"),render:item=>item.state ?? "—"},{key:"postal_code",label:t("preview.fields.postal_code"),render:item=>item.postal_code ?? "—"},{key:"country",label:t("preview.fields.country"),render:item=>item.country ?? "—"},{key:"bank_name",label:t("preview.fields.bank_name"),render:item=>item.bank_name ?? "—"},{key:"bank_branch",label:t("preview.fields.bank_branch"),render:item=>item.bank_branch ?? "—"},{key:"checking_account",label:t("preview.fields.checking_account"),render:item=>item.checking_account ?? "—"},{key:"account_holder_tax_id",label:t("preview.fields.account_holder_tax_id"),render:item=>item.account_holder_tax_id ?? "—"},{key:"account_holder_name",label:t("preview.fields.account_holder_name"),render:item=>item.account_holder_name ?? "—"}]} onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getEntity(item.id)).data} previewColumns={[{key:"full_name",label:t("preview.fields.full_name"),render:item=>item.full_name ?? "ï¿½"},{key:"alias_name",label:t("preview.fields.alias_name"),render:item=>item.alias_name ?? "ï¿½"},{key:"entity_type",label:t("preview.fields.entity_type"),render:item=>item.entity_type ? t(`types.${item.entity_type}`, {defaultValue:item.entity_type}) : "ï¿½"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")},{key:"ssn_tax_id",label:t("preview.fields.ssn_tax_id"),render:item=>item.ssn_tax_id ?? "ï¿½"},{key:"ein_tax_id",label:t("preview.fields.ein_tax_id"),render:item=>item.ein_tax_id ?? "ï¿½"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "ï¿½"},{key:"phone",label:t("preview.fields.phone"),render:item=>item.phone ?? "ï¿½"},{key:"street",label:t("preview.fields.street"),render:item=>item.street ?? "ï¿½"},{key:"street_number",label:t("preview.fields.street_number"),render:item=>item.street_number ?? "ï¿½"},{key:"city",label:t("preview.fields.city"),render:item=>item.city ?? "ï¿½"},{key:"state",label:t("preview.fields.state"),render:item=>item.state ?? "ï¿½"},{key:"postal_code",label:t("preview.fields.postal_code"),render:item=>item.postal_code ?? "ï¿½"},{key:"country",label:t("preview.fields.country"),render:item=>item.country ?? "ï¿½"},{key:"bank_name",label:t("preview.fields.bank_name"),render:item=>item.bank_name ?? "ï¿½"},{key:"bank_branch",label:t("preview.fields.bank_branch"),render:item=>item.bank_branch ?? "ï¿½"},{key:"checking_account",label:t("preview.fields.checking_account"),render:item=>item.checking_account ?? "ï¿½"},{key:"account_holder_tax_id",label:t("preview.fields.account_holder_tax_id"),render:item=>item.account_holder_tax_id ?? "ï¿½"},{key:"account_holder_name",label:t("preview.fields.account_holder_name"),render:item=>item.account_holder_name ?? "ï¿½"}]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
@@ -517,8 +518,8 @@ const EntitySettings: React.FC = () => {
               try {
                 if (mode === "create" && created) setAdded((prev) => [created, ...prev]);
                 await pager.refresh();
-              } catch {
-                setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
+              } catch (notificationCause) {
+                setSnack({ message: apiErrorMessage(notificationCause, t("errors.loadFailedTitle")), severity: "error" });
               }
             }}
           />
@@ -700,7 +701,7 @@ const EntitySettings: React.FC = () => {
 
 
 
-      <Snackbar
+      <Snackbar notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

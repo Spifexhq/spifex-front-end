@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
 import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
@@ -638,7 +639,7 @@ const BankSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getBank(item.id)).data} previewColumns={[{key:"institution",label:t("preview.fields.institution"),render:item=>item.institution ?? "—"},{key:"account_type",label:t("preview.fields.account_type"),render:item=>t(`accountType.${item.account_type}`, {defaultValue:item.account_type})},{key:"branch",label:t("preview.fields.branch"),render:item=>item.branch ?? "—"},{key:"account_number",label:t("preview.fields.account_number"),render:item=>item.account_number ?? "—"},{key:"iban",label:t("preview.fields.iban"),render:item=>item.iban ?? "—"},{key:"currency",label:t("preview.fields.currency"),render:item=>item.currency ?? "—"},{key:"initial_balance",label:t("preview.fields.initial_balance"),render:item=>item.initial_balance ?? "—"},{key:"current_balance",label:t("preview.fields.current_balance"),render:item=>item.current_balance ?? "—"},{key:"consolidated_balance",label:t("preview.fields.consolidated_balance"),render:item=>item.consolidated_balance ?? "—"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getBank(item.id)).data} previewColumns={[{key:"institution",label:t("preview.fields.institution"),render:item=>item.institution ?? "ï¿½"},{key:"account_type",label:t("preview.fields.account_type"),render:item=>t(`accountType.${item.account_type}`, {defaultValue:item.account_type})},{key:"branch",label:t("preview.fields.branch"),render:item=>item.branch ?? "ï¿½"},{key:"account_number",label:t("preview.fields.account_number"),render:item=>item.account_number ?? "ï¿½"},{key:"iban",label:t("preview.fields.iban"),render:item=>item.iban ?? "ï¿½"},{key:"currency",label:t("preview.fields.currency"),render:item=>item.currency ?? "ï¿½"},{key:"initial_balance",label:t("preview.fields.initial_balance"),render:item=>item.initial_balance ?? "ï¿½"},{key:"current_balance",label:t("preview.fields.current_balance"),render:item=>item.current_balance ?? "ï¿½"},{key:"consolidated_balance",label:t("preview.fields.consolidated_balance"),render:item=>item.consolidated_balance ?? "ï¿½"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
@@ -663,8 +664,8 @@ const BankSettings: React.FC = () => {
                   setAdded((prev) => [res.created!, ...prev]);
                 }
                 await pager.refresh();
-              } catch {
-                setSnack({ message: t("errors.fetchError"), severity: "error" });
+              } catch (notificationCause) {
+                setSnack({ message: apiErrorMessage(notificationCause, t("errors.fetchError")), severity: "error" });
               }
             }}
           />
@@ -929,7 +930,7 @@ const BankSettings: React.FC = () => {
 
 
 
-      <Snackbar
+      <Snackbar notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

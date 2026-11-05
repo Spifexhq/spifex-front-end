@@ -373,6 +373,7 @@ const ChartImport: React.FC<Props> = ({
       </section>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}

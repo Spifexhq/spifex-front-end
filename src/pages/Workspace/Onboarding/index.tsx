@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -285,7 +286,7 @@ const OnboardingPage: React.FC = () => {
       } catch (e) {
         console.error(e);
         if (mounted) {
-          setSnack({ message: t("errors.load"), severity: "error" });
+          setSnack({ message: apiErrorMessage(e, t("errors.load")), severity: "error" });
         }
       } finally {
         if (mounted) setLoading(false);
@@ -399,7 +400,7 @@ const OnboardingPage: React.FC = () => {
       setSnack({ message: t("success.personal"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnack({ message: t("errors.personalSave"), severity: "error" });
+      setSnack({ message: apiErrorMessage(e, t("errors.personalSave")), severity: "error" });
     } finally {
       setSavingPersonal(false);
     }
@@ -425,7 +426,7 @@ const OnboardingPage: React.FC = () => {
       setSnack({ message: t("success.organization"), severity: "success" });
     } catch (e) {
       console.error(e);
-      setSnack({ message: t("errors.organizationSave"), severity: "error" });
+      setSnack({ message: apiErrorMessage(e, t("errors.organizationSave")), severity: "error" });
     } finally {
       setSavingOrg(false);
     }
@@ -855,6 +856,7 @@ const OnboardingPage: React.FC = () => {
       </main>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}

@@ -427,6 +427,7 @@ const SignIn: React.FC = () => {
         </footer>
 
         <Snackbar
+          notificationKey={snack}
           open={!!snack}
           onClose={() => setSnack(null)}
           autoHideDuration={6000}

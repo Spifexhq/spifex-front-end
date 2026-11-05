@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useAccountingSource } from "@/api/hooks/useAccountingRecords";
 import { useRecordFilters } from "@/shared/ui/DataTable/useRecordFilters";
 import DataTable from "@/shared/ui/DataTable";
@@ -169,8 +170,8 @@ const AccountingJournalsPage: React.FC = () => {
         extractCollection<AccountingBook>((booksResponse as { data?: unknown })?.data ?? booksResponse)
       );
       setLedgerAccounts(allAccounts);
-    } catch {
-      setSnackbar({ severity: "error", message: t("journalsPage.lookupError", "Failed to load manual journal form lookups.") });
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("journalsPage.lookupError", "Failed to load manual journal form lookups.")) });
     } finally {
       setLookupsLoading(false);
     }
@@ -220,8 +221,8 @@ const AccountingJournalsPage: React.FC = () => {
       setModalOpen(false);
       setForm(EMPTY_FORM);
       await load();
-    } catch {
-      setSnackbar({ severity: "error", message: t("journalsPage.createError", "Failed to create manual journal.") });
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("journalsPage.createError", "Failed to create manual journal.")) });
     } finally {
       setSaving(false);
     }
@@ -233,8 +234,8 @@ const AccountingJournalsPage: React.FC = () => {
       await api.reverseJournalEntry(journalId, { memo: t("journalsPage.reverseReason", "Reversal requested from journals page") });
       setSnackbar({ severity: "success", message: t("journalsPage.reversedSuccess", "Journal reversed.") });
       await load();
-    } catch {
-      setSnackbar({ severity: "error", message: t("journalsPage.reverseError", "Failed to reverse journal.") });
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("journalsPage.reverseError", "Failed to reverse journal.")) });
     } finally {
       setReversingId(null);
     }
@@ -274,6 +275,7 @@ const AccountingJournalsPage: React.FC = () => {
 
         {snackbar ? (
           <Snackbar
+            notificationKey={snackbar}
             open={!!snackbar}
             onClose={() => setSnackbar(null)}
             autoHideDuration={6000}

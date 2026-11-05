@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { PreferenceSection as SectionCard, PreferenceRow as Row } from "@/shared/ui/Settings/PreferenceSection";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/OrganizationSettings/index.tsx                             */
@@ -118,8 +119,8 @@ const OrganizationSettings: React.FC = () => {
         setOrg(data);
         orgRef.current = data;
         hydrateSelectionsFrom(data);
-      } catch {
-        setSnack({ message: t("toast.orgLoadError"), severity: "error" });
+      } catch (notificationCause) {
+        setSnack({ message: apiErrorMessage(notificationCause, t("toast.orgLoadError")), severity: "error" });
       } finally {
         setIsInitialLoading(false);
       }
@@ -184,7 +185,7 @@ const OrganizationSettings: React.FC = () => {
       setSnack({ message: t("toast.orgUpdateOk"), severity: "success" });
     } catch (error) {
       console.error(error);
-      setSnack({ message: t("toast.orgUpdateError"), severity: "error" });
+      setSnack({ message: apiErrorMessage(error, t("toast.orgUpdateError")), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -356,6 +357,7 @@ const OrganizationSettings: React.FC = () => {
       </main>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}

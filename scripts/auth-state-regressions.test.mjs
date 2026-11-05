@@ -21,7 +21,7 @@ function httpHarness(adapter) {
    if(!cfg.validateStatus||cfg.validateStatus(response.status))return response;
    throw new axios.AxiosError("Request failed",undefined,cfg,undefined,response);
  }})};
- const exported=load("src/lib/http.ts",{"axios":{__esModule:true,default:fakeAxios},"@/lib/tokens":tokens,"./authGeneration":{getAuthGeneration:()=>generation},"@/lib/netReport":{},"@/redux/store":{store:{getState:()=>({auth:{user:{id:"user"},orgExternalId:"org"}})}}},{window:{dispatchEvent:event=>events.push(event),setTimeout,clearTimeout},navigator:{},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}}});
+ const exported=load("src/lib/http.ts",{"axios":{__esModule:true,default:fakeAxios},"@/lib/tokens":tokens,"./apiErrorMessage":load("src/lib/apiErrorMessage.ts",{}),"./authGeneration":{getAuthGeneration:()=>generation},"@/lib/netReport":{},"@/redux/store":{store:{getState:()=>({auth:{user:{id:"user"},orgExternalId:"org"}})}}},{window:{dispatchEvent:event=>events.push(event),setTimeout,clearTimeout},navigator:{},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}}});
  return {...exported,tokens,events,get access(){return access;}};
 }
 const csrf={status:200,data:{data:{csrf_token:"csrf"}}};

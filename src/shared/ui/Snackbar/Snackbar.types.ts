@@ -3,7 +3,10 @@ export interface SnackbarProps {
   open: boolean;
 
   /** Tempo (ms) para fechar automaticamente */
-  autoHideDuration?: number;
+  autoHideDuration?: number | null;
+
+  /** Stable identity for each notification; repeated messages restart the timer. */
+  notificationKey?: unknown;
 
   /** Callback ao fechar */
   onClose: () => void;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import axios from "axios";
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
@@ -788,10 +788,7 @@ const EntriesModal: React.FC<EntriesModalProps> = ({
         handleClose();
         onSave();
       } catch (err) {
-        const message =
-          axios.isAxiosError(err) && err.response?.data?.error?.message
-            ? err.response.data.error.message
-            : t("entriesModal:saveError.unexpected");
+        const message = apiErrorMessage(err, t("entriesModal:saveError.unexpected"));
 
         setWarning({ title: t("entriesModal:saveError.title"), message });
       } finally {

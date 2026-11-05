@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 // src/pages/Workspace/PersonalLocaleSetup/index.tsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -106,8 +107,8 @@ const PersonalLocaleSetup: React.FC = () => {
 
         const countryObj = COUNTRIES.find((c) => c.value === cc);
         setCountrySelected(countryObj ? [countryObj] : []);
-      } catch {
-        setSnack({ message: t("toastLoadError"), severity: "error" });
+      } catch (notificationCause) {
+        setSnack({ message: apiErrorMessage(notificationCause, t("toastLoadError")), severity: "error" });
       } finally {
         if (mounted) setLoading(false);
       }
@@ -167,7 +168,7 @@ const PersonalLocaleSetup: React.FC = () => {
       navigate("/cashflow", { replace: true });
     } catch (e) {
       console.error(e);
-      setSnack({ message: t("toastUpdateError"), severity: "error" });
+      setSnack({ message: apiErrorMessage(e, t("toastUpdateError")), severity: "error" });
     } finally {
       setSaving(false);
     }
@@ -349,6 +350,7 @@ const PersonalLocaleSetup: React.FC = () => {
       </main>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={4500}

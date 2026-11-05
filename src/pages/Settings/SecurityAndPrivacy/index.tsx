@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { PreferenceSection as SectionCard, PreferenceRow as Row } from "@/shared/ui/Settings/PreferenceSection";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/SecurityAndPrivacy/index.tsx                                     */
@@ -288,9 +289,9 @@ const SecurityAndPrivacy: React.FC = () => {
 
         setSnack({ message, severity: "error" });
       } else if (error instanceof Error) {
-        setSnack({ message: error.message, severity: "error" });
+        setSnack({ message: apiErrorMessage(error, error.message), severity: "error" });
       } else {
-        setSnack({ message: t("toast.unexpected"), severity: "error" });
+        setSnack({ message: apiErrorMessage(error, t("toast.unexpected")), severity: "error" });
       }
     } finally {
       setIsSubmitting(false);
@@ -342,9 +343,9 @@ const SecurityAndPrivacy: React.FC = () => {
 
         setSnack({ message, severity: "error" });
       } else if (error instanceof Error) {
-        setSnack({ message: error.message, severity: "error" });
+        setSnack({ message: apiErrorMessage(error, error.message), severity: "error" });
       } else {
-        setSnack({ message: t("toast.unexpected"), severity: "error" });
+        setSnack({ message: apiErrorMessage(error, t("toast.unexpected")), severity: "error" });
       }
     } finally {
       setIsSubmitting(false);
@@ -406,9 +407,9 @@ const SecurityAndPrivacy: React.FC = () => {
 
         setSnack({ message, severity: "error" });
       } else if (error instanceof Error) {
-        setSnack({ message: error.message, severity: "error" });
+        setSnack({ message: apiErrorMessage(error, error.message), severity: "error" });
       } else {
-        setSnack({ message: t("toast.unexpected"), severity: "error" });
+        setSnack({ message: apiErrorMessage(error, t("toast.unexpected")), severity: "error" });
       }
     } finally {
       setIsTwoFactorSubmitting(false);
@@ -536,6 +537,7 @@ const SecurityAndPrivacy: React.FC = () => {
       </main>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}

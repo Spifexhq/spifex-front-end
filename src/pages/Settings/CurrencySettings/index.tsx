@@ -340,6 +340,7 @@ const CurrencySettings: React.FC = () => {
       </main>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}

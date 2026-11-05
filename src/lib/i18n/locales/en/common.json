@@ -2,7 +2,6 @@
   "previewEmpty": "Not provided",
   "previewYes": "Yes",
   "previewNo": "No",
-
   "previewError": "Could not load the record details.",
   "previewRetry": "Try again",
   "previewLoading": "Loading preview…",
@@ -92,5 +91,9 @@
     "filters": "Filters",
     "clear": "Clear filters",
     "apply": "Apply filters"
+  },
+  "notifications": {
+    "dismiss": "Dismiss notification",
+    "genericError": "Something went wrong. Please try again."
   }
 }

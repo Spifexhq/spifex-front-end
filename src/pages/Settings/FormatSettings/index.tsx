@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 /* --------------------------------------------------------------------------
  * File: src/pages/Settings/FormatSettings/index.tsx
  * Manage display formats for dates and numbers.
@@ -262,7 +263,7 @@ const FormatSettings: React.FC = () => {
     } catch (err) {
       console.error("Error saving format preferences", err);
       setSnack({
-        message: t("toast.error"),
+        message: apiErrorMessage(err, t("toast.error")),
         severity: "error",
       });
     } finally {
@@ -585,6 +586,7 @@ const FormatSettings: React.FC = () => {
 
       {/* Snackbar */}
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}

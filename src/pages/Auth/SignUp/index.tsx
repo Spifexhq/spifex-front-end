@@ -771,6 +771,7 @@ const SignUp = () => {
         </main>
 
         <Snackbar
+          notificationKey={snack}
           open={!!snack}
           autoHideDuration={6000}
           onClose={() => setSnack(null)}

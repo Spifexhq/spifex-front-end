@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import SidePanel, { SidePanelForm } from "@/components/Modal/SidePanel";
 import DataTable from "@/shared/ui/DataTable";
 import AccountingStatus from "@/pages/Accounting/components/AccountingStatus";
@@ -128,9 +129,9 @@ const CategorySettingsPage: React.FC = () => {
       });
       const nextItems = extractCollection<CashflowCategory>((response as { data?: unknown })?.data ?? response);
       setItems(nextItems);
-    } catch {
+    } catch (notificationCause) {
       setItems([]);
-      setSnackbar({ severity: "error", message: t("feedback.loadError") });
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("feedback.loadError")) });
     } finally {
       setLoading(false);
     }
@@ -217,8 +218,8 @@ const CategorySettingsPage: React.FC = () => {
     let metadata: Record<string, unknown> = {};
     try {
       metadata = form.metadata_text.trim() ? JSON.parse(form.metadata_text) : {};
-    } catch {
-      setSnackbar({ severity: "error", message: t("feedback.invalidJson") });
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("feedback.invalidJson")) });
       return;
     }
 
@@ -442,6 +443,7 @@ const CategorySettingsPage: React.FC = () => {
 
       {snackbar ? (
         <Snackbar
+          notificationKey={snackbar}
           open={!!snackbar}
           onClose={() => setSnackbar(null)}
           autoHideDuration={6000}

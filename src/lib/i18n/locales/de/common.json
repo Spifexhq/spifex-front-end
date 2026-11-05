@@ -2,7 +2,6 @@
   "previewEmpty": "Nicht angegeben",
   "previewYes": "Ja",
   "previewNo": "Nein",
-
   "previewError": "Details konnten nicht geladen werden.",
   "previewRetry": "Erneut versuchen",
   "previewLoading": "Vorschau wird geladen…",
@@ -92,5 +91,9 @@
     "filters": "Filter",
     "clear": "Filter zurücksetzen",
     "apply": "Filter anwenden"
+  },
+  "notifications": {
+    "dismiss": "Benachrichtigung schließen",
+    "genericError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   }
 }

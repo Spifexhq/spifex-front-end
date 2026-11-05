@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 // src/components/Modal/SettlementModal.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
@@ -300,7 +301,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
         onClose();
       } catch (err) {
         setSnack({
-          message: getSettlementErrorMessage(err, t("errors.bulk")),
+          message: apiErrorMessage(err, getSettlementErrorMessage(err, t("errors.bulk"))),
           severity: "error",
         });
       }
@@ -713,6 +714,7 @@ const SettlementModal: React.FC<SettlementModalProps> = ({
     </div>
 
     <Snackbar
+      notificationKey={snack}
       open={!!snack}
       onClose={() => setSnack(null)}
       autoHideDuration={6000}

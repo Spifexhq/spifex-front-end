@@ -158,6 +158,7 @@ const ResetPassword: React.FC = () => {
       </div>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

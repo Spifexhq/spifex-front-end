@@ -187,8 +187,8 @@ const AccountingPostingPoliciesPage: React.FC = () => {
       setBooks(nextBooks);
       setLedgerAccounts(nextLedgerAccounts);
       setCategories(nextCategories);
-    } catch {
-      setSnackbar({ severity: "error", message: t("postingPoliciesPage.lookupError", "Failed to load posting policy form lookups.") });
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("postingPoliciesPage.lookupError", "Failed to load posting policy form lookups.")) });
     } finally {
       setLookupsLoading(false);
     }
@@ -296,6 +296,7 @@ const AccountingPostingPoliciesPage: React.FC = () => {
 
         {snackbar ? (
           <Snackbar
+            notificationKey={snackbar}
             open={!!snackbar}
             onClose={() => setSnackbar(null)}
             autoHideDuration={6000}

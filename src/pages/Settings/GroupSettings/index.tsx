@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/GroupSettings/index.tsx                                    */
 /* -------------------------------------------------------------------------- */
@@ -108,7 +109,7 @@ const GroupSettings: React.FC = () => {
         setGroups([...groupList].sort((a, b) => (a.name || "").localeCompare(b.name || "", "en")));
       } catch (error) {
         console.error(error);
-        setSnack({ message: t("toast.loadAllError"), severity: "error" });
+        setSnack({ message: apiErrorMessage(error, t("toast.loadAllError")), severity: "error" });
       } finally {
         if (opts.background) setIsBackgroundSync(false);
         else setIsInitialLoading(false);
@@ -150,7 +151,7 @@ const GroupSettings: React.FC = () => {
         }
       } catch (error) {
         console.error(error);
-        setSnack({ message: t("toast.detailError"), severity: "error" });
+        setSnack({ message: apiErrorMessage(error, t("toast.detailError")), severity: "error" });
       } finally {
         setIsDetailLoading(false);
       }
@@ -210,7 +211,7 @@ const GroupSettings: React.FC = () => {
       setSnack({ message: t("toast.createSuccess"), severity: "success" });
     } catch (error) {
       console.error(error);
-      setSnack({ message: t("toast.createError"), severity: "error" });
+      setSnack({ message: apiErrorMessage(error, t("toast.createError")), severity: "error" });
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -231,7 +232,7 @@ const GroupSettings: React.FC = () => {
       setSnack({ message: t("toast.renameSuccess"), severity: "success" });
     } catch (error) {
       console.error(error);
-      setSnack({ message: t("toast.renameError"), severity: "error" });
+      setSnack({ message: apiErrorMessage(error, t("toast.renameError")), severity: "error" });
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -250,7 +251,7 @@ const GroupSettings: React.FC = () => {
         setSnack({ message: t("toast.deleteSuccess"), severity: "info" });
       } catch (error) {
         console.error(error);
-        setSnack({ message: t("toast.deleteError"), severity: "error" });
+        setSnack({ message: apiErrorMessage(error, t("toast.deleteError")), severity: "error" });
       } finally {
         setConfirmOpen(false);
         setConfirmBusy(false);
@@ -277,7 +278,7 @@ const GroupSettings: React.FC = () => {
       setSnack({ message: t("toast.saveSuccess"), severity: "success" });
     } catch (error) {
       console.error(error);
-      setSnack({ message: t("toast.saveError"), severity: "error" });
+      setSnack({ message: apiErrorMessage(error, t("toast.saveError")), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -483,6 +484,7 @@ const GroupSettings: React.FC = () => {
       />
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={4000}

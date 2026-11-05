@@ -1,3 +1,4 @@
+import { normalizeApiError } from "./apiErrorMessage";
 import { getAuthGeneration } from "./authGeneration";
 /* -----------------------------------------------------------------------------
  * File: src/lib/http.ts
@@ -633,11 +634,12 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     const err = e as AxiosError<unknown>;
     if (axios.isAxiosError(err)) {
       const body = err.response?.data;
-      if (hasApiError(body)) throw { ...body.error, status: err.response?.status };
+      if (hasApiError(body)) throw normalizeApiError({ ...body.error, status: err.response?.status }, "Request failed. Please try again.");
 
       const msg = err.response ? `${err.response.status} ${err.response.statusText || "Request error"}` : err.message;
-      throw new Error(msg);
+      throw normalizeApiError(err.response ? { fields: body, status: err.response.status, code: "request_failed" } : err, msg);
     }
+    if (e && typeof e === "object" && !(e instanceof Error)) throw normalizeApiError(e, "Request failed. Please try again.");
     throw e;
   }
 }

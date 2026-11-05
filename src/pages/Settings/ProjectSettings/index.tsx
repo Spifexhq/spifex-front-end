@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
 import { recordName } from "@/shared/ui/DataTable/recordName";
 import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
@@ -568,7 +569,7 @@ const ProjectSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getProject(item.id)).data} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "—"},{key:"code",label:t("preview.fields.code"),render:item=>item.code ?? "—"},{key:"type",label:t("preview.fields.type"),render:item=>item.type ? t(`types.${item.type}`, {defaultValue:item.type}) : "—"},{key:"description",label:t("preview.fields.description"),render:item=>item.description ?? "—"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getProject(item.id)).data} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "ï¿½"},{key:"code",label:t("preview.fields.code"),render:item=>item.code ?? "ï¿½"},{key:"type",label:t("preview.fields.type"),render:item=>item.type ? t(`types.${item.type}`, {defaultValue:item.type}) : "ï¿½"},{key:"description",label:t("preview.fields.description"),render:item=>item.description ?? "ï¿½"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));
@@ -592,8 +593,8 @@ const ProjectSettings: React.FC = () => {
                   setAdded((prev) => [res.created!, ...prev]);
                 }
                 await pager.refresh();
-              } catch {
-                setSnack({ message: t("errors.loadFailedTitle"), severity: "error" });
+              } catch (notificationCause) {
+                setSnack({ message: apiErrorMessage(notificationCause, t("errors.loadFailedTitle")), severity: "error" });
               }
             }}
           />
@@ -774,7 +775,7 @@ const ProjectSettings: React.FC = () => {
 
 
 
-      <Snackbar
+      <Snackbar notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

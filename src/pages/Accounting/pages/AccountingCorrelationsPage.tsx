@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -983,8 +984,8 @@ export default function AccountingCorrelationsPage() {
           (journalsResponse as { data?: unknown })?.data ?? journalsResponse
         ),
       });
-    } catch {
-      setSnackbar({ severity: "error", message: t("correlationsPage.loadError", "Failed to load correlation explorer data.") });
+    } catch (notificationCause) {
+      setSnackbar({ severity: "error", message: apiErrorMessage(notificationCause, t("correlationsPage.loadError", "Failed to load correlation explorer data.")) });
       setData(EMPTY_DATA);
     } finally {
       setLoading(false);
@@ -1986,7 +1987,7 @@ export default function AccountingCorrelationsPage() {
         </SidePanel>
 
         {snackbar ? (
-          <Snackbar
+          <Snackbar notificationKey={snackbar}
             open={Boolean(snackbar)}
             onClose={() => setSnackbar(null)}
             autoHideDuration={6000}

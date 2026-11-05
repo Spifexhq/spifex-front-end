@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 /* -------------------------------------------------------------------------- */
 /* File: src/components/StatementImportWizard/StatementImportWizard.tsx       */
 /* -------------------------------------------------------------------------- */
@@ -484,7 +485,7 @@ const StatementImportWizard: React.FC<Props> = ({
       return false;
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not refresh analysis."),
+        message: apiErrorMessage(err, getErrorMessage(err, "Could not refresh analysis.")),
         severity: "error",
       });
       return false;
@@ -527,7 +528,7 @@ const StatementImportWizard: React.FC<Props> = ({
         await loadSession(prepared.session_id);
       } catch (err) {
         setSnack({
-          message: getErrorMessage(err, "Could not upload statement."),
+          message: apiErrorMessage(err, getErrorMessage(err, "Could not upload statement.")),
           severity: "error",
         });
       } finally {
@@ -699,7 +700,7 @@ const StatementImportWizard: React.FC<Props> = ({
       return true;
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not save review changes before closing."),
+        message: apiErrorMessage(err, getErrorMessage(err, "Could not save review changes before closing.")),
         severity: "error",
       });
       return false;
@@ -841,7 +842,7 @@ const StatementImportWizard: React.FC<Props> = ({
       });
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not commit import."),
+        message: apiErrorMessage(err, getErrorMessage(err, "Could not commit import.")),
         severity: "error",
       });
     } finally {
@@ -889,7 +890,7 @@ const StatementImportWizard: React.FC<Props> = ({
       });
     } catch (err) {
       setSnack({
-        message: getErrorMessage(err, "Could not accept confident rows."),
+        message: apiErrorMessage(err, getErrorMessage(err, "Could not accept confident rows.")),
         severity: "error",
       });
     } finally {
@@ -1962,6 +1963,7 @@ const StatementImportWizard: React.FC<Props> = ({
       </div>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={6000}

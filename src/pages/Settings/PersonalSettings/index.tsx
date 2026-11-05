@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { PreferenceSection as SectionCard, PreferenceRow as Row } from "@/shared/ui/Settings/PreferenceSection";
 /* -------------------------------------------------------------------------- */
 /* File: src/pages/Settings/PersonalSettings/index.tsx                                       */
@@ -181,8 +182,8 @@ const PersonalSettings: React.FC = () => {
           const response = await api.getOrganization();
           setOrgProfile(response.data);
         }
-      } catch {
-        setSnack({ message: t("toast.loadError"), severity: "error" });
+      } catch (notificationCause) {
+        setSnack({ message: apiErrorMessage(notificationCause, t("toast.loadError")), severity: "error" });
       } finally {
         setIsInitialLoading(false);
       }
@@ -255,7 +256,7 @@ const PersonalSettings: React.FC = () => {
       setSnack({ message: t("toast.updateOk"), severity: "success" });
     } catch (error) {
       console.error(t("toast.updateError"), error);
-      setSnack({ message: t("toast.updateError"), severity: "error" });
+      setSnack({ message: apiErrorMessage(error, t("toast.updateError")), severity: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -517,6 +518,7 @@ const PersonalSettings: React.FC = () => {
       </main>
 
       <Snackbar
+        notificationKey={snack}
         open={!!snack}
         onClose={() => setSnack(null)}
         autoHideDuration={5000}
