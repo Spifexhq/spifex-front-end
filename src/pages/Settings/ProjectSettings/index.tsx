@@ -575,7 +575,7 @@ const ProjectSettings: React.FC = () => {
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"code",label:t("common:records.fields.code"),render:item=>String(item.code??"—")},{key:"description",label:t("common:records.fields.description"),render:item=>String(item.description??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_project")} canDelete={isOwner||isSuperUser||permissions.includes("delete_project")} onEdit={openEditModal} onDelete={item=>api.deleteProject(item.id)} error={pager.error}/>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"code",label:t("common:records.fields.code"),render:item=>String(item.code??"—")},{key:"description",label:t("common:records.fields.description"),render:item=>String(item.description??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_project")} canDelete={isOwner||isSuperUser||permissions.includes("delete_project")} onEdit={openEditModal} onDelete={item=>api.deleteProject(item.id, (item as { version?: string }).version)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>

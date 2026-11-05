@@ -1,8 +1,15 @@
 {
   "title": "Projetos",
-  "header": { "settings": "Configurações", "projects": "Projetos" },
-  "badge": { "syncing": "Sincronizando…" },
-  "section": { "list": "Lista de projetos" },
+  "header": {
+    "settings": "Configurações",
+    "projects": "Projetos"
+  },
+  "badge": {
+    "syncing": "Sincronizando…"
+  },
+  "section": {
+    "list": "Lista de projetos"
+  },
   "filters": {
     "codeLabel": "Código",
     "searchLabel": "Buscar",
@@ -20,9 +27,18 @@
     "multi": "Múltiplos",
     "typeHint": "Dica: selecione um tipo para filtrar; múltiplos significa todos os tipos.",
     "byStatusTitle": "Filtrar por status",
-    "status": { "all": "Todos", "active": "Ativo", "inactive": "Inativo" }
+    "status": {
+      "all": "Todos",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    }
   },
-  "row": { "codePrefix": "CÓDIGO:", "active": "Ativo", "inactive": "Inativo", "untitled": "(sem título)" },
+  "row": {
+    "codePrefix": "CÓDIGO:",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "untitled": "(sem título)"
+  },
   "types": {
     "internal": "Interno",
     "client": "Cliente",
@@ -42,7 +58,9 @@
     "cancel": "Cancelar",
     "retry": "Tentar novamente"
   },
-  "btnLabel": { "type": "Selecione um tipo" },
+  "btnLabel": {
+    "type": "Selecione um tipo"
+  },
   "field": {
     "name": "Nome do projeto",
     "code": "Código",
@@ -50,18 +68,27 @@
     "description": "Descrição",
     "isActive": "Projeto ativo"
   },
-  "modal": { "createTitle": "Adicionar projeto", "editTitle": "Editar projeto", "close": "Fechar" },
+  "modal": {
+    "createTitle": "Adicionar projeto",
+    "editTitle": "Editar projeto",
+    "close": "Fechar"
+  },
   "footer": {
     "project": "Projeto:",
     "enterName": "Informe o nome do projeto para continuar.",
     "shortcuts": "Atalhos: Esc fecha • Ctrl/⌘+S salva"
   },
-  "actions": { "ok": "OK", "discard": "Descartar" },
+  "actions": {
+    "ok": "OK",
+    "discard": "Descartar"
+  },
   "confirmDiscard": {
     "title": "Descartar alterações?",
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
-  "confirm": { "deleteTitle": "Excluir o projeto \"{{name}}\"?" },
+  "confirm": {
+    "deleteTitle": "Excluir o projeto \"{{name}}\"?"
+  },
   "empty": "Nenhum projeto encontrado.",
   "errors": {
     "loadFailedTitle": "Falha ao carregar",
@@ -71,23 +98,27 @@
     "confirmFailed": "Falha ao confirmar.",
     "validationTitle": "Informações ausentes",
     "validationName": "O nome do projeto é obrigatório.",
-    "validationType": "Selecione um tipo de projeto válido."
+    "validationType": "Selecione um tipo de projeto válido.",
+    "concurrentChange": "Este registo foi alterado enquanto o editava. O rascunho foi mantido. Copie as suas alterações e feche e reabra o editor para rever a versão mais recente antes de guardar."
   },
-  "toast": { "saved": "Projeto salvo.", "deleted": "Projeto excluído." },
+  "toast": {
+    "saved": "Projeto salvo.",
+    "deleted": "Projeto excluído."
+  },
   "preview": {
-  "fields": {
-    "name": "Nome do projeto",
-    "code": "Código",
-    "type": "Tipo do projeto",
-    "description": "Descrição",
-    "is_active": "Projeto ativo"
-  },
-  "active": "Ativo",
-  "inactive": "Inativo",
-  "roles": {
-    "owner": "Proprietário",
-    "admin": "Administrador",
-    "member": "Membro"
+    "fields": {
+      "name": "Nome do projeto",
+      "code": "Código",
+      "type": "Tipo do projeto",
+      "description": "Descrição",
+      "is_active": "Projeto ativo"
+    },
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "roles": {
+      "owner": "Proprietário",
+      "admin": "Administrador",
+      "member": "Membro"
+    }
   }
-}
 }

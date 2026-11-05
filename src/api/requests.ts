@@ -614,11 +614,11 @@ export const api = {
   addDepartment: (payload: AddDepartmentRequest) =>
     request<Department>(`departments/`, "POST", payload),
 
-  editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>) =>
-    request<Department>(`departments/${departmentId}/`, "PATCH", payload),
+  editDepartment: (departmentId: string, payload: Partial<EditDepartmentRequest>, version?: string) =>
+    request<Department>(`departments/${departmentId}/`, "PATCH", payload, { ifMatch: version }),
 
-  deleteDepartment: (departmentId: string) =>
-    request<void>(`departments/${departmentId}/`, "DELETE"),
+  deleteDepartment: (departmentId: string, version?: string) =>
+    request<void>(`departments/${departmentId}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Projects --- */
   getProjects: (params?: GetProjectsParams) =>
@@ -638,11 +638,11 @@ export const api = {
   addProject: (payload: AddProjectRequest) =>
     request<Project>(`projects/`, "POST", payload),
 
-  editProject: (projectId: string, payload: EditProjectRequest) =>
-    request<Project>(`projects/${projectId}/`, "PATCH", payload),
+  editProject: (projectId: string, payload: EditProjectRequest, version?: string) =>
+    request<Project>(`projects/${projectId}/`, "PATCH", payload, { ifMatch: version }),
 
-  deleteProject: (projectId: string) =>
-    request<void>(`projects/${projectId}/`, "DELETE"),
+  deleteProject: (projectId: string, version?: string) =>
+    request<void>(`projects/${projectId}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Inventory --- */
   getInventoryItems: (params?: GetInventoryItemsParams) =>
@@ -662,11 +662,11 @@ export const api = {
   addInventoryItem: (payload: AddInventoryItemRequest) =>
     request<InventoryItem>(`inventory/items/`, "POST", payload),
 
-  editInventoryItem: (id: string, payload: EditInventoryItemRequest) =>
-    request<InventoryItem>(`inventory/items/${id}/`, "PATCH", payload),
+  editInventoryItem: (id: string, payload: EditInventoryItemRequest, version?: string) =>
+    request<InventoryItem>(`inventory/items/${id}/`, "PATCH", payload, { ifMatch: version }),
 
-  deleteInventoryItem: (id: string) =>
-    request<void>(`inventory/items/${id}/`, "DELETE"),
+  deleteInventoryItem: (id: string, version?: string) =>
+    request<void>(`inventory/items/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   /* --- Entities --- */
   getEntities: (params?: GetEntitiesParams) =>
@@ -689,11 +689,11 @@ export const api = {
   addEntity: (payload: AddEntityRequest) =>
     request<Entity>(`crm/entities/`, "POST", payload),
 
-  editEntity: (id: string, payload: EditEntityRequest) =>
-    request<Entity>(`crm/entities/${id}/`, "PATCH", payload),
+  editEntity: (id: string, payload: EditEntityRequest, version?: string) =>
+    request<Entity>(`crm/entities/${id}/`, "PATCH", payload, { ifMatch: version }),
 
-  deleteEntity: (id: string) =>
-    request<void>(`crm/entities/${id}/`, "DELETE"),
+  deleteEntity: (id: string, version?: string) =>
+    request<void>(`crm/entities/${id}/`, "DELETE", undefined, { ifMatch: version }),
 
   // -------------- Statements / AI Import Flow --------------
   getStatements: async (params?: GetStatementsParams) => {

@@ -140,6 +140,7 @@ export const useAuth = () => {
   const [isAuthResolved, setIsAuthResolved] = useState(false);
 
   const authUserRef = useRef(auth.user);
+  const authorizationRef = useRef("");
   useEffect(() => {
     authUserRef.current = auth.user;
   }, [auth.user]);
@@ -155,7 +156,9 @@ export const useAuth = () => {
       lockUserIdStrict(uid);
 
       const orgExt = payload.organization?.organization?.id ?? null;
-      if (orgExt !== (getOrgExternalIdStored() || null)) clearHttpCaches();
+      const authorization = JSON.stringify([orgExt, [...(payload.permissions || [])].sort(), payload.organization?.is_owner, payload.organization?.role, payload.user?.is_superuser, payload.is_subscribed]);
+      if (orgExt !== (getOrgExternalIdStored() || null) || (authorizationRef.current && authorizationRef.current !== authorization)) clearHttpCaches();
+      authorizationRef.current = authorization;
       dispatch(setAuthSnapshot(payload));
 
       if (orgExt) setOrgExternalIdStored(orgExt);

@@ -1,8 +1,12 @@
 {
   "title": "Abteilungen",
-  "card": { "settings": "Einstellungen", "departments": "Abteilungen" },
-  "list": { "title": "Abteilungsliste" },
-
+  "card": {
+    "settings": "Einstellungen",
+    "departments": "Abteilungen"
+  },
+  "list": {
+    "title": "Abteilungsliste"
+  },
   "buttons": {
     "search": "Suchen",
     "searchPlaceholder": "Nach Name oder Code suchen…",
@@ -14,13 +18,11 @@
     "cancel": "Abbrechen",
     "save": "Speichern"
   },
-
   "tags": {
     "code": "Code",
     "inactive": "Inaktiv",
     "noName": "(kein Name)"
   },
-
   "filters": {
     "codeLabel": "Code",
     "nameLabel": "Name",
@@ -39,7 +41,6 @@
       "inactive": "Inaktiv"
     }
   },
-
   "modal": {
     "createTitle": "Abteilung hinzufügen",
     "editTitle": "Abteilung bearbeiten",
@@ -50,49 +51,50 @@
       "is_active": "Abteilung aktiv"
     }
   },
-
   "footer": {
     "department": "Abteilung:",
     "enterName": "Bitte einen Abteilungsnamen eingeben, um fortzufahren.",
     "shortcuts": "Kurzbefehle: Esc schließen • Ctrl/⌘+S speichern"
   },
-
-  "actions": { "ok": "OK", "discard": "Verwerfen" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Verwerfen"
+  },
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
     "message": "Sie haben nicht gespeicherte Änderungen. Möchten Sie diese verwerfen?"
   },
-
-  "confirm": { "deleteTitle": "„{{name}}“ löschen?" },
-
+  "confirm": {
+    "deleteTitle": "„{{name}}“ löschen?"
+  },
   "errors": {
     "fetchError": "Laden fehlgeschlagen.",
     "saveFailed": "Abteilung konnte nicht gespeichert werden.",
     "deleteFailed": "Abteilung konnte nicht gelöscht werden.",
     "confirmFailed": "Aktion konnte nicht bestätigt werden.",
     "validationTitle": "Fehlende Angaben",
-    "validationName": "Der Abteilungsname ist erforderlich."
+    "validationName": "Der Abteilungsname ist erforderlich.",
+    "concurrentChange": "Dieser Datensatz wurde während der Bearbeitung geändert. Ihr Entwurf bleibt erhalten. Kopieren Sie Ihre Änderungen und öffnen Sie den Editor erneut, um vor dem Speichern die aktuelle Version zu prüfen."
   },
-
   "toast": {
     "saveOk": "Abteilung gespeichert.",
     "deleteOk": "Abteilung gelöscht."
   },
-
-  "alerts": { "noData": "Auf dieser Seite wurden keine Abteilungen gefunden." },
-  "preview": {
-  "fields": {
-    "name": "Name",
-    "code": "Code",
-    "is_active": "Abteilung aktiv"
+  "alerts": {
+    "noData": "Auf dieser Seite wurden keine Abteilungen gefunden."
   },
-  "active": "Aktiv",
-  "inactive": "Inaktiv",
-  "roles": {
-    "owner": "Inhaber",
-    "admin": "Administrator",
-    "member": "Mitglied"
+  "preview": {
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "is_active": "Abteilung aktiv"
+    },
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "roles": {
+      "owner": "Inhaber",
+      "admin": "Administrator",
+      "member": "Mitglied"
+    }
   }
-}
 }

@@ -459,7 +459,7 @@ const DepartmentSettings: React.FC = () => {
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"code",label:t("common:records.fields.code"),render:item=>String(item.code??"—")},{key:"status",label:t("filters.statusLabel"),render:item=>item.is_active?activeLabel:inactiveLabel}]} emptyLabel={t("alerts.noData")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_department")} canDelete={isOwner||isSuperUser||permissions.includes("delete_department")} onEdit={openEditModal} onDelete={item=>api.deleteDepartment(item.id)} error={pager.error}/>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"code",label:t("common:records.fields.code"),render:item=>String(item.code??"—")},{key:"status",label:t("filters.statusLabel"),render:item=>item.is_active?activeLabel:inactiveLabel}]} emptyLabel={t("alerts.noData")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_department")} canDelete={isOwner||isSuperUser||permissions.includes("delete_department")} onEdit={openEditModal} onDelete={item=>api.deleteDepartment(item.id, (item as { version?: string }).version)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>

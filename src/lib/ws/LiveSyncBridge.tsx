@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 
 import { useSpifexWebSocket } from "@/lib/ws/useSpifexWebSocket";
 import type { LiveSyncEnvelope } from "@/lib/ws/types";
-import { setAuthGate, clearAuthGate, clearHttpCaches } from "@/lib/http";
+import { setAuthGate, clearAuthGate, clearHttpCaches, invalidateHttpResources } from "@/lib/http";
 import { setIsSubscribed } from "@/redux";
 
 type Props = {
@@ -29,7 +29,8 @@ export const LiveSyncBridge: React.FC<Props> = ({ enabled, orgExternalId, syncAu
       const p = (async () => {
         do {
           queued.current = false;
-          clearHttpCaches();
+          if (latestReason.current.includes("permissions") || latestReason.current === "ws_auth_error") clearHttpCaches();
+          else invalidateHttpResources(["identity", "organization", "subscription"]);
           await syncAuth({ force: true, reason: latestReason.current });
         } while (queued.current);
       })();

@@ -1,14 +1,17 @@
 {
   "title": "Inventaire",
-  "header": { "settings": "Paramètres", "inventory": "Inventaire" },
-  "badge": { "syncing": "Synchronisation…" },
-
+  "header": {
+    "settings": "Paramètres",
+    "inventory": "Inventaire"
+  },
+  "badge": {
+    "syncing": "Synchronisation…"
+  },
   "row": {
     "skuPrefix": "SKU :",
     "qtyPrefix": "Qté :",
     "untitled": "(sans titre)"
   },
-
   "btn": {
     "addItem": "Ajouter un article",
     "edit": "Modifier",
@@ -17,7 +20,6 @@
     "retry": "Réessayer",
     "save": "Enregistrer"
   },
-
   "filters": {
     "skuLabel": "SKU",
     "nameLabel": "Nom",
@@ -25,32 +27,30 @@
     "uomLabel": "UdM",
     "qtyLabel": "Qté",
     "statusLabel": "Statut",
-
     "clearAll": "Effacer les filtres",
     "apply": "Appliquer",
     "clear": "Effacer",
-
     "bySkuTitle": "Filtrer par SKU",
     "byNameTitle": "Filtrer par nom",
     "byDescriptionTitle": "Filtrer par description",
     "byUomTitle": "Filtrer par unité",
     "byQtyTitle": "Filtrer par stock disponible",
     "byStatusTitle": "Filtrer par statut",
-
     "skuPlaceholder": "Saisir un SKU…",
     "namePlaceholder": "Saisir un nom…",
     "descriptionPlaceholder": "Saisir une description…",
     "uomPlaceholder": "ex. : u, boîte, kg, l…",
-
     "qtyMin": "Min",
     "qtyMax": "Max",
     "qtyMinPlaceholder": "0",
     "qtyMaxPlaceholder": "0",
-
     "statusHint": "Sélectionnez aucun ou les deux pour tout afficher.",
-    "status": { "all": "Tous", "active": "Actif", "inactive": "Inactif" }
+    "status": {
+      "all": "Tous",
+      "active": "Actif",
+      "inactive": "Inactif"
+    }
   },
-
   "field": {
     "sku": "SKU",
     "name": "Nom",
@@ -60,30 +60,28 @@
     "qty": "Quantité en stock",
     "isActive": "Actif"
   },
-
   "modal": {
     "createTitle": "Ajouter un article",
     "editTitle": "Modifier l’article",
     "close": "Fermer"
   },
-
   "footer": {
     "item": "Article :",
     "enterName": "Saisissez un nom d’article pour continuer.",
     "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
   },
-
-  "actions": { "ok": "OK", "discard": "Ignorer" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Ignorer"
+  },
   "confirmDiscard": {
     "title": "Ignorer les modifications ?",
     "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
   },
-
-  "confirm": { "deleteTitle": "Supprimer l’article \"{{name}}\" ?" },
-
+  "confirm": {
+    "deleteTitle": "Supprimer l’article \"{{name}}\" ?"
+  },
   "empty": "Aucun article trouvé.",
-
   "errors": {
     "loadFailedTitle": "Échec du chargement",
     "saveError": "Échec de l’enregistrement de l’article.",
@@ -92,29 +90,29 @@
     "confirmFailed": "Échec de la confirmation.",
     "validationTitle": "Informations manquantes",
     "validationSkuName": "Le SKU et le nom sont requis.",
-    "validationQty": "La quantité doit être un entier supérieur ou égal à 0."
+    "validationQty": "La quantité doit être un entier supérieur ou égal à 0.",
+    "concurrentChange": "Cet enregistrement a changé pendant la modification. Votre brouillon est conservé. Copiez vos changements, puis fermez et rouvrez l’éditeur pour consulter la dernière version avant d’enregistrer."
   },
-
   "toast": {
     "saveOk": "Article créé.",
     "updateOk": "Article mis à jour.",
     "deleteOk": "Article supprimé."
   },
   "preview": {
-  "fields": {
-    "name": "Nom",
-    "sku": "SKU",
-    "description": "Description",
-    "uom": "Unité",
-    "quantity_on_hand": "Quantité en stock",
-    "is_active": "Actif"
-  },
-  "active": "Actif",
-  "inactive": "Inactif",
-  "roles": {
-    "owner": "Propriétaire",
-    "admin": "Administrateur",
-    "member": "Membre"
+    "fields": {
+      "name": "Nom",
+      "sku": "SKU",
+      "description": "Description",
+      "uom": "Unité",
+      "quantity_on_hand": "Quantité en stock",
+      "is_active": "Actif"
+    },
+    "active": "Actif",
+    "inactive": "Inactif",
+    "roles": {
+      "owner": "Propriétaire",
+      "admin": "Administrateur",
+      "member": "Membre"
+    }
   }
-}
 }

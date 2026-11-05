@@ -1,8 +1,15 @@
 {
   "title": "Projekte",
-  "header": { "settings": "Einstellungen", "projects": "Projekte" },
-  "badge": { "syncing": "Synchronisieren…" },
-  "section": { "list": "Projektliste" },
+  "header": {
+    "settings": "Einstellungen",
+    "projects": "Projekte"
+  },
+  "badge": {
+    "syncing": "Synchronisieren…"
+  },
+  "section": {
+    "list": "Projektliste"
+  },
   "filters": {
     "codeLabel": "Code",
     "searchLabel": "Suchen",
@@ -20,9 +27,18 @@
     "multi": "Mehrere",
     "typeHint": "Tipp: Wählen Sie einen Typ zum Filtern; mehrere bedeutet alle Typen.",
     "byStatusTitle": "Nach Status filtern",
-    "status": { "all": "Alle", "active": "Aktiv", "inactive": "Inaktiv" }
+    "status": {
+      "all": "Alle",
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    }
   },
-  "row": { "codePrefix": "CODE:", "active": "Aktiv", "inactive": "Inaktiv", "untitled": "(ohne Titel)" },
+  "row": {
+    "codePrefix": "CODE:",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "untitled": "(ohne Titel)"
+  },
   "types": {
     "internal": "Intern",
     "client": "Kunde",
@@ -42,7 +58,9 @@
     "cancel": "Abbrechen",
     "retry": "Erneut versuchen"
   },
-  "btnLabel": { "type": "Typ auswählen" },
+  "btnLabel": {
+    "type": "Typ auswählen"
+  },
   "field": {
     "name": "Projektname",
     "code": "Code",
@@ -50,18 +68,27 @@
     "description": "Beschreibung",
     "isActive": "Projekt aktiv"
   },
-  "modal": { "createTitle": "Projekt hinzufügen", "editTitle": "Projekt bearbeiten", "close": "Schließen" },
+  "modal": {
+    "createTitle": "Projekt hinzufügen",
+    "editTitle": "Projekt bearbeiten",
+    "close": "Schließen"
+  },
   "footer": {
     "project": "Projekt:",
     "enterName": "Geben Sie einen Projektnamen ein, um fortzufahren.",
     "shortcuts": "Tastenkürzel: Esc schließen • Ctrl/⌘+S speichern"
   },
-  "actions": { "ok": "OK", "discard": "Verwerfen" },
+  "actions": {
+    "ok": "OK",
+    "discard": "Verwerfen"
+  },
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
     "message": "Sie haben ungespeicherte Änderungen. Möchten Sie sie verwerfen?"
   },
-  "confirm": { "deleteTitle": "Projekt \"{{name}}\" löschen?" },
+  "confirm": {
+    "deleteTitle": "Projekt \"{{name}}\" löschen?"
+  },
   "empty": "Keine Projekte gefunden.",
   "errors": {
     "loadFailedTitle": "Laden fehlgeschlagen",
@@ -71,23 +98,27 @@
     "confirmFailed": "Bestätigung fehlgeschlagen.",
     "validationTitle": "Fehlende Informationen",
     "validationName": "Der Projektname ist erforderlich.",
-    "validationType": "Bitte wählen Sie einen gültigen Projekttyp aus."
+    "validationType": "Bitte wählen Sie einen gültigen Projekttyp aus.",
+    "concurrentChange": "Dieser Datensatz wurde während der Bearbeitung geändert. Ihr Entwurf bleibt erhalten. Kopieren Sie Ihre Änderungen und öffnen Sie den Editor erneut, um vor dem Speichern die aktuelle Version zu prüfen."
   },
-  "toast": { "saved": "Projekt gespeichert.", "deleted": "Projekt gelöscht." },
+  "toast": {
+    "saved": "Projekt gespeichert.",
+    "deleted": "Projekt gelöscht."
+  },
   "preview": {
-  "fields": {
-    "name": "Projektname",
-    "code": "Code",
-    "type": "Projekttyp",
-    "description": "Beschreibung",
-    "is_active": "Projekt aktiv"
-  },
-  "active": "Aktiv",
-  "inactive": "Inaktiv",
-  "roles": {
-    "owner": "Inhaber",
-    "admin": "Administrator",
-    "member": "Mitglied"
+    "fields": {
+      "name": "Projektname",
+      "code": "Code",
+      "type": "Projekttyp",
+      "description": "Beschreibung",
+      "is_active": "Projekt aktiv"
+    },
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "roles": {
+      "owner": "Inhaber",
+      "admin": "Administrator",
+      "member": "Mitglied"
+    }
   }
-}
 }

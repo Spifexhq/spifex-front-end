@@ -1,8 +1,12 @@
 {
   "title": "Departments",
-  "card": { "settings": "Settings", "departments": "Departments" },
-  "list": { "title": "Department list" },
-
+  "card": {
+    "settings": "Settings",
+    "departments": "Departments"
+  },
+  "list": {
+    "title": "Department list"
+  },
   "buttons": {
     "search": "Search",
     "searchPlaceholder": "Search by name or code…",
@@ -14,13 +18,11 @@
     "cancel": "Cancel",
     "save": "Save"
   },
-
   "tags": {
     "code": "Code",
     "inactive": "Inactive",
     "noName": "(no name)"
   },
-
   "filters": {
     "codeLabel": "Code",
     "nameLabel": "Name",
@@ -39,7 +41,6 @@
       "inactive": "Inactive"
     }
   },
-
   "modal": {
     "createTitle": "Add department",
     "editTitle": "Edit department",
@@ -50,49 +51,50 @@
       "is_active": "Active department"
     }
   },
-
   "footer": {
     "department": "Department:",
     "enterName": "Enter a department name to continue.",
     "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
   },
-
-  "actions": { "ok": "OK", "discard": "Discard" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Discard"
+  },
   "confirmDiscard": {
     "title": "Discard changes?",
     "message": "You have unsaved changes. Do you want to discard them?"
   },
-
-  "confirm": { "deleteTitle": "Delete “{{name}}”?" },
-
+  "confirm": {
+    "deleteTitle": "Delete “{{name}}”?"
+  },
   "errors": {
     "fetchError": "Failed to load.",
     "saveFailed": "Failed to save department.",
     "deleteFailed": "Failed to delete department.",
     "confirmFailed": "Failed to confirm action.",
     "validationTitle": "Missing information",
-    "validationName": "Department name is required."
+    "validationName": "Department name is required.",
+    "concurrentChange": "This record changed while you were editing. Your draft is still here. Copy your changes, then close and reopen the editor to review the latest version before saving."
   },
-
   "toast": {
     "saveOk": "Saved department.",
     "deleteOk": "Department deleted."
   },
-
-  "alerts": { "noData": "No departments found on this page." },
-  "preview": {
-  "fields": {
-    "name": "Name",
-    "code": "Code",
-    "is_active": "Active department"
+  "alerts": {
+    "noData": "No departments found on this page."
   },
-  "active": "Active",
-  "inactive": "Inactive",
-  "roles": {
-    "owner": "Owner",
-    "admin": "Admin",
-    "member": "Member"
+  "preview": {
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "is_active": "Active department"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    }
   }
-}
 }

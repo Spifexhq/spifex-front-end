@@ -1,8 +1,15 @@
 {
   "title": "Projects",
-  "header": { "settings": "Settings", "projects": "Projects" },
-  "badge": { "syncing": "Syncing…" },
-  "section": { "list": "Project list" },
+  "header": {
+    "settings": "Settings",
+    "projects": "Projects"
+  },
+  "badge": {
+    "syncing": "Syncing…"
+  },
+  "section": {
+    "list": "Project list"
+  },
   "filters": {
     "codeLabel": "Code",
     "searchLabel": "Search",
@@ -20,9 +27,18 @@
     "multi": "Multiple",
     "typeHint": "Tip: select one type to filter; multiple means all types.",
     "byStatusTitle": "Filter by status",
-    "status": { "all": "All", "active": "Active", "inactive": "Inactive" }
+    "status": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
   },
-  "row": { "codePrefix": "CODE:", "active": "Active", "inactive": "Inactive", "untitled": "(untitled)" },
+  "row": {
+    "codePrefix": "CODE:",
+    "active": "Active",
+    "inactive": "Inactive",
+    "untitled": "(untitled)"
+  },
   "types": {
     "internal": "Internal",
     "client": "Client",
@@ -42,7 +58,9 @@
     "cancel": "Cancel",
     "retry": "Try again"
   },
-  "btnLabel": { "type": "Select a type" },
+  "btnLabel": {
+    "type": "Select a type"
+  },
   "field": {
     "name": "Project name",
     "code": "Code",
@@ -50,18 +68,27 @@
     "description": "Description",
     "isActive": "Active project"
   },
-  "modal": { "createTitle": "Add project", "editTitle": "Edit project", "close": "Close" },
+  "modal": {
+    "createTitle": "Add project",
+    "editTitle": "Edit project",
+    "close": "Close"
+  },
   "footer": {
     "project": "Project:",
     "enterName": "Enter a project name to continue.",
     "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
   },
-  "actions": { "ok": "OK", "discard": "Discard" },
+  "actions": {
+    "ok": "OK",
+    "discard": "Discard"
+  },
   "confirmDiscard": {
     "title": "Discard changes?",
     "message": "You have unsaved changes. Do you want to discard them?"
   },
-  "confirm": { "deleteTitle": "Delete project \"{{name}}\"?" },
+  "confirm": {
+    "deleteTitle": "Delete project \"{{name}}\"?"
+  },
   "empty": "No projects found.",
   "errors": {
     "loadFailedTitle": "Failed to load",
@@ -71,23 +98,27 @@
     "confirmFailed": "Failed to confirm.",
     "validationTitle": "Missing information",
     "validationName": "Project name is required.",
-    "validationType": "Please select a valid project type."
+    "validationType": "Please select a valid project type.",
+    "concurrentChange": "This record changed while you were editing. Your draft is still here. Copy your changes, then close and reopen the editor to review the latest version before saving."
   },
-  "toast": { "saved": "Project saved.", "deleted": "Project deleted." },
+  "toast": {
+    "saved": "Project saved.",
+    "deleted": "Project deleted."
+  },
   "preview": {
-  "fields": {
-    "name": "Project name",
-    "code": "Code",
-    "type": "Project type",
-    "description": "Description",
-    "is_active": "Active project"
-  },
-  "active": "Active",
-  "inactive": "Inactive",
-  "roles": {
-    "owner": "Owner",
-    "admin": "Admin",
-    "member": "Member"
+    "fields": {
+      "name": "Project name",
+      "code": "Code",
+      "type": "Project type",
+      "description": "Description",
+      "is_active": "Active project"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    }
   }
-}
 }

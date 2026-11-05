@@ -1,3 +1,4 @@
+import { resourceTags, mutationTags, stableParams, cacheFresh } from "./httpCachePolicy";
 import { normalizeApiError } from "./apiErrorMessage";
 import { getAuthGeneration } from "./authGeneration";
 /* -----------------------------------------------------------------------------
@@ -507,16 +508,14 @@ http.interceptors.response.use(
 /* ------------------------------ Request cache ------------------------------- */
 
 const inflight = new Map<string, Promise<AxiosResponse<unknown>>>();
-const responseCache = new Map<string, { t: number; res: AxiosResponse<unknown> }>();
-const CACHE_TTL_MS = 500;
+const responseCache = new Map<string, { t: number; res: AxiosResponse<unknown>; tags: string[] }>();
+const resourceGenerations = new Map<string, number>();
 
 function keyFrom(cfg: AxiosRequestConfig) {
   const u = (cfg.baseURL || "") + (cfg.url || "");
-  const p =
-    cfg.params && typeof cfg.params === "object"
-      ? JSON.stringify(cfg.params, Object.keys(cfg.params as Record<string, unknown>).sort())
-      : "";
-  return `${getUserIdStored()}:${readOrgExternalId() || ""}:${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
+  const p = stableParams(cfg.params || {});
+  const variants = stableParams(http.defaults.headers.common);
+  return `${getAuthGeneration()}:${getUserIdStored()}:${readOrgExternalId() || ""}:${variants}:${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
 }
 
 function pruneParams(p: unknown) {
@@ -552,23 +551,35 @@ export function clearHttpCaches() {
   cacheGeneration++;
   inflight.clear();
   responseCache.clear();
+  resourceGenerations.clear();
   lastByScope.clear();
   pauseUntil = 0;
 }
+
+export function invalidateHttpResources(tags: string[]) {
+  for (const tag of tags) resourceGenerations.set(tag, (resourceGenerations.get(tag) || 0) + 1);
+  for (const [key, value] of responseCache) if (value.tags.some(tag => tags.includes(tag))) responseCache.delete(key);
+}
+
 
 function normalizeEndpoint(ep: string): string {
   return String(ep || "").replace(/^\/+/, "");
 }
 
-export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean }): Promise<ApiSuccess<T>> {
+export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string }): Promise<ApiSuccess<T>> {
   try {
     const ep = normalizeEndpoint(endpoint);
     const generation = getAuthGeneration();
     const cacheVersion = cacheGeneration;
     const organization = readOrgExternalId();
+    const tags = resourceTags(ep);
+    const stamp = () => tags.map(tag => resourceGenerations.get(tag) || 0).join(":");
+    const resourceVersion = stamp();
+    const current = () => cacheVersion === cacheGeneration && resourceVersion === stamp() && generation === getAuthGeneration();
 
     const cfg: AxiosRequestConfig = {
       url: ep,
+      headers: options?.ifMatch ? { "If-Match": options.ifMatch } : undefined,
       ...({ _skipAuthGate: options?.skipAuthGate, _authGeneration: generation } as AxiosRequestConfig),
       method,
       data: method !== "GET" ? payload : undefined,
@@ -579,17 +590,15 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     let res: AxiosResponse<unknown>;
 
     if ((cfg.method || "GET").toUpperCase() === "GET") {
-      const k = keyFrom(cfg);
+      const k = `${keyFrom(cfg)}:${cacheVersion}:${resourceVersion}`;
       const hit = responseCache.get(k);
-      const controls = String(hit?.res.headers?.["cache-control"] || "").toLowerCase();
-      const mustValidate = /no-cache|max-age=0|must-revalidate/.test(controls);
-      if (!options?.fresh && hit && !mustValidate && Date.now() - hit.t < CACHE_TTL_MS) {
+      if (!options?.fresh && hit && cacheFresh(hit.res.headers as Record<string, unknown>, Date.now() - hit.t)) {
         res = hit.res;
       } else {
         const etag = hit?.res.headers?.etag;
         if (typeof etag === "string") cfg.headers = { ...cfg.headers, "If-None-Match": etag };
         if (!inflight.has(k)) {
-          inflight.set(k, http.request(cfg).finally(() => cacheVersion === cacheGeneration && inflight.delete(k)));
+          inflight.set(k, http.request(cfg).finally(() => inflight.delete(k)));
         }
         res = await inflight.get(k)!;
         if (res.status === 304) {
@@ -604,11 +613,11 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
           }
         }
         const responseControls = String(res.headers?.["cache-control"] || "").toLowerCase();
-        if (!/no-store/.test(responseControls) && cacheVersion === cacheGeneration && generation === getAuthGeneration() && res.status >= 200 && res.status < 300) {
+        if (!/no-store/.test(responseControls) && String(res.headers?.vary || "").trim() !== "*" && current() && res.status >= 200 && res.status < 300) {
           if (responseCache.size >= 200 && !responseCache.has(k)) responseCache.delete(responseCache.keys().next().value!);
           // Keep validators/bodies after freshness expires so the next GET can
           // revalidate. must-revalidate/no-cache forbids reuse, not storage.
-          responseCache.set(k, { t: Date.now(), res });
+          responseCache.set(k, { t: Date.now(), res, tags });
         } else if (/no-store/.test(responseControls)) {
           responseCache.delete(k);
         }
@@ -619,9 +628,13 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       res = locks && changesSession ? await locks.request("spifex:refresh", () => http.request(cfg)) : await http.request(cfg);
     }
 
-    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !options?.fresh && cacheVersion !== cacheGeneration) || (!ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
-    if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) clearHttpCaches();
+    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !(options?.skipAuthGate && ep === "identity/profile/") && !current()) || (!ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
+    if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) {
+      const affected = mutationTags(ep);
+      if (affected) invalidateHttpResources(affected); else clearHttpCaches();
+    }
     const body = res.data;
+
 
     if (res.status === 204 || body == null || (typeof body === "string" && body.trim() === "")) {
       return {} as ApiSuccess<T>;
@@ -634,6 +647,9 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     const err = e as AxiosError<unknown>;
     if (axios.isAxiosError(err)) {
       const body = err.response?.data;
+      if (err.response?.status === 412 || err.response?.status === 428) {
+        invalidateHttpResources(resourceTags(endpoint));
+      }
       if (hasApiError(body)) throw normalizeApiError({ ...body.error, status: err.response?.status }, "Request failed. Please try again.");
 
       const msg = err.response ? `${err.response.status} ${err.response.statusText || "Request error"}` : err.message;

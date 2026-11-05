@@ -1,3 +1,4 @@
+import { isPreconditionFailure } from "@/lib/apiErrorMessage";
 import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 /* -------------------------------------------------------------------------- */
@@ -109,6 +110,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
   const projectId = project?.id ?? null;
 
+  const recordVersion = useRef<string | undefined>(undefined);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,6 +201,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         const res = await api.getProject(projectId);
         const detail = res.data as Project;
         if (!alive) return;
+        recordVersion.current = (detail as typeof detail & { version?: string }).version;
 
         const next: FormState = {
           name: detail.name ?? "",
@@ -292,12 +295,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
         if (!projectId) return;
 
-        await api.editProject(projectId, payload);
+        await api.editProject(projectId, payload, recordVersion.current);
         onNotify?.({ message: t("toast.saved"), severity: "success" });
         onSaved?.({ mode: "edit" });
         handleClose();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : t("errors.saveError");
+        const msg = isPreconditionFailure(err) ? t("errors.concurrentChange") : err instanceof Error ? err.message : t("errors.saveError");
         onNotify?.({ message: msg, severity: "error" });
         setWarning({ title: t("errors.saveError"), message: msg });
       } finally {

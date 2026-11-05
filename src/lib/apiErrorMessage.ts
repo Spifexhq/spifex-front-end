@@ -33,3 +33,7 @@ export function normalizeApiError(cause: unknown, fallback: string): Error {
   }
   return error;
 }
+
+export function isPreconditionFailure(error: unknown): boolean {
+  return !!error && typeof error === "object" && [412, 428].includes((error as { status?: number }).status || 0);
+}

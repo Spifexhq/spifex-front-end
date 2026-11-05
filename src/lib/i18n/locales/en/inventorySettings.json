@@ -1,14 +1,17 @@
 {
   "title": "Inventory",
-  "header": { "settings": "Settings", "inventory": "Inventory" },
-  "badge": { "syncing": "Syncing…" },
-
+  "header": {
+    "settings": "Settings",
+    "inventory": "Inventory"
+  },
+  "badge": {
+    "syncing": "Syncing…"
+  },
   "row": {
     "skuPrefix": "SKU:",
     "qtyPrefix": "Qty:",
     "untitled": "(untitled)"
   },
-
   "btn": {
     "addItem": "Add item",
     "edit": "Edit",
@@ -17,7 +20,6 @@
     "retry": "Try again",
     "save": "Save"
   },
-
   "filters": {
     "skuLabel": "SKU",
     "nameLabel": "Name",
@@ -25,32 +27,30 @@
     "uomLabel": "UoM",
     "qtyLabel": "Qty",
     "statusLabel": "Status",
-
     "clearAll": "Clear filters",
     "apply": "Apply",
     "clear": "Clear",
-
     "bySkuTitle": "Filter by SKU",
     "byNameTitle": "Filter by name",
     "byDescriptionTitle": "Filter by description",
     "byUomTitle": "Filter by unit (UoM)",
     "byQtyTitle": "Filter by quantity on hand",
     "byStatusTitle": "Filter by status",
-
     "skuPlaceholder": "Type a SKU…",
     "namePlaceholder": "Type a name…",
     "descriptionPlaceholder": "Type a description…",
     "uomPlaceholder": "e.g.: ea, box, kg, l…",
-
     "qtyMin": "Min",
     "qtyMax": "Max",
     "qtyMinPlaceholder": "0",
     "qtyMaxPlaceholder": "0",
-
     "statusHint": "Select none or both to show all.",
-    "status": { "all": "All", "active": "Active", "inactive": "Inactive" }
+    "status": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
   },
-
   "field": {
     "sku": "SKU",
     "name": "Name",
@@ -60,30 +60,28 @@
     "qty": "Quantity on hand",
     "isActive": "Active"
   },
-
   "modal": {
     "createTitle": "Add item",
     "editTitle": "Edit item",
     "close": "Close"
   },
-
   "footer": {
     "item": "Item:",
     "enterName": "Enter an item name to continue.",
     "shortcuts": "Shortcuts: Esc close • Ctrl/⌘+S save"
   },
-
-  "actions": { "ok": "OK", "discard": "Discard" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Discard"
+  },
   "confirmDiscard": {
     "title": "Discard changes?",
     "message": "You have unsaved changes. Do you want to discard them?"
   },
-
-  "confirm": { "deleteTitle": "Delete item \"{{name}}\"?" },
-
+  "confirm": {
+    "deleteTitle": "Delete item \"{{name}}\"?"
+  },
   "empty": "No items found.",
-
   "errors": {
     "loadFailedTitle": "Failed to load",
     "saveError": "Failed to save item.",
@@ -92,29 +90,29 @@
     "confirmFailed": "Failed to confirm.",
     "validationTitle": "Missing information",
     "validationSkuName": "SKU and name are required.",
-    "validationQty": "Quantity must be an integer equal to or greater than 0."
+    "validationQty": "Quantity must be an integer equal to or greater than 0.",
+    "concurrentChange": "This record changed while you were editing. Your draft is still here. Copy your changes, then close and reopen the editor to review the latest version before saving."
   },
-
   "toast": {
     "saveOk": "Item created.",
     "updateOk": "Item updated.",
     "deleteOk": "Item deleted."
   },
   "preview": {
-  "fields": {
-    "name": "Name",
-    "sku": "SKU",
-    "description": "Description",
-    "uom": "Unit (UoM)",
-    "quantity_on_hand": "Quantity on hand",
-    "is_active": "Active"
-  },
-  "active": "Active",
-  "inactive": "Inactive",
-  "roles": {
-    "owner": "Owner",
-    "admin": "Admin",
-    "member": "Member"
+    "fields": {
+      "name": "Name",
+      "sku": "SKU",
+      "description": "Description",
+      "uom": "Unit (UoM)",
+      "quantity_on_hand": "Quantity on hand",
+      "is_active": "Active"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    }
   }
-}
 }

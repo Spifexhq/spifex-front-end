@@ -1,7 +1,12 @@
 {
   "title": "Entidades",
-  "header": { "settings": "Configurações", "entities": "Entidades" },
-  "section": { "list": "Lista de entidades" },
+  "header": {
+    "settings": "Configurações",
+    "entities": "Entidades"
+  },
+  "section": {
+    "list": "Lista de entidades"
+  },
   "search": {
     "placeholder": "Buscar por nome ou apelido…",
     "aria": "Buscar entidades",
@@ -19,31 +24,29 @@
     "investor": "Investidor",
     "other": "Outro"
   },
-  "row": { "inactive": "• Inativo", "untitled": "(sem título)" },
-
+  "row": {
+    "inactive": "• Inativo",
+    "untitled": "(sem título)"
+  },
   "tabs": {
     "general": "Geral",
     "tax": "Fiscal",
     "address": "Endereço",
     "bank": "Banco"
   },
-
   "footer": {
     "entity": "Entidade:",
     "enterName": "Informe o nome da entidade para continuar.",
     "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar • Ctrl+Alt+←/→ abas"
   },
-
   "actions": {
     "ok": "OK",
     "discard": "Descartar"
   },
-
   "confirmDiscard": {
     "title": "Descartar alterações?",
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
-
   "btn": {
     "add": "Adicionar entidade",
     "edit": "Editar",
@@ -54,35 +57,31 @@
     "retry": "Tentar novamente",
     "confirmDelete": "Excluir"
   },
-
-  "sections": { "address": "Endereço", "bank": "Dados bancários" },
-
+  "sections": {
+    "address": "Endereço",
+    "bank": "Dados bancários"
+  },
   "field": {
     "full_name": "Nome completo",
     "alias_name": "Nome fantasia / apelido",
     "entity_type": "Tipo de entidade",
     "is_active": "Entidade ativa",
-
     "ssn_tax_id": "CPF",
     "ein_tax_id": "CNPJ",
-
     "email": "E-mail",
     "phone": "Telefone",
-
     "street": "Rua",
     "street_number": "Número",
     "city": "Cidade",
     "state": "Estado",
     "postal_code": "CEP",
     "country": "País",
-
     "bank_name": "Banco",
     "bank_branch": "Agência",
     "checking_account": "Conta corrente",
     "account_holder_tax_id": "Titular (CPF/CNPJ)",
     "account_holder_name": "Nome do titular"
   },
-
   "filters": {
     "nameLabel": "Nome",
     "aliasLabel": "Apelido",
@@ -91,65 +90,68 @@
     "clearAll": "Limpar filtros",
     "apply": "Aplicar",
     "clear": "Limpar",
-
     "byNameTitle": "Filtrar por nome",
     "byAliasTitle": "Filtrar por apelido",
     "byTypeTitle": "Filtrar por tipo",
     "byStatusTitle": "Filtrar por status",
-
     "namePlaceholder": "Digite um nome…",
     "aliasPlaceholder": "Digite um apelido…",
-
     "typeAny": "Qualquer",
-
     "status": {
       "all": "Todos",
       "active": "Ativo",
       "inactive": "Inativo"
     }
   },
-
-  "modal": { "createTitle": "Adicionar entidade", "editTitle": "Editar entidade", "close": "Fechar" },
+  "modal": {
+    "createTitle": "Adicionar entidade",
+    "editTitle": "Editar entidade",
+    "close": "Fechar"
+  },
   "empty": "Nenhuma entidade encontrada.",
-  "confirm": { "deleteTitle": "Excluir entidade \"{{name}}\"?" },
-
+  "confirm": {
+    "deleteTitle": "Excluir entidade \"{{name}}\"?"
+  },
   "errors": {
     "loadFailedTitle": "Falha ao carregar",
     "saveError": "Falha ao salvar a entidade.",
     "deleteError": "Falha ao excluir a entidade.",
     "detailError": "Falha ao carregar os detalhes.",
-    "confirmFailed": "Falha ao confirmar."
+    "confirmFailed": "Falha ao confirmar.",
+    "concurrentChange": "Este registo foi alterado enquanto o editava. O rascunho foi mantido. Copie as suas alterações e feche e reabra o editor para rever a versão mais recente antes de guardar."
   },
-
-  "toast": { "saveOk": "Entidade salva.", "deleteOk": "Entidade removida." },
+  "toast": {
+    "saveOk": "Entidade salva.",
+    "deleteOk": "Entidade removida."
+  },
   "preview": {
-  "fields": {
-    "full_name": "Nome completo",
-    "alias_name": "Nome fantasia / apelido",
-    "entity_type": "Tipo de entidade",
-    "is_active": "Entidade ativa",
-    "ssn_tax_id": "CPF",
-    "ein_tax_id": "CNPJ",
-    "email": "E-mail",
-    "phone": "Telefone",
-    "street": "Rua",
-    "street_number": "Número",
-    "city": "Cidade",
-    "state": "Estado",
-    "postal_code": "CEP",
-    "country": "País",
-    "bank_name": "Banco",
-    "bank_branch": "Agência",
-    "checking_account": "Conta corrente",
-    "account_holder_tax_id": "Titular (CPF/CNPJ)",
-    "account_holder_name": "Nome do titular"
-  },
-  "active": "Ativo",
-  "inactive": "Inativo",
-  "roles": {
-    "owner": "Proprietário",
-    "admin": "Administrador",
-    "member": "Membro"
+    "fields": {
+      "full_name": "Nome completo",
+      "alias_name": "Nome fantasia / apelido",
+      "entity_type": "Tipo de entidade",
+      "is_active": "Entidade ativa",
+      "ssn_tax_id": "CPF",
+      "ein_tax_id": "CNPJ",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "street": "Rua",
+      "street_number": "Número",
+      "city": "Cidade",
+      "state": "Estado",
+      "postal_code": "CEP",
+      "country": "País",
+      "bank_name": "Banco",
+      "bank_branch": "Agência",
+      "checking_account": "Conta corrente",
+      "account_holder_tax_id": "Titular (CPF/CNPJ)",
+      "account_holder_name": "Nome do titular"
+    },
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "roles": {
+      "owner": "Proprietário",
+      "admin": "Administrador",
+      "member": "Membro"
+    }
   }
-}
 }

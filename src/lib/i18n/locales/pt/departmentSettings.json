@@ -1,8 +1,12 @@
 {
   "title": "Departamentos",
-  "card": { "settings": "Configurações", "departments": "Departamentos" },
-  "list": { "title": "Lista de departamentos" },
-
+  "card": {
+    "settings": "Configurações",
+    "departments": "Departamentos"
+  },
+  "list": {
+    "title": "Lista de departamentos"
+  },
   "buttons": {
     "search": "Buscar",
     "searchPlaceholder": "Buscar por nome ou código…",
@@ -14,13 +18,11 @@
     "cancel": "Cancelar",
     "save": "Salvar"
   },
-
   "tags": {
     "code": "Código",
     "inactive": "Inativo",
     "noName": "(sem nome)"
   },
-
   "filters": {
     "codeLabel": "Código",
     "nameLabel": "Nome",
@@ -39,7 +41,6 @@
       "inactive": "Inativo"
     }
   },
-
   "modal": {
     "createTitle": "Adicionar departamento",
     "editTitle": "Editar departamento",
@@ -50,49 +51,50 @@
       "is_active": "Departamento ativo"
     }
   },
-
   "footer": {
     "department": "Departamento:",
     "enterName": "Informe um nome de departamento para continuar.",
     "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
   },
-
-  "actions": { "ok": "OK", "discard": "Descartar" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Descartar"
+  },
   "confirmDiscard": {
     "title": "Descartar alterações?",
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
-
-  "confirm": { "deleteTitle": "Excluir “{{name}}”?" },
-
+  "confirm": {
+    "deleteTitle": "Excluir “{{name}}”?"
+  },
   "errors": {
     "fetchError": "Falha ao carregar.",
     "saveFailed": "Falha ao salvar o departamento.",
     "deleteFailed": "Falha ao excluir o departamento.",
     "confirmFailed": "Falha ao confirmar a ação.",
     "validationTitle": "Informação ausente",
-    "validationName": "O nome do departamento é obrigatório."
+    "validationName": "O nome do departamento é obrigatório.",
+    "concurrentChange": "Este registo foi alterado enquanto o editava. O rascunho foi mantido. Copie as suas alterações e feche e reabra o editor para rever a versão mais recente antes de guardar."
   },
-
   "toast": {
     "saveOk": "Departamento salvo.",
     "deleteOk": "Departamento excluído."
   },
-
-  "alerts": { "noData": "Nenhum departamento encontrado nesta página." },
-  "preview": {
-  "fields": {
-    "name": "Nome",
-    "code": "Código",
-    "is_active": "Departamento ativo"
+  "alerts": {
+    "noData": "Nenhum departamento encontrado nesta página."
   },
-  "active": "Ativo",
-  "inactive": "Inativo",
-  "roles": {
-    "owner": "Proprietário",
-    "admin": "Administrador",
-    "member": "Membro"
+  "preview": {
+    "fields": {
+      "name": "Nome",
+      "code": "Código",
+      "is_active": "Departamento ativo"
+    },
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "roles": {
+      "owner": "Proprietário",
+      "admin": "Administrador",
+      "member": "Membro"
+    }
   }
-}
 }

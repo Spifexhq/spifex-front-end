@@ -21,7 +21,7 @@ function httpHarness(adapter) {
    if(!cfg.validateStatus||cfg.validateStatus(response.status))return response;
    throw new axios.AxiosError("Request failed",undefined,cfg,undefined,response);
  }})};
- const exported=load("src/lib/http.ts",{"axios":{__esModule:true,default:fakeAxios},"@/lib/tokens":tokens,"./apiErrorMessage":load("src/lib/apiErrorMessage.ts",{}),"./authGeneration":{getAuthGeneration:()=>generation},"@/lib/netReport":{},"@/redux/store":{store:{getState:()=>({auth:{user:{id:"user"},orgExternalId:"org"}})}}},{window:{dispatchEvent:event=>events.push(event),setTimeout,clearTimeout},navigator:{},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}}});
+ const exported=load("src/lib/http.ts",{"axios":{__esModule:true,default:fakeAxios},"@/lib/tokens":tokens,"./apiErrorMessage":load("src/lib/apiErrorMessage.ts",{}),"./httpCachePolicy":load("src/lib/httpCachePolicy.ts",{}),"./authGeneration":{getAuthGeneration:()=>generation},"@/lib/netReport":{},"@/redux/store":{store:{getState:()=>({auth:{user:{id:"user"},orgExternalId:"org"}})}}},{window:{dispatchEvent:event=>events.push(event),setTimeout,clearTimeout},navigator:{},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}}});
  return {...exported,tokens,events,get access(){return access;}};
 }
 const csrf={status:200,data:{data:{csrf_token:"csrf"}}};
@@ -137,4 +137,36 @@ test("no-store responses never supply validators on a subsequent request",async(
   return{status:200,data:{data:"ready"},headers:{etag:'"secret"',"cache-control":"no-store"}};
  });
  await h.request("ledger/setup/");await h.request("ledger/setup/");
+});
+
+
+test("a department write invalidates departments without evicting cached bank reads",async()=>{
+ const calls={};
+ const h=httpHarness(async cfg=>{calls[cfg.url]=(calls[cfg.url]||0)+1;return{status:200,data:{data:"ok"}};});
+ await h.request("banking/accounts/");await h.request("departments/");
+ await h.request("departments/one/","PATCH",{});
+ await h.request("banking/accounts/");await h.request("departments/");
+ assert.equal(calls["banking/accounts/"],1);assert.equal(calls["departments/"],2);
+});
+
+test("scoped invalidation rejects a late related read but preserves an unrelated read",async()=>{
+ const department=deferred(), bank=deferred();const h=httpHarness(cfg=>cfg.url==="departments/"?department.promise:bank.promise);
+ const first=h.request("departments/");const other=h.request("banking/accounts/");
+ await new Promise(r=>setImmediate(r));h.invalidateHttpResources(["departments"]);
+ department.resolve({status:200,data:{data:"old"}});bank.resolve({status:200,data:{data:"bank"}});
+ await assert.rejects(first,/Stale request/);assert.equal((await other).data,"bank");
+});
+
+test("If-Match is passed once and a 412 preserves its conflict code without retrying",async()=>{
+ let writes=0;const h=httpHarness(async cfg=>{writes++;assert.equal(cfg.headers.get("If-Match"),'"opened-version"');return{status:412,data:{error:{code:"precondition_failed",message:"Reload before saving"}}};});
+ await assert.rejects(h.request("departments/one/","PATCH",{}, {ifMatch:'"opened-version"'}),e=>e.status===412&&e.code==="precondition_failed");
+ assert.equal(writes,1);
+});
+
+test("query and representation variants preserve significant nested values and ordering",()=>{
+ const {stableParams,cacheFresh}=load("src/lib/httpCachePolicy.ts",{});
+ assert.notEqual(stableParams({search:"001"}),stableParams({search:"1"}));
+ assert.notEqual(stableParams({filters:{q:"a"}}),stableParams({filters:{q:"b"}}));
+ assert.notEqual(stableParams({sort:["name","code"]}),stableParams({sort:["code","name"]}));
+ assert.equal(cacheFresh({"cache-control":"private, max-age = 0"},0),false);
 });

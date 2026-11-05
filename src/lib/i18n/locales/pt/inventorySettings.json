@@ -1,14 +1,17 @@
 {
   "title": "Estoque",
-  "header": { "settings": "Configurações", "inventory": "Estoque" },
-  "badge": { "syncing": "Sincronizando…" },
-
+  "header": {
+    "settings": "Configurações",
+    "inventory": "Estoque"
+  },
+  "badge": {
+    "syncing": "Sincronizando…"
+  },
   "row": {
     "skuPrefix": "SKU:",
     "qtyPrefix": "Qtd:",
     "untitled": "(sem título)"
   },
-
   "btn": {
     "addItem": "Adicionar item",
     "edit": "Editar",
@@ -17,7 +20,6 @@
     "retry": "Tentar novamente",
     "save": "Salvar"
   },
-
   "filters": {
     "skuLabel": "SKU",
     "nameLabel": "Nome",
@@ -25,32 +27,30 @@
     "uomLabel": "Unid.",
     "qtyLabel": "Qtd",
     "statusLabel": "Status",
-
     "clearAll": "Limpar filtros",
     "apply": "Aplicar",
     "clear": "Limpar",
-
     "bySkuTitle": "Filtrar por SKU",
     "byNameTitle": "Filtrar por nome",
     "byDescriptionTitle": "Filtrar por descrição",
     "byUomTitle": "Filtrar por unidade",
     "byQtyTitle": "Filtrar por quantidade em estoque",
     "byStatusTitle": "Filtrar por status",
-
     "skuPlaceholder": "Digite um SKU…",
     "namePlaceholder": "Digite um nome…",
     "descriptionPlaceholder": "Digite uma descrição…",
     "uomPlaceholder": "ex.: un, cx, kg, l…",
-
     "qtyMin": "Mín",
     "qtyMax": "Máx",
     "qtyMinPlaceholder": "0",
     "qtyMaxPlaceholder": "0",
-
     "statusHint": "Selecione nenhum ou ambos para mostrar tudo.",
-    "status": { "all": "Todos", "active": "Ativo", "inactive": "Inativo" }
+    "status": {
+      "all": "Todos",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    }
   },
-
   "field": {
     "sku": "SKU",
     "name": "Nome",
@@ -60,30 +60,28 @@
     "qty": "Quantidade em estoque",
     "isActive": "Ativo"
   },
-
   "modal": {
     "createTitle": "Adicionar item",
     "editTitle": "Editar item",
     "close": "Fechar"
   },
-
   "footer": {
     "item": "Item:",
     "enterName": "Informe o nome do item para continuar.",
     "shortcuts": "Atalhos: Esc fechar • Ctrl/⌘+S salvar"
   },
-
-  "actions": { "ok": "OK", "discard": "Descartar" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Descartar"
+  },
   "confirmDiscard": {
     "title": "Descartar alterações?",
     "message": "Você tem alterações não salvas. Deseja descartá-las?"
   },
-
-  "confirm": { "deleteTitle": "Excluir o item \"{{name}}\"?" },
-
+  "confirm": {
+    "deleteTitle": "Excluir o item \"{{name}}\"?"
+  },
   "empty": "Nenhum item encontrado.",
-
   "errors": {
     "loadFailedTitle": "Falha ao carregar",
     "saveError": "Falha ao salvar o item.",
@@ -92,29 +90,29 @@
     "confirmFailed": "Falha ao confirmar.",
     "validationTitle": "Informações ausentes",
     "validationSkuName": "SKU e nome são obrigatórios.",
-    "validationQty": "A quantidade deve ser um inteiro maior ou igual a 0."
+    "validationQty": "A quantidade deve ser um inteiro maior ou igual a 0.",
+    "concurrentChange": "Este registo foi alterado enquanto o editava. O rascunho foi mantido. Copie as suas alterações e feche e reabra o editor para rever a versão mais recente antes de guardar."
   },
-
   "toast": {
     "saveOk": "Item criado.",
     "updateOk": "Item atualizado.",
     "deleteOk": "Item excluído."
   },
   "preview": {
-  "fields": {
-    "name": "Nome",
-    "sku": "SKU",
-    "description": "Descrição",
-    "uom": "Unidade",
-    "quantity_on_hand": "Quantidade em estoque",
-    "is_active": "Ativo"
-  },
-  "active": "Ativo",
-  "inactive": "Inativo",
-  "roles": {
-    "owner": "Proprietário",
-    "admin": "Administrador",
-    "member": "Membro"
+    "fields": {
+      "name": "Nome",
+      "sku": "SKU",
+      "description": "Descrição",
+      "uom": "Unidade",
+      "quantity_on_hand": "Quantidade em estoque",
+      "is_active": "Ativo"
+    },
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "roles": {
+      "owner": "Proprietário",
+      "admin": "Administrador",
+      "member": "Membro"
+    }
   }
-}
 }

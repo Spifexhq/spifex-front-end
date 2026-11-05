@@ -1,3 +1,4 @@
+import { isPreconditionFailure } from "@/lib/apiErrorMessage";
 import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 /* -------------------------------------------------------------------------- */
@@ -99,6 +100,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
 
   const itemId = item?.id ?? null;
 
+  const recordVersion = useRef<string | undefined>(undefined);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,6 +183,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
         const res = await api.getInventoryItem(itemId);
         const detail = res.data as InventoryItem;
         if (!alive) return;
+        recordVersion.current = (detail as typeof detail & { version?: string }).version;
 
         const next: FormState = {
           sku: detail.sku ?? "",
@@ -291,12 +294,12 @@ const InventoryModal: React.FC<InventoryModalProps> = ({
 
         if (!itemId) return;
 
-        await api.editInventoryItem(itemId, payload as unknown as InventoryItem);
+        await api.editInventoryItem(itemId, payload as unknown as InventoryItem, recordVersion.current);
         onNotify?.({ message: t("toast.updateOk"), severity: "success" });
         onSaved?.({ mode: "edit" });
         handleClose();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : t("errors.saveError");
+        const msg = isPreconditionFailure(err) ? t("errors.concurrentChange") : err instanceof Error ? err.message : t("errors.saveError");
         onNotify?.({ message: msg, severity: "error" });
         setWarning({ title: t("errors.saveError"), message: msg });
       } finally {

@@ -502,7 +502,7 @@ const EntitySettings: React.FC = () => {
                 setDeletedIds(current => new Set([...current, ...removed]));
                 setAdded(current => current.filter(item => !removed.has(String(item.id))));
                 return pager.refresh();
-              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"country",label:t("common:records.fields.country"),render:item=>String(item.country??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_entity")} canDelete={isOwner||isSuperUser||permissions.includes("delete_entity")} onEdit={openEditModal} onDelete={item=>api.deleteEntity(item.id)} error={pager.error}/>
+              }} pager={pager} busy={globalBusy} items={visibleItems} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"country",label:t("common:records.fields.country"),render:item=>String(item.country??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_entity")} canDelete={isOwner||isSuperUser||permissions.includes("delete_entity")} onEdit={openEditModal} onDelete={item=>api.deleteEntity(item.id, (item as { version?: string }).version)} error={pager.error}/>
             </section>
           </PermissionMiddleware>
         </div>

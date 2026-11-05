@@ -1,3 +1,4 @@
+import { isPreconditionFailure } from "@/lib/apiErrorMessage";
 import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 /* -------------------------------------------------------------------------- */
@@ -67,6 +68,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
 
   const departmentId = department?.id ?? null;
 
+  const recordVersion = useRef<string | undefined>(undefined);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,6 +148,7 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
         const res = await api.getDepartment(departmentId);
         const detail = res.data as Department;
         if (!alive) return;
+        recordVersion.current = (detail as typeof detail & { version?: string }).version;
 
         const next: FormState = {
           name: detail.name ?? "",
@@ -233,12 +236,12 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({
 
         if (!departmentId) return;
 
-        await api.editDepartment(departmentId, payload);
+        await api.editDepartment(departmentId, payload, recordVersion.current);
         onNotify?.({ message: t("toast.saveOk"), severity: "success" });
         onSaved?.({ mode: "edit" });
         handleClose();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : t("errors.saveFailed");
+        const msg = isPreconditionFailure(err) ? t("errors.concurrentChange") : err instanceof Error ? err.message : t("errors.saveFailed");
         onNotify?.({ message: msg, severity: "error" });
         setWarning({ title: t("errors.saveFailed"), message: msg });
       } finally {

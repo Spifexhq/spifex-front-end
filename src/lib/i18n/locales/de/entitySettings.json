@@ -1,7 +1,12 @@
 {
   "title": "Entitäten",
-  "header": { "settings": "Einstellungen", "entities": "Entitäten" },
-  "section": { "list": "Entitätenliste" },
+  "header": {
+    "settings": "Einstellungen",
+    "entities": "Entitäten"
+  },
+  "section": {
+    "list": "Entitätenliste"
+  },
   "search": {
     "placeholder": "Nach Name oder Alias suchen…",
     "aria": "Entitäten suchen",
@@ -19,31 +24,29 @@
     "investor": "Investor",
     "other": "Sonstiges"
   },
-  "row": { "inactive": "• Inaktiv", "untitled": "(ohne Titel)" },
-
+  "row": {
+    "inactive": "• Inaktiv",
+    "untitled": "(ohne Titel)"
+  },
   "tabs": {
     "general": "Allgemein",
     "tax": "Steuern",
     "address": "Adresse",
     "bank": "Bank"
   },
-
   "footer": {
     "entity": "Entität:",
     "enterName": "Geben Sie einen Entitätsnamen ein, um fortzufahren.",
     "shortcuts": "Kurzbefehle: Esc schließen • Strg/⌘+S speichern • Strg+Alt+←/→ Tabs"
   },
-
   "actions": {
     "ok": "OK",
     "discard": "Verwerfen"
   },
-
   "confirmDiscard": {
     "title": "Änderungen verwerfen?",
     "message": "Sie haben ungespeicherte Änderungen. Möchten Sie sie verwerfen?"
   },
-
   "btn": {
     "add": "Entität hinzufügen",
     "edit": "Bearbeiten",
@@ -54,35 +57,31 @@
     "retry": "Erneut versuchen",
     "confirmDelete": "Löschen"
   },
-
-  "sections": { "address": "Adresse", "bank": "Bankdaten" },
-
+  "sections": {
+    "address": "Adresse",
+    "bank": "Bankdaten"
+  },
   "field": {
     "full_name": "Vollständiger Name",
     "alias_name": "Handelsname / Alias",
     "entity_type": "Entitätstyp",
     "is_active": "Entität aktiv",
-
     "ssn_tax_id": "SSN (CPF)",
     "ein_tax_id": "EIN (CNPJ)",
-
     "email": "E-Mail",
     "phone": "Telefon",
-
     "street": "Straße",
     "street_number": "Nummer",
     "city": "Stadt",
     "state": "Bundesland",
     "postal_code": "Postleitzahl",
     "country": "Land",
-
     "bank_name": "Bank",
     "bank_branch": "Filiale",
     "checking_account": "Girokonto",
     "account_holder_tax_id": "Kontoinhaber (CPF/CNPJ)",
     "account_holder_name": "Name des Kontoinhabers"
   },
-
   "filters": {
     "nameLabel": "Name",
     "aliasLabel": "Alias",
@@ -91,65 +90,68 @@
     "clearAll": "Filter löschen",
     "apply": "Anwenden",
     "clear": "Löschen",
-
     "byNameTitle": "Nach Name filtern",
     "byAliasTitle": "Nach Alias filtern",
     "byTypeTitle": "Nach Typ filtern",
     "byStatusTitle": "Nach Status filtern",
-
     "namePlaceholder": "Name eingeben…",
     "aliasPlaceholder": "Alias eingeben…",
-
     "typeAny": "Beliebig",
-
     "status": {
       "all": "Alle",
       "active": "Aktiv",
       "inactive": "Inaktiv"
     }
   },
-
-  "modal": { "createTitle": "Entität hinzufügen", "editTitle": "Entität bearbeiten", "close": "Schließen" },
+  "modal": {
+    "createTitle": "Entität hinzufügen",
+    "editTitle": "Entität bearbeiten",
+    "close": "Schließen"
+  },
   "empty": "Keine Entitäten gefunden.",
-  "confirm": { "deleteTitle": "Entität \"{{name}}\" löschen?" },
-
+  "confirm": {
+    "deleteTitle": "Entität \"{{name}}\" löschen?"
+  },
   "errors": {
     "loadFailedTitle": "Laden fehlgeschlagen",
     "saveError": "Entität konnte nicht gespeichert werden.",
     "deleteError": "Entität konnte nicht gelöscht werden.",
     "detailError": "Details konnten nicht geladen werden.",
-    "confirmFailed": "Bestätigung fehlgeschlagen."
+    "confirmFailed": "Bestätigung fehlgeschlagen.",
+    "concurrentChange": "Dieser Datensatz wurde während der Bearbeitung geändert. Ihr Entwurf bleibt erhalten. Kopieren Sie Ihre Änderungen und öffnen Sie den Editor erneut, um vor dem Speichern die aktuelle Version zu prüfen."
   },
-
-  "toast": { "saveOk": "Entität gespeichert.", "deleteOk": "Entität entfernt." },
+  "toast": {
+    "saveOk": "Entität gespeichert.",
+    "deleteOk": "Entität entfernt."
+  },
   "preview": {
-  "fields": {
-    "full_name": "Vollständiger Name",
-    "alias_name": "Handelsname / Alias",
-    "entity_type": "Entitätstyp",
-    "is_active": "Entität aktiv",
-    "ssn_tax_id": "SSN (CPF)",
-    "ein_tax_id": "EIN (CNPJ)",
-    "email": "E-Mail",
-    "phone": "Telefon",
-    "street": "Straße",
-    "street_number": "Nummer",
-    "city": "Stadt",
-    "state": "Bundesland",
-    "postal_code": "Postleitzahl",
-    "country": "Land",
-    "bank_name": "Bank",
-    "bank_branch": "Filiale",
-    "checking_account": "Girokonto",
-    "account_holder_tax_id": "Kontoinhaber (CPF/CNPJ)",
-    "account_holder_name": "Name des Kontoinhabers"
-  },
-  "active": "Aktiv",
-  "inactive": "Inaktiv",
-  "roles": {
-    "owner": "Inhaber",
-    "admin": "Administrator",
-    "member": "Mitglied"
+    "fields": {
+      "full_name": "Vollständiger Name",
+      "alias_name": "Handelsname / Alias",
+      "entity_type": "Entitätstyp",
+      "is_active": "Entität aktiv",
+      "ssn_tax_id": "SSN (CPF)",
+      "ein_tax_id": "EIN (CNPJ)",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "street": "Straße",
+      "street_number": "Nummer",
+      "city": "Stadt",
+      "state": "Bundesland",
+      "postal_code": "Postleitzahl",
+      "country": "Land",
+      "bank_name": "Bank",
+      "bank_branch": "Filiale",
+      "checking_account": "Girokonto",
+      "account_holder_tax_id": "Kontoinhaber (CPF/CNPJ)",
+      "account_holder_name": "Name des Kontoinhabers"
+    },
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "roles": {
+      "owner": "Inhaber",
+      "admin": "Administrator",
+      "member": "Mitglied"
+    }
   }
-}
 }

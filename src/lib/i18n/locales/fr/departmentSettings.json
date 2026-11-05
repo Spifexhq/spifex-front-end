@@ -1,8 +1,12 @@
 {
   "title": "Départements",
-  "card": { "settings": "Paramètres", "departments": "Départements" },
-  "list": { "title": "Liste des départements" },
-
+  "card": {
+    "settings": "Paramètres",
+    "departments": "Départements"
+  },
+  "list": {
+    "title": "Liste des départements"
+  },
   "buttons": {
     "search": "Rechercher",
     "searchPlaceholder": "Rechercher par nom ou code…",
@@ -14,13 +18,11 @@
     "cancel": "Annuler",
     "save": "Enregistrer"
   },
-
   "tags": {
     "code": "Code",
     "inactive": "Inactif",
     "noName": "(sans nom)"
   },
-
   "filters": {
     "codeLabel": "Code",
     "nameLabel": "Nom",
@@ -39,7 +41,6 @@
       "inactive": "Inactif"
     }
   },
-
   "modal": {
     "createTitle": "Ajouter un département",
     "editTitle": "Modifier le département",
@@ -50,49 +51,50 @@
       "is_active": "Département actif"
     }
   },
-
   "footer": {
     "department": "Département :",
     "enterName": "Saisissez un nom de département pour continuer.",
     "shortcuts": "Raccourcis : Échap fermer • Ctrl/⌘+S enregistrer"
   },
-
-  "actions": { "ok": "OK", "discard": "Ignorer" },
-
+  "actions": {
+    "ok": "OK",
+    "discard": "Ignorer"
+  },
   "confirmDiscard": {
     "title": "Ignorer les modifications ?",
     "message": "Vous avez des modifications non enregistrées. Voulez-vous les ignorer ?"
   },
-
-  "confirm": { "deleteTitle": "Supprimer « {{name}} » ?" },
-
+  "confirm": {
+    "deleteTitle": "Supprimer « {{name}} » ?"
+  },
   "errors": {
     "fetchError": "Échec du chargement.",
     "saveFailed": "Échec de l’enregistrement du département.",
     "deleteFailed": "Échec de la suppression du département.",
     "confirmFailed": "Échec de la confirmation de l’action.",
     "validationTitle": "Information manquante",
-    "validationName": "Le nom du département est obligatoire."
+    "validationName": "Le nom du département est obligatoire.",
+    "concurrentChange": "Cet enregistrement a changé pendant la modification. Votre brouillon est conservé. Copiez vos changements, puis fermez et rouvrez l’éditeur pour consulter la dernière version avant d’enregistrer."
   },
-
   "toast": {
     "saveOk": "Département enregistré.",
     "deleteOk": "Département supprimé."
   },
-
-  "alerts": { "noData": "Aucun département trouvé sur cette page." },
-  "preview": {
-  "fields": {
-    "name": "Nom",
-    "code": "Code",
-    "is_active": "Département actif"
+  "alerts": {
+    "noData": "Aucun département trouvé sur cette page."
   },
-  "active": "Actif",
-  "inactive": "Inactif",
-  "roles": {
-    "owner": "Propriétaire",
-    "admin": "Administrateur",
-    "member": "Membre"
+  "preview": {
+    "fields": {
+      "name": "Nom",
+      "code": "Code",
+      "is_active": "Département actif"
+    },
+    "active": "Actif",
+    "inactive": "Inactif",
+    "roles": {
+      "owner": "Propriétaire",
+      "admin": "Administrateur",
+      "member": "Membre"
+    }
   }
-}
 }

@@ -1,3 +1,4 @@
+import { isPreconditionFailure } from "@/lib/apiErrorMessage";
 import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 /* -------------------------------------------------------------------------- */
@@ -192,6 +193,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
   const entityId = entity?.id ?? null;
 
+  const recordVersion = useRef<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [formData, setFormData] = useState<FormState>(emptyForm);
 
@@ -287,6 +289,7 @@ const EntityModal: React.FC<EntityModalProps> = ({
         const res = await api.getEntity(entityId);
         const detail = res.data as Entity;
         if (!alive) return;
+        recordVersion.current = (detail as typeof detail & { version?: string }).version;
 
         const next: FormState = {
           full_name: detail.full_name ?? "",
@@ -438,12 +441,12 @@ const EntityModal: React.FC<EntityModalProps> = ({
 
         if (!entityId) return;
 
-        await api.editEntity(entityId, payload);
+        await api.editEntity(entityId, payload, recordVersion.current);
         onNotify?.({ message: t("toast.saveOk"), severity: "success" });
         onSaved?.({ mode: "edit" });
         handleClose();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : t("errors.saveError");
+        const msg = isPreconditionFailure(err) ? t("errors.concurrentChange") : err instanceof Error ? err.message : t("errors.saveError");
         onNotify?.({ message: msg, severity: "error" });
         setWarning({ title: t("errors.saveError"), message: msg });
       } finally {
