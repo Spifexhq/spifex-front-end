@@ -59,6 +59,7 @@ export type DataTableProps<T> = {
     onDelete?(item: T): Promise<unknown>;
     onDeleted?(ids: string[]): unknown;
     actions?(item: T): ReactNode;
+    mobileActions?: boolean;
     pagination?: boolean;
     inspectable?: boolean;
 };
