@@ -390,11 +390,6 @@ function Select<T>({
     requestAnimationFrame(() => {
       updateFloatingPosition();
 
-      if (!isMobileViewport && !hideFilter && searchInputRef.current) {
-        searchInputRef.current.focus?.({ preventScroll: true });
-      } else {
-        panelRef.current?.focus?.({ preventScroll: true });
-      }
 
       const rowsPanel = rowsScrollRef.current;
       if (!rowsPanel) return;
@@ -411,6 +406,17 @@ function Select<T>({
     hideFilter,
     updateFloatingPosition,
   ]);
+
+  // Focus belongs to opening the dropdown, never to filtering its results.
+  useEffect(() => {
+    if (!isRendered) return;
+    const frame = requestAnimationFrame(() => {
+      if (panelRef.current?.contains(document.activeElement)) return;
+      const target = !isMobileViewport && !hideFilter ? searchInputRef.current : panelRef.current;
+      target?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isRendered, isMobileViewport, hideFilter]);
 
   useEffect(() => {
     if (!isRendered || activeIndex == null) return;

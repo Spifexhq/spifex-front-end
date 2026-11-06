@@ -3,23 +3,41 @@ import fs from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
-const code = ts.transpileModule(fs.readFileSync("src/middlewares/auth/LocaleProfileMiddleware.tsx", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true } }).outputText;
-function render(status, ready) {
-  const states = [status, ready];
-  const react = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'fragment', useState: () => [states.shift(), () => {}], useEffect: () => {}, useRef: () => ({ current: null }), useMemo: fn => fn() };
-  const modules = { react, 'react-router-dom': { useLocation: () => ({ pathname: '/settings/banks', search: '' }), useNavigate: () => () => {} } };
-  const context = vm.createContext({ exports: {}, require: name => modules[name] ?? {} });
-  vm.runInContext(code, context);
-  return context.exports.LocaleProfileMiddleware({ children: 'persistent-shell' });
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const compile = file => ts.transpileModule(fs.readFileSync(file,"utf8"), {compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+const policy = vm.createContext({exports:{}});
+vm.runInContext(compile("src/lib/localeSetup.ts"),policy);
+const ready = {personal_locale_setup:true,org_locale_setup:true};
+function render(configuration, {loading=false,failed=false,owner=false}={}) {
+  const modules = {
+    'react-router-dom': {useLocation:()=>({pathname:'/settings/banks',search:''}),Navigate:'navigate'},
+    'react-i18next': {useTranslation:()=>({t:key=>key})},
+    '@/hooks/useAuth': {useAuthContext:()=>({isOwner:owner})},
+    '@/lib/localeSetup':policy.exports,
+  };
+  const context=vm.createContext({exports:{},require:name=>modules[name]??(name.startsWith('@/')?{default:'component'}:require(name))});
+  vm.runInContext(compile('src/middlewares/auth/LocaleProfileMiddleware.tsx'),context);
+  return context.exports.LocaleProfileMiddleware({children:'persistent-shell',configuration,loading,failed,retry:async()=>{}});
 }
-test('route revalidation keeps an already visible shell mounted', () => {
-  const result = render('loading', true);
-  assert.equal(result.type, 'fragment');
-  assert.equal(result.children[0], 'persistent-shell');
+
+test('route revalidation keeps an already visible shell mounted',()=>{
+  const snapshot=policy.exports.configurationAfterFailure({key:'user:org',data:ready},'user:org',503);
+  const result=render(snapshot.data,{failed:true});
+  assert.equal(result.props.children,'persistent-shell');
 });
-test('initial locale validation still gates the shell', () => {
-  assert.notEqual(render('loading', false).type, 'fragment');
+test('initial locale validation still gates the shell',()=>{
+  assert.notEqual(render(null,{loading:true}).props.children,'persistent-shell');
+  assert.notEqual(render(null).props.children,'persistent-shell');
 });
-test('required locale redirects still hide the shell', () => {
-  assert.notEqual(render('redirecting', true).type, 'fragment');
+test('required locale redirects still hide the shell',()=>{
+  const result=render({...ready,personal_locale_setup:false});
+  assert.equal(result.type,'navigate');
+  assert.match(result.props.to,/^\/locale-setup/);
+});
+test('explicit access denial removes even an already validated shell',()=>{
+  const snapshot=policy.exports.configurationAfterFailure({key:'user:org',data:ready},'user:org',403);
+  const result=render(snapshot.data,{failed:true});
+  assert.equal(result.type,'main');
+  assert.notEqual(result.props.children,'persistent-shell');
 });

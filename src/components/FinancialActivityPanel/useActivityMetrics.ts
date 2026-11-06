@@ -10,6 +10,8 @@ export type KpiItem = {
   trend?: number[];
   label: string;
   value: string | number;
+  numericValue?: number | null;
+  formatValue?: (value: number) => string;
   hint?: string;
   delta?: { value: string; positive?: boolean };
 };
@@ -136,6 +138,8 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
         key: "mtdNet",
         label: tr("kpiCards:cashflow.labels.mtdNet"),
         value: signedCurrencyFromDecimal(cf.mtd.net),
+        numericValue: parseMoney(cf.mtd.net),
+        formatValue: signedCurrencyFromDecimal,
         hint: [
           tr("kpiCards:cashflow.hints.mtd", {
             inAmt: currencyFromDecimal(cf.mtd.in),
@@ -153,6 +157,8 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
         key: "overdueNet",
         label: tr("kpiCards:cashflow.labels.overdueNet"),
         value: signedCurrencyFromDecimal(cf.overdue.net),
+        numericValue: parseMoney(cf.overdue.net),
+        formatValue: signedCurrencyFromDecimal,
         hint: [
           tr("kpiCards:cashflow.hints.overdue", {
             recAmt: currencyFromDecimal(cf.overdue.rec),
@@ -166,6 +172,8 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
         key: "next7Net",
         label: tr("kpiCards:cashflow.labels.next7Net"),
         value: currencyFromDecimal(cf.next7.net),
+        numericValue: parseMoney(cf.next7.net),
+        formatValue: currencyFromDecimal,
         hint: [
           tr("kpiCards:cashflow.hints.next7", {
             recAmt: currencyFromDecimal(cf.next7.rec),
@@ -203,6 +211,8 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
         key: "mtdSettledNet",
         label: tr("kpiCards:settled.labels.mtdSettledNet"),
         value: signedCurrencyFromDecimal(st.mtd.net),
+        numericValue: parseMoney(st.mtd.net),
+        formatValue: signedCurrencyFromDecimal,
         hint: [
           tr("kpiCards:settled.hints.mtd", {
             recAmt: currencyFromDecimal(st.mtd.in),
@@ -220,6 +230,8 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
         key: "prevSettledNet",
         label: tr("kpiCards:settled.labels.prevSettledNet"),
         value: signedCurrencyFromDecimal(st.prev.net),
+        numericValue: parseMoney(st.prev.net),
+        formatValue: signedCurrencyFromDecimal,
         hint: [
           tr("kpiCards:settled.hints.prev", {
             recAmt: currencyFromDecimal(st.prev.in),
@@ -233,6 +245,8 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
         key: "last7Settled",
         label: tr("kpiCards:settled.labels.last7Settled"),
         value: signedCurrencyFromDecimal(st.last7.net),
+        numericValue: parseMoney(st.last7.net),
+        formatValue: signedCurrencyFromDecimal,
         hint: [
           tr("kpiCards:settled.hints.last7", {
             recAmt: currencyFromDecimal(st.last7.in),

@@ -1,4 +1,4 @@
-import { isSetupRequestCancelled } from "@/lib/localeSetup";
+import { configurationAfterFailure, isSetupRequestCancelled } from "@/lib/localeSetup";
 import { isCancel } from "axios";
 import { useState, useEffect, type FC, useCallback, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
@@ -41,7 +41,11 @@ export const SpifexLayout: FC = () => {
         const { data } = response;
         if (version === sequence.current) { setSnapshot({ key: identityKey, data }); validatedAt.current = Date.now(); }
       } catch (error) {
-        if (version === sequence.current && !isCancel(error) && !isSetupRequestCancelled(error)) { setSnapshot({ key: identityKey, data: null }); setFailedKey(identityKey); }
+        if (version === sequence.current && !isCancel(error) && !isSetupRequestCancelled(error)) { const status = (error as { status?: number })?.status;
+          // A temporary background failure cannot destroy an already validated
+          // same-workspace tree. Explicit access denials still remove access.
+          setSnapshot(previous => configurationAfterFailure(previous, identityKey, status));
+          setFailedKey(identityKey); }
         throw error;
       } finally { if (version === sequence.current) { inFlight.current = null; setPendingKey(null); } }
     })();

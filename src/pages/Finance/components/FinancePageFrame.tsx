@@ -15,17 +15,26 @@ export function FinancePageSkeleton() {
 }
 
 /** Load the whole Finance workspace together while data hooks run in mounted children. */
-export default function FinancePageFrame({ children, settled }: { children: ReactNode; settled: boolean }) {
+function FinancePageFrameContent({ children, settled }: { children: ReactNode; settled: boolean }) {
   const auth = useAuthContext();
   const can = (permission: string) => auth.isOwner || auth.isSuperUser || auth.permissions.includes(permission);
   const expected: Slot[] = ["banks", "metrics", ...(can(settled ? "view_settled_entries" : "view_cash_flow_entries") ? ["entries" as const] : [])];
   const [slots, setSlots] = useState<Partial<Record<Slot, boolean>>>({});
   const report = useCallback((slot: Slot, loading: boolean | undefined) => setSlots(previous => previous[slot] === loading ? previous : { ...previous, [slot]: loading }), []);
   const pending = isFinancePending(expected, slots);
+  const [initialReady, setInitialReady] = useState(false);
+  useEffect(() => { if (!pending) setInitialReady(true); }, [pending]);
+  const initialPending = pending && !initialReady;
   const body = useRef<HTMLDivElement>(null);
-  useEffect(() => { body.current?.toggleAttribute("inert", pending); }, [pending]);
+  useEffect(() => { body.current?.toggleAttribute("inert", initialPending); }, [initialPending]);
   return <LoadingContext.Provider value={report}><div className="relative h-full min-h-0" aria-busy={pending}>
-    {pending && <div className="absolute inset-0 z-10"><FinancePageSkeleton /></div>}
-    <div ref={body} aria-hidden={pending || undefined} className={`h-full min-h-0 ${pending ? "invisible" : ""}`}>{children}</div>
+    {initialPending && <div className="absolute inset-0 z-10"><FinancePageSkeleton /></div>}
+    <div ref={body} aria-hidden={initialPending || undefined} className={`h-full min-h-0 ${initialPending ? "invisible" : ""}`}>{children}</div>
   </div></LoadingContext.Provider>;
+}
+
+/** A new identity/workspace starts a fresh coordinated initial load. */
+export default function FinancePageFrame(props: { children: ReactNode; settled: boolean }) {
+  const { user, organization } = useAuthContext();
+  return <FinancePageFrameContent key={`${user?.id}:${organization?.organization?.id}:${props.settled}`} {...props} />;
 }

@@ -23,7 +23,7 @@ function toKey(v: unknown) {
   return String(v ?? "");
 }
 
-type State = { history?: number[]; currency?: string | null; mixed?: boolean; canViewBalance?: boolean; banks: BankAccountTableRow[]; count: number; total: number; loading: boolean; error: string | null };
+type State = { hasLoaded?: boolean; history?: number[]; currency?: string | null; mixed?: boolean; canViewBalance?: boolean; banks: BankAccountTableRow[]; count: number; total: number; loading: boolean; error: string | null };
 export function useBankBalances(selectedBankIds: string[] | undefined, refreshKey: number, enabled: boolean) {
  const { t } = useTranslation("banksTable");
   const ids = useMemo(() => {
@@ -67,6 +67,7 @@ export function useBankBalances(selectedBankIds: string[] | undefined, refreshKe
 
         setState({
           banks,
+          hasLoaded: true,
           history: payload.balance_history?.map(point => Number(point.value)),
           currency: payload.balance_currency,
           mixed: payload.mixed_currencies,

@@ -19,17 +19,30 @@ const initialState: AuthState = {
   permissions: [],
 };
 
+// Preserve references when session revalidation returns the same JSON data.
+// Dependent forms and lists must not reinitialize merely because focus returned.
+function sameValue(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const a = left as Record<string, unknown>, b = right as Record<string, unknown>;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every(key => Object.prototype.hasOwnProperty.call(b, key) && sameValue(a[key], b[key]));
+}
+
 const slice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setAuthSnapshot: (_s, a: PayloadAction<{ user: User; organization: UserOrganizationDetail | null; permissions: string[]; is_subscribed: boolean }>) => ({
-      user: a.payload.user,
-      organization: a.payload.organization,
-      orgExternalId: a.payload.organization?.organization?.id ?? null,
-      permissions: [...new Set((a.payload.permissions || []).filter(value => typeof value === "string"))],
-      isSubscribed: Boolean(a.payload.is_subscribed),
-    }),
+    setAuthSnapshot: (state, action: PayloadAction<{ user: User; organization: UserOrganizationDetail | null; permissions: string[]; is_subscribed: boolean }>) => {
+      const payload = action.payload;
+      const permissions = [...new Set((payload.permissions || []).filter(value => typeof value === "string"))].sort();
+      if (!sameValue(state.user, payload.user)) state.user = payload.user;
+      if (!sameValue(state.organization, payload.organization)) state.organization = payload.organization;
+      state.orgExternalId = payload.organization?.organization?.id ?? null;
+      if (!sameValue([...state.permissions].sort(), permissions)) state.permissions = permissions;
+      state.isSubscribed = Boolean(payload.is_subscribed);
+    },
     setUser: (s, a: PayloadAction<User | null>) => {
       if (s.user?.id !== a.payload?.id) { s.organization = null; s.orgExternalId = null; s.permissions = []; s.isSubscribed = false; }
       s.user = a.payload;

@@ -37,3 +37,11 @@ test('wrapped HTTP cancellations are not endpoint failures', () => {
   assert.equal(context.exports.isSetupRequestCancelled({status: 500, code: 'request_failed'}), false);
   assert.equal(context.exports.isSetupRequestCancelled(undefined), false);
 });
+
+test('temporary resume failures retain only the already validated same-identity view', () => {
+  const snapshot = {key:'user:org',data:{personal_locale_setup:true,org_locale_setup:true}};
+  for (const status of [undefined,429,500,503]) assert.equal(context.exports.configurationAfterFailure(snapshot,'user:org',status),snapshot);
+  for (const status of [401,403]) assert.equal(context.exports.configurationAfterFailure(snapshot,'user:org',status).data,null);
+  assert.equal(context.exports.configurationAfterFailure(snapshot,'user:other-org',503).data,null);
+  assert.equal(context.exports.configurationAfterFailure(null,'user:org',503).data,null);
+});

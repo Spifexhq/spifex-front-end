@@ -14,3 +14,11 @@ export function needsLocaleSetup(configuration: ConfigurationStatus, isOwner: bo
 export function isSetupRequestCancelled(error: unknown): boolean {
   return !!error && typeof error === "object" && (error as { code?: string }).code === "ERR_CANCELED";
 }
+
+export type ConfigurationSnapshot = { key: string; data: ConfigurationStatus | null };
+
+/** Keep only an already validated same-identity view through temporary outages. */
+export function configurationAfterFailure(previous: ConfigurationSnapshot | null, key: string, status?: number): ConfigurationSnapshot {
+  return status !== 401 && status !== 403 && previous?.key === key && previous.data
+    ? previous : { key, data: null };
+}

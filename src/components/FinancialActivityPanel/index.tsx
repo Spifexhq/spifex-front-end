@@ -1,3 +1,4 @@
+import AnimatedNumber from "@/shared/ui/AnimatedNumber";
 import { useFinanceLoading } from "@/pages/Finance/components/financeLoading";
 import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
 import FinancialActivitySkeleton from "./FinancialActivitySkeleton";
@@ -76,7 +77,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
       <div className="text-xs leading-5 text-gray-500">{t("kpiCards:panel.consolidatedBalance")}</div>
       <PermissionMiddleware codeName="view_consolidated_balance">
         <div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-7 tracking-tight text-gray-900 tabular-nums ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
-          {bankState.loading ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankTotal}
+          {bankState.loading && !bankState.hasLoaded ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankState.mixed || bankState.canViewBalance === false ? bankTotal : <AnimatedNumber value={bankState.total} format={value => formatCurrency(value, bankState.currency || undefined)} finalValue={bankTotal} />}
         </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div>
       </PermissionMiddleware>
       <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={detailsId}
@@ -109,7 +110,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
                 <div className="truncate text-[11px] text-gray-500">{bank.iban || t("banksTable:labels.branchAccount", { branch: bank.branch || "—", account: bank.account_number || "—" })}</div>
               </div>
             </div>
-            <span className="shrink-0 text-xs font-medium text-gray-800 tabular-nums">{bank.consolidated_balance == null ? "—" : formatCurrency(bank.consolidated_balance, bank.currency)}</span>
+            <span className="shrink-0 text-xs font-medium text-gray-800 tabular-nums">{bank.consolidated_balance == null ? "—" : <AnimatedNumber value={Number(bank.consolidated_balance)} format={value => formatCurrency(value, bank.currency)} finalValue={formatCurrency(bank.consolidated_balance, bank.currency)} />}</span>
           </li>)}</ul>}
         </div>
       </motion.section>}
@@ -124,7 +125,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           <div key={metric.key} aria-busy={loading} className="min-w-0 border-l border-gray-100 px-4 py-3 sm:px-5">
             <div className="flex items-center gap-1 text-xs leading-5 text-gray-500"><span>{metric.label}</span><span className="inline-flex sm:hidden"><InfoTooltip label={metric.label}>{metric.hint}{metric.delta ? ` · ${metric.delta.value}` : ""}</InfoTooltip></span></div>
             <div className="flex flex-wrap items-center justify-between gap-2"><div className="mt-1 whitespace-nowrap text-base font-semibold leading-7 tracking-tight text-gray-900 tabular-nums sm:text-2xl">
-              {loading ? <FinancialActivitySkeleton /> : metric.value}
+              {metric.numericValue != null && metric.formatValue ? <AnimatedNumber value={metric.numericValue} format={metric.formatValue} finalValue={String(metric.value)} /> : loading ? <FinancialActivitySkeleton /> : metric.value}
             </div>{!loading && metric.trend && <Sparkline values={metric.trend} label={t("kpiCards:metricTrend", { metric: metric.label })} color={metric.key.toLowerCase().includes("overdue") ? "#f59e0b" : "#6366f1"} className="max-sm:w-16"/>}</div>
             {metric.delta && !loading && <div className={`mt-1 hidden text-[11px] font-medium sm:block ${metric.delta.positive ? "text-emerald-700" : "text-rose-700"}`}>{metric.delta.value}</div>}
             {metric.hint && <p className="mt-1 hidden text-[11px] leading-4 text-gray-500 sm:block">{loading ? t("kpiCards:loading") : metric.hint}</p>}
