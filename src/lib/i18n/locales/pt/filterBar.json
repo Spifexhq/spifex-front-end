@@ -96,7 +96,8 @@
     "loading": "Salvando visualização…",
     "description": "Salve esta combinação de filtros para reutilizar depois.",
     "defaultShort": "padrão",
-    "overwriteHint": "A visualização selecionada será substituída pelos filtros atuais."
+    "overwriteHint": "A visualização selecionada será substituída pelos filtros atuais.",
+    "failed": "Não foi possível guardar a vista. Tente novamente."
   },
   "aria": {
     "removeFilter": "remover filtro"

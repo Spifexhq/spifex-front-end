@@ -1,5 +1,5 @@
 import { resourceTags, mutationTags, stableParams, cacheFresh } from "./httpCachePolicy";
-import { normalizeApiError } from "./apiErrorMessage";
+import { normalizeApiError, notifyQuotaError } from "./apiErrorMessage";
 import { getAuthGeneration } from "./authGeneration";
 /* -----------------------------------------------------------------------------
  * File: src/lib/http.ts
@@ -451,6 +451,7 @@ function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig):
 http.interceptors.response.use(
   (r) => {
     if ((r.config as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale response discarded");
+    if (hasApiError(r.data)) notifyQuotaError(r.data.error);
     finishLog(r.config, r);
     return r;
   },
@@ -500,6 +501,12 @@ http.interceptors.response.use(
       return http(original);
     }
 
+    // Blob downloads still return JSON error envelopes when quota checks deny them.
+    const failureBody = error.response?.data;
+    if (typeof Blob !== "undefined" && failureBody instanceof Blob && failureBody.size < 65_536 && /json/i.test(failureBody.type)) {
+      try { if (error.response) error.response.data = JSON.parse(await failureBody.text()); } catch { /* Keep the original response if it is not valid JSON. */ }
+    }
+    notifyQuotaError(error);
     finishLog(original, undefined, error);
     return Promise.reject(error);
   },
@@ -640,7 +647,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       return {} as ApiSuccess<T>;
     }
 
-    if (hasApiError(body)) throw body.error;
+    if (hasApiError(body)) { notifyQuotaError(body.error); throw body.error; }
 
     return body as ApiSuccess<T>;
   } catch (e) {

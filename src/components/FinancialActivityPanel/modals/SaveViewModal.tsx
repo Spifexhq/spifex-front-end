@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 
@@ -22,6 +23,7 @@ export const SaveViewModal: React.FC<{
 
   onRefreshViews: () => Promise<void>;
 }> = ({ t, open, onClose, scopedViews, localFilters, onRefreshViews }) => {
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const [saveName, setSaveName] = useState("");
@@ -33,6 +35,7 @@ export const SaveViewModal: React.FC<{
   const defaultLocked = isOverwrite && !!overwriteView?.is_default;
 
   const reset = useCallback(() => {
+    setError("");
     setSaveName("");
     setSaveDefault(false);
     setSaveMode("create");
@@ -56,7 +59,7 @@ export const SaveViewModal: React.FC<{
 
   const saveView = useCallback(async () => {
     const name = effectiveName;
-    if (!name) return;
+    if (!name || busy) return;
 
     const payload = {
       name,
@@ -68,6 +71,7 @@ export const SaveViewModal: React.FC<{
 
     try {
       setBusy(true);
+      setError("");
 
       if (isOverwrite && overwriteView) {
         const r: ApiResponse<unknown> = await api.editViewPreset(overwriteView.id, payload);
@@ -88,10 +92,13 @@ export const SaveViewModal: React.FC<{
       reset();
     } catch (err) {
       console.error("Failed to save visualization", err);
+      setError(apiErrorMessage(err, t("filterBar:saveModal.failed")));
     } finally {
       setBusy(false);
     }
   }, [
+    busy,
+    t,
     defaultLocked,
     effectiveName,
     isOverwrite,
@@ -116,6 +123,7 @@ export const SaveViewModal: React.FC<{
       }}
       maxWidthClass="max-w-md"
     >
+      {error && <p role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{error}</p>}
       <div className={busy ? "pointer-events-none opacity-60" : ""}>
         <div className="space-y-4 text-xs text-gray-700">
           <p className="text-[12px] text-gray-600">{t("filterBar:saveModal.description")}</p>

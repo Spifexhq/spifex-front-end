@@ -95,5 +95,12 @@
   "notifications": {
     "dismiss": "Dismiss notification",
     "genericError": "Something went wrong. Please try again."
+  },
+  "quota": {
+    "exceeded": "Your organization has reached the usage limit for this action. Review usage or ask the owner to review the plan.",
+    "notIncluded": "This action is not included in your organization's plan. Ask the owner to review the plan.",
+    "limit": "Plan limit: {{limit}}.",
+    "resets": "Resets on {{date}}.",
+    "viewUsage": "View usage and limits"
   }
 }

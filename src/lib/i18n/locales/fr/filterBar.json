@@ -96,7 +96,8 @@
     "loading": "Enregistrement de la vue...",
     "description": "Enregistrez cette combinaison de filtres pour la réutiliser plus tard.",
     "defaultShort": "par défaut",
-    "overwriteHint": "La vue sélectionnée sera remplacée par les filtres actuels."
+    "overwriteHint": "La vue sélectionnée sera remplacée par les filtres actuels.",
+    "failed": "Impossible d’enregistrer la vue. Réessayez."
   },
   "aria": {
     "removeFilter": "supprimer le filtre"

@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 
@@ -21,6 +22,7 @@ export const ViewsConfigModal: React.FC<{
   onApplyViewToForm: (view: Visualization) => void;
   onRefreshViews: () => Promise<void>;
 }> = ({ t, open, onClose, scopedViews, onApplyViewToForm, onRefreshViews }) => {
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export const ViewsConfigModal: React.FC<{
 
   useEffect(() => {
     if (!open) {
+      setError("");
       setRenamingId(null);
       setRenamingName("");
       setBusy(false);
@@ -43,6 +46,7 @@ export const ViewsConfigModal: React.FC<{
 
       try {
         setBusy(true);
+        setError("");
 
         const r1: ApiResponse<unknown> = await api.editViewPreset(view.id, { is_default: !view.is_default });
         if (isApiError(r1)) throw r1.error;
@@ -62,11 +66,12 @@ export const ViewsConfigModal: React.FC<{
         await onRefreshViews();
       } catch (err) {
         console.error("Failed to toggle default view", err);
+        setError(apiErrorMessage(err, t("filterBar:saveModal.failed")));
       } finally {
         setBusy(false);
       }
     },
-    [onRefreshViews, scopedViews, renamingId]
+    [onRefreshViews, scopedViews, renamingId, t]
   );
 
   const renameView = useCallback(async () => {
@@ -76,32 +81,36 @@ export const ViewsConfigModal: React.FC<{
 
     try {
       setBusy(true);
+      setError("");
       const r: ApiResponse<unknown> = await api.editViewPreset(id, { name });
       if (isApiError(r)) throw r.error;
       await onRefreshViews();
-    } catch (err) {
-      console.error("Failed to rename view", err);
-    } finally {
-      setBusy(false);
       setRenamingId(null);
       setRenamingName("");
+    } catch (err) {
+      console.error("Failed to rename view", err);
+      setError(apiErrorMessage(err, t("filterBar:saveModal.failed")));
+    } finally {
+      setBusy(false);
     }
-  }, [onRefreshViews, renamingId, renamingName]);
+  }, [onRefreshViews, renamingId, renamingName, t]);
 
   const deleteView = useCallback(
     async (id: string) => {
       try {
         setBusy(true);
+        setError("");
         const r: ApiResponse<unknown> = await api.deleteViewPreset(id);
         if (isApiError(r)) throw r.error;
         await onRefreshViews();
       } catch (err) {
         console.error("Failed to delete view", err);
+        setError(apiErrorMessage(err, t("filterBar:saveModal.failed")));
       } finally {
         setBusy(false);
       }
     },
-    [onRefreshViews]
+    [onRefreshViews, t]
   );
 
   if (!open) return null;
@@ -110,6 +119,7 @@ export const ViewsConfigModal: React.FC<{
 
   return (
     <ModalShell busy={busy} title={t("filterBar:configModal.title")} onClose={onClose}>
+      {error && <p role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{error}</p>}
       <div className={busy ? "pointer-events-none opacity-60" : ""}>
         <div className="border border-gray-200 rounded-md divide-y divide-gray-200">
           {scopedViews.length === 0 && (

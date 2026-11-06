@@ -5,7 +5,7 @@ import ts from "typescript";
 
 async function load(file) {
   const { outputText } = ts.transpileModule(fs.readFileSync(file, "utf8"), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext } });
-  return import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
+  return import(`data:text/javascript;base64,${Buffer.from(outputText.replaceAll('"i18next"', JSON.stringify(import.meta.resolve("i18next")))).toString("base64")}`);
 }
 const { buildAccountRows, descendantIds } = await load("src/pages/Accounting/chart/accountHierarchy.ts");
 const { accountingRouteAllowed } = await load("src/pages/Accounting/setup/setupNavigation.ts");

@@ -95,5 +95,12 @@
   "notifications": {
     "dismiss": "Fermer la notification",
     "genericError": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "quota": {
+    "exceeded": "Votre organisation a atteint la limite d’utilisation de cette action. Consultez l’utilisation ou demandez au propriétaire de vérifier le forfait.",
+    "notIncluded": "Cette action n’est pas incluse dans le forfait de votre organisation. Demandez au propriétaire de vérifier le forfait.",
+    "limit": "Limite du forfait : {{limit}}.",
+    "resets": "Réinitialisation le {{date}}.",
+    "viewUsage": "Voir l’utilisation et les limites"
   }
 }

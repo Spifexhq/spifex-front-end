@@ -96,7 +96,8 @@
     "loading": "Ansicht wird gespeichert...",
     "description": "Speichern Sie diese Filterkombination, um sie später wiederzuverwenden.",
     "defaultShort": "Standard",
-    "overwriteHint": "Die ausgewählte Ansicht wird durch die aktuellen Filter ersetzt."
+    "overwriteHint": "Die ausgewählte Ansicht wird durch die aktuellen Filter ersetzt.",
+    "failed": "Die Ansicht konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
   },
   "aria": {
     "removeFilter": "Filter entfernen"

@@ -96,7 +96,8 @@
     "loading": "Saving view...",
     "description": "Save this filter combination to reuse it later.",
     "defaultShort": "default",
-    "overwriteHint": "The selected view will be replaced with the current filters."
+    "overwriteHint": "The selected view will be replaced with the current filters.",
+    "failed": "Couldn't save your view. Please try again."
   },
   "aria": {
     "removeFilter": "remove filter"

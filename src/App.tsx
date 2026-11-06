@@ -1,3 +1,4 @@
+import QuotaWarning from "@/components/QuotaWarning";
 // src/App.tsx
 import { useRoutes } from 'react-router-dom';
 import routes from './router';
@@ -13,6 +14,7 @@ export const App = () => {
     <RequestsProvider>
       <AuthProvider>
         <div>
+          <QuotaWarning />
           {content}
         </div>
       </AuthProvider>

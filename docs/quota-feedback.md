@@ -1,0 +1,9 @@
+# Quota feedback coverage
+
+The shared HTTP response interceptor now publishes sanitized, deduplicated quota warnings. This covers request() callers and direct http calls, including statement uploads and JSON error bodies returned for blob downloads. Envelope errors in successful HTTP responses are also recognized. The global QuotaWarning component is mounted once under AuthProvider and clears when user/workspace identity changes.
+
+getQuotaIssue follows known API error containers, including wrapped Error causes, rather than matching arbitrary debug text. It distinguishes quota_exceeded from permission_not_in_plan. Generic 403, subscription expiration, throttling and stale/canceled requests are not mislabeled as quota failures. apiErrorMessage and normalizeApiError produce translated quota text while retaining machine-readable codes/fields. Numeric plan limits and genuine future reset times are included; lifetime dates such as year 9999 and invalid dates are omitted. Guidance is translated in en, pt, fr and de. No quota accounting or limits were changed.
+
+Cash-flow saved views previously swallowed failures in create/overwrite, rename, default selection and deletion. These dialogs now retain inline feedback. Failed saves preserve the draft, and failed rename operations preserve the name being edited. A global warning additionally covers any other local error handler that swallows quota failures. Users with the existing usage-page permission receive a Usage & Limits link; other users are directed to ask their organization owner.
+
+Validation includes quota envelope/nesting, normalization, lifetime and future dates, four-language content, exclusion of unrelated errors, notification deduplication and sanitized event payloads. Full frontend regression tests also cover the existing HTTP authentication/cache behavior. Live quota exhaustion in the hosted application remains a deployment-environment check.

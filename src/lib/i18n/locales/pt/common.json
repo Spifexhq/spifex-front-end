@@ -95,5 +95,12 @@
   "notifications": {
     "dismiss": "Fechar notificação",
     "genericError": "Ocorreu um erro. Tente novamente."
+  },
+  "quota": {
+    "exceeded": "A sua organização atingiu o limite de utilização desta ação. Consulte a utilização ou peça ao proprietário para rever o plano.",
+    "notIncluded": "Esta ação não está incluída no plano da organização. Peça ao proprietário para rever o plano.",
+    "limit": "Limite do plano: {{limit}}.",
+    "resets": "Renova em {{date}}.",
+    "viewUsage": "Ver utilização e limites"
   }
 }
