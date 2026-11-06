@@ -8,7 +8,7 @@ function harness(file,exportName,args){
  const changed=(a,b)=>!a||a.length!==b.length||a.some((value,i)=>!Object.is(value,b[i]));
  const react={useState(initial){const i=cursor++;if(!cells[i]){cells[i]={value:typeof initial==='function'?initial():initial};cells[i].set=value=>{cells[i].value=typeof value==='function'?value(cells[i].value):value;};}return[cells[i].value,cells[i].set];},useRef(value){const i=cursor++;return cells[i]??(cells[i]={current:value});},useCallback(fn,deps){const i=cursor++;if(changed(cells[i]?.deps,deps))cells[i]={value:fn,deps};return cells[i].value;},useEffect(fn,deps){const i=cursor++;if(changed(cells[i]?.deps,deps)){const old=cells[i];cells[i]={deps,cleanup:old?.cleanup};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}}};
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
- const context=vm.createContext({exports:{},require:name=>name==='react'?react:{},window:{},Promise,Map,Error,JSON});vm.runInContext(code,context);
+ const context=vm.createContext({exports:{},require:name=>name==='react'?react:name==='@/lib/authGeneration'?{getAuthGeneration:()=>1}:name==='@/lib/tokens'?{getOrgExternalIdStored:()=> 'org-1'}:{},window:{},Promise,Map,Error,JSON});vm.runInContext(code,context);
  const render=()=>{cursor=0;effects=[];result=context.exports[exportName](...args());for(const effect of effects)effect();return result;};
  return {render,get result(){return result;},async flush(){await new Promise(resolve=>setImmediate(resolve));return render();}};
 }
@@ -88,4 +88,23 @@ test('mixed-height virtual rows preserve exact spacer heights through the final 
  assert.equal(last.end, heights.length); assert.equal(last.after, 0);
  const empty = virtualRowRange(buildRowOffsets([]), 0, 410);
  assert.equal(empty.start, 0); assert.equal(empty.end, 0); assert.equal(empty.before + empty.after, 0);
+});
+
+test('stale HTTP reads recover for first and subsequent cursor pages without duplicating rows',async()=>{
+ const attempts = new Map();
+ const fetch=async(cursor,size)=>{const start=Number(cursor||0);attempts.set(start,(attempts.get(start)||0)+1);if(attempts.get(start)===1)throw Object.assign(new Error('Stale request discarded'),{code:'ERR_CANCELED'});return{items:records.slice(start,start+size),nextCursor:start+size<records.length?String(start+size):undefined};};
+ const h=harness('src/hooks/useCursorPager.ts','useCursorPager',()=>[fetch,{accumulate:true}]);
+ h.render();await h.flush();assert.equal(h.result.items.length,20);assert.equal(h.result.error,null);
+ await h.result.next();await h.flush();assert.equal(h.result.items.length,40);assert.equal(h.result.items[20].id,'20');assert.equal(attempts.get(20),2);
+});
+test('old filter cancellations do not retry after a new filter replaces the request',async()=>{
+ let key='old';const pending=[];
+ const fetch=()=>new Promise((resolve,reject)=>pending.push({key,resolve,reject}));
+ const h=harness('src/hooks/useCursorPager.ts','useCursorPager',()=>[fetch,{deps:[key]}]);
+ h.render();key='new';h.render();
+ pending[0].reject(Object.assign(new Error('stale'),{code:'ERR_CANCELED'}));pending[1].resolve({items:[{id:'current'}]});
+ await h.flush();assert.equal(pending.length,2);assert.equal(h.result.items[0].id,'current');assert.equal(h.result.error,null);
+});
+test('pager retries are bounded and actual endpoint failures are not retried',async()=>{
+ for(const code of ['ERR_CANCELED','server_error']){let calls=0;const fetch=async()=>{calls++;throw Object.assign(new Error('failed'),{code});};const h=harness('src/hooks/useCursorPager.ts','useCursorPager',()=>[fetch]);h.render();await h.flush();assert.equal(calls,code==='ERR_CANCELED'?3:1);assert.equal(h.result.error,'failed');assert.equal(h.result.loading,false);}
 });

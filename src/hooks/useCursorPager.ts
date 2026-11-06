@@ -1,3 +1,5 @@
+import { getAuthGeneration } from "@/lib/authGeneration";
+import { getOrgExternalIdStored } from "@/lib/tokens";
 import { useCallback, useEffect, useRef, useState } from "react";
 export type FetchPage<T, M = unknown> = (cursor?: string, pageSize?: number) => Promise<{
     items: T[];
@@ -47,6 +49,8 @@ export function useCursorPager<T, M = unknown>(fetchPage: FetchPage<T, M>, opts:
     settings.current = { pageSize, accumulate: opts.accumulate };
     const load = useCallback((page: number, cursor?: string): Promise<void> => {
         const version = generation.current, key = `${version}:${page}`;
+        const authGeneration = getAuthGeneration(), organization = getOrgExternalIdStored();
+        const current = () => version === generation.current && authGeneration === getAuthGeneration() && organization === getOrgExternalIdStored();
         const existing = pending.current.get(key);
         if (existing)
             return existing;
@@ -55,8 +59,18 @@ export function useCursorPager<T, M = unknown>(fetchPage: FetchPage<T, M>, opts:
         setError(null);
         const request = (async () => {
             try {
-                const result = await fetchRef.current(cursor, settings.current.pageSize);
-                if (version !== generation.current)
+                // Pin this request to its original filters, cursor and page size.
+                const fetch = fetchRef.current, size = settings.current.pageSize;
+                const result = await (async () => {
+                    for (let attempt = 0; ; attempt++) {
+                        try { return await fetch(cursor, size); }
+                        catch (cause) {
+                            const cancelled = !!cause && typeof cause === "object" && (cause as { code?: string }).code === "ERR_CANCELED";
+                            if (!current() || !cancelled || attempt >= 2) throw cause;
+                        }
+                    }
+                })();
+                if (!current())
                     return;
                 if (cursor && result.nextCursor === cursor)
                     throw new Error("Repeated pagination cursor.");
@@ -76,7 +90,7 @@ export function useCursorPager<T, M = unknown>(fetchPage: FetchPage<T, M>, opts:
                 setEnd(!result.nextCursor);
             }
             catch (cause) {
-                if (version === generation.current)
+                if (current())
                     setError(cause instanceof Error ? cause.message : "Unable to load records.");
             }
             finally {

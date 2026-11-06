@@ -1,3 +1,7 @@
+import { isCancel } from "axios";
+import { isSetupRequestCancelled } from "@/lib/localeSetup";
+import { getAuthGeneration } from "@/lib/authGeneration";
+import { getOrgExternalIdStored } from "@/lib/tokens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/api/requests";
@@ -58,44 +62,55 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
   useEffect(() => {
     if (!enabled) return;
     let mounted = true;
+    const generation = getAuthGeneration(), organization = getOrgExternalIdStored();
+    const current = () => mounted && generation === getAuthGeneration() && organization === getOrgExternalIdStored();
+    const freshRead = async <T,>(read: () => Promise<T>): Promise<T> => {
+      for (let attempt = 0; ; attempt++) {
+        try { return await read(); }
+        catch (error) {
+          if (!current() || !(isCancel(error) || isSetupRequestCancelled(error)) || attempt >= 2) throw error;
+        }
+      }
+    };
 
     (async () => {
       setLoading(true);
       setError(false);
       try {
         if (contextSettlement) {
-          const { data } = await api.getSettledKpis({
+          const { data } = await freshRead(() => api.getSettledKpis({
             description: filters?.description,
             observation: filters?.observation,
             cashflow_category_id: cashflowCategoryParam,
             bank_id: bankParam,
-          });
+          }));
 
-          if (mounted) {
+          if (current()) {
             setSt(data);
             setCf(null);
           }
         } else {
-          const { data } = await api.getCashflowKpis({
+          const { data } = await freshRead(() => api.getCashflowKpis({
             description: filters?.description,
             observation: filters?.observation,
             cashflow_category_id: cashflowCategoryParam,
-          });
+          }));
 
-          if (mounted) {
+          if (current()) {
             setCf(data);
             setSt(null);
           }
         }
       } catch (e) {
+        if (!current()) return;
         console.error("KPI fetch failed", e);
-        if (mounted) {
+        if (current()) {
           setCf(null);
           setSt(null);
           setError(true);
         }
       } finally {
-        if (mounted) setLoading(false);
+        if (current()) setLoading(false);
       }
     })();
 

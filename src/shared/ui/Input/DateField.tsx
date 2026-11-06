@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import React, {
   forwardRef,
@@ -76,6 +77,8 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
     const [isCalendarRendered, setIsCalendarRendered] = useState(false);
     const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
 
+    const calendarRef = useRef<HTMLDivElement | null>(null);
+    const [calendarPosition, setCalendarPosition] = useState<React.CSSProperties>({});
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const slot1Ref = useRef<HTMLInputElement | null>(null);
     const slot2Ref = useRef<HTMLInputElement | null>(null);
@@ -368,7 +371,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         const isInsideWrapper =
           !!focusedElement && !!wrapperRef.current && wrapperRef.current.contains(focusedElement);
 
-        if (!isStillInSlots && !isInsideWrapper) {
+        if (!isStillInSlots && !isInsideWrapper && !(focusedElement && calendarRef.current?.contains(focusedElement))) {
           setIsFocused(false);
           closeAndCommit();
         }
@@ -380,14 +383,18 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       if (!el || typeof window === "undefined") return;
 
       const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-
-      const need = 320;
-      const spaceBelow = vh - r.bottom - 8;
-      const spaceAbove = r.top - 8;
-
-      setPlacement(spaceBelow >= need || spaceBelow >= spaceAbove ? "bottom" : "top");
-    }, []);
+      const viewport = window.visualViewport;
+      const topEdge = (viewport?.offsetTop || 0) + 8;
+      const bottomEdge = (viewport?.offsetTop || 0) + (viewport?.height || window.innerHeight) - 8;
+      const below = Math.max(0, bottomEdge - r.bottom - 8);
+      const above = Math.max(0, r.top - topEdge - 8);
+      const bottom = below >= 320 || below >= above;
+      const width = Math.min(({ xs: 210, sm: 230, md: 240, lg: 280, xl: 310 }[size]), window.innerWidth - 16);
+      setPlacement(bottom ? "bottom" : "top");
+      setCalendarPosition({ width, minWidth: 0, left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)),
+        top: bottom ? r.bottom + 8 : undefined, bottom: bottom ? undefined : window.innerHeight - r.top + 8,
+        maxHeight: Math.min(360, bottom ? below : above) });
+    }, [size]);
 
     const handleCalendarClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -419,7 +426,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
 
       const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
-        if (wrapperRef.current?.contains(target)) return;
+        if (wrapperRef.current?.contains(target) || calendarRef.current?.contains(target)) return;
         closeAndCommit();
       };
 
@@ -434,10 +441,14 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
         computePlacement();
       };
 
+      window.visualViewport?.addEventListener("resize", handleViewportChange);
+      window.visualViewport?.addEventListener("scroll", handleViewportChange);
       window.addEventListener("resize", handleViewportChange);
       window.addEventListener("scroll", handleViewportChange, true);
 
       return () => {
+        window.visualViewport?.removeEventListener("resize", handleViewportChange);
+        window.visualViewport?.removeEventListener("scroll", handleViewportChange);
         window.removeEventListener("resize", handleViewportChange);
         window.removeEventListener("scroll", handleViewportChange, true);
       };
@@ -506,15 +517,18 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
       return (
         <div
           className={classNames(
-            "absolute left-0 z-[9999] origin-top rounded-md border border-gray-200 bg-white shadow-lg",
+            "fixed z-[11000] rounded-md border border-gray-200 bg-white shadow-lg",
             "max-h-[50vh] overflow-auto",
-            placement === "bottom" ? "top-full mt-2" : "bottom-full mb-2",
+            placement === "bottom" ? "origin-top" : "origin-bottom",
             sz.popover,
             "transition-all duration-150 ease-out will-change-transform",
             isCalendarOpen
               ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
               : "opacity-0 -translate-y-1 scale-[0.985] pointer-events-none"
           )}
+          ref={calendarRef}
+          data-calendar-portal
+          style={calendarPosition}
           aria-hidden={!isCalendarOpen}
         >
           <div className="mb-2 flex items-center justify-between">
@@ -731,7 +745,7 @@ const DateField = forwardRef<HTMLInputElement, DateInputProps>(
             </button>
           </div>
 
-          {isCalendarRendered ? renderCalendar() : null}
+          {isCalendarRendered ? createPortal(renderCalendar(), document.body) : null}
         </div>
 
         {errorMessage ? (
