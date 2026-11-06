@@ -124,6 +124,9 @@
       "amount": "Enter an amount above zero and no higher than the remaining balance.",
       "date": "Enter a valid settlement date."
     },
-    "reloadBalances": "Reload current balances"
+    "reloadBalances": "Reload current balances",
+    "customDate": "Custom date",
+    "useDueDate": "Entry due date",
+    "dueDateHelp": "Uses each entry’s own due date. Individual dates can still be adjusted below."
   }
 }

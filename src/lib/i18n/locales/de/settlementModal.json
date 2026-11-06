@@ -124,6 +124,9 @@
       "amount": "Geben Sie einen positiven Betrag bis zur Höhe des Restbetrags ein.",
       "date": "Geben Sie ein gültiges Zahlungsdatum ein."
     },
-    "reloadBalances": "Aktuelle Restbeträge laden"
+    "reloadBalances": "Aktuelle Restbeträge laden",
+    "customDate": "Eigenes Datum",
+    "useDueDate": "Fälligkeitsdatum",
+    "dueDateHelp": "Verwendet das Fälligkeitsdatum jeder Buchung. Einzelne Daten lassen sich unten weiterhin anpassen."
   }
 }

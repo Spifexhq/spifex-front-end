@@ -124,6 +124,9 @@
       "amount": "Informe um valor maior que zero e até ao saldo em aberto.",
       "date": "Informe uma data de liquidação válida."
     },
-    "reloadBalances": "Atualizar saldos atuais"
+    "reloadBalances": "Atualizar saldos atuais",
+    "customDate": "Data personalizada",
+    "useDueDate": "Vencimento do lançamento",
+    "dueDateHelp": "Usa a data de vencimento de cada lançamento. Pode ajustar datas individuais abaixo."
   }
 }

@@ -34,3 +34,7 @@ export function bankSummary(rows: SettlementDraft[], bankId: string) {
   for (const row of group) { const amount = cents(row.amount) ?? 0n; if (row.tx === "credit") incoming += amount; else outgoing += amount; }
   return { count: group.length, incoming: decimal(incoming), outgoing: decimal(outgoing), net: decimal(incoming-outgoing) };
 }
+
+export function applySettlementDate(row: SettlementDraft, mode: "custom" | "due", date: string): SettlementDraft {
+  return { ...row, date: mode === "due" ? row.dueDate : date };
+}

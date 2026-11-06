@@ -124,6 +124,9 @@
       "amount": "Indiquez un montant positif ne dépassant pas le solde restant.",
       "date": "Indiquez une date de règlement valide."
     },
-    "reloadBalances": "Actualiser les soldes"
+    "reloadBalances": "Actualiser les soldes",
+    "customDate": "Date personnalisée",
+    "useDueDate": "Échéance de l’écriture",
+    "dueDateHelp": "Utilise l’échéance de chaque écriture. Vous pouvez encore modifier les dates individuellement ci-dessous."
   }
 }

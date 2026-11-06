@@ -16,3 +16,18 @@ test('each entry preserves its own bank, amount, date and expected version',()=>
 test('invalid dates, stale amounts and unavailable banks cannot be submitted',()=>{assert.equal(draftIssue({...row(),date:'2026-02-30'},banks),'date');assert.equal(draftIssue({...row(),amount:'80.01'},banks),'amount');assert.equal(draftIssue({...row(),amount:'0'},banks),'amount');assert.equal(draftIssue({...row(),bankId:'missing'},banks),'bank');assert.equal(draftIssue(row(),[{id:'b1',is_active:false}]),'bank');assert.throws(()=>settlementPayload([row(),row()],banks));});
 test('bank review separates incoming and outgoing amounts exactly',()=>{const s=bankSummary([{...row(),amount:'0.10'},{...row(),id:'e2',amount:'0.20'},{...row(),id:'e3',tx:'debit',amount:'0.05'},{...row(),id:'e4',bankId:'b2',amount:'999'}],'b1');assert.equal(s.count,3);assert.equal(s.incoming,'0.30');assert.equal(s.outgoing,'0.05');assert.equal(s.net,'0.25');});
 test('all batch guidance is translated',()=>{for(const lang of ['en','pt','fr','de']){const d=JSON.parse(fs.readFileSync(`src/lib/i18n/locales/${lang}/settlementModal.json`,'utf8'));for(const k of ['title','intro','prepare','review','selectionHelp','reviewHelp','reloadBalances','discardText'])assert.ok(d.batch[k],`${lang}/${k}`);for(const k of ['bank','date','amount'])assert.ok(d.batch.issue[k]);}});
+
+test('due-date mode sends each entry own date and preserves amount, bank and version',()=>{
+ const rows=[{...row(),date:'2026-02-01'},{...row(),id:'e2',dueDate:'2026-01-29',bankId:'b2'}];
+ const updated=rows.map(value=>context.exports.applySettlementDate(value,'due','2026-03-01'));
+ const payload=settlementPayload(updated,banks);
+ assert.deepEqual(Array.from(payload,value=>value.value_date),['2026-01-15','2026-01-29']);
+ assert.equal(payload[1].bank_id,'b2');assert.equal(payload[0].amount,'80.00');assert.equal(payload[0].expected_version,'v1');
+ assert.equal(rows[0].date,'2026-02-01');
+});
+test('custom mode uses the chosen date while invalid due dates remain blocked',()=>{
+ const updated=context.exports.applySettlementDate(row(),'custom','2026-04-12');
+ assert.equal(settlementPayload([updated],banks)[0].value_date,'2026-04-12');
+ const invalid=context.exports.applySettlementDate({...row(),dueDate:'2026-02-30'},'due','2026-04-12');
+ assert.throws(()=>settlementPayload([invalid],banks));
+});
