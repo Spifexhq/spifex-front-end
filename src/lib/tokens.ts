@@ -1,4 +1,4 @@
-import { advanceAuthGeneration } from "./authGeneration";
+import { advanceAuthGeneration } from "../core/authentication/authGeneration";
 // src/lib/tokens.ts
 
 export const ORG_EXTERNAL_ID_STORAGE_KEY = "spx_tenant";

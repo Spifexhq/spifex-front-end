@@ -1,4 +1,4 @@
-import { getAuthGeneration } from "@/lib/authGeneration";
+import { getAuthGeneration } from "@/core/authentication/authGeneration";
 import { getOrgExternalIdStored } from "@/lib/tokens";
 import { useCallback, useEffect, useRef, useState } from "react";
 export type FetchPage<T, M = unknown> = (cursor?: string, pageSize?: number) => Promise<{

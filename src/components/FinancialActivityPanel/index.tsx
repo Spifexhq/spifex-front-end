@@ -1,5 +1,5 @@
 import AnimatedNumber from "@/shared/ui/AnimatedNumber";
-import { useFinanceLoading } from "@/pages/Finance/components/financeLoading";
+import { useFinanceLoading } from "@/products/business/pages/Finance/components/financeLoading";
 import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
 import FinancialActivitySkeleton from "./FinancialActivitySkeleton";
 import { useId, useState, type ReactNode } from "react";

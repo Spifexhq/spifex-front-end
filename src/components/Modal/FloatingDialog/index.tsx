@@ -32,6 +32,7 @@ export default function FloatingDialog({ isOpen, title, description, eyebrow, cl
   const contentRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  window.useGlobalEsc(isOpen && !busy && !overlay, onClose);
   useDialogFocus(isOpen, ref);
   useDialogFocus(isOpen && Boolean(overlay), overlayRef);
   useEffect(() => {

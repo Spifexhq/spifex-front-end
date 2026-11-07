@@ -1,2 +1,2 @@
-export * from "@/api/requests";
-export * from "@/api/auth";
+export * from "@/core/api/requests";
+export * from "@/app/authentication/api";

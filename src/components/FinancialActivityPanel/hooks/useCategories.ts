@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import type { CashflowCategory } from "@/models/settings/categories";
 
 function extractCollection<T>(input: unknown): T[] {

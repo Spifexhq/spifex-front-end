@@ -6,7 +6,7 @@ import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import { Pencil } from "lucide-react";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import type { ApiResponse } from "@/models/Api";
 import type { Visualization } from "@/models/components/filterBar";
 import { isApiError } from "../FilterBar.utils";

@@ -1,0 +1,9 @@
+{
+  "loading": "Chargement des soldes…",
+  "totalBalance": "Solde total des comptes",
+  "pending_income": "Revenus en attente",
+  "pending_expense": "Dépenses en attente",
+  "projected_balance": "Solde après les opérations en attente",
+  "balanceExplanation": "Les soldes actuels incluent tous les comptes. Les montants en attente suivent les filtres actifs ; les virements ne modifient pas le total consolidé.",
+  "noAccounts": "Ajoutez votre premier compte pour suivre son solde."
+}

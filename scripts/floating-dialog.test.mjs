@@ -4,9 +4,10 @@ import vm from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
 const element = (type, props) => ({ type, props });
+const escapeRegistrations = [];
 function load(file) {
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  const context = vm.createContext({ exports: {}, document: { body: {} }, require: name => ({
+  const context = vm.createContext({ exports: {}, document: { body: {} }, window: { useGlobalEsc: (enabled, handler) => escapeRegistrations.push({ enabled, handler }) }, require: name => ({
     react: { useEffect: () => {}, useId: () => 'dialog-test', useRef: () => ({ current: null }) },
     'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'fragment' },
     'react-dom': { createPortal: child => child },
@@ -47,6 +48,18 @@ test('skeleton is accessible and supports different form field counts', () => {
   assert.equal(tree.props.role, 'status');
   assert.equal(tree.props['aria-label'], 'Loading accounts');
   assert.equal(tree.props.children[1].length, 5);
+});
+test('Escape dismisses the active dialog but cannot interrupt saving or a nested overlay', () => {
+  for (const state of [{}, { busy: true }, { overlay: 'nested confirmation' }, { isOpen: false }]) {
+    let closed = false;
+    const onClose = () => { closed = true; };
+    Dialog({ ...base, ...state, onClose, children: 'fields' });
+    const registered = escapeRegistrations.at(-1);
+    assert.equal(registered.enabled, !state.busy && !state.overlay && state.isOpen !== false);
+    assert.equal(registered.handler, onClose);
+    if (registered.enabled) registered.handler();
+    assert.equal(closed, registered.enabled);
+  }
 });
 test('the boolean switch exposes its label/state and sends the opposite value', () => {
   const Switch = load('src/shared/ui/ToggleSwitch/index.tsx').default;

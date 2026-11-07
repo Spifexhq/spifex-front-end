@@ -1,0 +1,501 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/Settings/GroupSettings/index.tsx                                    */
+/* -------------------------------------------------------------------------- */
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import Input from "@/shared/ui/Input";
+import Button from "@/shared/ui/Button";
+import Snackbar from "@/shared/ui/Snackbar";
+import ConfirmToast from "@/shared/ui/ConfirmToast";
+import { Pencil } from "lucide-react";
+
+import GroupPermissionsTable from "./GroupPermissionsTable";
+import GroupModal from "./GroupModal";
+
+import { api } from "@/core/api/requests";
+import { useAuthContext } from "@/hooks/useAuth";
+import { PermissionMiddleware } from "src/middlewares";
+
+import type { AddGroupRequest, GroupDetail, GroupListItem, Permission } from "@/models/auth/rbac";
+
+/* ------------------------------ Snackbar type ----------------------------- */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
+
+type ModalState =
+  | { open: false; mode: "create" | "rename"; initialName: string }
+  | { open: true; mode: "create" | "rename"; initialName: string };
+
+/* --------------------------- Page Component -------------------------------- */
+const GroupSettings: React.FC = () => {
+  const { t, i18n } = useTranslation("groupSettings");
+  const { isOwner, permissions } = useAuthContext();
+
+  const canViewGroups = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_group");
+  }, [isOwner, permissions]);
+
+  const canViewPermissions = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_permission");
+  }, [isOwner, permissions]);
+
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+  const [snack, setSnack] = useState<Snack>(null);
+
+  const [groups, setGroups] = useState<GroupListItem[]>([]);
+
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupDetail, setSelectedGroupDetail] = useState<GroupDetail | null>(null);
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set<string>());
+  const [originalCodes, setOriginalCodes] = useState<Set<string>>(new Set<string>());
+
+  const [groupSearch, setGroupSearch] = useState("");
+
+  const [modal, setModal] = useState<ModalState>({ open: false, mode: "create", initialName: "" });
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
+
+  const busy = isSubmitting || isDetailLoading || isBackgroundSync || confirmBusy;
+
+  const inflightRef = useRef(false);
+
+  const fetchAll = useCallback(
+    async (opts: { background?: boolean } = {}) => {
+      if (!canViewGroups) {
+        setGroups([]);
+        setSelectedGroupId(null);
+        setSelectedGroupDetail(null);
+        setSelectedCodes(new Set<string>());
+        setOriginalCodes(new Set<string>());
+
+        if (opts.background) setIsBackgroundSync(false);
+        else setIsInitialLoading(false);
+
+        return;
+      }
+
+      if (inflightRef.current) return;
+      inflightRef.current = true;
+
+      if (opts.background) setIsBackgroundSync(true);
+      else setIsInitialLoading(true);
+
+      try {
+        const response = await api.getGroups();
+        const groupList = response.data.results || [];
+        setGroups([...groupList].sort((a, b) => (a.name || "").localeCompare(b.name || "", "en")));
+      } catch (error) {
+        console.error(error);
+        setSnack({ message: apiErrorMessage(error, t("toast.loadAllError")), severity: "error" });
+      } finally {
+        if (opts.background) setIsBackgroundSync(false);
+        else setIsInitialLoading(false);
+        inflightRef.current = false;
+      }
+    },
+    [t, canViewGroups]
+  );
+
+  useEffect(() => {
+    void fetchAll();
+  }, [fetchAll]);
+
+  useEffect(() => {
+    if (!canViewGroups || !selectedGroupId) {
+      setSelectedGroupDetail(null);
+      setSelectedCodes(new Set<string>());
+      setOriginalCodes(new Set<string>());
+      return;
+    }
+
+    const load = async () => {
+      setIsDetailLoading(true);
+
+      try {
+        const detailRes = await api.getGroup(selectedGroupId);
+        const detail = detailRes.data;
+        setSelectedGroupDetail(detail);
+
+        if (canViewPermissions) {
+          const permRes = await api.getGroupPermissions(selectedGroupId);
+          const perms = permRes.data.permissions || [];
+          const activeCodes = new Set<string>(perms.map((p: Permission) => p.code));
+          setSelectedCodes(activeCodes);
+          setOriginalCodes(new Set<string>(activeCodes));
+        } else {
+          setSelectedCodes(new Set<string>());
+          setOriginalCodes(new Set<string>());
+        }
+      } catch (error) {
+        console.error(error);
+        setSnack({ message: apiErrorMessage(error, t("toast.detailError")), severity: "error" });
+      } finally {
+        setIsDetailLoading(false);
+      }
+    };
+
+    void load();
+  }, [selectedGroupId, t, canViewGroups, canViewPermissions]);
+
+  const filteredGroups = useMemo(() => {
+    if (!groupSearch.trim()) return groups;
+    const query = groupSearch.trim().toLowerCase();
+    return groups.filter((group) => (group.name || "").toLowerCase().includes(query));
+  }, [groups, groupSearch]);
+
+  const dirty = useMemo(() => {
+    if (originalCodes.size !== selectedCodes.size) return true;
+    for (const code of selectedCodes) {
+      if (!originalCodes.has(code)) return true;
+    }
+    return false;
+  }, [originalCodes, selectedCodes]);
+
+  const setPermissionChecked = (code: string, enabled: boolean) => {
+    setSelectedCodes((prev) => {
+      const next = new Set<string>(prev);
+      if (enabled) next.add(code);
+      else next.delete(code);
+      return next;
+    });
+  };
+
+  const openCreateModal = () => {
+    setModal({ open: true, mode: "create", initialName: "" });
+  };
+
+  const openRenameModal = () => {
+    if (!selectedGroupDetail) return;
+    setModal({ open: true, mode: "rename", initialName: selectedGroupDetail.name || "" });
+  };
+
+  const closeModal = () => {
+    if (busy) return;
+    setModal((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleCreateGroup = async (name: string) => {
+    setIsSubmitting(true);
+
+    try {
+      const payload: AddGroupRequest = { name, permission_codes: [] };
+      const response = await api.addGroup(payload);
+      const created = response.data;
+
+      await fetchAll({ background: true });
+      setSelectedGroupId(created.id);
+
+      setSnack({ message: t("toast.createSuccess"), severity: "success" });
+    } catch (error) {
+      console.error(error);
+      setSnack({ message: apiErrorMessage(error, t("toast.createError")), severity: "error" });
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRenameGroup = async (name: string) => {
+    if (!selectedGroupDetail) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await api.editGroup(selectedGroupDetail.id, { name });
+
+      await fetchAll({ background: true });
+      setSelectedGroupDetail((prev) => (prev ? { ...prev, name } : prev));
+
+      setSnack({ message: t("toast.renameSuccess"), severity: "success" });
+    } catch (error) {
+      console.error(error);
+      setSnack({ message: apiErrorMessage(error, t("toast.renameError")), severity: "error" });
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const requestDeleteGroup = () => {
+    if (!selectedGroupDetail) return;
+
+    setConfirmText(t("confirm.deleteText", { name: selectedGroupDetail.name }));
+    setConfirmAction(() => async () => {
+      try {
+        await api.deleteGroup(selectedGroupDetail.id);
+        await fetchAll({ background: true });
+        setSelectedGroupId(null);
+        setSnack({ message: t("toast.deleteSuccess"), severity: "info" });
+      } catch (error) {
+        console.error(error);
+        setSnack({ message: apiErrorMessage(error, t("toast.deleteError")), severity: "error" });
+      } finally {
+        setConfirmOpen(false);
+        setConfirmBusy(false);
+      }
+    });
+
+    setConfirmOpen(true);
+  };
+
+  const handleSavePermissions = async () => {
+    if (!selectedGroupDetail) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await api.updateGroupPermissions(selectedGroupDetail.id, Array.from(selectedCodes));
+
+      setOriginalCodes(new Set<string>(selectedCodes));
+
+      await fetchAll({ background: true });
+      const response = await api.getGroup(selectedGroupDetail.id);
+      setSelectedGroupDetail(response.data);
+
+      setSnack({ message: t("toast.saveSuccess"), severity: "success" });
+    } catch (error) {
+      console.error(error);
+      setSnack({ message: apiErrorMessage(error, t("toast.saveError")), severity: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDiscard = () => {
+    setSelectedCodes(new Set<string>(originalCodes));
+  };
+
+  if (isInitialLoading) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton variant="groups" rows={6} />
+      </>
+    );
+  }
+
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("badge.syncing")}
+    </span>
+  ) : null;
+
+  return (
+    <>
+      <TopProgress active={isBackgroundSync || isSubmitting} variant="top" topOffset={64} />
+
+      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
+        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-start sm:items-center gap-3">
+              
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
+                
+                {headerBadge}
+              </div>
+            </div></div>
+
+          <PermissionMiddleware codeName={"view_group"} behavior="lock">
+            <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              <aside className="xl:col-span-3">
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden ">
+                  <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between gap-3 ">
+                    <div className="text-xs font-semibold text-gray-700">{t("left.groups")}</div>
+
+                    <PermissionMiddleware codeName={"add_group"}>
+                      <Button className="!py-1.5 !px-3" onClick={openCreateModal} disabled={busy}>
+                        {t("left.create")}
+                      </Button>
+                    </PermissionMiddleware>
+                  </div>
+
+                  <div className="p-3 border-b border-gray-200">
+                    <Input
+                      kind="text"
+                      placeholder={t("left.searchPlaceholder")}
+                      name="groupSearch"
+                      value={groupSearch}
+                      onChange={(e) => setGroupSearch(e.target.value)}
+                      disabled={busy}
+                    />
+                  </div>
+
+                  <div className="max-h-56 xl:max-h-[60dvh] overflow-auto divide-y divide-gray-200">
+                    {filteredGroups.map((group) => (
+                      <button
+                        key={group.id}
+                        aria-pressed={selectedGroupId === group.id}
+                        disabled={busy}
+                        onClick={() => !busy && setSelectedGroupId((prev) => (prev === group.id ? null : group.id))}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${
+                          selectedGroupId === group.id ? "bg-gray-100/70 border-l-2 border-gray-900" : "border-l-2 border-transparent"
+                        } ${busy ? "pointer-events-none opacity-70" : ""}`}
+                      >
+                        <div className="text-[13px] font-medium text-gray-900 truncate">{group.name}</div>
+                        <div className="text-[11px] text-gray-500">
+                          {t("left.meta", { perms: group.permissions_count, members: group.members_count })}
+                        </div>
+                      </button>
+                    ))}
+
+                    {filteredGroups.length === 0 && (
+                      <p className="p-4 text-center text-sm text-gray-500">{t("left.empty")}</p>
+                    )}
+                  </div>
+                </div>
+              </aside>
+
+              <section className="xl:col-span-9">
+                {!selectedGroupDetail ? (
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500 ">
+                    {t("right.selectPrompt")}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden ">
+                    <div className="p-4 border-gray-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex flex-col min-w-0 sm:max-w-[70%]">
+                        <label className="text-xs font-semibold text-gray-700">
+                          {t("right.nameLabel")}
+                        </label>
+                        <p className="mt-1 text-[14px] font-medium text-gray-900 truncate">
+                          {selectedGroupDetail.name}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <PermissionMiddleware codeName={"change_group"}>
+                          <Button
+                            variant="outline"
+                            className="inline-flex items-center gap-2"
+                            onClick={openRenameModal}
+                            disabled={busy}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden />
+                            {t("right.rename")}
+                          </Button>
+                        </PermissionMiddleware>
+
+                        {!selectedGroupDetail.is_system && (
+                          <PermissionMiddleware codeName={"delete_group"}>
+                            <Button
+                              variant="outline"
+                              onClick={requestDeleteGroup}
+                              disabled={busy}
+                              aria-busy={busy || undefined}
+                            >
+                              {t("right.delete")}
+                            </Button>
+                          </PermissionMiddleware>
+                        )}
+
+                        <button
+                          type="button"
+                          aria-label={t("right.closePanel")}
+                          className="text-[18px] leading-none px-2 text-gray-400 hover:text-gray-700 disabled:opacity-50"
+                          onClick={() => setSelectedGroupId(null)}
+                          disabled={busy}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+
+                    <PermissionMiddleware codeName={["view_permission", "view_group"]} requireAll>
+                      <GroupPermissionsTable
+                        selectedCodes={selectedCodes}
+                        disabled={busy}
+                        dirty={dirty}
+                        onToggle={setPermissionChecked}
+                        onUndo={handleDiscard}
+                        onSave={handleSavePermissions}
+                      />
+                    </PermissionMiddleware>
+                  </div>
+                )}
+              </section>
+            </section>
+          </PermissionMiddleware>
+        </div>
+
+        <PermissionMiddleware codeName={["add_group", "change_group"]}>
+          <GroupModal
+            isOpen={modal.open}
+            mode={modal.mode}
+            initialName={modal.initialName}
+            busy={busy}
+            onClose={closeModal}
+            onSubmit={async (name) => {
+              if (modal.mode === "create") return handleCreateGroup(name);
+              return handleRenameGroup(name);
+            }}
+          />
+        </PermissionMiddleware>
+      </main>
+
+      <ConfirmToast
+        open={confirmOpen}
+        text={confirmText}
+        confirmLabel={t("confirm.confirmLabel")}
+        cancelLabel={t("confirm.cancelLabel")}
+        variant="danger"
+        onCancel={() => {
+          if (confirmBusy) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => {
+          if (confirmBusy || !confirmAction) return;
+
+          setConfirmBusy(true);
+
+          confirmAction()
+            .catch((error) => {
+              console.error(error);
+              setSnack({ message: t("confirm.fail"), severity: "error" });
+            })
+            .finally(() => setConfirmBusy(false));
+        }}
+        busy={confirmBusy}
+      />
+
+      <Snackbar
+        notificationKey={snack}
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={4000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
+    </>
+  );
+};
+
+export default GroupSettings;

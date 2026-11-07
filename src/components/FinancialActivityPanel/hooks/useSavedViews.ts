@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import type { ApiResponse } from "@/models/Api";
 import type { Visualization } from "@/models/components/filterBar";
 import { extractArray, isApiError } from "../FilterBar.utils";

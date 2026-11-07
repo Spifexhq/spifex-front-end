@@ -7,8 +7,8 @@ async function load(file) {
   const { outputText } = ts.transpileModule(fs.readFileSync(file, "utf8"), { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext } });
   return import(`data:text/javascript;base64,${Buffer.from(outputText.replaceAll('"i18next"', JSON.stringify(import.meta.resolve("i18next")))).toString("base64")}`);
 }
-const { buildAccountRows, descendantIds } = await load("src/pages/Accounting/chart/accountHierarchy.ts");
-const { accountingRouteAllowed } = await load("src/pages/Accounting/setup/setupNavigation.ts");
+const { buildAccountRows, descendantIds } = await load("src/products/business/pages/Accounting/chart/accountHierarchy.ts");
+const { accountingRouteAllowed } = await load("src/products/business/pages/Accounting/setup/setupNavigation.ts");
 const account = (id, parent_id = null, code = id) => ({ id, parent_id, code, name: id });
 
 test("hierarchy rows preserve sorted nesting and collapse only descendants", () => {
@@ -60,7 +60,7 @@ test("validated books unlock optional configuration and keep historical records 
 });
 
 test("legacy route aliases target the canonical workspace", () => {
-  const source = ts.createSourceFile("router.tsx", fs.readFileSync("src/router.tsx", "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const source = ts.createSourceFile("router.tsx", fs.readFileSync("src/products/business/routes/index.tsx", "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const destinations = new Map();
   function visit(node) {
     if (ts.isObjectLiteralExpression(node)) {

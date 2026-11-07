@@ -1,3 +1,5 @@
+import ProductChoice from "@/features/workspaces/components/ProductChoice";
+import type { ProductCategory } from "@/models/auth/organization";
 import AuthStory from "../AuthStory";
 import { motion, useReducedMotion } from "framer-motion";
 /* --------------------------------------------------------------------------
@@ -14,7 +16,7 @@ import {
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import { validateEmailFormat, validatePassword, useAutoCountry } from "@/lib";
 
 import Snackbar from "@/shared/ui/Snackbar";
@@ -65,6 +67,8 @@ const SignUp = () => {
   const { t, i18n } = useTranslation("signUp");
   const [searchParams] = useSearchParams();
 
+  const [category, setCategory] = useState<ProductCategory | null>(null);
+  const [plan, setPlan] = useState("");
   const [step, setStep] = useState<Step>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [snack, setSnack] = useState<Snack>(null);
@@ -165,7 +169,7 @@ const SignUp = () => {
     !form.confirmPassword;
 
   const isStep2Incomplete =
-    !prefs.language || !prefs.country || !prefs.currency;
+    !prefs.language || !prefs.country || !prefs.currency || !category || !plan;
 
   const isStep3Incomplete = !consents.privacy || !consents.tos;
 
@@ -365,6 +369,8 @@ const SignUp = () => {
       setIsLoading(true);
 
       const payload: SignUpRequest = {
+        product_category: category!,
+        plan_code: plan,
         name: form.name.trim(),
         email: normalizedEmail,
         password: form.password,
@@ -567,6 +573,7 @@ const SignUp = () => {
                           : "opacity-0 pointer-events-none absolute inset-0"
                       }`}
                     >
+                      <ProductChoice category={category} plan={plan} onCategory={setCategory} onPlan={setPlan} disabled={isLoading}/>
                       <Select<LanguageOption>
                         label={t("languageLabel")}
                         items={LANGUAGE_OPTIONS}

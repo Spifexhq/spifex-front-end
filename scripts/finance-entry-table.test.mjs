@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import ts from 'typescript';
-const code=ts.transpileModule(fs.readFileSync('src/pages/Finance/components/EntryTable/entryRows.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const code=ts.transpileModule(fs.readFileSync('src/products/business/pages/Finance/components/EntryTable/entryRows.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 const {buildEntryRows,entryId,sourceEntryId,entryQuery,isOutstandingEntry}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
 const entry=(id,date,amount,tx_type='credit',running_balance=null)=>({id,due_date:date,amount,tx_type,running_balance});
 test('partial settlements keep their own external ids and their underlying entry id',()=>{

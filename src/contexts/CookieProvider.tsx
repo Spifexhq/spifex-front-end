@@ -5,7 +5,7 @@ import {
   CookieConsent,
   defaultConsent,
 } from "./CookieContext";
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 
 /** Lê o cookie manualmente do navegador */
 function readConsentCookie(): CookieConsent {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
-const code = ts.transpileModule(fs.readFileSync('src/pages/Finance/BankImports/importUtils.ts','utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+const code = ts.transpileModule(fs.readFileSync('src/products/business/pages/Finance/BankImports/importUtils.ts','utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 const context = vm.createContext({ exports: {} }); vm.runInContext(code, context);
 const { parseMinorAmount } = context.exports;
 test('import amounts use exact cents and reject invalid or unsafe values', () => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AUTH_SYNC_EVENT, request } from "@/lib/http";
+import { AUTH_SYNC_EVENT, request } from "@/core/api/http";
 import { buildWsUrl } from "./url";
 import { isLiveSyncEnvelope, type LiveSyncEnvelope } from "./types";
 

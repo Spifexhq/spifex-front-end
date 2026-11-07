@@ -1,3 +1,11 @@
+import deFinancial from "./locales/de/financial.json";
+import frFinancial from "./locales/fr/financial.json";
+import ptFinancial from "./locales/pt/financial.json";
+import enFinancial from "./locales/en/financial.json";
+import enPersonal from "./locales/en/personal.json";
+import ptPersonal from "./locales/pt/personal.json";
+import frPersonal from "./locales/fr/personal.json";
+import dePersonal from "./locales/de/personal.json";
 import enFinanceEntries from "./locales/en/financeEntries.json";
 import ptFinanceEntries from "./locales/pt/financeEntries.json";
 import frFinanceEntries from "./locales/fr/financeEntries.json";
@@ -341,6 +349,8 @@ import deSubscriptionMiddleware from "./locales/de/subscriptionMiddleware.json";
 /* -------------------------------------------------------------------------- */
 
 const NAMESPACES = [
+  "financial",
+  "personal",
   "common",
 
   "signIn",
@@ -414,6 +424,8 @@ const NAMESPACES = [
 
 const resources: Resource = {
   pt: {
+    personal: ptPersonal,
+    financial: ptFinancial,
     common: ptCommon,
     signIn: ptSignIn,
     signUp: ptSignUp,
@@ -482,6 +494,8 @@ const resources: Resource = {
   },
 
   en: {
+    personal: enPersonal,
+    financial: enFinancial,
     common: enCommon,
     signIn: enSignIn,
     signUp: enSignUp,
@@ -550,6 +564,8 @@ const resources: Resource = {
   },
 
   fr: {
+    personal: frPersonal,
+    financial: frFinancial,
     common: frCommon,
     signIn: frSignIn,
     signUp: frSignUp,
@@ -618,6 +634,8 @@ const resources: Resource = {
   },
 
   de: {
+    personal: dePersonal,
+    financial: deFinancial,
     common: deCommon,
     signIn: deSignIn,
     signUp: deSignUp,

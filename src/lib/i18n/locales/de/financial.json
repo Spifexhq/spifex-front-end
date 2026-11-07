@@ -1,0 +1,9 @@
+{
+  "loading": "Kontostände werden geladen…",
+  "totalBalance": "Gesamter Kontostand",
+  "pending_income": "Offene Einnahmen",
+  "pending_expense": "Offene Ausgaben",
+  "projected_balance": "Saldo nach offenen Buchungen",
+  "balanceExplanation": "Aktuelle Salden enthalten alle Konten. Offene Beträge folgen den aktiven Filtern; Umbuchungen ändern den Gesamtsaldo nicht.",
+  "noAccounts": "Fügen Sie Ihr erstes Konto hinzu, um den Saldo zu verfolgen."
+}

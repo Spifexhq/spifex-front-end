@@ -8,7 +8,7 @@ function harness(file,exportName,args){
  const changed=(a,b)=>!a||a.length!==b.length||a.some((value,i)=>!Object.is(value,b[i]));
  const react={useState(initial){const i=cursor++;if(!cells[i]){cells[i]={value:typeof initial==='function'?initial():initial};cells[i].set=value=>{cells[i].value=typeof value==='function'?value(cells[i].value):value;};}return[cells[i].value,cells[i].set];},useRef(value){const i=cursor++;return cells[i]??(cells[i]={current:value});},useCallback(fn,deps){const i=cursor++;if(changed(cells[i]?.deps,deps))cells[i]={value:fn,deps};return cells[i].value;},useEffect(fn,deps){const i=cursor++;if(changed(cells[i]?.deps,deps)){const old=cells[i];cells[i]={deps,cleanup:old?.cleanup};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}}};
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
- const context=vm.createContext({exports:{},require:name=>name==='react'?react:name==='@/lib/authGeneration'?{getAuthGeneration:()=>1}:name==='@/lib/tokens'?{getOrgExternalIdStored:()=> 'org-1'}:{},window:{},Promise,Map,Error,JSON});vm.runInContext(code,context);
+ const context=vm.createContext({exports:{},require:name=>name==='react'?react:name==='@/core/authentication/authGeneration'?{getAuthGeneration:()=>1}:name==='@/lib/tokens'?{getOrgExternalIdStored:()=> 'org-1'}:{},window:{},Promise,Map,Error,JSON});vm.runInContext(code,context);
  const render=()=>{cursor=0;effects=[];result=context.exports[exportName](...args());for(const effect of effects)effect();return result;};
  return {render,get result(){return result;},async flush(){await new Promise(resolve=>setImmediate(resolve));return render();}};
 }

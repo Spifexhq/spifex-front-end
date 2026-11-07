@@ -1,7 +1,7 @@
 // Auth
-export * from "./AuthContext";
-export * from "./AuthProvider";
+export * from "../app/authentication/AuthContext";
+export * from "../app/authentication/AuthProvider";
 
 // Requests
-export * from "./RequestsContext";
-export * from "./RequestsProvider";
+export * from "../app/providers/RequestsContext";
+export * from "../app/providers/RequestsProvider";

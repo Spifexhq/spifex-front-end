@@ -26,7 +26,7 @@ function inspect(directory, namespace) {
     visit(source);
   }
 }
-inspect("src/pages/Accounting", "accountingSettings");
+inspect("src/products/business/pages/Accounting", "accountingSettings");
 
 
 

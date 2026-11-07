@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import type { BankAccountTableRow, GetBanksTableParams } from "@/models/settings/banking";
 
 export function useBankOptions(bankActive?: boolean, enabled = true) {

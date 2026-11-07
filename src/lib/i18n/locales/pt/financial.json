@@ -1,0 +1,9 @@
+{
+  "loading": "A carregar saldos…",
+  "totalBalance": "Saldo total das contas",
+  "pending_income": "Receitas em aberto",
+  "pending_expense": "Despesas em aberto",
+  "projected_balance": "Saldo após movimentos em aberto",
+  "balanceExplanation": "Os saldos atuais incluem todas as contas. Os montantes em aberto seguem os filtros ativos; as transferências não alteram o total consolidado.",
+  "noAccounts": "Adicione a primeira conta para acompanhar o seu saldo."
+}

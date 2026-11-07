@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, FormEvent, ChangeEvent, useCallbac
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import { validatePassword } from "@/lib";
 import Snackbar from "@/shared/ui/Snackbar";
 import Button from "@/shared/ui/Button";

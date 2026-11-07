@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
-const source=ts.transpileModule(fs.readFileSync('src/pages/Overview/overviewUtils.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+const source=ts.transpileModule(fs.readFileSync('src/products/business/pages/Overview/overviewUtils.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
 const context=vm.createContext({exports:{},URLSearchParams,Date});vm.runInContext(source,context);
 const {periodPreset,queryFromParams,cumulativeValues,percentageChange,exportSeries}=context.exports;
 test('period shortcuts use local calendar dates across month boundaries',()=>{

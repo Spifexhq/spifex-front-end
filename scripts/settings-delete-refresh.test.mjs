@@ -4,7 +4,7 @@ import vm from "node:vm";
 import test from "node:test";
 import ts from "typescript";
 for (const page of ["BankSettings", "DepartmentSettings", "EntitySettings", "InventorySettings", "ProjectSettings"]) {
-  const file = `src/pages/Settings/${page}/index.tsx`;
+  const file = `src/products/business/pages/Settings/${page}/index.tsx`;
   const source = ts.createSourceFile(file, fs.readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let callback;
   function find(node) {

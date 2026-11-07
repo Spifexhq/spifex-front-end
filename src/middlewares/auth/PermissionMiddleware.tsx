@@ -45,6 +45,7 @@ export const PermissionMiddleware = ({
 
   const {
     user,
+    organization,
     isOwner,
     isSuperUser,
     permissions,
@@ -76,12 +77,14 @@ export const PermissionMiddleware = ({
       : required.some((cn) => permissions.includes(cn));
   }, [authReady, user, isOwner, isSuperUser, codeName, requireAll, permissions]);
 
+  const retainedHistory = ["legacy", "deletion_pending"].includes(organization?.organization?.lifecycle || "");
   const hasSubscriptionAccess = useMemo(() => {
     if (!authReady || !user) return false;
     if (isSuperUser) return true;
     if (!requireSubscription) return true;
+    if (retainedHistory && (Array.isArray(codeName) ? codeName : [codeName]).every(code => code.startsWith("view_"))) return true;
     return !!isSubscribed;
-  }, [authReady, user, isSuperUser, requireSubscription, isSubscribed]);
+  }, [authReady, user, isSuperUser, requireSubscription, isSubscribed, retainedHistory, codeName]);
 
   const hasAccess = hasPermission && hasSubscriptionAccess;
 

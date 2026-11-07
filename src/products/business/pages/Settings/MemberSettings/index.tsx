@@ -1,0 +1,702 @@
+import { apiErrorMessage } from "@/lib/apiErrorMessage";
+import DataTable from "@/shared/ui/DataTable";
+import { recordName } from "@/shared/ui/DataTable/recordName";
+import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
+import { SettingsFilter as Chip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
+/* -------------------------------------------------------------------------- */
+/* File: src/pages/Settings/MemberSettings/index.tsx                                          */
+/* -------------------------------------------------------------------------- */
+
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  startTransition,
+} from "react";
+import { useTranslation } from "react-i18next";
+
+import Button from "@/shared/ui/Button";
+import Input from "@/shared/ui/Input";
+import Snackbar from "@/shared/ui/Snackbar";
+import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
+import TopProgress from "@/shared/ui/Loaders/TopProgress";
+import Select from "src/shared/ui/Select/Select";
+import Popover from "src/shared/ui/Popover";
+
+import MemberModal from "./MemberModal";
+
+import { api } from "@/core/api/requests";
+import { PermissionMiddleware } from "src/middlewares";
+import { useAuthContext } from "@/hooks/useAuth";
+
+import type { GroupListItem } from "@/models/auth/rbac";
+import type { Member, Role, GetMembersParams } from "@/models/auth/members";
+
+/* ---------------------------- Snackbar type ------------------------------ */
+type Snack =
+  | { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" }
+  | null;
+
+
+
+
+/* ------------------------- Filter types / helpers ------------------------ */
+
+type FilterKey = "name" | "email" | "role" | "group" | null;
+
+type RoleKey = Exclude<Role, "owner">;
+type RoleOption = { key: RoleKey; label: string };
+
+type GroupOption = { key: string; label: string };
+
+function uniq<T>(arr: T[]) {
+  return Array.from(new Set(arr));
+}
+
+function truncate(s: string, max = 24) {
+  const v = (s || "").trim();
+  if (v.length <= max) return v;
+  return `${v.slice(0, max - 1)}…`;
+}
+
+function selectedSingle<T>(keys: T[]): T | undefined {
+  const u = uniq(keys);
+  return u.length === 1 ? u[0] : undefined;
+}
+
+/* ------------------------------- Chip UI ---------------------------------- */
+
+
+
+
+
+/* ----------------------------- UI: Row ----------------------------------- */
+
+
+/* ----------------------------- Component --------------------------------- */
+const MemberSettings: React.FC = () => {
+  const { t, i18n } = useTranslation("memberSettings");
+  const { isOwner, isSuperUser, permissions } = useAuthContext();
+
+  const canViewMembers = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_member");
+  }, [isOwner, permissions]);
+
+  const canViewGroups = useMemo(() => {
+    if (isOwner) return true;
+    return permissions.includes("view_group");
+  }, [isOwner, permissions]);
+
+  useEffect(() => {
+    document.title = t("title");
+  }, [t]);
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  const [members, setMembers] = useState<Member[]>([]);
+  const [groups, setGroups] = useState<GroupListItem[]>([]);
+
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isBackgroundSync, setIsBackgroundSync] = useState(false);
+
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+
+  const [snack, setSnack] = useState<Snack>(null);
+
+
+
+
+
+
+  const fetchSeqRef = useRef(0);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  /* ------------------------------- Applied filters ------------------------- */
+  const [appliedName, setAppliedName] = useState("");
+  const [appliedEmail, setAppliedEmail] = useState("");
+  const [appliedRoles, setAppliedRoles] = useState<RoleKey[]>([]);
+  const [appliedGroups, setAppliedGroups] = useState<string[]>([]);
+
+  const hasAppliedFilters = useMemo(() => {
+    return (
+      appliedName.trim() !== "" ||
+      appliedEmail.trim() !== "" ||
+      appliedRoles.length > 0 ||
+      appliedGroups.length > 0
+    );
+  }, [appliedName, appliedEmail, appliedRoles, appliedGroups]);
+
+  const appliedRoleParam = useMemo(() => selectedSingle(appliedRoles), [appliedRoles]);
+  const appliedGroupParam = useMemo(() => selectedSingle(appliedGroups), [appliedGroups]);
+
+  /* ------------------------------- Popover state --------------------------- */
+  const [openFilter, setOpenFilter] = useState<FilterKey>(null);
+
+  const [draftName, setDraftName] = useState("");
+  const [draftEmail, setDraftEmail] = useState("");
+  const [draftRoles, setDraftRoles] = useState<RoleKey[]>([]);
+  const [draftGroups, setDraftGroups] = useState<string[]>([]);
+
+  /* ------------------------------- Anchors --------------------------------- */
+  const nameAnchorRef = useRef<HTMLDivElement | null>(null);
+  const emailAnchorRef = useRef<HTMLDivElement | null>(null);
+  const roleAnchorRef = useRef<HTMLDivElement | null>(null);
+  const groupAnchorRef = useRef<HTMLDivElement | null>(null);
+
+  /* ------------------------------- Options --------------------------------- */
+  const roleOptions: RoleOption[] = useMemo(
+    () => [
+      { key: "admin", label: t("filters.roles.admin", { defaultValue: "Admin" }) },
+      { key: "member", label: t("filters.roles.member", { defaultValue: "Member" }) },
+    ],
+    [t]
+  );
+
+  const groupOptions: GroupOption[] = useMemo(() => {
+    return (groups || []).map((g) => ({ key: g.slug as string, label: g.name }));
+  }, [groups]);
+
+  const selectedDraftRoleOptions = useMemo(() => {
+    const set = new Set(draftRoles);
+    return roleOptions.filter((o) => set.has(o.key));
+  }, [draftRoles, roleOptions]);
+
+  const selectedDraftGroupOptions = useMemo(() => {
+    const set = new Set(draftGroups);
+    return groupOptions.filter((o) => set.has(o.key));
+  }, [draftGroups, groupOptions]);
+
+  const draftRoleButtonLabel = useMemo(() => {
+    const one = selectedSingle(draftRoles);
+    if (one) return roleOptions.find((x) => x.key === one)?.label ?? t("filters.roleAll");
+    if (draftRoles.length > 1) return t("filters.multi");
+    return t("filters.roleAll");
+  }, [draftRoles, roleOptions, t]);
+
+  const draftGroupButtonLabel = useMemo(() => {
+    const one = selectedSingle(draftGroups);
+    if (one) return groupOptions.find((x) => x.key === one)?.label ?? t("filters.groupAll");
+    if (draftGroups.length > 1) return t("filters.multi");
+    return t("filters.groupAll");
+  }, [draftGroups, groupOptions, t]);
+
+  const appliedRoleChipValue = useMemo(() => {
+    if (!appliedRoles.length) return "";
+    const one = selectedSingle(appliedRoles);
+    if (one) return roleOptions.find((x) => x.key === one)?.label ?? "";
+    return t("filters.multi");
+  }, [appliedRoles, roleOptions, t]);
+
+  const appliedGroupChipValue = useMemo(() => {
+    if (!appliedGroups.length) return "";
+    const one = selectedSingle(appliedGroups);
+    if (one) return groupOptions.find((x) => x.key === one)?.label ?? "";
+    return t("filters.multi");
+  }, [appliedGroups, groupOptions, t]);
+
+  /* ----------------------------- Fetchers --------------------------------- */
+  const normalizeAndSet = useCallback((memRes: Member[], grpRes: GroupListItem[]) => {
+    const visible = memRes.filter((e) => e.role !== "owner");
+
+    const normMembers = [...visible].sort((a, b) => {
+      const an = (a.name || "").toLowerCase();
+      const bn = (b.name || "").toLowerCase();
+      if (an !== bn) return an.localeCompare(bn);
+      return (a.email || "").toLowerCase().localeCompare((b.email || "").toLowerCase());
+    });
+
+    const normGroups = [...grpRes].sort((a, b) => (a.name || "").localeCompare(b.name || "", "en"));
+
+    startTransition(() => {
+      setMembers(normMembers);
+      setGroups(normGroups);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!canViewMembers && !canViewGroups) {
+      setIsInitialLoading(false);
+      setIsBackgroundSync(false);
+    }
+  }, [canViewMembers, canViewGroups]);
+
+  const fetchList = useCallback(
+    async (opts: { background?: boolean } = {}) => {
+      if (!canViewMembers && !canViewGroups) {
+        if (opts.background) setIsBackgroundSync(false);
+        else setIsInitialLoading(false);
+        return;
+      }
+
+      const seq = ++fetchSeqRef.current;
+
+      if (opts.background) setIsBackgroundSync(true);
+      else setIsInitialLoading(true);
+
+      try {
+        const params: GetMembersParams = {
+          name: appliedName.trim() || undefined,
+          email: appliedEmail.trim() || undefined,
+          role: (appliedRoleParam as Role) || undefined,
+          group: appliedGroupParam || undefined,
+        };
+
+        let memList: Member[] = [];
+        let grpList: GroupListItem[] = [];
+
+        if (canViewMembers && canViewGroups) {
+          const [memResp, grpResp] = await Promise.all([
+            api.getMembers(params),
+            api.getGroups(),
+          ]);
+
+          if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+          memList = memResp.data.members || [];
+          grpList = grpResp.data.results || [];
+        } else if (canViewMembers) {
+          const memResp = await api.getMembers(params);
+
+          if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+          memList = memResp.data.members || [];
+        } else {
+          const grpResp = await api.getGroups();
+
+          if (seq !== fetchSeqRef.current || !mountedRef.current) return;
+
+          grpList = grpResp.data.results || [];
+        }
+
+        normalizeAndSet(memList, grpList);
+      } catch (err) {
+        if (mountedRef.current) {
+          console.error("Fetch members/groups failed", err);
+          setSnack({ message: apiErrorMessage(err, t("errors.fetchError")), severity: "error" });
+        }
+      } finally {
+          if (mountedRef.current) {
+            if (opts.background) setIsBackgroundSync(false);
+            else setIsInitialLoading(false);
+          }
+        }
+      },
+    [
+      canViewMembers,
+      canViewGroups,
+      appliedName,
+      appliedEmail,
+      appliedRoleParam,
+      appliedGroupParam,
+      normalizeAndSet,
+      t,
+    ]
+  );
+
+  useEffect(() => {
+    void fetchList();
+  }, [fetchList]);
+
+  /* ------------------------------ Filter apply/clear ------------------------ */
+  const togglePopover = useCallback((key: Exclude<FilterKey, null>) => {
+    setOpenFilter((prev) => (prev === key ? null : key));
+  }, []);
+
+  const applyFromDraft = useCallback(
+    (key: Exclude<FilterKey, null>) => {
+      if (key === "name") setAppliedName(draftName.trim());
+      if (key === "email") setAppliedEmail(draftEmail.trim());
+
+      if (key === "role") setAppliedRoles(uniq(draftRoles));
+      if (key === "group") setAppliedGroups(uniq(draftGroups));
+
+      setOpenFilter(null);
+    },
+    [draftName, draftEmail, draftRoles, draftGroups]
+  );
+
+  const clearOne = useCallback((key: Exclude<FilterKey, null>) => {
+    if (key === "name") setAppliedName("");
+    if (key === "email") setAppliedEmail("");
+    if (key === "role") setAppliedRoles([]);
+    if (key === "group") setAppliedGroups([]);
+    setOpenFilter(null);
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setAppliedName("");
+    setAppliedEmail("");
+    setAppliedRoles([]);
+    setAppliedGroups([]);
+    setOpenFilter(null);
+  }, []);
+
+  /* ------------------------------ Draft sync on open ------------------------ */
+  useEffect(() => {
+    if (openFilter === "name") setDraftName(appliedName);
+    if (openFilter === "email") setDraftEmail(appliedEmail);
+    if (openFilter === "role") setDraftRoles(appliedRoles);
+    if (openFilter === "group") setDraftGroups(appliedGroups);
+  }, [openFilter, appliedName, appliedEmail, appliedRoles, appliedGroups]);
+
+  /* ------------------------------ Focus on open ----------------------------- */
+  useEffect(() => {
+    if (openFilter === "name") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("member-filter-name-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+    if (openFilter === "email") {
+      requestAnimationFrame(() => {
+        const el = document.getElementById("member-filter-email-input") as HTMLInputElement | null;
+        el?.focus();
+        el?.select?.();
+      });
+    }
+  }, [openFilter]);
+
+  /* ------------------------------ Handlers -------------------------------- */
+  const openCreateModal = () => {
+    setModalMode("create");
+    setEditingMember(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (member: Member) => {
+    setModalMode("edit");
+    setEditingMember(member);
+    setModalOpen(true);
+  };
+
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setEditingMember(null);
+  }, []);
+
+
+
+
+  /* ------------------------------ Render ---------------------------------- */
+  const shouldBlockOnInitial = isInitialLoading && (canViewMembers || canViewGroups);
+
+  if (shouldBlockOnInitial) {
+    return (
+      <>
+        <TopProgress active variant="top" topOffset={64} />
+        <PageSkeleton rows={6} />
+      </>
+    );
+  }
+
+  const headerBadge = isBackgroundSync ? (
+    <span
+      aria-live="polite"
+      className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm"
+    >
+      {t("badge.syncing")}
+    </span>
+  ) : null;
+
+  const globalBusy = isBackgroundSync  || modalOpen;
+
+  const nameChipValue = appliedName.trim() ? truncate(appliedName.trim(), 22) : "";
+  const emailChipValue = appliedEmail.trim() ? truncate(appliedEmail.trim(), 22) : "";
+  const roleChipValue = appliedRoles.length ? appliedRoleChipValue : "";
+  const groupChipValue = appliedGroups.length ? appliedGroupChipValue : "";
+
+  return (
+    <>
+      <TopProgress active={isBackgroundSync} variant="top" topOffset={64} />
+
+      <main className="settings-page">
+        <div className="settings-content ">
+          <div className="settings-intro"><div className="px-5 py-4 flex items-center gap-3">
+
+              <div className="flex items-center gap-3">
+
+                {headerBadge}
+              </div>
+            </div></div>
+
+          <PermissionMiddleware codeName={"view_member"} behavior="lock">
+            <section className="mt-6">
+              <div className="mb-4">
+                  <div className="flex items-center justify-between gap-3 settings-toolbar">
+                    {/* LEFT: chips */}
+                    <SettingsFilters active={hasAppliedFilters}>
+                      <div ref={nameAnchorRef}>
+                        <Chip
+                          label={t("filters.nameLabel")}
+                          value={nameChipValue ? `• ${nameChipValue}` : undefined}
+                          active={!!appliedName.trim()}
+                          onClick={() => togglePopover("name")}
+                          expanded={openFilter === "name"}
+                          onClear={appliedName.trim() ? () => clearOne("name") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={emailAnchorRef}>
+                        <Chip
+                          label={t("filters.emailLabel")}
+                          value={emailChipValue ? `• ${emailChipValue}` : undefined}
+                          active={!!appliedEmail.trim()}
+                          onClick={() => togglePopover("email")}
+                          expanded={openFilter === "email"}
+                          onClear={appliedEmail.trim() ? () => clearOne("email") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <div ref={roleAnchorRef}>
+                        <Chip
+                          label={t("filters.roleLabel")}
+                          value={roleChipValue ? `• ${roleChipValue}` : undefined}
+                          active={appliedRoles.length > 0}
+                          onClick={() => togglePopover("role")}
+                          expanded={openFilter === "role"}
+                          onClear={appliedRoles.length ? () => clearOne("role") : undefined}
+                          disabled={globalBusy}
+                        />
+                      </div>
+
+                      <PermissionMiddleware codeName={"view_group"}>
+                        <div ref={groupAnchorRef}>
+                          <Chip
+                            label={t("filters.groupLabel")}
+                            value={groupChipValue ? `• ${groupChipValue}` : undefined}
+                            active={appliedGroups.length > 0}
+                            onClick={() => togglePopover("group")}
+                          expanded={openFilter === "group"}
+                            onClear={appliedGroups.length ? () => clearOne("group") : undefined}
+                            disabled={globalBusy}
+                          />
+                        </div>
+                      </PermissionMiddleware>
+
+                      {hasAppliedFilters && (
+                        <ClearFiltersChip label={t("filters.clearAll")} onClick={clearAll} disabled={globalBusy} />
+                      )}
+                    </SettingsFilters>
+
+                    {/* RIGHT: add button */}
+                    <div className="shrink-0">
+                      <PermissionMiddleware codeName={"add_member"}>
+                        <Button onClick={openCreateModal} className="!py-1.5" disabled={globalBusy}>
+                          {t("btn.addMember")}
+                        </Button>
+                      </PermissionMiddleware>
+                    </div>
+                  </div>
+                </div>
+<DataTable loadPreview={async item => (await api.getMember(item.id)).data.member} previewColumns={[{key:"name",label:t("preview.fields.name"),render:item=>item.name ?? "�"},{key:"email",label:t("preview.fields.email"),render:item=>item.email ?? "�"},{key:"role",label:t("preview.fields.role"),render:item=>t(`preview.roles.${item.role}`)},{key:"groups",label:t("preview.fields.groups"),render:item=>item.groups?.map(group => group.name).join(", ") || "�"},{key:"created_at",label:t("preview.fields.created_at"),render:item=>item.created_at ?? "�"},{key:"updated_at",label:t("preview.fields.updated_at"),render:item=>item.updated_at ?? "�"}]} onDeleted={ids => setMembers(current => current.filter(item => !ids.includes(String(item.id))))} busy={globalBusy} items={members} columns={[{key:"name",label:t("common:records.name"),render:item=>recordName(item)},{key:"email",label:t("common:records.fields.email"),render:item=>String(item.email??"—")},{key:"role",label:t("common:records.fields.role"),render:item=>String(item.role??"—")}]} emptyLabel={t("empty")} selectable canEdit={isOwner||isSuperUser||permissions.includes("change_member")} canDelete={isOwner||isSuperUser||permissions.includes("delete_member")} onEdit={openEditModal} onDelete={item=>api.deleteMember(item.id)} />
+            </section>
+          </PermissionMiddleware>
+        </div>
+
+        <PermissionMiddleware codeName={["add_member", "change_member"]}>
+          <MemberModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            member={editingMember}
+            allGroups={groups}
+            onClose={closeModal}
+            onNotify={(s) => setSnack(s)}
+            onSaved={async () => {
+              await fetchList({ background: true });
+            }}
+          />
+        </PermissionMiddleware>
+      </main>
+
+      {/* NAME POPOVER */}
+      <Popover appearance="settings" open={openFilter === "name"} anchorRef={nameAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byNameTitle")}>
+        <div className="p-4">
+
+
+          <div className="mt-3">
+            <Input
+              kind="text"
+              id="member-filter-name-input"
+              value={draftName}
+              onChange={(e) => setDraftName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("name");
+                }
+              }}
+              placeholder={t("filters.namePlaceholder")}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftName("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear")}
+            </button>
+
+            <Button onClick={() => applyFromDraft("name")} disabled={globalBusy}>
+              {t("filters.apply")}
+            </Button>
+          </div>
+        </div>
+      </Popover>
+
+      {/* EMAIL POPOVER */}
+      <Popover appearance="settings" open={openFilter === "email"} anchorRef={emailAnchorRef} onClose={() => setOpenFilter(null)} title={t("filters.byEmailTitle")}>
+        <div className="p-4">
+
+
+          <div className="mt-3">
+            <Input
+              kind="text"
+              id="member-filter-email-input"
+              value={draftEmail}
+              onChange={(e) => setDraftEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyFromDraft("email");
+                }
+              }}
+              placeholder={t("filters.emailPlaceholder")}
+              disabled={globalBusy}
+            />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftEmail("")}
+              disabled={globalBusy}
+            >
+              {t("filters.clear")}
+            </button>
+
+            <Button onClick={() => applyFromDraft("email")} disabled={globalBusy}>
+              {t("filters.apply")}
+            </Button>
+          </div>
+        </div>
+      </Popover>
+
+      {/* ROLE POPOVER */}
+      <Popover appearance="settings" open={openFilter === "role"} anchorRef={roleAnchorRef} onClose={() => setOpenFilter(null)} width={420} title={t("filters.byRoleTitle")}>
+        <div className="p-4 overflow-visible">
+
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <Select<RoleOption>
+                label={t("filters.roleLabel")}
+                items={roleOptions}
+                selected={selectedDraftRoleOptions}
+                onChange={(list) => setDraftRoles(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={draftRoleButtonLabel}
+                customStyles={{ maxHeight: "240px" }}
+                hideFilter
+              />
+            </div>
+
+            <div className="mt-2 text-[11px] text-gray-500">{t("filters.roleHint")}</div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftRoles([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear")}
+            </button>
+
+            <Button onClick={() => applyFromDraft("role")} disabled={globalBusy}>
+              {t("filters.apply")}
+            </Button>
+          </div>
+        </div>
+      </Popover>
+
+      {/* GROUP POPOVER */}
+      <Popover appearance="settings" open={openFilter === "group"} anchorRef={groupAnchorRef} onClose={() => setOpenFilter(null)} width={420} title={t("filters.byGroupTitle")}>
+        <div className="p-4 overflow-visible">
+
+
+          <div className="mt-3 relative z-[1000000] overflow-visible">
+            <div className="[&_input[type=text]]:hidden overflow-visible">
+              <Select<GroupOption>
+                label={t("filters.groupLabel")}
+                items={groupOptions}
+                selected={selectedDraftGroupOptions}
+                onChange={(list) => setDraftGroups(uniq((list || []).map((x) => x.key)))}
+                getItemKey={(item) => item.key}
+                getItemLabel={(item) => item.label}
+                buttonLabel={draftGroupButtonLabel}
+                customStyles={{ maxHeight: "260px" }}
+                hideFilter
+              />
+            </div>
+
+            <div className="mt-2 text-[11px] text-gray-500">{t("filters.groupHint")}</div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-[12px] text-gray-600 hover:text-gray-900"
+              onClick={() => setDraftGroups([])}
+              disabled={globalBusy}
+            >
+              {t("filters.clear")}
+            </button>
+
+            <Button onClick={() => applyFromDraft("group")} disabled={globalBusy}>
+              {t("filters.apply")}
+            </Button>
+          </div>
+        </div>
+      </Popover>
+
+
+
+      <Snackbar notificationKey={snack}
+        open={!!snack}
+        onClose={() => setSnack(null)}
+        autoHideDuration={6000}
+        message={snack?.message}
+        severity={snack?.severity}
+        anchor={{ vertical: "bottom", horizontal: "center" }}
+        pauseOnHover
+        showCloseButton
+      />
+    </>
+  );
+};
+
+export default MemberSettings;

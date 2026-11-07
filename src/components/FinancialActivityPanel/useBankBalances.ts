@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import { formatCurrency } from "@/lib";
 import type { BankAccountTableRow, GetBanksTableResponse } from "@/models/settings/banking";
 import type { ApiSuccess } from "@/models/Api";

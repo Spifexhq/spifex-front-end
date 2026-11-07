@@ -1,0 +1,9 @@
+{
+  "loading": "Loading balances…",
+  "totalBalance": "Total account balance",
+  "pending_income": "Outstanding income",
+  "pending_expense": "Outstanding expenses",
+  "projected_balance": "Balance after outstanding entries",
+  "balanceExplanation": "Current balances include all accounts. Outstanding amounts follow the active transaction filters; transfers do not change the consolidated total.",
+  "noAccounts": "Add your first account to track its balance."
+}

@@ -20,6 +20,9 @@ export interface SignInResponse {
 /* ---------------------------------- Sign Up ---------------------------------- */
 
 export interface SignUpRequest {
+  product_category: "personal" | "business";
+  plan_code: string;
+  workspace_name?: string;
   name: string;
   email: string;
   password: string;

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
-const code=ts.transpileModule(fs.readFileSync('src/pages/Finance/components/SettlementForm/settlementDraft.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+const code=ts.transpileModule(fs.readFileSync('src/products/business/pages/Finance/components/SettlementForm/settlementDraft.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const context=vm.createContext({exports:{}});vm.runInContext(code,context);
 const {cents,decimal,makeDraft,draftIssue,applyPercentage,settlementPayload,bankSummary}=context.exports;
 const banks=[{id:'b1',is_active:true},{id:'b2',is_active:true}];

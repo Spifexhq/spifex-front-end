@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import Button from "@/shared/ui/Button";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 

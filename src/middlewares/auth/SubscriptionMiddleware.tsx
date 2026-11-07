@@ -55,7 +55,7 @@ export const SubscriptionMiddleware = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { user, isSuperUser, isSubscribed, handleInitUser } = useAuthContext();
+  const { user, organization, isSuperUser, isSubscribed, handleInitUser } = useAuthContext();
   const accessToken = getAccess();
   const authReady = !accessToken || !!user;
   const didInit = useRef(false);
@@ -69,10 +69,11 @@ export const SubscriptionMiddleware = ({
     });
   }, [authReady, handleInitUser]);
 
+  const retainedHistory = ["legacy", "deletion_pending"].includes(organization?.organization?.lifecycle || "");
   const allowed = useMemo(() => {
     if (!authReady) return false;
-    return Boolean(isSubscribed || isSuperUser);
-  }, [authReady, isSubscribed, isSuperUser]);
+    return Boolean(isSubscribed || isSuperUser || retainedHistory);
+  }, [authReady, isSubscribed, isSuperUser, retainedHistory]);
 
   if (!authReady) return <TopProgress active variant="center" />;
 

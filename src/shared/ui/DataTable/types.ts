@@ -52,6 +52,7 @@ export type DataTableProps<T> = {
     error?: string | null;
     errorContent?: ReactNode;
     canEdit?: boolean;
+    rowCanEdit?(item: T): boolean;
     canDelete?: boolean;
     selectable?: boolean;
     onEdit?(item: T): void;

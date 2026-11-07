@@ -9,7 +9,7 @@ function load(file, modules = {}, extra = {}) {
   vm.runInContext(code, context);
   return context.exports;
 }
-const { getEntryChanges, entryHasSettlements, touchesFinancialFields } = load('src/pages/Finance/components/EntryForm/entryChanges.ts');
+const { getEntryChanges, entryHasSettlements, touchesFinancialFields } = load('src/products/business/pages/Finance/components/EntryForm/entryChanges.ts');
 const entry = { id: 'one', due_date: '2026-01-15', amount: '10.00', description: 'Original', notes: '', observation: '', cashflow_category: 'sales', document_type: null, project: null, entity: null, departments: [{ department_id: 'd1', percent: '100.00' }], items: [], installment_count: 3, last_settled_on: null };
 const form = () => ({ details: { dueDate: entry.due_date, amount: '10', description: 'Original', notes: '', observation: '', cashflowCategory: 'sales', documentType: '' }, costCenters: { departments: ['d1'], department_percentage: ['100'], projects: '' }, inventory: { product: '', quantity: '' }, entities: { entity: '', entityType: '' }, recurrence: { recurrence: 1, installments: '3', periods: 1, weekend: '' } });
 test('unchanged decimals and allocations do not become financial changes during descriptive edits', () => {
@@ -46,7 +46,7 @@ test('editing an unsupported multi-line inventory allocation leaves it intact', 
   assert.equal('items' in changes, false);
 });
 test('document type API forwards the next cursor so the complete options list can load', async () => {
-  const file = ts.createSourceFile('requests.ts', fs.readFileSync('src/api/requests.ts', 'utf8'), ts.ScriptTarget.Latest, true);
+  const file = ts.createSourceFile('requests.ts', fs.readFileSync('src/core/api/requests.ts', 'utf8'), ts.ScriptTarget.Latest, true);
   let method;
   function walk(node) { if (ts.isPropertyAssignment(node) && node.name.getText(file) === 'getDocumentTypes') method = node.initializer.getText(file); ts.forEachChild(node, walk); }
   walk(file);
@@ -64,7 +64,7 @@ test('option failures identify the affected list and HTTP status; other lists re
   const empty = async () => ({ data: { results: [], next: null } });
   const api = { getCashflowCategories: async () => ({ data: [{ id: 'sales', name: 'Sales', tx_type_hint: 'credit' }] }), getDepartmentsOptions: async () => { throw { status: 403 }; }, getProjectsOptions: empty, getInventoryOptions: empty, getEntitiesOptions: empty, getDocumentTypes: empty };
   const { fetchAllCursor } = load('src/lib/list/cursors.ts');
-  const { useEntryOptions } = load('src/pages/Finance/components/EntryForm/useEntryOptions.ts', { react, '@/api/requests': { api }, '@/lib/list': { fetchAllCursor } });
+  const { useEntryOptions } = load('src/products/business/pages/Finance/components/EntryForm/useEntryOptions.ts', { react, '@/core/api/requests': { api }, '@/lib/list': { fetchAllCursor } });
   useEntryOptions(true, 'credit', 0);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(state.loading, false);
@@ -74,7 +74,7 @@ test('option failures identify the affected list and HTTP status; other lists re
   assert.equal(state.categories.length, 1);
 });
 test('Finance loading waits for the initial table, balances and metrics, and releases together', () => {
-  const { isFinancePending } = load('src/pages/Finance/components/financeLoading.ts', { react: { createContext: () => ({}) } });
+  const { isFinancePending } = load('src/products/business/pages/Finance/components/financeLoading.ts', { react: { createContext: () => ({}) } });
   const expected = ['banks', 'metrics', 'entries'];
   assert.equal(isFinancePending(expected, {}), true);
   assert.equal(isFinancePending(expected, { banks: false, metrics: false, entries: true }), true);
@@ -95,8 +95,8 @@ test('installment pagination only fetches the requested page, never walks the fu
   const calls = [];
   const react = { useState: initial => [initial, () => {}], useEffect: () => {}, useMemo: fn => fn() };
   const api = { getEntryRecurrence: async (id, params) => { calls.push({ id, params }); return { data: { results: [{ id: params.cursor || 'first' }], current: { id: 'anchor' }, next: params.cursor ? null : 'second', count: 25 } }; } };
-  const { useRecurrenceEntries } = load('src/pages/Finance/components/EntryForm/useRecurrenceEntries.ts', {
-    react, '@/api/requests': { api }, '@/lib/list': { getCursorFromUrl: value => value },
+  const { useRecurrenceEntries } = load('src/products/business/pages/Finance/components/EntryForm/useRecurrenceEntries.ts', {
+    react, '@/core/api/requests': { api }, '@/lib/list': { getCursorFromUrl: value => value },
     '@/hooks/useCursorPager': { useCursorPager: (fetch, opts) => { fetchPage = fetch; assert.equal(opts.autoLoadFirst, true); return { items: [], metadata: undefined, index: 0, knownPages: 0 }; } },
     '@/hooks/useShiftSelect': { useShiftSelect: () => ({ selectedIds: [], setSelectedIds: () => {} }) },
   });
@@ -119,8 +119,8 @@ test('select all includes unseen rows and exclusions persist when a later page l
   const key = 'true:anchor:0';
   const states = [0, true, 'pinned-snapshot', {key, rows: [{id:'anchor'},{id:'first'}]}];
   const react = {useState: initial => [states[slot++] ?? initial, () => {}], useEffect: () => {}, useMemo: fn => fn()};
-  const {useRecurrenceEntries} = load('src/pages/Finance/components/EntryForm/useRecurrenceEntries.ts', {
-    react, '@/api/requests': {api:{}}, '@/lib/list': {getCursorFromUrl:value=>value},
+  const {useRecurrenceEntries} = load('src/products/business/pages/Finance/components/EntryForm/useRecurrenceEntries.ts', {
+    react, '@/core/api/requests': {api:{}}, '@/lib/list': {getCursorFromUrl:value=>value},
     '@/hooks/useCursorPager': {useCursorPager:()=>({items:[{id:'later'},{id:'excluded'}], metadata:{key, current:{id:'anchor'}, selectionVersion:'new-page-snapshot'}, totalCount:25, index:2, knownPages:3})},
     '@/hooks/useShiftSelect': {useShiftSelect:()=>({selectedIds:['excluded'],setSelectedIds:()=>{}})},
   });
@@ -136,7 +136,7 @@ test('select all includes unseen rows and exclusions persist when a later page l
 
 
 test('all-selection requests cannot become a partial explicit selection on an older backend', () => {
-  const file = ts.createSourceFile('requests.ts', fs.readFileSync('src/api/requests.ts', 'utf8'), ts.ScriptTarget.Latest, true);
+  const file = ts.createSourceFile('requests.ts', fs.readFileSync('src/core/api/requests.ts', 'utf8'), ts.ScriptTarget.Latest, true);
   let method;
   function walk(node) { if (ts.isPropertyAssignment(node) && node.name.getText(file) === 'editEntryRecurrence') method = node.initializer.getText(file); ts.forEachChild(node, walk); }
   walk(file);

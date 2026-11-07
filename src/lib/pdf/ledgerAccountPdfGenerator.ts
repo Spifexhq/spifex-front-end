@@ -6,7 +6,7 @@ import { jsPDF } from "jspdf";
 import autoTable, { RowInput } from "jspdf-autotable";
 import i18next from "i18next";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import { fetchAllCursor } from "@/lib/list";
 
 import type {

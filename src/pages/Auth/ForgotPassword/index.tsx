@@ -11,7 +11,7 @@ import type { FormEvent, ChangeEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import Snackbar from "@/shared/ui/Snackbar";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";

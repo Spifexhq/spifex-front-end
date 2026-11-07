@@ -1,10 +1,10 @@
 import { isCancel } from "axios";
 import { isSetupRequestCancelled } from "@/lib/localeSetup";
-import { getAuthGeneration } from "@/lib/authGeneration";
+import { getAuthGeneration } from "@/core/authentication/authGeneration";
 import { getOrgExternalIdStored } from "@/lib/tokens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 import type { CashflowKpis, SettledKpis } from "@/models/components/cardKpis";
 import type { EntryFilters } from "@/models/components/filterBar";

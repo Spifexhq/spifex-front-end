@@ -21,7 +21,7 @@ function httpHarness(adapter) {
    if(!cfg.validateStatus||cfg.validateStatus(response.status))return response;
    throw new axios.AxiosError("Request failed",undefined,cfg,undefined,response);
  }})};
- const exported=load("src/lib/http.ts",{"axios":{__esModule:true,default:fakeAxios},"@/lib/tokens":tokens,"./apiErrorMessage":load("src/lib/apiErrorMessage.ts",{}),"./httpCachePolicy":load("src/lib/httpCachePolicy.ts",{}),"./authGeneration":{getAuthGeneration:()=>generation},"@/lib/netReport":{},"@/redux/store":{store:{getState:()=>({auth:{user:{id:"user"},orgExternalId:"org"}})}}},{window:{dispatchEvent:event=>events.push(event),setTimeout,clearTimeout},navigator:{},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}}});
+ const exported=load("src/core/api/http.ts",{"axios":{__esModule:true,default:fakeAxios},"@/lib/tokens":tokens,"../../lib/apiErrorMessage":load("src/lib/apiErrorMessage.ts",{}),"../cache/httpCachePolicy":load("src/core/cache/httpCachePolicy.ts",{}),"../authentication/authGeneration":{getAuthGeneration:()=>generation},"@/lib/netReport":{},"@/redux/store":{store:{getState:()=>({auth:{user:{id:"user"},orgExternalId:"org"}})}}},{window:{dispatchEvent:event=>events.push(event),setTimeout,clearTimeout},navigator:{},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}}});
  return {...exported,tokens,events,get access(){return access;}};
 }
 const csrf={status:200,data:{data:{csrf_token:"csrf"}}};
@@ -164,7 +164,7 @@ test("If-Match is passed once and a 412 preserves its conflict code without retr
 });
 
 test("query and representation variants preserve significant nested values and ordering",()=>{
- const {stableParams,cacheFresh}=load("src/lib/httpCachePolicy.ts",{});
+ const {stableParams,cacheFresh}=load("src/core/cache/httpCachePolicy.ts",{});
  assert.notEqual(stableParams({search:"001"}),stableParams({search:"1"}));
  assert.notEqual(stableParams({filters:{q:"a"}}),stableParams({filters:{q:"b"}}));
  assert.notEqual(stableParams({sort:["name","code"]}),stableParams({sort:["code","name"]}));

@@ -1,3 +1,7 @@
+export type ProductCategory = "business" | "personal";
+export type WorkspaceLifecycle = "active" | "legacy" | "deletion_pending" | "deleted";
+export interface ProductWorkspaceFields { product_category?: ProductCategory; lifecycle?: WorkspaceLifecycle; legacy_since?: string | null; scheduled_deletion_at?: string | null; replacement_workspace_id?: string | null; selected_plan_code?: string | null; }
+
 // src/models/auth/organization.ts
 
 export interface Owner {
@@ -15,7 +19,7 @@ export interface OrgLedgerProfile {
   auto_bootstrapped_at?: string | null;
 }
 
-export interface Organization {
+export interface Organization extends ProductWorkspaceFields {
   id: string;
   name: string;
   timezone?: string;
@@ -31,7 +35,7 @@ export interface Organization {
   ledger_profile?: OrgLedgerProfile | null;
 }
 
-export interface OrganizationSummary {
+export interface OrganizationSummary extends ProductWorkspaceFields {
   id: string;
   name: string;
   currency: string;

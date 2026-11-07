@@ -6,7 +6,7 @@ import { UserRound, Building2, Bell, CircleHelp, LogOut, ChevronsUpDown } from "
 import { useAuthContext } from "@/hooks/useAuth";
 import { useAppShell } from "@/contexts/AppShellContext";
 
-export default function SidebarUserConfiguration({ collapsed = false }: { collapsed?: boolean }) {
+export default function SidebarUserConfiguration({ collapsed = false, destinations, onNavigate }: { collapsed?: boolean; destinations?: { personal: string; organization?: string; notifications: string; help: string }; onNavigate?(): void }) {
   const { user, handleSignOut } = useAuthContext();
   const shell = useAppShell();
   const { t } = useTranslation("userMenu");
@@ -45,15 +45,15 @@ export default function SidebarUserConfiguration({ collapsed = false }: { collap
     window.addEventListener("resize", update);
     return () => { cancelAnimationFrame(frame); document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", key, true); window.removeEventListener("resize", update); };
   }, [open]);
-  const closeForNavigation = () => { setOpen(false); shell?.closeMobile(); };
+  const closeForNavigation = () => { setOpen(false); shell?.closeMobile(); onNavigate?.(); };
   const logout = async () => {
     setPending(true); setError(false);
     try { await handleSignOut(); closeForNavigation(); navigate("/signin"); } catch { setError(true); } finally { setPending(false); }
   };
   const links = [
-    { to: "/settings/personal", key: "personal", Icon: UserRound },
-    { to: "/settings/organization-settings", key: "organization", Icon: Building2 },
-    { to: "/settings/notifications", key: "notifications", Icon: Bell },
+    { to: destinations?.personal || "/settings/personal", key: "personal", Icon: UserRound },
+    ...(!destinations || destinations.organization ? [{ to: destinations?.organization || "/settings/organization-settings", key: "organization", Icon: Building2 }] : []),
+    { to: destinations?.notifications || "/settings/notifications", key: "notifications", Icon: Bell },
   ];
   return <div className="shrink-0 border-t border-gray-200 p-3">
     <button ref={trigger} type="button" className="sidebar-row rounded-md text-left hover:bg-gray-200/60" aria-label={t("accountButton", { name: user?.name || t("account") })} title={collapsed ? user?.name : undefined} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} onClick={() => setOpen(previous => !previous)}>
@@ -63,7 +63,7 @@ export default function SidebarUserConfiguration({ collapsed = false }: { collap
     {open && createPortal(<div ref={panel} id={id} role="menu" aria-label={t("aria.menu")} style={position} className="shell-popover fixed z-[10060] w-64 max-w-[calc(100vw-24px)] overflow-y-auto rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
       <div className="border-b border-gray-100 px-2.5 py-2"><p className="truncate text-xs font-semibold text-gray-900">{user?.name}</p><p className="mt-0.5 truncate text-[11px] text-gray-500">{user?.email}</p></div>
       {links.map(({ to, key, Icon }) => <Link key={key} to={to} role="menuitem" onClick={closeForNavigation} className="mt-1 flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50"><Icon size={15} />{t(`items.${key}`)}</Link>)}
-      <button type="button" role="menuitem" onClick={() => { setOpen(false); shell?.openHelp(); }} className="mt-1 flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50"><CircleHelp size={15} />{t("items.help")}</button>
+      <button type="button" role="menuitem" onClick={() => { closeForNavigation(); if (destinations) navigate(destinations.help); else shell?.openHelp(); }} className="mt-1 flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50"><CircleHelp size={15} />{t("items.help")}</button>
       <div className="my-1 border-t border-gray-100" />
       <button type="button" role="menuitem" disabled={pending} onClick={() => void logout()} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"><LogOut size={15} />{t("items.signout")}</button>
       {error && <p role="alert" className="px-2.5 py-2 text-xs text-red-600">{t("signoutError")}</p>}

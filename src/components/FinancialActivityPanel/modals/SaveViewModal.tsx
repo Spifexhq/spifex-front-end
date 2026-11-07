@@ -7,7 +7,7 @@ import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import Input from "@/shared/ui/Input";
 
-import { api } from "@/api/requests";
+import { api } from "@/core/api/requests";
 import type { ApiResponse } from "@/models/Api";
 import type { LocalFilters, Visualization } from "@/models/components/filterBar";
 import { isApiError, toEntryFilters } from "../FilterBar.utils";

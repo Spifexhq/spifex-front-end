@@ -11,10 +11,10 @@ async function run(read,{obsolete=false,unmount=false}={}) {
   'react-i18next':{useTranslation:()=>({t:key=>key})},
   axios:{isCancel:()=>false},
   '@/lib/localeSetup':{isSetupRequestCancelled:error=>error.code==='ERR_CANCELED'},
-  '@/lib/authGeneration':{getAuthGeneration:()=>generation},
+  '@/core/authentication/authGeneration':{getAuthGeneration:()=>generation},
   '@/lib/tokens':{getOrgExternalIdStored:()=> 'org-1'},
   '@/lib/currency/formatCurrency':{formatCurrency:String},
-  '@/api/requests':{api:{getSettledKpis:read}},
+  '@/core/api/requests':{api:{getSettledKpis:read}},
  };
  const scope=vm.createContext({exports:{},require:name=>modules[name],console:{error(){}}});
  vm.runInContext(compile('src/components/FinancialActivityPanel/useActivityMetrics.ts'),scope);
