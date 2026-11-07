@@ -18,6 +18,7 @@
     "clearAll": "Limpar filtros",
 
     "apply": "Aplicar",
+    "more": "Mais filtros",
     "clear": "Limpar",
 
     "byInstitutionTitle": "Filtrar por instituição",
@@ -67,7 +68,8 @@
     "investment": "Investimento",
     "cash": "Caixa",
     "petty_cash": "Caixa pequeno",
-    "card": "Cartão"
+    "card": "Cartão",
+    "other": "Outro"
   },
 
   "modal": {

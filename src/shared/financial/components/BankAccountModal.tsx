@@ -1,7 +1,7 @@
 import SidePanel, { SidePanelFooter } from "@/components/Modal/SidePanel";
 
 /* -------------------------------------------------------------------------- */
-/* File: src/pages/Settings/BankSettings/BankModal.tsx                                 */
+/* Shared bank-account editor used by Business and Personal workspaces. */
 /* -------------------------------------------------------------------------- */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,13 +12,11 @@ import Button from "@/shared/ui/Button";
 import Checkbox from "@/shared/ui/Checkbox";
 import { Select } from "src/shared/ui/Select";
 
-import { api } from "@/core/api/requests";
-
-import type { BankAccount } from "@/models/settings/banking";
+import type { AddBankRequest, BankAccount, EditBankRequest } from "@/models/settings/banking";
 
 /* ----------------------------- Constants/Types ---------------------------- */
 
-const ACCOUNT_TYPE_VALUES = ["checking", "savings", "investment", "cash"] as const;
+const ACCOUNT_TYPE_VALUES = ["checking", "savings", "investment", "cash", "petty_cash", "card", "other"] as const;
 type AccountType = (typeof ACCOUNT_TYPE_VALUES)[number];
 
 type Mode = "create" | "edit";
@@ -85,7 +83,7 @@ const ModalSkeleton: React.FC = () => (
   </div>
 );
 
-export type BankModalProps = {
+export type BankAccountModalProps = {
   isOpen: boolean;
   mode: Mode;
   bank?: BankAccount | null;
@@ -95,9 +93,14 @@ export type BankModalProps = {
     snack: { message: React.ReactNode; severity: "success" | "error" | "warning" | "info" } | null
   ) => void;
   onSaved?: (result: { mode: Mode; created?: BankAccount; updatedId?: string }) => void;
+  apiAdapter: {
+    getBank: (id: string) => Promise<{ data: BankAccount }>;
+    addBank: (payload: AddBankRequest) => Promise<{ data: BankAccount }>;
+    editBank: (id: string, payload: EditBankRequest) => Promise<unknown>;
+  };
 };
 
-const BankModal: React.FC<BankModalProps> = ({
+const BankAccountModal: React.FC<BankAccountModalProps> = ({
   isOpen,
   mode,
   bank,
@@ -105,6 +108,7 @@ const BankModal: React.FC<BankModalProps> = ({
   onClose,
   onNotify,
   onSaved,
+  apiAdapter,
 }) => {
   const { t } = useTranslation("bankSettings");
 
@@ -194,7 +198,7 @@ const BankModal: React.FC<BankModalProps> = ({
       setIsDetailLoading(true);
 
       try {
-        const res = await api.getBank(bankId);
+        const res = await apiAdapter.getBank(bankId);
         const detail = res.data as BankAccount;
         if (!alive) return;
 
@@ -236,7 +240,7 @@ const BankModal: React.FC<BankModalProps> = ({
     return () => {
       alive = false;
     };
-  }, [isOpen, mode, bankId, bank, hardReset, onNotify, t]);
+  }, [isOpen, mode, bankId, bank, hardReset, onNotify, t, apiAdapter]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -295,7 +299,7 @@ const BankModal: React.FC<BankModalProps> = ({
 
       try {
         if (mode === "create") {
-          const { data: created } = await api.addBank(payload);
+          const { data: created } = await apiAdapter.addBank(payload);
           onNotify?.({ message: t("toast.saveOk"), severity: "success" });
           onSaved?.({ mode: "create", created: created as BankAccount });
           handleClose();
@@ -304,7 +308,7 @@ const BankModal: React.FC<BankModalProps> = ({
 
         if (!bankId) return;
 
-        await api.editBank(bankId, payload);
+        await apiAdapter.editBank(bankId, payload);
         onNotify?.({ message: t("toast.saveOk"), severity: "success" });
         onSaved?.({ mode: "edit", updatedId: bankId });
         handleClose();
@@ -318,7 +322,7 @@ const BankModal: React.FC<BankModalProps> = ({
         setIsSubmitting(false);
       }
     },
-    [formData, mode, bankId, orgCurrency, onNotify, onSaved, handleClose, t]
+    [formData, mode, bankId, orgCurrency, onNotify, onSaved, handleClose, t, apiAdapter]
   );
 
   return (
@@ -506,4 +510,4 @@ const BankModal: React.FC<BankModalProps> = ({
   );
 };
 
-export default BankModal;
+export default BankAccountModal;

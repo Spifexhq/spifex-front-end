@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, LayoutDashboard, ArrowLeftRight, Landmark, Tags, CircleGauge, Target, ChartNoAxesCombined, Settings2 } from "lucide-react";
+import { Menu, LayoutDashboard, ArrowLeftRight, Landmark, Tags, CircleGauge, Target, ChartNoAxesCombined, Settings2, Repeat } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
@@ -12,7 +12,7 @@ import PersonalSettingsSidebar from "../components/PersonalSettingsSidebar";
 
 const groups = [
   { id: "overview", items: [{ key: "overview", Icon: LayoutDashboard }] },
-  { id: "money", items: [{ key: "transactions", Icon: ArrowLeftRight }, { key: "accounts", Icon: Landmark }, { key: "categories", Icon: Tags }] },
+  { id: "money", items: [{ key: "transactions", Icon: ArrowLeftRight }, { key: "accounts", Icon: Landmark }, { key: "transfers", Icon: Repeat }, { key: "categories", Icon: Tags }] },
   { id: "planning", items: [{ key: "budgets", Icon: CircleGauge }, { key: "goals", Icon: Target }, { key: "reports", Icon: ChartNoAxesCombined }] },
 ];
 

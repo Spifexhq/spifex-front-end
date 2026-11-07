@@ -2,8 +2,14 @@ import { lazy } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
 const Layout = lazy(() => import("../layouts/PersonalLayout"));
 const SettingsLayout = lazy(() => import("../layouts/PersonalSettingsLayout"));
-const Overview = lazy(() => import("../pages/PersonalOverview"));
-const Collection = lazy(() => import("../pages/PersonalCollectionPage"));
+const Overview = lazy(() => import("../pages/Overview"));
+const Reports = lazy(() => import("../pages/Reports"));
+const Transactions = lazy(() => import("../pages/Transactions"));
+const BankAccounts = lazy(() => import("../pages/BankAccounts"));
+const Categories = lazy(() => import("../pages/Categories"));
+const Budgets = lazy(() => import("../pages/Budgets"));
+const Goals = lazy(() => import("../pages/Goals"));
+const Transfers = lazy(() => import("../pages/Transfers"));
 const SettingsIndex = lazy(() => import("../pages/PersonalSettings"));
 const PersonalSettings = lazy(() => import("@/features/account-settings/pages/PersonalSettings"));
 const Security = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
@@ -17,9 +23,13 @@ const Help = lazy(() => import("@/pages/Help"));
 export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layout/>, children: [
   { index: true, element: <Navigate to="overview" replace/> },
   { path: "overview", element: <Overview/> },
-  { path: "reports", element: <Overview reports/> },
-  ...(["transactions", "accounts", "categories", "budgets", "goals"] as const).map(collection => ({ path: collection, element: <Collection key={collection} collection={collection}/> })),
-  { path: "transfers", element: <Navigate to="/personal/transactions?kind=transfer" replace/> },
+  { path: "reports", element: <Reports/> },
+  { path: "transactions", element: <Transactions/> },
+  { path: "accounts", element: <BankAccounts/> },
+  { path: "categories", element: <Categories/> },
+  { path: "budgets", element: <Budgets/> },
+  { path: "goals", element: <Goals/> },
+  { path: "transfers", element: <Transfers/> },
   { path: "settings", element: <SettingsLayout/>, children: [
     { index: true, element: <SettingsIndex/> },
     { path: "personal", element: <PersonalSettings product="personal"/> },

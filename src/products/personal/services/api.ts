@@ -2,10 +2,11 @@ import { getAuthGeneration } from "@/core/authentication/authGeneration";
 import { getOrgExternalIdStored } from "@/lib/tokens";
 import { http, request } from "@/core/api/http";
 
-import type { PersonalDashboard, PersonalCollection, PersonalPage, PersonalRecord, PersonalTransaction, EntryAttachment } from "../types";
+import type { PersonalAccount, PersonalDashboard, PersonalCollection, PersonalPage, PersonalRecord, PersonalTransaction, EntryAttachment } from "../types";
 import type { CashflowBalance } from "@/shared/financial/types";
 export const personalApi = {
   transaction: (id: string) => request<PersonalTransaction>(`personal/transactions/${id}/`, "GET"),
+  account: (id: string) => request<PersonalAccount>(`personal/accounts/${id}/`, "GET"),
   summary: (params: Record<string, string> = {}) => request<CashflowBalance>("personal/transactions/summary/", "GET", params),
   attachments: (id: string) => request<{results:EntryAttachment[];max_files:number;max_bytes:number}>(`personal/transactions/${id}/attachments/`, "GET"),
   uploadAttachment: (id: string, file: File) => { const form = new FormData(); form.append("file", file); return request<EntryAttachment>(`personal/transactions/${id}/attachments/`, "POST", form); },

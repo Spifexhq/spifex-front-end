@@ -1,6 +1,4 @@
 import { usePersonalReadRevision } from "../hooks/usePersonalReadRevision";
-import PersonalRecordDialog from "../components/PersonalRecordDialog";
-import { readonlyWorkspace } from "../services/personalData";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -40,7 +38,6 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const readRevision = usePersonalReadRevision();
   const access = JSON.stringify([permissions, isOwner, isSubscribed, readRevision, organization?.organization?.lifecycle]);
   const initialRange = useMemo<DateRange>(() => ({ start_date: `${today().slice(0, 7)}-01`, end_date: today() }), []);
-  const [createOpen, setCreateOpen] = useState(false);
   const [draft, setDraft] = useState<DateRange>(initialRange);
   const [query, setQuery] = useState<DateRange>(initialRange);
   const [group, setGroup] = useState<"day" | "week" | "month">("day");
@@ -50,7 +47,6 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const [retry, setRetry] = useState(0);
   const id = organization?.organization?.id || "";
   const data = snapshot?.workspace === id && snapshot.access === access ? snapshot.data : null;
-  const isReadOnly = readonlyWorkspace(organization?.organization?.lifecycle);
 
   useEffect(() => {
     let active = true;
@@ -116,7 +112,6 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
   const quickRanges = <div className="flex flex-wrap items-center gap-1">
     {[7, 30, 90].map(days => <Button key={days} variant="ghost" size="sm" onClick={() => setRange(rangeForDays(days))}>{t("lastDays", { count: days, ns: "overview" })}</Button>)}
   </div>;
-  const addTransaction = !reports && !isReadOnly ? <Button size="sm" onClick={() => setCreateOpen(true)}>{t("addTransaction")}</Button> : null;
 
   return <div className="space-y-6" aria-busy={loading}>
     <header className="space-y-1">
@@ -124,7 +119,7 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
       <p className="text-sm text-slate-500">{t(reports ? "reportsDescription" : "overviewDescription")}</p>
     </header>
 
-    <OverviewFilterPanel toolbar={<>{quickRanges}{addTransaction}</>} onSubmit={event => {
+    <OverviewFilterPanel toolbar={quickRanges} onSubmit={event => {
       event.preventDefault();
       setQuery(draft);
     }}>
@@ -148,6 +143,5 @@ export default function PersonalOverview({ reports = false }: { reports?: boolea
         <section className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="text-sm font-semibold text-slate-900">{t("upcoming")}</h2><ul className="mt-3 divide-y divide-slate-100">{data.upcoming.map(item => <li key={item.id} className="flex items-center justify-between gap-4 py-3 text-xs"><div><p className="font-medium text-slate-700">{item.description}</p><p className="mt-1 text-slate-500">{item.date}</p></div><span className="tabular-nums">{money(item.amount)}</span></li>)}</ul>{!data.upcoming.length && <p className="mt-3 text-xs text-slate-500">{t("empty")}</p>}</section>
       </>}
     </>}
-    {createOpen && !isReadOnly && <PersonalRecordDialog kind="transactions" currency={data?.currency || "EUR"} onClose={() => setCreateOpen(false)} onSaved={() => setRetry(value => value + 1)} />}
   </div>;
 }

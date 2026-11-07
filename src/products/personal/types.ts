@@ -1,12 +1,13 @@
 import type { OverviewData } from "@/models/finance/overview";
 export type PersonalPayment = { id: string; bank_name: string; value_date: string; amount: string };
 export type PersonalTransaction = { id: string; description: string; due_date: string; amount: string; paid_amount: string; open_amount: string; kind: "income" | "expense" | "transfer"; transfer_id: string | null; source_bank_name: string | null; destination_bank_name: string | null; payments?: PersonalPayment[]; status: "pending" | "partial" | "settled"; category_id: string | null; category_name: string | null; bank_id: string | null; bank_name: string | null; notes: string; installment_count: number; installment_index: number };
-export type PersonalAccount = { id: string; name: string; account_type: string; currency: string; initial_balance: string; balance: string; is_active: boolean };
+export type PersonalAccount = { id: string; name: string; institution: string; account_type: string; currency: string; branch: string; account_number: string; iban: string; initial_balance: string; current_balance: string; balance: string; consolidated_balance: string; is_active: boolean };
 export type PersonalCategory = { id: string; name: string; kind: "income" | "expense" | null; is_active: boolean };
 export type PersonalBudget = { id: string; name: string; month: string; category_id: string | null; category_name: string | null; limit: string; spent: string; remaining: string; progress: number };
 export type PersonalGoal = { id: string; name: string; target: string; saved: string; remaining: string; progress: number; target_date: string | null };
 export type PersonalDashboard = OverviewData & { available_balance: string; balances_by_currency: { currency: string; balance: string }[]; budgets: PersonalBudget[]; goals: PersonalGoal[] };
 export type PersonalCollection = "transactions" | "accounts" | "categories" | "budgets" | "goals" | "transfers";
+export type PersonalWorkspaceCollection = Exclude<PersonalCollection, "accounts">;
 export type PersonalTransfer = { id: string; description: string; value_date: string; amount: string; source_bank_name: string; destination_bank_name: string };
 export type PersonalRecord = PersonalTransaction | PersonalAccount | PersonalCategory | PersonalBudget | PersonalGoal | PersonalTransfer;
 export type PersonalPage<T> = { count: number; next: string | null; previous: string | null; results: T[] };

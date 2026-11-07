@@ -6,8 +6,8 @@ import { useCursorPager } from "@/hooks/useCursorPager";
 import { personalApi } from "../services/api";
 import { usePersonalReadRevision } from "../hooks/usePersonalReadRevision";
 import { useCashflowBalance } from "../hooks/useCashflowBalance";
-import { useCollectionColumns } from "../components/useCollectionColumns";
-import type { PersonalCollection, PersonalRecord } from "../types";
+import { useCollectionColumns } from "./useCollectionColumns";
+import type { PersonalWorkspaceCollection, PersonalRecord } from "../types";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import DataTable from "@/shared/ui/DataTable";
 import Input from "@/shared/ui/Input";
@@ -18,8 +18,8 @@ import PersonalRecordPreview from "../components/PersonalRecordPreview";
 import PersonalRecordDialog from "../components/PersonalRecordDialog";
 import { readonlyWorkspace } from "../services/personalData";
 
-type Dialog = { kind: Exclude<PersonalCollection, "transfers"> | "settle" | "contribute" | "transfer"; record?: PersonalRecord | null };
-export default function PersonalCollectionPage({ collection }: { collection: PersonalCollection }) {
+type Dialog = { kind: Exclude<PersonalWorkspaceCollection, "transfers"> | "settle" | "contribute" | "transfer"; record?: PersonalRecord | null };
+export default function PersonalCollectionWorkspace({ collection }: { collection: PersonalWorkspaceCollection }) {
   const { t } = useTranslation("personal");
   const { organization, permissions, isOwner, isSubscribed } = useAuthContext();
   const [params] = useSearchParams();
@@ -41,7 +41,7 @@ export default function PersonalCollectionPage({ collection }: { collection: Per
       } catch (cause) { if (attempt >= 2 || (cause as { code?: string }).code !== "ERR_CANCELED") throw cause; }
     }
   }, { deps: [collection, applied, workspace?.id, workspace?.lifecycle, permissions.join("|"), isOwner, isSubscribed, readRevision] });
-  const balances = useCashflowBalance(collection === "transactions" || collection === "accounts", collection === "transactions" ? applied : {}, revision);
+  const balances = useCashflowBalance(collection === "transactions", collection === "transactions" ? applied : {}, revision);
   const columns = useCollectionColumns(collection, currency);
   useEffect(() => { setPreview(null); setDialog(null); setError(""); setSearch(""); setKind(linkedKind); setStatus(""); setStart(""); setEnd(""); setApplied({ kind: linkedKind }); }, [collection, workspace?.id, linkedKind]);
   useEffect(() => { if (readOnly) setDialog(null); }, [readOnly]);
@@ -49,8 +49,8 @@ export default function PersonalCollectionPage({ collection }: { collection: Per
   const isTransfer = (row: PersonalRecord) => "kind" in row && row.kind === "transfer";
   const edit = (row: PersonalRecord) => { if (!isTransfer(row)) setDialog({ kind: collection === "transfers" ? "transfer" : collection, record: row }); };
   return <div className="space-y-6">
-    <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-semibold tracking-tight text-gray-900">{t(collection)}</h1><p className="mt-2 text-sm text-gray-500">{t(`${collection}Description`)}</p></div>{!readOnly && <div className="flex gap-2">{["accounts", "transactions"].includes(collection) && <Button type="button" variant="outline" onClick={() => setDialog({ kind: "transfer" })}>{t("transfer")}</Button>}<Button type="button" onClick={() => setDialog({ kind: collection === "transfers" ? "transfer" : collection })}>{t("create")}</Button></div>}</header>
-    {(collection === "transactions" || collection === "accounts") && <AccountBalancePanel {...balances}/>}
+    <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-2xl font-semibold tracking-tight text-gray-900">{t(collection)}</h1><p className="mt-2 text-sm text-gray-500">{t(`${collection}Description`)}</p></div>{!readOnly && <div className="flex gap-2">{collection === "transactions" && <Button type="button" variant="outline" onClick={() => setDialog({ kind: "transfer" })}>{t("transfer")}</Button>}<Button type="button" onClick={() => setDialog({ kind: collection === "transfers" ? "transfer" : collection })}>{t("create")}</Button></div>}</header>
+    {collection === "transactions" && <AccountBalancePanel {...balances}/>}
     <form onSubmit={event => { event.preventDefault(); setApplied({ search, kind, status, start_date: start, end_date: end }); }} className="flex flex-wrap items-end gap-3">
       <div className="min-w-44 flex-1"><Input kind="text" label={t("search")} placeholder={t("searchPlaceholder")} value={search} onChange={event => setSearch(event.target.value)}/></div>
       {collection === "transactions" && <>

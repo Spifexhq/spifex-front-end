@@ -328,10 +328,10 @@ export const useAuth = () => {
 
   const handlePermissionExists = useCallback(
     (code: string) => {
-      if (auth.organization?.is_owner) return true;
+      if (auth.user?.is_superuser || auth.organization?.is_owner) return true;
       return (auth.permissions || []).includes(code);
     },
-    [auth.organization?.is_owner, auth.permissions],
+    [auth.user?.is_superuser, auth.organization?.is_owner, auth.permissions],
   );
 
   useEffect(() => {

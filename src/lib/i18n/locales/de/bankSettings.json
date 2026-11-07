@@ -18,6 +18,7 @@
     "clearAll": "Filter zurücksetzen",
 
     "apply": "Anwenden",
+    "more": "Weitere Filter",
     "clear": "Leeren",
 
     "byInstitutionTitle": "Nach Institut filtern",
@@ -67,7 +68,8 @@
     "investment": "Investment",
     "cash": "Bargeld",
     "petty_cash": "Kasse",
-    "card": "Karte"
+    "card": "Karte",
+    "other": "Sonstiges"
   },
 
   "modal": {

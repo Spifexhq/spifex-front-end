@@ -19,7 +19,7 @@ import Popover from "src/shared/ui/Popover";
 
 import Select from "src/shared/ui/Select/Select";
 
-import BankModal from "./BankModal";
+import BankAccountModal from "@/shared/financial/components/BankAccountModal";
 
 import { api } from "@/core/api/requests";
 import { PermissionMiddleware } from "src/middlewares";
@@ -109,6 +109,11 @@ const BankSettings: React.FC = () => {
   }, [isOwner, permissions]);
 
   const orgCurrency = useMemo(() => safeCurrency(authOrg?.organization?.currency), [authOrg]);
+  const bankApiAdapter = useMemo(() => ({
+    getBank: (id: string) => api.getBank(id),
+    addBank: (payload: Parameters<typeof api.addBank>[0]) => api.addBank(payload),
+    editBank: (id: string, payload: Parameters<typeof api.editBank>[1]) => api.editBank(id, payload),
+  }), []);
 
   useEffect(() => {
     document.title = t("title");
@@ -651,11 +656,12 @@ const BankSettings: React.FC = () => {
         </div>
 
         <PermissionMiddleware codeName={["add_bank", "change_bank"]}>
-          <BankModal
+          <BankAccountModal
             isOpen={modalOpen}
             mode={modalMode}
             bank={editingBank}
             orgCurrency={orgCurrency}
+            apiAdapter={bankApiAdapter}
             onClose={closeModal}
             onNotify={(s) => setSnack(s)}
             onSaved={async (res) => {

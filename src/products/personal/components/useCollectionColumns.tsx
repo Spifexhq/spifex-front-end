@@ -3,12 +3,12 @@ import { ArrowLeftRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { Column } from "@/shared/ui/DataTable";
-import type { PersonalCollection, PersonalRecord } from "../types";
+import type { PersonalWorkspaceCollection, PersonalRecord } from "../types";
 
 const field = (row: PersonalRecord, key: string) => String((row as unknown as Record<string, unknown>)[key] ?? "");
 const isTransfer = (row: PersonalRecord) => field(row, "kind") === "transfer";
 
-export function useCollectionColumns(collection: PersonalCollection, currency?: string) {
+export function useCollectionColumns(collection: PersonalWorkspaceCollection, currency?: string) {
   const { t } = useTranslation("personal");
   return useMemo<Column<PersonalRecord>[]>(() => {
     const money = (value: string) => value ? formatCurrency(value, currency) : "—";
@@ -54,10 +54,6 @@ export function useCollectionColumns(collection: PersonalCollection, currency?: 
       { key: "source", label: t("source_bank_id"), render: row => field(row, "source_bank_name") },
       { key: "destination", label: t("destination_bank_id"), render: row => field(row, "destination_bank_name") },
       { ...amount("amount"), mobile: true, mobileWidth: "110px" },
-    ];
-    if (collection === "accounts") return [name,
-      { key: "type", label: t("account_type"), render: row => t(field(row, "account_type")) },
-      { key: "balance", label: t("balance"), mobile: true, mobileWidth: "120px", render: row => formatCurrency(field(row, "balance"), field(row, "currency")) },
     ];
     if (collection === "categories") return [name,
       { key: "kind", label: t("kind"), mobile: true, render: row => t(field(row, "kind") || "allCategories") },

@@ -54,8 +54,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const userInfo = useCombinedUserInfo();
 
   const handlePermissionExists = useCallback(
-    (codename: string) => (userInfo.permissions || []).includes(codename),
-    [userInfo.permissions],
+    (codename: string) => userInfo.isSuperUser || (userInfo.isOwner || (userInfo.permissions || []).includes(codename)),
+    [userInfo.isOwner, userInfo.isSuperUser, userInfo.permissions],
   );
 
   const authContextValue = useMemo(

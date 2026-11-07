@@ -12,7 +12,7 @@ import { formatCurrency } from "@/lib";
 import type { PersonalAccount, PersonalCategory, PersonalCollection, PersonalRecord } from "@/products/personal/types";
 import { allPersonal, today } from "../services/personalData";
 
-type DialogKind = Exclude<PersonalCollection, "transfers"> | "settle" | "contribute" | "transfer";
+type DialogKind = Exclude<PersonalCollection, "accounts" | "transfers"> | "settle" | "contribute" | "transfer";
 type Props = { kind: DialogKind; record?: PersonalRecord | null; currency: string; onClose(): void; onSaved(): void };
 
 export default function PersonalRecordDialog({ kind, record, currency, onClose, onSaved }: Props) {
@@ -21,7 +21,7 @@ export default function PersonalRecordDialog({ kind, record, currency, onClose, 
   const [form, setForm] = useState<Record<string, string>>(() => ({
     name: "", description: "", amount: kind === "settle" && record && "open_amount" in record ? record.open_amount : "",
     kind: "expense", due_date: today(), value_date: today(), month: today().slice(0, 7) + "-01",
-    category_id: "", bank_id: "", notes: "", account_type: "checking", is_active: "true", currency, initial_balance: "0.00",
+    category_id: "", bank_id: "", notes: "",
     limit: "", target: "", target_date: "", installment_count: "1", interval_months: "1",
     ...(kind === "settle" || kind === "contribute" ? {} : Object.fromEntries(Object.entries(record || {}).map(([key, value]) => [key, value == null ? "" : String(value)]))),
   }));
@@ -80,7 +80,6 @@ export default function PersonalRecordDialog({ kind, record, currency, onClose, 
           ...(!editLocked ? { amount: form.amount, kind: form.kind, due_date: form.due_date, category_id: form.category_id || null } : {}),
           ...(!record ? { bank_id: form.bank_id || null, settled, installment_count: Number(form.installment_count), interval_months: Number(form.interval_months), idempotency_key: key.current } : {}),
         };
-        if (kind === "accounts") payload = { name: form.name, account_type: form.account_type, is_active: form.is_active === "true", ...(!record ? { currency: form.currency, initial_balance: form.initial_balance } : {}) };
         if (kind === "categories") payload = { name: form.name, kind: form.kind || null, is_active: form.is_active === "true" };
         if (kind === "budgets") payload = { name: form.name, month: form.month.slice(0, 7) + "-01", category_id: form.category_id || null, limit: form.limit };
         if (kind === "goals") payload = { name: form.name, target: form.target, target_date: form.target_date || null };
@@ -104,9 +103,8 @@ export default function PersonalRecordDialog({ kind, record, currency, onClose, 
         {!record && !settled && <details className="text-xs text-slate-500 sm:col-span-2"><summary className="cursor-pointer py-2">{t("recurrence")}</summary><div className="mt-3 grid gap-4 sm:grid-cols-2"><Input kind="text" type="number" min={1} max={120} label={t("installment_count")} value={form.installment_count} onChange={event => update("installment_count", event.target.value)} />{choices("interval_months", ["1", "2", "3", "6", "12"])}</div></details>}
         {editLocked && <p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("lockedTransaction")}</p>}
       </>}
-      {kind === "accounts" && <>{text("name")}{choices("account_type", ["checking", "savings", "cash", "other"])}{!record && <>{amount("initial_balance")}<p className="self-end text-xs text-slate-500">{t("currency")}: {currency}</p></>}</>}
       {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}
-      {["accounts","categories"].includes(kind) && <ToggleSwitch checked={form.is_active === "true"} onChange={value => update("is_active", String(value))} label={t("active")} />}
+      {kind === "categories" && <ToggleSwitch checked={form.is_active === "true"} onChange={value => update("is_active", String(value))} label={t("active")} />}
       {kind === "budgets" && <>{text("name")}{date("month")}{options("category_id", categories.filter(item => item.kind !== "income"), true)}{amount("limit")}</>}
       {kind === "goals" && <>{text("name")}{amount("target")}{date("target_date", false)}</>}
       {kind === "settle" && <><div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-6 text-gray-600 sm:col-span-2">{t("partialPaymentHint")}<p className="mt-1 font-medium text-gray-800">{t("open_amount")}: {formatCurrency(record && "open_amount" in record ? record.open_amount : "0", currency)}</p></div>{options("bank_id", accounts)}{amount("amount")}{date("value_date")}</>}
