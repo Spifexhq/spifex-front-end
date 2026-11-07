@@ -1,5 +1,6 @@
 {
-  "title": "Personal Settings",
+  "title": "Personal settings",
+  "description": "Manage your profile, contact details, address and personal information.",
   "header": {
     "settings": "Settings",
     "personal": "Personal"

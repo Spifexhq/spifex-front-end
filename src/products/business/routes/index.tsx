@@ -14,6 +14,7 @@ const SubscriptionManagement = lazy(() => import("@/features/account-settings/pa
 const LimitsAndUsage = lazy(() => import("@/features/account-settings/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
 const OrganizationSettings = lazy(() => import("@/products/business/pages/Settings/OrganizationSettings"));
+const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const DepartmentSettings = lazy(() => import("@/products/business/pages/Settings/DepartmentSettings"));
 const BankSettings = lazy(() => import("@/products/business/pages/Settings/BankSettings"));
 const EntitySettings = lazy(() => import("@/products/business/pages/Settings/EntitySettings"));
@@ -104,6 +105,14 @@ export const businessRoutes: RouteObject[] = [
                     element: (
                     <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/settings'}>
                         <OrganizationSettings />
+                    </PermissionMiddleware>
+                    ),
+                },
+                {
+                    path: 'workspaces',
+                    element: (
+                    <PermissionMiddleware codeName="view_organization_settings_page" behavior="redirect" redirectTo={'/settings'}>
+                        <Workspaces />
                     </PermissionMiddleware>
                     ),
                 },

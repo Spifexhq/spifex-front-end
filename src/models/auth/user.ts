@@ -49,6 +49,8 @@ export interface PersonalSettings {
 }
 
 export type EditPersonalSettingsRequest = Partial<Omit<PersonalSettings, "email">>;
+export type PersonalDataSettings = { phone?: string; job_title?: string; department?: string; national_id?: string; birth_date?: string | null; gender?: string; note?: string };
+export type PersonalAddressSettings = { line1?: string; line2?: string; city?: string; region?: string; postal_code?: string; country?: string; timezone?: string };
 
 export interface GetUserResponse {
   user: User;

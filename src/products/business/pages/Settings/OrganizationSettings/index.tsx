@@ -1,4 +1,3 @@
-import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { PreferenceSection as SectionCard, PreferenceRow as Row } from "@/shared/ui/Settings/PreferenceSection";
 /* -------------------------------------------------------------------------- */
@@ -58,7 +57,6 @@ function toFormData(org: Organization | null): OrgFormData {
 
 const OrganizationSettings: React.FC = () => {
   const { t, i18n } = useTranslation("organizationSettings");
-  const { t: workspaceText } = useTranslation("personal");
   const navigate = useNavigate();
   const { isOwner } = useAuthContext();
 
@@ -337,8 +335,6 @@ const OrganizationSettings: React.FC = () => {
             </div>
           </section>
         </div>
-
-        <SectionCard title={workspaceText("workspaces")}><div className="max-w-sm p-5"><WorkspaceSwitcher manage/></div></SectionCard>
 
         <OrganizationSettingsModal
           isOpen={modalOpen}

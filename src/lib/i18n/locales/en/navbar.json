@@ -43,6 +43,7 @@
   "settingsDescriptions": {
     "personal": "Manage your profile, contact details, and personal preferences.",
     "organization-settings": "Keep your organization’s details and regional settings up to date.",
+    "workspaces": "Create, switch and manage the workspaces attached to your account.",
     "subscription-management": "Review your plan, billing, and subscription details.",
     "security": "Manage sign-in, passwords, and account security.",
     "banks": "Manage the bank accounts used to track your cash flow.",

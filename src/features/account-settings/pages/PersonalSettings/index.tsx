@@ -105,7 +105,7 @@ function toFormData(profile: PersonalSettingsModel | null): FormData {
 
 
 
-const PersonalSettings: React.FC = () => {
+const PersonalSettings: React.FC<{ product?: "business" | "personal" }> = ({ product = "business" }) => {
   const { t, i18n } = useTranslation("personalSettings");
 
   useEffect(() => {
@@ -178,7 +178,7 @@ const PersonalSettings: React.FC = () => {
         setProfile(data);
         hydrateSelectionsFrom(data);
 
-        if (isOwner && orgExternalId) {
+        if (product === "business" && isOwner && orgExternalId) {
           const response = await api.getOrganization();
           setOrgProfile(response.data);
         }
@@ -188,7 +188,7 @@ const PersonalSettings: React.FC = () => {
         setIsInitialLoading(false);
       }
     })();
-  }, [hydrateSelectionsFrom, isOwner, orgExternalId, t]);
+  }, [hydrateSelectionsFrom, isOwner, orgExternalId, product, t]);
 
   const openModal = (field?: EditableUserField) => {
     hydrateSelectionsFrom(profile);
@@ -262,8 +262,8 @@ const PersonalSettings: React.FC = () => {
     }
   };
 
-  const handleSecurityNavigation = () => navigate("/settings/security");
-  const handleFormatsNavigation = () => navigate("/settings/manage-formats");
+  const handleSecurityNavigation = () => navigate(product === "personal" ? "/personal/settings/security" : "/settings/security");
+  const handleFormatsNavigation = () => navigate(product === "personal" ? "/personal/settings/formats" : "/settings/manage-formats");
 
   if (isInitialLoading) {
     return (
@@ -287,8 +287,8 @@ const PersonalSettings: React.FC = () => {
     <>
       <TopProgress active={isSubmitting} variant="top" topOffset={64} />
 
-      <main className="min-w-0 px-4 pb-10 pt-5 sm:px-7">
-        <div className="mx-auto w-full max-w-[1440px] space-y-5">
+      <main className={product === "personal" ? "min-w-0" : "min-w-0 px-4 pb-10 pt-5 sm:px-7"}>
+        <div className={product === "personal" ? "w-full space-y-5" : "mx-auto w-full max-w-[1440px] space-y-5"}>
           <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               
 

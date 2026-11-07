@@ -1,4 +1,4 @@
-const settingsPages = new Set(["personal", "organization-settings", "subscription-management", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
+const settingsPages = new Set(["personal", "organization-settings", "workspaces", "subscription-management", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", reconciliation: "reconciliation", correlation: "correlation", setup: "setup", periods: "periods" };
 export function getPageTitleKey(pathname: string): string {
   const [, root, page, detail, phase] = pathname.split("/");

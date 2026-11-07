@@ -43,6 +43,7 @@
   "settingsDescriptions": {
     "personal": "Gerencie seu perfil, dados de contato e preferências pessoais.",
     "organization-settings": "Mantenha os dados e as configurações regionais da organização atualizados.",
+    "workspaces": "Crie, alterne e gira os espaços de trabalho associados à sua conta.",
     "subscription-management": "Consulte seu plano, faturamento e detalhes da assinatura.",
     "security": "Gerencie o acesso, a senha e a segurança da sua conta.",
     "banks": "Gerencie as contas bancárias usadas no fluxo de caixa.",

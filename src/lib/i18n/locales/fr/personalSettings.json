@@ -1,5 +1,6 @@
 {
   "title": "Paramètres personnels",
+  "description": "Gérez votre profil, vos coordonnées, votre adresse et vos informations personnelles.",
   "header": {
     "settings": "Paramètres",
     "personal": "Personnel"

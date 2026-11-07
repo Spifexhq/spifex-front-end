@@ -1,30 +1,21 @@
-import WorkspaceCurrency from "@/features/workspaces/components/WorkspaceCurrency";
-import { useSearchParams } from "react-router-dom";
-import SegmentedControl from "@/shared/ui/SegmentedControl";
-import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useDispatch } from "react-redux";
-import { useAuthContext } from "@/hooks/useAuth";
-import { api } from "@/core/api/requests";
-import { setAuthSnapshot } from "@/redux";
-import { apiErrorMessage } from "@/lib/apiErrorMessage";
-import { TIMEZONES } from "@/lib/location/timezonesList";
-import { getCountries } from "@/lib/location/countries";
-import { PreferenceSection } from "@/shared/ui/Settings/PreferenceSection";
-import Input from "@/shared/ui/Input";
-import Button from "@/shared/ui/Button";
-import { Select } from "@/shared/ui/Select";
-import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
-import { readonlyWorkspace } from "../services/personalData";
-const Security = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
-const Notifications = lazy(() => import("@/features/account-settings/pages/NotificationSettings"));
-const Plans = lazy(() => import("./PersonalPlans"));
-export default function PersonalSettings(){
- const [params, setParams] = useSearchParams();
- const section = params.get("section") || "profile";
- const {t,i18n}=useTranslation("personal"),auth=useAuthContext(),dispatch=useDispatch();const [form,setForm]=useState({name:"",timezone:"",country:""}),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[saved,setSaved]=useState(false);const countries=useMemo(()=>getCountries(i18n.language),[i18n.language]);
- const readOnly=readonlyWorkspace(auth.organization?.organization?.lifecycle);
- useEffect(()=>{let active=true;void api.getPersonalSettings().then(result=>{if(active)setForm({name:result.data.name,timezone:result.data.timezone,country:result.data.country||""});}).catch(cause=>{if(active)setError(apiErrorMessage(cause,t("error")));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[t]);
- return <div className="space-y-6"><header><h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t("settings")}</h1><p className="mt-2 text-sm text-slate-500">{t("settingsDescription")}</p></header><SegmentedControl value={section} onChange={section=>setParams({section})} label={t("settings")} items={["profile","currency","security","notifications","plans","workspaces"].map(value=>({value,label:t(value)}))}/><Suspense fallback={<PageSkeleton variant="form"/>}>{section==="currency"?<WorkspaceCurrency/>:section==="workspaces"?<PreferenceSection title={t("workspaces")}><div className="max-w-sm p-5"><WorkspaceSwitcher manage/></div></PreferenceSection>:section==="security"?<Security/>:section==="notifications"?<Notifications/>:section==="plans"?<Plans/>:<><PreferenceSection title={t("profile")}><form className="space-y-5 p-5" onSubmit={async event=>{event.preventDefault();if(busy||readOnly)return;setBusy(true);setSaved(false);setError("");try{await api.editPersonalSettings(form);const result=await api.getUser();dispatch(setAuthSnapshot(result.data));setSaved(true);}catch(cause){setError(apiErrorMessage(cause,t("error")));}finally{setBusy(false);}}}><p className="break-all text-xs text-slate-500">{auth.user?.email}</p><div className="grid gap-5 sm:grid-cols-2"><Input kind="text" label={t("name")} value={form.name} onChange={event=>setForm({...form,name:event.target.value})} required disabled={loading||busy||readOnly}/><Select label={t("country")} items={countries} selected={countries.filter(item=>item.value===form.country)} onChange={items=>setForm({...form,country:items[0]?.value||""})} getItemKey={item=>item.value} getItemLabel={item=>item.label} singleSelect hideCheckboxes disabled={loading||busy||readOnly}/><Select label={t("timezone")} items={TIMEZONES} selected={TIMEZONES.filter(item=>item.value===form.timezone)} onChange={items=>setForm({...form,timezone:items[0]?.value||""})} getItemKey={item=>item.value} getItemLabel={item=>item.label} singleSelect hideCheckboxes disabled={loading||busy||readOnly}/></div>{error&&<p role="alert" className="text-xs text-red-700">{error}</p>}{saved&&<p role="status" className="text-xs text-emerald-700">{t("saved")}</p>}<div className="flex justify-end"><Button type="submit" disabled={loading||busy||readOnly} isLoading={busy}>{t("save")}</Button></div></form></PreferenceSection></>}</Suspense></div>;
+import { Navigate, useSearchParams } from "react-router-dom";
+
+const legacySections: Record<string, string> = {
+  profile: "personal",
+  address: "personal",
+  personalData: "personal",
+  formats: "formats",
+  currency: "currency",
+  security: "security",
+  notifications: "notifications",
+  plans: "billing",
+  billing: "billing",
+  workspaces: "workspaces",
+};
+
+/** Preserve bookmarks using the former /settings?section=... URLs. */
+export default function PersonalSettingsIndex() {
+  const [params] = useSearchParams();
+  const section = params.get("section") || "personal";
+  return <Navigate to={`/personal/settings/${legacySections[section] || "personal"}`} replace />;
 }

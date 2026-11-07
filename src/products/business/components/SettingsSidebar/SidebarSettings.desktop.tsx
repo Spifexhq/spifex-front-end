@@ -4,10 +4,10 @@ import "../../../../shared/layout/Sidebar/sidebar-motion.css";
 import { useEffect, useMemo, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft } from "lucide-react";
+import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft, PanelsTopLeft } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import type { SidebarSettingsProps } from "./SidebarSettings";
-const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network };
+const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, workspaces: PanelsTopLeft, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network };
 type SidebarSection = { title: string; id: string; items: { id: string; icon: keyof typeof Icons; label: string; permission: string }[] };
 export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mobileOpen = false, onMobileClose, collapsed = false, onToggleCollapsed }: SidebarSettingsProps) {
   const { permissions, isOwner } = useAuthContext();
@@ -30,6 +30,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         id: "org",
         items: [
           { id: "organization-settings", icon: "building", label: t("items.organization-settings"), permission: "view_organization_settings_page" },
+          { id: "workspaces", icon: "workspaces", label: t("items.workspaces"), permission: "view_organization_settings_page" },
           { id: "members", icon: "members", label: t("items.members"), permission: "view_member_settings_page" },
           { id: "groups", icon: "groups", label: t("items.groups"), permission: "view_group_settings_page" },
           { id: "subscription-management", icon: "layers", label: t("items.subscription-management"), permission: "view_subscription_management_page" },

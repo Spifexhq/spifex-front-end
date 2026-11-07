@@ -43,6 +43,7 @@
   "settingsDescriptions": {
     "personal": "Verwalten Sie Ihr Profil, Ihre Kontaktdaten und persönlichen Einstellungen.",
     "organization-settings": "Halten Sie die Daten und regionalen Einstellungen Ihrer Organisation aktuell.",
+    "workspaces": "Erstellen und verwalten Sie die Arbeitsbereiche Ihres Kontos und wechseln Sie zwischen ihnen.",
     "subscription-management": "Prüfen Sie Ihren Tarif, Ihre Abrechnung und Ihr Abonnement.",
     "security": "Verwalten Sie Anmeldung, Passwort und Kontosicherheit.",
     "banks": "Verwalten Sie die Bankkonten für Ihre Zahlungsübersicht.",

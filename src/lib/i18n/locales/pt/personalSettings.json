@@ -1,5 +1,6 @@
 {
-  "title": "Configurações pessoais",
+  "title": "Definições pessoais",
+  "description": "Gira o seu perfil, contactos, morada e informações pessoais.",
   "header": {
     "settings": "Configurações",
     "personal": "Pessoal"

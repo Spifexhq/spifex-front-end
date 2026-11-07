@@ -10,7 +10,7 @@ import type { MfaRequiredPayload, SignInRequest, SignInResend2FARequest,
 import type { CookieConsentRequest, CookieConsentResponse } from '@/models/auth/cookies';
 import type { EmailChangeRequest, EmailChangeResponse, PasswordChangeRequest, PasswordChangeResponse, VerifyPasswordResetRequest, VerifyPasswordResetResponse, PasswordResetRequest, PasswordResetResponse, 
   TwoFactorSettingsResponse, TwoFactorSettingsUpdateRequest, SecurityStatusResponse} from '@/models/auth/security';
-import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest } from '@/models/auth/user';
+import type { GetUserResponse, User, PersonalSettings, EditPersonalSettingsRequest, PersonalDataSettings, PersonalAddressSettings } from '@/models/auth/user';
 import type { ConfigurationStatus } from "@/models/auth/configuration";
 import type { Organization, OrgCurrencyResponse, UpdateOrgCurrencyRequest, OrgLedgerProfileResponse,
   UpdateOrgLedgerProfileRequest } from '@/models/auth/organization';
@@ -226,6 +226,11 @@ export const api = {
 
   editPersonalSettings:(payload: EditPersonalSettingsRequest) =>
     request<PersonalSettings>("identity/profile/settings/", "PATCH", payload),
+
+  getPersonalData: () => request<PersonalDataSettings>("identity/profile/data/", "GET"),
+  editPersonalData: (payload: Partial<PersonalDataSettings>) => request<PersonalDataSettings>("identity/profile/data/", "PATCH", payload),
+  getPersonalAddress: () => request<PersonalAddressSettings>("identity/profile/address/", "GET"),
+  editPersonalAddress: (payload: Partial<PersonalAddressSettings>) => request<PersonalAddressSettings>("identity/profile/address/", "PATCH", payload),
 
   getSecurityStatus: () =>
     request<SecurityStatusResponse>("identity/profile/security-status/", "GET"),
