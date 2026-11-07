@@ -1,4 +1,5 @@
 import SidebarUserConfiguration from "../../../../shared/layout/Sidebar/SidebarUserConfiguration";
+import SidebarBrand from "@/shared/layout/Sidebar/SidebarBrand";
 import "../../../../shared/layout/Sidebar/sidebar-motion.css";
 import { useEffect, useMemo, useRef } from "react";
 import { NavLink } from "react-router-dom";
@@ -81,9 +82,8 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
       className={`sidebar-motion fixed left-0 z-50 flex flex-col border-r border-gray-200 bg-gray-50 ${collapsed ? "md:w-[72px]" : "md:w-[248px]"} w-[280px] max-w-[85vw] `}
       style={{ top: topOffsetPx, height: `calc(100dvh - ${topOffsetPx}px)` }}>
       <div className="sidebar-header h-20 shrink-0 items-center">
-        <div className="sidebar-header-copy sidebar-label">
-          <p className="text-[15px] font-semibold tracking-tight text-gray-900"><NavLink to="/overview" tabIndex={collapsed && !mobileOpen ? -1 : undefined}>Spifex</NavLink></p>
-          <p className="mt-0.5 truncate text-xs text-gray-500">{t("title", "Settings")}</p>
+        <div className="sidebar-header-copy sidebar-label" aria-hidden={collapsed && !mobileOpen}>
+          <SidebarBrand product="Enterprise"/>
         </div>
         <button type="button" onClick={onToggleCollapsed} aria-expanded={!collapsed} aria-controls="settings-navigation" title={t(collapsed ? "actions.expand" : "actions.collapse")} aria-label={t(collapsed ? "actions.expand" : "actions.collapse")} className="sidebar-toggle hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200/60 focus-visible:outline-2 focus-visible:outline-gray-500 md:inline-flex">
           {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
