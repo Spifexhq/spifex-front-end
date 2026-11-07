@@ -9,11 +9,11 @@ import { selectWorkspace } from "./workspaceSelection";
 
 export function useWorkspaceSelection() {
   const dispatch = useDispatch(), navigate = useNavigate();
-  return (id: string) => selectWorkspace(id, {
+  return (id: string, options?: { beforeCommit?: () => Promise<void> }) => selectWorkspace(id, {
     getWorkspace: getOrgExternalIdStored, setWorkspace: setOrgExternalIdStored,
     getUser: getUserIdStored, generation: getAuthGeneration, advance: advanceAuthGeneration,
-    clearCaches: clearHttpCaches, profile: api.getUser,
+    clearCaches: clearHttpCaches, profile: () => api.getUser(id),
     commit: snapshot => { dispatch(setAuthSnapshot(snapshot)); },
     navigate: path => navigate(path, { replace: true }), setGate: setAuthGate, clearGate: clearAuthGate,
-  });
+  }, options);
 }

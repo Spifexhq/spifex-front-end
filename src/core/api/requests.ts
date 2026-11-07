@@ -215,8 +215,8 @@ export const api = {
     } satisfies VerifyPasswordResetRequest),
 
   /* --- User --- */
-  getUser: () =>
-    request<GetUserResponse>("identity/profile/", "GET", undefined, { fresh: true, skipAuthGate: true }),
+  getUser: (organizationId?: string) =>
+    request<GetUserResponse>("identity/profile/", "GET", undefined, { fresh: true, skipAuthGate: true, organizationId }),
 
   editUser:(payload: Partial<User>) =>
     request<User>("identity/profile/", "PUT", payload),

@@ -213,7 +213,7 @@ http.interceptors.request.use((cfg) => {
   const token = getAccess();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const orgExt = readOrgExternalId();
+  const orgExt = (cfg as AxiosRequestConfig & { _orgExternalId?: string })._orgExternalId || readOrgExternalId();
   if (orgExt) headers["X-Org-External-Id"] = orgExt;
 
   return cfg;
@@ -522,7 +522,8 @@ function keyFrom(cfg: AxiosRequestConfig) {
   const u = (cfg.baseURL || "") + (cfg.url || "");
   const p = stableParams(cfg.params || {});
   const variants = stableParams(http.defaults.headers.common);
-  return `${getAuthGeneration()}:${getUserIdStored()}:${readOrgExternalId() || ""}:${variants}:${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
+  const organization = (cfg as AxiosRequestConfig & { _orgExternalId?: string })._orgExternalId || readOrgExternalId();
+  return `${getAuthGeneration()}:${getUserIdStored()}:${organization || ""}:${variants}:${(cfg.method || "GET").toUpperCase()} ${u}?${p}`;
 }
 
 function pruneParams(p: unknown) {
@@ -573,12 +574,12 @@ function normalizeEndpoint(ep: string): string {
   return String(ep || "").replace(/^\/+/, "");
 }
 
-export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string }): Promise<ApiSuccess<T>> {
+export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string; organizationId?: string }): Promise<ApiSuccess<T>> {
   try {
     const ep = normalizeEndpoint(endpoint);
     const generation = getAuthGeneration();
     const cacheVersion = cacheGeneration;
-    const organization = readOrgExternalId();
+    const organization = options?.organizationId || readOrgExternalId();
     const tags = resourceTags(ep);
     const stamp = () => tags.map(tag => resourceGenerations.get(tag) || 0).join(":");
     const resourceVersion = stamp();
@@ -587,7 +588,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
     const cfg: AxiosRequestConfig = {
       url: ep,
       headers: options?.ifMatch ? { "If-Match": options.ifMatch } : undefined,
-      ...({ _skipAuthGate: options?.skipAuthGate, _authGeneration: generation } as AxiosRequestConfig),
+      ...({ _skipAuthGate: options?.skipAuthGate, _authGeneration: generation, _orgExternalId: options?.organizationId } as AxiosRequestConfig),
       method,
       data: method !== "GET" ? payload : undefined,
       params: method === "GET" ? pruneParams(payload) : undefined,
@@ -635,7 +636,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       res = locks && changesSession ? await locks.request("spifex:refresh", () => http.request(cfg)) : await http.request(cfg);
     }
 
-    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !(options?.skipAuthGate && ep === "identity/profile/") && !current()) || (!ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
+    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !(options?.skipAuthGate && ep === "identity/profile/") && !current()) || (!options?.organizationId && !ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
     if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) {
       const affected = mutationTags(ep);
       if (affected) invalidateHttpResources(affected); else clearHttpCaches();

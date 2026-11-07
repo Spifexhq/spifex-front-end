@@ -7,7 +7,7 @@ type Dependencies = {
   generation(): number;
   advance(): void;
   clearCaches(): void;
-  profile(): Promise<{ data: GetUserResponse }>;
+  profile(organizationId: string): Promise<{ data: GetUserResponse }>;
   commit(snapshot: GetUserResponse): void;
   navigate(path: string): void;
   setGate(task: Promise<void>): void;
@@ -15,7 +15,7 @@ type Dependencies = {
 };
 
 /** Commit only a verified same-user workspace snapshot; restore the hint on failure. */
-export async function selectWorkspace(id: string, deps: Dependencies): Promise<void> {
+export async function selectWorkspace(id: string, deps: Dependencies, options: { beforeCommit?: () => Promise<void> } = {}): Promise<void> {
   const previous = deps.getWorkspace(), user = deps.getUser();
   deps.advance();
   const generation = deps.generation();
@@ -24,10 +24,12 @@ export async function selectWorkspace(id: string, deps: Dependencies): Promise<v
   deps.setWorkspace(id);
   const task = (async () => {
     try {
-      const { data } = await deps.profile();
+      const { data } = await deps.profile(id);
       if (!current()) throw new Error("Workspace switch superseded");
       if (user && data.user.id !== user) throw new Error("refresh_user_mismatch");
       if (data.organization?.organization?.id !== id) throw new Error("Workspace access could not be verified");
+      await options.beforeCommit?.();
+      if (!current()) throw new Error("Workspace switch superseded");
       deps.commit(data);
       deps.navigate(data.organization.organization.product_category === "personal" ? "/personal/overview" : "/overview");
     } catch (error) {

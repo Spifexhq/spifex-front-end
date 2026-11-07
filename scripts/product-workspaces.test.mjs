@@ -7,14 +7,15 @@ const source = ts.transpileModule(fs.readFileSync("src/features/workspaces/compo
 const context = vm.createContext({exports:{}, Error}); vm.runInContext(source, context);
 const {selectWorkspace} = context.exports;
 function harness() {
-  const state = {workspace:"old", user:"user", generation:0, commits:[], paths:[], clears:0, gate:null};
+  const state = {workspace:"old", user:"user", generation:0, commits:[], paths:[], clears:0, gate:null, profileScopes:[]};
   const snapshot = {user:{id:"user"},organization:{organization:{id:"new",product_category:"personal"}}};
-  const deps = {getWorkspace:()=>state.workspace,setWorkspace:id=>{state.workspace=id;},getUser:()=>state.user,generation:()=>state.generation,advance:()=>{state.generation++;},clearCaches:()=>{state.clears++;},profile:async()=>({data:snapshot}),commit:value=>{state.commits.push(value);},navigate:path=>{state.paths.push(path);},setGate:task=>{state.gate=task;},clearGate:task=>{if(state.gate===task)state.gate=null;}};
+  const deps = {getWorkspace:()=>state.workspace,setWorkspace:id=>{state.workspace=id;},getUser:()=>state.user,generation:()=>state.generation,advance:()=>{state.generation++;},clearCaches:()=>{state.clears++;},profile:async organizationId=>{state.profileScopes.push(organizationId);return{data:snapshot};},commit:value=>{state.commits.push(value);},navigate:path=>{state.paths.push(path);},setGate:task=>{state.gate=task;},clearGate:task=>{if(state.gate===task)state.gate=null;}};
   return {state,snapshot,deps};
 }
 test("workspace switching commits a verified same-user snapshot and product destination", async()=>{
-  const {state,deps}=harness(); await selectWorkspace("new",deps);
-  assert.equal(state.workspace,"new");assert.equal(state.commits.length,1);assert.deepEqual(state.paths,["/personal/overview"]);assert.equal(state.gate,null);assert.equal(state.clears,1);
+  const {state,deps}=harness();let boundaryPassed=false;await selectWorkspace("new",deps,{beforeCommit:async()=>{boundaryPassed=true;}});
+  assert.equal(boundaryPassed,true);
+  assert.equal(state.workspace,"new");assert.deepEqual(state.profileScopes,["new"]);assert.equal(state.commits.length,1);assert.deepEqual(state.paths,["/personal/overview"]);assert.equal(state.gate,null);assert.equal(state.clears,1);
 });
 test("a rejected tenant selection restores the previous context and clears its caches", async()=>{
   const {state,deps,snapshot}=harness();snapshot.organization.organization.id="not-new";
@@ -29,6 +30,20 @@ test("a newer identity or switch cannot be overwritten by a delayed snapshot or 
 test("a different authenticated user is never accepted during workspace selection", async()=>{
   const {state,deps,snapshot}=harness();snapshot.user.id="another-user";
   await assert.rejects(selectWorkspace("new",deps),/refresh_user_mismatch/);assert.equal(state.commits.length,0);assert.equal(state.workspace,"old");
+});
+test("a failed pre-commit action restores the source workspace without committing the destination",async()=>{
+  const {state,deps}=harness();
+  await assert.rejects(selectWorkspace("new",deps,{beforeCommit:async()=>{throw new Error("checkout_failed");}}),/checkout_failed/);
+  assert.equal(state.workspace,"old");assert.equal(state.commits.length,0);assert.equal(state.clears,2);
+});
+test("paid plan checkout is scoped to the verified destination workspace",async()=>{
+  const code=ts.transpileModule(fs.readFileSync("src/features/workspaces/services/api.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+  let requestArgs;
+  const sandbox=vm.createContext({exports:{},require:name=>name==="@/core/api/http"?{request:async(...args)=>{requestArgs=args;return{data:{url:"https://checkout.example/session"}};}}:{}});
+  vm.runInContext(code,sandbox);
+  const result=await sandbox.exports.workspaceApi.checkout("personal-starter","PT","year","destination-workspace");
+  assert.equal(result.data.url,"https://checkout.example/session");
+  assert.deepEqual(JSON.parse(JSON.stringify(requestArgs)),["billing/checkout-session/","POST",{plan_code:"personal-starter",country_code:"PT",billing_interval:"year"},{organizationId:"destination-workspace"}]);
 });
 test("Personal copy has the same translated keys in every supported language",()=>{
   const read=lang=>JSON.parse(fs.readFileSync(`src/lib/i18n/locales/${lang}/personal.json`,"utf8"));
