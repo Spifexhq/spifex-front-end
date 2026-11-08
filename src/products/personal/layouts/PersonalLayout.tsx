@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, LayoutDashboard, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Landmark, Tags, CircleGauge, Target, ChartNoAxesCombined, Settings2 } from "lucide-react";
+import { Menu, LayoutDashboard, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, CircleGauge, Target, ChartNoAxesCombined, Settings2 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
@@ -14,7 +14,7 @@ import { PERSONAL_PERMISSION } from "../access/permissions";
 
 const groups = [
   { id: "overview", items: [{ key: "overview", Icon: LayoutDashboard }] },
-  { id: "money", items: [{ key: "transactions", Icon: ArrowLeftRight }, { key: "accounts", Icon: Landmark }, { key: "categories", Icon: Tags }] },
+  { id: "money", items: [{ key: "transactions", Icon: ArrowLeftRight }] },
   { id: "planning", items: [{ key: "budgets", Icon: CircleGauge }, { key: "goals", Icon: Target }, { key: "reports", Icon: ChartNoAxesCombined }] },
 ];
 
@@ -54,7 +54,7 @@ function PersonalLayoutContent() {
     <div className="fixed inset-y-0 left-0 z-40">
       {inSettings ? <PersonalSettingsSidebar open={desktop ? !collapsed : mobile} mobile={!desktop} collapsed={collapsed} onToggle={toggle} onMobileClose={closeMobile}/> : <SidebarFrame open={desktop ? !collapsed : mobile} mobile={!desktop} onToggle={toggle} product="Personal" label={t("navigation")} toggleLabel={t(!desktop && mobile ? "close" : "toggleNavigation")} workspace={<WorkspaceSwitcher compact={railCollapsed}/>} footer={<><div className="shrink-0 border-t border-gray-200 p-3"><NavLink to="/personal/settings/personal" title={railCollapsed ? t("settings") : undefined} onClick={closeMobile} className={({isActive})=>`sidebar-row rounded-md text-xs ${isActive?"bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200":"text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Settings2 size={16} className="sidebar-icon"/><span className="sidebar-label">{t("settings")}</span></NavLink></div><SidebarUserConfiguration collapsed={railCollapsed} onNavigate={closeMobile} destinations={{ personal: "/personal/settings/personal", notifications: "/personal/settings/notifications", help: "/personal/help" }}/></>}>
         {groups.slice(0, 2).map(group => <section key={group.id} className="mb-5" aria-label={t(`navigationSections.${group.id}`)}><div className="sidebar-section-title text-[11px] font-medium text-gray-400"><span className="sidebar-label">{t(`navigationSections.${group.id}`)}</span></div><ul className="space-y-1">{group.items.map(({key,Icon})=><li key={key}><NavLink to={`/personal/${key}`} title={railCollapsed ? t(key) : undefined} onClick={closeMobile} className={({ isActive }) => `sidebar-row rounded-md text-[13px] transition-colors ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Icon size={16} className="sidebar-icon"/><span className="sidebar-label">{t(key)}</span></NavLink></li>)}</ul></section>)}
-        {section === "transactions" && (canCreateEntries || canCreateTransfers) && <section className="mb-5" aria-label={t("sidebar:sidebar.sections.actions")}>
+        {(canCreateEntries || canCreateTransfers) && <section className="mb-5" aria-label={t("sidebar:sidebar.sections.actions")}>
           <div className="sidebar-section-title text-[11px] font-medium text-gray-400"><span className="sidebar-label">{t("sidebar:sidebar.sections.actions")}</span></div>
           <ul className="space-y-1">
             {canCreateEntries && <>

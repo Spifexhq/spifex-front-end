@@ -260,6 +260,7 @@
   "settingsSections": {
     "account": "Your account",
     "preferences": "Preferences",
+    "banking": "Banking",
     "workspace": "Workspace"
   },
   "settingsPages": {
@@ -282,6 +283,14 @@
     "notifications": {
       "title": "Notifications",
       "description": "Choose which account and workspace updates you receive."
+    },
+    "accounts": {
+      "title": "Accounts",
+      "description": "Manage the bank accounts and cash balances in this workspace."
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Organize income and expenses with your own categories."
     },
     "formats": {
       "title": "Formats",

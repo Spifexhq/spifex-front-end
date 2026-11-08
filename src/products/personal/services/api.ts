@@ -5,10 +5,12 @@ import { http, request } from "@/core/api/http";
 import type { PersonalAccount, PersonalDashboard, PersonalCollection, PersonalPage, PersonalRecord, PersonalTransaction, PersonalSettledActivity, EntryAttachment } from "../types";
 import type { CashflowBalance } from "@/shared/financial/types";
 import type { SettlementSource, BulkSettleItem } from "@/models/entries/settlements";
+import type { CashflowKpis, SettledKpis } from "@/models/components/cardKpis";
 export const personalApi = {
   transaction: (id: string) => request<PersonalTransaction>(`personal/transactions/${id}/`, "GET"),
   account: (id: string) => request<PersonalAccount>(`personal/accounts/${id}/`, "GET"),
   summary: (params: Record<string, string> = {}) => request<CashflowBalance>("personal/transactions/summary/", "GET", params),
+  kpis: (params: Record<string, string | undefined> = {}) => request<CashflowKpis | SettledKpis>("personal/transactions/kpis/", "GET", params),
   settledActivity: (params: Record<string, string | number | undefined> = {}) => request<PersonalPage<PersonalSettledActivity>>("personal/transactions/settled-activity/", "GET", params),
   settlementDrafts: (ids: string[]) => request<SettlementSource[]>("personal/transactions/settlement-drafts/", "GET", { ids: ids.join(",") }),
   settleBulk: (items: BulkSettleItem[], atomic = true) => request<{updated:PersonalTransaction[];errors:unknown[]}>("personal/transactions/bulk-settle/", "POST", { items, atomic }),

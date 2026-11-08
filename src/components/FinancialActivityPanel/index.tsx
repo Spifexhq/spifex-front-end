@@ -54,8 +54,8 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
  const showBanks = canView("view_bank");
  const showMetrics = canView(contextSettlement ? "view_settlement_kpis" : "view_cash_flow_kpis");
  const showFilters = canView("view_filters");
- const { metrics, loading, error, retry } = useActivityMetrics({filters, contextSettlement, refreshToken, enabled: showMetrics});
- const { state: bankState, ids: bankIds, sorted: bankRows, totalFmt: bankTotal, retryBanks } = useBankBalances(filters.bank_id, banksRefreshKey, showBanks);
+ const { metrics, loading, error, retry } = useActivityMetrics({filters, contextSettlement, refreshToken, enabled: showMetrics, personal: isPersonal});
+ const { state: bankState, ids: bankIds, sorted: bankRows, totalFmt: bankTotal, retryBanks } = useBankBalances(filters.bank_id, banksRefreshKey, showBanks, isPersonal);
  useFinanceLoading("banks", showBanks && bankState.loading);
  useFinanceLoading("metrics", showMetrics && loading);
  const [expanded, setExpanded] = useState(false);
@@ -71,7 +71,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
    tryApplyCurrentFilters, closeEditorsAndApply, clearAll, applyViewToForm,
    addFilterItems, activeEditorDef, scopedViews, refreshViews,
    bankOptions, removeChip,
- } = useActivityFilters({initial: filters, onApply, contextSettlement, shortcutsEnabled, enabled: showFilters, excludeObservationFilter});
+ } = useActivityFilters({initial: filters, onApply, contextSettlement, shortcutsEnabled, enabled: showFilters, excludeObservationFilter, personal: isPersonal});
  return <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
   {(showBanks || showMetrics) && <div className="shrink-0 overflow-hidden">
     <section aria-label={t("kpiCards:overview.title")} className="min-w-0">
@@ -85,11 +85,11 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         {showBanks && <>
     <div className="min-w-0 px-4 py-3 sm:px-5">
       <div className="text-xs leading-5 text-gray-500">{t("kpiCards:panel.consolidatedBalance")}</div>
-      <PermissionMiddleware codeName="view_consolidated_balance">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-7 tracking-tight text-gray-900 tabular-nums ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
+      {isPersonal ? personalAccess?.can("personal_view_financial_indicators") && <div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-7 tracking-tight text-gray-900 tabular-nums ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
           {bankState.loading && !bankState.hasLoaded ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankState.mixed || bankState.canViewBalance === false ? bankTotal : <AnimatedNumber value={bankState.total} format={value => formatCurrency(value, bankState.currency || undefined)} finalValue={bankTotal} />}
-        </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div>
-      </PermissionMiddleware>
+        </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div> : <PermissionMiddleware codeName="view_consolidated_balance"><div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-7 tracking-tight text-gray-900 tabular-nums ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
+          {bankState.loading && !bankState.hasLoaded ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankState.mixed || bankState.canViewBalance === false ? bankTotal : <AnimatedNumber value={bankState.total} format={value => formatCurrency(value, bankState.currency || undefined)} finalValue={bankTotal} />}
+        </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div></PermissionMiddleware>}
       <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={detailsId}
         className="mt-1 inline-flex min-h-7 max-w-full items-center gap-1 rounded text-[11px] font-medium text-gray-600 transition-colors hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
         <span>{bankState.loading ? <SkeletonLine className="h-3 w-20" /> : bankState.error ? t("banksTable:details") : t("kpiCards:panel.accountsCount", { count: bankState.count })}</span>

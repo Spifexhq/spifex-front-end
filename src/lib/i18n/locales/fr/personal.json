@@ -260,6 +260,7 @@
   "settingsSections": {
     "account": "Votre compte",
     "preferences": "Préférences",
+    "banking": "Banque",
     "workspace": "Espace de travail"
   },
   "settingsPages": {
@@ -282,6 +283,14 @@
     "notifications": {
       "title": "Notifications",
       "description": "Choisissez les mises à jour du compte et de l’espace de travail que vous recevez."
+    },
+    "accounts": {
+      "title": "Comptes",
+      "description": "Gérez les comptes bancaires et les soldes de cet espace de travail."
+    },
+    "categories": {
+      "title": "Catégories",
+      "description": "Organisez vos revenus et dépenses avec vos propres catégories."
     },
     "formats": {
       "title": "Formats",

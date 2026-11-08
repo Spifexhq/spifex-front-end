@@ -246,11 +246,11 @@ export const businessRoutes: RouteObject[] = [
                 },
                 {
                     path: 'manage-formats',
-                    element: <FormatSettings />
+                    element: <PermissionMiddleware codeName="view_format_settings_page" redirectTo="/settings"><FormatSettings /></PermissionMiddleware>
                 },
                 {
                     path: 'manage-currency',
-                    element: <CurrencySettings />
+                    element: <PermissionMiddleware codeName="view_currency_settings_page" redirectTo="/settings"><CurrencySettings /></PermissionMiddleware>
                 },
             ]
             },

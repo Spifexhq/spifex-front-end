@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/core/api/requests";
 import type { CashflowCategory } from "@/models/settings/categories";
+import { personalApi } from "@/products/personal/services/api";
+import type { PersonalCategory } from "@/products/personal/types";
 
 function extractCollection<T>(input: unknown): T[] {
   if (Array.isArray(input)) return input as T[];
@@ -19,7 +21,7 @@ function extractCollection<T>(input: unknown): T[] {
   return [];
 }
 
-export function useCashflowCategories(enabled = true) {
+export function useCashflowCategories(enabled = true, personal = false) {
   const [categories, setCategories] = useState<CashflowCategory[]>([]);
 
   useEffect(() => {
@@ -28,10 +30,26 @@ export function useCashflowCategories(enabled = true) {
 
     (async () => {
       try {
-        const response = await api.getCashflowCategories({ active: "true" });
-        const items = extractCollection<CashflowCategory>(
-          (response as { data?: unknown })?.data ?? response
-        );
+        let items: CashflowCategory[];
+        if (personal) {
+          const response = await personalApi.list<PersonalCategory>("categories", { page: 1, page_size: 100 });
+          items = (response.data?.results ?? []).filter(category => category.is_active).map(category => ({
+            id: category.id,
+            parent_id: null,
+            code: "",
+            name: category.name,
+            description: "",
+            tx_type_hint: category.kind === "income" ? "credit" : category.kind === "expense" ? "debit" : null,
+            is_active: category.is_active,
+            sort_order: 0,
+            metadata: {},
+          }));
+        } else {
+          const response = await api.getCashflowCategories({ active: "true" });
+          items = extractCollection<CashflowCategory>(
+            (response as { data?: unknown })?.data ?? response
+          );
+        }
         if (!alive) return;
         setCategories(items);
       } catch (err) {
@@ -44,7 +62,7 @@ export function useCashflowCategories(enabled = true) {
     return () => {
       alive = false;
     };
-  }, [enabled]);
+  }, [enabled, personal]);
 
   return categories;
 }

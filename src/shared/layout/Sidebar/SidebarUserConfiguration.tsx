@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { UserRound, Building2, Bell, CircleHelp, LogOut, ChevronsUpDown } from "lucide-react";
@@ -12,6 +13,7 @@ export default function SidebarUserConfiguration({ collapsed = false, destinatio
   const { t } = useTranslation("userMenu");
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -60,13 +62,13 @@ export default function SidebarUserConfiguration({ collapsed = false, destinatio
       <span className="sidebar-icon flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-[10px] font-semibold text-gray-700">{initials}</span>
       <span className="sidebar-label flex items-center gap-2 pr-3" aria-hidden={collapsed} style={{ opacity: collapsed ? 0 : 1, pointerEvents: collapsed ? "none" : undefined }}><span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium text-gray-800">{user?.name || t("account")}</span><span className="block truncate text-[10px] text-gray-400">{user?.email}</span></span><ChevronsUpDown size={13} className="shrink-0 text-gray-400" /></span>
     </button>
-    {open && createPortal(<div ref={panel} id={id} role="menu" aria-label={t("aria.menu")} style={position} className="shell-popover fixed z-[10060] w-64 max-w-[calc(100vw-24px)] overflow-y-auto rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
+    {createPortal(<AnimatePresence initial={false}>{open && <motion.div key="user-configuration-menu" ref={panel} id={id} role="menu" aria-label={t("aria.menu")} initial={{ opacity: 0, y: reducedMotion ? 0 : 4, scale: reducedMotion ? 1 : 0.985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: reducedMotion ? 0 : 4, scale: reducedMotion ? 1 : 0.985, pointerEvents: "none" }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: "easeOut" }} style={{ ...position, transformOrigin: "bottom left" }} className="shell-popover fixed z-[10060] w-64 max-w-[calc(100vw-24px)] overflow-y-auto rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
       <div className="border-b border-gray-100 px-2.5 py-2"><p className="truncate text-xs font-semibold text-gray-900">{user?.name}</p><p className="mt-0.5 truncate text-[11px] text-gray-500">{user?.email}</p></div>
       {links.map(({ to, key, Icon }) => <Link key={key} to={to} role="menuitem" onClick={closeForNavigation} className="mt-1 flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50"><Icon size={15} />{t(`items.${key}`)}</Link>)}
       <button type="button" role="menuitem" onClick={() => { closeForNavigation(); if (destinations) navigate(destinations.help); else shell?.openHelp(); }} className="mt-1 flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-gray-600 hover:bg-gray-50"><CircleHelp size={15} />{t("items.help")}</button>
       <div className="my-1 border-t border-gray-100" />
       <button type="button" role="menuitem" disabled={pending} onClick={() => void logout()} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"><LogOut size={15} />{t("items.signout")}</button>
       {error && <p role="alert" className="px-2.5 py-2 text-xs text-red-600">{t("signoutError")}</p>}
-    </div>, document.body)}
+    </motion.div>}</AnimatePresence>, document.body)}
   </div>;
 }

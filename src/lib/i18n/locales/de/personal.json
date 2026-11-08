@@ -260,6 +260,7 @@
   "settingsSections": {
     "account": "Ihr Konto",
     "preferences": "Einstellungen",
+    "banking": "Banking",
     "workspace": "Arbeitsbereich"
   },
   "settingsPages": {
@@ -282,6 +283,14 @@
     "notifications": {
       "title": "Benachrichtigungen",
       "description": "Legen Sie fest, welche Konto- und Arbeitsbereichs-Updates Sie erhalten."
+    },
+    "accounts": {
+      "title": "Konten",
+      "description": "Verwalten Sie die Bankkonten und Bargeldbestände dieses Arbeitsbereichs."
+    },
+    "categories": {
+      "title": "Kategorien",
+      "description": "Ordnen Sie Einnahmen und Ausgaben mit eigenen Kategorien."
     },
     "formats": {
       "title": "Formate",

@@ -8,6 +8,7 @@ import { api } from "@/core/api/requests";
 import { formatCurrency } from "@/lib/currency/formatCurrency";
 import type { CashflowKpis, SettledKpis } from "@/models/components/cardKpis";
 import type { EntryFilters } from "@/models/components/filterBar";
+import { personalApi } from "@/products/personal/services/api";
 
 export type KpiItem = {
   key: string;
@@ -39,8 +40,8 @@ const signedCurrencyFromDecimal = (v: unknown) => {
   return `${sign}${formatCurrency(n)}`;
 };
 
-export function useActivityMetrics({ filters, contextSettlement, refreshToken = 0, enabled = true }: {
-  filters?: EntryFilters; contextSettlement: boolean; refreshToken?: number; enabled?: boolean;
+export function useActivityMetrics({ filters, contextSettlement, refreshToken = 0, enabled = true, personal = false }: {
+  filters?: EntryFilters; contextSettlement: boolean; refreshToken?: number; enabled?: boolean; personal?: boolean;
 }) {
   const { t } = useTranslation("kpiCards");
   const tr = useCallback((key: string, options?: Record<string, unknown>) => String(t(key, options)), [t]);
@@ -78,26 +79,41 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
       setError(false);
       try {
         if (contextSettlement) {
-          const { data } = await freshRead(() => api.getSettledKpis({
-            description: filters?.description,
-            observation: filters?.observation,
-            cashflow_category_id: cashflowCategoryParam,
-            bank_id: bankParam,
-          }));
+          const { data } = personal
+            ? await freshRead(() => personalApi.kpis({
+                basis: "settled",
+                description: filters?.description,
+                observation: filters?.observation,
+                cashflow_category_id: cashflowCategoryParam,
+                bank_id: bankParam,
+              }))
+            : await freshRead(() => api.getSettledKpis({
+                description: filters?.description,
+                observation: filters?.observation,
+                cashflow_category_id: cashflowCategoryParam,
+                bank_id: bankParam,
+              }));
 
           if (current()) {
-            setSt(data);
+            setSt(data as SettledKpis);
             setCf(null);
           }
         } else {
-          const { data } = await freshRead(() => api.getCashflowKpis({
-            description: filters?.description,
-            observation: filters?.observation,
-            cashflow_category_id: cashflowCategoryParam,
-          }));
+          const { data } = personal
+            ? await freshRead(() => personalApi.kpis({
+                basis: "outstanding",
+                description: filters?.description,
+                observation: filters?.observation,
+                cashflow_category_id: cashflowCategoryParam,
+              }))
+            : await freshRead(() => api.getCashflowKpis({
+                description: filters?.description,
+                observation: filters?.observation,
+                cashflow_category_id: cashflowCategoryParam,
+              }));
 
           if (current()) {
-            setCf(data);
+            setCf(data as CashflowKpis);
             setSt(null);
           }
         }
@@ -119,6 +135,7 @@ export function useActivityMetrics({ filters, contextSettlement, refreshToken = 
     };
   }, [
     enabled,
+    personal,
     retryKey,
     contextSettlement,
     cashflowCategoryParam,

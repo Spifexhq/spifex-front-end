@@ -4,10 +4,10 @@ import "../../../../shared/layout/Sidebar/sidebar-motion.css";
 import { useEffect, useMemo, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft, PanelsTopLeft } from "lucide-react";
+import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft, PanelsTopLeft, CalendarClock, Coins } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import type { SidebarSettingsProps } from "./SidebarSettings";
-const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, workspaces: PanelsTopLeft, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network };
+const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, workspaces: PanelsTopLeft, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network, formats: CalendarClock, currency: Coins };
 type SidebarSection = { title: string; id: string; items: { id: string; icon: keyof typeof Icons; label: string; permission: string }[] };
 export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mobileOpen = false, onMobileClose, collapsed = false, onToggleCollapsed }: SidebarSettingsProps) {
   const { permissions, isOwner } = useAuthContext();
@@ -30,6 +30,8 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         id: "org",
         items: [
           { id: "organization-settings", icon: "building", label: t("items.organization-settings"), permission: "view_organization_settings_page" },
+          { id: "manage-formats", icon: "formats", label: t("items.formats"), permission: "view_format_settings_page" },
+          { id: "manage-currency", icon: "currency", label: t("items.currency"), permission: "view_currency_settings_page" },
           { id: "workspaces", icon: "workspaces", label: t("items.workspaces"), permission: "view_organization_settings_page" },
           { id: "members", icon: "members", label: t("items.members"), permission: "view_member_settings_page" },
           { id: "groups", icon: "groups", label: t("items.groups"), permission: "view_group_settings_page" },

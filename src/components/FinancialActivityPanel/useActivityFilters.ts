@@ -38,14 +38,14 @@ function filtersSignature(filters: EntryFilters): string {
   return JSON.stringify(sig);
 }
 
-export function useActivityFilters({ initial, onApply, contextSettlement, shortcutsEnabled = true, enabled, excludeObservationFilter = false }: {
- initial: EntryFilters; onApply(payload: {filters: EntryFilters}): void; contextSettlement: boolean; shortcutsEnabled?: boolean; enabled: boolean; excludeObservationFilter?: boolean;
+export function useActivityFilters({ initial, onApply, contextSettlement, shortcutsEnabled = true, enabled, excludeObservationFilter = false, personal = false }: {
+ initial: EntryFilters; onApply(payload: {filters: EntryFilters}): void; contextSettlement: boolean; shortcutsEnabled?: boolean; enabled: boolean; excludeObservationFilter?: boolean; personal?: boolean;
 }) {
   const { t } = useTranslation(["filterBar"]);
   const isMobile = useMediaQuery("(max-width: 639px)");
 
-  const bankOptions = useBankOptions(true, enabled);
-  const allCategories = useCashflowCategories(enabled);
+  const bankOptions = useBankOptions(true, enabled, personal);
+  const allCategories = useCashflowCategories(enabled, personal);
   const { views: savedViews, loaded: viewsLoaded, refresh: refreshViews } = useSavedViews(contextSettlement, enabled);
 
   const scopedViews = useMemo(() => savedViews, [savedViews]);
