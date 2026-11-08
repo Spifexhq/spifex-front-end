@@ -7,6 +7,7 @@ import { getAuthGeneration } from "../authentication/authGeneration";
 
 import axios, {
   type AxiosError,
+  type CanceledError,
   type AxiosResponse,
   type Method,
   type AxiosRequestConfig,
@@ -146,7 +147,7 @@ export const http = axios.create({
 });
 
 /** Superseded identity reads are expected during login and workspace changes. */
-function staleRequestCancellation(): axios.CanceledError {
+function staleRequestCancellation(): CanceledError {
   const error = new axios.CanceledError("Stale request discarded");
   // Callers that display Error.message should not turn an expected cancellation
   // into a visible failure notification.
