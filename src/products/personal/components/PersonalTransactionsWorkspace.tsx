@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, Trash2, X } from "lucide-react";
@@ -98,8 +99,7 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
   }, { income: 0, expense: 0 }), [records]);
   const pendingEntries = records.flatMap(row => row.activityKind === "entry" && "open_amount" in row.source && row.source.status === "pending" ? [row.source] : []);
   const canDeleteSelection = !!onDelete && pendingEntries.length === records.length;
-  if (!records.length) return null;
-  return <AnimatePresence initial={false}>{records.length > 0 && <motion.aside layout role="region" aria-label={t("financeEntries:selectionActions")} initial={{ opacity: 0, y: reduced ? 0 : 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reduced ? 0 : 4 }} transition={{ duration: reduced ? 0 : .15 }} className="fixed bottom-4 left-1/2 z-[9000] w-[calc(100vw-24px)] max-w-3xl -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4">
+  return createPortal(<AnimatePresence>{records.length > 0 && <motion.aside layout role="region" aria-label={t("financeEntries:selectionActions")} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: reduced ? 0 : .15 }} className="fixed bottom-4 left-1/2 z-[9000] w-[calc(100vw-24px)] max-w-3xl -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4">
     <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold text-gray-900">{t("financeEntries:selected", { count: records.length })}</p><div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500"><span>{t("financeEntries:income")} <b className="font-medium text-emerald-700">{formatCurrency(totals.income / 100, currency)}</b></span><span>{t("financeEntries:expense")} <b className="font-medium text-rose-700">{formatCurrency(totals.expense / 100, currency)}</b></span><span>{t("financeEntries:net")} <b className="font-medium text-gray-900">{formatCurrency((totals.income - totals.expense) / 100, currency)}</b></span></div></div><button type="button" disabled={busy} aria-label={t("financeEntries:clearSelection")} title={t("financeEntries:clearSelection")} onClick={onClear} className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-800"><X size={15}/></button></div>
     <AnimatePresence mode="wait" initial={false}>
       {confirm ? <motion.div key="confirm" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} role="group" aria-label={confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })} onKeyDown={event => { if (event.key === "Escape" && !pending && !busy) { event.preventDefault(); event.stopPropagation(); setConfirm(null); } }} className="mt-3 space-y-3 border-t border-gray-100 pt-3">
@@ -112,7 +112,7 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
       </motion.div>}
     </AnimatePresence>
     {error && <p className="w-full text-right text-xs text-rose-700" role="alert">{error}</p>}
-  </motion.aside>}</AnimatePresence>;
+  </motion.aside>}</AnimatePresence>, document.body);
 }
 
 function ActivityTable({ basis, items, loading, mutating, error, pager, currency, readOnly, onInspect, onEdit, onSettle, onDeleted, onSelectionBusy }: {
