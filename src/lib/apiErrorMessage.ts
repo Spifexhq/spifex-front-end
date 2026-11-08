@@ -1,6 +1,16 @@
 import i18next from "i18next";
+import { isCancel } from "axios";
+
+function isCancellation(cause: unknown, seen = new Set<object>()): boolean {
+  if (isCancel(cause)) return true;
+  if (!cause || typeof cause !== "object" || seen.has(cause)) return false;
+  seen.add(cause);
+  return isCancellation((cause as { cause?: unknown }).cause, seen);
+}
+
 /** Extract safe, useful messages from Error, DRF, Axios and envelope failures. */
 export function apiErrorMessage(cause: unknown, fallback: string): string {
+  if (isCancellation(cause)) return "";
   const quota = quotaErrorMessage(cause);
   if (quota) return quota;
   const seen = new Set<object>();
@@ -27,6 +37,7 @@ export function apiErrorMessage(cause: unknown, fallback: string): string {
 
 /** Preserve API codes/fields while supporting existing instanceof Error callers. */
 export function normalizeApiError(cause: unknown, fallback: string): Error {
+  if (isCancellation(cause) && cause instanceof Error) return cause;
   const message = apiErrorMessage(cause, fallback);
   const error = new Error(message);
   Object.defineProperty(error, "cause", { value: cause, configurable: true });

@@ -145,6 +145,15 @@ export const http = axios.create({
   timeout: 20_000,
 });
 
+/** Superseded identity reads are expected during login and workspace changes. */
+function staleRequestCancellation(): axios.CanceledError {
+  const error = new axios.CanceledError("Stale request discarded");
+  // Callers that display Error.message should not turn an expected cancellation
+  // into a visible failure notification.
+  error.message = "";
+  return error;
+}
+
 const startAt = new WeakMap<AxiosRequestConfig, number>();
 
 http.interceptors.request.use(async (cfg) => {
@@ -163,7 +172,7 @@ http.interceptors.request.use(async (cfg) => {
     await new Promise((r) => setTimeout(r, pauseUntil - Date.now()));
   }
 
-  if (stamped._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale request discarded");
+  if (stamped._authGeneration !== getAuthGeneration()) throw staleRequestCancellation();
   startAt.set(cfg, typeof performance !== "undefined" ? performance.now() : Date.now());
 
   const fullUrl = cfg.baseURL ? cfg.baseURL + (cfg.url || "") : cfg.url || "";
@@ -373,7 +382,7 @@ for (const client of [http, rawHttp]) client.interceptors.request.use(async cfg 
 async function doRefresh(): Promise<void> {
   const generation = getAuthGeneration();
   const res = await rawHttp.post("auth/refresh/", {});
-  if (generation !== getAuthGeneration()) throw new axios.CanceledError("Identity changed during refresh");
+  if (generation !== getAuthGeneration()) throw staleRequestCancellation();
 
   const { data, status } = res as AxiosResponse<unknown>;
 
@@ -408,7 +417,7 @@ export function refreshAccess(): Promise<void> {
   if (!refreshingPromise) {
     const generation = getAuthGeneration();
     const run = () => {
-      if (generation !== getAuthGeneration()) throw new axios.CanceledError("Identity changed before refresh");
+      if (generation !== getAuthGeneration()) throw staleRequestCancellation();
       return doRefresh();
     };
     // Tabs share rotating cookies. Serialize exchanges without sharing access JWTs.
@@ -450,14 +459,14 @@ function shouldTryRefreshOnce(status: number | undefined, cfg: RetriableConfig):
 
 http.interceptors.response.use(
   (r) => {
-    if ((r.config as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale response discarded");
+    if ((r.config as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw staleRequestCancellation();
     if (hasApiError(r.data)) notifyQuotaError(r.data.error);
     finishLog(r.config, r);
     return r;
   },
   async (error: AxiosError) => {
     const original = (error.config || {}) as RetriableConfig;
-    if ((original as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== undefined && (original as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw new axios.CanceledError("Stale response discarded");
+    if ((original as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== undefined && (original as AxiosRequestConfig & { _authGeneration?: number })._authGeneration !== getAuthGeneration()) throw staleRequestCancellation();
     const status = error.response?.status;
 
     if (axios.isAxiosError(error) && isSubscriptionBlocked(error)) {
@@ -575,15 +584,21 @@ function normalizeEndpoint(ep: string): string {
 }
 
 export async function request<T>(endpoint: string, method: Method = "GET", payload?: object, options?: { fresh?: boolean; skipAuthGate?: boolean; ifMatch?: string; organizationId?: string }): Promise<ApiSuccess<T>> {
+  let requestStillCurrent: (() => boolean) | null = null;
+  let requestGeneration = getAuthGeneration();
+  let requestOrganization: string | undefined;
   try {
     const ep = normalizeEndpoint(endpoint);
     const generation = getAuthGeneration();
     const cacheVersion = cacheGeneration;
     const organization = options?.organizationId || readOrgExternalId();
+    requestGeneration = generation;
+    requestOrganization = organization;
     const tags = resourceTags(ep);
     const stamp = () => tags.map(tag => resourceGenerations.get(tag) || 0).join(":");
     const resourceVersion = stamp();
     const current = () => cacheVersion === cacheGeneration && resourceVersion === stamp() && generation === getAuthGeneration();
+    requestStillCurrent = current;
 
     const cfg: AxiosRequestConfig = {
       url: ep,
@@ -636,7 +651,7 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
       res = locks && changesSession ? await locks.request("spifex:refresh", () => http.request(cfg)) : await http.request(cfg);
     }
 
-    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !(options?.skipAuthGate && ep === "identity/profile/") && !current()) || (!options?.organizationId && !ep.startsWith("auth/") && organization !== readOrgExternalId())) throw new axios.CanceledError("Stale request discarded");
+    if (generation !== getAuthGeneration() || (/^(GET|HEAD)$/i.test(method) && !(options?.skipAuthGate && ep === "identity/profile/") && !current()) || (!options?.organizationId && !ep.startsWith("auth/") && organization !== readOrgExternalId())) throw staleRequestCancellation();
     if (!/^(GET|HEAD|OPTIONS)$/i.test(method) && !ep.startsWith("auth/")) {
       const affected = mutationTags(ep);
       if (affected) invalidateHttpResources(affected); else clearHttpCaches();
@@ -652,6 +667,18 @@ export async function request<T>(endpoint: string, method: Method = "GET", paylo
 
     return body as ApiSuccess<T>;
   } catch (e) {
+    const failedEndpoint = normalizeEndpoint(endpoint);
+    const staleIdentity = requestGeneration !== getAuthGeneration()
+      || (!options?.organizationId && !failedEndpoint.startsWith("auth/") && requestOrganization !== readOrgExternalId());
+    const staleRead = /^(GET|HEAD)$/i.test(method)
+      && !(options?.skipAuthGate && failedEndpoint === "identity/profile/")
+      && requestStillCurrent !== null
+      && !requestStillCurrent();
+    // A stale request may fail with 403/401 while a workspace transition is in
+    // progress. Convert that response to a silent cancellation before callers
+    // can mistake it for a real permission or authentication failure.
+    if (staleIdentity || staleRead) throw staleRequestCancellation();
+    if (axios.isCancel(e)) throw e;
     const err = e as AxiosError<unknown>;
     if (axios.isAxiosError(err)) {
       const body = err.response?.data;

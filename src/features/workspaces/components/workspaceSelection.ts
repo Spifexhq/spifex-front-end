@@ -21,7 +21,6 @@ export async function selectWorkspace(id: string, deps: Dependencies, options: {
   const generation = deps.generation();
   const current = () => generation === deps.generation() && user === deps.getUser();
   deps.clearCaches();
-  deps.setWorkspace(id);
   const task = (async () => {
     try {
       const { data } = await deps.profile(id);
@@ -30,10 +29,18 @@ export async function selectWorkspace(id: string, deps: Dependencies, options: {
       if (data.organization?.organization?.id !== id) throw new Error("Workspace access could not be verified");
       await options.beforeCommit?.();
       if (!current()) throw new Error("Workspace switch superseded");
+      // Keep the previous workspace active until the new profile is verified.
+      // This avoids routing unrelated in-flight requests under a half-switched
+      // tenant identity.
+      deps.setWorkspace(id);
       deps.commit(data);
       deps.navigate(data.organization.organization.product_category === "personal" ? "/personal/overview" : "/overview");
     } catch (error) {
-      if (current()) { deps.advance(); deps.clearCaches(); deps.setWorkspace(previous); }
+      if (current()) {
+        deps.advance();
+        deps.clearCaches();
+        if (deps.getWorkspace() !== previous) deps.setWorkspace(previous);
+      }
       throw error;
     }
   })();
