@@ -147,7 +147,7 @@ export const http = axios.create({
 });
 
 /** Superseded identity reads are expected during login and workspace changes. */
-function staleRequestCancellation(): CanceledError {
+function staleRequestCancellation(): CanceledError<unknown> {
   const error = new axios.CanceledError("Stale request discarded");
   // Callers that display Error.message should not turn an expected cancellation
   // into a visible failure notification.
