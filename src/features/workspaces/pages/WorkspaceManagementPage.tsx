@@ -76,20 +76,21 @@ export default function WorkspaceManagementPage() {
     }
   };
 
-  if (loading) return <PageSkeleton variant="groups" rows={3}/>;
+  if (loading) return <main className="settings-page"><div className="settings-content"><PageSkeleton variant="groups" rows={3}/></div></main>;
 
-  return <div className="space-y-5">
-    <section className="flex justify-end rounded-lg border border-gray-200 bg-white p-3">
+  return <main className="settings-page">
+    <div className="settings-content space-y-5">
+    <div className="settings-intro justify-end">
       <div className="w-full sm:w-auto sm:min-w-[230px]"><WorkspaceSwitcher manage/></div>
-    </section>
+    </div>
 
     {error && !deleteTarget && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}<button type="button" className="ml-2 font-medium underline" onClick={() => void loadWorkspaces()}>{t("retry")}</button></p>}
 
-    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white" aria-label={t("workspaces")}>
-      <div className="border-b border-gray-100 px-4 py-3"><h2 className="text-[13px] font-semibold text-gray-900">{t("workspaces")}</h2></div>
+    <section className="settings-panel overflow-hidden rounded-lg border border-gray-200 bg-white" aria-label={t("workspaces")}>
+      <div className="settings-panel-heading flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-3"><h2 className="text-[13px] font-semibold text-gray-900">{t("workspaces")}</h2><span className="text-xs text-gray-500">{workspaces.length}</span></div>
       {workspaces.length ? <ul className="divide-y divide-gray-100">{workspaces.map(workspace => {
         const eligible = auth.isOwner && workspace.is_owner && workspace.lifecycle === "active" && activeOwned.length > 1;
-        return <li key={workspace.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        return <li key={workspace.id} className="settings-row flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-gray-50/70 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2"><p className="truncate text-[13px] font-medium text-gray-900">{workspace.name}</p>{workspace.id === activeWorkspace?.id && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">{t("current")}</span>}</div>
             <p className="mt-1 text-xs text-gray-500">{t(workspace.product_category || "business")} · {t(workspace.lifecycle || "active")}{workspace.scheduled_deletion_at && <span className="ml-2 text-amber-700">{t("deletionDaysLeft", { count: daysUntil(workspace.scheduled_deletion_at) })}</span>}</p>
@@ -107,5 +108,6 @@ export default function WorkspaceManagementPage() {
         <label className="flex items-start gap-2 text-xs leading-5 text-slate-700"><Checkbox checked={confirmed} onChange={event => setConfirmed(event.target.checked)} disabled={busy}/>{t("confirmPermanentDeletion")}</label>
       </div>
     </FloatingDialog>
-  </div>;
+    </div>
+  </main>;
 }
