@@ -23,6 +23,7 @@ export default function PersonalLayout() {
   const location = useLocation();
   const section = location.pathname.split("/")[2] || "overview";
   const inSettings = section === "settings";
+  const isTransactionsPage = section === "transactions";
   const workspace = organization?.organization;
   const readOnly = !!workspace?.lifecycle && workspace.lifecycle !== "active";
   const canCreateEntries = !readOnly && (isOwner || isSuperUser || permissions.includes("add_cash_flow_entries"));
@@ -66,7 +67,7 @@ export default function PersonalLayout() {
     <div ref={main} className={`flex h-full min-w-0 flex-col transition-[margin-left] duration-[220ms] ease-out motion-reduce:transition-none ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:px-6"><button type="button" aria-label={t("navigation")} className="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 md:hidden" onClick={toggle}><Menu size={18}/></button><p className="text-xs text-gray-500">Personal <span className="mx-2 text-gray-300">/</span>{inSettings && <><span className="text-gray-500">{t("settings")}</span><span className="mx-2 text-gray-300">/</span></>}<span className="font-medium text-gray-800">{inSettings ? (location.pathname.split("/")[3] === "personal" ? t("personalSettings:title") : t(`settingsPages.${location.pathname.split("/")[3] || "workspaces"}.title`)) : t(section)}</span></p></header>
       <WorkspaceLifecycleBanner/>
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-7"><div className="mx-auto max-w-[1440px]"><Suspense fallback={<PageSkeleton rows={7}/>}><Outlet/></Suspense></div></main>
+      <main className={`min-h-0 flex-1 px-4 py-6 sm:px-7 ${isTransactionsPage ? "flex flex-col overflow-hidden" : "overflow-y-auto"}`}><div className={`mx-auto max-w-[1440px] ${isTransactionsPage ? "flex min-h-0 w-full flex-1 flex-col" : ""}`}><Suspense fallback={<PageSkeleton rows={7}/>}><Outlet/></Suspense></div></main>
     </div>
   </div>;
 }

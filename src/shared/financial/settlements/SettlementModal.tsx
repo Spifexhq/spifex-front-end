@@ -71,7 +71,7 @@ export default function SettlementModal({ isOpen, onClose, onSave, selectedEntri
     try {
       const payload = settlementPayload(rows,banks);
       const result = adapter ? await adapter.settle(payload, true) : (await api.addSettlementsBulk(payload, true)).data;
-      if (result.errors?.length) throw new Error(t("batch.failed"));
+      if ("errors" in result && result.errors?.length) throw new Error(t("batch.failed"));
       setDirty(false); onSave();
     } catch (cause) { setError(apiErrorMessage(cause,t("batch.failed"))); }
     finally { submitting.current = false; setBusy(false); }

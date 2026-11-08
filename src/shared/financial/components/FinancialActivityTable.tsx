@@ -108,7 +108,7 @@ export default function FinancialActivityTable<T>({ records, currency, locale, e
     rowCanEdit={rowCanEdit ? row => row.record ? rowCanEdit(row.record) : false : undefined}
     rowCanDelete={rowCanDelete ? row => row.record ? rowCanDelete(row.record) : false : undefined}
     onDelete={onDelete ? row => row.record ? onDelete(row.record.source) : Promise.resolve() : undefined}
-    onDeleted={async () => { await pager.refresh(); await onDeleted?.(); }}
+    onDeleted={async () => { await pager.refresh?.(); await onDeleted?.(); }}
     onInspect={row => { if (row.record) onInspect(row.record.source); }}
     onEdit={canEdit && onEdit ? row => { if (row.record) onEdit(row.record.source); } : undefined}
     clearSelectionToken={clearSelectionToken}

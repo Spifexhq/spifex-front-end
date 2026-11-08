@@ -57,6 +57,8 @@ function normalizeRows(items: TableItem[], settled: boolean): FinancialActivityR
         amount: transfer ? dec(item.amount) : direction === "credit" ? dec(item.amount) : -dec(item.amount),
         balance: item.running_balance == null ? null : dec(item.running_balance),
         direction,
+        installmentIndex: transfer ? null : item.installment_index,
+        installmentCount: transfer ? null : item.installment_count,
         bankName: transfer ? `${item.source_bank_name || ""} → ${item.destination_bank_name || ""}` : item.bank_name,
         activityKind: transfer ? "transfer" : "settlement",
         source: item,
@@ -166,7 +168,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     return record.bankName || ("bank_name" in record.source ? record.source.bank_name : null) || <span className="text-gray-400">∅</span>;
   };
   const inspect = (row: TableItem) => onInspect(row);
-  const edit = (row: TableItem) => { if ("open_amount" in row) onEdit(row); };
+  const edit = (row: TableItem) => { if (!settled) onEdit(row as PersonalTransaction); };
   const deleteOne = async (record: TableItem) => {
     if (settled) {
       const activity = record as PersonalSettledActivity;
@@ -220,7 +222,7 @@ export default function PersonalTransactionsWorkspace() {
       ? await personalApi.settledActivity({ ...query, page, page_size: pageSize })
       : await personalApi.list<PersonalTransaction>("transactions", { ...query, basis: "outstanding", page, page_size: pageSize });
     return { items: response.data.results, nextCursor: response.data.next ? getCursorFromUrl(response.data.next) : undefined, totalCount: response.data.count };
-  }, { accumulate: true, deps: [basis, query, workspace?.id, workspace?.lifecycle, readRevision, revision] });
+  }, { accumulate: true, initialPageSize: 100, deps: [basis, query, workspace?.id, workspace?.lifecycle, readRevision, revision] });
   const { items: _unused, ...rest } = pager;
   void _unused;
   const pagerForTable = { ...rest, items: pager.items };

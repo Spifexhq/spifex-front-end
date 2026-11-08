@@ -11,6 +11,7 @@ export type UseCursorPagerOptions = {
     autoLoadFirst?: boolean;
     deps?: unknown[];
     accumulate?: boolean;
+    initialPageSize?: number;
 };
 export type UseCursorPagerReturn<T, M = unknown> = {
     items: T[];
@@ -34,7 +35,7 @@ export type UseCursorPagerReturn<T, M = unknown> = {
 export function useCursorPager<T, M = unknown>(fetchPage: FetchPage<T, M>, opts: UseCursorPagerOptions = {}): UseCursorPagerReturn<T, M> {
     const fetchRef = useRef(fetchPage);
     fetchRef.current = fetchPage;
-    const [pageSize, setPageSize] = useState(20), [items, setItems] = useState<T[]>([]), [metadata, setMetadata] = useState<M>(), [totalCount, setTotal] = useState<number>(), [index, setIndex] = useState(0), [loading, setLoading] = useState(false), [error, setError] = useState<string | null>(null), [knownPages, setKnown] = useState(0), [reachedEnd, setEnd] = useState(false), [hasNext, setNext] = useState(false);
+    const [pageSize, setPageSize] = useState(opts.initialPageSize ?? 20), [items, setItems] = useState<T[]>([]), [metadata, setMetadata] = useState<M>(), [totalCount, setTotal] = useState<number>(), [index, setIndex] = useState(0), [loading, setLoading] = useState(false), [error, setError] = useState<string | null>(null), [knownPages, setKnown] = useState(0), [reachedEnd, setEnd] = useState(false), [hasNext, setNext] = useState(false);
     const pages = useRef(new Map<number, {
         items: T[];
         nextCursor?: string;
@@ -141,7 +142,7 @@ export function useCursorPager<T, M = unknown>(fetchPage: FetchPage<T, M>, opts:
         if (page === 0 || cursor)
             await load(page, cursor);
     }, [load]);
-    const signature = JSON.stringify([opts.autoLoadFirst ?? true, pageSize, opts.deps ?? [], !!opts.accumulate]);
+    const signature = JSON.stringify([opts.autoLoadFirst ?? true, opts.initialPageSize ?? 20, pageSize, opts.deps ?? [], !!opts.accumulate]);
     const auto = opts.autoLoadFirst ?? true;
     const invalidate = useCallback(() => { generation.current++; refreshing.current = null; busy.current = false; }, []);
     useEffect(() => { invalidate(); if (auto)

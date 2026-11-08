@@ -203,6 +203,6 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           />
     </div>
   </div>}
-  <div className="min-h-0 flex-1 [&>div]:rounded-none [&>div]:border-0 [&>div]:shadow-none [&>section]:rounded-none [&>section]:border-0 [&>section]:shadow-none">{children}</div>
+  <div className="flex min-h-0 flex-1 flex-col [&>div]:rounded-none [&>div]:border-0 [&>div]:shadow-none [&>section]:rounded-none [&>section]:border-0 [&>section]:shadow-none">{children}</div>
  </div>;
 }
