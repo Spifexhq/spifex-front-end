@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import FloatingDialog, { DialogSkeleton } from "@/components/Modal/FloatingDialog";
 import Input from "@/shared/ui/Input";
 import Button from "@/shared/ui/Button";
+import ToggleSwitch from "@/shared/ui/ToggleSwitch";
 import { Select } from "@/shared/ui/Select";
 import { personalApi } from "@/products/personal/services/api";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
@@ -21,7 +22,7 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
     name: "", description: "", amount: kind === "settle" && record && "open_amount" in record ? record.open_amount : "",
     kind: transactionKind || "expense", due_date: today(), value_date: today(), month: today().slice(0, 7) + "-01",
     category_id: "", bank_id: "", notes: "",
-    limit: "", target: "", target_date: "", installment_count: "1", interval_months: "1",
+    limit: "", target: "", target_date: "", recurrence_enabled: "false", installment_count: "2", interval_months: "1", weekend_action: "0",
     ...(kind === "settle" || kind === "contribute" ? {} : Object.fromEntries(Object.entries(record || {}).map(([key, value]) => [key, value == null ? "" : String(value)]))),
   }));
   const [busy, setBusy] = useState(false);
@@ -76,7 +77,12 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
         if (kind === "transactions") payload = {
           description: form.description, notes: form.notes,
           ...(!editLocked ? { amount: form.amount, kind: form.kind, due_date: form.due_date, category_id: form.category_id || null } : {}),
-          ...(!record ? { installment_count: Number(form.installment_count), interval_months: Number(form.interval_months), idempotency_key: key.current } : {}),
+          ...(!record ? {
+            installment_count: form.recurrence_enabled === "true" ? Number(form.installment_count) : 1,
+            interval_months: Number(form.interval_months),
+            weekend_action: Number(form.weekend_action),
+            idempotency_key: key.current,
+          } : {}),
         };
         if (kind === "categories") payload = { name: form.name, kind: form.kind || null, is_active: form.is_active === "true" };
         if (kind === "budgets") payload = { name: form.name, month: form.month.slice(0, 7) + "-01", category_id: form.category_id || null, limit: form.limit };
@@ -97,7 +103,14 @@ export default function PersonalRecordDialog({ kind, record, currency, transacti
         <div className="sm:col-span-2">{text("description")}</div>
         {!editLocked && <>{(record || !transactionKind) && choices("kind", ["income", "expense"])}{amount("amount")}{date("due_date")}{options("category_id", categories.filter(item => !item.kind || item.kind === form.kind), true)}</>}
         <div className="sm:col-span-2">{text("notes", false)}{record ? <TransactionAttachments entryId={record.id}/> : <p className="mt-3 text-[11px] leading-5 text-slate-400">{t("saveBeforeFiles")}</p>}</div>
-        {!record && <details className="text-xs text-slate-500 sm:col-span-2"><summary className="cursor-pointer py-2">{t("recurrence")}</summary><div className="mt-3 grid gap-4 sm:grid-cols-2"><Input kind="text" type="number" min={1} max={120} label={t("installment_count")} value={form.installment_count} onChange={event => update("installment_count", event.target.value)} />{choices("interval_months", ["1", "2", "3", "6", "12"])}</div></details>}
+        {!record && <details className="text-xs text-slate-500 sm:col-span-2"><summary className="cursor-pointer py-2">{t("recurrence")}</summary><div className="mt-3 space-y-3">
+          <ToggleSwitch checked={form.recurrence_enabled === "true"} onChange={enabled => { update("recurrence_enabled", String(enabled)); if (enabled && Number(form.installment_count) < 2) update("installment_count", "2"); }} label={t("repeatTransaction")} description={t("recurrenceHelp")} disabled={busy}/>
+          {form.recurrence_enabled === "true" && <div className="grid gap-4 sm:grid-cols-2">
+            <Input kind="text" type="number" min={2} max={120} step={1} label={t("installment_count")} value={form.installment_count} onChange={event => update("installment_count", event.target.value)} />
+            <Select<{id:string;name:string}> label={t("interval_months")} items={[0,1,2,3,6,12].map(value => ({id:String(value),name:t(`recurrenceIntervals.${value}`)}))} selected={[{id:form.interval_months,name:t(`recurrenceIntervals.${form.interval_months}`)}]} onChange={items => update("interval_months", items[0]?.id || "1")} getItemKey={item => item.id} getItemLabel={item => item.name} buttonLabel={t("choose")} singleSelect hideFilter disabled={busy}/>
+            <Select<{id:string;name:string}> label={t("weekend_action")} items={[0,1,-1].map(value => ({id:String(value),name:t(`weekendActions.${value}`)}))} selected={[{id:form.weekend_action,name:t(`weekendActions.${form.weekend_action}`)}]} onChange={items => update("weekend_action", items[0]?.id || "0")} getItemKey={item => item.id} getItemLabel={item => item.name} buttonLabel={t("choose")} singleSelect hideFilter disabled={busy}/>
+          </div>}
+        </div></details>}
         {editLocked && <p className="text-xs leading-6 text-slate-500 sm:col-span-2">{t("lockedTransaction")}</p>}
       </>}
       {kind === "categories" && <>{text("name")}{choices("kind", ["income", "expense"])}</>}

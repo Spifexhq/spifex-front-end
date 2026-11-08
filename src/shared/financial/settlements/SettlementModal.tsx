@@ -12,15 +12,20 @@ import { api } from "@/core/api/requests";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import type { BankAccount } from "@/models/settings/banking";
+import type { SettlementSource } from "@/models/entries/settlements";
 import { useSettlementDraft } from "./useSettlementDraft";
 import { applySettlementDate, applyPercentage, bankSummary, cents, draftIssue, localToday, settlementPayload, type SettlementDraft } from "./settlementDraft";
 
 export type SettlementTarget = { id: string };
-type Props = { isOpen: boolean; onClose(): void; onSave(): void; selectedEntries: SettlementTarget[]; banksData: { banks: BankAccount[]; loading: boolean; error: string | null }; onRetryBanks?(): void };
+type SettlementAdapter = {
+  loadDrafts(ids: string[]): Promise<SettlementSource[]>;
+  settle(items: ReturnType<typeof settlementPayload>, atomic: boolean): Promise<{ errors?: unknown[] }>;
+};
+type Props = { isOpen: boolean; onClose(): void; onSave(): void; selectedEntries: SettlementTarget[]; banksData: { banks: BankAccount[]; loading: boolean; error: string | null }; onRetryBanks?(): void; adapter?: SettlementAdapter };
 const PAGE_SIZE = 20;
-export default function SettlementModal({ isOpen, onClose, onSave, selectedEntries, banksData, onRetryBanks }: Props) {
+export default function SettlementModal({ isOpen, onClose, onSave, selectedEntries, banksData, onRetryBanks, adapter }: Props) {
   const { t } = useTranslation("settlementModal");
-  const draft = useSettlementDraft(isOpen, selectedEntries);
+  const draft = useSettlementDraft(isOpen, selectedEntries, adapter?.loadDrafts);
   const { rows, setRows } = draft;
   const banks = useMemo(() => banksData.banks.filter(bank => bank.is_active !== false).sort((a,b) => a.institution.localeCompare(b.institution)), [banksData.banks]);
   const [tab, setTab] = useState<"prepare" | "review">("prepare"), [search, setSearch] = useState(""), [filter, setFilter] = useState("all"), [page, setPage] = useState(0);
@@ -64,8 +69,9 @@ export default function SettlementModal({ isOpen, onClose, onSave, selectedEntri
     if (invalid) return;
     submitting.current = true; setBusy(true); setError(null);
     try {
-      const { data } = await api.addSettlementsBulk(settlementPayload(rows,banks), true);
-      if ("errors" in data && data.errors?.length) throw new Error(t("batch.failed"));
+      const payload = settlementPayload(rows,banks);
+      const result = adapter ? await adapter.settle(payload, true) : (await api.addSettlementsBulk(payload, true)).data;
+      if (result.errors?.length) throw new Error(t("batch.failed"));
       setDirty(false); onSave();
     } catch (cause) { setError(apiErrorMessage(cause,t("batch.failed"))); }
     finally { submitting.current = false; setBusy(false); }

@@ -2,7 +2,7 @@ import type { SettlementSource } from "@/models/entries/settlements";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/core/api/requests";
 import { cents, makeDraft, type SettlementDraft } from "./settlementDraft";
-export function useSettlementDraft(open: boolean, entries: { id: string }[]) {
+export function useSettlementDraft(open: boolean, entries: { id: string }[], loadDrafts?: (ids: string[]) => Promise<SettlementSource[]>) {
   const [rows, setRows] = useState<SettlementDraft[]>([]), [loading, setLoading] = useState(true), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const preserve = useRef(false);
   const ids = JSON.stringify([...new Set(entries.map(entry => entry.id))].sort());
@@ -16,7 +16,8 @@ export function useSettlementDraft(open: boolean, entries: { id: string }[]) {
       try {
         const result: SettlementSource[] = [];
         for (let i = 0; i < requested.length; i += 100) {
-          const data = (await api.getSettlementDrafts(requested.slice(i, i + 100))).data;
+          const batch = requested.slice(i, i + 100);
+          const data = loadDrafts ? await loadDrafts(batch) : (await api.getSettlementDrafts(batch)).data;
           if (!alive) return;
           if (!Array.isArray(data)) throw new Error("Invalid entry details");
           result.push(...data);
@@ -29,6 +30,6 @@ export function useSettlementDraft(open: boolean, entries: { id: string }[]) {
       finally { if (alive) setLoading(false); }
     })();
     return () => { alive = false; };
-  }, [open, ids, attempt]);
+  }, [open, ids, attempt, loadDrafts]);
   return { rows, setRows, loading, error, retry: () => setAttempt(value => value+1), refreshBalances: () => { preserve.current = true; setAttempt(value => value+1); } };
 }

@@ -4,11 +4,15 @@ import { http, request } from "@/core/api/http";
 
 import type { PersonalAccount, PersonalDashboard, PersonalCollection, PersonalPage, PersonalRecord, PersonalTransaction, PersonalSettledActivity, EntryAttachment } from "../types";
 import type { CashflowBalance } from "@/shared/financial/types";
+import type { SettlementSource, BulkSettleItem } from "@/models/entries/settlements";
 export const personalApi = {
   transaction: (id: string) => request<PersonalTransaction>(`personal/transactions/${id}/`, "GET"),
   account: (id: string) => request<PersonalAccount>(`personal/accounts/${id}/`, "GET"),
   summary: (params: Record<string, string> = {}) => request<CashflowBalance>("personal/transactions/summary/", "GET", params),
   settledActivity: (params: Record<string, string | number | undefined> = {}) => request<PersonalPage<PersonalSettledActivity>>("personal/transactions/settled-activity/", "GET", params),
+  settlementDrafts: (ids: string[]) => request<SettlementSource[]>("personal/transactions/settlement-drafts/", "GET", { ids: ids.join(",") }),
+  settleBulk: (items: BulkSettleItem[], atomic = true) => request<{updated:PersonalTransaction[];errors:unknown[]}>("personal/transactions/bulk-settle/", "POST", { items, atomic }),
+  deleteTransactionsBulk: (ids: string[]) => request<{deleted:string[]}>("personal/transactions/bulk-delete/", "POST", { ids }),
   attachments: (id: string) => request<{results:EntryAttachment[];max_files:number;max_bytes:number}>(`personal/transactions/${id}/attachments/`, "GET"),
   uploadAttachment: (id: string, file: File) => { const form = new FormData(); form.append("file", file); return request<EntryAttachment>(`personal/transactions/${id}/attachments/`, "POST", form); },
   removeAttachment: (id: string, attachment: string) => request<void>(`personal/transactions/${id}/attachments/${attachment}/`, "DELETE"),

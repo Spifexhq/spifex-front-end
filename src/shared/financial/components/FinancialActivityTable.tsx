@@ -1,5 +1,4 @@
 import { useMemo, type ReactNode } from "react";
-import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatCurrency, formatDateFromISO } from "@/lib";
 import DataTable, { type Column, type DataTableProps } from "@/shared/ui/DataTable";
@@ -59,8 +58,6 @@ type Props<T> = {
   editLabel: string;
   onInspect(record: T): void;
   onEdit?(record: T): void;
-  onSettle?(record: T): void;
-  settleLabel?: string;
   onDelete?(record: T): Promise<unknown>;
   onDeleted?(): void | Promise<void>;
   onSelection?(selection: Selection<T>): ReactNode;
@@ -70,7 +67,7 @@ type Props<T> = {
   clearSelectionToken?: number;
 };
 
-export default function FinancialActivityTable<T>({ records, currency, locale, emptyLabel, secondColumnLabel, secondColumnHeader, renderSecondColumn, renderName, headerAccessory, pager, busy = false, error, mutating = false, canSelect, canDelete, canEdit = false, rowCanEdit, rowCanDelete, editLabel, settleLabel, onInspect, onEdit, onSettle, onDelete, onDeleted, onSelection, onEndReached, loadMore = false, onRetry, clearSelectionToken }: Props<T>) {
+export default function FinancialActivityTable<T>({ records, currency, locale, emptyLabel, secondColumnLabel, secondColumnHeader, renderSecondColumn, renderName, headerAccessory, pager, busy = false, error, mutating = false, canSelect, canDelete, canEdit = false, rowCanEdit, rowCanDelete, editLabel, onInspect, onEdit, onDelete, onDeleted, onSelection, onEndReached, loadMore = false, onRetry, clearSelectionToken }: Props<T>) {
   const { t } = useTranslation("financeEntries");
   const rows = useMemo(() => buildFinancialActivityRows(records, !!pager.canNext), [records, pager.canNext]);
   const loadedCount = rows.filter(row => row.kind === "record").length;
@@ -108,7 +105,6 @@ export default function FinancialActivityTable<T>({ records, currency, locale, e
     busy={mutating || (busy && !rows.length)}
     error={error || pager.error}
     canDelete={canDelete}
-    actions={onSettle ? row => row.kind === "record" && row.record?.activityKind === "entry" ? <button type="button" disabled={busy} aria-label={settleLabel || t("settle")} title={settleLabel || t("settle")} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900" onClick={() => { if (row.record) onSettle(row.record.source); }}><Check size={14}/></button> : null : undefined}
     rowCanEdit={rowCanEdit ? row => row.record ? rowCanEdit(row.record) : false : undefined}
     rowCanDelete={rowCanDelete ? row => row.record ? rowCanDelete(row.record) : false : undefined}
     onDelete={onDelete ? row => row.record ? onDelete(row.record.source) : Promise.resolve() : undefined}

@@ -78,27 +78,30 @@ function normalizeRows(items: TableItem[], settled: boolean): FinancialActivityR
   });
 }
 
-function SelectionActions({ basis, items, currency, onClear, onSettle, onReverse, busy, t }: {
+function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete, onReverse, busy, t }: {
   basis: Basis; items: FinancialActivityRow<TableItem>[]; currency: string; onClear(): void;
-  onSettle?(rows: PersonalTransaction[]): void; onReverse?(rows: PersonalSettledActivity[]): Promise<void>; busy: boolean;
+  onSettle?(ids: string[]): void; onDelete?(rows: PersonalTransaction[]): Promise<void>; onReverse?(rows: PersonalSettledActivity[]): Promise<void>; busy: boolean;
   t(key: string, options?: Record<string, unknown>): string;
 }) {
-  const [confirm, setConfirm] = useState(false);
+  const [confirm, setConfirm] = useState<"delete" | "reverse" | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const reduced = useReducedMotion();
   const records = items.flatMap(row => row.record ? [row.record] : []);
   const amount = records.reduce((sum, row) => sum + row.amount, 0);
+  const pendingEntries = records.flatMap(row => row.activityKind === "entry" && "open_amount" in row.source && row.source.status === "pending" ? [row.source] : []);
+  const canDeleteSelection = !!onDelete && pendingEntries.length === records.length;
   if (!records.length) return null;
   return <div className="fixed bottom-4 left-1/2 z-[1000] flex w-[calc(100vw-24px)] max-w-3xl -translate-x-1/2 flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4">
     <div className="min-w-0"><p className="text-xs font-semibold text-gray-900">{t("financeEntries:selected", { count: records.length })}</p><p className="mt-1 text-[11px] text-gray-500">{t("financeEntries:net")} <b className="font-medium text-gray-800">{formatCurrency(amount, currency)}</b></p></div>
     <AnimatePresence mode="wait" initial={false}>
-      {confirm && basis === "settled" ? <motion.div key="confirm" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} className="flex w-full flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3">
-        <p className="text-xs text-gray-700">{t("personal:reverseActivityConfirm", { count: records.length })}</p>
-        <div className="flex gap-2"><Button size="sm" variant="outline" disabled={pending || busy} onClick={() => setConfirm(false)}>{t("financeEntries:cancel")}</Button><Button size="sm" variant="danger" disabled={pending || busy} isLoading={pending} onClick={async () => { setPending(true); setError(""); try { await onReverse?.(records.flatMap(row => row.record?.source && "value_date" in row.record.source ? [row.record.source as PersonalSettledActivity] : [])); setConfirm(false); } catch (cause) { setError(cause instanceof Error ? cause.message : t("personal:error")); } finally { setPending(false); } }} className="gap-1.5"><RotateCcw size={13}/>{t("personal:reverseActivity")}</Button></div>
+      {confirm ? <motion.div key="confirm" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} className="flex w-full flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3">
+        <p className="text-xs text-gray-700">{confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })}</p>
+        <div className="flex gap-2"><Button size="sm" variant="outline" disabled={pending || busy} onClick={() => setConfirm(null)}>{t("financeEntries:cancel")}</Button><Button size="sm" variant="danger" disabled={pending || busy} isLoading={pending} onClick={async () => { setPending(true); setError(""); try { if (confirm === "delete") await onDelete?.(pendingEntries); else await onReverse?.(records.flatMap(row => "value_date" in row.source ? [row.source] : [])); setConfirm(null); onClear(); } catch (cause) { setError(cause instanceof Error ? cause.message : t("personal:error")); } finally { setPending(false); } }} className="gap-1.5">{confirm === "delete" ? t("financeEntries:delete") : <><RotateCcw size={13}/>{t("personal:reverseActivity")}</>}</Button></div>
       </motion.div> : <motion.div key="actions" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} className="flex items-center gap-2">
-        {basis === "outstanding" && onSettle && <Button size="sm" variant="outlineBlack" disabled={busy} onClick={() => onSettle(records.flatMap(row => row.record?.activityKind === "entry" && "open_amount" in row.record.source ? [row.record.source] : []))} className="gap-1.5"><Check size={13}/>{t("financeEntries:settle")}</Button>}
-        {basis === "settled" && onReverse && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setError(""); setConfirm(true); }} className="gap-1.5"><RotateCcw size={13}/>{t("personal:reverseActivity")}</Button>}
+        {basis === "outstanding" && onSettle && <Button size="sm" variant="outlineBlack" disabled={busy} onClick={() => onSettle(records.map(row => row.id))} className="gap-1.5"><Check size={13}/>{t("financeEntries:settle")}</Button>}
+        {basis === "outstanding" && onDelete && <Button size="sm" variant="outline" disabled={busy || !canDeleteSelection} onClick={() => { setError(""); setConfirm("delete"); }} className="gap-1.5">{t("financeEntries:delete")}</Button>}
+        {basis === "settled" && onReverse && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setError(""); setConfirm("reverse"); }} className="gap-1.5"><RotateCcw size={13}/>{t("personal:reverseActivity")}</Button>}
         <button type="button" disabled={busy} aria-label={t("financeEntries:clearSelection")} onClick={onClear} className="grid size-8 place-items-center rounded-md text-gray-500 hover:bg-gray-100"><X size={15}/></button>
       </motion.div>}
     </AnimatePresence>
@@ -116,26 +119,45 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
   const settled = basis === "settled";
   const canSettle = !settled && !readOnly && can(auth, "add_settled_entries");
   const canReverse = settled && !readOnly && can(auth, "delete_settled_entries");
-  const canSelect = canSettle || canReverse;
+  const canDeletePending = !settled && !readOnly && can(auth, "delete_cash_flow_entries");
+  const canSelect = canSettle || canReverse || canDeletePending;
   const pagerAdapter = { ...pager, canNext: pager.canNext, canPrev: pager.canPrev };
   const reverseSelected = useCallback(async (selected: PersonalSettledActivity[]) => {
+    if (!selected.length) throw new Error(t("personal:reverseActivityError"));
     onSelectionBusy(true);
-    const results = await Promise.allSettled(selected.map(row => row.transfer_id
-      ? personalApi.remove("transfers", row.transfer_id)
-      : row.entry_id ? personalApi.reverseSettlement(row.entry_id, row.id) : Promise.reject(new Error(t("personal:error")))));
-    onSelectionBusy(false);
-    const failures = results.filter(result => result.status === "rejected");
-    if (results.some(result => result.status === "fulfilled")) {
+    try {
+      const results = await Promise.allSettled(selected.map(row => row.transfer_id
+        ? personalApi.remove("transfers", row.transfer_id)
+        : row.entry_id ? personalApi.reverseSettlement(row.entry_id, row.id) : Promise.reject(new Error(t("personal:error")))));
+      const failures = results.filter(result => result.status === "rejected");
+      if (results.some(result => result.status === "fulfilled")) {
+        await pager.refresh();
+        await onDeleted();
+      }
+      if (failures.length) throw new Error(t("reverseActivityError"));
+    } finally { onSelectionBusy(false); }
+  }, [onDeleted, onSelectionBusy, pager, t]);
+  const deleteSelected = useCallback(async (selected: PersonalTransaction[]) => {
+    if (!selected.length || selected.some(row => row.status !== "pending")) throw new Error(t("personal:deleteSelectedError"));
+    onSelectionBusy(true);
+    try {
+      await personalApi.deleteTransactionsBulk(selected.map(row => row.id));
       await pager.refresh();
       await onDeleted();
-    }
-    if (failures.length) throw new Error(t("reverseActivityError"));
+    } finally { onSelectionBusy(false); }
   }, [onDeleted, onSelectionBusy, pager, t]);
   const onSelection = useCallback(({ items, clear }: { ids: string[]; items: FinancialActivityRow<TableItem>[]; clear(): void }) => <SelectionActions
     basis={basis} items={items} currency={currency} onClear={clear} busy={loading || mutating} t={t}
-    onSettle={canSettle ? selected => { onSelectionBusy(true); onSettle(selected); } : undefined}
+    onSettle={canSettle ? ids => {
+      const byId = new Map(items.flatMap(row => row.record ? [[row.id, row.record.source] as const] : []));
+      onSettle(ids.flatMap(id => {
+        const item = byId.get(id);
+        return item && "open_amount" in item ? [item as PersonalTransaction] : [];
+      }));
+    } : undefined}
+    onDelete={canDeletePending ? deleteSelected : undefined}
     onReverse={canReverse ? reverseSelected : undefined}
-  />, [basis, canReverse, canSettle, currency, loading, mutating, onSelectionBusy, onSettle, reverseSelected, t]);
+  />, [basis, canDeletePending, canReverse, canSettle, currency, deleteSelected, loading, mutating, onSettle, reverseSelected, t]);
   const rowAdapters = normalizeRows(items, settled);
   const sourceById = new Map(rowAdapters.map(record => [record.id, record.source]));
   const secondColumnLabel = t(settled ? "personal:bank_name" : "personal:category_name");
@@ -145,7 +167,6 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
   };
   const inspect = (row: TableItem) => onInspect(row);
   const edit = (row: TableItem) => { if ("open_amount" in row) onEdit(row); };
-  const settleOne = (row: TableItem) => { if ("open_amount" in row) onSettle([row]); };
   const deleteOne = async (record: TableItem) => {
     if (settled) {
       const activity = record as PersonalSettledActivity;
@@ -161,7 +182,6 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     secondColumnLabel={secondColumnLabel} renderSecondColumn={renderSecondary} pager={pagerAdapter}
     busy={loading} error={error} mutating={loading || mutating} canSelect={canSelect} canDelete={settled ? canReverse : !readOnly && can(auth, "delete_cash_flow_entries")}
     canEdit={!settled && !readOnly && can(auth, "change_cash_flow_entries")} editLabel={t("personal:edit")}
-    onSettle={canSettle ? settleOne : undefined} settleLabel={t("financeEntries:settle")}
     rowCanDelete={record => settled || ("status" in record.source && record.source.status === "pending")}
     onInspect={row => { const source = sourceById.get(row.id); if (source) inspect(source); }}
     onEdit={row => { const source = sourceById.get(row.id); if (source && "open_amount" in source) edit(source); }}
@@ -231,7 +251,7 @@ export default function PersonalTransactionsWorkspace() {
   const refreshPanel = useCallback(() => setPanelRevision(value => value + 1), []);
   const edit = (item: PersonalTransaction) => setDialog({ kind: "transactions", record: item });
   const openSettlement = useCallback((items: PersonalTransaction[]) => {
-    if (!items.length) return;
+    if (!items.length) { setBusy(false); return; }
     setSelected(items);
     setBusy(false);
     setSettlementOpen(true);
@@ -248,6 +268,10 @@ export default function PersonalTransactionsWorkspace() {
   const inspect = (item: TableItem) => { if ("value_date" in item) setActivityPreview(item); else setEntryPreview(item); };
   const selectedForSettlement = selected.map(item => ({ id: item.id } satisfies SettlementTarget));
   const settlementBanks = { banks: personalBanks, loading: accountsLoading, error: null as string | null };
+  const settlementAdapter = useMemo(() => ({
+    loadDrafts: async (ids: string[]) => (await personalApi.settlementDrafts(ids)).data,
+    settle: async (items: import("@/models/entries/settlements").BulkSettleItem[], atomic: boolean) => (await personalApi.settleBulk(items, atomic)).data,
+  }), []);
   return <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
     <header className="flex shrink-0 flex-wrap items-start justify-between gap-4">
       <div><h1 className="text-2xl font-semibold tracking-tight text-gray-900">{t("transactions")}</h1><p className="mt-1.5 max-w-2xl text-sm leading-6 text-gray-500">{t("transactionsDescription")}</p></div>
@@ -263,7 +287,7 @@ export default function PersonalTransactionsWorkspace() {
     <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setEntryPreview(null); openSettlement([item as PersonalTransaction]); }} onContribute={() => {}}/>
     <PersonalSettledActivityPreview item={activityPreview} currency={currency} onClose={() => setActivityPreview(null)}/>
     {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}:${dialog.transactionKind || ""}`} kind={dialog.kind} record={dialog.record} currency={currency} transactionKind={dialog.transactionKind} onClose={() => setDialog(null)} onSaved={refresh}/>}
-    <SettlementModal isOpen={settlementOpen} onClose={() => { setSettlementOpen(false); setSelected([]); setBusy(false); }} onSave={() => { setSettlementOpen(false); setSelected([]); setBusy(false); refresh(); }} selectedEntries={selectedForSettlement} banksData={settlementBanks}/>
+    <SettlementModal isOpen={settlementOpen} onClose={() => { setSettlementOpen(false); setSelected([]); setBusy(false); }} onSave={() => { setSettlementOpen(false); setSelected([]); setBusy(false); refresh(); }} selectedEntries={selectedForSettlement} banksData={settlementBanks} adapter={settlementAdapter}/>
     {basis === "settled" && busy && <span className="sr-only" role="status">{t("loading")}</span>}
   </div>;
 }
