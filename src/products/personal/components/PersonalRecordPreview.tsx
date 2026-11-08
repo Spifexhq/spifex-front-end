@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 import SidePanel, { SidePanelDetails } from "@/components/Modal/SidePanel";
 import Button from "@/shared/ui/Button";
 import { formatCurrency, formatDateFromISO } from "@/lib";
-import type { PersonalWorkspaceCollection, PersonalRecord, PersonalTransaction } from "@/products/personal/types";
+import type { PersonalPreviewCollection, PersonalRecord, PersonalTransaction } from "@/products/personal/types";
 
-const fieldsByCollection: Record<PersonalWorkspaceCollection, string[]> = {
+const fieldsByCollection: Record<PersonalPreviewCollection, string[]> = {
   transactions: ["kind", "amount", "paid_amount", "open_amount", "status", "due_date", "category_name", "bank_name", "installment_index", "installment_count", "notes"],
   categories: ["kind", "is_active"],
   budgets: ["month", "category_name", "limit", "spent", "remaining", "progress"],
@@ -18,7 +18,7 @@ const fieldsByCollection: Record<PersonalWorkspaceCollection, string[]> = {
 const moneyFields = new Set(["amount", "paid_amount", "open_amount", "balance", "initial_balance", "limit", "spent", "remaining", "target", "saved"]);
 const dateFields = new Set(["due_date", "value_date", "month", "target_date"]);
 export default function PersonalRecordPreview({ collection, record, currency, readOnly, onClose, onEdit, onSettle, onContribute }: {
-  collection: PersonalWorkspaceCollection; record: PersonalRecord | null; currency?: string; readOnly: boolean;
+  collection: PersonalPreviewCollection; record: PersonalRecord | null; currency?: string; readOnly: boolean;
   onClose(): void; onEdit(record: PersonalRecord): void; onSettle(record: PersonalRecord): void; onContribute(record: PersonalRecord): void;
 }) {
   const { t } = useTranslation("personal");

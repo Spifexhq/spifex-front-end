@@ -6,12 +6,12 @@ import { usePersonalReadRevision } from "./usePersonalReadRevision";
 import { apiErrorMessage } from "@/lib/apiErrorMessage";
 import type { CashflowBalance } from "@/shared/financial/types";
 
-export function useCashflowBalance(enabled: boolean, filters: Record<string, string>, revision = 0) {
+export function useCashflowBalance(enabled: boolean, filters: Record<string, string>, revision = 0, basis: "outstanding" | "settled" = "outstanding") {
   const { organization, permissions, isOwner, isSubscribed } = useAuthContext();
   const readRevision = usePersonalReadRevision();
   const { t } = useTranslation("personal");
   const identity = JSON.stringify([organization?.organization?.id, organization?.organization?.lifecycle, permissions, isOwner, isSubscribed]);
-  const query = JSON.stringify(filters);
+  const query = JSON.stringify({ ...filters, basis });
   const [snapshot, setSnapshot] = useState<{ identity: string; data: CashflowBalance } | null>(null);
   const [loading, setLoading] = useState(enabled), [error, setError] = useState("");
   useEffect(() => {

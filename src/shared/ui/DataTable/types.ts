@@ -46,6 +46,9 @@ export type DataTableProps<T> = {
     loadPreview?(item: T): Promise<T>;
     emptyLabel: string;
     editLabel?: string;
+    deleteLabel?: string;
+    deleteConfirmText?: (count: number) => string;
+    deleteConfirmLabel?: string;
     className?: string;
     summary?: ReactNode;
     busy?: boolean;
@@ -53,6 +56,7 @@ export type DataTableProps<T> = {
     errorContent?: ReactNode;
     canEdit?: boolean;
     rowCanEdit?(item: T): boolean;
+    rowCanDelete?(item: T): boolean;
     canDelete?: boolean;
     selectable?: boolean;
     onEdit?(item: T): void;

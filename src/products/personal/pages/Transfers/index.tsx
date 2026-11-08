@@ -1,5 +1,5 @@
-import PersonalCollectionWorkspace from "../../components/PersonalCollectionWorkspace";
+import { Navigate } from "react-router-dom";
 
 export default function TransfersPage() {
-  return <PersonalCollectionWorkspace collection="transfers" />;
+  return <Navigate to="/personal/transactions?tab=settled&kind=transfer" replace />;
 }

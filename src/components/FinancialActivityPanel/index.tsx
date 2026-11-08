@@ -1,5 +1,5 @@
 import AnimatedNumber from "@/shared/ui/AnimatedNumber";
-import { useFinanceLoading } from "@/products/business/pages/Finance/components/financeLoading";
+import { useFinanceLoading } from "@/shared/financial/FinanceLoadingContext";
 import { SkeletonLine } from "@/shared/ui/DataTable/DataTableSkeleton";
 import FinancialActivitySkeleton from "./FinancialActivitySkeleton";
 import { useId, useState, type ReactNode } from "react";
@@ -33,9 +33,9 @@ function getInitials(name: string) {
 }
 
 /** The single Cash flow / Settled panel; hooks isolate API and filter logic. */
-export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true }: {
+export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/settings/banks" }: {
  children: ReactNode; filters: EntryFilters; onApply(payload: {filters: EntryFilters}): void;
- contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean;
+ contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean; manageBanksPath?: string;
 }) {
  const { t } = useTranslation(["filterBar", "kpiCards", "banksTable"]);
  const navigate = useNavigate();
@@ -94,7 +94,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
         className="order-last col-span-full min-w-0 overflow-hidden border-t border-gray-100 bg-gray-50/40">
         <div className="flex items-center justify-between gap-3 px-4 py-2 sm:px-5">
           <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-700"><Landmark size={14} aria-hidden />{t("banksTable:aria.section")}</h3>
-          <button type="button" onClick={() => navigate("/settings/banks")}
+          <button type="button" onClick={() => navigate(manageBanksPath)}
             className="inline-flex items-center gap-1 rounded py-1 text-[11px] font-medium text-gray-600 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
             {t("banksTable:manage")}<ArrowUpRight size={12} aria-hidden />
           </button>

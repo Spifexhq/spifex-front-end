@@ -4,6 +4,9 @@
   "pending_income": "Revenus en attente",
   "pending_expense": "Dépenses en attente",
   "projected_balance": "Solde après les opérations en attente",
+  "settled_income": "Revenus réglés",
+  "settled_expense": "Dépenses réglées",
+  "settled_net": "Flux net réglé",
   "balanceExplanation": "Les soldes actuels incluent tous les comptes. Les montants en attente suivent les filtres actifs ; les virements ne modifient pas le total consolidé.",
   "noAccounts": "Ajoutez votre premier compte pour suivre son solde."
 }

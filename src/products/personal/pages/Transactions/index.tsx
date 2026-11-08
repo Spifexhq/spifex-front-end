@@ -1,5 +1,5 @@
-import PersonalCollectionWorkspace from "../../components/PersonalCollectionWorkspace";
+import PersonalTransactionsWorkspace from "../../components/PersonalTransactionsWorkspace";
 
 export default function TransactionsPage() {
-  return <PersonalCollectionWorkspace collection="transactions" />;
+  return <PersonalTransactionsWorkspace />;
 }

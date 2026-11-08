@@ -4,6 +4,9 @@
   "pending_income": "Outstanding income",
   "pending_expense": "Outstanding expenses",
   "projected_balance": "Balance after outstanding entries",
+  "settled_income": "Settled income",
+  "settled_expense": "Settled expenses",
+  "settled_net": "Net settled cash flow",
   "balanceExplanation": "Current balances include all accounts. Outstanding amounts follow the active transaction filters; transfers do not change the consolidated total.",
   "noAccounts": "Add your first account to track its balance."
 }

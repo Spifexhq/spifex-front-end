@@ -82,9 +82,8 @@ function toActiveParamFromStatusKeys(keys: StatusKey[]): GetBanksParams["active"
 }
 
 function selectedAccountTypeParamFromKeys(keys: AccountType[]): GetBanksParams["account_type"] | undefined {
-  // Backend supports single account_type; keep UI multi-select.
   const uniqKeys = uniq(keys.filter((x) => isAccountType(x)));
-  return uniqKeys.length === 1 ? uniqKeys[0] : undefined;
+  return uniqKeys.length ? uniqKeys.join(",") : undefined;
 }
 
 /* ------------------------------- Chip UI ---------------------------------- */
@@ -231,16 +230,14 @@ const BankSettings: React.FC = () => {
   }, [draftAccountTypes, accountTypeOptions]);
 
   const draftAccountTypeButtonLabel = useMemo(() => {
-    const one = selectedAccountTypeParamFromKeys(draftAccountTypes);
-    if (one) return accountTypeOptions.find((x) => x.key === one)?.label ?? t("filters.typeAll", { defaultValue: "All" });
+    if (draftAccountTypes.length === 1) return accountTypeOptions.find((x) => x.key === draftAccountTypes[0])?.label ?? t("filters.typeAll", { defaultValue: "All" });
     if (draftAccountTypes.length > 1) return t("filters.multi", { defaultValue: "Multiple" });
     return t("filters.typeAll", { defaultValue: "All" });
   }, [draftAccountTypes, accountTypeOptions, t]);
 
   const appliedAccountTypeChipValue = useMemo(() => {
     if (!appliedAccountTypes.length) return "";
-    const one = selectedAccountTypeParamFromKeys(appliedAccountTypes);
-    if (one) return accountTypeOptions.find((x) => x.key === one)?.label ?? "";
+    if (appliedAccountTypes.length === 1) return accountTypeOptions.find((x) => x.key === appliedAccountTypes[0])?.label ?? "";
     return t("filters.multi", { defaultValue: "Multiple" });
   }, [appliedAccountTypes, accountTypeOptions, t]);
 
@@ -644,7 +641,7 @@ const BankSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-<DataTable loadPreview={async item => (await api.getBank(item.id)).data} previewColumns={[{key:"institution",label:t("preview.fields.institution"),render:item=>item.institution ?? "�"},{key:"account_type",label:t("preview.fields.account_type"),render:item=>t(`accountType.${item.account_type}`, {defaultValue:item.account_type})},{key:"branch",label:t("preview.fields.branch"),render:item=>item.branch ?? "�"},{key:"account_number",label:t("preview.fields.account_number"),render:item=>item.account_number ?? "�"},{key:"iban",label:t("preview.fields.iban"),render:item=>item.iban ?? "�"},{key:"currency",label:t("preview.fields.currency"),render:item=>item.currency ?? "�"},{key:"initial_balance",label:t("preview.fields.initial_balance"),render:item=>item.initial_balance ?? "�"},{key:"current_balance",label:t("preview.fields.current_balance"),render:item=>item.current_balance ?? "�"},{key:"consolidated_balance",label:t("preview.fields.consolidated_balance"),render:item=>item.consolidated_balance ?? "�"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} onDeleted={ids => {
+<DataTable loadPreview={async item => (await api.getBank(item.id)).data} previewColumns={[{key:"institution",label:t("preview.fields.institution"),render:item=>item.institution ?? "�"},{key:"account_type",label:t("preview.fields.account_type"),render:item=>t(`accountType.${item.account_type}`, {defaultValue:item.account_type})},{key:"branch",label:t("preview.fields.branch"),render:item=>item.branch ?? "�"},{key:"account_number",label:t("preview.fields.account_number"),render:item=>item.account_number ?? "�"},{key:"iban",label:t("preview.fields.iban"),render:item=>item.iban ?? "�"},{key:"currency",label:t("preview.fields.currency"),render:item=>item.currency ?? "�"},{key:"initial_balance",label:t("preview.fields.initial_balance"),render:item=>item.initial_balance ?? "�"},{key:"current_balance",label:t("preview.fields.current_balance"),render:item=>item.current_balance ?? "�"},{key:"consolidated_balance",label:t("preview.fields.consolidated_balance"),render:item=>item.consolidated_balance ?? "�"},{key:"is_active",label:t("preview.fields.is_active"),render:item=>t(item.is_active ? "preview.active" : "preview.inactive")}]} initialWidths={[45,27,28]} onDeleted={ids => {
                 if (!ids.length) return;
                 const removed = new Set(ids);
                 setDeletedIds(current => new Set([...current, ...removed]));

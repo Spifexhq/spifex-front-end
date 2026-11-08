@@ -4,6 +4,9 @@
   "pending_income": "Offene Einnahmen",
   "pending_expense": "Offene Ausgaben",
   "projected_balance": "Saldo nach offenen Buchungen",
+  "settled_income": "Eingegangene Einnahmen",
+  "settled_expense": "Bezahlte Ausgaben",
+  "settled_net": "Netto abgeschlossener Zahlungsfluss",
   "balanceExplanation": "Aktuelle Salden enthalten alle Konten. Offene Beträge folgen den aktiven Filtern; Umbuchungen ändern den Gesamtsaldo nicht.",
   "noAccounts": "Fügen Sie Ihr erstes Konto hinzu, um den Saldo zu verfolgen."
 }

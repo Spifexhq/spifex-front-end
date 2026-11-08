@@ -1,25 +1,28 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeftRight } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
 import { formatCurrency } from "@/lib";
 import type { AddBankRequest, BankAccount, EditBankRequest } from "@/models/settings/banking";
 import { personalApi } from "@/products/personal/services/api";
 import type { PersonalAccount } from "@/products/personal/types";
-import { useCashflowBalance } from "@/products/personal/hooks/useCashflowBalance";
 import { readonlyWorkspace } from "@/products/personal/services/personalData";
-import AccountBalancePanel from "@/shared/financial/components/AccountBalancePanel";
 import BankAccountModal from "@/shared/financial/components/BankAccountModal";
 import Button from "@/shared/ui/Button";
 import DataTable from "@/shared/ui/DataTable";
 import type { Column } from "@/shared/ui/DataTable";
 import Input from "@/shared/ui/Input";
 import { Select } from "@/shared/ui/Select";
+import Popover from "@/shared/ui/Popover";
+import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
+import { SettingsFilter as FilterChip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
+import SettingsSurface from "@/shared/ui/Settings/SettingsSurface";
 import Snackbar from "@/shared/ui/Snackbar";
 
 const ACCOUNT_TYPES = ["checking", "savings", "investment", "cash", "petty_cash", "card", "other"] as const;
+type FilterKey = "institution" | "accountType" | "branch" | "accountNumber" | "iban" | "status" | null;
+type BankFilters = { search: string; account_type: string; is_active: string; branch: string; account_number: string; iban: string };
+const EMPTY_FILTERS: BankFilters = { search: "", account_type: "", is_active: "", branch: "", account_number: "", iban: "" };
 
 function toBankAccount(account: PersonalAccount): BankAccount {
   return {
@@ -63,17 +66,15 @@ export default function PersonalBankAccountsPage() {
   const canEdit = !readOnly && (isOwner || isSuperUser || permissions.includes("change_bank"));
   const canDelete = !readOnly && (isOwner || isSuperUser || permissions.includes("delete_bank"));
 
-  const [searchDraft, setSearchDraft] = useState("");
-  const [branchDraft, setBranchDraft] = useState("");
-  const [accountNumberDraft, setAccountNumberDraft] = useState("");
-  const [ibanDraft, setIbanDraft] = useState("");
-  const [typeDraft, setTypeDraft] = useState("");
-  const [statusDraft, setStatusDraft] = useState("");
-  const [applied, setApplied] = useState({ search: "", account_type: "", is_active: "", branch: "", account_number: "", iban: "" });
+  const [draft, setDraft] = useState<BankFilters>(EMPTY_FILTERS);
+  const [applied, setApplied] = useState<BankFilters>(EMPTY_FILTERS);
+  const [openFilter, setOpenFilter] = useState<FilterKey>(null);
+  const anchors = {
+    institution: useRef<HTMLDivElement>(null), accountType: useRef<HTMLDivElement>(null), branch: useRef<HTMLDivElement>(null),
+    accountNumber: useRef<HTMLDivElement>(null), iban: useRef<HTMLDivElement>(null), status: useRef<HTMLDivElement>(null),
+  };
   const [modal, setModal] = useState<{ mode: "create" | "edit"; bank: BankAccount | null } | null>(null);
-  const [revision, setRevision] = useState(0);
   const [notice, setNotice] = useState<{ message: ReactNode; severity: "success" | "error" | "warning" | "info" } | null>(null);
-  const balances = useCashflowBalance(canView, {}, revision);
 
   const pager = useCursorPager<PersonalAccount>(async (cursor, pageSize = 20) => {
     if (!canView) return { items: [], nextCursor: undefined, totalCount: 0 };
@@ -108,9 +109,7 @@ export default function PersonalBankAccountsPage() {
     { key: "name", label: personalT("name"), render: account => account.name },
     { key: "account_type", label: personalT("account_type"), render: account => bankT(`accountType.${account.account_type}`, { defaultValue: account.account_type }) },
     { key: "account_number", label: bankT("field.accountNumber"), render: account => account.account_number || "∅" },
-    { key: "balance", label: personalT("balance"), mobile: true, mobileWidth: "132px", render: account => <span className="tabular-nums">{formatCurrency(account.balance, currency)}</span> },
-    { key: "status", label: personalT("status"), mobile: true, render: account => <span className="inline-flex items-center gap-2"><span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${account.is_active ? "bg-emerald-500" : "bg-gray-300"}`}/>{personalT(account.is_active ? "active" : "inactive")}</span> },
-  ], [bankT, currency, personalT]);
+  ], [bankT, personalT]);
 
   const previewColumns = useMemo<Column<PersonalAccount>[]>(() => [
     { key: "institution", label: bankT("preview.fields.institution"), render: account => account.institution || account.name },
@@ -136,43 +135,32 @@ export default function PersonalBankAccountsPage() {
   ], [bankT]);
 
   const refreshAfterMutation = async () => {
-    setRevision(value => value + 1);
     await pager.refresh();
   };
 
-  return <div className="space-y-6">
-    <header className="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{personalT("accounts")}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">{personalT("accountsDescription")}</p>
-      </div>
-      <div className="flex items-center gap-2">
-        <Link to="/personal/transfers" className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-200 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-50"><ArrowLeftRight size={14}/>{personalT("transfers")}</Link>
+  return <SettingsSurface><div className="settings-content min-w-0">
+    {canView ? <>
+      <header className="mb-6">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900">{personalT("accounts")}</h1>
+        <p className="mt-1.5 max-w-3xl text-[13px] leading-5 text-gray-500">{personalT("accountsDescription")}</p>
+      </header>
+      <div className="settings-toolbar mb-4">
+        <SettingsFilters active={Object.values(applied).some(Boolean)}>
+          {(["institution", "accountType", "branch", "accountNumber", "iban", "status"] as const).map(key => {
+            const field: keyof BankFilters = key === "institution" ? "search" : key === "accountType" ? "account_type" : key === "accountNumber" ? "account_number" : key === "status" ? "is_active" : key;
+            const label = key === "institution" ? bankT("filters.institutionLabel") : key === "accountType" ? bankT("filters.accountTypeLabel") : key === "branch" ? bankT("filters.branchLabel") : key === "accountNumber" ? bankT("filters.accountNumberLabel") : key === "iban" ? bankT("filters.ibanLabel") : bankT("filters.statusLabel");
+            const value = key === "accountType" ? applied.account_type.split(",").filter(Boolean).map(type => accountTypeOptions.find(option => option.value === type)?.label).filter(Boolean).join(", ") : key === "status" ? statusOptions.find(option => option.value === applied[field])?.label : applied[field];
+            return <div key={key} ref={anchors[key]}><FilterChip label={label} value={value ? `• ${value}` : undefined} active={!!applied[field]} expanded={openFilter === key} onClick={() => { setDraft(applied); setOpenFilter(current => current === key ? null : key); }} onClear={applied[field] ? () => { setApplied(previous => ({ ...previous, [field]: "" })); setDraft(previous => ({ ...previous, [field]: "" })); } : undefined}/></div>;
+          })}
+          {Object.values(applied).some(Boolean) && <ClearFiltersChip label={bankT("filters.clearAll")} onClick={() => { setApplied(EMPTY_FILTERS); setDraft(EMPTY_FILTERS); }}/ >}
+        </SettingsFilters>
         {canCreate && <Button type="button" onClick={() => setModal({ mode: "create", bank: null })}>{bankT("btn.addBank")}</Button>}
       </div>
-    </header>
-
-    {canView ? <>
-      <AccountBalancePanel {...balances}/>
-      <form onSubmit={event => { event.preventDefault(); setApplied({ search: searchDraft.trim(), account_type: typeDraft, is_active: statusDraft, branch: branchDraft.trim(), account_number: accountNumberDraft.trim(), iban: ibanDraft.trim() }); }} className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50/60 p-3 sm:flex-row sm:items-end sm:bg-white sm:p-0 sm:border-0">
-        <div className="min-w-0 flex-1"><Input kind="text" label={personalT("search")} placeholder={personalT("bankSearchPlaceholder")} value={searchDraft} onChange={event => setSearchDraft(event.target.value)}/></div>
-        <div className="w-full sm:w-48"><Select label={bankT("filters.accountTypeLabel")} items={accountTypeOptions} selected={accountTypeOptions.filter(option => option.value === typeDraft)} onChange={items => setTypeDraft(items[0]?.value || "")} getItemKey={option => option.value} getItemLabel={option => option.label} singleSelect hideCheckboxes buttonLabel={bankT("filters.typeAll")}/></div>
-        <div className="w-full sm:w-40"><Select label={bankT("filters.statusLabel")} items={statusOptions} selected={statusOptions.filter(option => option.value === statusDraft)} onChange={items => setStatusDraft(items[0]?.value || "")} getItemKey={option => option.value} getItemLabel={option => option.label} singleSelect hideCheckboxes buttonLabel={bankT("filters.status.all")}/></div>
-        <Button type="submit" variant="outline" className="shrink-0">{bankT("filters.apply")}</Button>
-        <details className="w-full border-t border-gray-200 pt-2 sm:border-0 sm:pt-0">
-          <summary className="cursor-pointer px-1 py-1 text-xs font-medium text-gray-600 hover:text-gray-900">{bankT("filters.more")}</summary>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <Input kind="text" label={bankT("filters.branchLabel")} placeholder={bankT("filters.branchPlaceholder")} value={branchDraft} onChange={event => setBranchDraft(event.target.value)}/>
-            <Input kind="text" label={bankT("filters.accountNumberLabel")} placeholder={bankT("filters.accountNumberPlaceholder")} value={accountNumberDraft} onChange={event => setAccountNumberDraft(event.target.value)}/>
-            <Input kind="text" label={bankT("filters.ibanLabel")} placeholder={bankT("filters.ibanPlaceholder")} value={ibanDraft} onChange={event => setIbanDraft(event.target.value)}/>
-          </div>
-        </details>
-      </form>
       <DataTable
         items={pager.items}
         columns={columns}
         previewColumns={previewColumns}
-        initialWidths={[24, 18, 16, 17, 15]}
+        initialWidths={[45, 27, 28]}
         pager={pager}
         busy={pager.loading}
         error={pager.error}
@@ -187,6 +175,17 @@ export default function PersonalBankAccountsPage() {
         onInspect={undefined}
         loadPreview={async account => account}
       />
+      <Popover appearance="settings" open={!!openFilter} anchorRef={openFilter ? anchors[openFilter] : undefined} onClose={() => setOpenFilter(null)} title={openFilter === "institution" ? bankT("filters.byInstitutionTitle") : openFilter === "accountType" ? bankT("filters.byAccountTypeTitle") : openFilter === "branch" ? bankT("filters.byBranchTitle") : openFilter === "accountNumber" ? bankT("filters.byAccountNumberTitle") : openFilter === "iban" ? bankT("filters.byIbanTitle") : bankT("filters.byStatusTitle")}>
+        <div className="space-y-3 p-4">
+          {openFilter === "institution" && <Input kind="text" label={bankT("filters.institutionLabel")} placeholder={bankT("filters.institutionPlaceholder")} value={draft.search} onChange={event => setDraft(previous => ({ ...previous, search: event.target.value }))}/>}
+          {openFilter === "accountType" && <Select label={bankT("filters.accountTypeLabel")} items={accountTypeOptions.filter(option => option.value)} selected={accountTypeOptions.filter(option => draft.account_type.split(",").includes(option.value))} onChange={items => setDraft(previous => ({ ...previous, account_type: items.map(option => option.value).join(",") }))} getItemKey={option => option.value} getItemLabel={option => option.label} buttonLabel={bankT("filters.typeAll")}/>}
+          {openFilter === "status" && <Select label={bankT("filters.statusLabel")} items={statusOptions} selected={statusOptions.filter(option => option.value === draft.is_active)} onChange={items => setDraft(previous => ({ ...previous, is_active: items[0]?.value || "" }))} getItemKey={option => option.value} getItemLabel={option => option.label} singleSelect hideCheckboxes buttonLabel={bankT("filters.status.all")}/>}
+          {openFilter === "branch" && <Input kind="text" label={bankT("filters.branchLabel")} placeholder={bankT("filters.branchPlaceholder")} value={draft.branch} onChange={event => setDraft(previous => ({ ...previous, branch: event.target.value }))}/>}
+          {openFilter === "accountNumber" && <Input kind="text" label={bankT("filters.accountNumberLabel")} placeholder={bankT("filters.accountNumberPlaceholder")} value={draft.account_number} onChange={event => setDraft(previous => ({ ...previous, account_number: event.target.value }))}/>}
+          {openFilter === "iban" && <Input kind="text" label={bankT("filters.ibanLabel")} placeholder={bankT("filters.ibanPlaceholder")} value={draft.iban} onChange={event => setDraft(previous => ({ ...previous, iban: event.target.value }))}/>}
+          <div className="flex items-center justify-between border-t border-gray-100 pt-3"><button type="button" className="text-xs text-gray-500 hover:text-gray-900" onClick={() => { if (openFilter) { const field: keyof BankFilters = openFilter === "institution" ? "search" : openFilter === "accountType" ? "account_type" : openFilter === "accountNumber" ? "account_number" : openFilter === "status" ? "is_active" : openFilter; setDraft(previous => ({ ...previous, [field]: "" })); } }}>{bankT("filters.clear")}</button><Button size="sm" onClick={() => { setApplied(draft); setOpenFilter(null); }}>{bankT("filters.apply")}</Button></div>
+        </div>
+      </Popover>
     </> : <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-600">{personalT("bankAccessUnavailable")}</div>}
 
     {modal && <BankAccountModal
@@ -200,5 +199,5 @@ export default function PersonalBankAccountsPage() {
       onSaved={() => { void refreshAfterMutation(); }}
     />}
     <Snackbar notificationKey={notice} open={!!notice} onClose={() => setNotice(null)} autoHideDuration={6000} message={notice?.message} severity={notice?.severity} anchor={{ vertical: "bottom", horizontal: "center" }} pauseOnHover showCloseButton/>
-  </div>;
+  </div></SettingsSurface>;
 }
