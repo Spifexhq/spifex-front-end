@@ -13,6 +13,7 @@ export default function PersonalSettledActivityPreview({ item, currency, onClose
     { label: t("kind"), value: t(item.kind) },
     { label: t("value_date"), value: formatDateFromISO(item.value_date) },
     { label: t("amount"), value: formatCurrency(item.amount, currency) },
+    { label: t("balance"), value: item.running_balance != null ? formatCurrency(item.running_balance, currency) : "—" },
     ...(transfer ? [
       { label: t("source_bank_id"), value: item.source_bank_name || "—" },
       { label: t("destination_bank_id"), value: item.destination_bank_name || "—" },
@@ -22,6 +23,7 @@ export default function PersonalSettledActivityPreview({ item, currency, onClose
       { label: t("transactionAmount"), value: formatCurrency(item.transaction_amount, currency) },
       { label: t("remaining"), value: formatCurrency(item.open_amount, currency) },
       { label: t("category_name"), value: item.category_name || "—" },
+      ...(item.installment_count && item.installment_count > 1 ? [{ label: t("installment_index"), value: `${item.installment_index || 1} / ${item.installment_count}` }] : []),
     ]),
     { label: t("status"), value: t("settled") },
   ];

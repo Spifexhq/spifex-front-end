@@ -1,8 +1,10 @@
 import type { FinancialActivityRecord, FinancialActivityRow } from "./FinancialActivityTable";
 
-export function buildFinancialActivityRows<T>(records: FinancialActivityRecord<T>[], hasMore = false): FinancialActivityRow<T>[] {
+export function buildFinancialActivityRows<T>(records: FinancialActivityRecord<T>[], hasMore = false, newestFirst = false): FinancialActivityRow<T>[] {
   const unique = [...new Map(records.map(record => [record.id, record])).values()]
-    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+    .sort((a, b) => newestFirst
+      ? b.date.localeCompare(a.date) || b.id.localeCompare(a.id)
+      : a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   const rows: FinancialActivityRow<T>[] = [];
   let month = "", totalMinor = 0, balance: number | null = null;
   const closeMonth = (partial = false) => {

@@ -45,6 +45,7 @@ const EntryTable = forwardRef<EntryTableHandle, EntryTableProps>(({ settled, fil
   return <>
     <FinancialActivityTable
       records={records}
+      newestFirst={settled}
       currency={auth.organization?.organization?.currency || "EUR"}
       locale={i18n.language}
       emptyLabel={t("empty")}

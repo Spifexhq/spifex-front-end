@@ -44,9 +44,9 @@ function queryFromFilters(filters: EntryFilters, activityKind?: string): FilterQ
   };
 }
 
-function normalizeRows(items: TableItem[], settled: boolean): FinancialActivityRecord<TableItem>[] {
+function normalizeRows(items: TableItem[]): FinancialActivityRecord<TableItem>[] {
   return items.map(item => {
-    if (settled && "value_date" in item) {
+    if ("value_date" in item) {
       const transfer = transferRow(item);
       const direction = transfer ? "transfer" : item.kind === "income" ? "credit" : "debit";
       return {
@@ -165,8 +165,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     onDelete={canDeletePending ? deleteSelected : undefined}
     onReverse={canReverse ? reverseSelected : undefined}
   />, [basis, canDeletePending, canReverse, canSettle, currency, deleteSelected, loading, mutating, onSettle, reverseSelected, t]);
-  const rowAdapters = normalizeRows(items, settled);
-  const sourceById = new Map(rowAdapters.map(record => [record.id, record.source]));
+  const rowAdapters = normalizeRows(items);
   const secondColumnLabel = t(settled ? "personal:bank_name" : "personal:category_name");
   const renderSecondary = (record: FinancialActivityRecord<TableItem>) => {
     if (record.activityKind === "entry" && "category_name" in record.source) return record.source.category_name || <span className="text-gray-400">∅</span>;
@@ -184,7 +183,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     await personalApi.remove("transactions", (record as PersonalTransaction).id);
   };
   return <FinancialActivityTable
-    records={rowAdapters} currency={currency} locale={i18n.language}
+    records={rowAdapters} newestFirst={settled} currency={currency} locale={i18n.language}
     emptyLabel={t(settled ? "personal:settledEmpty" : "personal:outstandingEmpty")}
     secondColumnLabel={secondColumnLabel} renderSecondColumn={renderSecondary} pager={pagerAdapter}
     busy={loading} error={error} mutating={loading || mutating} canSelect={canSelect} canDelete={settled ? canReverse : canDeletePending}
@@ -192,8 +191,8 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     rowCanDelete={record => settled
       ? (record.source.kind === "transfer" ? access.canUse(PERSONAL_PERMISSION.deleteTransfer) : access.canUse(PERSONAL_PERMISSION.reverseSettlement))
       : ("status" in record.source && record.source.status === "pending")}
-    onInspect={row => { const source = sourceById.get(row.id); if (source) inspect(source); }}
-    onEdit={row => { const source = sourceById.get(row.id); if (source && "open_amount" in source) edit(source); }}
+    onInspect={inspect}
+    onEdit={row => { if ("open_amount" in row) edit(row); }}
     onDelete={deleteOne} onDeleted={onDeleted}
     onSelection={onSelection} onEndReached={() => { if (pager.canNext && !pager.loading && !pager.error) void pager.next(); }}
     loadMore={pager.loading && !!pager.items.length} onRetry={() => void pager.refresh()}

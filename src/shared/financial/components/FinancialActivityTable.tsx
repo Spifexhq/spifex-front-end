@@ -38,6 +38,7 @@ type ActivityPager = NonNullable<DataTableProps<FinancialActivityRow<unknown>>["
 type Selection<T> = { ids: string[]; items: FinancialActivityRow<T>[]; clear(): void };
 type Props<T> = {
   records: FinancialActivityRecord<T>[];
+  newestFirst?: boolean;
   currency: string;
   locale: string;
   emptyLabel: string;
@@ -67,9 +68,9 @@ type Props<T> = {
   clearSelectionToken?: number;
 };
 
-export default function FinancialActivityTable<T>({ records, currency, locale, emptyLabel, secondColumnLabel, secondColumnHeader, renderSecondColumn, renderName, headerAccessory, pager, busy = false, error, mutating = false, canSelect, canDelete, canEdit = false, rowCanEdit, rowCanDelete, editLabel, onInspect, onEdit, onDelete, onDeleted, onSelection, onEndReached, loadMore = false, onRetry, clearSelectionToken }: Props<T>) {
+export default function FinancialActivityTable<T>({ records, newestFirst = false, currency, locale, emptyLabel, secondColumnLabel, secondColumnHeader, renderSecondColumn, renderName, headerAccessory, pager, busy = false, error, mutating = false, canSelect, canDelete, canEdit = false, rowCanEdit, rowCanDelete, editLabel, onInspect, onEdit, onDelete, onDeleted, onSelection, onEndReached, loadMore = false, onRetry, clearSelectionToken }: Props<T>) {
   const { t } = useTranslation("financeEntries");
-  const rows = useMemo(() => buildFinancialActivityRows(records, !!pager.canNext), [records, pager.canNext]);
+  const rows = useMemo(() => buildFinancialActivityRows(records, !!pager.canNext, newestFirst), [records, pager.canNext, newestFirst]);
   const loadedCount = rows.filter(row => row.kind === "record").length;
   useFinanceLoading("entries", (!pager.knownPages && !pager.error) || (pager.loading && !records.length));
   const columns = useMemo<Column<FinancialActivityRow<T>>[]>(() => [
