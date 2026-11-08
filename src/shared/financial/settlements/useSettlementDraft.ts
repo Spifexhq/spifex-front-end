@@ -16,7 +16,7 @@ export function useSettlementDraft(open: boolean, entries: { id: string }[]) {
       try {
         const result: SettlementSource[] = [];
         for (let i = 0; i < requested.length; i += 100) {
-          const { data } = await api.getSettlementDrafts(requested.slice(i, i+100));
+          const data = (await api.getSettlementDrafts(requested.slice(i, i + 100))).data;
           if (!alive) return;
           if (!Array.isArray(data)) throw new Error("Invalid entry details");
           result.push(...data);

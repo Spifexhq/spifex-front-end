@@ -38,8 +38,8 @@ function filtersSignature(filters: EntryFilters): string {
   return JSON.stringify(sig);
 }
 
-export function useActivityFilters({ initial, onApply, contextSettlement, shortcutsEnabled = true, enabled }: {
- initial: EntryFilters; onApply(payload: {filters: EntryFilters}): void; contextSettlement: boolean; shortcutsEnabled?: boolean; enabled: boolean;
+export function useActivityFilters({ initial, onApply, contextSettlement, shortcutsEnabled = true, enabled, excludeObservationFilter = false }: {
+ initial: EntryFilters; onApply(payload: {filters: EntryFilters}): void; contextSettlement: boolean; shortcutsEnabled?: boolean; enabled: boolean; excludeObservationFilter?: boolean;
 }) {
   const { t } = useTranslation(["filterBar"]);
   const isMobile = useMediaQuery("(max-width: 639px)");
@@ -50,11 +50,13 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
 
   const scopedViews = useMemo(() => savedViews, [savedViews]);
 
+  const stripUnsupported = useCallback((filters: LocalFilters): LocalFilters => excludeObservationFilter ? { ...filters, observation: "" } : filters, [excludeObservationFilter]);
+  const cleanEntryFilters = useCallback((filters: EntryFilters): EntryFilters => excludeObservationFilter ? { ...filters, observation: undefined } : filters, [excludeObservationFilter]);
   const [localFilters, setLocalFilters] = useState<LocalFilters>(() =>
-    buildInitialLocalFilters(initial, contextSettlement)
+    stripUnsupported(buildInitialLocalFilters(initial, contextSettlement))
   );
 
-  const filterDefs = useMemo<FilterDefinition[]>(() => getFilterDefinitions(), []);
+  const filterDefs = useMemo<FilterDefinition[]>(() => getFilterDefinitions().filter(def => !excludeObservationFilter || def.key !== "observation"), [excludeObservationFilter]);
   const defsByKey = useMemo(() => {
     const map = new Map<ChipKey, FilterDefinition>();
     filterDefs.forEach((d) => map.set(d.key, d));
@@ -136,7 +138,7 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
   }, [lastAppliedSig, hasActiveFilters, currentSig]);
 
   const tryApplyCurrentFilters = useCallback(() => {
-    const next = toEntryFilters(localFilters);
+    const next = cleanEntryFilters(toEntryFilters(localFilters));
     const nextSig = filtersSignature(next);
 
     const shouldApply = lastAppliedSig === null ? hasActiveFilters : nextSig !== lastAppliedSig;
@@ -145,7 +147,7 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
     onApply({ filters: next });
     setLastAppliedSig(nextSig);
     return true;
-  }, [localFilters, lastAppliedSig, hasActiveFilters, onApply]);
+  }, [cleanEntryFilters, localFilters, lastAppliedSig, hasActiveFilters, onApply]);
 
   const closeEditorsAndApply = useCallback(() => {
     const applied = tryApplyCurrentFilters();
@@ -153,8 +155,8 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
   }, [tryApplyCurrentFilters, canApply]);
 
   const clearAll = useCallback(() => {
-    const cleared = buildClearedLocalFilters(contextSettlement);
-    const next = toEntryFilters(cleared);
+    const cleared = stripUnsupported(buildClearedLocalFilters(contextSettlement));
+    const next = cleanEntryFilters(toEntryFilters(cleared));
     const nextSig = filtersSignature(next);
 
     setLocalFilters(cleared);
@@ -164,7 +166,7 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
 
     onApply({ filters: next });
     setLastAppliedSig(nextSig);
-  }, [closeEditorsAndMenus, contextSettlement, lastAppliedSig, onApply]);
+  }, [cleanEntryFilters, closeEditorsAndMenus, contextSettlement, lastAppliedSig, onApply, stripUnsupported]);
 
   const escEnabled =
     enabled && shortcutsEnabled &&
@@ -216,17 +218,17 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
     const defaultView = scopedViews.find((v) => v.is_default);
 
     if (defaultView) {
-      const nextLocal = buildInitialLocalFilters(defaultView.filters, contextSettlement);
+      const nextLocal = stripUnsupported(buildInitialLocalFilters(defaultView.filters, contextSettlement));
       nextLocal.settlement_status = !!defaultView.settlement_status;
 
-      const next = toEntryFilters(nextLocal);
+      const next = cleanEntryFilters(toEntryFilters(nextLocal));
       const sig = filtersSignature(next);
 
       setLocalFilters(nextLocal);
       onApply({ filters: next });
       setLastAppliedSig(sig);
     } else {
-      const next = toEntryFilters(localFilters);
+      const next = cleanEntryFilters(toEntryFilters(localFilters));
       const sig = filtersSignature(next);
 
       onApply({ filters: next });
@@ -234,15 +236,15 @@ export function useActivityFilters({ initial, onApply, contextSettlement, shortc
     }
 
     bootstrappedRef.current = true;
-  }, [viewsLoaded, scopedViews, onApply, localFilters, contextSettlement]);
+  }, [cleanEntryFilters, viewsLoaded, scopedViews, onApply, localFilters, contextSettlement, stripUnsupported]);
 
   const applyViewToForm = useCallback(
     (view: Visualization) => {
-      const next = buildInitialLocalFilters(view.filters, contextSettlement);
+      const next = stripUnsupported(buildInitialLocalFilters(view.filters, contextSettlement));
       next.settlement_status = !!view.settlement_status;
       setLocalFilters(next);
     },
-    [contextSettlement]
+    [contextSettlement, stripUnsupported]
   );
 
   const addFilterItems = useMemo<MenuEntry[]>(() => {

@@ -244,17 +244,56 @@
   "collapseNavigation": "Recolher navegação",
   "expandNavigation": "Expandir navegação",
   "backToWorkspace": "Voltar ao espaço de trabalho",
-  "navigationSections": { "overview": "Visão geral", "money": "Dinheiro", "planning": "Planeamento" },
-  "settingsSections": { "account": "A sua conta", "preferences": "Preferências", "workspace": "Espaço de trabalho" },
+  "navigationSections": {
+    "overview": "Visão geral",
+    "money": "Dinheiro",
+    "planning": "Planeamento",
+    "actions": "Ações"
+  },
+  "settingsSections": {
+    "account": "A sua conta",
+    "preferences": "Preferências",
+    "workspace": "Espaço de trabalho"
+  },
   "settingsPages": {
-    "profile": { "title": "Perfil", "description": "Gira o seu nome, país e fuso horário." },
-    "address": { "title": "Morada", "description": "Mantenha os dados da sua morada atualizados." },
-    "personalData": { "title": "Dados pessoais", "description": "Gira os seus contactos e informações pessoais sensíveis." },
-    "security": { "title": "Segurança e privacidade", "description": "Proteja a sua conta e reveja as respetivas definições de segurança." },
-    "notifications": { "title": "Notificações", "description": "Escolha que atualizações da conta e do espaço de trabalho recebe." },
-    "formats": { "title": "Formatos", "description": "Defina como as datas e os números são apresentados no Spifex." },
-    "currency": { "title": "Moeda", "description": "Escolha a moeda utilizada neste espaço de trabalho." },
-    "billing": { "title": "Plano e faturação", "description": "Consulte o plano e gira a faturação deste espaço de trabalho." },
-    "workspaces": { "title": "Espaços de trabalho", "description": "Crie, alterne e gira os seus espaços de finanças pessoais." }
-  }
+    "profile": {
+      "title": "Perfil",
+      "description": "Gira o seu nome, país e fuso horário."
+    },
+    "address": {
+      "title": "Morada",
+      "description": "Mantenha os dados da sua morada atualizados."
+    },
+    "personalData": {
+      "title": "Dados pessoais",
+      "description": "Gira os seus contactos e informações pessoais sensíveis."
+    },
+    "security": {
+      "title": "Segurança e privacidade",
+      "description": "Proteja a sua conta e reveja as respetivas definições de segurança."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "description": "Escolha que atualizações da conta e do espaço de trabalho recebe."
+    },
+    "formats": {
+      "title": "Formatos",
+      "description": "Defina como as datas e os números são apresentados no Spifex."
+    },
+    "currency": {
+      "title": "Moeda",
+      "description": "Escolha a moeda utilizada neste espaço de trabalho."
+    },
+    "billing": {
+      "title": "Plano e faturação",
+      "description": "Consulte o plano e gira a faturação deste espaço de trabalho."
+    },
+    "workspaces": {
+      "title": "Espaços de trabalho",
+      "description": "Crie, alterne e gira os seus espaços de finanças pessoais."
+    }
+  },
+  "createCreditEntry": "Criar receita",
+  "createDebitEntry": "Criar despesa",
+  "createTransfer": "Criar transferência"
 }

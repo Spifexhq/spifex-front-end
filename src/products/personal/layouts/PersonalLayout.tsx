@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Menu, LayoutDashboard, ArrowLeftRight, Landmark, Tags, CircleGauge, Target, ChartNoAxesCombined, Settings2 } from "lucide-react";
+import { Menu, LayoutDashboard, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Landmark, Tags, CircleGauge, Target, ChartNoAxesCombined, Settings2 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
@@ -17,11 +17,16 @@ const groups = [
 ];
 
 export default function PersonalLayout() {
-  const { t } = useTranslation(["personal", "personalSettings"]);
-  const { organization } = useAuthContext();
+  const { t } = useTranslation(["personal", "personalSettings", "sidebar"]);
+  const { organization, permissions, isOwner, isSuperUser } = useAuthContext();
+  const navigate = useNavigate();
   const location = useLocation();
   const section = location.pathname.split("/")[2] || "overview";
   const inSettings = section === "settings";
+  const workspace = organization?.organization;
+  const readOnly = !!workspace?.lifecycle && workspace.lifecycle !== "active";
+  const canCreateEntries = !readOnly && (isOwner || isSuperUser || permissions.includes("add_cash_flow_entries"));
+  const canCreateTransfers = !readOnly && (isOwner || isSuperUser || permissions.includes("add_transference"));
   const [mobile, setMobile] = useState(false);
   const [desktop, setDesktop] = useState(() => matchMedia("(min-width: 768px)").matches);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem("spifex.personal.collapsed") === "true"; } catch { return false; } });
@@ -44,7 +49,18 @@ export default function PersonalLayout() {
   return <div className="h-dvh overflow-hidden bg-white text-gray-900">
     <div className="fixed inset-y-0 left-0 z-40">
       {inSettings ? <PersonalSettingsSidebar open={desktop ? !collapsed : mobile} mobile={!desktop} collapsed={collapsed} onToggle={toggle} onMobileClose={closeMobile}/> : <SidebarFrame open={desktop ? !collapsed : mobile} mobile={!desktop} onToggle={toggle} product="Personal" label={t("navigation")} toggleLabel={t(!desktop && mobile ? "close" : "toggleNavigation")} workspace={<WorkspaceSwitcher compact={railCollapsed}/>} footer={<><div className="shrink-0 border-t border-gray-200 p-3"><NavLink to="/personal/settings/personal" title={railCollapsed ? t("settings") : undefined} onClick={closeMobile} className={({isActive})=>`sidebar-row rounded-md text-xs ${isActive?"bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200":"text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Settings2 size={16} className="sidebar-icon"/><span className="sidebar-label">{t("settings")}</span></NavLink></div><SidebarUserConfiguration collapsed={railCollapsed} onNavigate={closeMobile} destinations={{ personal: "/personal/settings/personal", notifications: "/personal/settings/notifications", help: "/personal/help" }}/></>}>
-        {groups.map(group => <section key={group.id} className="mb-5" aria-label={t(`navigationSections.${group.id}`)}><div className="sidebar-section-title text-[11px] font-medium text-gray-400"><span className="sidebar-label">{t(`navigationSections.${group.id}`)}</span></div><ul className="space-y-1">{group.items.map(({key,Icon})=><li key={key}><NavLink to={`/personal/${key}`} title={railCollapsed ? t(key) : undefined} onClick={closeMobile} className={({ isActive }) => `sidebar-row rounded-md text-[13px] transition-colors ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Icon size={16} className="sidebar-icon"/><span className="sidebar-label">{t(key)}</span></NavLink></li>)}</ul></section>)}
+        {groups.slice(0, 2).map(group => <section key={group.id} className="mb-5" aria-label={t(`navigationSections.${group.id}`)}><div className="sidebar-section-title text-[11px] font-medium text-gray-400"><span className="sidebar-label">{t(`navigationSections.${group.id}`)}</span></div><ul className="space-y-1">{group.items.map(({key,Icon})=><li key={key}><NavLink to={`/personal/${key}`} title={railCollapsed ? t(key) : undefined} onClick={closeMobile} className={({ isActive }) => `sidebar-row rounded-md text-[13px] transition-colors ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Icon size={16} className="sidebar-icon"/><span className="sidebar-label">{t(key)}</span></NavLink></li>)}</ul></section>)}
+        {section === "transactions" && (canCreateEntries || canCreateTransfers) && <section className="mb-5" aria-label={t("sidebar:sidebar.sections.actions")}>
+          <div className="sidebar-section-title text-[11px] font-medium text-gray-400"><span className="sidebar-label">{t("sidebar:sidebar.sections.actions")}</span></div>
+          <ul className="space-y-1">
+            {canCreateEntries && <>
+              <li><button type="button" title={railCollapsed ? t("sidebar:sidebar.items.credit") : undefined} onClick={() => { navigate("/personal/transactions?create=credit"); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowDownLeft size={16} className="sidebar-icon"/><span className="sidebar-label">{t("sidebar:sidebar.items.credit")}</span></button></li>
+              <li><button type="button" title={railCollapsed ? t("sidebar:sidebar.items.debit") : undefined} onClick={() => { navigate("/personal/transactions?create=debit"); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowUpRight size={16} className="sidebar-icon"/><span className="sidebar-label">{t("sidebar:sidebar.items.debit")}</span></button></li>
+            </>}
+            {canCreateTransfers && <li><button type="button" title={railCollapsed ? t("sidebar:sidebar.items.transfer") : undefined} onClick={() => { navigate("/personal/transactions?create=transfer"); closeMobile(); }} className="sidebar-row rounded-md text-left text-[13px] text-gray-600 transition-colors hover:bg-gray-200/50 hover:text-gray-900"><ArrowLeftRight size={16} className="sidebar-icon"/><span className="sidebar-label">{t("sidebar:sidebar.items.transfer")}</span></button></li>}
+          </ul>
+        </section>}
+        {groups.slice(2).map(group => <section key={group.id} className="mb-5" aria-label={t(`navigationSections.${group.id}`)}><div className="sidebar-section-title text-[11px] font-medium text-gray-400"><span className="sidebar-label">{t(`navigationSections.${group.id}`)}</span></div><ul className="space-y-1">{group.items.map(({key,Icon})=><li key={key}><NavLink to={`/personal/${key}`} title={railCollapsed ? t(key) : undefined} onClick={closeMobile} className={({ isActive }) => `sidebar-row rounded-md text-[13px] transition-colors ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900"}`}><Icon size={16} className="sidebar-icon"/><span className="sidebar-label">{t(key)}</span></NavLink></li>)}</ul></section>)}
       </SidebarFrame>}
     </div>
     <div ref={main} className={`flex h-full min-w-0 flex-col transition-[margin-left] duration-[220ms] ease-out motion-reduce:transition-none ${collapsed ? "md:ml-[72px]" : "md:ml-[248px]"}`}>

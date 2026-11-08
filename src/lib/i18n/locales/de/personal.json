@@ -244,17 +244,56 @@
   "collapseNavigation": "Navigation einklappen",
   "expandNavigation": "Navigation ausklappen",
   "backToWorkspace": "Zurück zum Arbeitsbereich",
-  "navigationSections": { "overview": "Übersicht", "money": "Finanzen", "planning": "Planung" },
-  "settingsSections": { "account": "Ihr Konto", "preferences": "Einstellungen", "workspace": "Arbeitsbereich" },
+  "navigationSections": {
+    "overview": "Übersicht",
+    "money": "Finanzen",
+    "planning": "Planung",
+    "actions": "Aktionen"
+  },
+  "settingsSections": {
+    "account": "Ihr Konto",
+    "preferences": "Einstellungen",
+    "workspace": "Arbeitsbereich"
+  },
   "settingsPages": {
-    "profile": { "title": "Profil", "description": "Verwalten Sie Ihren Namen, Ihr Land und Ihre Zeitzone." },
-    "address": { "title": "Adresse", "description": "Halten Sie Ihre persönlichen Adressdaten aktuell." },
-    "personalData": { "title": "Persönliche Daten", "description": "Verwalten Sie Kontaktangaben und sensible persönliche Informationen." },
-    "security": { "title": "Sicherheit und Datenschutz", "description": "Schützen Sie Ihr Konto und überprüfen Sie die Sicherheitseinstellungen." },
-    "notifications": { "title": "Benachrichtigungen", "description": "Legen Sie fest, welche Konto- und Arbeitsbereichs-Updates Sie erhalten." },
-    "formats": { "title": "Formate", "description": "Legen Sie fest, wie Spifex Datumsangaben und Zahlen darstellt." },
-    "currency": { "title": "Währung", "description": "Wählen Sie die Währung für diesen Arbeitsbereich." },
-    "billing": { "title": "Tarif und Abrechnung", "description": "Prüfen Sie Ihren Tarif und verwalten Sie die Abrechnung dieses Arbeitsbereichs." },
-    "workspaces": { "title": "Arbeitsbereiche", "description": "Erstellen und verwalten Sie Ihre persönlichen Finanzarbeitsbereiche." }
-  }
+    "profile": {
+      "title": "Profil",
+      "description": "Verwalten Sie Ihren Namen, Ihr Land und Ihre Zeitzone."
+    },
+    "address": {
+      "title": "Adresse",
+      "description": "Halten Sie Ihre persönlichen Adressdaten aktuell."
+    },
+    "personalData": {
+      "title": "Persönliche Daten",
+      "description": "Verwalten Sie Kontaktangaben und sensible persönliche Informationen."
+    },
+    "security": {
+      "title": "Sicherheit und Datenschutz",
+      "description": "Schützen Sie Ihr Konto und überprüfen Sie die Sicherheitseinstellungen."
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "Legen Sie fest, welche Konto- und Arbeitsbereichs-Updates Sie erhalten."
+    },
+    "formats": {
+      "title": "Formate",
+      "description": "Legen Sie fest, wie Spifex Datumsangaben und Zahlen darstellt."
+    },
+    "currency": {
+      "title": "Währung",
+      "description": "Wählen Sie die Währung für diesen Arbeitsbereich."
+    },
+    "billing": {
+      "title": "Tarif und Abrechnung",
+      "description": "Prüfen Sie Ihren Tarif und verwalten Sie die Abrechnung dieses Arbeitsbereichs."
+    },
+    "workspaces": {
+      "title": "Arbeitsbereiche",
+      "description": "Erstellen und verwalten Sie Ihre persönlichen Finanzarbeitsbereiche."
+    }
+  },
+  "createCreditEntry": "Einnahme erstellen",
+  "createDebitEntry": "Ausgabe erstellen",
+  "createTransfer": "Überweisung erstellen"
 }

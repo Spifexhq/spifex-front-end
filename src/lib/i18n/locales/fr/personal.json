@@ -244,17 +244,56 @@
   "collapseNavigation": "Réduire la navigation",
   "expandNavigation": "Développer la navigation",
   "backToWorkspace": "Retour à l’espace de travail",
-  "navigationSections": { "overview": "Vue d’ensemble", "money": "Finances", "planning": "Planification" },
-  "settingsSections": { "account": "Votre compte", "preferences": "Préférences", "workspace": "Espace de travail" },
+  "navigationSections": {
+    "overview": "Vue d’ensemble",
+    "money": "Finances",
+    "planning": "Planification",
+    "actions": "Actions"
+  },
+  "settingsSections": {
+    "account": "Votre compte",
+    "preferences": "Préférences",
+    "workspace": "Espace de travail"
+  },
   "settingsPages": {
-    "profile": { "title": "Profil", "description": "Gérez votre nom, votre pays et votre fuseau horaire." },
-    "address": { "title": "Adresse", "description": "Tenez à jour les informations de votre adresse personnelle." },
-    "personalData": { "title": "Données personnelles", "description": "Gérez vos coordonnées et vos informations personnelles sensibles." },
-    "security": { "title": "Sécurité et confidentialité", "description": "Protégez votre compte et consultez ses paramètres de sécurité." },
-    "notifications": { "title": "Notifications", "description": "Choisissez les mises à jour du compte et de l’espace de travail que vous recevez." },
-    "formats": { "title": "Formats", "description": "Définissez l’affichage des dates et des nombres dans Spifex." },
-    "currency": { "title": "Devise", "description": "Choisissez la devise utilisée dans cet espace de travail." },
-    "billing": { "title": "Offre et facturation", "description": "Consultez votre offre et gérez la facturation de cet espace de travail." },
-    "workspaces": { "title": "Espaces de travail", "description": "Créez et gérez vos espaces de finances personnelles." }
-  }
+    "profile": {
+      "title": "Profil",
+      "description": "Gérez votre nom, votre pays et votre fuseau horaire."
+    },
+    "address": {
+      "title": "Adresse",
+      "description": "Tenez à jour les informations de votre adresse personnelle."
+    },
+    "personalData": {
+      "title": "Données personnelles",
+      "description": "Gérez vos coordonnées et vos informations personnelles sensibles."
+    },
+    "security": {
+      "title": "Sécurité et confidentialité",
+      "description": "Protégez votre compte et consultez ses paramètres de sécurité."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choisissez les mises à jour du compte et de l’espace de travail que vous recevez."
+    },
+    "formats": {
+      "title": "Formats",
+      "description": "Définissez l’affichage des dates et des nombres dans Spifex."
+    },
+    "currency": {
+      "title": "Devise",
+      "description": "Choisissez la devise utilisée dans cet espace de travail."
+    },
+    "billing": {
+      "title": "Offre et facturation",
+      "description": "Consultez votre offre et gérez la facturation de cet espace de travail."
+    },
+    "workspaces": {
+      "title": "Espaces de travail",
+      "description": "Créez et gérez vos espaces de finances personnelles."
+    }
+  },
+  "createCreditEntry": "Créer une recette",
+  "createDebitEntry": "Créer une dépense",
+  "createTransfer": "Créer un transfert"
 }

@@ -33,9 +33,9 @@ function getInitials(name: string) {
 }
 
 /** The single Cash flow / Settled panel; hooks isolate API and filter logic. */
-export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/settings/banks" }: {
+export default function FinancialActivityPanel({ children, filters, onApply, contextSettlement, refreshToken = 0, banksRefreshKey = 0, shortcutsEnabled = true, manageBanksPath = "/settings/banks", excludeObservationFilter = false }: {
  children: ReactNode; filters: EntryFilters; onApply(payload: {filters: EntryFilters}): void;
- contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean; manageBanksPath?: string;
+ contextSettlement: boolean; refreshToken?: number; banksRefreshKey?: number; shortcutsEnabled?: boolean; manageBanksPath?: string; excludeObservationFilter?: boolean;
 }) {
  const { t } = useTranslation(["filterBar", "kpiCards", "banksTable"]);
  const navigate = useNavigate();
@@ -61,7 +61,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
    tryApplyCurrentFilters, closeEditorsAndApply, clearAll, applyViewToForm,
    addFilterItems, activeEditorDef, scopedViews, refreshViews,
    bankOptions, removeChip,
- } = useActivityFilters({initial: filters, onApply, contextSettlement, shortcutsEnabled, enabled: showFilters});
+ } = useActivityFilters({initial: filters, onApply, contextSettlement, shortcutsEnabled, enabled: showFilters, excludeObservationFilter});
  return <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
   {(showBanks || showMetrics) && <div className="shrink-0 overflow-hidden">
     <section aria-label={t("kpiCards:overview.title")} className="min-w-0">

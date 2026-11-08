@@ -244,17 +244,56 @@
   "collapseNavigation": "Collapse navigation",
   "expandNavigation": "Expand navigation",
   "backToWorkspace": "Back to workspace",
-  "navigationSections": { "overview": "Overview", "money": "Money", "planning": "Planning" },
-  "settingsSections": { "account": "Your account", "preferences": "Preferences", "workspace": "Workspace" },
+  "navigationSections": {
+    "overview": "Overview",
+    "money": "Money",
+    "planning": "Planning",
+    "actions": "Actions"
+  },
+  "settingsSections": {
+    "account": "Your account",
+    "preferences": "Preferences",
+    "workspace": "Workspace"
+  },
   "settingsPages": {
-    "profile": { "title": "Profile", "description": "Manage your name, country and time zone." },
-    "address": { "title": "Address", "description": "Keep your personal address details up to date." },
-    "personalData": { "title": "Personal data", "description": "Manage contact and sensitive personal information." },
-    "security": { "title": "Security & privacy", "description": "Protect your account and review its security settings." },
-    "notifications": { "title": "Notifications", "description": "Choose which account and workspace updates you receive." },
-    "formats": { "title": "Formats", "description": "Set how dates and numbers appear across Spifex." },
-    "currency": { "title": "Currency", "description": "Choose the currency used throughout this workspace." },
-    "billing": { "title": "Plan & billing", "description": "Review your plan and manage billing for this workspace." },
-    "workspaces": { "title": "Workspaces", "description": "Create, switch and manage your personal finance workspaces." }
-  }
+    "profile": {
+      "title": "Profile",
+      "description": "Manage your name, country and time zone."
+    },
+    "address": {
+      "title": "Address",
+      "description": "Keep your personal address details up to date."
+    },
+    "personalData": {
+      "title": "Personal data",
+      "description": "Manage contact and sensitive personal information."
+    },
+    "security": {
+      "title": "Security & privacy",
+      "description": "Protect your account and review its security settings."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose which account and workspace updates you receive."
+    },
+    "formats": {
+      "title": "Formats",
+      "description": "Set how dates and numbers appear across Spifex."
+    },
+    "currency": {
+      "title": "Currency",
+      "description": "Choose the currency used throughout this workspace."
+    },
+    "billing": {
+      "title": "Plan & billing",
+      "description": "Review your plan and manage billing for this workspace."
+    },
+    "workspaces": {
+      "title": "Workspaces",
+      "description": "Create, switch and manage your personal finance workspaces."
+    }
+  },
+  "createCreditEntry": "Create credit entry",
+  "createDebitEntry": "Create debit entry",
+  "createTransfer": "Create transfer"
 }

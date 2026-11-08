@@ -35,7 +35,6 @@ function can(auth: ReturnType<typeof useAuthContext>, code: string) {
 function queryFromFilters(filters: EntryFilters, activityKind?: string): FilterQuery {
   return {
     ...(filters.description ? { search: filters.description } : {}),
-    ...(filters.observation ? { observation: filters.observation } : {}),
     ...(filters.start_date ? { start_date: filters.start_date } : {}),
     ...(filters.end_date ? { end_date: filters.end_date } : {}),
     ...(activityKind ? { kind: activityKind } : filters.tx_type ? { kind: filters.tx_type === "credit" ? "income" : "expense" } : {}),
@@ -146,7 +145,7 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
   };
   const inspect = (row: TableItem) => onInspect(row);
   const edit = (row: TableItem) => { if ("open_amount" in row) onEdit(row); };
-  const settleOne = (row: TableItem[]) => onSettle(row.filter((item): item is PersonalTransaction => "open_amount" in item));
+  const settleOne = (row: TableItem) => { if ("open_amount" in row) onSettle([row]); };
   const deleteOne = async (record: TableItem) => {
     if (settled) {
       const activity = record as PersonalSettledActivity;
@@ -162,10 +161,11 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     secondColumnLabel={secondColumnLabel} renderSecondColumn={renderSecondary} pager={pagerAdapter}
     busy={loading} error={error} mutating={loading || mutating} canSelect={canSelect} canDelete={settled ? canReverse : !readOnly && can(auth, "delete_cash_flow_entries")}
     canEdit={!settled && !readOnly && can(auth, "change_cash_flow_entries")} editLabel={t("personal:edit")}
+    onSettle={canSettle ? settleOne : undefined} settleLabel={t("financeEntries:settle")}
     rowCanDelete={record => settled || ("status" in record.source && record.source.status === "pending")}
     onInspect={row => { const source = sourceById.get(row.id); if (source) inspect(source); }}
     onEdit={row => { const source = sourceById.get(row.id); if (source && "open_amount" in source) edit(source); }}
-    onSettle={settleOne} onDelete={deleteOne} onDeleted={onDeleted}
+    onDelete={deleteOne} onDeleted={onDeleted}
     onSelection={onSelection} onEndReached={() => { if (pager.canNext && !pager.loading && !pager.error) void pager.next(); }}
     loadMore={pager.loading && !!pager.items.length} onRetry={() => void pager.refresh()}
   />;
@@ -186,8 +186,9 @@ export default function PersonalTransactionsWorkspace() {
   const [panelRevision, setPanelRevision] = useState(0);
   const [entryPreview, setEntryPreview] = useState<PersonalTransaction | null>(null);
   const [activityPreview, setActivityPreview] = useState<PersonalSettledActivity | null>(null);
-  const [dialog, setDialog] = useState<{ kind: "transactions" | "transfer"; record?: PersonalRecord | null } | null>(null);
+  const [dialog, setDialog] = useState<{ kind: "transactions" | "transfer"; record?: PersonalRecord | null; transactionKind?: "income" | "expense" } | null>(null);
   const [selected, setSelected] = useState<PersonalTransaction[]>([]);
+  const [settlementOpen, setSettlementOpen] = useState(false);
   const [accounts, setAccounts] = useState<PersonalAccount[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -229,26 +230,40 @@ export default function PersonalTransactionsWorkspace() {
   const refresh = useCallback(() => { setRevision(value => value + 1); setPanelRevision(value => value + 1); }, []);
   const refreshPanel = useCallback(() => setPanelRevision(value => value + 1), []);
   const edit = (item: PersonalTransaction) => setDialog({ kind: "transactions", record: item });
+  const openSettlement = useCallback((items: PersonalTransaction[]) => {
+    if (!items.length) return;
+    setSelected(items);
+    setBusy(false);
+    setSettlementOpen(true);
+  }, []);
+  useEffect(() => {
+    const create = params.get("create");
+    if (!create) return;
+    if (create === "credit" || create === "debit") setDialog({ kind: "transactions", transactionKind: create === "credit" ? "income" : "expense" });
+    if (create === "transfer") setDialog({ kind: "transfer" });
+    const next = new URLSearchParams(params);
+    next.delete("create");
+    setParams(next, { replace: true });
+  }, [params, setParams]);
   const inspect = (item: TableItem) => { if ("value_date" in item) setActivityPreview(item); else setEntryPreview(item); };
   const selectedForSettlement = selected.map(item => ({ id: item.id } satisfies SettlementTarget));
   const settlementBanks = { banks: personalBanks, loading: accountsLoading, error: null as string | null };
   return <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
     <header className="flex shrink-0 flex-wrap items-start justify-between gap-4">
       <div><h1 className="text-2xl font-semibold tracking-tight text-gray-900">{t("transactions")}</h1><p className="mt-1.5 max-w-2xl text-sm leading-6 text-gray-500">{t("transactionsDescription")}</p></div>
-      <div className="flex gap-2">{basis === "settled" ? <Button variant="outline" disabled={readOnly} onClick={() => setDialog({ kind: "transfer" })}>{t("newTransfer")}</Button> : <Button disabled={readOnly} onClick={() => setDialog({ kind: "transactions" })}>{t("newTransaction")}</Button>}</div>
     </header>
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
       <div className="flex shrink-0 items-center gap-1 border-b border-gray-200 p-2" role="tablist" aria-label={t("activityTabs")}>
         {(["outstanding", "settled"] as const).map(value => <button key={value} type="button" role="tab" aria-selected={basis === value} onClick={() => setBasis(value)} className="min-h-8 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors aria-selected:bg-gray-100 aria-selected:text-gray-900">{t(value === "outstanding" ? "cashFlowTab" : "settledActivityTab")}</button>)}
       </div>
-      <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/personal/accounts">
-        <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} auth={auth} onInspect={inspect} onEdit={edit} onSettle={items => { setSelected(items); setBusy(false); }} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
+      <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/personal/accounts" excludeObservationFilter>
+        <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} auth={auth} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
       </FinancialActivityPanel>
     </div>
-    <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setSelected([item as PersonalTransaction]); setBusy(false); }} onContribute={() => {}}/>
+    <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setEntryPreview(null); openSettlement([item as PersonalTransaction]); }} onContribute={() => {}}/>
     <PersonalSettledActivityPreview item={activityPreview} currency={currency} onClose={() => setActivityPreview(null)}/>
-    {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}`} kind={dialog.kind} record={dialog.record} currency={currency} onClose={() => setDialog(null)} onSaved={refresh}/>}
-    {selected.length > 0 && <SettlementModal isOpen onClose={() => { setSelected([]); setBusy(false); }} onSave={() => { setSelected([]); setBusy(false); refresh(); }} selectedEntries={selectedForSettlement} banksData={settlementBanks}/>}
+    {dialog && <PersonalRecordDialog key={`${dialog.kind}:${dialog.record?.id || "new"}:${dialog.transactionKind || ""}`} kind={dialog.kind} record={dialog.record} currency={currency} transactionKind={dialog.transactionKind} onClose={() => setDialog(null)} onSaved={refresh}/>}
+    <SettlementModal isOpen={settlementOpen} onClose={() => { setSettlementOpen(false); setSelected([]); setBusy(false); }} onSave={() => { setSettlementOpen(false); setSelected([]); setBusy(false); refresh(); }} selectedEntries={selectedForSettlement} banksData={settlementBanks}/>
     {basis === "settled" && busy && <span className="sr-only" role="status">{t("loading")}</span>}
   </div>;
 }
