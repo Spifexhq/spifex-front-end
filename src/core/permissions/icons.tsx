@@ -44,7 +44,7 @@ export function permissionIcons(code: string): LucideIcon {
   if (code === "view_report_page") return FileText;
 
   if (code === "view_personal_settings_page") return User;
-  if (code === "view_subscription_management_page") return CreditCard;
+  if (code === "view_billing_page") return CreditCard;
   if (code === "view_limits_and_usage_page") return Gauge;
   if (code === "view_security_and_privacy_page") return Shield;
 

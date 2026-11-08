@@ -17,7 +17,7 @@
     "workspaces": "Workspaces",
     "members": "Employees",
     "groups": "Groups",
-    "subscription-management": "Plan & billing",
+    "billing": "Plan & billing",
     "formats": "Formats",
     "currency": "Currency",
     "banks": "Banks",

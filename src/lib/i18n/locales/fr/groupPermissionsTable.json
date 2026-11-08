@@ -277,9 +277,9 @@
       "label": "Paramètres personnels",
       "description": "Permet de voir la page des paramètres personnels."
     },
-    "view_subscription_management_page": {
-      "label": "Gestion d’abonnement",
-      "description": "Permet de voir la page de gestion d’abonnement."
+    "view_billing_page": {
+      "label": "Facturation",
+      "description": "Permet de consulter et gérer la facturation de l’espace de travail."
     },
     "view_limits_and_usage_page": {
       "label": "Limites & usage",

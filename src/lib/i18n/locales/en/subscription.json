@@ -1,5 +1,5 @@
 {
-  "title": "Subscription Management",
+  "title": "Plan & billing",
   "header": {
     "settings": "Settings",
     "title": "Plan & Billing"
@@ -38,7 +38,7 @@
   "btn": {
     "manage": "Manage subscription",
     "fixPayment": "Fix payment",
-    "changeInPortal": "Change in portal",
+    "changeInPortal": "Change plan",
     "reactivate": "Reactivate",
     "current": "Current",
     "subscribe": "Subscribe",
@@ -84,6 +84,7 @@
     "checkout": "Payment initialization failed. Please try again later.",
     "noPortal": "Couldn’t open the customer portal.",
     "portal": "Portal redirect failed. Please try again later.",
-    "ownerOnly": "Only organization owners can manage subscription and billing settings."
+    "planChangeNotConfigured": "Plan changes are not enabled in the Stripe billing portal yet. Please contact support.",
+    "ownerOnly": "Only organization owners and admins can manage subscription and billing settings."
   }
 }

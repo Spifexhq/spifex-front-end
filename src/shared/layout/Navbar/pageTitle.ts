@@ -1,4 +1,4 @@
-const settingsPages = new Set(["personal", "organization-settings", "workspaces", "subscription-management", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
+const settingsPages = new Set(["personal", "organization-settings", "workspaces", "billing", "security", "banks", "departments", "entities", "inventory", "projects", "members", "groups", "categories", "ledger-accounts", "notifications"]);
 const accountingPages: Record<string, string> = { overview: "overview", chart: "chart", books: "books", "bank-mappings": "bankMappings", "posting-policies": "postingPolicies", journals: "journals", reconciliation: "reconciliation", correlation: "correlation", setup: "setup", periods: "periods" };
 export function getPageTitleKey(pathname: string): string {
   const [, root, page, detail, phase] = pathname.split("/");
@@ -15,7 +15,7 @@ export function getPageTitleKey(pathname: string): string {
     if (page === "manage-currency") return "navbar:pages.currency";
     if (page === "manage-formats") return "navbar:pages.formats";
     if (page === "limits") return "navbar:pages.limits";
-    if (page === "subscription") return "settingsSidebar:items.subscription-management";
+    if (page === "subscription") return "settingsSidebar:items.billing";
     return "navbar:pages.settings";
   }
   const keys: Record<string, string> = { "bank-imports": "bankImports", overview: "overview", help: "help", home: "overview", cashflow: "cashflow", settled: "settled", reports: "reports", onboarding: "onboarding", "locale-setup": "locale", status: "status" };
@@ -30,12 +30,12 @@ export function getPageBreadcrumbs(pathname: string): PageCrumb[] {
   const parents: Record<string, PageCrumb> = {
     "/settings/manage-currency": { titleKey: "settingsSidebar:items.organization-settings", to: "/settings/organization-settings" },
     "/settings/manage-formats": { titleKey: "settingsSidebar:items.personal", to: "/settings/personal" },
-    "/settings/limits": { titleKey: "settingsSidebar:items.subscription-management", to: "/settings/subscription-management" },
+    "/settings/limits": { titleKey: "settingsSidebar:items.billing", to: "/settings/billing" },
   };
   return parents[pathname] ? [parents[pathname], { titleKey }] : [{ titleKey }];
 }
 export function getSettingsDescriptionKey(pathname: string): string {
   const [, , page, tab] = pathname.split("/");
-  const key = page === "accounting" ? `accounting-${tab || "overview"}` : page === "register" ? "ledger-accounts" : page === "subscription" ? "subscription-management" : page || "personal";
+  const key = page === "accounting" ? `accounting-${tab || "overview"}` : page === "register" ? "ledger-accounts" : page === "subscription" || page === "subscription-management" ? "billing" : page || "personal";
   return `navbar:settingsDescriptions.${key}`;
 }

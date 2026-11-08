@@ -1,5 +1,5 @@
 {
-  "title": "Gestão da assinatura",
+  "title": "Plano e faturação",
   "header": {
     "settings": "Configurações",
     "title": "Plano e cobrança"
@@ -38,7 +38,7 @@
   "btn": {
     "manage": "Gerenciar assinatura",
     "fixPayment": "Corrigir pagamento",
-    "changeInPortal": "Alterar no portal",
+    "changeInPortal": "Alterar plano",
     "reactivate": "Reativar",
     "current": "Atual",
     "subscribe": "Assinar",
@@ -84,6 +84,7 @@
     "checkout": "Falha ao iniciar o pagamento. Tente novamente mais tarde.",
     "noPortal": "Não foi possível abrir o portal do cliente.",
     "portal": "Falha ao redirecionar para o portal. Tente novamente mais tarde.",
-    "ownerOnly": "Somente os proprietários da organização podem gerenciar as configurações de assinatura e faturamento."
+    "planChangeNotConfigured": "As alterações de plano ainda não estão ativadas no portal de faturação Stripe. Contacte o suporte.",
+    "ownerOnly": "Apenas proprietários e administradores da organização podem gerir a assinatura e a faturação."
   }
 }

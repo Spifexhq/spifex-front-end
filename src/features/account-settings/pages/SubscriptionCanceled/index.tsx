@@ -1,6 +1,6 @@
 // ✅ Add a dedicated cancel landing page at: /settings/subscription
 // It shows a clean “Checkout canceled” message and provides a button back to
-// /settings/subscription-management (and also supports a generic fallback).
+// /settings/billing (and also supports a generic fallback).
 
 // 1) Create the page:
 // File: src/pages/Settings/SubscriptionCanceled/index.tsx
@@ -29,7 +29,7 @@ const SubscriptionCanceled: React.FC = () => {
     document.title = t("subscription:title", "Plan & Billing");
   }, [t]);
 
-  const goBack = () => navigate("/settings/subscription-management", { replace: true });
+  const goBack = () => navigate("/settings/billing", { replace: true });
 
   return (
     <>

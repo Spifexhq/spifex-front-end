@@ -277,9 +277,9 @@
       "label": "Personal settings page",
       "description": "Can view the personal settings page."
     },
-    "view_subscription_management_page": {
-      "label": "Subscription management page",
-      "description": "Can view the subscription management page."
+    "view_billing_page": {
+      "label": "Billing page",
+      "description": "Can view and manage workspace billing settings."
     },
     "view_limits_and_usage_page": {
       "label": "Limits & usage page",

@@ -277,9 +277,9 @@
       "label": "Página de configurações pessoais",
       "description": "Permite acessar a página de configurações pessoais."
     },
-    "view_subscription_management_page": {
-      "label": "Página de assinatura",
-      "description": "Permite acessar a página de gerenciamento de assinatura."
+    "view_billing_page": {
+      "label": "Página de faturação",
+      "description": "Permite consultar e gerir a faturação do espaço de trabalho."
     },
     "view_limits_and_usage_page": {
       "label": "Página de limites e uso",

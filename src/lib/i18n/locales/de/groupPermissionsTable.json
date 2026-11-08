@@ -277,9 +277,9 @@
       "label": "Persönliche Einstellungen",
       "description": "Erlaubt das Anzeigen der Seite für persönliche Einstellungen."
     },
-    "view_subscription_management_page": {
-      "label": "Abo-Verwaltung",
-      "description": "Erlaubt das Anzeigen der Abo-Verwaltungsseite."
+    "view_billing_page": {
+      "label": "Abrechnung",
+      "description": "Erlaubt die Anzeige und Verwaltung der Abrechnung des Arbeitsbereichs."
     },
     "view_limits_and_usage_page": {
       "label": "Limits & Nutzung",

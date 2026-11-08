@@ -271,9 +271,9 @@ export const api = {
       country_code,
     } satisfies CreateCheckoutSessionRequest),
 
-  createCustomerPortalSession: () =>
+  createCustomerPortalSession: (planChange?: { plan_code: string; country_code?: string; billing_interval?: "month" | "year" }) =>
     request<CreateCustomerPortalSessionResponse>(`billing/customer-portal-session/`, 'POST',
-      {} satisfies CreateCustomerPortalSessionRequest),
+      planChange ?? ({} satisfies CreateCustomerPortalSessionRequest)),
 
   /* --- Notifications --- */
   getNotificationPreferences: () =>

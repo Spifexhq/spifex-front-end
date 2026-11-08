@@ -18,7 +18,7 @@ const Security = lazy(() => import("@/features/account-settings/pages/SecurityAn
 const Notifications = lazy(() => import("@/features/account-settings/pages/NotificationSettings"));
 const Formats = lazy(() => import("@/features/account-settings/pages/FormatSettings"));
 const Currency = lazy(() => import("@/features/account-settings/pages/CurrencySettings"));
-const Billing = lazy(() => import("@/features/workspaces/components/WorkspaceBillingSettings"));
+const Billing = lazy(() => import("@/features/account-settings/pages/Billing"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const Help = lazy(() => import("@/pages/Help"));
 

@@ -1,5 +1,5 @@
 {
-  "title": "Aboverwaltung",
+  "title": "Tarif und Abrechnung",
   "header": {
     "settings": "Einstellungen",
     "title": "Tarif & Abrechnung"
@@ -38,7 +38,7 @@
   "btn": {
     "manage": "Abo verwalten",
     "fixPayment": "Zahlung korrigieren",
-    "changeInPortal": "Im Portal ändern",
+    "changeInPortal": "Tarif ändern",
     "reactivate": "Reaktivieren",
     "current": "Aktuell",
     "subscribe": "Abonnieren",
@@ -84,6 +84,7 @@
     "checkout": "Fehler beim Start des Zahlungsvorgangs. Bitte versuchen Sie es später erneut.",
     "noPortal": "Kundenportal konnte nicht geöffnet werden.",
     "portal": "Weiterleitung zum Portal fehlgeschlagen. Bitte versuchen Sie es später erneut.",
-    "ownerOnly": "Nur Organisationsinhaber können Abonnement- und Abrechnungseinstellungen verwalten."
+    "planChangeNotConfigured": "Tarifänderungen sind im Stripe-Abrechnungsportal noch nicht aktiviert. Bitte wenden Sie sich an den Support.",
+    "ownerOnly": "Nur Organisationsinhaber und Administratoren können Abonnement und Abrechnung verwalten."
   }
 }

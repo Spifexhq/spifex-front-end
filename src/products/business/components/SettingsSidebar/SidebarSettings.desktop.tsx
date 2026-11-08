@@ -35,7 +35,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
           { id: "workspaces", icon: "workspaces", label: t("items.workspaces"), permission: "view_organization_settings_page" },
           { id: "members", icon: "members", label: t("items.members"), permission: "view_member_settings_page" },
           { id: "groups", icon: "groups", label: t("items.groups"), permission: "view_group_settings_page" },
-          { id: "subscription-management", icon: "layers", label: t("items.subscription-management"), permission: "view_subscription_management_page" },
+          { id: "billing", icon: "layers", label: t("items.billing"), permission: "view_billing_page" },
         ],
       },
       {

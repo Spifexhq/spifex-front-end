@@ -10,7 +10,7 @@ const SettledEntries = lazy(() => import("@/products/business/pages/Finance/Sett
 const Reports = lazy(() => import("@/products/business/pages/Reporting/Reports"));
 const OnboardingPage = lazy(() => import("@/products/business/pages/Onboarding"));
 const Personal = lazy(() => import("@/features/account-settings/pages/PersonalSettings"));
-const SubscriptionManagement = lazy(() => import("@/features/account-settings/pages/SubscriptionManagement"));
+const Billing = lazy(() => import("@/products/business/pages/Settings/Billing"));
 const LimitsAndUsage = lazy(() => import("@/features/account-settings/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
 const OrganizationSettings = lazy(() => import("@/products/business/pages/Settings/OrganizationSettings"));
@@ -117,17 +117,18 @@ export const businessRoutes: RouteObject[] = [
                     ),
                 },
                 {
-                    path: 'subscription-management',
+                    path: 'billing',
                     element: (
-                    <PermissionMiddleware codeName="view_subscription_management_page" behavior="redirect" redirectTo={'/settings'}>
-                        <SubscriptionManagement />
+                    <PermissionMiddleware codeName="view_billing_page" behavior="redirect" redirectTo={'/settings'}>
+                        <Billing />
                     </PermissionMiddleware>
                     ),
                 },
+                { path: 'subscription-management', element: <Navigate to="/settings/billing" replace /> },
                 {
                     path: "subscription",
                     element: (
-                    <PermissionMiddleware codeName="view_subscription_management_page" behavior="redirect" redirectTo={"/settings"}>
+                    <PermissionMiddleware codeName="view_billing_page" behavior="redirect" redirectTo={"/settings"}>
                         <SubscriptionCanceled />
                     </PermissionMiddleware>
                     ),

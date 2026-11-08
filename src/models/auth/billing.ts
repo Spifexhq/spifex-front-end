@@ -52,7 +52,11 @@ export interface CreateCheckoutSessionResponse {
   message?: string;
 }
 
-export type CreateCustomerPortalSessionRequest = Record<string, never>;
+export type CreateCustomerPortalSessionRequest = {
+  plan_code?: string;
+  country_code?: string;
+  billing_interval?: "month" | "year";
+};
 
 export interface CreateCustomerPortalSessionResponse {
   url?: string;

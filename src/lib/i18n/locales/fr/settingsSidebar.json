@@ -17,7 +17,7 @@
     "workspaces": "Espaces de travail",
     "members": "Employés",
     "groups": "Groupes",
-    "subscription-management": "Offre et facturation",
+    "billing": "Offre et facturation",
     "formats": "Formats",
     "currency": "Devise",
     "banks": "Banques",

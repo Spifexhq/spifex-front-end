@@ -95,7 +95,7 @@ const PERMISSION_ROWS: PermissionRow[] = [
   { code: "view_settlement_page", category: "pages" },
   { code: "view_report_page", category: "pages" },
   { code: "view_personal_settings_page", category: "pages" },
-  { code: "view_subscription_management_page", category: "pages" },
+  { code: "view_billing_page", category: "pages" },
   { code: "view_limits_and_usage_page", category: "pages" },
   { code: "view_security_and_privacy_page", category: "pages" },
   { code: "view_organization_settings_page", category: "pages" },

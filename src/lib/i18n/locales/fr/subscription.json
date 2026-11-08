@@ -1,5 +1,5 @@
 {
-  "title": "Gestion de l’abonnement",
+  "title": "Offre et facturation",
   "header": {
     "settings": "Paramètres",
     "title": "Forfait et facturation"
@@ -38,7 +38,7 @@
   "btn": {
     "manage": "Gérer l’abonnement",
     "fixPayment": "Corriger le paiement",
-    "changeInPortal": "Modifier dans le portail",
+    "changeInPortal": "Changer de forfait",
     "reactivate": "Réactiver",
     "current": "Actuel",
     "subscribe": "S’abonner",
@@ -84,6 +84,7 @@
     "checkout": "Échec de l’initialisation du paiement. Veuillez réessayer plus tard.",
     "noPortal": "Impossible d’ouvrir le portail client.",
     "portal": "Échec de la redirection vers le portail. Veuillez réessayer plus tard.",
-    "ownerOnly": "Seuls les propriétaires de l'organisation peuvent gérer les paramètres d'abonnement et de facturation."
+    "planChangeNotConfigured": "Les changements de forfait ne sont pas encore activés dans le portail de facturation Stripe. Contactez l’assistance.",
+    "ownerOnly": "Seuls les propriétaires et administrateurs de l’organisation peuvent gérer l’abonnement et la facturation."
   }
 }
