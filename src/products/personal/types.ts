@@ -12,5 +12,5 @@ export type PersonalWorkspaceCollection = Exclude<PersonalCollection, "accounts"
 export type PersonalPreviewCollection = Exclude<PersonalCollection, "accounts">;
 export type PersonalTransfer = { id: string; description: string; value_date: string; amount: string; source_bank_name: string; destination_bank_name: string };
 export type PersonalRecord = PersonalTransaction | PersonalAccount | PersonalCategory | PersonalBudget | PersonalGoal | PersonalTransfer;
-export type PersonalPage<T> = { count: number; next: string | null; previous: string | null; results: T[] };
+export type PersonalPage<T> = { count: number; next: string | null; previous: string | null; results: T[]; active_count?: number; resource_count?: number };
 export type EntryAttachment = { id: string; name: string; content_type: string; size: number; created_at: string };

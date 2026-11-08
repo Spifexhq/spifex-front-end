@@ -9,6 +9,8 @@ import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitche
 import WorkspaceLifecycleBanner from "@/features/workspaces/components/WorkspaceLifecycleBanner";
 import PageSkeleton from "@/shared/ui/Loaders/PageSkeleton";
 import PersonalSettingsSidebar from "../components/PersonalSettingsSidebar";
+import { PersonalAccessProvider, usePersonalAccess } from "../access/PersonalAccessProvider";
+import { PERSONAL_PERMISSION } from "../access/permissions";
 
 const groups = [
   { id: "overview", items: [{ key: "overview", Icon: LayoutDashboard }] },
@@ -16,9 +18,10 @@ const groups = [
   { id: "planning", items: [{ key: "budgets", Icon: CircleGauge }, { key: "goals", Icon: Target }, { key: "reports", Icon: ChartNoAxesCombined }] },
 ];
 
-export default function PersonalLayout() {
+function PersonalLayoutContent() {
   const { t } = useTranslation(["personal", "personalSettings", "sidebar"]);
-  const { organization, permissions, isOwner, isSuperUser } = useAuthContext();
+  const { organization } = useAuthContext();
+  const access = usePersonalAccess();
   const navigate = useNavigate();
   const location = useLocation();
   const section = location.pathname.split("/")[2] || "overview";
@@ -26,8 +29,8 @@ export default function PersonalLayout() {
   const isTransactionsPage = section === "transactions";
   const workspace = organization?.organization;
   const readOnly = !!workspace?.lifecycle && workspace.lifecycle !== "active";
-  const canCreateEntries = !readOnly && (isOwner || isSuperUser || permissions.includes("add_cash_flow_entries"));
-  const canCreateTransfers = !readOnly && (isOwner || isSuperUser || permissions.includes("add_transference"));
+  const canCreateEntries = !readOnly && access.can(PERSONAL_PERMISSION.addTransaction);
+  const canCreateTransfers = !readOnly && access.can(PERSONAL_PERMISSION.addTransfer);
   const [mobile, setMobile] = useState(false);
   const [desktop, setDesktop] = useState(() => matchMedia("(min-width: 768px)").matches);
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem("spifex.personal.collapsed") === "true"; } catch { return false; } });
@@ -70,4 +73,8 @@ export default function PersonalLayout() {
       <main className={`min-h-0 flex-1 px-4 py-6 sm:px-7 ${isTransactionsPage ? "flex flex-col overflow-hidden" : "overflow-y-auto"}`}><div className={`mx-auto max-w-[1440px] ${isTransactionsPage ? "flex min-h-0 w-full flex-1 flex-col" : ""}`}><Suspense fallback={<PageSkeleton rows={7}/>}><Outlet/></Suspense></div></main>
     </div>
   </div>;
+}
+
+export default function PersonalLayout() {
+  return <PersonalAccessProvider><PersonalLayoutContent/></PersonalAccessProvider>;
 }

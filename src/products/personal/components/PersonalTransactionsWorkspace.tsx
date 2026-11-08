@@ -21,16 +21,14 @@ import type { PersonalAccount, PersonalRecord, PersonalSettledActivity, Personal
 import PersonalRecordDialog from "./PersonalRecordDialog";
 import PersonalRecordPreview from "./PersonalRecordPreview";
 import PersonalSettledActivityPreview from "./PersonalSettledActivityPreview";
+import { usePersonalAccess } from "../access/PersonalAccessProvider";
+import { PERSONAL_PERMISSION } from "../access/permissions";
 
 type Basis = "outstanding" | "settled";
 type FilterQuery = Record<string, string>;
 type TableItem = PersonalTransaction | PersonalSettledActivity;
 const dec = (value: unknown) => Number(value || 0) || 0;
 const transferRow = (row: PersonalSettledActivity) => row.kind === "transfer";
-
-function can(auth: ReturnType<typeof useAuthContext>, code: string) {
-  return auth.isOwner || auth.isSuperUser || auth.permissions.includes(code);
-}
 
 function queryFromFilters(filters: EntryFilters, activityKind?: string): FilterQuery {
   return {
@@ -111,17 +109,18 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
   </div>;
 }
 
-function ActivityTable({ basis, items, loading, mutating, error, pager, currency, readOnly, auth, onInspect, onEdit, onSettle, onDeleted, onSelectionBusy }: {
+function ActivityTable({ basis, items, loading, mutating, error, pager, currency, readOnly, onInspect, onEdit, onSettle, onDeleted, onSelectionBusy }: {
   basis: Basis; items: TableItem[]; loading: boolean; mutating: boolean; error: string | null;
-  pager: ReturnType<typeof useCursorPager<TableItem>>; currency: string; readOnly: boolean; auth: ReturnType<typeof useAuthContext>;
+  pager: ReturnType<typeof useCursorPager<TableItem>>; currency: string; readOnly: boolean;
   onInspect(item: TableItem): void; onEdit(item: PersonalTransaction): void; onSettle(item: PersonalTransaction[]): void;
   onDeleted(): void; onSelectionBusy(busy: boolean): void;
 }) {
   const { t, i18n } = useTranslation(["personal", "financeEntries"]);
+  const access = usePersonalAccess();
   const settled = basis === "settled";
-  const canSettle = !settled && !readOnly && can(auth, "add_settled_entries");
-  const canReverse = settled && !readOnly && can(auth, "delete_settled_entries");
-  const canDeletePending = !settled && !readOnly && can(auth, "delete_cash_flow_entries");
+  const canSettle = !settled && !readOnly && access.can(PERSONAL_PERMISSION.settleTransaction);
+  const canReverse = settled && !readOnly && (access.can(PERSONAL_PERMISSION.reverseSettlement) || access.can(PERSONAL_PERMISSION.deleteTransfer));
+  const canDeletePending = !settled && !readOnly && access.can(PERSONAL_PERMISSION.deleteTransaction);
   const canSelect = canSettle || canReverse || canDeletePending;
   const pagerAdapter = { ...pager, canNext: pager.canNext, canPrev: pager.canPrev };
   const reverseSelected = useCallback(async (selected: PersonalSettledActivity[]) => {
@@ -182,9 +181,11 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
     records={rowAdapters} currency={currency} locale={i18n.language}
     emptyLabel={t(settled ? "personal:settledEmpty" : "personal:outstandingEmpty")}
     secondColumnLabel={secondColumnLabel} renderSecondColumn={renderSecondary} pager={pagerAdapter}
-    busy={loading} error={error} mutating={loading || mutating} canSelect={canSelect} canDelete={settled ? canReverse : !readOnly && can(auth, "delete_cash_flow_entries")}
-    canEdit={!settled && !readOnly && can(auth, "change_cash_flow_entries")} editLabel={t("personal:edit")}
-    rowCanDelete={record => settled || ("status" in record.source && record.source.status === "pending")}
+    busy={loading} error={error} mutating={loading || mutating} canSelect={canSelect} canDelete={settled ? canReverse : canDeletePending}
+    canEdit={!settled && !readOnly && access.can(PERSONAL_PERMISSION.changeTransaction)} editLabel={t("personal:edit")}
+    rowCanDelete={record => settled
+      ? (record.source.kind === "transfer" ? access.canUse(PERSONAL_PERMISSION.deleteTransfer) : access.canUse(PERSONAL_PERMISSION.reverseSettlement))
+      : ("status" in record.source && record.source.status === "pending")}
     onInspect={row => { const source = sourceById.get(row.id); if (source) inspect(source); }}
     onEdit={row => { const source = sourceById.get(row.id); if (source && "open_amount" in source) edit(source); }}
     onDelete={deleteOne} onDeleted={onDeleted}
@@ -283,7 +284,7 @@ export default function PersonalTransactionsWorkspace() {
         {(["outstanding", "settled"] as const).map(value => <button key={value} type="button" role="tab" aria-selected={basis === value} onClick={() => setBasis(value)} className="min-h-8 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors aria-selected:bg-gray-100 aria-selected:text-gray-900">{t(value === "outstanding" ? "cashFlowTab" : "settledActivityTab")}</button>)}
       </div>
       <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/personal/accounts" excludeObservationFilter>
-        <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} auth={auth} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
+        <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
       </FinancialActivityPanel>
     </div>
     <PersonalRecordPreview collection="transactions" record={entryPreview} currency={currency} readOnly={readOnly} onClose={() => setEntryPreview(null)} onEdit={item => edit(item as PersonalTransaction)} onSettle={item => { setEntryPreview(null); openSettlement([item as PersonalTransaction]); }} onContribute={() => {}}/>

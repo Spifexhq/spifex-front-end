@@ -302,5 +302,16 @@
   },
   "createCreditEntry": "Créer une recette",
   "createDebitEntry": "Créer une dépense",
-  "createTransfer": "Créer un transfert"
+  "createTransfer": "Créer un transfert",
+  "access": {
+    "loadErrorTitle": "Impossible de vérifier l’accès Personnel",
+    "loadErrorDescription": "Actualisez les informations d’accès pour continuer. Vos données financières n’ont pas été modifiées.",
+    "retry": "Réessayer",
+    "unavailableTitle": "Cette fonctionnalité n’est pas disponible",
+    "unavailableDescription": "Votre rôle dans l’espace ou votre forfait Personnel ne donne pas accès à cette section.",
+    "planLabel": "Forfait Personnel",
+    "managePlan": "Voir le forfait",
+    "capacityReached": "Votre forfait autorise jusqu’à {{limit}} comptes actifs. Supprimez un compte ou consultez votre forfait pour en ajouter un autre.",
+    "resourceCapacityReached": "Votre forfait autorise jusqu’à {{limit}} éléments actifs dans cette section. Supprimez-en un ou consultez votre forfait pour en ajouter un autre."
+  }
 }

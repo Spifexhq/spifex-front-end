@@ -302,5 +302,16 @@
   },
   "createCreditEntry": "Criar receita",
   "createDebitEntry": "Criar despesa",
-  "createTransfer": "Criar transferência"
+  "createTransfer": "Criar transferência",
+  "access": {
+    "loadErrorTitle": "Não foi possível confirmar o acesso Pessoal",
+    "loadErrorDescription": "Atualize os dados de acesso para continuar. Os seus dados financeiros não foram alterados.",
+    "retry": "Tentar novamente",
+    "unavailableTitle": "Esta funcionalidade não está disponível",
+    "unavailableDescription": "A sua função no espaço de trabalho ou o plano Pessoal não inclui acesso a esta secção.",
+    "planLabel": "Plano Pessoal",
+    "managePlan": "Ver plano",
+    "capacityReached": "O seu plano permite até {{limit}} contas ativas. Remova uma conta ou reveja o plano para adicionar outra.",
+    "resourceCapacityReached": "O seu plano permite até {{limit}} registos ativos nesta secção. Remova um ou reveja o plano para adicionar outro."
+  }
 }

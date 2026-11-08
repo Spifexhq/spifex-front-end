@@ -9,6 +9,8 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SlidersHorizontal, ChevronDown, Settings2, Save, Eye, Star, ArrowUpRight, Landmark } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
+import { useOptionalPersonalAccess } from "@/products/personal/access/PersonalAccessProvider";
+import { resolvePersonalPermission } from "@/products/personal/access/permissions";
 import Button from "@/shared/ui/Button";
 import Sparkline from "@/shared/ui/Sparkline";
 import InfoTooltip from "@/shared/ui/InfoTooltip";
@@ -40,7 +42,15 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
  const { t } = useTranslation(["filterBar", "kpiCards", "banksTable"]);
  const navigate = useNavigate();
  const auth = useAuthContext();
- const canView = (permission: string) => auth.isOwner || auth.isSuperUser || auth.permissions.includes(permission);
+ const personalAccess = useOptionalPersonalAccess();
+ const isPersonal = auth.organization?.organization?.product_category === "personal";
+ const canView = (permission: string) => {
+   if (isPersonal) {
+     const scoped = resolvePersonalPermission(permission);
+     return !!scoped && !!personalAccess?.can(scoped);
+   }
+   return auth.isOwner || auth.isSuperUser || auth.permissions.includes(permission);
+ };
  const showBanks = canView("view_bank");
  const showMetrics = canView(contextSettlement ? "view_settlement_kpis" : "view_cash_flow_kpis");
  const showFilters = canView("view_filters");

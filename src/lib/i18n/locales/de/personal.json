@@ -302,5 +302,16 @@
   },
   "createCreditEntry": "Einnahme erstellen",
   "createDebitEntry": "Ausgabe erstellen",
-  "createTransfer": "Überweisung erstellen"
+  "createTransfer": "Überweisung erstellen",
+  "access": {
+    "loadErrorTitle": "Der Zugriff auf Personal Finance konnte nicht geprüft werden",
+    "loadErrorDescription": "Aktualisieren Sie die Zugriffsdaten, um fortzufahren. Ihre Finanzdaten wurden nicht geändert.",
+    "retry": "Erneut versuchen",
+    "unavailableTitle": "Diese Funktion ist nicht verfügbar",
+    "unavailableDescription": "Ihre Arbeitsbereichsrolle oder Ihr Personal-Tarif gewährt keinen Zugriff auf diesen Bereich.",
+    "planLabel": "Personal-Tarif",
+    "managePlan": "Tarif ansehen",
+    "capacityReached": "Ihr Tarif erlaubt bis zu {{limit}} aktive Konten. Entfernen Sie ein Konto oder prüfen Sie Ihren Tarif, um ein weiteres hinzuzufügen.",
+    "resourceCapacityReached": "Ihr Tarif erlaubt bis zu {{limit}} aktive Einträge in diesem Bereich. Entfernen Sie einen Eintrag oder prüfen Sie Ihren Tarif, um einen weiteren hinzuzufügen."
+  }
 }

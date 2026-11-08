@@ -302,5 +302,16 @@
   },
   "createCreditEntry": "Create credit entry",
   "createDebitEntry": "Create debit entry",
-  "createTransfer": "Create transfer"
+  "createTransfer": "Create transfer",
+  "access": {
+    "loadErrorTitle": "Couldn’t verify Personal access",
+    "loadErrorDescription": "Refresh access details to continue. Your financial data has not been changed.",
+    "retry": "Retry",
+    "unavailableTitle": "This feature is unavailable",
+    "unavailableDescription": "Your workspace role or Personal plan does not include access to this section.",
+    "planLabel": "Personal plan",
+    "managePlan": "Review plan",
+    "capacityReached": "Your plan allows up to {{limit}} active accounts. Remove an account or review your plan to add another.",
+    "resourceCapacityReached": "Your plan allows up to {{limit}} active records in this section. Remove one or review your plan to add another."
+  }
 }

@@ -1,5 +1,7 @@
 import { lazy } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
+import PersonalPermissionRoute from "../access/PersonalPermissionRoute";
+import { PERSONAL_PERMISSION } from "../access/permissions";
 const Layout = lazy(() => import("../layouts/PersonalLayout"));
 const SettingsLayout = lazy(() => import("../layouts/PersonalSettingsLayout"));
 const Overview = lazy(() => import("../pages/Overview"));
@@ -22,15 +24,15 @@ const Help = lazy(() => import("@/pages/Help"));
 
 export const personalRoutes: RouteObject[] = [{ path: "personal", element: <Layout/>, children: [
   { index: true, element: <Navigate to="overview" replace/> },
-  { path: "overview", element: <Overview/> },
-  { path: "reports", element: <Reports/> },
-  { path: "transactions", element: <Transactions/> },
-  { path: "accounts", element: <BankAccounts/> },
-  { path: "categories", element: <Categories/> },
-  { path: "budgets", element: <Budgets/> },
-  { path: "goals", element: <Goals/> },
-  { path: "transfers", element: <Transfers/> },
-  { path: "settings", element: <SettingsLayout/>, children: [
+  { path: "overview", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.overview}><Overview/></PersonalPermissionRoute> },
+  { path: "reports", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.reports}><Reports/></PersonalPermissionRoute> },
+  { path: "transactions", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.transactions}><Transactions/></PersonalPermissionRoute> },
+  { path: "accounts", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.bankAccounts}><BankAccounts/></PersonalPermissionRoute> },
+  { path: "categories", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.categories}><Categories/></PersonalPermissionRoute> },
+  { path: "budgets", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.budgets}><Budgets/></PersonalPermissionRoute> },
+  { path: "goals", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.goals}><Goals/></PersonalPermissionRoute> },
+  { path: "transfers", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settledTransactions}><Transfers/></PersonalPermissionRoute> },
+  { path: "settings", element: <PersonalPermissionRoute permission={PERSONAL_PERMISSION.settings}><SettingsLayout/></PersonalPermissionRoute>, children: [
     { index: true, element: <SettingsIndex/> },
     { path: "personal", element: <PersonalSettings product="personal"/> },
     { path: "profile", element: <Navigate to="/personal/settings/personal" replace/> },

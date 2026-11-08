@@ -18,6 +18,8 @@ import SettingsFilters from "@/shared/ui/Settings/SettingsFilters";
 import { SettingsFilter as FilterChip, SettingsClearFilters as ClearFiltersChip } from "@/shared/ui/Settings/SettingsFilter";
 import SettingsSurface from "@/shared/ui/Settings/SettingsSurface";
 import Snackbar from "@/shared/ui/Snackbar";
+import { usePersonalAccess } from "@/products/personal/access/PersonalAccessProvider";
+import { PERSONAL_PERMISSION } from "@/products/personal/access/permissions";
 
 const ACCOUNT_TYPES = ["checking", "savings", "investment", "cash", "petty_cash", "card", "other"] as const;
 type FilterKey = "institution" | "accountType" | "branch" | "accountNumber" | "iban" | "status" | null;
@@ -57,14 +59,14 @@ function personalPayload(payload: AddBankRequest | EditBankRequest) {
 export default function PersonalBankAccountsPage() {
   const { t: personalT } = useTranslation("personal");
   const { t: bankT } = useTranslation("bankSettings");
-  const { organization, permissions, isOwner, isSuperUser } = useAuthContext();
+  const { organization } = useAuthContext();
+  const access = usePersonalAccess();
   const workspace = organization?.organization;
   const currency = (workspace?.currency || "EUR").toUpperCase();
   const readOnly = readonlyWorkspace(workspace?.lifecycle);
-  const canView = isOwner || isSuperUser || permissions.includes("view_bank");
-  const canCreate = !readOnly && (isOwner || isSuperUser || permissions.includes("add_bank"));
-  const canEdit = !readOnly && (isOwner || isSuperUser || permissions.includes("change_bank"));
-  const canDelete = !readOnly && (isOwner || isSuperUser || permissions.includes("delete_bank"));
+  const canView = access.can(PERSONAL_PERMISSION.bankAccounts);
+  const canEdit = !readOnly && access.can(PERSONAL_PERMISSION.changeBankAccount);
+  const canDelete = !readOnly && access.can(PERSONAL_PERMISSION.deleteBankAccount);
 
   const [draft, setDraft] = useState<BankFilters>(EMPTY_FILTERS);
   const [applied, setApplied] = useState<BankFilters>(EMPTY_FILTERS);
@@ -76,7 +78,7 @@ export default function PersonalBankAccountsPage() {
   const [modal, setModal] = useState<{ mode: "create" | "edit"; bank: BankAccount | null } | null>(null);
   const [notice, setNotice] = useState<{ message: ReactNode; severity: "success" | "error" | "warning" | "info" } | null>(null);
 
-  const pager = useCursorPager<PersonalAccount>(async (cursor, pageSize = 20) => {
+  const pager = useCursorPager<PersonalAccount, { activeCount: number }>(async (cursor, pageSize = 20) => {
     if (!canView) return { items: [], nextCursor: undefined, totalCount: 0 };
     const page = cursor || "1";
     const { data } = await personalApi.list<PersonalAccount>("accounts", {
@@ -85,11 +87,15 @@ export default function PersonalBankAccountsPage() {
       page_size: pageSize,
     });
     const nextCursor = data.next ? new URL(data.next, window.location.origin).searchParams.get("page") || undefined : undefined;
-    return { items: data.results, nextCursor, totalCount: data.count };
+    return { items: data.results, nextCursor, totalCount: data.count, metadata: { activeCount: data.active_count ?? 0 } };
   }, {
     autoLoadFirst: canView,
-    deps: [canView, applied.search, applied.account_type, applied.is_active, applied.branch, applied.account_number, applied.iban, workspace?.id, workspace?.lifecycle, permissions.join("|"), isOwner, isSuperUser],
+    deps: [canView, applied.search, applied.account_type, applied.is_active, applied.branch, applied.account_number, applied.iban, workspace?.id, workspace?.lifecycle],
   });
+  const activeAccountCount = pager.metadata?.activeCount;
+  const canCreate = !readOnly && !pager.loading && activeAccountCount !== undefined &&
+    access.canUse(PERSONAL_PERMISSION.addBankAccount, 1, activeAccountCount);
+  const addBankEntitlement = access.entitlement(PERSONAL_PERMISSION.addBankAccount);
 
   const apiAdapter = useMemo(() => ({
     getBank: async (id: string) => {
@@ -136,6 +142,7 @@ export default function PersonalBankAccountsPage() {
 
   const refreshAfterMutation = async () => {
     await pager.refresh();
+    await access.refresh();
   };
 
   return <SettingsSurface><div className="settings-content min-w-0">
@@ -155,6 +162,7 @@ export default function PersonalBankAccountsPage() {
           {Object.values(applied).some(Boolean) && <ClearFiltersChip label={bankT("filters.clearAll")} onClick={() => { setApplied(EMPTY_FILTERS); setDraft(EMPTY_FILTERS); }}/ >}
         </SettingsFilters>
         {canCreate && <Button type="button" onClick={() => setModal({ mode: "create", bank: null })}>{bankT("btn.addBank")}</Button>}
+        {!readOnly && canView && !canCreate && !pager.loading && activeAccountCount !== undefined && addBankEntitlement?.limits.limit !== null && addBankEntitlement?.limits.limit !== undefined && activeAccountCount >= addBankEntitlement.limits.limit && <p className="w-full text-right text-xs text-gray-500">{personalT("access.capacityReached", { limit: addBankEntitlement.limits.limit })}</p>}
       </div>
       <DataTable
         items={pager.items}
@@ -170,7 +178,7 @@ export default function PersonalBankAccountsPage() {
         canEdit={canEdit}
         canDelete={canDelete}
         onEdit={account => setModal({ mode: "edit", bank: toBankAccount(account) })}
-        onDelete={account => personalApi.remove("accounts", account.id)}
+        onDelete={async account => { await personalApi.remove("accounts", account.id); await access.refresh(); }}
         onDeleted={refreshAfterMutation}
         onInspect={undefined}
         loadPreview={async account => account}

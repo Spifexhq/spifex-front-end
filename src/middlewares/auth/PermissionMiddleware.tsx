@@ -6,6 +6,8 @@ import { useAuthContext } from "@/hooks/useAuth";
 import { getAccess } from "@/lib/tokens";
 import TopProgress from "@/shared/ui/Loaders/TopProgress";
 import Button from "@/shared/ui/Button";
+import { useOptionalPersonalAccess } from "@/products/personal/access/PersonalAccessProvider";
+import { resolvePersonalPermission } from "@/products/personal/access/permissions";
 
 type PermissionBehavior = "hide" | "redirect" | "lock";
 
@@ -54,6 +56,8 @@ export const PermissionMiddleware = ({
   } = useAuthContext();
 
   const accessToken = getAccess();
+  const personalAccess = useOptionalPersonalAccess();
+  const isPersonalWorkspace = organization?.organization?.product_category === "personal";
   const authReady = !accessToken || !!user;
   const didInit = useRef(false);
 
@@ -68,6 +72,16 @@ export const PermissionMiddleware = ({
   const hasPermission = useMemo(() => {
     if (!authReady || !user) return false;
 
+    if (isPersonalWorkspace) {
+      if (!personalAccess) return false;
+      const requested = Array.isArray(codeName) ? codeName : [codeName];
+      const resolved = requested.map(resolvePersonalPermission);
+      if (resolved.some(code => !code)) return false;
+      return requireAll
+        ? resolved.every(code => !!code && personalAccess.can(code))
+        : resolved.some(code => !!code && personalAccess.can(code));
+    }
+
     if (isOwner || isSuperUser) return true;
 
     const required = Array.isArray(codeName) ? codeName : [codeName];
@@ -75,14 +89,14 @@ export const PermissionMiddleware = ({
     return requireAll
       ? required.every((cn) => permissions.includes(cn))
       : required.some((cn) => permissions.includes(cn));
-  }, [authReady, user, isOwner, isSuperUser, codeName, requireAll, permissions]);
+  }, [authReady, user, isOwner, isSuperUser, codeName, requireAll, permissions, isPersonalWorkspace, personalAccess]);
 
   const retainedHistory = ["legacy", "deletion_pending"].includes(organization?.organization?.lifecycle || "");
   const hasSubscriptionAccess = useMemo(() => {
     if (!authReady || !user) return false;
     if (isSuperUser) return true;
     if (!requireSubscription) return true;
-    if (retainedHistory && (Array.isArray(codeName) ? codeName : [codeName]).every(code => code.startsWith("view_"))) return true;
+    if (retainedHistory && (Array.isArray(codeName) ? codeName : [codeName]).every(code => code.startsWith("view_") || code.startsWith("personal_view_"))) return true;
     return !!isSubscribed;
   }, [authReady, user, isSuperUser, requireSubscription, isSubscribed, retainedHistory, codeName]);
 
