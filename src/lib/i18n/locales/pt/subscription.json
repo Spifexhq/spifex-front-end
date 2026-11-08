@@ -10,6 +10,7 @@
   },
   "current": {
     "youAreOn": "Você está no plano",
+    "lastPlan": "Seu último plano foi",
     "cancelAt": "cancela em",
     "renews": "renova em",
     "endedOn": "terminou em",

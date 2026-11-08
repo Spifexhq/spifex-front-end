@@ -10,6 +10,7 @@
   },
   "current": {
     "youAreOn": "Vous êtes sur le forfait",
+    "lastPlan": "Votre dernier forfait était",
     "cancelAt": "sera résilié le",
     "renews": "se renouvelle le",
     "endedOn": "s’est terminé le",

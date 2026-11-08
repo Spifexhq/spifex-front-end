@@ -43,6 +43,9 @@ const legacyPermissionMap: Record<string, PersonalPermission> = {
   view_personal_overview: PERSONAL_PERMISSION.overview,
   view_personal_reports: PERSONAL_PERMISSION.reports,
   view_personal_settings_page: PERSONAL_PERMISSION.settings,
+  // The shared Security & Privacy page uses the Business permission code;
+  // Personal workspaces authorize it through the broader Personal settings grant.
+  view_security_and_privacy_page: PERSONAL_PERMISSION.settings,
   view_cash_flow_entries: PERSONAL_PERMISSION.transactions,
   view_settled_entries: PERSONAL_PERMISSION.settledTransactions,
   view_bank: PERSONAL_PERMISSION.bankAccounts,

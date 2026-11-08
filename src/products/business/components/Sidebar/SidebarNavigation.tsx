@@ -95,11 +95,11 @@ export default function SidebarNavigation({
     </>}>
           <section
             className="mb-5"
-            aria-label={t("sidebar.sections.workspaces")}
+            aria-label={t("sidebar.sections.overview")}
           >
             <div className="sidebar-section-title text-[11px] font-medium text-gray-400">
               <span className="sidebar-label">
-                {t("sidebar.sections.workspaces")}
+                {t("sidebar.sections.overview")}
               </span>
             </div>
 

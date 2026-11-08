@@ -10,6 +10,7 @@
   },
   "current": {
     "youAreOn": "Sie nutzen",
+    "lastPlan": "Ihr letzter Tarif war",
     "cancelAt": "endet am",
     "renews": "verlängert sich am",
     "endedOn": "endete am",

@@ -4,6 +4,9 @@
   },
   "sections": {
     "organization": "Organization",
+    "team": "Team",
+    "preferences": "Preferences",
+    "workspace": "Workspace",
     "banking": "Banking",
     "management": "Management",
     "accounting": "Accounting & Structure",

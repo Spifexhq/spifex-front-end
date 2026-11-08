@@ -10,6 +10,7 @@
   },
   "current": {
     "youAreOn": "You are on",
+    "lastPlan": "Your last plan was",
     "cancelAt": "cancels on",
     "renews": "renews on",
     "endedOn": "ended on",

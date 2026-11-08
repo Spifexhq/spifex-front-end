@@ -16,7 +16,7 @@
     "settings": "Settings",
     "sections": {
       "actions": "Quick actions",
-      "workspaces": "Workspaces"
+      "overview": "Overview"
     }
   }
 }

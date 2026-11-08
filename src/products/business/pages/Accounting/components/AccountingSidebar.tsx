@@ -6,6 +6,7 @@ import { useAppShell } from "@/contexts/AppShellContext";
 import { useDialogFocus } from "@/shared/ui/useDialogFocus";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
 import SidebarBrand from "@/shared/layout/Sidebar/SidebarBrand";
+import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
 
 const groups = [
   { key: "workspace", items: [{ page: "overview", key: "overview", Icon: ChartNoAxesCombined }, { page: "setup", key: "setup", Icon: CheckCheck }] },
@@ -39,6 +40,7 @@ export default function AccountingSidebar() {
         <button type="button" onClick={shell?.closeMobile} className="col-start-1 row-start-1 flex h-8 w-8 items-center justify-center justify-self-center rounded-md text-gray-500 hover:bg-gray-200 md:hidden" aria-label={t("section.close")}><X size={18} /></button>
       </div>
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-5">
+        <div className="mb-4"><WorkspaceSwitcher compact={collapsed} /></div>
         {groups.map(group => <section key={group.key} className="mb-5" aria-label={t(`section.${group.key}`)}><p className={`mb-2 h-5 w-[224px] pl-3 text-[11px] font-medium text-gray-400 ${label}`}>{t(`section.${group.key}`)}</p><div className="space-y-1">{group.items.map(({page,key,Icon}) => <NavLink key={page} to={`/accounting/${page}`} onClick={shell?.closeMobile} title={collapsed ? t(`nav.${key}`) : undefined} aria-label={t(`nav.${key}`)} className={({isActive}) => `${row} ${isActive ? "bg-white font-semibold text-gray-900 shadow-sm ring-1 ring-gray-200" : "text-gray-600 hover:bg-gray-200/50"}`}><Icon size={16} className="shrink-0 justify-self-center" /><span className={label}>{t(`nav.${key}`)}</span></NavLink>)}</div></section>)}
       </div>
       <div className="space-y-1 border-t border-gray-200 p-3"><Link to="/settings" className={`${row} text-gray-500 hover:bg-gray-200/50`} title={t("section.settings")}><Settings2 size={16} className="shrink-0 justify-self-center" /><span className={label}>{t("section.settings")}</span></Link><Link to="/overview" className={`${row} text-gray-500 hover:bg-gray-200/50`} title={t("section.back")}><ArrowLeft size={16} className="shrink-0 justify-self-center" /><span className={label}>{t("section.back")}</span></Link></div>

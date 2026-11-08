@@ -1,5 +1,6 @@
 import SidebarUserConfiguration from "../../../../shared/layout/Sidebar/SidebarUserConfiguration";
 import SidebarBrand from "@/shared/layout/Sidebar/SidebarBrand";
+import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
 import "../../../../shared/layout/Sidebar/sidebar-motion.css";
 import { useEffect, useMemo, useRef } from "react";
 import { NavLink } from "react-router-dom";
@@ -30,12 +31,30 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         id: "org",
         items: [
           { id: "organization-settings", icon: "building", label: t("items.organization-settings"), permission: "view_organization_settings_page" },
+          { id: "billing", icon: "layers", label: t("items.billing"), permission: "view_billing_page" },
+        ],
+      },
+      {
+        title: t("sections.preferences"),
+        id: "preferences",
+        items: [
           { id: "manage-formats", icon: "formats", label: t("items.formats"), permission: "view_format_settings_page" },
           { id: "manage-currency", icon: "currency", label: t("items.currency"), permission: "view_currency_settings_page" },
+        ],
+      },
+      {
+        title: t("sections.workspace"),
+        id: "workspace",
+        items: [
           { id: "workspaces", icon: "workspaces", label: t("items.workspaces"), permission: "view_organization_settings_page" },
+        ],
+      },
+      {
+        title: t("sections.team"),
+        id: "team",
+        items: [
           { id: "members", icon: "members", label: t("items.members"), permission: "view_member_settings_page" },
           { id: "groups", icon: "groups", label: t("items.groups"), permission: "view_group_settings_page" },
-          { id: "billing", icon: "layers", label: t("items.billing"), permission: "view_billing_page" },
         ],
       },
       {
@@ -94,6 +113,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
         <button ref={closeRef} type="button" onClick={onMobileClose} aria-label={t("actions.close", "Close navigation")} className="sidebar-toggle rounded-md p-2 hover:bg-gray-100 md:hidden"><X size={18} /></button>
       </div>
       <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+        <div className="mb-4"><WorkspaceSwitcher compact={collapsed && !mobileOpen} /></div>
         {visibleSections.map(section => <section key={section.id} className="mb-5" aria-label={section.title || t("sections.profile", "Your account")}>
           <div className="sidebar-section-title text-[11px] font-medium text-gray-400">
             <span className="sidebar-label">{section.title || t("sections.profile", "Your account")}</span>

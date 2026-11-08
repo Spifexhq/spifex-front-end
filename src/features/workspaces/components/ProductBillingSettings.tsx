@@ -48,6 +48,9 @@ export default function ProductBillingSettings() {
   const statusTone = status === "active" || status === "trialing" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : status === "past_due" || status === "incomplete" ? "border-amber-200 bg-amber-50 text-amber-800" : status === "unpaid" ? "border-rose-200 bg-rose-50 text-rose-800" : "border-gray-200 bg-gray-50 text-gray-700";
   const currentPlan = useMemo(() => plans.find(plan => plan.code === billing.current), [plans, billing.current]);
   const periodDate = subscription?.subscription?.current_period_end;
+  const endedDate = subscription?.subscription?.ended_at;
+  const isCanceled = status === "canceled";
+  const canManageCurrentSubscription = ["active", "trialing", "past_due", "incomplete", "unpaid"].includes(status);
   const checkout = async (plan: ProductPlan) => {
     if (!canManage || busy || readOnly) return;
     const price = plan.prices.find(item => item.currency === billing.currency);
@@ -82,16 +85,16 @@ export default function ProductBillingSettings() {
   return <div className="space-y-5">
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4"><div className="flex min-w-0 items-center gap-3"><h2 className="text-sm font-semibold text-gray-900">{t("section.withPlan")}</h2><span className={`rounded-full border px-2 py-1 text-[10px] font-medium ${statusTone}`}>{t(`status.${status}`, t("status.unknown"))}</span></div></div>
-      <div className={`mx-4 my-3 rounded-md border-l-4 px-4 py-3 ${statusTone}`}><p className="text-[13px] font-medium">{statusTitle}</p><p className="mt-1 text-xs leading-5">{subscriptionBody}</p>{subscription?.subscription && !subscription?.has_access && <p className="mt-1 text-xs">{t("current.noAccessHint")}</p>}</div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 text-[13px] text-gray-600"><span>{currentPlan ? <>{t("current.youAreOn")} <strong className="font-semibold text-gray-900">{currentPlan.name}</strong></> : t("current.noActive")}{periodDate && <> <span className="mx-1">·</span>{subscription?.subscription?.cancel_at_period_end ? t("current.cancelAt") : t("current.renews")} {dateLabel(periodDate, i18n.language)}</>}</span>{subscription?.subscription && canManage && <Button variant="outline" disabled={busy || readOnly} onClick={() => void portal()}>{t("btn.manage")}</Button>}</div>
+      <div className={`mx-4 my-3 rounded-md border-l-4 px-4 py-3 ${statusTone}`}><p className="text-[13px] font-medium">{statusTitle}</p><p className="mt-1 text-xs leading-5">{subscriptionBody}</p>{subscription?.subscription && !subscription?.has_access && !isCanceled && <p className="mt-1 text-xs">{t("current.noAccessHint")}</p>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 text-[13px] text-gray-600"><span>{currentPlan ? <>{t(isCanceled ? "current.lastPlan" : "current.youAreOn")} <strong className="font-semibold text-gray-900">{currentPlan.name}</strong></> : t("current.noActive")}{isCanceled ? endedDate && <> <span className="mx-1">·</span>{t("current.endedOn")} {dateLabel(endedDate, i18n.language)}</> : periodDate && <> <span className="mx-1">·</span>{subscription?.subscription?.cancel_at_period_end ? t("current.cancelAt") : t("current.renews")} {dateLabel(periodDate, i18n.language)}</>}</span>{subscription?.subscription && canManage && canManageCurrentSubscription && <Button variant="outline" disabled={busy || readOnly} onClick={() => void portal()}>{t("btn.manage")}</Button>}</div>
     </section>
     {error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}<Button size="xs" variant="outline" onClick={() => setRetry(value => value + 1)}>{t("personal:retry")}</Button></div>}
     {!canManage && <p className="text-xs text-gray-500">{t("errors.ownerOnly")}</p>}
     <div className="grid gap-4 lg:grid-cols-3">{plans.map(plan => {
       const price = plan.prices.find(item => item.currency === billing.currency && item.billing_interval === "month") ?? plan.prices.find(item => item.currency === billing.currency);
-      const isCurrent = plan.code === billing.current;
+      const isCurrent = plan.code === billing.current && Boolean(subscription?.has_access);
       const activeSubscription = status === "active" || status === "trialing" || status === "past_due" || status === "incomplete" || status === "unpaid";
-      const actionLabel = isCurrent ? t("btn.current") : status === "canceled" ? t("btn.reactivate") : activeSubscription ? t("btn.changeInPortal") : t("btn.subscribe");
+      const actionLabel = isCurrent ? t("btn.current") : activeSubscription ? t("btn.changeInPortal") : t("btn.subscribe");
       return <section key={plan.code} className="flex min-h-44 flex-col rounded-lg border border-gray-200 bg-white p-5">
         <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-gray-900">{plan.name}</h3>{isCurrent && <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700">{t("btn.current")}</span>}</div>
         <p className="mt-4 text-xl font-semibold tracking-tight text-gray-900">{plan.tier === "free" ? t("personal:free") : price ? <>{formatCurrency(price.amount_minor / 100, price.currency)}<span className="ml-1 text-xs font-normal text-gray-500">{t(price.billing_interval === "year" ? "personal:perYear" : "personal:perMonth")}</span></> : t("personal:notAvailable")}</p>
