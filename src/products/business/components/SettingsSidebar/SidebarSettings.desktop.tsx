@@ -5,10 +5,10 @@ import "../../../../shared/layout/Sidebar/sidebar-motion.css";
 import { useEffect, useMemo, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft, PanelsTopLeft, CalendarClock, Coins } from "lucide-react";
+import { SlidersHorizontal, Bell, Shield, Building2, Users, Layers3, Landmark, CreditCard, BookOpen, BookOpenText, UsersRound, Network, Boxes, FolderKanban, IdCard, ListTree, PanelLeftClose, PanelLeftOpen, X, ArrowLeft, PanelsTopLeft, CalendarClock, Coins, Bot } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import type { SidebarSettingsProps } from "./SidebarSettings";
-const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, workspaces: PanelsTopLeft, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network, formats: CalendarClock, currency: Coins };
+const Icons = { personal: SlidersHorizontal, bell: Bell, shield: Shield, building: Building2, workspaces: PanelsTopLeft, members: Users, groups: UsersRound, layers: Layers3, bank: Landmark, category: ListTree, card: CreditCard, ledger: BookOpen, accounting: BookOpenText, entities: IdCard, inventory: Boxes, projects: FolderKanban, departments: Network, formats: CalendarClock, currency: Coins, ai: Bot };
 type SidebarSection = { title: string; id: string; items: { id: string; icon: keyof typeof Icons; label: string; permission: string }[] };
 export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mobileOpen = false, onMobileClose, collapsed = false, onToggleCollapsed }: SidebarSettingsProps) {
   const { permissions, isOwner } = useAuthContext();
@@ -24,6 +24,7 @@ export default function SidebarSettingsDesktop({ activeItem, topOffsetPx = 0, mo
           { id: "personal", icon: "personal", label: t("items.personal"), permission: "view_personal_settings_page" },
           { id: "notifications", icon: "bell", label: t("items.notifications"), permission: "view_notification_settings_page" },
           { id: "security", icon: "shield", label: t("items.security"), permission: "view_security_and_privacy_page" },
+          { id: "ai-connections", icon: "ai", label: t("items.ai-connections"), permission: "view_ai_connections" },
         ],
       },
       {

@@ -6,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import type { ApiErrorBody } from "@/models/Api";
 
 import { useAuth } from "@/api";
+import { baseURL } from "@/core/api/http";
+import { safeReturnToFromLocation } from "./returnTo";
 import Snackbar from "@/shared/ui/Snackbar";
 import Button from "@/shared/ui/Button";
 import Input from "@/shared/ui/Input";
@@ -51,6 +53,10 @@ function isMfaRequiredPayload(value: unknown): value is MfaRequiredPayload {
 const SignIn: React.FC = () => {
   const { t } = useTranslation("signIn");
   const navigate = useNavigate();
+  const safeReturnTo = useMemo(
+    () => safeReturnToFromLocation(window.location.search, baseURL),
+    [],
+  );
 
   const { handleSignIn, handleVerifyTwoFactor, handleResendTwoFactor } = useAuth();
 
@@ -146,6 +152,14 @@ const SignIn: React.FC = () => {
     }
   };
 
+  const completeSignIn = () => {
+    if (safeReturnTo) {
+      window.location.assign(safeReturnTo);
+      return;
+    }
+    navigate("/overview");
+  };
+
   const startTwoFactor = (id: string) => {
     setChallengeId(id);
     setTwoFactorCode("");
@@ -179,7 +193,7 @@ const SignIn: React.FC = () => {
       }
 
       persistRememberedEmail(normalizedEmail);
-      navigate("/overview");
+      completeSignIn();
     } catch (err: unknown) {
       const { message, severity } = resolveErrorMessage(err);
       setSnack({ message, severity });
@@ -207,7 +221,7 @@ const SignIn: React.FC = () => {
       await handleVerifyTwoFactor({ challenge_id: challengeId, code });
 
       persistRememberedEmail(normalizedEmail);
-      navigate("/overview");
+      completeSignIn();
     } catch (err: unknown) {
       if (isApiErrorBody(err) && err.code === "mfa_expired") {
         const { message, severity } = resolveErrorMessage(err);

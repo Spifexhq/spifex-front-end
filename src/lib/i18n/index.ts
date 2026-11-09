@@ -252,6 +252,11 @@ import enSecurityAndPrivacy from "./locales/en/securityAndPrivacy.json";
 import frSecurityAndPrivacy from "./locales/fr/securityAndPrivacy.json";
 import deSecurityAndPrivacy from "./locales/de/securityAndPrivacy.json";
 
+import ptAiConnections from "./locales/pt/aiConnections.json";
+import enAiConnections from "./locales/en/aiConnections.json";
+import frAiConnections from "./locales/fr/aiConnections.json";
+import deAiConnections from "./locales/de/aiConnections.json";
+
 /* -------------------------------------------------------------------------- */
 /* Settings screens                                                             */
 /* -------------------------------------------------------------------------- */
@@ -397,6 +402,7 @@ const NAMESPACES = [
   "groupPermissionsTable",
   "currencySettings",
   "securityAndPrivacy",
+  "aiConnections",
 
   "memberSettings",
   "bankSettings",
@@ -472,6 +478,7 @@ const resources: Resource = {
     groupPermissionsTable: ptGroupPermissionsTable,
     currencySettings: ptCurrencySettings,
     securityAndPrivacy: ptSecurityAndPrivacy,
+    aiConnections: ptAiConnections,
 
     memberSettings: ptMemberSettings,
     bankSettings: ptBankSettings,
@@ -542,6 +549,7 @@ const resources: Resource = {
     groupPermissionsTable: enGroupPermissionsTable,
     currencySettings: enCurrencySettings,
     securityAndPrivacy: enSecurityAndPrivacy,
+    aiConnections: enAiConnections,
 
     memberSettings: enMemberSettings,
     bankSettings: enBankSettings,
@@ -612,6 +620,7 @@ const resources: Resource = {
     groupPermissionsTable: frGroupPermissionsTable,
     currencySettings: frCurrencySettings,
     securityAndPrivacy: frSecurityAndPrivacy,
+    aiConnections: frAiConnections,
 
     memberSettings: frMemberSettings,
     bankSettings: frBankSettings,
@@ -682,6 +691,7 @@ const resources: Resource = {
     groupPermissionsTable: deGroupPermissionsTable,
     currencySettings: deCurrencySettings,
     securityAndPrivacy: deSecurityAndPrivacy,
+    aiConnections: deAiConnections,
 
     memberSettings: deMemberSettings,
     bankSettings: deBankSettings,

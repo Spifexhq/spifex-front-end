@@ -32,7 +32,8 @@
     "entities": "Entitäten",
     "ledger-accounts": "Hauptbuchkonten",
     "departments": "Abteilungen",
-    "accounting": "Buchhaltung"
+    "accounting": "Buchhaltung",
+    "ai-connections": "KI-Verbindungen"
   },
   "title": "Einstellungen",
   "actions": {

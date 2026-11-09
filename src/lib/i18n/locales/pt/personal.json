@@ -89,8 +89,19 @@
   "repeatTransaction": "Repetir movimento",
   "recurrenceHelp": "Cria movimentos futuros com o mesmo montante e intervalo.",
   "weekend_action": "Datas ao fim de semana",
-  "recurrenceIntervals": { "0": "Semanal", "1": "Mensal", "2": "A cada 2 meses", "3": "A cada 3 meses", "6": "A cada 6 meses", "12": "A cada 12 meses" },
-  "weekendActions": { "0": "Manter a data prevista", "1": "Adiar para o próximo dia útil", "-1": "Antecipar para o dia útil anterior" },
+  "recurrenceIntervals": {
+    "0": "Semanal",
+    "1": "Mensal",
+    "2": "A cada 2 meses",
+    "3": "A cada 3 meses",
+    "6": "A cada 6 meses",
+    "12": "A cada 12 meses"
+  },
+  "weekendActions": {
+    "0": "Manter a data prevista",
+    "1": "Adiar para o próximo dia útil",
+    "-1": "Antecipar para o dia útil anterior"
+  },
   "lockedTransaction": "Este movimento tem pagamentos. O montante, a categoria e o vencimento estão protegidos; pode alterar a descrição e as notas.",
   "settle": "Registar pagamento",
   "contribute": "Atualizar poupança",
@@ -307,6 +318,10 @@
     "workspaces": {
       "title": "Espaços de trabalho",
       "description": "Crie, alterne e gira os seus espaços de finanças pessoais."
+    },
+    "ai-connections": {
+      "title": "Conexões de IA",
+      "description": "Conecte o ChatGPT ou o Claude e gerencie o acesso somente leitura aos seus dados de fluxo de caixa."
     }
   },
   "createCreditEntry": "Criar receita",

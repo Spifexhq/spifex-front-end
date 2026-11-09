@@ -1,0 +1,65 @@
+{
+  "title": "Conexões de IA",
+  "description": "Conecte o ChatGPT ou o Claude para fazer perguntas sobre os dados de fluxo de caixa do Spifex. As conexões são somente leitura e podem ser revogadas a qualquer momento.",
+  "endpoint": {
+    "copy": "Copiar URL",
+    "copied": "URL do MCP copiado para a área de transferência.",
+    "copyError": "Não foi possível copiar o endpoint. Copie-o manualmente."
+  },
+  "how": {
+    "title": "Conectar um assistente",
+    "description": "No ChatGPT ou no Claude, abra as configurações de conectores e adicione o Spifex como conector MCP personalizado usando o URL abaixo. Você deverá entrar e aprovar o acesso somente leitura.",
+    "step1": "Adicione o URL do conector https://api.spifex.com/mcp no seu assistente de IA.",
+    "step2": "Entre no Spifex e aprove o escopo de fluxo de caixa somente leitura.",
+    "step3": "Faça perguntas sobre seus espaços de trabalho, transações e totais.",
+    "docs": "Ler o guia de configuração"
+  },
+  "list": {
+    "title": "Assistentes conectados",
+    "description": "Cada assistente só pode ler os espaços de trabalho que você escolher na conversa.",
+    "refresh": "Atualizar",
+    "retry": "Tentar novamente",
+    "duplicates": "Várias linhas com o mesmo nome são registos separados criados por tentativas de ligação repetidas. Revogue cada uma que já não utiliza."
+  },
+  "columns": {
+    "client": "Assistente",
+    "status": "Estado",
+    "created": "Conectado",
+    "lastUsed": "Último uso",
+    "expires": "Expira"
+  },
+  "status": {
+    "active": "Ativo",
+    "expired": "Expirado"
+  },
+  "revoke": {
+    "action": "Revogar",
+    "confirm": "Revogar o acesso de {{client}}? O assistente perderá o acesso imediatamente e precisará ser conectado novamente para continuar.",
+    "confirmLabel": "Revogar acesso",
+    "cancel": "Manter conexão",
+    "success": "O acesso de {{client}} foi revogado.",
+    "error": "Não foi possível revogar esta conexão."
+  },
+  "empty": "Ainda não há assistentes conectados. Adicione o Spifex no ChatGPT ou no Claude para começar.",
+  "never": "Nunca",
+  "errors": {
+    "load": "Não foi possível carregar suas conexões de IA."
+  },
+  "registration": "Registo {{id}}",
+  "details": {
+    "registrationId": "ID de registo",
+    "scopes": "Âmbitos",
+    "registrationSource": "Método de registo",
+    "clientType": "Tipo de cliente",
+    "grantType": "Tipo de concessão"
+  },
+  "source": {
+    "dcr": "Registo dinâmico de cliente",
+    "cimd": "Documento de metadados do ID de cliente",
+    "manual": "Pré-registado"
+  },
+  "clientType": {
+    "public": "Público (PKCE)",
+    "confidential": "Confidencial"
+  }
+}

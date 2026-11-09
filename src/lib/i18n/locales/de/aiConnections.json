@@ -1,0 +1,65 @@
+{
+  "title": "KI-Verbindungen",
+  "description": "Verbinden Sie ChatGPT oder Claude, um Fragen zu Ihren Spifex-Cashflow-Daten zu stellen. Verbindungen sind schreibgeschützt und können jederzeit widerrufen werden.",
+  "endpoint": {
+    "copy": "URL kopieren",
+    "copied": "MCP-Endpunkt in die Zwischenablage kopiert.",
+    "copyError": "Der Endpunkt konnte nicht kopiert werden. Bitte kopieren Sie ihn manuell."
+  },
+  "how": {
+    "title": "Assistent verbinden",
+    "description": "Öffnen Sie in ChatGPT oder Claude die Connector-Einstellungen und fügen Sie Spifex mit der unten stehenden URL als benutzerdefinierten MCP-Connector hinzu. Sie werden gebeten, sich anzumelden und den schreibgeschützten Zugriff zu genehmigen.",
+    "step1": "Fügen Sie die Connector-URL https://api.spifex.com/mcp in Ihrem KI-Assistenten hinzu.",
+    "step2": "Melden Sie sich bei Spifex an und genehmigen Sie den schreibgeschützten Cashflow-Zugriff.",
+    "step3": "Stellen Sie Fragen zu Ihren Workspaces, Transaktionen und Summen.",
+    "docs": "Einrichtungsanleitung lesen"
+  },
+  "list": {
+    "title": "Verbundene Assistenten",
+    "description": "Jeder Assistent kann nur die Workspaces lesen, die Sie im Gespräch auswählen.",
+    "refresh": "Aktualisieren",
+    "retry": "Erneut versuchen",
+    "duplicates": "Mehrere Zeilen mit demselben Namen sind separate Registrierungen aus wiederholten Verbindungsversuchen. Widerrufen Sie jede, die Sie nicht mehr verwenden."
+  },
+  "columns": {
+    "client": "Assistent",
+    "status": "Status",
+    "created": "Verbunden",
+    "lastUsed": "Zuletzt verwendet",
+    "expires": "Läuft ab"
+  },
+  "status": {
+    "active": "Aktiv",
+    "expired": "Abgelaufen"
+  },
+  "revoke": {
+    "action": "Widerrufen",
+    "confirm": "Zugriff für {{client}} widerrufen? Der Assistent verliert sofort den Zugriff und muss erneut verbunden werden.",
+    "confirmLabel": "Zugriff widerrufen",
+    "cancel": "Verbindung behalten",
+    "success": "Der Zugriff für {{client}} wurde widerrufen.",
+    "error": "Diese Verbindung konnte nicht widerrufen werden."
+  },
+  "empty": "Es sind noch keine Assistenten verbunden. Fügen Sie Spifex in ChatGPT oder Claude hinzu, um zu beginnen.",
+  "never": "Nie",
+  "errors": {
+    "load": "Ihre KI-Verbindungen konnten nicht geladen werden."
+  },
+  "registration": "Registrierung {{id}}",
+  "details": {
+    "registrationId": "Registrierungs-ID",
+    "scopes": "Bereiche",
+    "registrationSource": "Registrierungsmethode",
+    "clientType": "Client-Typ",
+    "grantType": "Grant-Typ"
+  },
+  "source": {
+    "dcr": "Dynamische Client-Registrierung",
+    "cimd": "Client-ID-Metadatendokument",
+    "manual": "Vorregistriert"
+  },
+  "clientType": {
+    "public": "Öffentlich (PKCE)",
+    "confidential": "Vertraulich"
+  }
+}

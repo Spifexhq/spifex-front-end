@@ -32,7 +32,8 @@
     "entities": "Entidades",
     "ledger-accounts": "Contas contábeis",
     "departments": "Departamentos",
-    "accounting": "Contabilidade"
+    "accounting": "Contabilidade",
+    "ai-connections": "Conexões de IA"
   },
   "title": "Configurações",
   "actions": {

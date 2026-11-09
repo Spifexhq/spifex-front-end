@@ -108,6 +108,10 @@ import type {
   EntryAccountingPreviewEnvelope,
   EntryAccountingReadinessEnvelope,
 } from '@/models/entries/accountingReadiness';
+import type {
+  GetIntegrationActivityResponse,
+  GetIntegrationConnectionsResponse,
+} from '@/models/integrations/connections';
 
 
 async function downloadTemplate(path: string, filename: string) {
@@ -485,6 +489,19 @@ export const api = {
 
   deleteBank: (bankId: string) =>
     request<void>(`banking/accounts/${bankId}/`, "DELETE"),
+
+  /* --- AI connections (remote MCP) --- */
+  getIntegrationConnections: () =>
+    request<GetIntegrationConnectionsResponse>("integrations/connections/", "GET", undefined, { fresh: true }),
+
+  revokeIntegrationConnection: (applicationId: string) =>
+    request<void>(
+      `integrations/connections/${encodeURIComponent(applicationId)}/`,
+      "DELETE",
+    ),
+
+  getIntegrationActivity: (limit = 50) =>
+    request<GetIntegrationActivityResponse>("integrations/activity/", "GET", { limit }, { fresh: true }),
 
   /* --- Document Types --- */
   getDocumentTypes: (params?: { cursor?: string; page_size?: number }) =>

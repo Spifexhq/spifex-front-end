@@ -89,8 +89,19 @@
   "repeatTransaction": "Répéter la transaction",
   "recurrenceHelp": "Crée des transactions futures avec le même montant et le même calendrier.",
   "weekend_action": "Dates de week-end",
-  "recurrenceIntervals": { "0": "Chaque semaine", "1": "Chaque mois", "2": "Tous les 2 mois", "3": "Tous les 3 mois", "6": "Tous les 6 mois", "12": "Tous les 12 mois" },
-  "weekendActions": { "0": "Conserver la date prévue", "1": "Reporter au prochain jour ouvré", "-1": "Avancer au jour ouvré précédent" },
+  "recurrenceIntervals": {
+    "0": "Chaque semaine",
+    "1": "Chaque mois",
+    "2": "Tous les 2 mois",
+    "3": "Tous les 3 mois",
+    "6": "Tous les 6 mois",
+    "12": "Tous les 12 mois"
+  },
+  "weekendActions": {
+    "0": "Conserver la date prévue",
+    "1": "Reporter au prochain jour ouvré",
+    "-1": "Avancer au jour ouvré précédent"
+  },
   "lockedTransaction": "Cette transaction a des paiements. Le montant, la catégorie et l’échéance sont protégés ; la description et les notes restent modifiables.",
   "settle": "Enregistrer un paiement",
   "contribute": "Mettre à jour l’épargne",
@@ -307,6 +318,10 @@
     "workspaces": {
       "title": "Espaces de travail",
       "description": "Créez et gérez vos espaces de finances personnelles."
+    },
+    "ai-connections": {
+      "title": "Connexions IA",
+      "description": "Connectez ChatGPT ou Claude et gérez l'accès en lecture seule à vos données de trésorerie."
     }
   },
   "createCreditEntry": "Créer une recette",

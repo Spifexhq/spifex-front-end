@@ -1,0 +1,65 @@
+{
+  "title": "Connexions IA",
+  "description": "Connectez ChatGPT ou Claude pour poser des questions sur vos données de trésorerie Spifex. Les connexions sont en lecture seule et peuvent être révoquées à tout moment.",
+  "endpoint": {
+    "copy": "Copier l’URL",
+    "copied": "L’URL MCP a été copiée dans le presse-papiers.",
+    "copyError": "Impossible de copier l’endpoint. Veuillez le copier manuellement."
+  },
+  "how": {
+    "title": "Connecter un assistant",
+    "description": "Dans ChatGPT ou Claude, ouvrez les paramètres des connecteurs et ajoutez Spifex comme connecteur MCP personnalisé avec l'URL ci-dessous. Vous devrez vous connecter et approuver l'accès en lecture seule.",
+    "step1": "Ajoutez l'URL du connecteur https://api.spifex.com/mcp dans votre assistant IA.",
+    "step2": "Connectez-vous à Spifex et approuvez la portée de trésorerie en lecture seule.",
+    "step3": "Posez des questions sur vos espaces de travail, transactions et totaux.",
+    "docs": "Lire le guide de configuration"
+  },
+  "list": {
+    "title": "Assistants connectés",
+    "description": "Chaque assistant ne peut lire que les espaces de travail que vous choisissez dans la conversation.",
+    "refresh": "Actualiser",
+    "retry": "Réessayer",
+    "duplicates": "Plusieurs lignes portant le même nom sont des enregistrements distincts créés par des tentatives de connexion répétées. Révoquez chacune de celles que vous n'utilisez plus."
+  },
+  "columns": {
+    "client": "Assistant",
+    "status": "Statut",
+    "created": "Connecté",
+    "lastUsed": "Dernière utilisation",
+    "expires": "Expire"
+  },
+  "status": {
+    "active": "Actif",
+    "expired": "Expiré"
+  },
+  "revoke": {
+    "action": "Révoquer",
+    "confirm": "Révoquer l'accès pour {{client}} ? L'assistant perdra immédiatement l'accès et devra être reconnecté pour continuer.",
+    "confirmLabel": "Révoquer l'accès",
+    "cancel": "Conserver la connexion",
+    "success": "L'accès pour {{client}} a été révoqué.",
+    "error": "Impossible de révoquer cette connexion."
+  },
+  "empty": "Aucun assistant n'est encore connecté. Ajoutez Spifex dans ChatGPT ou Claude pour commencer.",
+  "never": "Jamais",
+  "errors": {
+    "load": "Impossible de charger vos connexions IA."
+  },
+  "registration": "Enregistrement {{id}}",
+  "details": {
+    "registrationId": "ID d'enregistrement",
+    "scopes": "Portées",
+    "registrationSource": "Méthode d'enregistrement",
+    "clientType": "Type de client",
+    "grantType": "Type d'autorisation"
+  },
+  "source": {
+    "dcr": "Enregistrement dynamique du client",
+    "cimd": "Document de métadonnées de l'ID client",
+    "manual": "Pré-enregistré"
+  },
+  "clientType": {
+    "public": "Public (PKCE)",
+    "confidential": "Confidentiel"
+  }
+}

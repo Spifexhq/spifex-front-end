@@ -139,6 +139,6 @@ export default function DataTable<T extends {
         </motion.div>}
       </AnimatePresence>
   </motion.div>}</AnimatePresence>
-  <RecordPreview key={selected?.id || "closed"} item={selected} columns={props.previewColumns || [...columns, ...previewFields]} load={props.loadPreview} onClose={() => setPreviewId(null)} onEdit={onEdit && canEdit && (!selected || (props.rowCanEdit?.(selected) ?? true)) ? onEdit : undefined} editLabel={editLabel}/>
+  <RecordPreview item={selected} columns={props.previewColumns || [...columns, ...previewFields]} load={props.loadPreview} onClose={() => setPreviewId(null)} onEdit={onEdit && canEdit && (!selected || (props.rowCanEdit?.(selected) ?? true)) ? onEdit : undefined} editLabel={editLabel}/>
  </section>;
 }

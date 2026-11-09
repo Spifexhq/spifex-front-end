@@ -13,6 +13,7 @@ const Personal = lazy(() => import("@/features/account-settings/pages/PersonalSe
 const Billing = lazy(() => import("@/products/business/pages/Settings/Billing"));
 const LimitsAndUsage = lazy(() => import("@/features/account-settings/pages/LimitsAndUsage"));
 const SecurityAndPrivacy = lazy(() => import("@/features/account-settings/pages/SecurityAndPrivacy"));
+const Integrations = lazy(() => import("@/products/business/pages/Settings/Integrations"));
 const OrganizationSettings = lazy(() => import("@/products/business/pages/Settings/OrganizationSettings"));
 const Workspaces = lazy(() => import("@/features/workspaces/pages/WorkspaceManagementPage"));
 const DepartmentSettings = lazy(() => import("@/products/business/pages/Settings/DepartmentSettings"));
@@ -146,6 +147,14 @@ export const businessRoutes: RouteObject[] = [
                     element: (
                     <PermissionMiddleware codeName="view_security_and_privacy_page" behavior="redirect" redirectTo={'/settings'}>
                         <SecurityAndPrivacy />
+                    </PermissionMiddleware>
+                    ),
+                },
+                {
+                    path: 'ai-connections',
+                    element: (
+                    <PermissionMiddleware codeName="view_ai_connections" behavior="redirect" redirectTo={'/settings'}>
+                        <Integrations />
                     </PermissionMiddleware>
                     ),
                 },

@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { NavLink, useLocation } from "react-router-dom";
-import { ArrowLeft, Bell, CalendarClock, CreditCard, Landmark, SlidersHorizontal, Tags, UserRound, WalletCards } from "lucide-react";
+import { ArrowLeft, Bell, CalendarClock, CreditCard, Landmark, SlidersHorizontal, Tags, UserRound, WalletCards, Bot } from "lucide-react";
 import SidebarFrame from "@/shared/layout/Sidebar/SidebarFrame";
 import SidebarUserConfiguration from "@/shared/layout/Sidebar/SidebarUserConfiguration";
 import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitcher";
 
 type Props = { open: boolean; mobile: boolean; collapsed: boolean; onToggle(): void; onMobileClose(): void };
 const groups = [
-  { id: "account", items: [{ id: "personal", Icon: UserRound }, { id: "security", Icon: SlidersHorizontal }, { id: "notifications", Icon: Bell }, { id: "billing", Icon: CreditCard }] },
+  { id: "account", items: [{ id: "personal", Icon: UserRound }, { id: "security", Icon: SlidersHorizontal }, { id: "ai-connections", Icon: Bot }, { id: "notifications", Icon: Bell }, { id: "billing", Icon: CreditCard }] },
   { id: "preferences", items: [{ id: "formats", Icon: CalendarClock }, { id: "currency", Icon: Landmark }] },
   { id: "banking", items: [{ id: "accounts", Icon: Landmark }, { id: "categories", Icon: Tags }] },
   { id: "workspace", items: [{ id: "workspaces", Icon: WalletCards }] },

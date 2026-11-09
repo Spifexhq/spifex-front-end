@@ -32,7 +32,8 @@
     "entities": "Entités",
     "ledger-accounts": "Comptes du grand livre",
     "departments": "Départements",
-    "accounting": "Comptabilité"
+    "accounting": "Comptabilité",
+    "ai-connections": "Connexions IA"
   },
   "title": "Paramètres",
   "actions": {

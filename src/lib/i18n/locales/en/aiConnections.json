@@ -1,0 +1,65 @@
+{
+  "title": "AI connections",
+  "description": "Connect ChatGPT or Claude to ask questions about your Spifex cash-flow data. Connections are read-only and can be revoked at any time.",
+  "endpoint": {
+    "copy": "Copy URL",
+    "copied": "MCP endpoint copied to clipboard.",
+    "copyError": "Could not copy the endpoint. Please copy it manually."
+  },
+  "how": {
+    "title": "Connect an assistant",
+    "description": "In ChatGPT or Claude, open the connectors settings and add Spifex as a custom MCP connector using the URL below. You will be asked to sign in and approve read-only access.",
+    "step1": "Add the connector URL https://api.spifex.com/mcp in your AI assistant.",
+    "step2": "Sign in to Spifex and approve the read-only cash-flow scope.",
+    "step3": "Ask questions about your workspaces, transactions and totals.",
+    "docs": "Read the setup guide"
+  },
+  "list": {
+    "title": "Connected assistants",
+    "description": "Each assistant can only read the workspaces you choose in the conversation.",
+    "refresh": "Refresh",
+    "retry": "Try again",
+    "duplicates": "Multiple rows with the same name are separate registrations created by repeated connection attempts. Revoke each one you no longer use."
+  },
+  "columns": {
+    "client": "Assistant",
+    "status": "Status",
+    "created": "Connected",
+    "lastUsed": "Last used",
+    "expires": "Expires"
+  },
+  "status": {
+    "active": "Active",
+    "expired": "Expired"
+  },
+  "revoke": {
+    "action": "Revoke",
+    "confirm": "Revoke access for {{client}}? The assistant will lose access immediately and must be connected again to continue.",
+    "confirmLabel": "Revoke access",
+    "cancel": "Keep connection",
+    "success": "Access for {{client}} was revoked.",
+    "error": "Could not revoke this connection."
+  },
+  "empty": "No assistants are connected yet. Add Spifex in ChatGPT or Claude to get started.",
+  "never": "Never",
+  "errors": {
+    "load": "Could not load your AI connections."
+  },
+  "registration": "Registration {{id}}",
+  "details": {
+    "registrationId": "Registration ID",
+    "scopes": "Scopes",
+    "registrationSource": "Registration method",
+    "clientType": "Client type",
+    "grantType": "Grant type"
+  },
+  "source": {
+    "dcr": "Dynamic client registration",
+    "cimd": "Client ID metadata document",
+    "manual": "Pre-registered"
+  },
+  "clientType": {
+    "public": "Public (PKCE)",
+    "confidential": "Confidential"
+  }
+}

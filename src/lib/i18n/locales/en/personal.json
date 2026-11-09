@@ -89,8 +89,19 @@
   "repeatTransaction": "Repeat transaction",
   "recurrenceHelp": "Create future transactions using the same amount and schedule.",
   "weekend_action": "Weekend dates",
-  "recurrenceIntervals": { "0": "Weekly", "1": "Monthly", "2": "Every 2 months", "3": "Every 3 months", "6": "Every 6 months", "12": "Every 12 months" },
-  "weekendActions": { "0": "Keep the scheduled date", "1": "Postpone to the next business day", "-1": "Bring forward to the previous business day" },
+  "recurrenceIntervals": {
+    "0": "Weekly",
+    "1": "Monthly",
+    "2": "Every 2 months",
+    "3": "Every 3 months",
+    "6": "Every 6 months",
+    "12": "Every 12 months"
+  },
+  "weekendActions": {
+    "0": "Keep the scheduled date",
+    "1": "Postpone to the next business day",
+    "-1": "Bring forward to the previous business day"
+  },
   "lockedTransaction": "This transaction has payments. Its amount, category and due date are protected; you can update its description and notes.",
   "settle": "Record payment",
   "contribute": "Update savings",
@@ -307,6 +318,10 @@
     "workspaces": {
       "title": "Workspaces",
       "description": "Create, switch and manage your personal finance workspaces."
+    },
+    "ai-connections": {
+      "title": "AI connections",
+      "description": "Connect ChatGPT or Claude and manage read-only access to your cash-flow data."
     }
   },
   "createCreditEntry": "Create credit entry",

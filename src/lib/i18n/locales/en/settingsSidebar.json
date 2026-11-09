@@ -32,7 +32,8 @@
     "entities": "Entities",
     "ledger-accounts": "Ledger Accounts",
     "departments": "Departments",
-    "accounting": "Accounting"
+    "accounting": "Accounting",
+    "ai-connections": "AI connections"
   },
   "title": "Settings",
   "actions": {
