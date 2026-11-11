@@ -1,6 +1,8 @@
 {
   "overview": "Visão geral",
   "transactions": "Movimentos",
+  "cashFlow": "Fluxo de caixa",
+  "settledTransactions": "Liquidadas",
   "accounts": "Contas",
   "categories": "Categorias",
   "budgets": "Orçamentos",

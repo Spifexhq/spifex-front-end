@@ -96,6 +96,10 @@
     "dismiss": "Benachrichtigung schließen",
     "genericError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   },
+  "floatingPanel": {
+    "minimize": "Minimieren",
+    "restore": "Wiederherstellen"
+  },
   "quota": {
     "exceeded": "Ihre Organisation hat das Nutzungslimit für diese Aktion erreicht. Prüfen Sie die Nutzung oder bitten Sie den Inhaber, den Tarif zu prüfen.",
     "notIncluded": "Diese Aktion ist im Tarif Ihrer Organisation nicht enthalten. Bitten Sie den Inhaber, den Tarif zu prüfen.",

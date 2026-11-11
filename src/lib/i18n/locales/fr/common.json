@@ -96,6 +96,10 @@
     "dismiss": "Fermer la notification",
     "genericError": "Une erreur est survenue. Veuillez réessayer."
   },
+  "floatingPanel": {
+    "minimize": "Réduire",
+    "restore": "Rétablir"
+  },
   "quota": {
     "exceeded": "Votre organisation a atteint la limite d’utilisation de cette action. Consultez l’utilisation ou demandez au propriétaire de vérifier le forfait.",
     "notIncluded": "Cette action n’est pas incluse dans le forfait de votre organisation. Demandez au propriétaire de vérifier le forfait.",

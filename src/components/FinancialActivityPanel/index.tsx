@@ -75,7 +75,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
  return <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
   {(showBanks || showMetrics) && <div className="shrink-0 overflow-hidden">
     <section aria-label={t("kpiCards:overview.title")} className="min-w-0">
-      <div className="flex items-center gap-1 px-4 pt-3 sm:px-5">
+      <div className="hidden items-center gap-1 px-4 pt-2 sm:flex sm:px-5 sm:pt-3">
         <h2 className="text-xs font-semibold text-gray-600">{t("kpiCards:overview.title")}</h2>
         <InfoTooltip label={t("kpiCards:overview.scopeLabel")}>
           {t(contextSettlement ? "kpiCards:overview.settledScope" : "kpiCards:overview.cashflowScope")}
@@ -83,15 +83,15 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
       </div>
       <div className={`grid ${showBanks && showMetrics ? "grid-cols-2 xl:grid-cols-4" : showMetrics ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1"}`}>
         {showBanks && <>
-    <div className="min-w-0 px-4 py-3 sm:px-5">
+    <div className="min-w-0 px-4 py-2 sm:px-5 sm:py-3">
       <div className="text-xs leading-5 text-gray-500">{t("kpiCards:panel.consolidatedBalance")}</div>
-      {isPersonal ? personalAccess?.can("personal_view_financial_indicators") && <div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-7 tracking-tight text-gray-900 tabular-nums ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
+      {isPersonal ? personalAccess?.can("personal_view_financial_indicators") && <div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-6 tracking-tight text-gray-900 tabular-nums sm:leading-7 ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
           {bankState.loading && !bankState.hasLoaded ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankState.mixed || bankState.canViewBalance === false ? bankTotal : <AnimatedNumber value={bankState.total} format={value => formatCurrency(value, bankState.currency || undefined)} finalValue={bankTotal} />}
-        </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div> : <PermissionMiddleware codeName="view_consolidated_balance"><div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-7 tracking-tight text-gray-900 tabular-nums ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
+        </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div> : <PermissionMiddleware codeName="view_consolidated_balance"><div className="flex flex-wrap items-center justify-between gap-2"><div aria-busy={bankState.loading} className={`mt-1 font-semibold leading-6 tracking-tight text-gray-900 tabular-nums sm:leading-7 ${bankState.mixed ? "whitespace-normal text-sm" : "whitespace-nowrap text-base sm:text-2xl"}`}>
           {bankState.loading && !bankState.hasLoaded ? <FinancialActivitySkeleton /> : bankState.error ? "—" : bankState.mixed || bankState.canViewBalance === false ? bankTotal : <AnimatedNumber value={bankState.total} format={value => formatCurrency(value, bankState.currency || undefined)} finalValue={bankTotal} />}
         </div>{!bankState.loading && !bankState.error && bankState.history && <Sparkline values={bankState.history} label={t("kpiCards:balanceTrend")} className="max-sm:w-16"/>}</div></PermissionMiddleware>}
       <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} aria-controls={detailsId}
-        className="mt-1 inline-flex min-h-7 max-w-full items-center gap-1 rounded text-[11px] font-medium text-gray-600 transition-colors hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)]">
+        className="mt-0.5 inline-flex min-h-7 max-w-full items-center gap-1 rounded text-[11px] font-medium text-gray-600 transition-colors hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-[var(--accentPrimary)] sm:mt-1">
         <span>{bankState.loading ? <SkeletonLine className="h-3 w-20" /> : bankState.error ? t("banksTable:details") : t("kpiCards:panel.accountsCount", { count: bankState.count })}</span>
         <ChevronDown size={13} aria-hidden className={`shrink-0 transition-transform duration-150 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
       </button>
@@ -132,9 +132,9 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
             <Button variant="outline" size="xs" onClick={retry}>{t("kpiCards:overview.retry")}</Button>
           </div>
         ) : metrics.map((metric) => (
-          <div key={metric.key} aria-busy={loading} className="min-w-0 border-l border-gray-100 px-4 py-3 sm:px-5">
+          <div key={metric.key} aria-busy={loading} className="min-w-0 border-l border-gray-100 px-4 py-2 sm:px-5 sm:py-3">
             <div className="flex items-center gap-1 text-xs leading-5 text-gray-500"><span>{metric.label}</span><span className="inline-flex sm:hidden"><InfoTooltip label={metric.label}>{metric.hint}{metric.delta ? ` · ${metric.delta.value}` : ""}</InfoTooltip></span></div>
-            <div className="flex flex-wrap items-center justify-between gap-2"><div className="mt-1 whitespace-nowrap text-base font-semibold leading-7 tracking-tight text-gray-900 tabular-nums sm:text-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div className="mt-1 whitespace-nowrap text-base font-semibold leading-6 tracking-tight text-gray-900 tabular-nums sm:text-2xl sm:leading-7">
               {metric.numericValue != null && metric.formatValue ? <AnimatedNumber value={metric.numericValue} format={metric.formatValue} finalValue={String(metric.value)} /> : loading ? <FinancialActivitySkeleton /> : metric.value}
             </div>{!loading && metric.trend && <Sparkline values={metric.trend} label={t("kpiCards:metricTrend", { metric: metric.label })} color={metric.key.toLowerCase().includes("overdue") ? "#f59e0b" : "#6366f1"} className="max-sm:w-16"/>}</div>
             {metric.delta && !loading && <div className={`mt-1 hidden text-[11px] font-medium sm:block ${metric.delta.positive ? "text-emerald-700" : "text-rose-700"}`}>{metric.delta.value}</div>}
@@ -145,7 +145,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
     </section>
   </div>}
   {showFilters && <div className="shrink-0">
-<div className="relative min-w-0 border-y border-gray-200 bg-white px-4 py-3 sm:px-5">
+<div className="relative min-w-0 border-y border-gray-200 bg-white px-4 py-2 sm:px-5 sm:py-3">
       <div className="flex flex-wrap items-center gap-2">
         <ChipsSearchBar t={t} localFilters={localFilters} searchInputRef={searchInputRef}
           onSearchEnter={() => void tryApplyCurrentFilters()}
@@ -180,7 +180,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
           </PermissionMiddleware>
         </div>
       </div>
-      {(hasActiveFilters || canApply) && <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+      {(hasActiveFilters || canApply) && <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:mt-2.5">
         {filterDefs.filter(def => def.isActive(localFilters)).map(def => <Chip key={def.key} t={t} icon={def.icon}
           label={def.getChipLabel({ t, filters: localFilters, selectedBanks, selectedCategories })}
           onClick={event => { editorAnchorRef.current = event.currentTarget; setOpenEditor(current => current === def.key ? null : def.key); setAddFilterMenuOpen(false); setViewsMenuOpen(false); }}

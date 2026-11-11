@@ -47,6 +47,8 @@
   "expense": "Pagamentos",
   "net": "Líquido",
   "clearSelection": "Limpar seleção (Esc)",
+  "collapseActions": "Recolher",
+  "expandActions": "Expandir",
   "settle": "Liquidar selecionados",
   "delete": "Excluir",
   "reopen": "Reverter liquidação",

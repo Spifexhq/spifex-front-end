@@ -47,6 +47,8 @@
   "expense": "Zahlungen",
   "net": "Netto",
   "clearSelection": "Auswahl aufheben (Esc)",
+  "collapseActions": "Einklappen",
+  "expandActions": "Ausklappen",
   "settle": "Auswahl abrechnen",
   "delete": "Löschen",
   "reopen": "Abrechnung rückgängig",

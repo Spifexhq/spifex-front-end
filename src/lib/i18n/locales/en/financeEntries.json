@@ -47,6 +47,8 @@
   "expense": "Payments",
   "net": "Net",
   "clearSelection": "Clear selection (Esc)",
+  "collapseActions": "Collapse",
+  "expandActions": "Expand",
   "settle": "Settle selected",
   "delete": "Delete",
   "reopen": "Undo settlement",

@@ -47,6 +47,8 @@
   "expense": "Paiements",
   "net": "Net",
   "clearSelection": "Effacer la sélection (Échap)",
+  "collapseActions": "Réduire",
+  "expandActions": "Développer",
   "settle": "Régler la sélection",
   "delete": "Supprimer",
   "reopen": "Annuler le règlement",

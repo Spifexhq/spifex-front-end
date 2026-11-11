@@ -1,6 +1,8 @@
 {
   "overview": "Overview",
   "transactions": "Transactions",
+  "cashFlow": "Cash Flow",
+  "settledTransactions": "Settled",
   "accounts": "Accounts",
   "categories": "Categories",
   "budgets": "Budgets",

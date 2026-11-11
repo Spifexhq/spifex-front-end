@@ -26,6 +26,7 @@ import { usePersonalAccess } from "../access/PersonalAccessProvider";
 import { PERSONAL_PERMISSION } from "../access/permissions";
 
 type Basis = "outstanding" | "settled";
+export type { Basis };
 type FilterQuery = Record<string, string>;
 type TableItem = PersonalTransaction | PersonalSettledActivity;
 const dec = (value: unknown) => Number(value || 0) || 0;
@@ -199,14 +200,13 @@ function ActivityTable({ basis, items, loading, mutating, error, pager, currency
   />;
 }
 
-export default function PersonalTransactionsWorkspace() {
+export default function PersonalTransactionsWorkspace({ basis = "outstanding" }: { basis?: Basis }) {
   const { t } = useTranslation("personal");
   const auth = useAuthContext();
   const workspace = auth.organization?.organization;
   const currency = workspace?.currency || "EUR";
   const readOnly = readonlyWorkspace(workspace?.lifecycle);
   const [params, setParams] = useSearchParams();
-  const basis: Basis = params.get("tab") === "settled" ? "settled" : "outstanding";
   const urlKind = params.get("kind");
   const activityKind = basis === "settled" && ["income", "expense", "transfer"].includes(urlKind || "") ? urlKind || undefined : undefined;
   const [filters, setFilters] = useState<EntryFilters>({ settlement_status: basis === "settled", bank_id: [], cashflow_category_id: [] });
@@ -254,7 +254,6 @@ export default function PersonalTransactionsWorkspace() {
     }
     setFilters({ ...next, settlement_status: basis === "settled" });
   }, [basis, params, setParams]);
-  const setBasis = (next: Basis) => { const value = new URLSearchParams(params); value.set("tab", next); setParams(value, { replace: true }); setSelected([]); };
   const refresh = useCallback(() => { setRevision(value => value + 1); setPanelRevision(value => value + 1); }, []);
   const refreshPanel = useCallback(() => setPanelRevision(value => value + 1), []);
   const edit = (item: PersonalTransaction) => setDialog({ kind: "transactions", record: item });
@@ -280,14 +279,9 @@ export default function PersonalTransactionsWorkspace() {
     loadDrafts: async (ids: string[]) => (await personalApi.settlementDrafts(ids)).data,
     settle: async (items: import("@/models/entries/settlements").BulkSettleItem[], atomic: boolean) => (await personalApi.settleBulk(items, atomic)).data,
   }), []);
-  return <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
-    <header className="flex shrink-0 flex-wrap items-start justify-between gap-4">
-      <div><h1 className="text-2xl font-semibold tracking-tight text-gray-900">{t("transactions")}</h1><p className="mt-1.5 max-w-2xl text-sm leading-6 text-gray-500">{t("transactionsDescription")}</p></div>
-    </header>
+  return <div className="flex h-full min-h-0 min-w-0 flex-col">
+    <h1 className="sr-only">{t(basis === "settled" ? "settledTransactions" : "cashFlow")}</h1>
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <div className="flex shrink-0 items-center gap-1 border-b border-gray-200 p-2" role="tablist" aria-label={t("activityTabs")}>
-        {(["outstanding", "settled"] as const).map(value => <button key={value} type="button" role="tab" aria-selected={basis === value} onClick={() => setBasis(value)} className="min-h-8 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors aria-selected:bg-gray-100 aria-selected:text-gray-900">{t(value === "outstanding" ? "cashFlowTab" : "settledActivityTab")}</button>)}
-      </div>
       <FinancialActivityPanel key={basis} filters={filters} onApply={applyFilters} contextSettlement={basis === "settled"} refreshToken={panelRevision} banksRefreshKey={panelRevision} manageBanksPath="/personal/settings/accounts" excludeObservationFilter>
         <ActivityTable basis={basis} items={pager.items} loading={pager.loading} mutating={busy} error={pager.error} pager={pagerForTable} currency={currency} readOnly={readOnly} onInspect={inspect} onEdit={edit} onSettle={openSettlement} onDeleted={refreshPanel} onSelectionBusy={setBusy}/>
       </FinancialActivityPanel>

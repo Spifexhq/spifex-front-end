@@ -1,6 +1,8 @@
 {
   "overview": "Übersicht",
   "transactions": "Transaktionen",
+  "cashFlow": "Cashflow",
+  "settledTransactions": "Abgeschlossen",
   "accounts": "Konten",
   "categories": "Kategorien",
   "budgets": "Budgets",

@@ -1,6 +1,8 @@
 {
   "overview": "Vue d’ensemble",
   "transactions": "Transactions",
+  "cashFlow": "Flux de trésorerie",
+  "settledTransactions": "Réglées",
   "accounts": "Comptes",
   "categories": "Catégories",
   "budgets": "Budgets",
