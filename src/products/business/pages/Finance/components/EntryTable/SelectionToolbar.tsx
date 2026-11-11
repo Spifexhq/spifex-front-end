@@ -24,7 +24,7 @@ export default function SelectionToolbar({ entries, settled, onClear, onRefresh,
     const { t } = useTranslation("financeEntries");
     const auth = useAuthContext();
     const reduced = useReducedMotion();
-    const isMobile = useMediaQuery("(max-width: 639px)");
+    const isMobile = useMediaQuery("(max-width: 767px)");
     const allowed = (code: string) => auth.isOwner || auth.isSuperUser || auth.permissions.includes(code);
     const [confirm, setConfirm] = useState<string | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
     const [collapsed, setCollapsed] = useState(false);

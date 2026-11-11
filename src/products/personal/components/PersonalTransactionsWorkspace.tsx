@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Check, RotateCcw, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, RotateCcw, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useAuthContext } from "@/hooks/useAuth";
 import { useCursorPager } from "@/hooks/useCursorPager";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { getCursorFromUrl } from "@/lib/list";
 import { formatCurrency } from "@/lib";
 import type { EntryFilters } from "@/models/components/filterBar";
@@ -88,7 +89,17 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
   const [confirm, setConfirm] = useState<"delete" | "reverse" | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
   const reduced = useReducedMotion();
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const bodyCollapsed = isMobile && collapsed;
+  const bodyId = useId();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const deleteRef = useRef<HTMLButtonElement>(null);
+  const reverseRef = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef<"delete" | "reverse" | null>(null);
   const records = items.flatMap(row => row.record ? [row.record] : []);
   const totals = useMemo(() => records.reduce((result, row) => {
     // Transfers move money between accounts; they are neither receipts nor payments.
@@ -100,19 +111,80 @@ function SelectionActions({ basis, items, currency, onClear, onSettle, onDelete,
   }, { income: 0, expense: 0 }), [records]);
   const pendingEntries = records.flatMap(row => row.activityKind === "entry" && "open_amount" in row.source && row.source.status === "pending" ? [row.source] : []);
   const canDeleteSelection = !!onDelete && pendingEntries.length === records.length;
-  return createPortal(<AnimatePresence>{records.length > 0 && <motion.aside layout role="region" aria-label={t("financeEntries:selectionActions")} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: reduced ? 0 : .15 }} className="fixed bottom-4 left-1/2 z-[9000] w-[calc(100vw-24px)] max-w-3xl -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4">
+  const selectionKey = records.map(row => row.id).sort().join("|");
+
+  useEffect(() => {
+    setConfirm(null);
+    setError("");
+  }, [selectionKey]);
+
+  const cancel = useCallback(() => {
+    if (pending || busy || !confirm) return;
+    if (bodyCollapsed) {
+      restoreFocus.current = null;
+      setConfirm(null);
+      setError("");
+      handleRef.current?.focus({ preventScroll: true });
+      return;
+    }
+    restoreFocus.current = confirm;
+    setConfirm(null);
+    setError("");
+  }, [bodyCollapsed, busy, confirm, pending]);
+
+  useEffect(() => { if (!isMobile) setCollapsed(false); }, [isMobile]);
+  useEffect(() => { if (!records.length) setCollapsed(false); }, [records.length]);
+
+  // Zero-height content still contains focusable buttons. Make the closed body inert.
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+    if (bodyCollapsed) body.setAttribute("inert", "");
+    else body.removeAttribute("inert");
+  }, [bodyCollapsed]);
+
+  // The shared table clears the whole selection from a window-level Escape
+  // listener. While the confirmation is open, this document listener runs
+  // first and keeps Escape scoped to the confirmation.
+  useEffect(() => {
+    if (!confirm) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || pending || busy) return;
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancel();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [cancel, confirm, pending, busy]);
+
+  const bodyTransition = reduced
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 420, damping: 36, mass: 0.7 };
+
+  return createPortal(<AnimatePresence>{records.length > 0 && <motion.aside role="region" aria-label={t("financeEntries:selectionActions")} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: reduced ? 0 : .15 }} className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[9000] w-[calc(100vw-24px)] max-w-3xl -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_8px_32px_#26334d20] sm:bottom-6 sm:p-4">
+
+    {isMobile && <button ref={handleRef} type="button" disabled={pending || busy} aria-expanded={!collapsed} aria-controls={bodyId} aria-label={t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")} onClick={() => setCollapsed(value => !value)} className="group -mt-1 mb-1.5 flex min-h-9 w-full flex-col items-center justify-center gap-1.5 rounded-lg py-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50">
+      <span aria-hidden className="h-1 w-9 rounded-full bg-gray-200 transition-colors group-hover:bg-gray-300"/>
+      <span aria-hidden className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.06em]">{t(collapsed ? "financeEntries:expandActions" : "financeEntries:collapseActions")}<motion.span animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: reduced ? 0 : .2 }} className="inline-flex"><ChevronDown size={11}/></motion.span></span>
+    </button>}
+
     <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold text-gray-900">{t("financeEntries:selected", { count: records.length })}</p><div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500"><span>{t("financeEntries:income")} <b className="font-medium text-emerald-700">{formatCurrency(totals.income / 100, currency)}</b></span><span>{t("financeEntries:expense")} <b className="font-medium text-rose-700">{formatCurrency(totals.expense / 100, currency)}</b></span><span>{t("financeEntries:net")} <b className="font-medium text-gray-900">{formatCurrency((totals.income - totals.expense) / 100, currency)}</b></span></div></div><button type="button" disabled={busy} aria-label={t("financeEntries:clearSelection")} title={t("financeEntries:clearSelection")} onClick={onClear} className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-800"><X size={15}/></button></div>
-    <AnimatePresence mode="wait" initial={false}>
-      {confirm ? <motion.div key="confirm" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} role="group" aria-label={confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })} onKeyDown={event => { if (event.key === "Escape" && !pending && !busy) { event.preventDefault(); event.stopPropagation(); setConfirm(null); } }} className="mt-3 space-y-3 border-t border-gray-100 pt-3">
-        <p role="status" className="text-xs leading-5 text-gray-700">{confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })}</p>
-        <div className="flex flex-wrap justify-end gap-2"><Button size="sm" variant="outline" disabled={pending || busy} onClick={() => setConfirm(null)}>{t("financeEntries:cancel")}</Button><Button size="sm" variant="danger" disabled={pending || busy} isLoading={pending} onClick={async () => { setPending(true); setError(""); try { if (confirm === "delete") await onDelete?.(pendingEntries); else await onReverse?.(records.flatMap(row => "value_date" in row.source ? [row.source] : [])); setConfirm(null); onClear(); } catch (cause) { setError(cause instanceof Error ? cause.message : t("personal:error")); } finally { setPending(false); } }} className="gap-1.5">{confirm === "delete" ? <Trash2 size={13}/> : <RotateCcw size={13}/>} {confirm === "delete" ? t("financeEntries:delete") : t("personal:reverseActivity")}</Button></div>
-      </motion.div> : <motion.div key="actions" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
-        {basis === "outstanding" && onSettle && <Button size="sm" variant="outlineBlack" disabled={busy} onClick={() => onSettle(records.map(row => row.id))} className="gap-1.5"><Check size={13}/>{t("financeEntries:settle")}</Button>}
-        {basis === "outstanding" && onDelete && <Button size="sm" variant="outline" disabled={busy || !canDeleteSelection} onClick={() => { setError(""); setConfirm("delete"); }} className="gap-1.5"><Trash2 size={13}/>{t("financeEntries:delete")}</Button>}
-        {basis === "settled" && onReverse && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setError(""); setConfirm("reverse"); }} className="gap-1.5"><RotateCcw size={13}/>{t("personal:reverseActivity")}</Button>}
-      </motion.div>}
-    </AnimatePresence>
-    {error && <p className="w-full text-right text-xs text-rose-700" role="alert">{error}</p>}
+
+    <motion.div id={bodyId} ref={bodyRef} initial={false} animate={bodyCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }} transition={bodyTransition} className="overflow-hidden" aria-hidden={bodyCollapsed || undefined}>
+      <AnimatePresence mode="wait" initial={false}>
+        {confirm ? <motion.div key="confirm" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} role="group" aria-label={confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })} onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); } }} onAnimationComplete={() => { if (!pending && !bodyCollapsed) cancelRef.current?.focus({ preventScroll: true }); }} className="mt-3 space-y-3 border-t border-gray-100 pt-3">
+          <p role="status" className="text-xs leading-5 text-gray-700">{confirm === "delete" ? t("personal:deleteSelectedConfirm", { count: pendingEntries.length }) : t("personal:reverseActivityConfirm", { count: records.length })}</p>
+          <div className="flex flex-wrap justify-end gap-2"><Button ref={cancelRef} size="sm" variant="outline" disabled={pending || busy} onClick={cancel}>{t("financeEntries:cancel")}</Button><Button size="sm" variant="danger" disabled={pending || busy} isLoading={pending} onClick={async () => { setPending(true); setError(""); try { if (confirm === "delete") await onDelete?.(pendingEntries); else await onReverse?.(records.flatMap(row => "value_date" in row.source ? [row.source] : [])); setConfirm(null); onClear(); } catch (cause) { setError(cause instanceof Error ? cause.message : t("personal:error")); } finally { setPending(false); } }} className="gap-1.5">{confirm === "delete" ? <Trash2 size={13}/> : <RotateCcw size={13}/>} {confirm === "delete" ? t("financeEntries:delete") : t("personal:reverseActivity")}</Button></div>
+        </motion.div> : <motion.div key="actions" initial={{opacity:0,y:reduced?0:5}} animate={{opacity:1,y:0}} exit={{opacity:0,y:reduced?0:-4}} transition={{duration:reduced?0:.15}} onAnimationComplete={() => { if (!restoreFocus.current) return; const target = restoreFocus.current === "delete" ? deleteRef.current : reverseRef.current; restoreFocus.current = null; target?.focus({ preventScroll: true }); }} className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
+          {basis === "outstanding" && onSettle && <Button size="sm" variant="outlineBlack" disabled={busy} onClick={() => onSettle(records.map(row => row.id))} className="gap-1.5"><Check size={13}/>{t("financeEntries:settle")}</Button>}
+          {basis === "outstanding" && onDelete && <Button ref={deleteRef} size="sm" variant="outline" disabled={busy || !canDeleteSelection} onClick={() => { setError(""); setConfirm("delete"); }} className="gap-1.5"><Trash2 size={13}/>{t("financeEntries:delete")}</Button>}
+          {basis === "settled" && onReverse && <Button ref={reverseRef} size="sm" variant="outline" disabled={busy} onClick={() => { setError(""); setConfirm("reverse"); }} className="gap-1.5"><RotateCcw size={13}/>{t("personal:reverseActivity")}</Button>}
+        </motion.div>}
+      </AnimatePresence>
+      {error && <p className="w-full text-right text-xs text-rose-700" role="alert">{error}</p>}
+    </motion.div>
   </motion.aside>}</AnimatePresence>, document.body);
 }
 

@@ -7,7 +7,7 @@ import WorkspaceSwitcher from "@/features/workspaces/components/WorkspaceSwitche
 
 type Props = { open: boolean; mobile: boolean; collapsed: boolean; onToggle(): void; onMobileClose(): void };
 const groups = [
-  { id: "account", items: [{ id: "personal", Icon: UserRound }, { id: "security", Icon: SlidersHorizontal }, { id: "ai-connections", Icon: Bot }, { id: "notifications", Icon: Bell }, { id: "billing", Icon: CreditCard }] },
+  { id: "account", items: [{ id: "personal", Icon: UserRound }, { id: "notifications", Icon: Bell }, { id: "security", Icon: SlidersHorizontal }, { id: "ai-connections", Icon: Bot }, { id: "billing", Icon: CreditCard }] },
   { id: "preferences", items: [{ id: "formats", Icon: CalendarClock }, { id: "currency", Icon: Landmark }] },
   { id: "banking", items: [{ id: "accounts", Icon: Landmark }, { id: "categories", Icon: Tags }] },
   { id: "workspace", items: [{ id: "workspaces", Icon: WalletCards }] },
