@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 
 import Button from "@/shared/ui/Button";
-import Checkbox from "@/shared/ui/Checkbox";
+import Switch from "@/shared/ui/Switch";
 import { Pencil } from "lucide-react";
 
 import { api } from "@/core/api/requests";
@@ -131,17 +131,17 @@ export const ViewsConfigModal: React.FC<{
 
             return (
               <div key={v.id} className="flex flex-wrap items-center gap-3 px-3 py-3">
-                <label className="inline-flex items-center gap-2">
-                  <Checkbox
-                    checked={!!v.is_default}
-                    size="small"
-                    disabled={busy || isRenamingAny} // freeze while renaming
-                    onChange={() => void toggleDefaultView(v)}
-                  />
+                <Switch
+                  checked={!!v.is_default}
+                  onChange={() => void toggleDefaultView(v)}
+                  label={`${t("filterBar:saveModal.setDefault")}: ${v.name}`}
+                  disabled={busy || isRenamingAny}
+                />
 
+                <div className="min-w-0 flex-1">
                   {isRenaming ? (
                     <input
-                      className="border border-gray-300 rounded px-2 py-1 text-sm"
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                       value={renamingName}
                       onChange={(e) => setRenamingName(e.target.value)}
                       autoFocus
@@ -149,7 +149,7 @@ export const ViewsConfigModal: React.FC<{
                   ) : (
                     <span className="text-sm text-gray-800">{v.name}</span>
                   )}
-                </label>
+                </div>
 
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   {isRenaming ? (

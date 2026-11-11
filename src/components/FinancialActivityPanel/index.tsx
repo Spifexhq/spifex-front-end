@@ -6,7 +6,7 @@ import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { SlidersHorizontal, ChevronDown, Settings2, Save, Eye, Star, ArrowUpRight, Landmark } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Settings2, Save, Eye, ArrowUpRight, Landmark } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuth";
 import { PermissionMiddleware } from "@/middlewares";
 import { useOptionalPersonalAccess } from "@/products/personal/access/PersonalAccessProvider";
@@ -169,7 +169,7 @@ export default function FinancialActivityPanel({ children, filters, onApply, con
               </Button>
               {viewsMenuOpen && <Menu anchorRef={viewsMenuRef} roleLabel={t("filterBar:viewsMenu.aria")} align="right"
                 emptyLabel={t("filterBar:viewsMenu.empty")} onClose={() => setViewsMenuOpen(false)}
-                items={scopedViews.map(view => ({ key: view.id, label: <span className="flex w-full items-center justify-between gap-2"><span className="truncate">{view.name}</span>{view.is_default && <Star size={12} className="shrink-0 text-amber-500" aria-hidden />}</span>, onAction: () => applyViewToForm(view) }))} />}
+                items={scopedViews.map(view => ({ key: view.id, label: <span className="truncate">{view.name}</span>, onAction: () => applyViewToForm(view) }))} />}
             </div>
           </PermissionMiddleware>
           <PermissionMiddleware codeName="add_entry_view">
