@@ -7,6 +7,7 @@ import AccountingOverviewPage from "./pages/AccountingOverviewPage";
 
 import ChartOfAccountsPage from "./chart/ChartOfAccountsPage";
 import AccountingSetupPage from "./setup/AccountingSetupPage";
+import AccountingGuidedSetupPage from "./setup/AccountingGuidedSetupPage";
 import AccountingPeriodsPage from "./pages/AccountingPeriodsPage";
 import { AccountingSetupProvider } from "./setup/AccountingSetupProvider";
 import { useAccountingSetup } from "./setup/useAccountingSetup";
@@ -41,7 +42,8 @@ const AccountingWorkspace: React.FC = () => {
           <Route path="/" element={<Navigate to="/accounting/overview" replace />} />
           <Route path="overview" element={<AccountingOverviewPage />} />
           <Route path="chart" element={<ChartOfAccountsPage />} />
-          <Route path="setup/:phase?" element={<AccountingSetupPage />} />
+          <Route path="setup/guide" element={<AccountingGuidedSetupPage />} />
+        <Route path="setup/:phase?" element={<AccountingSetupPage />} />
           <Route path="periods" element={<AccountingPeriodsPage />} />
           <Route path="books" element={<AccountingBooksPage />} />
           <Route path="bank-mappings" element={<AccountingBankMappingsPage />} />

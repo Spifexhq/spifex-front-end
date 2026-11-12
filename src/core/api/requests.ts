@@ -54,6 +54,8 @@ import type {
   LedgerAccountsBulkRequest,
   LedgerAccountsBulkResponse,
   LedgerAccountsExistsResponse,
+  LedgerGuideRequest,
+  LedgerGuideResponse,
   GetLedgerAccountsTreeRequest,
   GetLedgerAccountsTreeResponse,
 } from '@/models/settings/ledgerAccounts';
@@ -549,6 +551,9 @@ export const api = {
     request<ImportStandardLedgerAccountsResponse>("ledger/accounts/import-standard/", "POST", {
       plan,
     } satisfies ImportStandardLedgerAccountsRequest),
+
+  generateLedgerGuide: (payload: LedgerGuideRequest) =>
+    request<LedgerGuideResponse>("ledger/accounts/ai-guide/", "POST", payload),
 
   downloadLedgerCsvTemplate: () =>
     downloadTemplate("ledger/accounts/template/csv/", "template_ledger_accounts.csv"),

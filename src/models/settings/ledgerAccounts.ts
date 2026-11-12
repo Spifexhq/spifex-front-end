@@ -146,3 +146,39 @@ export interface LedgerProfile {
   use_compact_cashflow_view: boolean;
   auto_bootstrapped_at?: string | null;
 }
+
+export type LedgerGuideLanguage = "en" | "pt" | "fr" | "de";
+export type LedgerGuideKnowledge = "none" | "basic" | "average" | "accountant";
+
+export interface LedgerGuideRequest {
+  language: LedgerGuideLanguage;
+  knowledge_level: LedgerGuideKnowledge;
+  business_type: string;
+  country?: string;
+  currency?: string;
+  answers?: Record<string, unknown>;
+  accounts?: LedgerGuideAccount[];
+  apply?: boolean;
+}
+
+export interface LedgerGuideAccount {
+  code: string;
+  name: string;
+  description: string;
+  parent_code: string;
+  account_type: LedgerAccountType;
+  statement_section: LedgerStatementSection;
+  normal_balance: LedgerNormalBalance;
+  report_group: string;
+  report_subgroup: string;
+}
+
+export interface LedgerGuideResponse {
+  provider: string;
+  model: string;
+  language: LedgerGuideLanguage;
+  accounts: LedgerGuideAccount[];
+  warnings: string[];
+  can_apply: boolean;
+  created_count?: number;
+}
